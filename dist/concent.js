@@ -28,7 +28,6 @@ if (!this._inheritsLoose) {
     subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 }
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -877,7 +876,7 @@ if (!this._inheritsLoose) {
   function getStateHandlerForInit (module) {
     return function (state) {
       try {
-        setState(module, state, 0);
+        setState(module, state, 0, true);
       } catch (err) {
         if (module == MODULE_GLOBAL) {
           getAndStoreValidGlobalState(state);
