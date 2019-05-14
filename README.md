@@ -1,7 +1,7 @@
 # concent [C_C]
 <p align="center">
   <a href="#">
-    <img width="200" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png">
+    <img width="500" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png">
   </a>
 </p>
 
