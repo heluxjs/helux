@@ -28,6 +28,7 @@ if (!this._inheritsLoose) {
     subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 }
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -4123,36 +4124,6 @@ if (!this._inheritsLoose) {
     try {
       util.justTip("cc version " + ccContext.info.version);
 
-      if (autoCreateDispatcher) {
-        var Dispatcher = createDispatcher();
-        var box = document.querySelector("#" + CC_DISPATCHER_BOX);
-
-        if (!box) {
-          box = document.createElement('div');
-          box.id = CC_DISPATCHER_BOX;
-          box.style.position = 'fixed';
-          box.style.left = 0;
-          box.style.top = 0;
-          box.style.display = 'none';
-          box.style.zIndex = -888666;
-          document.body.append(box);
-        }
-
-        if (ccContext.refs[CC_DISPATCHER]) {
-          util.justTip("[[startUp]]: CcDispatcher existed already");
-        } else {
-          ReactDOM.render(React__default.createElement(Dispatcher), box);
-          util.justTip("[[startUp]]: cc create a CcDispatcher automatically");
-        }
-      } else {
-        throw 'customizing Dispatcher is not allowed in current version cc';
-      }
-
-      if (window) {
-        window.CC_CONTEXT = ccContext;
-        window.ccc = ccContext;
-      }
-
       if (ccContext.isCcAlreadyStartup) {
         var err = util.makeError(ERR.CC_ALREADY_STARTUP);
 
@@ -4163,6 +4134,12 @@ if (!this._inheritsLoose) {
           clearObject(ccContext.computed._computedValue);
           clearObject(ccContext.event_handlers_);
           clearObject(ccContext.ccUniqueKey_handlerKeys_);
+          var cct = ccContext.ccClassKey_ccClassContext_;
+          Object.keys(cct).forEach(function (ccClassKey) {
+            var ctx = cct[ccClassKey];
+            clearObject(ctx.ccKeys);
+          });
+          clearObject(ccContext.moduleName_ccClassKeys_);
           clearObject(ccContext.handlerKey_handler_);
           clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
           clearObject(ccContext.refs, [CC_DISPATCHER]);
@@ -4170,6 +4147,36 @@ if (!this._inheritsLoose) {
           clearObject(ccContext.ccKey_option_);
           util.hotReloadWarning(err);
         } else throw err;
+      }
+
+      if (autoCreateDispatcher) {
+        if (!ccContext.refs[CC_DISPATCHER]) {
+          var Dispatcher = createDispatcher();
+          var box = document.querySelector("#" + CC_DISPATCHER_BOX);
+
+          if (!box) {
+            box = document.createElement('div');
+            box.id = CC_DISPATCHER_BOX;
+            box.style.position = 'fixed';
+            box.style.left = 0;
+            box.style.top = 0;
+            box.style.display = 'none';
+            box.style.zIndex = -888666;
+            document.body.append(box);
+          }
+
+          ReactDOM.render(React__default.createElement(Dispatcher), box);
+          util.justTip("[[startUp]]: cc create a CcDispatcher automatically");
+        } else {
+          util.justTip("[[startUp]]: CcDispatcher existed already");
+        }
+      } else {
+        throw 'customizing Dispatcher is not allowed in current version cc';
+      }
+
+      if (window) {
+        window.CC_CONTEXT = ccContext;
+        window.ccc = ccContext;
       }
 
       ccContext.isModuleMode = isModuleMode;

@@ -312,35 +312,7 @@ export default function ({
 } = {}) {
   try{
     util.justTip(`cc version ${ccContext.info.version}`);
-    if(autoCreateDispatcher){
-      const Dispatcher = createDispatcher();
-      let box = document.querySelector(`#${CC_DISPATCHER_BOX}`);
-      if(!box){
-        box = document.createElement('div');
-        box.id = CC_DISPATCHER_BOX;
-        box.style.position = 'fixed';
-        box.style.left = 0;
-        box.style.top = 0;
-        box.style.display = 'none';
-        box.style.zIndex = -888666;
-        document.body.append(box);
-      }
 
-      if (ccContext.refs[CC_DISPATCHER]) {
-        util.justTip(`[[startUp]]: CcDispatcher existed already`);
-      } else {
-        ReactDOM.render(React.createElement(Dispatcher), box);
-        util.justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
-      }
-    }else{
-      throw 'customizing Dispatcher is not allowed in current version cc';
-    }
-
-    if (window) {
-      window.CC_CONTEXT = ccContext;
-      window.ccc = ccContext;
-    }
-  
     if (ccContext.isCcAlreadyStartup) {
       const err =  util.makeError(ERR.CC_ALREADY_STARTUP);
       if(util.isHotReloadMode()){
@@ -350,6 +322,12 @@ export default function ({
         clearObject(ccContext.computed._computedValue);
         clearObject(ccContext.event_handlers_);
         clearObject(ccContext.ccUniqueKey_handlerKeys_);
+        const cct = ccContext.ccClassKey_ccClassContext_;
+        Object.keys(cct).forEach(ccClassKey=>{
+          const ctx = cct[ccClassKey];
+          clearObject(ctx.ccKeys);
+        });
+        clearObject(ccContext.moduleName_ccClassKeys_);
         clearObject(ccContext.handlerKey_handler_);
         clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
         clearObject(ccContext.refs, [CC_DISPATCHER]);
@@ -360,6 +338,34 @@ export default function ({
       else throw err;
     }
 
+    if(autoCreateDispatcher){
+      if(!ccContext.refs[CC_DISPATCHER]){
+        const Dispatcher = createDispatcher();
+        let box = document.querySelector(`#${CC_DISPATCHER_BOX}`);
+        if(!box){
+          box = document.createElement('div');
+          box.id = CC_DISPATCHER_BOX;
+          box.style.position = 'fixed';
+          box.style.left = 0;
+          box.style.top = 0;
+          box.style.display = 'none';
+          box.style.zIndex = -888666;
+          document.body.append(box);
+        }
+        ReactDOM.render(React.createElement(Dispatcher), box);
+        util.justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
+      }else{
+        util.justTip(`[[startUp]]: CcDispatcher existed already`);
+      }
+    }else{
+      throw 'customizing Dispatcher is not allowed in current version cc';
+    }
+
+    if (window) {
+      window.CC_CONTEXT = ccContext;
+      window.ccc = ccContext;
+    }
+  
     ccContext.isModuleMode = isModuleMode;
     ccContext.isStrict = isStrict;
     ccContext.isDebug = isDebug;
