@@ -327,7 +327,6 @@ export default function ({
           const ctx = cct[ccClassKey];
           clearObject(ctx.ccKeys);
         });
-        clearObject(ccContext.moduleName_ccClassKeys_);
         clearObject(ccContext.handlerKey_handler_);
         clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
         clearObject(ccContext.refs, [CC_DISPATCHER]);
