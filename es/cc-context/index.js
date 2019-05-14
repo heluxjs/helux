@@ -179,7 +179,7 @@ const ccContext = {
   // when component unmounted, it's handler will been removed
   handlerKey_handler_: {
   },
-  
+
 
   ccKey_option_: {
 
@@ -189,16 +189,16 @@ const ccContext = {
     startupTime: Date.now(),
     version: '1.1.82',
     author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-    tag:'promise land',
+    tag: 'promise land',
   },
   // fragment association
   fragmentNameCount: 0,
   fragmentFeature_classKey_: {
 
   },
-  fragmentCcKeys:[],
+  fragmentCcKeys: [],
   errorHandler: null,
-  middlewares:[],
+  middlewares: [],
 }
 
 if (window && !window.sss) {
@@ -214,10 +214,10 @@ const lsLen = localStorage.length;
 const _refStoreState = ccContext.refStore._state;
 for (var i = 0; i < lsLen; i++) {
   const lsKey = localStorage.key(i);
-  if(lsKey.startsWith('CCSS_')){
-    try{
+  if (lsKey.startsWith('CCSS_')) {
+    try {
       _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
-    }catch(err){
+    } catch (err) {
       console.error(err);
     }
   }
