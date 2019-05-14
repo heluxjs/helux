@@ -95,7 +95,7 @@ ___
 ### [示例集合](https://github.com/fantasticsoul/rcc-simple-demo)
 ___
 ## 图文介绍
-### cc渲染流程
+### cc渲染触发流程
 ![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-core.png)
 ### `react类`、`cc类`和`cc实例`三者之间的关系
 ![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc2.png)
