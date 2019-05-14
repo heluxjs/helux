@@ -1,5 +1,5 @@
 # concent [C_C]
-<div align="center">![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png)</div>
+<div align="center"><img src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png)"></img></div>
 
 ## concent是什么，（注：以下有的地方简称为cc）
 concent是一个按照`flux`架构实现、为`react`提供状态管理服务的框架，同时也为你的`react`组件提供更多有趣且强大的特性，让你的`react`工程代码变得更加简约、优雅，并容易维护与扩展。
