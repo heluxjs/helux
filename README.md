@@ -13,7 +13,7 @@ concent是一个专为`react`提供状态管理服务的框架，重新定义`st
 * 提供全局模块化的单一数据源；
 * 共享数据可直接注入到state，也可注入props，[点我查看](https://stackblitz.com/edit/concent-state-inject-way?file=index.js)。
 * 修改共享数据的方式灵活多样且简单直接，[点我查看](https://stackblitz.com/edit/concent-state-modify-way)；
-* 对组件扩展了事件总线、computed、watch等特性，[点我查看](https://stackblitz.com/edit/concent-vue-like-programming)；
+* 对组件扩展了事件总线、computed、watch、双向绑定等特性，[点我查看](https://stackblitz.com/edit/concent-vue-like-programming)；
 * 内置与react16一样的使用方式但却更有趣的hook，[点我查看](https://stackblitz.com/edit/concent-hook?file=index.js)；
 * 默认采用反向继承包裹你的组件，让react dom tree层级更少，保持干净和清爽；
 * 基于引用定位和状态广播，支持细粒度的状态订阅，渲染效率出众，[点我查看](https://stackblitz.com/edit/concent-why-it-is-high-performance?file=index.js)；
