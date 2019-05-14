@@ -1,5 +1,9 @@
 # concent [C_C]
-<p align="center">![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png)</p>
+<p align="center">
+  <a href="#">
+    <img width="200" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png">
+  </a>
+</p>
 
 ## concent是什么，（注：以下有的地方简称为cc）
 concent是一个按照`flux`架构实现、为`react`提供状态管理服务的框架，同时也为你的`react`组件提供更多有趣且强大的特性，让你的`react`工程代码变得更加简约、优雅，并容易维护与扩展。
@@ -105,3 +109,4 @@ ___
 ### [聊一聊cc的变化侦测和hook实现](https://juejin.im/post/5c8d99f4e51d4555816d6335)
 ### [在cc里玩转无状态组件](https://juejin.im/post/5c838107f265da2dca389593)
 ### [对话 redux(家族)，后生何以挑战前辈？](https://juejin.im/post/5c8479316fb9a049ba42635c)
+### [为什么不用redux](https://www.zhihu.com/question/263928256/answer/274963347)
