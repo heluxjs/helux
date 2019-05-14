@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import cst from '../../support/constant';
+import { CC_DISPATCHER } from '../../support/constant';
 
 /****
  * pick one ccInstance ref randomly
@@ -37,7 +37,7 @@ export default function (module, excludeDispatcher = true) {
   }
 
   if (excludeDispatcher === true) {
-    ccKeys = ccKeys.filter(key => key != cst.CC_DISPATCHER);
+    ccKeys = ccKeys.filter(key => key !== CC_DISPATCHER);
   }
 
   const oneRef = ccKey_ref_[ccKeys[0]];
