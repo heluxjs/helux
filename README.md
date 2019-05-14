@@ -8,14 +8,16 @@
 <p>
 <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.5rem;'>
 <img src='https://raw.githubusercontent.com/fantasticsoul/static/master/svg/1-1-82/npm-version.svg' alt='npm version' height='18'/>
+  </img>
 </a>
 
 <a href='#' style='margin: 0 0.5rem;'>
-  <img src='https://coveralls.io/repos/github/rematch/rematch/badge.svg?branch=master' alt='build:passing' height='18'>
+  <img src='https://coveralls.io/repos/github/rematch/rematch/badge.svg?branch=master' alt='build:passing' height='18'>   </img>
 </a>
 
 <a href='#' style='margin: 0 0.5rem;'>
 <img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRw%0D%0AOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTA4IiBoZWlnaHQ9IjIwIj48bGluZWFy%0D%0AR3JhZGllbnQgaWQ9ImIiIHgyPSIwIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNv%0D%0AbG9yPSIjYmJiIiBzdG9wLW9wYWNpdHk9Ii4xIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLW9wYWNp%0D%0AdHk9Ii4xIi8+PC9saW5lYXJHcmFkaWVudD48Y2xpcFBhdGggaWQ9ImEiPjxyZWN0IHdpZHRoPSIx%0D%0AMDgiIGhlaWdodD0iMjAiIHJ4PSIzIiBmaWxsPSIjZmZmIi8+PC9jbGlwUGF0aD48ZyBjbGlwLXBh%0D%0AdGg9InVybCgjYSkiPjxwYXRoIGZpbGw9IiM1NTUiIGQ9Ik0wIDBoNjl2MjBIMHoiLz48cGF0aCBm%0D%0AaWxsPSIjNGMxIiBkPSJNNjkgMGgzOXYyMEg2OXoiLz48cGF0aCBmaWxsPSJ1cmwoI2IpIiBkPSJN%0D%0AMCAwaDEwOHYyMEgweiIvPjwvZz48ZyBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBm%0D%0Ab250LWZhbWlseT0iRGVqYVZ1IFNhbnMsVmVyZGFuYSxHZW5ldmEsc2Fucy1zZXJpZiIgZm9udC1z%0D%0AaXplPSIxMTAiPiA8dGV4dCB4PSIzNTUiIHk9IjE1MCIgZmlsbD0iIzAxMDEwMSIgZmlsbC1vcGFj%0D%0AaXR5PSIuMyIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5ndGg9IjU5MCI+bGljZW5zZTwv%0D%0AdGV4dD48dGV4dCB4PSIzNTUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5n%0D%0AdGg9IjU5MCI+bGljZW5zZTwvdGV4dD48dGV4dCB4PSI4NzUiIHk9IjE1MCIgZmlsbD0iIzAxMDEw%0D%0AMSIgZmlsbC1vcGFjaXR5PSIuMyIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5ndGg9IjI5%0D%0AMCI+TUlUPC90ZXh0Pjx0ZXh0IHg9Ijg3NSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIg%0D%0AdGV4dExlbmd0aD0iMjkwIj5NSVQ8L3RleHQ+PC9nPiA8L3N2Zz4=' alt='license:MIT' height='18'>
+  </img>
 </a>
 
 </p>
