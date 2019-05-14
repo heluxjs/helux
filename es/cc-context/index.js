@@ -187,8 +187,8 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.1.81',
-    author: ['624313307@qq.com', 'zhongzhengkai@hotmail.com'],
+    version: '1.1.82',
+    author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag:'promise land',
   },
   // fragment association

@@ -653,7 +653,7 @@ export default function register(ccClassKey, {
           }
 
           const selfState = this.state;
-          const entireState = Object.assign(selfState, refState, partialSharedState, partialGlobalState);
+          const entireState = Object.assign({}, selfState, refState, partialSharedState, partialGlobalState);
           this.state = entireState;
           computeValueForRef(this.$$computed, this.$$refComputed, entireState);
         }
@@ -915,7 +915,7 @@ export default function register(ccClassKey, {
                 if (!isStateEmpty) {
                   if (ccOption.storeInLocalStorage === true) {
                     const { partialState: entireStoredState } = extractStateByKeys(this.state, storedStateKeys);
-                    const currentStoredState = Object.assign(entireStoredState, partialState);
+                    const currentStoredState = Object.assign({},entireStoredState, partialState);
                     localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
                   }
                   refStore.setState(ccUniqueKey, partialState);
@@ -1056,7 +1056,7 @@ export default function register(ccClassKey, {
                     } = extractStateByKeys(partialGlobalState, globalStateKeys, true);
                     if (isSharedStateEmpty && isPartialGlobalStateEmpty) return;
   
-                    let mergedStateForCurrentCcClass = Object.assign(globalStateForCurrentCcClass, sharedStateForCurrentCcClass);
+                    let mergedStateForCurrentCcClass = Object.assign({}, globalStateForCurrentCcClass, sharedStateForCurrentCcClass);
                     ccKeys.forEach(ccKey => {
                       if (ccKey === currentCcKey && ignoreCurrentCcKey) return;
   
