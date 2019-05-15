@@ -149,7 +149,7 @@ function bindReducerToCcContext(reducer) {
 
 function bindComputedToCcContext(computed, isModuleMode) {
   if (!isPlainJsonObject(computed)) {
-    throw new Error(`the computed value of ccStartUpOption is not a plain json object!`);
+    throw new Error(`the computed value of StartUpOption is not a plain json object!`);
   }
 
   function mapComputed(m, moduleComputed) {
@@ -160,8 +160,8 @@ function bindComputedToCcContext(computed, isModuleMode) {
     if (!isPlainJsonObject(moduleComputed)) {
       throw new Error(`the value of one key of the computed object is not a plain json object!`);
     }
-    const keys = Object.keys(moduleComputed);
-    keys.forEach(key => {
+    const stateKeys = Object.keys(moduleComputed);
+    stateKeys.forEach(key => {
       const originalValue = moduleState[key];
       if (originalValue !== undefined) {
         const moduleComputedFn = util.safeGetObjectFromObject(_computedFn, m);
@@ -172,6 +172,7 @@ function bindComputedToCcContext(computed, isModuleMode) {
         const moduleComputedValue = util.safeGetObjectFromObject(_computedValue, m);
         moduleComputedValue[key] = computedValue;
       } else {
+        //strict?
         justWarning(`key:${key} of module:${m} of computed object is not declared in module:${m} of store!`);
       }
     });
@@ -185,24 +186,69 @@ function bindComputedToCcContext(computed, isModuleMode) {
       mapComputed(m, computed[m]);
     });
   } else {
-    const includeDefaultKey = computed.hasOwnProperty(MODULE_DEFAULT);
-    const includeGlobalKey = computed.hasOwnProperty(MODULE_GLOBAL);
-    if (includeDefaultKey || includeGlobalKey) {
-      let invalidKeyCount = 0;
-      if (includeDefaultKey) {
-        invalidKeyCount++;
-        mapComputed(MODULE_DEFAULT, computed[MODULE_DEFAULT]);
-      }
-      if (includeGlobalKey) {
-        invalidKeyCount++;
-        mapComputed(MODULE_GLOBAL, computed[MODULE_GLOBAL]);
-      }
-      if (Object.keys(computed).length > invalidKeyCount) {
-        keysWarning('computed');
-      }
-    } else {
-      mapComputed(MODULE_DEFAULT, computed);
+    mapToCcContextForNonModule(computed, mapComputed, 'computed');
+  }
+}
+
+function mapToCcContextForNonModule(startOptionConfig, mapFn, configLabel){
+  const includeDefaultKey = startOptionConfig.hasOwnProperty(MODULE_DEFAULT);
+  const includeGlobalKey = startOptionConfig.hasOwnProperty(MODULE_GLOBAL);
+  if (includeDefaultKey || includeGlobalKey) {
+    let invalidKeyCount = 0;
+    if (includeDefaultKey) {
+      invalidKeyCount++;
+      mapFn(MODULE_DEFAULT, startOptionConfig[MODULE_DEFAULT]);
     }
+    if (includeGlobalKey) {
+      invalidKeyCount++;
+      mapFn(MODULE_GLOBAL, startOptionConfig[MODULE_GLOBAL]);
+    }
+    if (Object.keys(startOptionConfig).length > invalidKeyCount) {
+      keysWarning(configLabel);
+    }
+  } else {
+    mapFn(MODULE_DEFAULT, startOptionConfig);
+  }
+}
+
+function bindWatchToCcContext(inputWatch, isModuleMode) {
+  if (!isPlainJsonObject(inputWatch)) {
+    throw new Error(`StartUpOption.watch is not a plain json object!`);
+  }
+  const ccWatch = ccContext.watch;
+  const _state = ccContext.store._state;
+
+  function mapWatch(moduleName, moduleWatch){
+    const stateKeys = Object.keys(moduleWatch);
+    stateKeys.forEach(key => {
+      const moduleState = _state[moduleName];
+      const originalValue = moduleState[key];
+      if (originalValue !== undefined) {
+        const moduleWatchFn = moduleWatch[key];
+        if (typeof moduleWatchFn !== 'function') {
+          throw new Error(`watch.${m}.${key} 's value is not a function`);
+        }
+        const ccModuleWatch = util.safeGetObjectFromObject(ccWatch, moduleName);
+        ccModuleWatch[key] = moduleWatchFn;
+      } else {
+        //strict?
+        justWarning(`key:${key} in watch.${moduleName} is not declared in store.${moduleName}!`);
+      }
+    });
+  }
+
+  if (isModuleMode) {
+    const moduleNames = Object.keys(inputWatch);
+    moduleNames.forEach(m => {
+      const moduleState = _state[m];
+      if (!moduleState) {
+        throw util.makeError(ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION, vbi(` moduleName in watch is ${m}`));
+      }
+      const moduleWatch = inputWatch[m];
+      mapWatch(m, moduleWatch);
+    });
+  }else{
+    mapToCcContextForNonModule(inputWatch, mapWatch, 'watch');
   }
 }
 
@@ -301,6 +347,7 @@ export default function ({
   reducer = {},
   init = null,
   computed = {},
+  watch = {},
   sharedToGlobalMapping = {},
   moduleSingleClass = {},
   middlewares = [],
@@ -310,12 +357,12 @@ export default function ({
   isHot = false,
   autoCreateDispatcher = true,
 } = {}) {
-  try{
+  try {
     util.justTip(`cc version ${ccContext.info.version}`);
 
     if (ccContext.isCcAlreadyStartup) {
-      const err =  util.makeError(ERR.CC_ALREADY_STARTUP);
-      if(util.isHotReloadMode()){
+      const err = util.makeError(ERR.CC_ALREADY_STARTUP);
+      if (util.isHotReloadMode()) {
         clearObject(ccContext.reducer._reducer);
         clearObject(ccContext.store._state);
         clearObject(ccContext.computed._computedFn);
@@ -323,7 +370,7 @@ export default function ({
         clearObject(ccContext.event_handlers_);
         clearObject(ccContext.ccUniqueKey_handlerKeys_);
         const cct = ccContext.ccClassKey_ccClassContext_;
-        Object.keys(cct).forEach(ccClassKey=>{
+        Object.keys(cct).forEach(ccClassKey => {
           const ctx = cct[ccClassKey];
           clearObject(ctx.ccKeys);
         });
@@ -337,11 +384,11 @@ export default function ({
       else throw err;
     }
 
-    if(autoCreateDispatcher){
-      if(!ccContext.refs[CC_DISPATCHER]){
+    if (autoCreateDispatcher) {
+      if (!ccContext.refs[CC_DISPATCHER]) {
         const Dispatcher = createDispatcher();
         let box = document.querySelector(`#${CC_DISPATCHER_BOX}`);
-        if(!box){
+        if (!box) {
           box = document.createElement('div');
           box.id = CC_DISPATCHER_BOX;
           box.style.position = 'fixed';
@@ -353,10 +400,10 @@ export default function ({
         }
         ReactDOM.render(React.createElement(Dispatcher), box);
         util.justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
-      }else{
+      } else {
         util.justTip(`[[startUp]]: CcDispatcher existed already`);
       }
-    }else{
+    } else {
       throw 'customizing Dispatcher is not allowed in current version cc';
     }
 
@@ -364,32 +411,33 @@ export default function ({
       window.CC_CONTEXT = ccContext;
       window.ccc = ccContext;
     }
-  
+
     ccContext.isModuleMode = isModuleMode;
     ccContext.isStrict = isStrict;
     ccContext.isDebug = isDebug;
     util.safeAssignObjectValue(ccContext.sharedToGlobalMapping, sharedToGlobalMapping);
     util.safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
-  
+
     bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode);
     bindReducerToCcContext(reducer);
     bindComputedToCcContext(computed, isModuleMode);
-  
+    bindWatchToCcContext(watch, isModuleMode);
+
     if (init) {
       const computedStore = ccContext.store._state;
       executeInitializer(isModuleMode, computedStore, init);
     }
-  
+
     if (middlewares.length > 0) {
       const ccMiddlewares = ccContext.middlewares;
       middlewares.forEach(m => ccMiddlewares.push(m));
     }
-  
+
     ccContext.isCcAlreadyStartup = true;
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
-  }catch(err){
-    if(errorHandler)errorHandler(err);
+  } catch (err) {
+    if (errorHandler) errorHandler(err);
     else throw err;
   }
 }

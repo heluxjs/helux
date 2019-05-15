@@ -368,9 +368,9 @@ function mapModuleAssociateDataToCcContext(extendInputClass, ccClassKey, stateMo
   return { sharedStateKeys: targetSharedStateKeys, globalStateKeys: targetGlobalStateKeys };
 }
 
-function computeValueForRef(computed, refComputed, state) {
-  if (computed) {
-    const toBeComputed = computed();
+function computeValueForRef(refComputedFn, refComputed, state) {
+  if (refComputedFn) {
+    const toBeComputed = refComputedFn();
     const toBeComputedKeys = Object.keys(toBeComputed);
     toBeComputedKeys.forEach(key => {
       const fn = toBeComputed[key];
@@ -380,6 +380,20 @@ function computeValueForRef(computed, refComputed, state) {
         refComputed[key] = computedValue;
       }
     })
+  }
+}
+
+function watchValueForRef(refWatchFn, refEntireState, userCommitState) {
+  if (refWatchFn) {
+    const refWatch = refWatchFn();
+    const watchStateKeys = Object.keys(refWatch);
+    watchStateKeys.forEach(key => {
+      const commitValue = userCommitState[key];
+      if (commitValue !== undefined) {
+        const watchFn = refWatch[key];
+        watchFn(commitValue, refEntireState[key]);// watchFn(newValue, oldValue);
+      }
+    });
   }
 }
 
@@ -393,7 +407,7 @@ function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, ide
   const handlerKey = makeHandlerKey(ccUniqueKey, event, identity);
   //  that means the component of ccUniqueKey mounted again 
   //  or user call $$on for a same event in a same instance more than once
-  const handlerItem = { event, module, ccClassKey, ccUniqueKey, identity, handlerKey, fn:handler };
+  const handlerItem = { event, module, ccClassKey, ccUniqueKey, identity, handlerKey, fn: handler };
   if (targetHandlerIndex > -1) {
     //  cc will alway use the latest handler
     handlers[targetHandlerIndex] = handlerItem;
@@ -561,7 +575,7 @@ export default function register(ccClassKey, {
   __calledBy,
 } = {}) {
   try {
-    if(!ccClassKey)throw new Error(`[[register]]: ccClassKey is undefined!`)
+    if (!ccClassKey) throw new Error(`[[register]]: ccClassKey is undefined!`)
 
     if (__checkStartUp === true) checkCcStartupOrNot();
     if (__calledBy !== 'cc') {
@@ -598,9 +612,9 @@ export default function register(ccClassKey, {
             const originalCcKey = ccKey;
 
             util.bindThis(this, [
-              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch',
+              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', 
               '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler',
-              '__$$getLazyXEffectHandler', '__$$getDispatchHandler',
+              '__$$getLazyXEffectHandler', '__$$getDispatchHandler', 
               '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler',
             ]);
             if (!ccOption.storedStateKeys) ccOption.storedStateKeys = [];
@@ -704,7 +718,7 @@ export default function register(ccClassKey, {
               this.$$changeState(state, { ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, lazyMs });
             },
             forceSyncState: (state, cb, lazyMs = -1) => {
-              this.$$changeState(state, { forceSync:true, ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, lazyMs });
+              this.$$changeState(state, { forceSync: true, ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, lazyMs });
             },
             setGlobalState: (partialGlobalState, lazyMs = -1, broadcastTriggeredBy = BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE) => {
               this.$$changeState(partialGlobalState, { ccKey, module: MODULE_GLOBAL, broadcastTriggeredBy, calledBy: SET_GLOBAL_STATE, lazyMs });
@@ -713,7 +727,7 @@ export default function register(ccClassKey, {
               this.$$changeState(this.state, { ccKey, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: currentModule, cb, calledBy: FORCE_UPDATE, lazyMs });
             },
             effect: (targetModule, userLogicFn, ...args) => {
-              return this.cc.__effect(targetModule, userLogicFn, { ccKey },  -1, ...args);
+              return this.cc.__effect(targetModule, userLogicFn, { ccKey }, -1, ...args);
             },
             lazyEffect: (targetModule, userLogicFn, lazyMs, ...args) => {
               return this.cc.__effect(targetModule, userLogicFn, { ccKey }, lazyMs, ...args);
@@ -739,7 +753,7 @@ export default function register(ccClassKey, {
               const { ccKey } = extra;
               const thisCC = this.cc;
               return thisCC.__promisifiedInvokeWith(userLogicFn, {
-                ccKey, stateFor:STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, lazyMs,
+                ccKey, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, lazyMs,
                 context: true, module: targetModule, calledBy: XEFFECT, fnName: userLogicFn.name
               }, ...args);
             },
@@ -754,7 +768,7 @@ export default function register(ccClassKey, {
             },
             xinvoke: (userLogicFn, ...args) => {
               return this.cc.__promisifiedInvokeWith(userLogicFn, {
-                context:true, ccKey, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: currentModule, calledBy: INVOKE, fnName: userLogicFn.name
+                context: true, ccKey, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: currentModule, calledBy: INVOKE, fnName: userLogicFn.name
               }, ...args);
             },
             // advanced invoke, can change other module state, but user should put module to option
@@ -915,7 +929,7 @@ export default function register(ccClassKey, {
                 if (!isStateEmpty) {
                   if (ccOption.storeInLocalStorage === true) {
                     const { partialState: entireStoredState } = extractStateByKeys(this.state, storedStateKeys);
-                    const currentStoredState = Object.assign({},entireStoredState, partialState);
+                    const currentStoredState = Object.assign({}, entireStoredState, partialState);
                     localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
                   }
                   refStore.setState(ccUniqueKey, partialState);
@@ -927,6 +941,7 @@ export default function register(ccClassKey, {
                 return;
               } else {
                 computeValueForRef(this.$$computed, this.$$refComputed, state);
+                watchValueForRef(this.$$watch, this.state, state);
               }
 
               if (this.$$beforeSetState) {
@@ -984,7 +999,7 @@ export default function register(ccClassKey, {
               }
 
               let skipBroadcastRefState = false;
-              if(stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY){
+              if (stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
                 if (targetSharedStateKeys.length === 0 && targetGlobalStateKeys.length === 0) {
                   skipBroadcastRefState = true;
                 }
@@ -1022,31 +1037,31 @@ export default function register(ccClassKey, {
               if (skipBroadcastRefState === false) {
                 let _partialSharedState = partialSharedState;
                 if (needClone) _partialSharedState = util.clone(partialSharedState);// this clone operation may cause performance issue, if partialSharedState is too big!!
-  
+
                 const { ccUniqueKey: currentCcKey } = this.cc.ccState;
                 const ccClassKey_isHandled_ = {};//record which ccClassKey has been handled
-  
+
                 // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered reactSetState
                 // so flag ignoreCurrentCcKey as true;
                 const ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
-  
+
                 const ccClassKeys = moduleName_ccClassKeys_[moduleName];
                 if (ccClassKeys) {
                   //  these ccClass are watching the same module's state
                   ccClassKeys.forEach(ccClassKey => {
                     //  flag this ccClassKey been handled
                     ccClassKey_isHandled_[ccClassKey] = true;
-  
+
                     const classContext = ccClassKey_ccClassContext_[ccClassKey];
                     const { ccKeys, sharedStateKeys, globalStateKeys } = classContext;
                     if (ccKeys.length === 0) return;
                     if (sharedStateKeys.length === 0 && globalStateKeys.length === 0) return;
-  
+
                     //  extract _partialSharedState again! because different class with a same module may have different sharedStateKeys!!!
                     const {
                       partialState: sharedStateForCurrentCcClass, isStateEmpty: isSharedStateEmpty
                     } = extractStateByKeys(_partialSharedState, sharedStateKeys, true);
-  
+
                     //  extract sourcePartialGlobalState again! because different class watch different globalStateKeys.
                     //  it is ok here if current ccClass's globalStateKeys include mappedGlobalKeys or not！
                     //  partialGlobalState is prepared for this module especially by method getSuitableGlobalStateKeysAndSharedStateKeys
@@ -1055,11 +1070,11 @@ export default function register(ccClassKey, {
                       partialState: globalStateForCurrentCcClass, isStateEmpty: isPartialGlobalStateEmpty
                     } = extractStateByKeys(partialGlobalState, globalStateKeys, true);
                     if (isSharedStateEmpty && isPartialGlobalStateEmpty) return;
-  
+
                     let mergedStateForCurrentCcClass = Object.assign({}, globalStateForCurrentCcClass, sharedStateForCurrentCcClass);
                     ccKeys.forEach(ccKey => {
                       if (ccKey === currentCcKey && ignoreCurrentCcKey) return;
-  
+
                       const ref = ccKey_ref_[ccKey];
                       if (ref) {
                         const option = ccKey_option_[ccKey];
@@ -1074,7 +1089,7 @@ export default function register(ccClassKey, {
                           changedBy = CHANGE_BY_BROADCASTED_GLOBAL_STATE;
                           toSet = globalStateForCurrentCcClass;
                         }
-  
+
                         if (toSet) {
                           if (ccContext.isDebug) {
                             console.log(ss(`ref ${ccKey} to be rendered state(changedBy ${changedBy}) is broadcast from same module's other ref ${currentCcKey}`), cl());
@@ -1083,10 +1098,10 @@ export default function register(ccClassKey, {
                         };
                       }
                     });
-  
+
                   });
                 }
-  
+
                 if (util.isObjectNotNull(module_globalState_)) {
                   const moduleNames = Object.keys(module_globalState_);
                   moduleNames.forEach(mName => {
@@ -1095,15 +1110,15 @@ export default function register(ccClassKey, {
                     ccClassKeys.forEach(ccClassKey => {
                       const classContext = ccClassKey_ccClassContext_[ccClassKey];
                       const { ccKeys, globalStateKeys } = classContext;
-  
+
                       if (ccKeys.length === 0) return;
                       if (globalStateKeys.length === 0) return;
                       const {
                         partialState: globalStateForCurrentCcClass, isStateEmpty: isPartialGlobalStateEmpty
                       } = extractStateByKeys(partialGlobalState, globalStateKeys);
-  
+
                       if (isPartialGlobalStateEmpty) return;
-  
+
                       ccKeys.forEach(ccKey => {
                         const ref = ccKey_ref_[ccKey];
                         if (ref) {
@@ -1116,7 +1131,7 @@ export default function register(ccClassKey, {
                           }
                         }
                       });
-  
+
                     });
                   });
                 }
@@ -1236,7 +1251,7 @@ export default function register(ccClassKey, {
               const currentModule = ccState.module;
               const btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
               if (module === currentModule) {
-                // who trigger $$changeState, who will go to change the whole received state 
+                // who trigger $$changeState, who will change the whole received state 
                 this.cc.prepareReactSetState(identity, changedBy || CHANGE_BY_SELF, state, stateFor, () => {
                   //if forceSync=true, cc clone the input state
                   if (forceSync === true) {
@@ -1357,11 +1372,35 @@ export default function register(ccClassKey, {
         $$domDispatch(event) {
           const currentTarget = event.currentTarget;
           const { value, dataset } = currentTarget;
-          const { cct: type, ccm: module, ccrm: reducerModule, cclazyms = -1, ccidt='' } = dataset;
+          const { cct: type, ccm: module, ccrm: reducerModule, ccdelay = -1, ccidt = '' } = dataset;
           const payload = { event, dataset, value };
           const ccKey = this.cc.ccKey;
-          const handler = this.__$$getDispatchHandler(STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, cclazyms, ccKey, ccidt);
+          const handler = this.__$$getDispatchHandler(STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, ccdelay, ccKey, ccidt);
           handler();
+        }
+
+        $$sync(event){
+          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '';
+          const currentTarget = event.currentTarget;
+          let { value, dataset } = currentTarget;
+          const { ccm, ccdelay, ccidt = '', ccint, ccsync:stateKey } = dataset;
+          if(!stateKey){
+            return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
+          }
+          if(ccm) _module = ccm;
+          if(ccdelay){
+            try{
+              _lazyMs = parseInt(ccdelay);
+            }catch(err){}
+          }
+          if(ccidt) _identity = ccidt;
+          if(ccint!==undefined){
+            try{
+              value = parseInt(value);
+            }catch(err){}
+          }
+
+          this.$$changeState({[stateKey]:value}, {ccKey:this.cc.ccKey, stateFor:STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module:_module, lazyMs:_lazyMs, identity:_identity});
         }
 
         componentDidUpdate() {
@@ -1392,7 +1431,7 @@ export default function register(ccClassKey, {
         }
       }
 
-      if (ccClassKey === CC_DISPATCHER)CcClass.displayName = 'CcDispatcher';
+      if (ccClassKey === CC_DISPATCHER) CcClass.displayName = 'CcDispatcher';
       else CcClass.displayName = ccClassDisplayName(ccClassKey);
       return CcClass;
     }

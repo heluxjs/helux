@@ -79,6 +79,7 @@ if (!this._inheritsLoose) {
     CC_DISPATCH_STRING_INVALID: 1013,
     CC_DISPATCH_PARAM_INVALID: 1014,
     CC_NO_DISPATCHER_FOUND: 1015,
+    CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION: 1016,
     CC_CLASS_KEY_DUPLICATE: 1100,
     CC_CLASS_NOT_FOUND: 1101,
     CC_CLASS_STORE_MODULE_INVALID: 1102,
@@ -112,7 +113,7 @@ if (!this._inheritsLoose) {
     CC_REDUCER_MODULE_NAME_DUPLICATE: 1511 // REDUCER_KEY_NOT_EXIST_IN_STORE_MODULE: 1203,
 
   };
-  var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_ALREADY_STARTUP] = 'react-controller-center startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ', _ERR_MESSAGE[ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE] = 'you are trying register a module class but cc startup with non module mode! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_REGISTER_A_CC_CLASS] = 'registering a cc class is prohibited! ', _ERR_MESSAGE[ERR.CC_MODULE_KEY_CC_FOUND] = 'key:"$$cc" is a built-in module name for react-controller-center,you can not configure it or the name like it in you store or reducer! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_INVALID] = "module name is invalid, /^[$#&a-zA-Z0-9_-]+$/.test() is false. ", _ERR_MESSAGE[ERR.CC_STORE_STATE_INVALID] = "module state of store must be a plain json object! ", _ERR_MESSAGE[ERR.CC_STORE_MAPPING_IS_NOT_ALLOWED_IN_NON_MODULE] = "sharedToGlobalMapping is not allowed to supply to startup's options in non module. ", _ERR_MESSAGE[ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument moduleReducer is invalid, must be a function!", _ERR_MESSAGE[ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer is invalid, must be a plain json object(not an array also)!", _ERR_MESSAGE[ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!", _ERR_MESSAGE[ERR.CC_COMPUTED_MODULE_INVALID_IN_STARTUP_OPTION] = "one of the computed keys is not a valid module name in store!", _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)\u3001(moduleName)/(functionName)\u3001(moduleName)/(reducerModuleName)/(functionName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_NO_DISPATCHER_FOUND] = "\n    cc guess you may set autoCreateDispatcher as false in StartupOption,\n    if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, \n    ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:\n    import {createDispatcher} from 'react-control-center';\n    const CcDispatcher = createDispatcher();\n    <App>\n      <CcDispatcher />\n      {/* another jsx */}\n    </App>\n    or\n    <CcDispatcher>\n      <App />\n    </CcDispatcher>\n  ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_OPTION_INVALID] = 'ccOption must be a plain json object! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NOT_FOUND] = 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND] = 'ccClass instance method not found, make sure the instance include the method! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID] = 'ccClass instance invoke callWith method with invalid args! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = 'ccClass is declared as singleton, now cc found you are trying new another one instance! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_STORED_STATE_KEYS_DUPLICATE_WITH_SHARED_KEYS] = 'some of your storedStateKeys has been declared in CCClass sharedStateKeys!', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_STATE_KEYS] = 'you must explicitly specify a ccKey for ccInstance if you want to use storeStateKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate while you register a react class!  ', _ERR_MESSAGE[ERR.CC_CLASS_NOT_FOUND] = 'ccClass not found, make sure your ccClassKey been registered to react-control-center before you use the ccClass!  ', _ERR_MESSAGE[ERR.CC_CLASS_STORE_MODULE_INVALID] = 'ccClass ccOption module value is invalid, can not match it in store! ', _ERR_MESSAGE[ERR.CC_CLASS_MODULE_GLOBAL_DECLARE_NOT_ALLOWED] = "$$global is cc's build-in module name, all ccClass is watching $$global's state implicitly, user can not assign $$global to module prop!", _ERR_MESSAGE[ERR.CC_CLASS_REDUCER_MODULE_INVALID] = 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_SINGLE_BUT_YOU_CALL_INVOKE_SINGLE] = 'ccClass is declared as singleton, now cc found you are trying execute cc.invokeSingle, you can call cc.invoke instead, it does not care whether your ccClass is singleton or not! ', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE] = 'you are trying register a react class to a single class module, but cc found the target module has been registered!', _ERR_MESSAGE[ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID] = 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_OF_STATE_TO_PROP_MAPPING_INVALID] = 'key of stateToPropMapping is invalid, correct one may like $g/m, must and only include one slash, check it in your register method or connect method!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED] = '$$fragment is cc built-in class key prefix, your class key can not start with it!', _ERR_MESSAGE[ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_NOT_ARRAY] = 'storedStateKeys or sharedStateKeys is not an Array!', _ERR_MESSAGE[ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'storedStateKeys or sharedStateKeys include non string element', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_SHARED_STATE_KEYS] = 'some of your sharedStateKeys has been declared in CCClass globalStateKeys!', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY] = "globalStateKeys or sharedStateKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set sharedStateKeys='*' and globalStateKeys='*'", _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'globalStateKeys or sharedStateKeys include non string element!', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_CONFIGURE_GLOBAL_STATE] = 'some keys of configured global state have been included in store.globalState', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_SHARED_TO_GLOBAL_MAPPING_KEY] = 'found key is sharedToGlobalMapping key in globalStateKeys, you should delete it ', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_KEY_NOT_DECLARED_IN_GLOBAL_STATE] = 'found key in globalStateKeys is not included in global state, check your globalStateKeys', _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID] = "action type's naming is invalid, correct one may like: fooModule/fooType. ", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE] = "action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!", _ERR_MESSAGE[ERR.CC_REDUCER_MODULE_NAME_DUPLICATE] = "reducer module name duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE] = "reducer action type duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
+  var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_ALREADY_STARTUP] = 'react-controller-center startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ', _ERR_MESSAGE[ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE] = 'you are trying register a module class but cc startup with non module mode! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_REGISTER_A_CC_CLASS] = 'registering a cc class is prohibited! ', _ERR_MESSAGE[ERR.CC_MODULE_KEY_CC_FOUND] = 'key:"$$cc" is a built-in module name for react-controller-center,you can not configure it or the name like it in you store or reducer! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_INVALID] = "module name is invalid, /^[$#&a-zA-Z0-9_-]+$/.test() is false. ", _ERR_MESSAGE[ERR.CC_STORE_STATE_INVALID] = "module state of store must be a plain json object! ", _ERR_MESSAGE[ERR.CC_STORE_MAPPING_IS_NOT_ALLOWED_IN_NON_MODULE] = "sharedToGlobalMapping is not allowed to supply to startup's options in non module. ", _ERR_MESSAGE[ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument moduleReducer is invalid, must be a function!", _ERR_MESSAGE[ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer is invalid, must be a plain json object(not an array also)!", _ERR_MESSAGE[ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!", _ERR_MESSAGE[ERR.CC_COMPUTED_MODULE_INVALID_IN_STARTUP_OPTION] = "one of the computed keys is not a valid module name in store!", _ERR_MESSAGE[ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION] = "one of the watch keys is not a valid module name in store!", _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)\u3001(moduleName)/(functionName)\u3001(moduleName)/(reducerModuleName)/(functionName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_NO_DISPATCHER_FOUND] = "\n    cc guess you may set autoCreateDispatcher as false in StartupOption,\n    if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, \n    ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:\n    import {createDispatcher} from 'react-control-center';\n    const CcDispatcher = createDispatcher();\n    <App>\n      <CcDispatcher />\n      {/* another jsx */}\n    </App>\n    or\n    <CcDispatcher>\n      <App />\n    </CcDispatcher>\n  ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_OPTION_INVALID] = 'ccOption must be a plain json object! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NOT_FOUND] = 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND] = 'ccClass instance method not found, make sure the instance include the method! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID] = 'ccClass instance invoke callWith method with invalid args! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = 'ccClass is declared as singleton, now cc found you are trying new another one instance! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_STORED_STATE_KEYS_DUPLICATE_WITH_SHARED_KEYS] = 'some of your storedStateKeys has been declared in CCClass sharedStateKeys!', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_STATE_KEYS] = 'you must explicitly specify a ccKey for ccInstance if you want to use storeStateKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate while you register a react class!  ', _ERR_MESSAGE[ERR.CC_CLASS_NOT_FOUND] = 'ccClass not found, make sure your ccClassKey been registered to react-control-center before you use the ccClass!  ', _ERR_MESSAGE[ERR.CC_CLASS_STORE_MODULE_INVALID] = 'ccClass ccOption module value is invalid, can not match it in store! ', _ERR_MESSAGE[ERR.CC_CLASS_MODULE_GLOBAL_DECLARE_NOT_ALLOWED] = "$$global is cc's build-in module name, all ccClass is watching $$global's state implicitly, user can not assign $$global to module prop!", _ERR_MESSAGE[ERR.CC_CLASS_REDUCER_MODULE_INVALID] = 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_SINGLE_BUT_YOU_CALL_INVOKE_SINGLE] = 'ccClass is declared as singleton, now cc found you are trying execute cc.invokeSingle, you can call cc.invoke instead, it does not care whether your ccClass is singleton or not! ', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE] = 'you are trying register a react class to a single class module, but cc found the target module has been registered!', _ERR_MESSAGE[ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID] = 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_OF_STATE_TO_PROP_MAPPING_INVALID] = 'key of stateToPropMapping is invalid, correct one may like $g/m, must and only include one slash, check it in your register method or connect method!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED] = '$$fragment is cc built-in class key prefix, your class key can not start with it!', _ERR_MESSAGE[ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_NOT_ARRAY] = 'storedStateKeys or sharedStateKeys is not an Array!', _ERR_MESSAGE[ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'storedStateKeys or sharedStateKeys include non string element', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_SHARED_STATE_KEYS] = 'some of your sharedStateKeys has been declared in CCClass globalStateKeys!', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY] = "globalStateKeys or sharedStateKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set sharedStateKeys='*' and globalStateKeys='*'", _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'globalStateKeys or sharedStateKeys include non string element!', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_CONFIGURE_GLOBAL_STATE] = 'some keys of configured global state have been included in store.globalState', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_SHARED_TO_GLOBAL_MAPPING_KEY] = 'found key is sharedToGlobalMapping key in globalStateKeys, you should delete it ', _ERR_MESSAGE[ERR.CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_KEY_NOT_DECLARED_IN_GLOBAL_STATE] = 'found key in globalStateKeys is not included in global state, check your globalStateKeys', _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID] = "action type's naming is invalid, correct one may like: fooModule/fooType. ", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE] = "action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!", _ERR_MESSAGE[ERR.CC_REDUCER_MODULE_NAME_DUPLICATE] = "reducer module name duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE] = "reducer action type duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
 
   var _state2, _reducer;
   var refs = {};
@@ -134,8 +135,8 @@ if (!this._inheritsLoose) {
   var setStateByModuleAndKey = function setStateByModuleAndKey(module, key, value) {
     var moduleState = _getState(module);
 
-    moduleState[key] = value;
     var moduleComputedFn = computed._computedFn[module];
+    var watchFn = watch[module];
 
     if (moduleComputedFn) {
       var fn = moduleComputedFn[key];
@@ -145,12 +146,20 @@ if (!this._inheritsLoose) {
         computed._computedValue[module][key] = computedValue;
       }
     }
+
+    if (watchFn) {
+      var _fn = watchFn[key];
+      if (_fn) _fn(value, moduleState[key]); //fn(newValue, oldValue)
+    }
+
+    moduleState[key] = value;
   };
 
   var computed = {
     _computedValue: {},
     _computedFn: {}
   };
+  var watch = {};
   var ccContext = {
     isDebug: false,
     // if isStrict is true, every error will be throw out instead of console.error, 
@@ -229,6 +238,7 @@ if (!this._inheritsLoose) {
       _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer)
     },
     computed: computed,
+    watch: watch,
     refStore: {
       _state: {},
       setState: function setState(ccUniqueKey, partialStoredState) {
@@ -1952,9 +1962,9 @@ if (!this._inheritsLoose) {
     };
   }
 
-  function computeValueForRef(computed, refComputed, state) {
-    if (computed) {
-      var toBeComputed = computed();
+  function computeValueForRef(refComputedFn, refComputed, state) {
+    if (refComputedFn) {
+      var toBeComputed = refComputedFn();
       var toBeComputedKeys = Object.keys(toBeComputed);
       toBeComputedKeys.forEach(function (key) {
         var fn = toBeComputed[key];
@@ -1963,6 +1973,21 @@ if (!this._inheritsLoose) {
         if (originalValue !== undefined) {
           var computedValue = fn(originalValue, state);
           refComputed[key] = computedValue;
+        }
+      });
+    }
+  }
+
+  function watchValueForRef(refWatchFn, refEntireState, userCommitState) {
+    if (refWatchFn) {
+      var refWatch = refWatchFn();
+      var watchStateKeys = Object.keys(refWatch);
+      watchStateKeys.forEach(function (key) {
+        var commitValue = userCommitState[key];
+
+        if (commitValue !== undefined) {
+          var watchFn = refWatch[key];
+          watchFn(commitValue, refEntireState[key]); // watchFn(newValue, oldValue);
         }
       });
     }
@@ -2266,7 +2291,7 @@ if (!this._inheritsLoose) {
                   _props$ccOption = props.ccOption,
                   ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
               var originalCcKey = ccKey;
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler', '__$$getLazyXEffectHandler', '__$$getDispatchHandler', '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler']);
+              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler', '__$$getLazyXEffectHandler', '__$$getDispatchHandler', '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler']);
               if (!ccOption.storedStateKeys) ccOption.storedStateKeys = []; // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
 
               if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true; // if you flag syncGlobalState false, that means this ccInstance's globalState changing will not effect cc's globalState and not effected by cc's globalState changing
@@ -3003,6 +3028,7 @@ if (!this._inheritsLoose) {
                 return;
               } else {
                 computeValueForRef(_this2.$$computed, _this2.$$refComputed, state);
+                watchValueForRef(_this2.$$watch, _this2.state, state);
               }
 
               if (_this2.$$beforeSetState) {
@@ -3388,7 +3414,7 @@ if (!this._inheritsLoose) {
                 var btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
 
                 if (module === currentModule) {
-                  // who trigger $$changeState, who will go to change the whole received state 
+                  // who trigger $$changeState, who will change the whole received state 
                   _this3.cc.prepareReactSetState(identity, changedBy || CHANGE_BY_SELF, state, stateFor, function () {
                     //if forceSync=true, cc clone the input state
                     if (forceSync === true) {
@@ -3662,8 +3688,8 @@ if (!this._inheritsLoose) {
             var type = dataset.cct,
                 module = dataset.ccm,
                 reducerModule = dataset.ccrm,
-                _dataset$cclazyms = dataset.cclazyms,
-                cclazyms = _dataset$cclazyms === void 0 ? -1 : _dataset$cclazyms,
+                _dataset$ccdelay = dataset.ccdelay,
+                ccdelay = _dataset$ccdelay === void 0 ? -1 : _dataset$ccdelay,
                 _dataset$ccidt = dataset.ccidt,
                 ccidt = _dataset$ccidt === void 0 ? '' : _dataset$ccidt;
             var payload = {
@@ -3673,9 +3699,55 @@ if (!this._inheritsLoose) {
             };
             var ccKey = this.cc.ccKey;
 
-            var handler = this.__$$getDispatchHandler(STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, cclazyms, ccKey, ccidt);
+            var handler = this.__$$getDispatchHandler(STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, ccdelay, ccKey, ccidt);
 
             handler();
+          };
+
+          _proto.$$sync = function $$sync(event) {
+            var _this$$$changeState;
+
+            var _module = this.cc.ccState.module,
+                _lazyMs = -1,
+                _identity = '';
+
+            var currentTarget = event.currentTarget;
+            var value = currentTarget.value,
+                dataset = currentTarget.dataset;
+            var ccm = dataset.ccm,
+                ccdelay = dataset.ccdelay,
+                _dataset$ccidt2 = dataset.ccidt,
+                ccidt = _dataset$ccidt2 === void 0 ? '' : _dataset$ccidt2,
+                ccint = dataset.ccint,
+                stateKey = dataset.ccsync;
+
+            if (!stateKey) {
+              return justWarning$1("data-ccsync attr no found, you must define it while using this.$$sync");
+            }
+
+            if (ccm) _module = ccm;
+
+            if (ccdelay) {
+              try {
+                _lazyMs = parseInt(ccdelay);
+              } catch (err) {}
+            }
+
+            if (ccidt) _identity = ccidt;
+
+            if (ccint !== undefined) {
+              try {
+                value = parseInt(value);
+              } catch (err) {}
+            }
+
+            this.$$changeState((_this$$$changeState = {}, _this$$$changeState[stateKey] = value, _this$$$changeState), {
+              ccKey: this.cc.ccKey,
+              stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
+              module: _module,
+              lazyMs: _lazyMs,
+              identity: _identity
+            });
           };
 
           _proto.componentDidUpdate = function componentDidUpdate() {
@@ -3930,7 +4002,7 @@ if (!this._inheritsLoose) {
 
   function bindComputedToCcContext(computed, isModuleMode) {
     if (!isPlainJsonObject(computed)) {
-      throw new Error("the computed value of ccStartUpOption is not a plain json object!");
+      throw new Error("the computed value of StartUpOption is not a plain json object!");
     }
 
     function mapComputed(m, moduleComputed) {
@@ -3944,8 +4016,8 @@ if (!this._inheritsLoose) {
         throw new Error("the value of one key of the computed object is not a plain json object!");
       }
 
-      var keys = Object.keys(moduleComputed);
-      keys.forEach(function (key) {
+      var stateKeys = Object.keys(moduleComputed);
+      stateKeys.forEach(function (key) {
         var originalValue = moduleState[key];
 
         if (originalValue !== undefined) {
@@ -3956,6 +4028,7 @@ if (!this._inheritsLoose) {
           var moduleComputedValue = util.safeGetObjectFromObject(_computedValue, m);
           moduleComputedValue[key] = computedValue;
         } else {
+          //strict?
           justWarning("key:" + key + " of module:" + m + " of computed object is not declared in module:" + m + " of store!");
         }
       });
@@ -3972,28 +4045,79 @@ if (!this._inheritsLoose) {
         mapComputed(m, computed[m]);
       });
     } else {
-      var includeDefaultKey = computed.hasOwnProperty(MODULE_DEFAULT);
-      var includeGlobalKey = computed.hasOwnProperty(MODULE_GLOBAL);
+      mapToCcContextForNonModule(computed, mapComputed, 'computed');
+    }
+  }
 
-      if (includeDefaultKey || includeGlobalKey) {
-        var invalidKeyCount = 0;
+  function mapToCcContextForNonModule(startOptionConfig, mapFn, configLabel) {
+    var includeDefaultKey = startOptionConfig.hasOwnProperty(MODULE_DEFAULT);
+    var includeGlobalKey = startOptionConfig.hasOwnProperty(MODULE_GLOBAL);
 
-        if (includeDefaultKey) {
-          invalidKeyCount++;
-          mapComputed(MODULE_DEFAULT, computed[MODULE_DEFAULT]);
-        }
+    if (includeDefaultKey || includeGlobalKey) {
+      var invalidKeyCount = 0;
 
-        if (includeGlobalKey) {
-          invalidKeyCount++;
-          mapComputed(MODULE_GLOBAL, computed[MODULE_GLOBAL]);
-        }
-
-        if (Object.keys(computed).length > invalidKeyCount) {
-          keysWarning('computed');
-        }
-      } else {
-        mapComputed(MODULE_DEFAULT, computed);
+      if (includeDefaultKey) {
+        invalidKeyCount++;
+        mapFn(MODULE_DEFAULT, startOptionConfig[MODULE_DEFAULT]);
       }
+
+      if (includeGlobalKey) {
+        invalidKeyCount++;
+        mapFn(MODULE_GLOBAL, startOptionConfig[MODULE_GLOBAL]);
+      }
+
+      if (Object.keys(startOptionConfig).length > invalidKeyCount) {
+        keysWarning(configLabel);
+      }
+    } else {
+      mapFn(MODULE_DEFAULT, startOptionConfig);
+    }
+  }
+
+  function bindWatchToCcContext(inputWatch, isModuleMode) {
+    if (!isPlainJsonObject(inputWatch)) {
+      throw new Error("StartUpOption.watch is not a plain json object!");
+    }
+
+    var ccWatch = ccContext.watch;
+    var _state = ccContext.store._state;
+
+    function mapWatch(moduleName, moduleWatch) {
+      var stateKeys = Object.keys(moduleWatch);
+      stateKeys.forEach(function (key) {
+        var moduleState = _state[moduleName];
+        var originalValue = moduleState[key];
+
+        if (originalValue !== undefined) {
+          var moduleWatchFn = moduleWatch[key];
+
+          if (typeof moduleWatchFn !== 'function') {
+            throw new Error("watch." + m + "." + key + " 's value is not a function");
+          }
+
+          var ccModuleWatch = util.safeGetObjectFromObject(ccWatch, moduleName);
+          ccModuleWatch[key] = moduleWatchFn;
+        } else {
+          //strict?
+          justWarning("key:" + key + " in watch." + moduleName + " is not declared in store." + moduleName + "!");
+        }
+      });
+    }
+
+    if (isModuleMode) {
+      var moduleNames = Object.keys(inputWatch);
+      moduleNames.forEach(function (m) {
+        var moduleState = _state[m];
+
+        if (!moduleState) {
+          throw util.makeError(ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION, vbi$4(" moduleName in watch is " + m));
+        }
+
+        var moduleWatch = inputWatch[m];
+        mapWatch(m, moduleWatch);
+      });
+    } else {
+      mapToCcContextForNonModule(inputWatch, mapWatch, 'watch');
     }
   }
 
@@ -4104,6 +4228,8 @@ if (!this._inheritsLoose) {
         init = _ref$init === void 0 ? null : _ref$init,
         _ref$computed = _ref.computed,
         computed = _ref$computed === void 0 ? {} : _ref$computed,
+        _ref$watch = _ref.watch,
+        watch = _ref$watch === void 0 ? {} : _ref$watch,
         _ref$sharedToGlobalMa = _ref.sharedToGlobalMapping,
         sharedToGlobalMapping = _ref$sharedToGlobalMa === void 0 ? {} : _ref$sharedToGlobalMa,
         _ref$moduleSingleClas = _ref.moduleSingleClass,
@@ -4186,6 +4312,7 @@ if (!this._inheritsLoose) {
       bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode);
       bindReducerToCcContext(reducer);
       bindComputedToCcContext(computed, isModuleMode);
+      bindWatchToCcContext(watch, isModuleMode);
 
       if (init) {
         var computedStore = ccContext.store._state;
