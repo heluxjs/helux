@@ -368,9 +368,9 @@ function mapModuleAssociateDataToCcContext(extendInputClass, ccClassKey, stateMo
   return { sharedStateKeys: targetSharedStateKeys, globalStateKeys: targetGlobalStateKeys };
 }
 
-function computeValueForRef(computed, refComputed, state) {
-  if (computed) {
-    const toBeComputed = computed();
+function computeValueForRef(refComputedFn, refComputed, state) {
+  if (refComputedFn) {
+    const toBeComputed = refComputedFn();
     const toBeComputedKeys = Object.keys(toBeComputed);
     toBeComputedKeys.forEach(key => {
       const fn = toBeComputed[key];
@@ -380,6 +380,20 @@ function computeValueForRef(computed, refComputed, state) {
         refComputed[key] = computedValue;
       }
     })
+  }
+}
+
+function watchValueForRef(refWatchFn, refEntireState, userCommitState){
+  if(refWatchFn){
+    const refWatch = refWatchFn();
+    const watchStateKeys = Object.keys(refWatch);
+    watchStateKeys.forEach(key=>{
+      const commitValue = userCommitState[key];
+      if(commitValue!==undefined){
+        const watchFn = refWatch[key];
+        watchFn(commitValue, refEntireState[key]);// watchFn(newValue, oldValue);
+      }
+    });
   }
 }
 
@@ -927,6 +941,7 @@ export default function register(ccClassKey, {
                 return;
               } else {
                 computeValueForRef(this.$$computed, this.$$refComputed, state);
+                watchValueForRef(this.$$watch, this.state, state);
               }
 
               if (this.$$beforeSetState) {
@@ -1236,7 +1251,7 @@ export default function register(ccClassKey, {
               const currentModule = ccState.module;
               const btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
               if (module === currentModule) {
-                // who trigger $$changeState, who will go to change the whole received state 
+                // who trigger $$changeState, who will change the whole received state 
                 this.cc.prepareReactSetState(identity, changedBy || CHANGE_BY_SELF, state, stateFor, () => {
                   //if forceSync=true, cc clone the input state
                   if (forceSync === true) {

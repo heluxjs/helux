@@ -17,9 +17,9 @@ const getState = (module) => {
 
 const setStateByModuleAndKey = (module, key, value) => {
   const moduleState = getState(module);
-  moduleState[key] = value;
-
   const moduleComputedFn = computed._computedFn[module];
+  const watchFn = watch[module];
+
   if (moduleComputedFn) {
     const fn = moduleComputedFn[key];
     if (fn) {
@@ -27,6 +27,12 @@ const setStateByModuleAndKey = (module, key, value) => {
       computed._computedValue[module][key] = computedValue;
     }
   }
+
+  if (watchFn) {
+    const fn = watchFn[key];
+    if (fn) fn(value, moduleState[key]);//fn(newValue, oldValue)
+  }
+  moduleState[key] = value;
 }
 
 const computed = {
@@ -37,6 +43,7 @@ const computed = {
 
   }
 };
+const watch = {};
 
 const ccContext = {
   isDebug: false,
@@ -157,6 +164,7 @@ const ccContext = {
     }
   },
   computed,
+  watch,
   refStore: {
     _state: {
 
