@@ -1,4 +1,5 @@
 import _startup from './core/startup';
+import _load from './core/load';
 import _register from './core/register';
 import _r from './core/r';
 import _registerToDefault from './core/register-to-default';
@@ -19,6 +20,7 @@ import _createDispatcher from './core/create-dispatcher';
 import _CcFragment from './component/CcFragment';
 
 export const startup = _startup;
+export const load = _load;
 export const register = _register;
 export const r = _r;
 export const registerToDefault = _registerToDefault;
@@ -45,6 +47,7 @@ const defaultExport = {
   connect: _connect,
   dispatch: _dispatch,
   startup: _startup,
+  load,
   register: _register,
   r: _r,
   registerToDefault: _registerToDefault,
