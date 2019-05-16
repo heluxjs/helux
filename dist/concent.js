@@ -260,7 +260,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.1.82',
+      version: '1.1.92',
       author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'promise land'
     },
@@ -381,9 +381,12 @@ if (!this._inheritsLoose) {
       hotReloadWarning(err);
     } else throw err;
   }
-  function makeCcClassContext(module, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys) {
+  /** make ccClassContext */
+
+  function makeCcClassContext(module, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys) {
     return {
       module: module,
+      ccClassKey: ccClassKey,
       originalSharedStateKeys: originalSharedStateKeys,
       originalGlobalStateKeys: originalGlobalStateKeys,
       sharedStateKeys: sharedStateKeys,
@@ -394,46 +397,6 @@ if (!this._inheritsLoose) {
       stateKey_propKeyDescriptor_: {},
       stateToPropMapping: null
     };
-  }
-  function makeStateMail(ccUniqueKey, ccOption, module, type, cb) {
-    var mail = {};
-    Object.defineProperty(mail, 'ccUniqueKey', {
-      configurable: false,
-      enumerable: true,
-      writable: false,
-      value: ccUniqueKey
-    });
-    Object.defineProperty(mail, 'ccOption', {
-      configurable: false,
-      enumerable: true,
-      writable: false,
-      value: ccOption
-    });
-    Object.defineProperty(mail, 'module', {
-      configurable: false,
-      enumerable: true,
-      writable: false,
-      value: module
-    });
-    Object.defineProperty(mail, 'type', {
-      configurable: false,
-      enumerable: true,
-      writable: false,
-      value: type
-    });
-    Object.defineProperty(mail, 'state', {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: {}
-    });
-    Object.defineProperty(mail, 'cb', {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: function value() {}
-    });
-    return mail;
   } // !!! different ccClass enable own a same key
 
   function makeUniqueCcKey(ccClassKey, ccKey) {
@@ -625,7 +588,6 @@ if (!this._inheritsLoose) {
     hotReloadWarning: hotReloadWarning,
     isHotReloadMode: isHotReloadMode,
     makeCcClassContext: makeCcClassContext,
-    makeStateMail: makeStateMail,
     makeUniqueCcKey: makeUniqueCcKey,
     makeHandlerKey: makeHandlerKey,
     isActionTypeValid: isActionTypeValid,
@@ -958,7 +920,7 @@ if (!this._inheritsLoose) {
     if (ccContext.errorHandler) ccContext.errorHandler(err);else throw err;
   });
 
-  function _setPropState (propState, propKey, propValue, isPropStateModuleMode, module) {
+  function setPropState (propState, propKey, propValue, isPropStateModuleMode, module) {
     if (isPropStateModuleMode) {
       var modulePropState = util.safeGetObjectFromObject(propState, module);
       modulePropState[propKey] = propValue;
@@ -975,16 +937,21 @@ if (!this._inheritsLoose) {
     throw me("cc found different module has same key, you need give the key a alias explicitly! or you can set isPropStateModuleMode=true to avoid this error", vbi("the prefixedKey is " + prefixedKey + ", module is:" + module));
   }
 
-  function _getPropKeyPair(isPropStateModuleMode, module, propKey) {
+  function _getPropKeyPair(isPropStateModuleMode, module, stateKey, propKey) {
     if (isPropStateModuleMode === true) {
+      var derivedPropKey = '';
+      if (propKey === '') derivedPropKey = stateKey;else derivedPropKey = propKey;
+      var moduledPropKey = module + "/" + derivedPropKey;
       return {
-        moduledPropKey: module + "/" + propKey,
-        originalPropKey: propKey
+        moduledPropKey: moduledPropKey,
+        originalPropKey: propKey,
+        derivedPropKey: derivedPropKey
       };
     } else {
       return {
         moduledPropKey: propKey,
-        originalPropKey: propKey
+        originalPropKey: propKey,
+        derivedPropKey: propKey
       };
     }
   }
@@ -1000,14 +967,14 @@ if (!this._inheritsLoose) {
     if (forCcFragment === true) {
       //if this is called fro CcFragment, just reuse  ccClassContext;
       if (ccClassContext === undefined) {
-        ccClassContext = util.makeCcClassContext(moduleName, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
+        ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
       }
     } else {
       if (ccClassContext !== undefined) {
         throwCcHmrError$1(me(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:" + ccClassKey + " duplicate"));
       }
 
-      ccClassContext = util.makeCcClassContext(moduleName, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
+      ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
     }
 
     var _state = ccContext.store._state;
@@ -1067,16 +1034,17 @@ if (!this._inheritsLoose) {
           var moduleStateKeys = Object.keys(moduleState);
           moduleStateKeys.forEach(function (msKey) {
             // now prop key equal state key if user declare key like m1/* in stateToPropMapping;
-            var _getPropKeyPair2 = _getPropKeyPair(isPropStateModuleMode, module, msKey),
+            var _getPropKeyPair2 = _getPropKeyPair(isPropStateModuleMode, module, msKey, ''),
                 moduledPropKey = _getPropKeyPair2.moduledPropKey,
-                originalPropKey = _getPropKeyPair2.originalPropKey;
+                originalPropKey = _getPropKeyPair2.originalPropKey,
+                derivedPropKey = _getPropKeyPair2.derivedPropKey;
 
             var appeared = propKey_appeared_[moduledPropKey];
 
             if (appeared === true) {
               _throwPropDuplicateError(module_sharedKey_[module], module);
             } else {
-              propKey_appeared_[moduledPropKey] = true; // moduledPropKey and moduledStateKey is equal
+              propKey_appeared_[moduledPropKey] = true; // in this situation , moduledPropKey and moduledStateKey are equal
 
               propKey_stateKeyDescriptor_[moduledPropKey] = {
                 module: module,
@@ -1085,12 +1053,12 @@ if (!this._inheritsLoose) {
               };
               stateKey_propKeyDescriptor_[moduledPropKey] = {
                 module: module,
+                originalStateKey: msKey,
                 moduledPropKey: moduledPropKey,
-                originalPropKey: originalPropKey
+                originalPropKey: originalPropKey,
+                derivedPropKey: derivedPropKey
               };
-
-              _setPropState(propState, msKey, moduleState[msKey], isPropStateModuleMode, module);
-
+              setPropState(propState, derivedPropKey, moduleState[msKey], isPropStateModuleMode, module);
               isPropStateSet = true;
             }
           });
@@ -1104,9 +1072,10 @@ if (!this._inheritsLoose) {
 
             var propKey = stateToPropMapping[prefixedKey];
 
-            var _getPropKeyPair3 = _getPropKeyPair(isPropStateModuleMode, module, propKey),
+            var _getPropKeyPair3 = _getPropKeyPair(isPropStateModuleMode, module, stateKey, propKey),
                 moduledPropKey = _getPropKeyPair3.moduledPropKey,
-                originalPropKey = _getPropKeyPair3.originalPropKey;
+                originalPropKey = _getPropKeyPair3.originalPropKey,
+                derivedPropKey = _getPropKeyPair3.derivedPropKey;
 
             var appeared = propKey_appeared_[moduledPropKey];
 
@@ -1123,13 +1092,12 @@ if (!this._inheritsLoose) {
               };
               stateKey_propKeyDescriptor_[moduledStateKey] = {
                 module: stateModule,
+                originalStateKey: stateKey,
                 moduledPropKey: moduledPropKey,
                 originalPropKey: originalPropKey,
-                originalStateKey: stateKey
+                derivedPropKey: derivedPropKey
               };
-
-              _setPropState(propState, propKey, moduleState[stateKey], isPropStateModuleMode, module);
-
+              setPropState(propState, derivedPropKey, moduleState[stateKey], isPropStateModuleMode, module);
               isPropStateSet = true;
             }
           });
@@ -2128,11 +2096,13 @@ if (!this._inheritsLoose) {
     }
   }
 
-  function updateModulePropState(module_isPropStateChanged, changedPropStateList, targetClassContext, state, stateModuleName) {
+  function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, targetClassContext, state, stateModuleName) {
     var stateToPropMapping = targetClassContext.stateToPropMapping,
         stateKey_propKeyDescriptor_ = targetClassContext.stateKey_propKeyDescriptor_,
         propState = targetClassContext.propState,
-        isPropStateModuleMode = targetClassContext.isPropStateModuleMode;
+        isPropStateModuleMode = targetClassContext.isPropStateModuleMode,
+        ccClassKey = targetClassContext.ccClassKey,
+        ccKeys = targetClassContext.ccKeys;
 
     if (stateToPropMapping) {
       Object.keys(state).forEach(function (sKey) {
@@ -2143,7 +2113,7 @@ if (!this._inheritsLoose) {
         var moduledPropKeyDescriptor = stateKey_propKeyDescriptor_[moduledStateKey];
 
         if (moduledPropKeyDescriptor) {
-          var originalPropKey = moduledPropKeyDescriptor.originalPropKey;
+          var derivedPropKey = moduledPropKeyDescriptor.derivedPropKey;
 
           if (module_isPropStateChanged[stateModuleName] !== true) {
             //mark propState changed
@@ -2152,8 +2122,12 @@ if (!this._inheritsLoose) {
           }
 
           var stateValue = state[sKey];
-          _setPropState(propState, originalPropKey, stateValue, isPropStateModuleMode, stateModuleName);
+          setPropState(propState, derivedPropKey, stateValue, isPropStateModuleMode, stateModuleName);
           setStateByModuleAndKey$1(stateModuleName, sKey, stateValue);
+        } else {
+          if (ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
+            noRenderCcUniKeyMap[ccKeys[0]] = 1; // every ccFragment class only have one ins
+          }
         }
       });
     }
@@ -2162,13 +2136,15 @@ if (!this._inheritsLoose) {
   function broadcastPropState(module, commitState) {
     var changedPropStateList = [];
     var module_isPropStateChanged = {}; // record which module's propState has been changed
+
+    var noRenderCcUniKeyMap = {}; //these ccUniKeys ins will not been trigger to render
     // if there is no any react class registered to module, here will get undefined, so use safeGetArrayFromObject
 
     Object.keys(moduleName_ccClassKeys_).forEach(function (moduleName) {
       var ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
       ccClassKeys.forEach(function (ccClassKey) {
         var ccClassContext = ccClassKey_ccClassContext_$1[ccClassKey];
-        updateModulePropState(module_isPropStateChanged, changedPropStateList, ccClassContext, commitState, module);
+        updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, ccClassContext, commitState, module);
       });
     });
     Object.keys(module_isPropStateChanged).forEach(function (module) {
@@ -2178,6 +2154,7 @@ if (!this._inheritsLoose) {
         var classContext = ccClassKey_ccClassContext_$1[ccClassKey];
         var ccKeys = classContext.ccKeys;
         ccKeys.forEach(function (ccKey) {
+          if (noRenderCcUniKeyMap[ccKey] === 1) return;
           var ref = ccKey_ref_$1[ccKey];
 
           if (ref) {

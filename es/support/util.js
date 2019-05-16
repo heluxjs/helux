@@ -93,9 +93,11 @@ export function throwCcHmrError(err){
   }else throw err;
 }
 
-export function makeCcClassContext(module, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys) {
+/** make ccClassContext */
+export function makeCcClassContext(module, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys) {
   return {
     module,
+    ccClassKey,
     originalSharedStateKeys,
     originalGlobalStateKeys,
     sharedStateKeys,
@@ -106,17 +108,6 @@ export function makeCcClassContext(module, sharedStateKeys, globalStateKeys, ori
     stateKey_propKeyDescriptor_: {},
     stateToPropMapping: null,
   }
-}
-
-export function makeStateMail(ccUniqueKey, ccOption, module, type, cb) {
-  const mail = {}
-  Object.defineProperty(mail, 'ccUniqueKey', { configurable: false, enumerable: true, writable: false, value: ccUniqueKey });
-  Object.defineProperty(mail, 'ccOption', { configurable: false, enumerable: true, writable: false, value: ccOption });
-  Object.defineProperty(mail, 'module', { configurable: false, enumerable: true, writable: false, value: module });
-  Object.defineProperty(mail, 'type', { configurable: false, enumerable: true, writable: false, value: type });
-  Object.defineProperty(mail, 'state', { configurable: true, enumerable: true, writable: true, value: {} });
-  Object.defineProperty(mail, 'cb', { configurable: true, enumerable: true, writable: true, value: () => { } });
-  return mail;
 }
 
 // !!! different ccClass enable own a same key
@@ -310,7 +301,6 @@ export default {
   hotReloadWarning,
   isHotReloadMode,
   makeCcClassContext,
-  makeStateMail,
   makeUniqueCcKey,
   makeHandlerKey,
   isActionTypeValid,

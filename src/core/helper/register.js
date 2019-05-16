@@ -487,8 +487,8 @@ function offEventHandlersByCcUniqueKey(ccUniqueKey) {
   }
 }
 
-function updateModulePropState(module_isPropStateChanged, changedPropStateList, targetClassContext, state, stateModuleName) {
-  const { stateToPropMapping, stateKey_propKeyDescriptor_, propState, isPropStateModuleMode } = targetClassContext;
+function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, targetClassContext, state, stateModuleName) {
+  const { stateToPropMapping, stateKey_propKeyDescriptor_, propState, isPropStateModuleMode, ccClassKey, ccKeys } = targetClassContext;
   if (stateToPropMapping) {
     Object.keys(state).forEach(sKey => {// sKey mean user commit state's key, it equal propKey, so it may be an alias
       // use input stateModuleName to compute moduledStateKey for current stateKey
@@ -496,7 +496,7 @@ function updateModulePropState(module_isPropStateChanged, changedPropStateList, 
       const moduledStateKey = `${stateModuleName}/${sKey}`;
       const moduledPropKeyDescriptor = stateKey_propKeyDescriptor_[moduledStateKey];
       if (moduledPropKeyDescriptor) {
-        const { originalPropKey } = moduledPropKeyDescriptor;
+        const { derivedPropKey } = moduledPropKeyDescriptor;
 
         if (module_isPropStateChanged[stateModuleName] !== true) {//mark propState changed
           module_isPropStateChanged[stateModuleName] = true;
@@ -504,8 +504,14 @@ function updateModulePropState(module_isPropStateChanged, changedPropStateList, 
         }
 
         const stateValue = state[sKey];
-        setPropState(propState, originalPropKey, stateValue, isPropStateModuleMode, stateModuleName);
+        setPropState(propState, derivedPropKey, stateValue, isPropStateModuleMode, stateModuleName);
         setStateByModuleAndKey(stateModuleName, sKey, stateValue);
+      } else {
+        if (ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
+          noRenderCcUniKeyMap[ccKeys[0]] = 1;// every ccFragment class only have one ins
+        } else {
+          //todo
+        }
       }
     });
   }
@@ -514,13 +520,14 @@ function updateModulePropState(module_isPropStateChanged, changedPropStateList, 
 function broadcastPropState(module, commitState) {
   const changedPropStateList = [];
   const module_isPropStateChanged = {};// record which module's propState has been changed
+  const noRenderCcUniKeyMap = {};//these ccUniKeys ins will not been trigger to render
 
   // if there is no any react class registered to module, here will get undefined, so use safeGetArrayFromObject
   Object.keys(moduleName_ccClassKeys_).forEach(moduleName => {
     const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
     ccClassKeys.forEach(ccClassKey => {
       const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-      updateModulePropState(module_isPropStateChanged, changedPropStateList, ccClassContext, commitState, module);
+      updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, ccClassContext, commitState, module);
     });
   });
 
@@ -531,6 +538,7 @@ function broadcastPropState(module, commitState) {
       const classContext = ccClassKey_ccClassContext_[ccClassKey];
       const { ccKeys } = classContext;
       ccKeys.forEach(ccKey => {
+        if (noRenderCcUniKeyMap[ccKey] === 1) return;
         const ref = ccKey_ref_[ccKey];
         if (ref) {
           ref.cc.reactForceUpdate();
@@ -612,9 +620,9 @@ export default function register(ccClassKey, {
             const originalCcKey = ccKey;
 
             util.bindThis(this, [
-              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', 
+              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync',
               '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler',
-              '__$$getLazyXEffectHandler', '__$$getDispatchHandler', 
+              '__$$getLazyXEffectHandler', '__$$getDispatchHandler',
               '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler',
             ]);
             if (!ccOption.storedStateKeys) ccOption.storedStateKeys = [];
@@ -1379,28 +1387,28 @@ export default function register(ccClassKey, {
           handler();
         }
 
-        $$sync(event){
+        $$sync(event) {
           let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '';
           const currentTarget = event.currentTarget;
           let { value, dataset } = currentTarget;
-          const { ccm, ccdelay, ccidt = '', ccint, ccsync:stateKey } = dataset;
-          if(!stateKey){
+          const { ccm, ccdelay, ccidt = '', ccint, ccsync: stateKey } = dataset;
+          if (!stateKey) {
             return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
           }
-          if(ccm) _module = ccm;
-          if(ccdelay){
-            try{
+          if (ccm) _module = ccm;
+          if (ccdelay) {
+            try {
               _lazyMs = parseInt(ccdelay);
-            }catch(err){}
+            } catch (err) { }
           }
-          if(ccidt) _identity = ccidt;
-          if(ccint!==undefined){
-            try{
+          if (ccidt) _identity = ccidt;
+          if (ccint !== undefined) {
+            try {
               value = parseInt(value);
-            }catch(err){}
+            } catch (err) { }
           }
 
-          this.$$changeState({[stateKey]:value}, {ccKey:this.cc.ccKey, stateFor:STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module:_module, lazyMs:_lazyMs, identity:_identity});
+          this.$$changeState({ [stateKey]: value }, { ccKey: this.cc.ccKey, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: _module, lazyMs: _lazyMs, identity: _identity });
         }
 
         componentDidUpdate() {
