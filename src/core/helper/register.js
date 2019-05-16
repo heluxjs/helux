@@ -1392,13 +1392,23 @@ export default function register(ccClassKey, {
         }
 
         $$sync(event) {
-          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '';
+          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '',stateKey='';
           const currentTarget = event.currentTarget;
           let { value, dataset } = currentTarget;
-          const { ccm, ccdelay, ccidt = '', ccint, ccsync: stateKey } = dataset;
-          if (!stateKey) {
+          const { ccm, ccdelay, ccidt = '', ccint, ccsync } = dataset;
+
+          if (!ccsync) {
             return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
+          }else{
+            if(ccsync.includes('/')){
+              const arr = ccsync.split('/');
+              _module = arr[0];
+              stateKey = arr[1];
+            }else{
+              stateKey = ccsync;
+            }
           }
+
           if (ccm) _module = ccm;
           if (ccdelay) {
             try {
