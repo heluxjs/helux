@@ -168,7 +168,7 @@ function bindComputedToCcContext(computed, isModuleMode) {
         const fn = moduleComputed[key];
         moduleComputedFn[key] = fn;
 
-        const computedValue = fn(originalValue, moduleState);
+        const computedValue = fn(originalValue, originalValue, moduleState);
         const moduleComputedValue = util.safeGetObjectFromObject(_computedValue, m);
         moduleComputedValue[key] = computedValue;
       } else {

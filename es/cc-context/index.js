@@ -19,18 +19,19 @@ const setStateByModuleAndKey = (module, key, value) => {
   const moduleState = getState(module);
   const moduleComputedFn = computed._computedFn[module];
   const watchFn = watch[module];
+  const oldValue = moduleState[key];
 
   if (moduleComputedFn) {
     const fn = moduleComputedFn[key];
     if (fn) {
-      const computedValue = fn(value);
+      const computedValue = fn(value, oldValue, moduleState);
       computed._computedValue[module][key] = computedValue;
     }
   }
 
   if (watchFn) {
     const fn = watchFn[key];
-    if (fn) fn(value, moduleState[key]);//fn(newValue, oldValue)
+    if (fn) fn(value, oldValue);//fn(newValue, oldValue)
   }
   moduleState[key] = value;
 }

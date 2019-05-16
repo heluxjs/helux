@@ -368,15 +368,15 @@ function mapModuleAssociateDataToCcContext(extendInputClass, ccClassKey, stateMo
   return { sharedStateKeys: targetSharedStateKeys, globalStateKeys: targetGlobalStateKeys };
 }
 
-function computeValueForRef(refComputedFn, refComputed, state) {
+function computeValueForRef(refComputedFn, refComputed, unchangedState, commitState) {
   if (refComputedFn) {
     const toBeComputed = refComputedFn();
     const toBeComputedKeys = Object.keys(toBeComputed);
     toBeComputedKeys.forEach(key => {
       const fn = toBeComputed[key];
-      const originalValue = state[key];
-      if (originalValue !== undefined) {
-        const computedValue = fn(originalValue, state);
+      const newValue = commitState[key];
+      if (newValue !== undefined) {
+        const computedValue = fn(newValue, unchangedState[key], unchangedState);
         refComputed[key] = computedValue;
       }
     })
@@ -505,7 +505,8 @@ function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, c
 
         const stateValue = state[sKey];
         setPropState(propState, derivedPropKey, stateValue, isPropStateModuleMode, stateModuleName);
-        setStateByModuleAndKey(stateModuleName, sKey, stateValue);
+
+        // setStateByModuleAndKey(stateModuleName, sKey, stateValue);//!!! this is unnecessary operation, and also will call redundant compute fn call
       } else {
         if (ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
           noRenderCcUniKeyMap[ccKeys[0]] = 1;// every ccFragment class only have one ins
@@ -677,7 +678,7 @@ export default function register(ccClassKey, {
           const selfState = this.state;
           const entireState = Object.assign({}, selfState, refState, partialSharedState, partialGlobalState);
           this.state = entireState;
-          computeValueForRef(this.$$computed, this.$$refComputed, entireState);
+          computeValueForRef(this.$$computed, this.$$refComputed, entireState, entireState);
         }
 
         __$$mapCcToInstance(
@@ -948,8 +949,9 @@ export default function register(ccClassKey, {
                 if (next) next();
                 return;
               } else {
-                computeValueForRef(this.$$computed, this.$$refComputed, state);
-                watchValueForRef(this.$$watch, this.state, state);
+                const thisState = this.state;
+                computeValueForRef(this.$$computed, this.$$refComputed, thisState, state);
+                watchValueForRef(this.$$watch, thisState, state);
               }
 
               if (this.$$beforeSetState) {
@@ -971,6 +973,7 @@ export default function register(ccClassKey, {
               }
             },
             prepareBroadcastGlobalState: (identity, broadcastTriggeredBy, globalState, lazyMs) => {
+              //!!! save global state to store
               const { partialState: validGlobalState, isStateEmpty } = getAndStoreValidGlobalState(globalState);
               const startBroadcastGlobalState = () => {
                 if (!isStateEmpty) {
@@ -1016,6 +1019,7 @@ export default function register(ccClassKey, {
               const { isPartialSharedStateEmpty, isPartialGlobalStateEmpty, partialSharedState, partialGlobalState, module_globalState_ }
                 = extractStateToBeBroadcasted(moduleName, committedState, targetSharedStateKeys, targetGlobalStateKeys);
 
+              //!!! save state to store
               if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);
               if (!isPartialGlobalStateEmpty) ccStoreSetState(MODULE_GLOBAL, partialGlobalState);
 
@@ -1388,13 +1392,23 @@ export default function register(ccClassKey, {
         }
 
         $$sync(event) {
-          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '';
+          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '',stateKey='';
           const currentTarget = event.currentTarget;
           let { value, dataset } = currentTarget;
-          const { ccm, ccdelay, ccidt = '', ccint, ccsync: stateKey } = dataset;
-          if (!stateKey) {
+          const { ccm, ccdelay, ccidt = '', ccint, ccsync } = dataset;
+
+          if (!ccsync) {
             return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
+          }else{
+            if(ccsync.includes('/')){
+              const arr = ccsync.split('/');
+              _module = arr[0];
+              stateKey = arr[1];
+            }else{
+              stateKey = ccsync;
+            }
           }
+
           if (ccm) _module = ccm;
           if (ccdelay) {
             try {

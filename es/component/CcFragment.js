@@ -195,6 +195,7 @@ export default class CcFragment extends Component {
       xeffect: dispatcher.__$$getXEffectHandler(ccKey),
       lazyEffect: dispatcher.__$$getLazyEffectHandler(ccKey),
       lazyXeffect: dispatcher.__$$getLazyXEffectHandler(ccKey),
+      sync:dispatcher.$$sync,
       setState: (module, state, lazyMs) => {
         dispatcher.$$changeState(state, {
           ccKey, module, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
