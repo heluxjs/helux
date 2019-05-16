@@ -623,7 +623,7 @@ export default function register(ccClassKey, {
             util.bindThis(this, [
               '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync',
               '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler',
-              '__$$getLazyXEffectHandler', '__$$getDispatchHandler',
+              '__$$getLazyXEffectHandler', '__$$getDispatchHandler', '__$$getSyncHandler',
               '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler',
             ]);
             if (!ccOption.storedStateKeys) ccOption.storedStateKeys = [];
@@ -1323,7 +1323,6 @@ export default function register(ccClassKey, {
         __$$getLazyXEffectHandler(ccKey) {
           return (targetModule, userLogicFn, lazyMs, ...args) => this.cc.__xeffect(targetModule, userLogicFn, { ccKey }, lazyMs, ...args)
         }
-
         __$$getDispatchHandler(stateFor, originalComputedStateModule, originalComputedReducerModule, inputType, inputPayload, lazyMs = -1, ccKey, defaultIdentity = '') {
           return (paramObj = {}, payloadWhenFirstParamIsString, userInputIdentity) => {
             const paramObjType = typeof paramObj;
@@ -1380,6 +1379,9 @@ export default function register(ccClassKey, {
             }).catch(catchCcError);
           }
         }
+        __$$getSyncHandler(stateFor) {
+          return (e) => this.$$sync(e, stateFor);
+        }
 
         $$domDispatch(event) {
           const currentTarget = event.currentTarget;
@@ -1391,20 +1393,20 @@ export default function register(ccClassKey, {
           handler();
         }
 
-        $$sync(event) {
-          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '',stateKey='';
+        $$sync(event, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
+          let _module = this.cc.ccState.module, _lazyMs = -1, _identity = '', stateKey = '';
           const currentTarget = event.currentTarget;
           let { value, dataset } = currentTarget;
           const { ccm, ccdelay, ccidt = '', ccint, ccsync } = dataset;
 
           if (!ccsync) {
             return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
-          }else{
-            if(ccsync.includes('/')){
+          } else {
+            if (ccsync.includes('/')) {
               const arr = ccsync.split('/');
               _module = arr[0];
               stateKey = arr[1];
-            }else{
+            } else {
               stateKey = ccsync;
             }
           }
@@ -1422,7 +1424,7 @@ export default function register(ccClassKey, {
             } catch (err) { }
           }
 
-          this.$$changeState({ [stateKey]: value }, { ccKey: this.cc.ccKey, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: _module, lazyMs: _lazyMs, identity: _identity });
+          this.$$changeState({ [stateKey]: value }, { ccKey: this.cc.ccKey, stateFor, module: _module, lazyMs: _lazyMs, identity: _identity });
         }
 
         componentDidUpdate() {

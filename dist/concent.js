@@ -2268,7 +2268,7 @@ if (!this._inheritsLoose) {
                   _props$ccOption = props.ccOption,
                   ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
               var originalCcKey = ccKey;
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler', '__$$getLazyXEffectHandler', '__$$getDispatchHandler', '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler']);
+              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getChangeStateHandler', '__$$getEffectHandler', '__$$getLazyEffectHandler', '__$$getXEffectHandler', '__$$getLazyXEffectHandler', '__$$getDispatchHandler', '__$$getSyncHandler', '__$$getEffectIdentityHandler', '__$$getXEffectIdentityHandler']);
               if (!ccOption.storedStateKeys) ccOption.storedStateKeys = []; // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
 
               if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true; // if you flag syncGlobalState false, that means this ccInstance's globalState changing will not effect cc's globalState and not effected by cc's globalState changing
@@ -3661,6 +3661,14 @@ if (!this._inheritsLoose) {
             };
           };
 
+          _proto.__$$getSyncHandler = function __$$getSyncHandler(stateFor) {
+            var _this12 = this;
+
+            return function (e) {
+              return _this12.$$sync(e, stateFor);
+            };
+          };
+
           _proto.$$domDispatch = function $$domDispatch(event) {
             var currentTarget = event.currentTarget;
             var value = currentTarget.value,
@@ -3684,8 +3692,12 @@ if (!this._inheritsLoose) {
             handler();
           };
 
-          _proto.$$sync = function $$sync(event) {
+          _proto.$$sync = function $$sync(event, stateFor) {
             var _this$$$changeState;
+
+            if (stateFor === void 0) {
+              stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
+            }
 
             var _module = this.cc.ccState.module,
                 _lazyMs = -1,
@@ -3732,7 +3744,7 @@ if (!this._inheritsLoose) {
 
             this.$$changeState((_this$$$changeState = {}, _this$$$changeState[stateKey] = value, _this$$$changeState), {
               ccKey: this.cc.ccKey,
-              stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
+              stateFor: stateFor,
               module: _module,
               lazyMs: _lazyMs,
               identity: _identity
@@ -5154,7 +5166,7 @@ if (!this._inheritsLoose) {
         xeffect: dispatcher.__$$getXEffectHandler(ccKey),
         lazyEffect: dispatcher.__$$getLazyEffectHandler(ccKey),
         lazyXeffect: dispatcher.__$$getLazyXEffectHandler(ccKey),
-        sync: dispatcher.$$sync,
+        sync: dispatcher.__$$getSyncHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE),
         setState: function setState$$1(module, state, lazyMs) {
           dispatcher.$$changeState(state, {
             ccKey: ccKey,
