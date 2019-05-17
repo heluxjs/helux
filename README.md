@@ -93,7 +93,7 @@ $ yarn add concent
 ### counter示例
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
-> 探索concent从这里开始
+> 探索concent从这里开始，[点我看以下代码的在线示例](https://codesandbox.io/s/spring-river-yqcbo)
 ```javascript
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
