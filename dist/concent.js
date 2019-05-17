@@ -1,4 +1,3 @@
-
 if (!this._assertThisInitialized) {
   this._assertThisInitialized = function (self) {
     if (self === void 0) {
@@ -29,6 +28,7 @@ if (!this._inheritsLoose) {
     subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 }
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -4279,7 +4279,6 @@ if (!this._inheritsLoose) {
 
     try {
       util.justTip("cc version " + ccContext.info.version);
-      ccContext.isCcAlreadyStartup = true;
       ccContext.isHot = isHot;
       ccContext.errorHandler = errorHandler;
 
@@ -4288,7 +4287,8 @@ if (!this._inheritsLoose) {
 
         if (util.isHotReloadMode()) {
           clearObject(ccContext.reducer._reducer);
-          clearObject(ccContext.store._state);
+          clearObject(ccContext.store._state, [MODULE_DEFAULT]); //MODULE_DEFAULT cannot be cleared, cause in hot reload mode, createDispatcher() will trigger register again
+
           clearObject(ccContext.computed._computedFn);
           clearObject(ccContext.computed._computedValue);
           clearObject(ccContext.event_handlers_);
@@ -4358,6 +4358,8 @@ if (!this._inheritsLoose) {
           return ccMiddlewares.push(m);
         });
       }
+
+      ccContext.isCcAlreadyStartup = true;
     } catch (err) {
       if (errorHandler) errorHandler(err);else throw err;
     }

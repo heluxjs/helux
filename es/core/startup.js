@@ -359,7 +359,6 @@ export default function ({
 } = {}) {
   try {
     util.justTip(`cc version ${ccContext.info.version}`);
-    ccContext.isCcAlreadyStartup = true;
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
 
@@ -367,7 +366,7 @@ export default function ({
       const err = util.makeError(ERR.CC_ALREADY_STARTUP);
       if (util.isHotReloadMode()) {
         clearObject(ccContext.reducer._reducer);
-        clearObject(ccContext.store._state);
+        clearObject(ccContext.store._state, [MODULE_DEFAULT]);//MODULE_DEFAULT cannot be cleared, cause in hot reload mode, createDispatcher() will trigger register again
         clearObject(ccContext.computed._computedFn);
         clearObject(ccContext.computed._computedValue);
         clearObject(ccContext.event_handlers_);
@@ -436,6 +435,7 @@ export default function ({
       middlewares.forEach(m => ccMiddlewares.push(m));
     }
 
+    ccContext.isCcAlreadyStartup = true;
   } catch (err) {
     if (errorHandler) errorHandler(err);
     else throw err;
