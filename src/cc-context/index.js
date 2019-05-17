@@ -173,7 +173,7 @@ const ccContext = {
     setState: function (ccUniqueKey, partialStoredState) {
       const _state = ccContext.refStore._state;
       const fullStoredState = _state[ccUniqueKey];
-      const mergedState = Object.assign(fullStoredState, partialStoredState);
+      const mergedState = Object.assign({}, fullStoredState, partialStoredState);
       _state[ccUniqueKey] = mergedState;
     },
   },
