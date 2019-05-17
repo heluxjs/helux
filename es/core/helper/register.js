@@ -487,9 +487,10 @@ function offEventHandlersByCcUniqueKey(ccUniqueKey) {
   }
 }
 
-function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, targetClassContext, state, stateModuleName) {
+function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, targetClassContext, state, stateModuleName) {
   const { stateToPropMapping, stateKey_propKeyDescriptor_, propState, isPropStateModuleMode, ccClassKey, ccKeys } = targetClassContext;
   if (stateToPropMapping) {
+    let isSetPropStateTriggered = false;
     Object.keys(state).forEach(sKey => {// sKey mean user commit state's key, it equal propKey, so it may be an alias
       // use input stateModuleName to compute moduledStateKey for current stateKey
       // to see if the propState should be updated
@@ -500,26 +501,25 @@ function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, c
 
         if (module_isPropStateChanged[stateModuleName] !== true) {//mark propState changed
           module_isPropStateChanged[stateModuleName] = true;
-          changedPropStateList.push(propState);// push this ref to changedPropStateList
         }
 
         const stateValue = state[sKey];
         setPropState(propState, derivedPropKey, stateValue, isPropStateModuleMode, stateModuleName);
-
+        isSetPropStateTriggered = true;
         // setStateByModuleAndKey(stateModuleName, sKey, stateValue);//!!! this is unnecessary operation, and also will call redundant compute fn call
-      } else {
-        if (ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-          noRenderCcUniKeyMap[ccKeys[0]] = 1;// every ccFragment class only have one ins
-        } else {
-          //todo
-        }
       }
     });
+
+    //针对targetClassContext，遍历完提交的state key，没有触发更新propState的行为
+    if(isSetPropStateTriggered === false){
+      ccKeys.forEach(ccKey=>{
+        noRenderCcUniKeyMap[ccKey] = 1;//module发生了propStatez状态变更，但是这些ccClass实例不需要更新
+      });
+    }
   }
 }
 
 function broadcastPropState(module, commitState) {
-  const changedPropStateList = [];
   const module_isPropStateChanged = {};// record which module's propState has been changed
   const noRenderCcUniKeyMap = {};//these ccUniKeys ins will not been trigger to render
 
@@ -528,7 +528,7 @@ function broadcastPropState(module, commitState) {
     const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
     ccClassKeys.forEach(ccClassKey => {
       const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-      updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, ccClassContext, commitState, module);
+      updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, ccClassContext, commitState, module);
     });
   });
 

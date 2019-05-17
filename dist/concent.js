@@ -29,7 +29,6 @@ if (!this._inheritsLoose) {
   }
 }
 
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -626,9 +625,9 @@ if (!this._inheritsLoose) {
    * pick one ccInstance ref randomly
    */
 
-  function pickOneRef (module, excludeDispatcher) {
-    if (excludeDispatcher === void 0) {
-      excludeDispatcher = true;
+  function pickOneRef (module, mustBelongToModule) {
+    if (mustBelongToModule === void 0) {
+      mustBelongToModule = false;
     }
 
     var ccKey_ref_ = ccContext.ccKey_ref_,
@@ -653,21 +652,19 @@ if (!this._inheritsLoose) {
       } else {
         throw new Error("sorry, module: " + module + " is invalid, cc don't know this module!");
       }
-    }
 
-    if (ccKeys.length === 0) {
-      ccKeys = Object.keys(ccKey_ref_);
-    }
-
-    if (ccKeys.length === 0) {
-      var ignoreIt = "if this message doesn't matter, you can ignore it";
-      if (module) throw new Error("[[pick-one-ref]]: no any ccInstance founded for module:" + module + "!," + ignoreIt);else throw new Error("[[pick-one-ref]]: no any ccInstance founded currently," + ignoreIt);
-    }
-
-    if (excludeDispatcher === true) {
       ccKeys = ccKeys.filter(function (key) {
-        return key !== CC_DISPATCHER;
+        return !key.startsWith(CC_FRAGMENT_PREFIX);
       });
+
+      if (ccKeys.length === 0) {
+        if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];else {
+          var ignoreIt = "if this message doesn't matter, you can ignore it";
+          throw new Error("[[pick-one-ref]]: no any ccInstance founded for module:" + module + "!," + ignoreIt);
+        }
+      }
+    } else {
+      ccKeys = [CC_DISPATCHER];
     }
 
     var oneRef = ccKey_ref_[ccKeys[0]];
@@ -2100,7 +2097,7 @@ if (!this._inheritsLoose) {
     }
   }
 
-  function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, targetClassContext, state, stateModuleName) {
+  function updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, targetClassContext, state, stateModuleName) {
     var stateToPropMapping = targetClassContext.stateToPropMapping,
         stateKey_propKeyDescriptor_ = targetClassContext.stateKey_propKeyDescriptor_,
         propState = targetClassContext.propState,
@@ -2109,6 +2106,7 @@ if (!this._inheritsLoose) {
         ccKeys = targetClassContext.ccKeys;
 
     if (stateToPropMapping) {
+      var isSetPropStateTriggered = false;
       Object.keys(state).forEach(function (sKey) {
         // sKey mean user commit state's key, it equal propKey, so it may be an alias
         // use input stateModuleName to compute moduledStateKey for current stateKey
@@ -2122,22 +2120,23 @@ if (!this._inheritsLoose) {
           if (module_isPropStateChanged[stateModuleName] !== true) {
             //mark propState changed
             module_isPropStateChanged[stateModuleName] = true;
-            changedPropStateList.push(propState); // push this ref to changedPropStateList
           }
 
           var stateValue = state[sKey];
-          setPropState(propState, derivedPropKey, stateValue, isPropStateModuleMode, stateModuleName); // setStateByModuleAndKey(stateModuleName, sKey, stateValue);//!!! this is unnecessary operation, and also will call redundant compute fn call
-        } else {
-          if (ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-            noRenderCcUniKeyMap[ccKeys[0]] = 1; // every ccFragment class only have one ins
-          }
+          setPropState(propState, derivedPropKey, stateValue, isPropStateModuleMode, stateModuleName);
+          isSetPropStateTriggered = true; // setStateByModuleAndKey(stateModuleName, sKey, stateValue);//!!! this is unnecessary operation, and also will call redundant compute fn call
         }
-      });
+      }); //针对targetClassContext，遍历完提交的state key，没有触发更新propState的行为
+
+      if (isSetPropStateTriggered === false) {
+        ccKeys.forEach(function (ccKey) {
+          noRenderCcUniKeyMap[ccKey] = 1; //module发生了propStatez状态变更，但是这些ccClass实例不需要更新
+        });
+      }
     }
   }
 
   function broadcastPropState(module, commitState) {
-    var changedPropStateList = [];
     var module_isPropStateChanged = {}; // record which module's propState has been changed
 
     var noRenderCcUniKeyMap = {}; //these ccUniKeys ins will not been trigger to render
@@ -2147,7 +2146,7 @@ if (!this._inheritsLoose) {
       var ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
       ccClassKeys.forEach(function (ccClassKey) {
         var ccClassContext = ccClassKey_ccClassContext_$1[ccClassKey];
-        updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, changedPropStateList, ccClassContext, commitState, module);
+        updateModulePropState(module_isPropStateChanged, noRenderCcUniKeyMap, ccClassContext, commitState, module);
       });
     });
     Object.keys(module_isPropStateChanged).forEach(function (module) {
@@ -4940,7 +4939,11 @@ if (!this._inheritsLoose) {
     return register$1(ccClassKey, mergedOption);
   }
 
-  function _dispatch (action, payLoadWhenActionIsString, _temp) {
+  function _dispatch (action, payLoadWhenActionIsString, identity, _temp) {
+    if (identity === void 0) {
+      identity = '';
+    }
+
     var _ref = _temp === void 0 ? [] : _temp,
         ccClassKey = _ref[0],
         ccKey = _ref[1],
@@ -4961,8 +4964,19 @@ if (!this._inheritsLoose) {
           targetRef.$$dispatch(action, payLoadWhenActionIsString);
         }
       } else {
-        var ref = pickOneRef();
-        ref.$$dispatchForModule(action, payLoadWhenActionIsString);
+        var module = '';
+
+        if (typeof action == 'string' && action.includes('/')) {
+          module = action.split('/')[0];
+        }
+
+        var ref = pickOneRef(module);
+
+        if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
+          ref.__fragmentParams.dispatch(action, payLoadWhenActionIsString, identity);
+        } else {
+          ref.$$dispatchForModule(action, payLoadWhenActionIsString, identity);
+        }
       }
     } catch (err) {
       if (throwError) throw err;else util.justWarning(err.message);

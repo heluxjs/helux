@@ -190,7 +190,7 @@ export default class CcFragment extends Component {
       hook,
       propState: this.$$propState,
       emit,
-      dispatch: dispatcher.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1, ccKey),
+      dispatch:dispatcher.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1, ccKey),
       effect: dispatcher.__$$getEffectHandler(ccKey),
       xeffect: dispatcher.__$$getXEffectHandler(ccKey),
       lazyEffect: dispatcher.__$$getLazyEffectHandler(ccKey),
