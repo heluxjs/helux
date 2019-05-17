@@ -93,40 +93,41 @@ $ yarn add concent
 ### counter示例
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
-> 探索concent从这里开始
+> 探索concent从这里开始，[点我看以下代码的在线示例](https://codesandbox.io/s/spring-river-yqcbo)
 ```javascript
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import cc, { register, load, CcFragment } from 'concent';
 
+//定义两个模块，foo 和 counter
 load({
   foo:{
-    state:{
+    state:{//定义state
       age:1,
       name:'concent'
     }
   },
   counter:{
-    state:{
+    state:{//定义state
       count:0,
       loading: '',
     },
-    watch:{
+    watch:{//定义watch，当count值发生变化时，触发此函数执行
       count(val){
         if(val==='love'){
-          cc.setState('foo',{name:'now counter/count is '+val});
+          cc.setState('foo',{name:'now counter/count is '+val});//用cc顶层api修改foo模块的数据
         }else{
           cc.setState('foo',{name:'try input love'});
         }
       }
     },
-    computed:{
+    computed:{//定义computed，当count值发生变化时，会触发此函数计算，计算的值可以在实例里的this.$$moduleComputed上获得
       count(val){
         if(typeof val==='string') return val.split('').reverse().join('');
         else return val;
       }
     },
-    reducer:{
+    reducer:{//定义reducer函数，用于处理业务逻辑
       setLoading({payload:loading}){
         return {loading};
       },
@@ -138,11 +139,11 @@ load({
         await new Promise(resolve=> setTimeout(resolve, 2000));
         return {count, loading:''};
         //或者写为 
-        //dispatch('setLoading', '');
-        //dispatch('updateCount', count);
+        // dispatch('setLoading', '');
+        // dispatch('updateCount', count);
       }
     },
-    init: setState=> setTimeout(()=> setState({count:666}, 1000)),//模拟从后端异步获取新的数据
+    init: setState=> setTimeout(()=> setState({count:666}, 1000)),//定义init，模拟从后端异步获取新的初始化数据
   }
 })
 
@@ -154,6 +155,7 @@ class Counter extends Component {
         <p style={{color:'red'}}>{loading}</p>
         <span>reversed count: {this.$$moduleComputed.count}</span>
         <br/>
+        {/** this.$$sync提供双向绑定的能力 */}
         <input data-ccsync="count" onChange={this.$$sync} value={count}/>
       </div>
     );
@@ -166,9 +168,12 @@ function App(){
     <div>
       <CcCounter_ />
       <CcCounter_ />
+      {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数 */}
       <CcFragment connect={{'foo/*':'', 'counter/*':''}} render={({propState, hook, dispatch})=>{
         const [localCount, setCount] = hook.useState();
-        hook.useEffect(()=>{alert('CcFragment挂载完毕')},[]);
+        hook.useEffect(()=>{
+          alert('CcFragment挂载完毕');
+        },[]);//第二位参数是空数组，以为这个副作用只会在CcFragment挂载完毕执行一次而已
         return (
           <div>
             <h3>count: {propState.counter.count}</h3>
@@ -176,6 +181,7 @@ function App(){
             <h3>name: {propState.foo.name}</h3>
             <p>
               输入count:<input value={localCount} onChange={e=>setCount(e.currentTarget.value)} />
+              {/** 直接通过dispatch句柄来调用counter模块的uploadCount函数 */}
               <button onClick={()=>dispatch('counter/uploadCount', localCount)}>点击确认，修改foo模块里的count</button>
             </p>
           </div>
@@ -184,7 +190,6 @@ function App(){
     </div>
   );
 }
-
 
 export default App;
 ```
