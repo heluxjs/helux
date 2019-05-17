@@ -93,7 +93,7 @@ $ yarn add concent
 ### counter示例
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
-> 探索concent从这里开始，[点我看以下代码的在线示例](https://codesandbox.io/s/spring-river-yqcbo)
+> 探索concent从这里开始，[点我看以下代码的在线示例](https://stackblitz.com/edit/concent-quick-start?file=index.js)
 ```javascript
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
@@ -173,7 +173,7 @@ function App(){
         const [localCount, setCount] = hook.useState();
         hook.useEffect(()=>{
           alert('CcFragment挂载完毕');
-        },[]);//第二位参数是空数组，以为这个副作用只会在CcFragment挂载完毕执行一次而已
+        },[]);//第二位参数是空数组，让这个副作用只会在CcFragment挂载完毕执行一次而已
         return (
           <div>
             <h3>count: {propState.counter.count}</h3>
@@ -196,6 +196,7 @@ export default App;
 ___
 ## 🔨更多精彩示例
 ### [cc版本的ant-design-pro](https://github.com/fantasticsoul/rcc-antd-pro)
+### [一个相对完整的示例](https://stackblitz.com/edit/cc-awesome)
 ### [有趣的counter](https://stackblitz.com/edit/funny-counter)
 ### [增强的counter](https://stackblitz.com/edit/dva-example-count-1saxx8)
 ### [Jsrun playground](http://jsrun.net/fLXKp/play) 
