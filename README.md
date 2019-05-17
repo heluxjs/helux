@@ -93,52 +93,98 @@ $ yarn add concent
 ### counter示例
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
-> 该示例主要演示了将一个普通的`reactClass`注册成为`ccClass`，多个`ccClass`的实例将共享`store`的数据。
+> 探索concent从这里开始
 ```javascript
 import React, {Component} from 'react';
-import { register, startup } from 'concent';
+import ReactDOM from 'react-dom';
+import cc, { register, load, CcFragment } from 'concent';
 
-startup({
-  store:{
-    count:1,
+load({
+  foo:{
+    state:{
+      age:1,
+      name:'concent'
+    }
+  },
+  counter:{
+    state:{
+      count:0,
+      loading: '',
+    },
+    watch:{
+      count(val){
+        if(val==='love'){
+          cc.setState('foo',{name:'now counter/count is '+val});
+        }else{
+          cc.setState('foo',{name:'try input love'});
+        }
+      }
+    },
+    computed:{
+      count(val){
+        if(typeof val==='string') return val.split('').reverse().join('');
+        else return val;
+      }
+    },
+    reducer:{
+      setLoading({payload:loading}){
+        return {loading};
+      },
+      updateCount({payload:count}){
+        return {count};
+      },
+      async uploadCount({dispatch, payload:count}){
+        dispatch('setLoading', '假兮兮的loading');
+        await new Promise(resolve=> setTimeout(resolve, 2000));
+        return {count, loading:''};
+        //或者写为 
+        //dispatch('setLoading', '');
+        //dispatch('updateCount', count);
+      }
+    },
+    init: setState=> setTimeout(()=> setState({count:666}, 1000)),//模拟从后端异步获取新的数据
   }
-});
+})
 
 class Counter extends Component {
-  constructor(props, context) {
-    super(props, context);
-    this.state = { count: 0 }
-  }
-  inc = () => this.setState({ count: this.state.count + 1 })
-  dec = () => this.setState({ count: this.state.count - 1 })
   render(){
+    const {count, loading} = this.state;
     return (
       <div style={{padding:'12px', margin:'6px'}}>
-        <span>{this.state.count}</span>
-        <button onClick={this.inc}>+</button>
-        <button onClick={this.dec}>-</button>
+        <p style={{color:'red'}}>{loading}</p>
+        <span>reversed count: {this.$$moduleComputed.count}</span>
+        <br/>
+        <input data-ccsync="count" onChange={this.$$sync} value={count}/>
       </div>
     );
   }
 }
-const CcCounter = register('Counter', {sharedStateKeys:'*'})(Counter);
+const CcCounter_ = register('Counter', {module:'counter', sharedStateKeys:'*'})(Counter);
 
-class App extends Component {
-  constructor(props, context) {
-    super(props, context);
-    this.state = { isShowCounter: true }
-  }
-  render() {
-    return (
-      <div>
-        <Counter />
-        <Counter />
-        <CcCounter />
-        <CcCounter />
-      </div>
-    )
-  }
+function App(){
+  return (
+    <div>
+      <CcCounter_ />
+      <CcCounter_ />
+      <CcFragment connect={{'foo/*':'', 'counter/*':''}} render={({propState, hook, dispatch})=>{
+        const [localCount, setCount] = hook.useState();
+        hook.useEffect(()=>{alert('CcFragment挂载完毕')},[]);
+        return (
+          <div>
+            <h3>count: {propState.counter.count}</h3>
+            <h3>age: {propState.foo.age}</h3>
+            <h3>name: {propState.foo.name}</h3>
+            <p>
+              输入count:<input value={localCount} onChange={e=>setCount(e.currentTarget.value)} />
+              <button onClick={()=>dispatch('counter/uploadCount', localCount)}>点击确认，修改foo模块里的count</button>
+            </p>
+          </div>
+        )
+      }}/>
+    </div>
+  );
 }
+
 
 export default App;
 ```
