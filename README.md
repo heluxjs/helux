@@ -173,7 +173,7 @@ function App(){
         const [localCount, setCount] = hook.useState();
         hook.useEffect(()=>{
           alert('CcFragment挂载完毕');
-        },[]);//第二位参数是空数组，以为这个副作用只会在CcFragment挂载完毕执行一次而已
+        },[]);//第二位参数是空数组，让这个副作用只会在CcFragment挂载完毕执行一次而已
         return (
           <div>
             <h3>count: {propState.counter.count}</h3>
@@ -196,6 +196,7 @@ export default App;
 ___
 ## 🔨更多精彩示例
 ### [cc版本的ant-design-pro](https://github.com/fantasticsoul/rcc-antd-pro)
+### [一个相对完整的示例](https://stackblitz.com/edit/cc-awesome)
 ### [有趣的counter](https://stackblitz.com/edit/funny-counter)
 ### [增强的counter](https://stackblitz.com/edit/dva-example-count-1saxx8)
 ### [Jsrun playground](http://jsrun.net/fLXKp/play) 
