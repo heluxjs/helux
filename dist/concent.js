@@ -1,3 +1,4 @@
+
 if (!this._assertThisInitialized) {
   this._assertThisInitialized = function (self) {
     if (self === void 0) {
@@ -28,7 +29,6 @@ if (!this._inheritsLoose) {
     subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 }
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -261,7 +261,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.1.92',
+      version: '1.1.95',
       author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'promise land'
     },
@@ -298,9 +298,11 @@ if (!this._inheritsLoose) {
     if (window) {
       console.log("%c[[isHotReloadMode]] window.name:" + window.name, 'color:green;border:1px solid green');
 
-      if (window.webpackHotUpdate || window.name === 'previewFrame') {
-        result = true;
-      }
+      if (window.webpackHotUpdate || window.name === 'previewFrame' //for stackblitz
+      || window.__SANDBOX_DATA__ // for codesandbox
+      ) {
+          result = true;
+        }
     }
 
     return result;
@@ -4277,6 +4279,9 @@ if (!this._inheritsLoose) {
 
     try {
       util.justTip("cc version " + ccContext.info.version);
+      ccContext.isCcAlreadyStartup = true;
+      ccContext.isHot = isHot;
+      ccContext.errorHandler = errorHandler;
 
       if (ccContext.isCcAlreadyStartup) {
         var err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -4353,10 +4358,6 @@ if (!this._inheritsLoose) {
           return ccMiddlewares.push(m);
         });
       }
-
-      ccContext.isCcAlreadyStartup = true;
-      ccContext.isHot = isHot;
-      ccContext.errorHandler = errorHandler;
     } catch (err) {
       if (errorHandler) errorHandler(err);else throw err;
     }
@@ -4594,6 +4595,7 @@ if (!this._inheritsLoose) {
         module = _ref.m,
         sharedStateKeys = _ref.s,
         globalStateKeys = _ref.g,
+        storedStateKeys = _ref.st,
         stateToPropMapping = _ref.pm,
         isPropStateModuleMode = _ref.mm,
         isSingle = _ref.is,
@@ -4606,6 +4608,7 @@ if (!this._inheritsLoose) {
       module: module,
       sharedStateKeys: sharedStateKeys,
       globalStateKeys: globalStateKeys,
+      storedStateKeys: storedStateKeys,
       stateToPropMapping: stateToPropMapping,
       isPropStateModuleMode: isPropStateModuleMode,
       isSingle: isSingle,

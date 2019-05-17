@@ -8,7 +8,10 @@ export function isHotReloadMode() {
   let result = false;
   if (window) {
     console.log(`%c[[isHotReloadMode]] window.name:${window.name}`, 'color:green;border:1px solid green');
-    if (window.webpackHotUpdate || window.name === 'previewFrame') {
+    if (window.webpackHotUpdate 
+      || window.name === 'previewFrame' //for stackblitz
+      || window.__SANDBOX_DATA__ // for codesandbox
+      ) {
       result = true;
     }
   }

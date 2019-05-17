@@ -359,6 +359,9 @@ export default function ({
 } = {}) {
   try {
     util.justTip(`cc version ${ccContext.info.version}`);
+    ccContext.isCcAlreadyStartup = true;
+    ccContext.isHot = isHot;
+    ccContext.errorHandler = errorHandler;
 
     if (ccContext.isCcAlreadyStartup) {
       const err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -433,9 +436,6 @@ export default function ({
       middlewares.forEach(m => ccMiddlewares.push(m));
     }
 
-    ccContext.isCcAlreadyStartup = true;
-    ccContext.isHot = isHot;
-    ccContext.errorHandler = errorHandler;
   } catch (err) {
     if (errorHandler) errorHandler(err);
     else throw err;

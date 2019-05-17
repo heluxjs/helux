@@ -17,6 +17,7 @@ export default function (ccClassKey, {
   m: module,
   s: sharedStateKeys,
   g: globalStateKeys,
+  st: storedStateKeys,
   pm: stateToPropMapping,
   mm: isPropStateModuleMode,
   is: isSingle,
@@ -24,5 +25,5 @@ export default function (ccClassKey, {
   re: reducerModule,
   ex: extendInputClass,
 } = {}) {
-  return register(ccClassKey, { extendInputClass, module, sharedStateKeys, globalStateKeys, stateToPropMapping, isPropStateModuleMode, isSingle, asyncLifecycleHook, reducerModule });
+  return register(ccClassKey, { extendInputClass, module, sharedStateKeys, globalStateKeys, storedStateKeys, stateToPropMapping, isPropStateModuleMode, isSingle, asyncLifecycleHook, reducerModule });
 }
