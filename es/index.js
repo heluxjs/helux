@@ -21,6 +21,7 @@ import _CcFragment from './component/CcFragment';
 
 export const startup = _startup;
 export const load = _load;
+export const run = _load;
 export const register = _register;
 export const r = _r;
 export const registerToDefault = _registerToDefault;
@@ -41,26 +42,27 @@ export const createDispatcher = _createDispatcher;
 export const CcFragment = _CcFragment;
 
 const defaultExport = {
-  emit: _emit,
-  emitWith: _emitWith,
-  off: _off,
-  connect: _connect,
-  dispatch: _dispatch,
-  startup: _startup,
+  emit,
+  emitWith,
+  off,
+  connect,
+  dispatch,
+  startup,
   load,
-  register: _register,
-  r: _r,
-  registerToDefault: _registerToDefault,
-  registerSingleClassToDefault: _registerSingleClassToDefault,
-  configure: _configure,
-  invoke: _invoke,
-  invokeSingle: _invokeSingle,
-  setGlobalState: _setGlobalState,
-  setState: _setState,
-  getState: _getState,
-  ccContext: _ccContext,
-  createDispatcher: _createDispatcher,
-  CcFragment: _CcFragment,
+  run,
+  register,
+  r,
+  registerToDefault,
+  registerSingleClassToDefault,
+  configure,
+  invoke,
+  invokeSingle,
+  setGlobalState,
+  setState,
+  getState,
+  ccContext,
+  createDispatcher,
+  CcFragment,
 }
 
 if (window) {

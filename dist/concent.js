@@ -29,6 +29,7 @@ if (!this._inheritsLoose) {
   }
 }
 
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -261,7 +262,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.1.95',
+      version: '1.1.99',
       author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'promise land'
     },
@@ -5291,6 +5292,7 @@ if (!this._inheritsLoose) {
 
   var startup$1 = startup;
   var load = _load;
+  var run = _load;
   var register$2 = register$1;
   var r = _r;
   var registerToDefault = _registerToDefault;
@@ -5310,26 +5312,27 @@ if (!this._inheritsLoose) {
   var createDispatcher$1 = createDispatcher;
   var CcFragment$1 = CcFragment;
   var defaultExport = {
-    emit: emit,
-    emitWith: _emitWith,
-    off: _off,
-    connect: _connect,
-    dispatch: _dispatch,
-    startup: startup,
+    emit: emit$1,
+    emitWith: emitWith,
+    off: off,
+    connect: connect,
+    dispatch: dispatch,
+    startup: startup$1,
     load: load,
-    register: register$1,
-    r: _r,
-    registerToDefault: _registerToDefault,
-    registerSingleClassToDefault: _registerSingleClassToDefault,
-    configure: _configure,
-    invoke: invoke,
-    invokeSingle: _invokeSingle,
-    setGlobalState: setGlobalState,
-    setState: _setState,
-    getState: getState$1,
-    ccContext: ccContext,
-    createDispatcher: createDispatcher,
-    CcFragment: CcFragment
+    run: run,
+    register: register$2,
+    r: r,
+    registerToDefault: registerToDefault,
+    registerSingleClassToDefault: registerSingleClassToDefault,
+    configure: configure,
+    invoke: invoke$1,
+    invokeSingle: invokeSingle,
+    setGlobalState: setGlobalState$1,
+    setState: setState$1,
+    getState: getState$2,
+    ccContext: ccContext$1,
+    createDispatcher: createDispatcher$1,
+    CcFragment: CcFragment$1
   };
 
   if (window) {
@@ -5338,6 +5341,7 @@ if (!this._inheritsLoose) {
 
   exports.startup = startup$1;
   exports.load = load;
+  exports.run = run;
   exports.register = register$2;
   exports.r = r;
   exports.registerToDefault = registerToDefault;
