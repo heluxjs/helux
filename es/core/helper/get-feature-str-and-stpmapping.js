@@ -41,7 +41,7 @@ export default function getFeatureStrAndStpMapping(connectSpec) {
         if (!moduleState.hasOwnProperty(sKey)) {
           throw new Error(`${invalidConnect} module[${m}]'s key[${sKey}] not declared in cc store `);
         } else {
-          feature += `sKey,`;
+          feature += `${sKey},`;
           stateToPropMapping[`${m}/${sKey}`] = sKey;
         }
       });

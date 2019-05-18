@@ -29,6 +29,7 @@ if (!this._inheritsLoose) {
   }
 }
 
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -259,7 +260,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.1.99',
+      version: '1.1.102',
       author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'promise land'
     },
@@ -968,7 +969,7 @@ if (!this._inheritsLoose) {
           if (!moduleState.hasOwnProperty(sKey)) {
             throw new Error(invalidConnect + " module[" + m + "]'s key[" + sKey + "] not declared in cc store ");
           } else {
-            feature += "sKey,";
+            feature += sKey + ",";
             stateToPropMapping[m + "/" + sKey] = sKey;
           }
         });
