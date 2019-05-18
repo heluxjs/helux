@@ -169,7 +169,7 @@ function App(){
       <CcCounter_ />
       <CcCounter_ />
       {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数 */}
-      <CcFragment connect={{'foo/*':'', 'counter/*':''}} render={({propState, hook, dispatch})=>{
+      <CcFragment connect={{'foo':'*', 'counter':'*'}} render={({propState, hook, dispatch})=>{
         const [localCount, setCount] = hook.useState();
         hook.useEffect(()=>{
           alert('CcFragment挂载完毕');

@@ -61,9 +61,6 @@ const ccContext = {
   moduleSingleClass: {
 
   },
-  propModuleName_ccClassKeys_: {//module is watched by these ccClass's propState
-
-  },
   moduleName_ccClassKeys_: {
 
   },
@@ -75,6 +72,10 @@ const ccContext = {
   moduleName_globalStateKeys_: {
 
   },
+  // 映射好模块的状态所有key并缓存住，用于提高性能
+  moduleName_stateKeys_: {
+
+  },
   //to let cc know which ccClass are watching globalStateKeys
   globalCcClassKeys: [],
   /**
@@ -84,10 +85,9 @@ const ccContext = {
       globalStateKeys,
       isPropModuleMode:false,// when false, data were collected into propState directly, else collected into propState[module]
       propState:{},
-      propKey_stateKeyDescriptor_: {},
-      stateKey_propKeyDescriptor_: {},
-      stateToPropMapping:null,
       ccKeys: [],
+      stateToPropMapping: null,
+      connectedModule:{}
     }
   */
   ccClassKey_ccClassContext_: {

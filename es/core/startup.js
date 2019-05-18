@@ -14,6 +14,12 @@ function keysWarning(keyWord) {
   justWarning(`now cc is startup with non module mode, cc only allow you define ${keyWord} like {"$$default":{}, "$$global":{}}, cc will ignore other module keys`);
 }
 
+function setModuleState(module, state){
+  const _state = ccContext.store._state;
+  _state[module] = state;
+  ccContext.moduleName_stateKeys_[module] = Object.keys(state);
+}
+
 function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
   if (!isPlainJsonObject(store)) {
     throw new Error(`the store is not a plain json object!`);
@@ -27,7 +33,7 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
 
   const _state = ccContext.store._state;
   let globalState = store[MODULE_GLOBAL];
-  _state[MODULE_CC] = {};
+  setModuleState(MODULE_CC, {});
 
   if (isModuleMode) {
     const moduleNames = Object.keys(store);
@@ -44,7 +50,7 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
       console.log(ss('$$global module state not found, cc will generate one for user automatically!'), cl());
       globalState = {};
     }
-    _state[MODULE_GLOBAL] = globalState;
+    setModuleState(MODULE_GLOBAL, globalState);
 
     const len = moduleNames.length;
     let isDefaultModuleExist = false;
@@ -59,7 +65,7 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
           isDefaultModuleExist = true;
           console.log(ss('$$default module state found while startup cc!'), cl());
         }
-        _state[moduleName] = moduleState;
+        setModuleState(moduleName, moduleState);
 
         const sharedKey_globalKey_ = sharedToGlobalMapping[moduleName];
         if (sharedKey_globalKey_) {
@@ -69,7 +75,7 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
     }
 
     if (!isDefaultModuleExist) {
-      _state[MODULE_DEFAULT] = {};
+      setModuleState(MODULE_DEFAULT, {});
       console.log(ss('$$default module state not found,cc will generate one for user automatically!'), cl());
     }
   } else {// non module mode
@@ -86,11 +92,11 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
         if (!util.isModuleStateValid(store[MODULE_DEFAULT])) {
           throw util.makeError(ERR.CC_STORE_STATE_INVALID, vbi(` moduleName:${MODULE_DEFAULT}'s state is invalid!`));
         }
-        _state[MODULE_DEFAULT] = store[MODULE_DEFAULT];
+        setModuleState(MODULE_DEFAULT, store[MODULE_DEFAULT]);
         invalidKeyCount += 1;
         console.log(ss('$$default module state found while startup cc with non module mode!'), cl());
       } else {
-        _state[MODULE_DEFAULT] = {};
+        setModuleState(MODULE_DEFAULT, {});
       }
 
       if (includeGlobalModule) {
@@ -101,9 +107,9 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
         Object.keys(globalState).forEach(key => globalStateKeys.push(key));
         invalidKeyCount += 1;
         console.log(ss('$$global module state found while startup cc with non module mode!'), cl());
-        _state[MODULE_GLOBAL] = globalState;
+        setModuleState(MODULE_GLOBAL, globalState);
       } else {
-        _state[MODULE_GLOBAL] = {};
+        setModuleState(MODULE_GLOBAL, {});
       }
 
       if (Object.keys(store).length > invalidKeyCount) {
@@ -113,7 +119,7 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
       if (!util.isModuleStateValid(store)) {
         throw util.makeError(ERR.CC_STORE_STATE_INVALID, vbi(` moduleName:${MODULE_DEFAULT}'s state  is invalid!`));
       }
-      _state[MODULE_DEFAULT] = store;
+      setModuleState(MODULE_DEFAULT, store);
     }
   }
 
@@ -393,11 +399,12 @@ export default function ({
         if (!box) {
           box = document.createElement('div');
           box.id = CC_DISPATCHER_BOX;
-          box.style.position = 'fixed';
-          box.style.left = 0;
-          box.style.top = 0;
-          box.style.display = 'none';
-          box.style.zIndex = -888666;
+          const boxSt = box.style;
+          boxSt.position = 'fixed';
+          boxSt.left = 0;
+          boxSt.top = 0;
+          boxSt.display = 'none';
+          boxSt.zIndex = -888666;
           document.body.append(box);
         }
         ReactDOM.render(React.createElement(Dispatcher), box);
