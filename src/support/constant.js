@@ -52,8 +52,7 @@ export const ERR = {
   CC_CLASS_IS_NOT_SINGLE_BUT_YOU_CALL_INVOKE_SINGLE: 1105,
   CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE:1106,
   CC_CLASS_STATE_TO_PROP_MAPPING_INVALID:1107,
-  CC_CLASS_KEY_OF_STATE_TO_PROP_MAPPING_INVALID:1108,
-  CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED:1109,
+  CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED:1108,
 
   CC_CLASS_INSTANCE_KEY_DUPLICATE: 1200,
   CC_CLASS_INSTANCE_OPTION_INVALID: 1201,
@@ -132,7 +131,6 @@ export const ERR_MESSAGE = {
   [ERR.CC_CLASS_IS_NOT_SINGLE_BUT_YOU_CALL_INVOKE_SINGLE]: 'ccClass is declared as singleton, now cc found you are trying execute cc.invokeSingle, you can call cc.invoke instead, it does not care whether your ccClass is singleton or not! ',
   [ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE]: 'you are trying register a react class to a single class module, but cc found the target module has been registered!',
   [ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID]: 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!',
-  [ERR.CC_CLASS_KEY_OF_STATE_TO_PROP_MAPPING_INVALID]: 'key of stateToPropMapping is invalid, correct one may like $g/m, must and only include one slash, check it in your register method or connect method!',
   [ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED]: '$$fragment is cc built-in class key prefix, your class key can not start with it!',
 
   [ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_NOT_ARRAY]: 'storedStateKeys or sharedStateKeys is not an Array!',
