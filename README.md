@@ -170,9 +170,10 @@ function App(){
       <CcCounter_ />
       {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数 */}
       <CcFragment connect={{'foo':'*', 'counter':'*'}} render={({propState, hook, dispatch})=>{
-        const [localCount, setCount] = hook.useState();
+        const [localCount='', setCount] = hook.useState();
         hook.useEffect(()=>{
           alert('CcFragment挂载完毕');
+          return ()=>console.log('CcFragment卸载的时候才会执行这个清理函数');
         },[]);//第二位参数是空数组，让这个副作用只会在CcFragment挂载完毕执行一次而已
         return (
           <div>

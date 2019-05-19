@@ -313,7 +313,7 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
  */
 function getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, moduleName, ccClassGlobalStateKeys, ccClassSharedStateKeys) {
   if (isDispatcher) {//dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
-    return { sharedStateKeys: [], globalStateKeys: [] }
+    return { sharedStateKeys: moduleName_sharedStateKeys_[moduleName] || [], globalStateKeys: [] }
   }
 
   let globalStateKeys, sharedStateKeys;

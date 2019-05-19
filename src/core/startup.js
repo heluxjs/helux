@@ -315,37 +315,7 @@ function executeInitializer(isModuleMode, store, init) {
   }
 }
 
-/* 
-store in CC_CONTEXT may like:
- {
-  $$global:{
- 
-  },
-  module1:{
-    books:[],
-    user:{},
-    color:'red',
-    readCount:5,
-  },
-  module2:{
-    books:[],
-    colors:[],
-    followCount:15,
-  }
-}
-reducer = {
-  [moduleName1]:{
-    [actionType1]:callback(setState, {type:'',payload:''})
-    [actionType2]:callback(setState, {type:'',payload:''})
-  },
-  [moduleName2]:{
-    [actionType1]:callback(setState, {type:'',payload:''})
-  }
-}
-init = {
-  global:(setState)=>{}
-}
-*/
+
 export default function ({
   isModuleMode = false,
   store = {},

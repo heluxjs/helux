@@ -258,7 +258,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.0',
+      version: '1.2.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -674,9 +674,9 @@ if (!this._inheritsLoose) {
     return oneRef;
   }
 
-  function checkModuleName (moduleName, checkReducerModule) {
-    if (checkReducerModule === void 0) {
-      checkReducerModule = false;
+  function checkModuleName (moduleName, checkReducerConfig) {
+    if (checkReducerConfig === void 0) {
+      checkReducerConfig = false;
     }
 
     var _state = ccContext.store._state;
@@ -691,13 +691,13 @@ if (!this._inheritsLoose) {
     }
 
     if (moduleName !== MODULE_GLOBAL) {
-      if (_state[moduleName]) {
-        throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, verboseInfo("module[" + moduleName + "]"));
-      }
-
-      if (checkReducerModule) {
+      if (checkReducerConfig) {
         if (_reducer[moduleName]) {
           throw makeError(ERR.CC_REDUCER_MODULE_NAME_DUPLICATE, verboseInfo("module[" + moduleName + "]"));
+        }
+      } else {
+        if (_state[moduleName]) {
+          throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, verboseInfo("module[" + moduleName + "]"));
         }
       }
     }
@@ -1935,7 +1935,7 @@ if (!this._inheritsLoose) {
     if (isDispatcher) {
       //dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
       return {
-        sharedStateKeys: [],
+        sharedStateKeys: moduleName_sharedStateKeys_[moduleName] || [],
         globalStateKeys: []
       };
     }
@@ -3807,38 +3807,6 @@ if (!this._inheritsLoose) {
       });
     }
   }
-  /* 
-  store in CC_CONTEXT may like:
-   {
-    $$global:{
-   
-    },
-    module1:{
-      books:[],
-      user:{},
-      color:'red',
-      readCount:5,
-    },
-    module2:{
-      books:[],
-      colors:[],
-      followCount:15,
-    }
-  }
-  reducer = {
-    [moduleName1]:{
-      [actionType1]:callback(setState, {type:'',payload:''})
-      [actionType2]:callback(setState, {type:'',payload:''})
-    },
-    [moduleName2]:{
-      [actionType1]:callback(setState, {type:'',payload:''})
-    }
-  }
-  init = {
-    global:(setState)=>{}
-  }
-  */
-
 
   function startup (_temp) {
     var _ref = _temp === void 0 ? {} : _temp,
