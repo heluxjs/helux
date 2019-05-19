@@ -97,10 +97,10 @@ $ yarn add concent
 ```javascript
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
-import cc, { register, load, CcFragment } from 'concent';
+import cc, { register, run, CcFragment } from 'concent';
 
 //定义两个模块，foo 和 counter
-load({
+run({
   foo:{
     state:{//定义state
       age:1,
