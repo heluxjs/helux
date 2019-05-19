@@ -49,7 +49,6 @@ export const ERR = {
   CC_CLASS_STORE_MODULE_INVALID: 1102,
   CC_CLASS_MODULE_GLOBAL_DECLARE_NOT_ALLOWED: 1103,
   CC_CLASS_REDUCER_MODULE_INVALID: 1104,
-  CC_CLASS_IS_NOT_SINGLE_BUT_YOU_CALL_INVOKE_SINGLE: 1105,
   CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE:1106,
   CC_CLASS_STATE_TO_PROP_MAPPING_INVALID:1107,
   CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED:1108,
@@ -67,7 +66,6 @@ export const ERR = {
   CC_STORED_STATE_KEYS_OR_SHARED_KEYS_INCLUDE_NON_STRING_ELEMENT: 1301,
 
   CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_SHARED_STATE_KEYS: 1400,
-  CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_CONFIGURE_GLOBAL_STATE: 1401,
   CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY: 1402,
   CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT: 1403,
   CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_SHARED_TO_GLOBAL_MAPPING_KEY: 1404,
@@ -82,11 +80,11 @@ export const ERR = {
 }
 
 export const ERR_MESSAGE = {
-  [ERR.CC_ALREADY_STARTUP]: 'react-controller-center startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ',
+  [ERR.CC_ALREADY_STARTUP]: 'concent startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ',
   [ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE]: 'you are trying register a module class but cc startup with non module mode! ',
   [ERR.CC_MODULE_NAME_DUPLICATE]: 'module name duplicate!',
   [ERR.CC_REGISTER_A_CC_CLASS]: 'registering a cc class is prohibited! ',
-  [ERR.CC_MODULE_KEY_CC_FOUND]: 'key:"$$cc" is a built-in module name for react-controller-center,you can not configure it or the name like it in you store or reducer! ',
+  [ERR.CC_MODULE_KEY_CC_FOUND]: 'key:"$$cc" is a built-in module name for concent,you can not configure it or the name like it in you store or reducer! ',
   [ERR.CC_MODULE_NAME_INVALID]: `module name is invalid, /^[\$\#\&a-zA-Z0-9_-]+$/.test() is false. `,
   [ERR.CC_STORE_STATE_INVALID]: `module state of store must be a plain json object! `,
   [ERR.CC_STORE_MAPPING_IS_NOT_ALLOWED_IN_NON_MODULE]: `sharedToGlobalMapping is not allowed to supply to startup's options in non module. `,
@@ -102,7 +100,7 @@ export const ERR_MESSAGE = {
     cc guess you may set autoCreateDispatcher as false in StartupOption,
     if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, 
     ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:
-    import {createDispatcher} from 'react-control-center';
+    import {createDispatcher} from 'concent';
     const CcDispatcher = createDispatcher();
     <App>
       <CcDispatcher />
@@ -124,11 +122,10 @@ export const ERR_MESSAGE = {
   [ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_STATE_KEYS]: 'you must explicitly specify a ccKey for ccInstance if you want to use storeStateKeys!',
 
   [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate while you register a react class!  ',
-  [ERR.CC_CLASS_NOT_FOUND]: 'ccClass not found, make sure your ccClassKey been registered to react-control-center before you use the ccClass!  ',
+  [ERR.CC_CLASS_NOT_FOUND]: 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ',
   [ERR.CC_CLASS_STORE_MODULE_INVALID]: 'ccClass ccOption module value is invalid, can not match it in store! ',
   [ERR.CC_CLASS_MODULE_GLOBAL_DECLARE_NOT_ALLOWED]: `$$global is cc's build-in module name, all ccClass is watching $$global's state implicitly, user can not assign $$global to module prop!`,
   [ERR.CC_CLASS_REDUCER_MODULE_INVALID]: 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ',
-  [ERR.CC_CLASS_IS_NOT_SINGLE_BUT_YOU_CALL_INVOKE_SINGLE]: 'ccClass is declared as singleton, now cc found you are trying execute cc.invokeSingle, you can call cc.invoke instead, it does not care whether your ccClass is singleton or not! ',
   [ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE]: 'you are trying register a react class to a single class module, but cc found the target module has been registered!',
   [ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID]: 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!',
   [ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED]: '$$fragment is cc built-in class key prefix, your class key can not start with it!',
@@ -139,7 +136,6 @@ export const ERR_MESSAGE = {
   [ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_SHARED_STATE_KEYS]: 'some of your sharedStateKeys has been declared in CCClass globalStateKeys!',
   [ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY]: `globalStateKeys or sharedStateKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set sharedStateKeys='*' and globalStateKeys='*'`,
   [ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT]: 'globalStateKeys or sharedStateKeys include non string element!',
-  [ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_CONFIGURE_GLOBAL_STATE]: 'some keys of configured global state have been included in store.globalState',
   [ERR.CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_SHARED_TO_GLOBAL_MAPPING_KEY]: 'found key is sharedToGlobalMapping key in globalStateKeys, you should delete it ',
   [ERR.CC_CLASS_GLOBAL_STATE_KEYS_INCLUDE_KEY_NOT_DECLARED_IN_GLOBAL_STATE]: 'found key in globalStateKeys is not included in global state, check your globalStateKeys',
 

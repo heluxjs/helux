@@ -5,8 +5,7 @@ import _r from './core/r';
 import _registerToDefault from './core/register-to-default';
 import _registerSingleClassToDefault from './core/register-single-class-to-default';
 import _configure from './core/configure';
-import _invoke from './core/invoke';
-import _invokeSingle from './core/invoke-single';
+import _call from './core/call';
 import _setGlobalState from './core/set-global-state';
 import _setState from './core/set-state';
 import _getState from './core/get-state';
@@ -27,8 +26,7 @@ export const r = _r;
 export const registerToDefault = _registerToDefault;
 export const registerSingleClassToDefault = _registerSingleClassToDefault;
 export const configure = _configure;
-export const invoke = _invoke;
-export const invokeSingle = _invokeSingle;
+export const call = _call;
 export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const getState = _getState;
@@ -55,8 +53,7 @@ const defaultExport = {
   registerToDefault,
   registerSingleClassToDefault,
   configure,
-  invoke,
-  invokeSingle,
+  call,
   setGlobalState,
   setState,
   getState,

@@ -31,7 +31,6 @@ function bindStoreToCcContext(store, sharedToGlobalMapping, isModuleMode) {
   const globalStateKeys = ccContext.globalStateKeys;
   const pureGlobalStateKeys = ccContext.pureGlobalStateKeys;
 
-  const _state = ccContext.store._state;
   let globalState = store[MODULE_GLOBAL];
   setModuleState(MODULE_CC, {});
 

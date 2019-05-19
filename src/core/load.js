@@ -3,11 +3,11 @@ import util from '../support/util';
 
 /**
  * load will call startup
- * @param {{ [moduleName:string]: config:{state:object, reducer:object, watch:object, computed:object, init:object, sharedToGlobalMapping:object, moduleSingleClass:boolean} }} store
+ * @param {{ [moduleName:string]: config:{state:object, reducer:object, watch:object, computed:object, init:object, sharedToGlobalMapping:object, isClassSingle:boolean} }} store
  * @param option
  */
 
-export default function (store, option = {}) {
+export default function (store = {}, option = {}) {
   if (!util.isPlainJsonObject(store)) {
     throw new Error('[[load]]: param error, store is not a plain json object');
   }
@@ -25,14 +25,14 @@ export default function (store, option = {}) {
   const moduleNames = Object.keys(store);
   moduleNames.forEach(m => {
     const config = store[m];
-    const { state, reducer, watch, computed, init, sharedToGlobalMapping, moduleSingleClass } = config;
+    const { state, reducer, watch, computed, init, sharedToGlobalMapping, isClassSingle } = config;
     if (state) _store[m] = state;
     if (reducer) _reducer[m] = reducer;
     if (watch) _watch[m] = watch;
     if (computed) _computed[m] = computed;
     if (init) _init[m] = init;
     if (sharedToGlobalMapping) _sharedToGlobalMapping[m] = sharedToGlobalMapping;
-    if (typeof moduleSingleClass === 'boolean') _moduleSingleClass[m] = moduleSingleClass;
+    if (typeof isClassSingle === 'boolean') _moduleSingleClass[m] = isClassSingle;
   });
 
   if (!util.isObjectNotNull(_init)) _init = null;

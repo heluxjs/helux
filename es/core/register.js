@@ -27,7 +27,7 @@ import register from './helper/register';
  * and pay attention key naming duplicate, because a cc instance's state is merged from global state、module state and self state,
  * so cc don't allow sharedStateKeys and globalStateKeys has duplicate element
  * 
- * @param {object} [registerOption.connect] { [moduleName:string]: keys: string[] | '*'  }
+ * @param {{ [moduleName:string]: keys: string[] | '*' }} [registerOption.connect]
  * @param {string} [registerOption.reducerModule] default is equal as module if you don't declare it
  * if you call cc instance api $$dispatch without module and reducerMoudle like below
  * ```

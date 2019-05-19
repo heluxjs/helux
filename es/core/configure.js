@@ -1,62 +1,93 @@
 import ccContext from '../cc-context';
 import * as helper from './helper';
 import { ERR, MODULE_GLOBAL } from '../support/constant';
-import { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
+import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
+
+function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
+  const globalState = ccContext.store.getGlobalState();
+  if (inputGlobalConf) {
+    if (!util.isPlainJsonObject(inputGlobalConf)) {
+      throw new Error(`option.global${label} is not a plain json object`);
+    }
+
+    const globalConfKeys = Object.keys(inputGlobalConf);
+    globalConfKeys.forEach(gKey => {
+      if (storedGlobalConf.hasOwnProperty(gKey)) {
+        throw new Error(`key[${gKey}] duplicated in global.${label.toLowerCase()}`);
+      }
+      const confValue = inputGlobalConf[gKey];
+      storedGlobalConf[gKey] = confValue;
+      if (label === 'State') ccGlobalStateKeys.push(gKey);
+      else if (label === 'Computed') {
+        const val = globalState[gKey];
+        const computedVal = confValue(val, val, globalState);
+        ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
+      }
+    });
+  }
+}
 
 /**
  * @description configure module、state、option to cc
  * @author zzk
  * @export
- * @param {String} module
- * @param {Object} state
- * @param {Object} [option] reducer、init、sharedToGlobalMapping
- * @param {Object} [option.reducer]  you can define multi reducer for a module by specify a reducer
- * @param {Object} [option.moduleReducer]  if you specify moduleReducer and reducer at the same time, the reducer will be ignored!
- * cc will give state module name as moduleReducer key
- * @param {Object} [option.init]
- * @param {Object} [option.globalState]  this globalState will been merged to $$global module state
- * @param {Object} [option.sharedToGlobalMapping]
- * @param {Object} [option.middlewares]
+ * @param {string} module
+ * @param {{state:object, reducer:object, watch:object, computed:object, init:object, sharedToGlobalMapping:object, isClassSingle:boolean}} config
+ * @param {object} [option] reducer、init、sharedToGlobalMapping
+ * @param {{[reducerModuleName:string]:{[fnName:string]:function}}} [option.reducer]
+ * @param {object} [option.globalState] will been merged to $$global module state
+ * @param {object} [option.globalWatch] will been merged to $$global module watch
+ * @param {object} [option.globalComputed] will been merged to $$global module computed
+ * @param {function[]} [option.middlewares]
  */
-export default function (module, state, { singleClass, moduleReducer, reducer, init, globalState, sharedToGlobalMapping, middlewares=[] } = {}) {
+export default function (module, config, option = {}) {
   if (!ccContext.isCcAlreadyStartup) {
     throw new Error('cc is not startup yet, you can not call cc.configure!');
   }
   if (!ccContext.isModuleMode) {
     throw new Error('cc is running in non module node, can not call cc.configure');
   }
+  if (!util.isPlainJsonObject(config)) {
+    throw new Error('[[configure]] param type error, config is not plain json object!');
+  }
+  if (module === MODULE_GLOBAL) {
+    throw new Error('cc do not allow configure global module');
+  }
+
+  const { state, reducer, computed, watch, init, sharedToGlobalMapping, isClassSingle } = config;
+  const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
 
   helper.checkModuleName(module);
   helper.checkModuleState(state, module);
 
   const _state = ccContext.store._state;
   const _reducer = ccContext.reducer._reducer;
-  if (_state[module]) {
-    throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, verboseInfo(`moduleName ${module}`));
-  }
   _state[module] = state;
 
-  if (singleClass === true) {
+  if (computed) {
+    ccContext.computed._computedFn[module] = computed;
+    ccContext.computed._computedValue[module] = {};
+  }
+  if (watch) {
+    ccContext.watch[module] = watch
+  }
+
+  if (isClassSingle === true) {
     ccContext.moduleSingleClass[module] = true;
   }
 
-  if (moduleReducer) {
-    if (!isPlainJsonObject(moduleReducer)) {
-      throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`moduleName ${module} 's moduleReducer is invalid`));
+  if (optionReducer) {
+    if (!isPlainJsonObject(optionReducer)) {
+      throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] 's moduleReducer is invalid`));
     }
-    _reducer[module] = moduleReducer;
-  } else if (reducer) {
-    if (!isPlainJsonObject(reducer)) {
-      throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`moduleName ${module} 's moduleReducer is invalid`));
-    }
-    const reducerModuleNames = Object.keys(reducer);
+    const reducerModuleNames = Object.keys(optionReducer);
     reducerModuleNames.forEach(rmName => {
       helper.checkModuleName(rmName);
-      const moduleReducer = reducer[rmName];
+      const moduleReducer = optionReducer[rmName];
       if (!isPlainJsonObject(moduleReducer)) {
-        throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`moduleName ${module} reducer 's value  is invalid`));
+        throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] reducer 's value is invalid`));
       }
 
       if (rmName == MODULE_GLOBAL) {//merge input globalReducer to existed globalReducer
@@ -78,19 +109,20 @@ export default function (module, state, { singleClass, moduleReducer, reducer, i
     });
   }
 
-  const storedGlobalState = _state[MODULE_GLOBAL];
-  if (globalState) {
-    helper.checkModuleState(globalState, MODULE_GLOBAL);
-    const globalStateKeys = Object.keys(globalState);
-    globalStateKeys.forEach(gKey => {
-      if (storedGlobalState[gKey]) {
-        throw makeError(ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_CONFIGURE_GLOBAL_STATE, verboseInfo(`duplicate globalKey: ${gKey}`));
-      }
-      const stateValue = globalState[gKey];
-      storedGlobalState[gKey] = stateValue;
-      ccGlobalStateKeys.push(gKey);
-    });
+  if (reducer) {
+    if (!isPlainJsonObject(reducer)) {
+      throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`config.reducer is not a plain json object`));
+    }
+    _reducer[module] = reducer;
   }
+
+  const storedGlobalState = _state[MODULE_GLOBAL];
+  const storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
+  const storedGlobalWatch = ccContext.watch[MODULE_GLOBAL];
+  //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
+  setGlobalConfig(storedGlobalState, globalState, 'State');
+  setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
+  setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
 
   if (sharedToGlobalMapping) {
     helper.handleModuleSharedToGlobalMapping(module, sharedToGlobalMapping);
@@ -104,8 +136,11 @@ export default function (module, state, { singleClass, moduleReducer, reducer, i
   }
 
 
-  if (middlewares.length > 0) {
+  if (middlewares && middlewares.length > 0) {
     const ccMiddlewares = ccContext.middlewares;
-    middlewares.forEach(m => ccMiddlewares.push(m));
+    middlewares.forEach(m => {
+      if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
+      ccMiddlewares.push(m)
+    });
   }
 }

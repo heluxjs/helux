@@ -1,4 +1,4 @@
-import { MODULE_GLOBAL, MODULE_CC } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
 
 const refs = {};
 const setStateByModule = (module, partialState) => {
@@ -38,10 +38,14 @@ const setStateByModuleAndKey = (module, key, value) => {
 
 const computed = {
   _computedValue: {
-
+    [MODULE_GLOBAL]: {},
+    [MODULE_DEFAULT]: {},
+    [MODULE_CC]: {},
   },
   _computedFn: {
-
+    [MODULE_GLOBAL]: {},
+    [MODULE_DEFAULT]: {},
+    [MODULE_CC]: {},
   }
 };
 const watch = {};
@@ -196,9 +200,10 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.1.102',
-    author: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-    tag: 'promise land',
+    version: '1.2.0',
+    author: 'fantasticsoul',
+    emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
+    tag: 'xenogear',
   },
   // fragment association
   fragmentNameCount: 0,

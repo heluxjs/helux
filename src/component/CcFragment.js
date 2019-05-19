@@ -4,12 +4,12 @@ import {
   MODULE_DEFAULT, CC_FRAGMENT_PREFIX,
   MODULE_GLOBAL, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE
 } from '../support/constant';
-import emit from '../core/emit';
 import ccContext from '../cc-context';
 import util from '../support/util';
 import getFeatureStrAndStpMapping from '../core//helper/get-feature-str-and-stpmapping';
+import * as ev from '../core/helper/event';
 
-const { ccClassKey_ccClassContext_, fragmentFeature_classKey_ } = ccContext;
+const { ccClassKey_ccClassContext_, fragmentFeature_classKey_, computed } = ccContext;
 
 /**
  * 根据connect参数动态的把CcFragment划为某个ccClassKey的实例，同时计算出stateToPropMapping值
@@ -119,7 +119,7 @@ export default class CcFragment extends Component {
           if (Array.isArray(shouldEffectExecute)) {
             const len = shouldEffectExecute.length;
             if (len == 0) {
-              __hookMeta.effectSeeResult = false;// effect fn will been executed only in didMount
+              __hookMeta.effectSeeResult[cursor] = false;// effect fn will been executed only in didMount
             } else {// compare prevSee and curSee
               let effectSeeResult = false;
               const prevSeeArr = __hookMeta.effectSeeAoa[cursor];
@@ -148,14 +148,24 @@ export default class CcFragment extends Component {
 
     const dispatcher = helper.getDispatcherRef();
     this.__fragmentParams = {
+      connectedComputed: computed._computedValue,
       hook,
       propState: this.$$propState,
-      emit,
+      emit: (event, ...args) => {
+        ev.findEventHandlersToPerform(event, { identity: null }, ...args);
+      },
+      emitIdentity: (event, identity, ...args)=>{
+        ev.findEventHandlersToPerform(event, { identity }, ...args);
+      },
+      on: (event, handler)=>{
+        ev.bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, null, handler);
+      },
+      onIdentity: (event, identity, handler)=>{
+        ev.bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, identity, handler);
+      },
       dispatch: dispatcher.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1, ccKey),
       effect: dispatcher.__$$getEffectHandler(ccKey),
       xeffect: dispatcher.__$$getXEffectHandler(ccKey),
-      lazyEffect: dispatcher.__$$getLazyEffectHandler(ccKey),
-      lazyXeffect: dispatcher.__$$getLazyXEffectHandler(ccKey),
       sync: dispatcher.__$$getSyncHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE),
       setState: (module, state, lazyMs) => {
         dispatcher.$$changeState(state, {
@@ -204,6 +214,7 @@ export default class CcFragment extends Component {
     });
 
     const { ccUniqueKey, ccClassKey } = this.cc.ccState;
+    ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
     helper.unsetRef(ccClassKey, ccUniqueKey);
     if (super.componentWillUnmount) super.componentWillUnmount();
   }
