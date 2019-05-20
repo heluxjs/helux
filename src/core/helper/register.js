@@ -28,6 +28,8 @@ import runLater from './run-later';
 import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import computeCcUniqueKey from './compute-cc-unique-key';
 import getFeatureStrAndStpMapping from './get-feature-str-and-stpmapping';
+import extractStateByCcsync from './extract-state-by-ccsync';
+
 import * as ev from './event';
 
 const { verifyKeys, ccClassDisplayName, styleStr, color, verboseInfo, makeError, justWarning, throwCcHmrError } = util;
@@ -1239,36 +1241,26 @@ export default function register(ccClassKey, {
 
         $$sync(event, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
           const currentModule = this.cc.ccState.module;
-          let _module = currentModule, _delay = -1, _identity = '', stateKey = '';
+          let _module = currentModule, _delay = -1, _identity = '';
           const currentTarget = event.currentTarget;
           let { value, dataset } = currentTarget;
-          const { ccm, ccdelay, ccidt = '', ccint, ccsync } = dataset;
+          const { ccdelay, ccidt = '', ccint, ccsync } = dataset;
 
           if (!ccsync) {
             return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
-          } 
-          if (ccsync.includes('/')) {
-            const arr = ccsync.split('/');
-            _module = arr[0];
-            stateKey = arr[1];
-          } else {
-            stateKey = ccsync;
           }
 
-          if (ccm) _module = ccm;
+          if(ccsync.includes('/')){
+            _module = ccsync.split('/')[0];
+          }
+          const { state } = extractStateByCcsync(ccsync, value, ccint, getState(_module));
+
           if (ccdelay) {
-            try {
-              _delay = parseInt(ccdelay);
-            } catch (err) { }
+            try { _delay = parseInt(ccdelay); } catch (err) { }
           }
           if (ccidt) _identity = ccidt;
-          if (ccint !== undefined) {
-            try {
-              value = parseInt(value);
-            } catch (err) { }
-          }
 
-          this.$$changeState({ [stateKey]: value }, { ccKey: this.cc.ccKey, stateFor, module: _module, delay: _delay, identity: _identity });
+          this.$$changeState(state, { ccKey: this.cc.ccKey, stateFor, module: _module, delay: _delay, identity: _identity });
         }
 
         componentDidUpdate() {

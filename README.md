@@ -96,7 +96,6 @@ $ yarn add concent
 > 探索concent从这里开始，[点我看以下代码的在线示例](https://stackblitz.com/edit/concent-quick-start?file=index.js)
 ```javascript
 import React, {Component} from 'react';
-import ReactDOM from 'react-dom';
 import cc, { register, run, CcFragment } from 'concent';
 
 //定义两个模块，foo 和 counter
@@ -104,7 +103,10 @@ run({
   foo:{
     state:{//定义state
       age:1,
-      name:'concent'
+      name:'concent',
+      info:{
+        addr:'Beijing',
+      }
     }
   },
   counter:{
@@ -169,14 +171,14 @@ function App(){
       <CcCounter_ />
       <CcCounter_ />
       {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数, state是自己的state */}
-      <CcFragment state={{a:1,b:2}} connect={{'foo':'*', 'counter':'*'}} render={(params)=>{
+      <CcFragment state={{ a: 1, b: 2, c: { c1: 'c1', c2: 'c2' } }} connect={{ 'foo': '*', 'counter': '*' }} render={(params) => {
         const {state, setState, connectedState, connectedComputed, hook, dispatch, sync} = params;
 
         //CcFragment实例里hook维护的局部state
         const [localCount='', setCount] = hook.useState();
         const [localAge='', setAge] = hook.useState('age');
 
-        const {a, b} = state;//CcFragment实例自己的局部state
+        const {a, b, c} = state;//CcFragment实例自己的局部state
 
         hook.useEffect(()=>{
           alert('CcFragment挂载完毕');
@@ -209,12 +211,21 @@ function App(){
               {/** 使用sync句柄自动同步转态，data-ccsync里的key不加模块前缀的话，cc只会将和值同步到实例本地状态里 */}
               <input data-ccsync="b" value={b} onChange={sync}/>
             </p>
+            <p>
+              c1:<input data-ccsync="c.c1" value={c.c1} onChange={sync}/>
+              c2:<input data-ccsync="c.c2" value={c.c2} onChange={sync}/>
+            </p>
 
             <p>
               sync双向绑定模块状态：
               {/** 使用sync句柄自动同步转态，data-ccsync里的key加了模块名前缀foo，cc会广播这个状态到其他实例 */}
               <input data-ccsync="foo/age" value={connectedState.foo.age} onChange={sync}/>
             </p>
+            <p>
+              修改foo模块下的addr值:
+              <input data-ccsync="foo/info.addr" value={connectedState.foo.info.addr} onChange={sync}/>
+            </p>
+
           </div>
         )
       }}/>

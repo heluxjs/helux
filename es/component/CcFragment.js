@@ -8,6 +8,7 @@ import ccContext from '../cc-context';
 import util from '../support/util';
 import getFeatureStrAndStpMapping from '../core//helper/get-feature-str-and-stpmapping';
 import * as ev from '../core/helper/event';
+import extractStateByCcsync from '../core/helper/extract-state-by-ccsync';
 
 const { ccClassKey_ccClassContext_, fragmentFeature_classKey_, computed } = ccContext;
 
@@ -187,10 +188,8 @@ export default class CcFragment extends Component {
           if(ccsync.includes('/')){// syncModuleState 同步模块的state状态
             dispatcher.$$sync(e, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
           }else{// syncLocalState 同步本地的state状态
-            if (ccint !== undefined) {
-              try { value = parseInt(value) } catch (err) { }
-            }
-            __fragmentParams.setState({ [ccsync]: value });
+            const { state } = extractStateByCcsync(ccsync, value, ccint, this.state);
+            __fragmentParams.setState(state);
           }
         }
       },
@@ -253,7 +252,7 @@ export default class CcFragment extends Component {
     const { children, render } = this.props
     const view = render || children;
     if (typeof view === 'function') {
-      this.__fragmentParams.state = this.state;
+      this.__fragmentParams.state = this.state;//注意这里，一定要每次都取最新的
       return view(this.__fragmentParams) || React.createElement(Fragment);
     } else {
       return view;

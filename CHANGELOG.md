@@ -38,6 +38,10 @@
 ```
 * 修正`propState`命名(它严重不符合上下文语境表达的含义)，现在统一叫`connectedState`，cc类的连接状态都从`connectedState`读取
 * cc类的`xinvoke`或者`xeffect`，现在统一都会注入四种state:`state`、`moduleState`、`globalState`、`connectedState`
+* 支持多层key的双向绑定，语法`{module}/{key}.key2}`
+```
+  <input data-ccsync="foo/info.addr" value={connectedState.foo.info.addr} onChange={sync}/>
+```
 
 #### 2019-05-19
 * 去掉cc实例内置的 `$$commit`,`$$call`等系列相关的无用函数

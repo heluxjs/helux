@@ -30,17 +30,16 @@ if (!this._inheritsLoose) {
 }
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/objectWithoutPropertiesLoose'), require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom'), require('@babel/runtime/helpers/esm/readOnlyError')) :
-  typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/objectWithoutPropertiesLoose', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom', '@babel/runtime/helpers/esm/readOnlyError'], factory) :
-  (factory((global.ReactControlCenter = {}),global._objectWithoutPropertiesLoose,global._assertThisInitialized,global._inheritsLoose,global.React,global.ReactDOM,global._readOnlyError));
-}(this, (function (exports,_objectWithoutPropertiesLoose,_assertThisInitialized,_inheritsLoose,React,ReactDOM,_readOnlyError) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/objectWithoutPropertiesLoose'), require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
+  typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/objectWithoutPropertiesLoose', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
+  (factory((global.ReactControlCenter = {}),global._objectWithoutPropertiesLoose,global._assertThisInitialized,global._inheritsLoose,global.React,global.ReactDOM));
+}(this, (function (exports,_objectWithoutPropertiesLoose,_assertThisInitialized,_inheritsLoose,React,ReactDOM) { 'use strict';
 
   _objectWithoutPropertiesLoose = _objectWithoutPropertiesLoose && _objectWithoutPropertiesLoose.hasOwnProperty('default') ? _objectWithoutPropertiesLoose['default'] : _objectWithoutPropertiesLoose;
   _assertThisInitialized = _assertThisInitialized && _assertThisInitialized.hasOwnProperty('default') ? _assertThisInitialized['default'] : _assertThisInitialized;
   _inheritsLoose = _inheritsLoose && _inheritsLoose.hasOwnProperty('default') ? _inheritsLoose['default'] : _inheritsLoose;
   var React__default = 'default' in React ? React['default'] : React;
   ReactDOM = ReactDOM && ReactDOM.hasOwnProperty('default') ? ReactDOM['default'] : ReactDOM;
-  _readOnlyError = _readOnlyError && _readOnlyError.hasOwnProperty('default') ? _readOnlyError['default'] : _readOnlyError;
 
   var _ERR_MESSAGE;
 
@@ -258,7 +257,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.2',
+      version: '1.2.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1447,6 +1446,71 @@ if (!this._inheritsLoose) {
       stateToPropMapping: stateToPropMapping
     };
   }
+
+  function setValue(obj, keys, lastKeyIndex, keyIndex, value) {
+    var key = keys[keyIndex];
+
+    if (lastKeyIndex === keyIndex) {
+      obj[key] = value;
+    } else {
+      setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value);
+    }
+  }
+
+  var extractStateByCcsync = (function (ccsync, value, ccint, defaultState) {
+    var _value = value;
+
+    if (ccint !== undefined) {
+      try {
+        _value = parseInt(value);
+      } catch (err) {}
+    }
+
+    var module = null,
+        keys = [];
+
+    if (ccsync.includes('/')) {
+      var _ccsync$split = ccsync.split('/'),
+          _module = _ccsync$split[0],
+          restStr = _ccsync$split[1];
+
+      module = _module;
+
+      if (restStr.includes('.')) {
+        keys = restStr.split('.');
+      } else {
+        keys = [restStr];
+      }
+    } else if (ccsync.includes('.')) {
+      keys = ccsync.split('.');
+    } else {
+      keys = [ccsync];
+    }
+
+    if (keys.length == 1) {
+      var _state;
+
+      return {
+        module: module,
+        state: (_state = {}, _state[keys[0]] = _value, _state)
+      };
+    } else {
+      var _state2;
+
+      var _keys = keys,
+          key = _keys[0],
+          restKeys = _keys.slice(1);
+
+      var targetState;
+      if (module) targetState = ccContext.store.getState(module);else targetState = defaultState;
+      var subState = targetState[key];
+      setValue(subState, restKeys, restKeys.length - 1, 0, _value);
+      return {
+        module: module,
+        state: (_state2 = {}, _state2[key] = subState, _state2)
+      };
+    }
+  });
 
   var event_handlers_ = ccContext.event_handlers_,
       handlerKey_handler_$1 = ccContext.handlerKey_handler_,
@@ -3318,8 +3382,6 @@ if (!this._inheritsLoose) {
           };
 
           _proto.$$sync = function $$sync(event, stateFor) {
-            var _this$$$changeState;
-
             if (stateFor === void 0) {
               stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
             }
@@ -3328,14 +3390,12 @@ if (!this._inheritsLoose) {
 
             var _module = currentModule,
                 _delay = -1,
-                _identity = '',
-                stateKey = '';
+                _identity = '';
 
             var currentTarget = event.currentTarget;
             var value = currentTarget.value,
                 dataset = currentTarget.dataset;
-            var ccm = dataset.ccm,
-                ccdelay = dataset.ccdelay,
+            var ccdelay = dataset.ccdelay,
                 _dataset$ccidt2 = dataset.ccidt,
                 ccidt = _dataset$ccidt2 === void 0 ? '' : _dataset$ccidt2,
                 ccint = dataset.ccint,
@@ -3346,14 +3406,11 @@ if (!this._inheritsLoose) {
             }
 
             if (ccsync.includes('/')) {
-              var arr = ccsync.split('/');
-              _module = arr[0];
-              stateKey = arr[1];
-            } else {
-              stateKey = ccsync;
+              _module = ccsync.split('/')[0];
             }
 
-            if (ccm) _module = ccm;
+            var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, getState(_module)),
+                state = _extractStateByCcsync.state;
 
             if (ccdelay) {
               try {
@@ -3362,14 +3419,7 @@ if (!this._inheritsLoose) {
             }
 
             if (ccidt) _identity = ccidt;
-
-            if (ccint !== undefined) {
-              try {
-                value = parseInt(value);
-              } catch (err) {}
-            }
-
-            this.$$changeState((_this$$$changeState = {}, _this$$$changeState[stateKey] = value, _this$$$changeState), {
+            this.$$changeState(state, {
               ccKey: this.cc.ccKey,
               stateFor: stateFor,
               module: _module,
@@ -4807,16 +4857,11 @@ if (!this._inheritsLoose) {
               // syncModuleState 同步模块的state状态
               dispatcher.$$sync(e, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
             } else {
-              var _fragmentParams$setS;
-
               // syncLocalState 同步本地的state状态
-              if (ccint !== undefined) {
-                try {
-                  value = (_readOnlyError("value"), parseInt(value));
-                } catch (err) {}
-              }
+              var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, _this.state),
+                  _state = _extractStateByCcsync.state;
 
-              __fragmentParams.setState((_fragmentParams$setS = {}, _fragmentParams$setS[ccsync] = value, _fragmentParams$setS));
+              __fragmentParams.setState(_state);
             }
           }
         },
@@ -4909,7 +4954,8 @@ if (!this._inheritsLoose) {
       var view = render || children;
 
       if (typeof view === 'function') {
-        this.__fragmentParams.state = this.state;
+        this.__fragmentParams.state = this.state; //注意这里，一定要每次都取最新的
+
         return view(this.__fragmentParams) || React__default.createElement(React.Fragment);
       } else {
         return view;
