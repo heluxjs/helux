@@ -60,7 +60,7 @@ export default class CcFragment extends Component {
     const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, MODULE_DEFAULT);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
-    this.$$connectedState = ccClassKey_ccClassContext_[ccClassKey].connectedState || {};
+    const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
 
     // only bind reactForceUpdateRef for CcFragment
     const reactForceUpdateRef = this.forceUpdate.bind(this);
@@ -154,9 +154,9 @@ export default class CcFragment extends Component {
     const dispatcher = helper.getDispatcherRef();
     this.state = state;
     const __fragmentParams = {
-      connectedComputed: computed._computedValue,
+      connectedComputed: ccClassContext.connectedComputed || {},
+      connectedState: ccClassContext.connectedState || {},
       hook,
-      connectedState: this.$$connectedState,
       emit: (event, ...args) => {
         ev.findEventHandlersToPerform(event, { identity: null }, ...args);
       },
