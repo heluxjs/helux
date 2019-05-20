@@ -1,10 +1,13 @@
-const feature_timerId = {};
+var feature_timerId = {};
+export default (function (cb, feature, delay) {
+  if (delay === void 0) {
+    delay = 1000;
+  }
 
-export default (cb, feature, delay = 1000) => {
-  const timerId = feature_timerId[feature];
-  if(timerId)clearTimeout(timerId);
-  feature_timerId[feature] = setTimeout(()=>{
+  var timerId = feature_timerId[feature];
+  if (timerId) clearTimeout(timerId);
+  feature_timerId[feature] = setTimeout(function () {
     delete feature_timerId[feature];
     cb();
   }, delay);
-}
+});

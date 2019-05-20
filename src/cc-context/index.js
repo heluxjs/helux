@@ -2,9 +2,6 @@ import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
 
 const refs = {};
 const setStateByModule = (module, partialState) => {
-  // const fullState = getState(module);
-  // const mergedState = { ...fullState, ...partialState };
-  // _state[module] = mergedState;
   Object.keys(partialState).forEach(key => {
     setStateByModuleAndKey(module, key, partialState[key]);
   });
@@ -199,7 +196,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.3',
+    version: '1.2.4',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

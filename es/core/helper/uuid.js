@@ -1,23 +1,28 @@
 import { randomNumber } from '../../support/util';
-let _currentIndex = 0;
-const letters = [
-  'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G',
-  'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N',
-  'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T',
-  'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z',
-]
+var _currentIndex = 0;
+var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
 
-function genNonceStr(length = 6) {
-  let ret = '';
-  for (let i = 0; i < length; i++) {
+function genNonceStr(length) {
+  if (length === void 0) {
+    length = 6;
+  }
+
+  var ret = '';
+
+  for (var i = 0; i < length; i++) {
     ret += letters[randomNumber()];
   }
+
   return ret;
 }
 
-export default function (forFragment = false) {
-  const prefix = forFragment === true ? 'CCF' : 'CC';
+export default function (forFragment) {
+  if (forFragment === void 0) {
+    forFragment = false;
+  }
+
+  var prefix = forFragment === true ? 'CCF' : 'CC';
   _currentIndex++;
-  const nonceStr = genNonceStr();
-  return `${prefix}_${Date.now()}_${nonceStr}_${_currentIndex}`;
+  var nonceStr = genNonceStr();
+  return prefix + "_" + Date.now() + "_" + nonceStr + "_" + _currentIndex;
 }

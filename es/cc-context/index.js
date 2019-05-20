@@ -1,56 +1,49 @@
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
+var _computedValue, _computedFn, _state2, _reducer;
 
-const refs = {};
-const setStateByModule = (module, partialState) => {
-  // const fullState = getState(module);
-  // const mergedState = { ...fullState, ...partialState };
-  // _state[module] = mergedState;
-  Object.keys(partialState).forEach(key => {
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
+var refs = {};
+
+var setStateByModule = function setStateByModule(module, partialState) {
+  Object.keys(partialState).forEach(function (key) {
     setStateByModuleAndKey(module, key, partialState[key]);
   });
-}
+};
 
-const getState = (module) => {
-  const _state = ccContext.store._state;
+var _getState = function getState(module) {
+  var _state = ccContext.store._state;
   return _state[module];
-}
+};
 
-const setStateByModuleAndKey = (module, key, value) => {
-  const moduleState = getState(module);
-  const moduleComputedFn = computed._computedFn[module];
-  const watchFn = watch[module];
-  const oldValue = moduleState[key];
+var setStateByModuleAndKey = function setStateByModuleAndKey(module, key, value) {
+  var moduleState = _getState(module);
+
+  var moduleComputedFn = computed._computedFn[module];
+  var watchFn = watch[module];
+  var oldValue = moduleState[key];
 
   if (moduleComputedFn) {
-    const fn = moduleComputedFn[key];
+    var fn = moduleComputedFn[key];
+
     if (fn) {
-      const computedValue = fn(value, oldValue, moduleState);
+      var computedValue = fn(value, oldValue, moduleState);
       computed._computedValue[module][key] = computedValue;
     }
   }
 
   if (watchFn) {
-    const fn = watchFn[key];
-    if (fn) fn(value, oldValue);//fn(newValue, oldValue)
+    var _fn = watchFn[key];
+    if (_fn) _fn(value, oldValue); //fn(newValue, oldValue)
   }
+
   moduleState[key] = value;
-}
-
-const computed = {
-  _computedValue: {
-    [MODULE_GLOBAL]: {},
-    [MODULE_DEFAULT]: {},
-    [MODULE_CC]: {},
-  },
-  _computedFn: {
-    [MODULE_GLOBAL]: {},
-    [MODULE_DEFAULT]: {},
-    [MODULE_CC]: {},
-  }
 };
-const watch = {};
 
-const ccContext = {
+var computed = {
+  _computedValue: (_computedValue = {}, _computedValue[MODULE_GLOBAL] = {}, _computedValue[MODULE_DEFAULT] = {}, _computedValue[MODULE_CC] = {}, _computedValue),
+  _computedFn: (_computedFn = {}, _computedFn[MODULE_GLOBAL] = {}, _computedFn[MODULE_DEFAULT] = {}, _computedFn[MODULE_CC] = {}, _computedFn)
+};
+var watch = {};
+var ccContext = {
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,
@@ -62,26 +55,17 @@ const ccContext = {
   //  cc allow multi react class register to a module by default, but if want to control some module 
   //  to only allow register one react class, flag the module name as true in this option object
   //  example:  {fooModule: true, barModule:true}
-  moduleSingleClass: {
-
-  },
-  moduleName_ccClassKeys_: {
-
-  },
+  moduleSingleClass: {},
+  moduleName_ccClassKeys_: {},
   // map from moduleName to sharedStateKeys
-  moduleName_sharedStateKeys_: {
-
-  },
+  moduleName_sharedStateKeys_: {},
   // map from moduleName to globalStateKeys
-  moduleName_globalStateKeys_: {
-
-  },
+  moduleName_globalStateKeys_: {},
   // 映射好模块的状态所有key并缓存住，用于提高性能
-  moduleName_stateKeys_: {
-
-  },
+  moduleName_stateKeys_: {},
   //to let cc know which ccClass are watching globalStateKeys
   globalCcClassKeys: [],
+
   /**
     ccClassContext:{
       module,
@@ -93,140 +77,96 @@ const ccContext = {
       connectedModule:{}
     }
   */
-  ccClassKey_ccClassContext_: {
-
-  },
+  ccClassKey_ccClassContext_: {},
   // [globalKey]:${modules}, let cc know what modules are watching a same globalKey
-  globalKey_toModules_: {
-
-  },
-  sharedToGlobalMapping: {
-
-  },
+  globalKey_toModules_: {},
+  sharedToGlobalMapping: {},
   //  translate sharedToGlobalMapping object to another shape: {sharedKey: {globalMappingKey, fromModule}, ... }
-  sharedKey_globalMappingKeyDescriptor_: {
-
-  },
+  sharedKey_globalMappingKeyDescriptor_: {},
   // [globalKey]:${sharedKey}
-  globalMappingKey_sharedKey_: {
-
-  },
+  globalMappingKey_sharedKey_: {},
   // [globalKey]:${modules}, let cc know what modules are watching a same globalMappingKey
-  globalMappingKey_toModules_: {
-
-  },
+  globalMappingKey_toModules_: {},
   // let cc know a globalMappingKey is mapped from which module
-  globalMappingKey_fromModule_: {
-
-  },
+  globalMappingKey_fromModule_: {},
   // globalStateKeys is maintained by cc automatically,
   // when user call cc.setGlobalState, or ccInstance.setGlobalState,
   // commit state will be checked strictly by cc with globalStateKeys,
   // all the keys of commit state must been included in globalStateKeys
-  globalStateKeys: [
-
-  ],
+  globalStateKeys: [],
   //  all global keys that exclude sharedToGlobalMapping keys
-  pureGlobalStateKeys: [
-
-  ],
+  pureGlobalStateKeys: [],
   store: {
-    _state: {
-      [MODULE_GLOBAL]: {
-
-      },
-      [MODULE_CC]: {
-
-      }
+    _state: (_state2 = {}, _state2[MODULE_GLOBAL] = {}, _state2[MODULE_CC] = {}, _state2),
+    getState: function getState(module) {
+      if (module) return _getState(module);else return ccContext.store._state;
     },
-    getState: function (module) {
-      if (module) return getState(module);
-      else return ccContext.store._state;
-    },
-    setState: function (module, partialSharedState) {
+    setState: function setState(module, partialSharedState) {
       setStateByModule(module, partialSharedState);
     },
-    setStateByModuleAndKey,
-    setGlobalState: function (partialGlobalState) {
+    setStateByModuleAndKey: setStateByModuleAndKey,
+    setGlobalState: function setGlobalState(partialGlobalState) {
       setStateByModule(MODULE_GLOBAL, partialGlobalState);
     },
-    setGlobalStateByKey: function (key, value) {
+    setGlobalStateByKey: function setGlobalStateByKey(key, value) {
       setStateByModuleAndKey(MODULE_GLOBAL, key, value);
     },
-    getGlobalState: function () {
+    getGlobalState: function getGlobalState() {
       return ccContext.store._state[MODULE_GLOBAL];
     }
   },
   reducer: {
-    _reducer: {
-      [MODULE_GLOBAL]: {
-
-      },
-      [MODULE_CC]: {
-
-      }
-    }
+    _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer)
   },
-  computed,
-  watch,
+  computed: computed,
+  watch: watch,
   refStore: {
-    _state: {
-
-    },
-    setState: function (ccUniqueKey, partialStoredState) {
-      const _state = ccContext.refStore._state;
-      const fullStoredState = _state[ccUniqueKey];
-      const mergedState = Object.assign({}, fullStoredState, partialStoredState);
+    _state: {},
+    setState: function setState(ccUniqueKey, partialStoredState) {
+      var _state = ccContext.refStore._state;
+      var fullStoredState = _state[ccUniqueKey];
+      var mergedState = Object.assign({}, fullStoredState, partialStoredState);
       _state[ccUniqueKey] = mergedState;
-    },
+    }
   },
   ccKey_ref_: refs,
   //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
-  event_handlers_: {
-
-  },
+  event_handlers_: {},
   ccUniqueKey_handlerKeys_: {},
   // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
   // it is a ref that towards ccUniqueKeyEvent_handler_'s key
   // when component unmounted, it's handler will been removed
-  handlerKey_handler_: {
-  },
-
-
-  ccKey_option_: {
-
-  },
-  refs,
+  handlerKey_handler_: {},
+  ccKey_option_: {},
+  refs: refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.3',
+    version: '1.2.4',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-    tag: 'xenogear',
+    tag: 'xenogear'
   },
   // fragment association
   fragmentNameCount: 0,
-  fragmentFeature_classKey_: {
-
-  },
+  fragmentFeature_classKey_: {},
   fragmentCcKeys: [],
   errorHandler: null,
-  middlewares: [],
-}
+  middlewares: []
+};
 
 if (window && !window.sss) {
   window.sss = ccContext.store._state;
 }
 
-
 export function getCcContext() {
   return ccContext;
 }
+var lsLen = localStorage.length;
+var _refStoreState = ccContext.refStore._state;
 
-const lsLen = localStorage.length;
-const _refStoreState = ccContext.refStore._state;
 for (var i = 0; i < lsLen; i++) {
-  const lsKey = localStorage.key(i);
+  var lsKey = localStorage.key(i);
+
   if (lsKey.startsWith('CCSS_')) {
     try {
       _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));

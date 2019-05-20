@@ -1,12 +1,10 @@
 import ccContext from '../cc-context';
 import util from '../support/util';
 import { ERR } from '../support/constant';
-
-const vbi = util.verboseInfo;
-const PICK_RANDOM_INS = 1;
-const PICK_SPECIFIED_INS = 2;
-const PICK_SINGLETON_INS = 3;
-
+var vbi = util.verboseInfo;
+var PICK_RANDOM_INS = 1;
+var PICK_SPECIFIED_INS = 2;
+var PICK_SINGLETON_INS = 3;
 /**
  * @description
  * @author zzk
@@ -16,44 +14,61 @@ const PICK_SINGLETON_INS = 3;
  * @param {any[]} args
  * @returns
  */
-export default function (keyDesc, method, ...args) {
-  const { ccClassKey_ccClassContext_, ccKey_ref_ } = ccContext;
 
-  let ccClassKey = '', ccKey = '';
+export default function (keyDesc, method) {
+  var _ref$method;
+
+  var ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
+      ccKey_ref_ = ccContext.ccKey_ref_;
+  var ccClassKey = '',
+      ccKey = '';
+
   if (keyDesc.includes('/')) {
-    const [key1, key2] = keyDesc.split('/');
+    var _keyDesc$split = keyDesc.split('/'),
+        key1 = _keyDesc$split[0],
+        key2 = _keyDesc$split[1];
+
     ccClassKey = key1, ccKey = key2;
-  }else{
+  } else {
     ccClassKey = keyDesc;
   }
 
-  const classContext = ccClassKey_ccClassContext_[ccClassKey];
+  var classContext = ccClassKey_ccClassContext_[ccClassKey];
+
   if (!classContext) {
-    const err = util.makeError(ERR.CC_CLASS_NOT_FOUND, vbi(` ccClassKey:${ccClassKey}`));
-    if (ccContext.isStrict) throw err;
-    else return console.error(err);
+    var err = util.makeError(ERR.CC_CLASS_NOT_FOUND, vbi(" ccClassKey:" + ccClassKey));
+    if (ccContext.isStrict) throw err;else return console.error(err);
   }
 
-  let ref;
+  var ref;
+
   if (ccKey) {
-    const ccUniKey = util.makeUniqueCcKey(ccClassKey, ccKey);
+    var ccUniKey = util.makeUniqueCcKey(ccClassKey, ccKey);
     ref = ccKey_ref_[ccUniKey];
   } else {
-    const ccKeys = classContext.ccKeys;
-    ref = ccKey_ref_[ccKeys[0]];// pick first one
+    var ccKeys = classContext.ccKeys;
+    ref = ccKey_ref_[ccKeys[0]]; // pick first one
   }
 
   if (!ref) {
-    const err = util.makeError(ERR.CC_CLASS_INSTANCE_NOT_FOUND, vbi(` ccClassKey:${ccClassKey} ccKey:${ccKey}`));
-    // only error, the target instance may has been unmounted really!
-    return console.error(err.message);
+    var _err = util.makeError(ERR.CC_CLASS_INSTANCE_NOT_FOUND, vbi(" ccClassKey:" + ccClassKey + " ccKey:" + ccKey)); // only error, the target instance may has been unmounted really!
+
+
+    return console.error(_err.message);
   }
 
   var fn = ref[method];
+
   if (!fn) {
-    const err = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi(` method:${method}`));
-    // only error
-    return console.error(err.message);
+    var _err2 = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi(" method:" + method)); // only error
+
+
+    return console.error(_err2.message);
   }
-  ref[method].call(ref, ...args);
+
+  for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    args[_key - 2] = arguments[_key];
+  }
+
+  (_ref$method = ref[method]).call.apply(_ref$method, [ref].concat(args));
 }

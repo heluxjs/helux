@@ -1137,7 +1137,10 @@ export default function register(ccClassKey, {
             if (firstParamType === 'function') {
               return this.cc.__invoke(firstParam, { context: giveContextToUserLoginFn, methodName }, ...args);
             } else if (firstParamType === 'object') {
-              const { fn, ...option } = firstParam;
+              // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
+              const fn = firstParam.fn;
+              delete firstParam.fn;
+              const option = firstParam;
               if (typeof fn != 'function') {
                 throw err;
               }
@@ -1147,6 +1150,7 @@ export default function register(ccClassKey, {
             } else {
               throw err;
             }
+            // return ()=>{}
           }
         }
         __$$getEffectHandler(ccKey) {

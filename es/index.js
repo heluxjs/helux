@@ -17,50 +17,48 @@ import _dispatch from './core/dispatch';
 import _ccContext from './cc-context';
 import _createDispatcher from './core/create-dispatcher';
 import _CcFragment from './component/CcFragment';
-
-export const startup = _startup;
-export const load = _load;
-export const run = _load;
-export const register = _register;
-export const r = _r;
-export const registerToDefault = _registerToDefault;
-export const registerSingleClassToDefault = _registerSingleClassToDefault;
-export const configure = _configure;
-export const call = _call;
-export const setGlobalState = _setGlobalState;
-export const setState = _setState;
-export const getState = _getState;
-export const emit = _emit;
-export const emitWith = _emitWith;
-export const off = _off;
-export const connect = _connect;
-export const dispatch = _dispatch;
-export const ccContext = _ccContext;
-export const createDispatcher = _createDispatcher;
-export const CcFragment = _CcFragment;
-
-const defaultExport = {
-  emit,
-  emitWith,
-  off,
-  connect,
-  dispatch,
-  startup,
-  load,
-  run,
-  register,
-  r,
-  registerToDefault,
-  registerSingleClassToDefault,
-  configure,
-  call,
-  setGlobalState,
-  setState,
-  getState,
-  ccContext,
-  createDispatcher,
-  CcFragment,
-}
+export var startup = _startup;
+export var load = _load;
+export var run = _load;
+export var register = _register;
+export var r = _r;
+export var registerToDefault = _registerToDefault;
+export var registerSingleClassToDefault = _registerSingleClassToDefault;
+export var configure = _configure;
+export var call = _call;
+export var setGlobalState = _setGlobalState;
+export var setState = _setState;
+export var getState = _getState;
+export var emit = _emit;
+export var emitWith = _emitWith;
+export var off = _off;
+export var connect = _connect;
+export var dispatch = _dispatch;
+export var ccContext = _ccContext;
+export var createDispatcher = _createDispatcher;
+export var CcFragment = _CcFragment;
+var defaultExport = {
+  emit: emit,
+  emitWith: emitWith,
+  off: off,
+  connect: connect,
+  dispatch: dispatch,
+  startup: startup,
+  load: load,
+  run: run,
+  register: register,
+  r: r,
+  registerToDefault: registerToDefault,
+  registerSingleClassToDefault: registerSingleClassToDefault,
+  configure: configure,
+  call: call,
+  setGlobalState: setGlobalState,
+  setState: setState,
+  getState: getState,
+  ccContext: ccContext,
+  createDispatcher: createDispatcher,
+  CcFragment: CcFragment
+};
 
 if (window) {
   window.cc = defaultExport;

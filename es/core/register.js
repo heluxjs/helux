@@ -1,5 +1,4 @@
 import register from './helper/register';
-
 /****
  * @param {string} ccClassKey a cc class's name, you can register a same react class to cc with different ccClassKey,
  * but you can not register multi react class with a same ccClassKey!
@@ -88,10 +87,12 @@ import register from './helper/register';
  * }
  * ```
  */
+
 export default function (ccClassKey, registerOption) {
   if (registerOption) {
     delete registerOption.__checkStartUp;
     delete registerOption.__calledBy;
   }
+
   return register(ccClassKey, registerOption);
 }

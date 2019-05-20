@@ -1,17 +1,29 @@
 import { isStateValid, isObjectNotNull } from '../../support/util';
-
-export default function (state, stateKeys, returnNullIfEmpty = false) {
-  const partialState = {};
-  if (!isStateValid(state) || !isObjectNotNull(state)) {
-    return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true };
+export default function (state, stateKeys, returnNullIfEmpty) {
+  if (returnNullIfEmpty === void 0) {
+    returnNullIfEmpty = false;
   }
-  let isStateEmpty = true;
-  stateKeys.forEach(key => {
-    const value = state[key];
+
+  var partialState = {};
+
+  if (!isStateValid(state) || !isObjectNotNull(state)) {
+    return {
+      partialState: returnNullIfEmpty ? null : partialState,
+      isStateEmpty: true
+    };
+  }
+
+  var isStateEmpty = true;
+  stateKeys.forEach(function (key) {
+    var value = state[key];
+
     if (value !== undefined) {
       partialState[key] = value;
       isStateEmpty = false;
     }
   });
-  return { partialState, isStateEmpty };
+  return {
+    partialState: partialState,
+    isStateEmpty: isStateEmpty
+  };
 }

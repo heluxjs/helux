@@ -2,33 +2,32 @@ import ccContext from '../cc-context';
 import * as helper from './helper';
 import { ERR, MODULE_GLOBAL } from '../support/constant';
 import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
-
-const ccGlobalStateKeys = ccContext.globalStateKeys;
+var ccGlobalStateKeys = ccContext.globalStateKeys;
 
 function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
-  const globalState = ccContext.store.getGlobalState();
+  var globalState = ccContext.store.getGlobalState();
+
   if (inputGlobalConf) {
     if (!util.isPlainJsonObject(inputGlobalConf)) {
-      throw new Error(`option.global${label} is not a plain json object`);
+      throw new Error("option.global" + label + " is not a plain json object");
     }
 
-    const globalConfKeys = Object.keys(inputGlobalConf);
-    globalConfKeys.forEach(gKey => {
+    var globalConfKeys = Object.keys(inputGlobalConf);
+    globalConfKeys.forEach(function (gKey) {
       if (storedGlobalConf.hasOwnProperty(gKey)) {
-        throw new Error(`key[${gKey}] duplicated in global.${label.toLowerCase()}`);
+        throw new Error("key[" + gKey + "] duplicated in global." + label.toLowerCase());
       }
-      const confValue = inputGlobalConf[gKey];
+
+      var confValue = inputGlobalConf[gKey];
       storedGlobalConf[gKey] = confValue;
-      if (label === 'State') ccGlobalStateKeys.push(gKey);
-      else if (label === 'Computed') {
-        const val = globalState[gKey];
-        const computedVal = confValue(val, val, globalState);
+      if (label === 'State') ccGlobalStateKeys.push(gKey);else if (label === 'Computed') {
+        var val = globalState[gKey];
+        var computedVal = confValue(val, val, globalState);
         ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
       }
     });
   }
 }
-
 /**
  * @description configure module、state、option to cc
  * @author zzk
@@ -42,36 +41,55 @@ function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
  * @param {object} [option.globalComputed] will been merged to $$global module computed
  * @param {function[]} [option.middlewares]
  */
-export default function (module, config, option = {}) {
+
+
+export default function (module, config, option) {
+  if (option === void 0) {
+    option = {};
+  }
+
   if (!ccContext.isCcAlreadyStartup) {
     throw new Error('cc is not startup yet, you can not call cc.configure!');
   }
+
   if (!ccContext.isModuleMode) {
     throw new Error('cc is running in non module node, can not call cc.configure');
   }
+
   if (!util.isPlainJsonObject(config)) {
     throw new Error('[[configure]] param type error, config is not plain json object!');
   }
+
   if (module === MODULE_GLOBAL) {
     throw new Error('cc do not allow configure global module');
   }
 
-  const { state, reducer, computed, watch, init, sharedToGlobalMapping, isClassSingle } = config;
-  const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
-
+  var state = config.state,
+      reducer = config.reducer,
+      computed = config.computed,
+      watch = config.watch,
+      init = config.init,
+      sharedToGlobalMapping = config.sharedToGlobalMapping,
+      isClassSingle = config.isClassSingle;
+  var _option = option,
+      optionReducer = _option.reducer,
+      globalState = _option.globalState,
+      globalWatch = _option.globalWatch,
+      globalComputed = _option.globalComputed,
+      middlewares = _option.middlewares;
   helper.checkModuleName(module);
   helper.checkModuleState(state, module);
-
-  const _state = ccContext.store._state;
-  const _reducer = ccContext.reducer._reducer;
+  var _state = ccContext.store._state;
+  var _reducer = ccContext.reducer._reducer;
   _state[module] = state;
 
   if (computed) {
     ccContext.computed._computedFn[module] = computed;
     ccContext.computed._computedValue[module] = {};
   }
+
   if (watch) {
-    ccContext.watch[module] = watch
+    ccContext.watch[module] = watch;
   }
 
   if (isClassSingle === true) {
@@ -80,27 +98,33 @@ export default function (module, config, option = {}) {
 
   if (optionReducer) {
     if (!isPlainJsonObject(optionReducer)) {
-      throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] 's moduleReducer is invalid`));
+      throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] 's moduleReducer is invalid"));
     }
-    const reducerModuleNames = Object.keys(optionReducer);
-    reducerModuleNames.forEach(rmName => {
+
+    var reducerModuleNames = Object.keys(optionReducer);
+    reducerModuleNames.forEach(function (rmName) {
       helper.checkModuleName(rmName);
-      const moduleReducer = optionReducer[rmName];
+      var moduleReducer = optionReducer[rmName];
+
       if (!isPlainJsonObject(moduleReducer)) {
-        throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] reducer 's value is invalid`));
+        throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] reducer 's value is invalid"));
       }
 
-      if (rmName == MODULE_GLOBAL) {//merge input globalReducer to existed globalReducer
-        const typesOfGlobal = Object.keys(moduleReducer);
-        const globalReducer = _reducer[MODULE_GLOBAL];
-        typesOfGlobal.forEach(type => {
+      if (rmName == MODULE_GLOBAL) {
+        //merge input globalReducer to existed globalReducer
+        var typesOfGlobal = Object.keys(moduleReducer);
+        var globalReducer = _reducer[MODULE_GLOBAL];
+        typesOfGlobal.forEach(function (type) {
           if (globalReducer[type]) {
-            throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo(`type ${type}`));
+            throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo("type " + type));
           }
+
           var reducerFn = moduleReducer[type];
+
           if (typeof reducerFn !== 'function') {
             throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
           }
+
           globalReducer[type] = reducerFn;
         });
       } else {
@@ -111,15 +135,16 @@ export default function (module, config, option = {}) {
 
   if (reducer) {
     if (!isPlainJsonObject(reducer)) {
-      throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`config.reducer is not a plain json object`));
+      throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("config.reducer is not a plain json object"));
     }
+
     _reducer[module] = reducer;
   }
 
-  const storedGlobalState = _state[MODULE_GLOBAL];
-  const storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
-  const storedGlobalWatch = ccContext.watch[MODULE_GLOBAL];
-  //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
+  var storedGlobalState = _state[MODULE_GLOBAL];
+  var storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
+  var storedGlobalWatch = ccContext.watch[MODULE_GLOBAL]; //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
+
   setGlobalConfig(storedGlobalState, globalState, 'State');
   setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
   setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
@@ -132,15 +157,15 @@ export default function (module, config, option = {}) {
     if (typeof init !== 'function') {
       throw new Error('init value must be a function!');
     }
+
     init(helper.getStateHandlerForInit(module));
   }
 
-
   if (middlewares && middlewares.length > 0) {
-    const ccMiddlewares = ccContext.middlewares;
-    middlewares.forEach(m => {
+    var ccMiddlewares = ccContext.middlewares;
+    middlewares.forEach(function (m) {
       if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
-      ccMiddlewares.push(m)
+      ccMiddlewares.push(m);
     });
   }
 }
