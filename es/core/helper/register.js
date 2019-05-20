@@ -18,7 +18,7 @@ import ccContext from '../../cc-context';
 import util, { isPlainJsonObject, makeHandlerKey } from '../../support/util';
 import co from 'co';
 import extractStateByKeys from './extract-state-by-keys';
-import setPropState from './set-prop-state';
+import setConnectedState from './set-connected-state';
 import buildCcClassContext from './build-cc-class-context';
 import catchCcError from './catch-cc-error';
 import mapModuleAndCcClassKeys from './map-module-and-cc-class-keys';
@@ -394,22 +394,22 @@ function watchValueForRef(refWatchFn, refEntireState, userCommitState) {
   }
 }
 
-function updateModulePropState(targetClassContext, commitModule, commitState, commitStateKeys) {
+function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
   const { stateToPropMapping, connectedModule } = targetClassContext;
   if(connectedModule[commitModule] === 1){
-    const { propState, ccKeys } = targetClassContext;
+    const { connectedState, ccKeys } = targetClassContext;
 
-    let isSetPropStateTriggered = false;
+    let isSetConnectedStateTriggered = false;
     commitStateKeys.forEach(sKey => {
       const moduledStateKey = `${commitModule}/${sKey}`;
       if(stateToPropMapping[moduledStateKey]){
-        setPropState(propState, commitModule, sKey, commitState[sKey]);
-        isSetPropStateTriggered = true;
+        setConnectedState(connectedState, commitModule, sKey, commitState[sKey]);
+        isSetConnectedStateTriggered = true;
       }
     });
 
-    //针对targetClassContext，遍历完提交的state key，触发了更新propState的行为，把targetClassContext对应的cc实例都强制刷新一遍
-    if (isSetPropStateTriggered === true) {
+    //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
+    if (isSetConnectedStateTriggered === true) {
       ccKeys.forEach(ccUniKey => {
         const ref = ccKey_ref_[ccUniKey];
         if (ref) ref.cc.reactForceUpdate();
@@ -418,14 +418,14 @@ function updateModulePropState(targetClassContext, commitModule, commitState, co
   }
 }
 
-function broadcastPropState(commitModule, commitState) {
+function broadcastConnectedState(commitModule, commitState) {
   // if there is no any react class registered to module, here will get undefined, so use safeGetArrayFromObject
-  const commitStateKeys = Object.keys(commitState);//提前把commitStateKeys拿到，省去了在updateModulePropState内部的多次获取过程
+  const commitStateKeys = Object.keys(commitState);//提前把commitStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
   Object.keys(moduleName_ccClassKeys_).forEach(moduleName => {
     const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
     ccClassKeys.forEach(ccClassKey => {
       const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-      updateModulePropState(ccClassContext, commitModule, commitState, commitStateKeys );
+      updateConnectedState(ccClassContext, commitModule, commitState, commitStateKeys );
     });
   });
 }
@@ -536,8 +536,8 @@ export default function register(ccClassKey, {
             const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
             setRef(this, isSingle, ccClassKey, newCcKey, ccUniqueKey, ccOption);
 
-            // bind propState to $$propState
-            this.$$propState = ccClassContext.propState || {};
+            // bind connectedState to $$connectedState
+            this.$$connectedState = ccClassContext.connectedState || {};
 
             // bind refComputed,computed result will been collected into refComputed by __$$recoverState later
             this.$$refComputed = {};
@@ -694,7 +694,8 @@ export default function register(ccClassKey, {
                     executionContext, {
                       effect: this.__$$getEffectHandler(ccKey), xeffect: this.__$$getXEffectHandler(ccKey),
                       invoke: this.__$$getInvokeHandler(), xinvoke: this.__$$getXInvokeHandler(),
-                      moduleState: getState(targetModule), state: this.state, store: getState(), globalState: getState(MODULE_GLOBAL),
+                      moduleState: getState(targetModule), connectedState: ccClassContext[currentModule],
+                      state: this.state, store: getState(), globalState: getState(MODULE_GLOBAL),
                       dispatch, dispatchIdentity, d: dispatch, di: dispatchIdentity,
                     });
                   args.unshift(executionContextForUser);
@@ -975,7 +976,7 @@ export default function register(ccClassKey, {
                 }
               }
 
-              broadcastPropState(moduleName, originalState);
+              broadcastConnectedState(moduleName, originalState);
             },
             broadcastGlobalState: (identity, globalSate) => {
               globalCcClassKeys.forEach(ccClassKey => {
@@ -994,7 +995,7 @@ export default function register(ccClassKey, {
                   });
                 }
               });
-              broadcastPropState(MODULE_GLOBAL, globalSate);
+              broadcastConnectedState(MODULE_GLOBAL, globalSate);
             },
 
             emit: (event, ...args) => {
@@ -1042,7 +1043,7 @@ export default function register(ccClassKey, {
 
           this.$$moduleComputed = _computedValue[currentModule] || {};
           this.$$globalComputed = _computedValue[MODULE_GLOBAL] || {};
-          this.$$connectedComputed = _computedValue;
+          this.$$connectedComputed = ccClassContext.connectedComputed;
 
           this.$$forceSyncState = thisCC.forceSyncState;// add$$ prefix, to let user it is cc api
           this.setState = thisCC.setState;//let setState call cc.setState
@@ -1245,14 +1246,13 @@ export default function register(ccClassKey, {
 
           if (!ccsync) {
             return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
+          } 
+          if (ccsync.includes('/')) {
+            const arr = ccsync.split('/');
+            _module = arr[0];
+            stateKey = arr[1];
           } else {
-            if (ccsync.includes('/')) {
-              const arr = ccsync.split('/');
-              _module = arr[0];
-              stateKey = arr[1];
-            } else {
-              stateKey = ccsync;
-            }
+            stateKey = ccsync;
           }
 
           if (ccm) _module = ccm;

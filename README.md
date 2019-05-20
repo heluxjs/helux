@@ -168,22 +168,52 @@ function App(){
     <div>
       <CcCounter_ />
       <CcCounter_ />
-      {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数 */}
-      <CcFragment connect={{'foo':'*', 'counter':'*'}} render={({propState, hook, dispatch})=>{
+      {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数, state是自己的state */}
+      <CcFragment state={{a:1,b:2}} connect={{'foo':'*', 'counter':'*'}} render={(params)=>{
+        const {state, setState, connectedState, connectedComputed, hook, dispatch, sync} = params;
+
+        //CcFragment实例里hook维护的局部state
         const [localCount='', setCount] = hook.useState();
+        const [localAge='', setAge] = hook.useState('age');
+
+        const {a, b} = state;//CcFragment实例自己的局部state
+
         hook.useEffect(()=>{
           alert('CcFragment挂载完毕');
           return ()=>console.log('CcFragment卸载的时候才会执行这个清理函数');
         },[]);//第二位参数是空数组，让这个副作用只会在CcFragment挂载完毕执行一次而已
         return (
           <div>
-            <h3>count: {propState.counter.count}</h3>
-            <h3>age: {propState.foo.age}</h3>
-            <h3>name: {propState.foo.name}</h3>
+            <h3>count: {connectedState.counter.count}</h3>
+            <h3>age: {connectedState.foo.age}</h3>
+            <h3>name: {connectedState.foo.name}</h3>
             <p>
               输入count:<input value={localCount} onChange={e=>setCount(e.currentTarget.value)} />
               {/** 直接通过dispatch句柄来调用counter模块的uploadCount函数 */}
               <button onClick={()=>dispatch('counter/uploadCount', localCount)}>点击确认，修改foo模块里的count</button>
+            </p>
+
+            <p>
+              {/** hook的setter自动实现了双向绑定 */}
+              localAge:<input value={localAge} onChange={setAge} />
+            </p>
+
+            <p>
+              setState修改本地转态：
+              {/** 使用setState句柄修改局部state状态 */}
+              <input value={a} onChange={e=>setState({a:e.currentTarget.value})}/>
+            </p>
+
+            <p>
+              sync双向绑定本地状态：
+              {/** 使用sync句柄自动同步转态，data-ccsync里的key不加模块前缀的话，cc只会将和值同步到实例本地状态里 */}
+              <input data-ccsync="b" value={b} onChange={sync}/>
+            </p>
+
+            <p>
+              sync双向绑定模块状态：
+              {/** 使用sync句柄自动同步转态，data-ccsync里的key加了模块名前缀foo，cc会广播这个状态到其他实例 */}
+              <input data-ccsync="foo/age" value={connectedState.foo.age} onChange={sync}/>
             </p>
           </div>
         )
@@ -209,7 +239,7 @@ ___
 ![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-core.png)
 ### `react类`、`cc类`和`cc实例`三者之间的关系
 ![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc2.png)
-### cc组件的`state`和`$$propState`是怎么来的
+### cc组件的`state`和`$$connectedState`是怎么来的
 ![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-class-and-ins.png)
 ### [在cc里用class和function实现counter](https://juejin.im/post/5c8f77bdf265da60ec2812f7)
 ### [聊一聊cc的变化侦测和hook实现](https://juejin.im/post/5c8d99f4e51d4555816d6335)

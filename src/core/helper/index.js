@@ -12,7 +12,7 @@ export { default as runLater } from './run-later';
 export { default as uuid } from './uuid';
 export { default as catchCcError } from './catch-cc-error';
 export { default as buildCcClassContext } from './build-cc-class-context';
-export { default as setPropState } from './set-prop-state';
+export { default as setConnectedState } from './set-connected-state';
 export { default as setRef } from './set-ref';
 export { default as unsetRef } from './unset-ref';
 export { default as computeCcUniqueKey } from './compute-cc-unique-key';

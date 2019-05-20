@@ -67,7 +67,7 @@ import register from './helper/register';
  *        this.props.$$dispatch('form/getInitData');
  *      }
  *      render(){
- *        const {regularFormSubmitting} = this.props.$$propState.from;
+ *        const {regularFormSubmitting} = this.props.$$connectedState.from;
  *      }
  *    }
  * ```

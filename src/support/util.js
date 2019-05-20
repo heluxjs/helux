@@ -106,7 +106,7 @@ export function makeCcClassContext(module, ccClassKey, sharedStateKeys, globalSt
     sharedStateKeys,
     globalStateKeys,
     ccKeys: [],
-    propState: {},
+    connectedState: {},
     stateToPropMapping: null,
     connectedModule:{},//记录当前cc类连接到了其他哪些模块
   }

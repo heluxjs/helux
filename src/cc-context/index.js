@@ -87,8 +87,7 @@ const ccContext = {
       module,
       sharedStateKeys,
       globalStateKeys,
-      isPropModuleMode:false,// when false, data were collected into propState directly, else collected into propState[module]
-      propState:{},
+      connectedState:{},
       ccKeys: [],
       stateToPropMapping: null,
       connectedModule:{}
@@ -200,7 +199,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.1',
+    version: '1.2.2',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
