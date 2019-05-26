@@ -1,7 +1,7 @@
 import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
 import util from '../../support/util'
-import setConnectedState from './set-connected-state';
+import setConnectedState from '../state/set-connected-state';
 
 const { makeError: me, throwCcHmrError } = util;
 

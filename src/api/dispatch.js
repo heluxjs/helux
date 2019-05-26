@@ -1,7 +1,7 @@
 import util from '../support/util';
 import {CC_FRAGMENT_PREFIX} from '../support/constant';
 import ccContext from '../cc-context';
-import pickOneRef from './helper/pick-one-ref';
+import pickOneRef from '../core/ref/pick-one-ref';
 
 export default function (action, payLoadWhenActionIsString, identity='', [ccClassKey, ccKey, throwError] = []) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {

@@ -37,7 +37,6 @@ export default function (store = {}, option = {}) {
 
   if (!util.isObjectNotNull(_init)) _init = null;
   const startupOption = {
-    isModuleMode: true,
     store: _store,
     reducer: _reducer,
     watch: _watch,

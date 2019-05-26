@@ -1,6 +1,6 @@
 import util from '../../support/util';
 import { BROADCAST_TRIGGERED_BY_CC_API_SET_STATE, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE } from '../../support/constant';
-import pickOneRef from './pick-one-ref';
+import pickOneRef from '../ref/pick-one-ref';
 
 export default function (module, state, lazyMs = -1, throwError = false) {
   try {

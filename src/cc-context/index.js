@@ -43,9 +43,15 @@ const computed = {
     [MODULE_GLOBAL]: {},
     [MODULE_DEFAULT]: {},
     [MODULE_CC]: {},
-  }
+  },
+  getRootComputedValue: () => computed._computedValue,
+  getRootComputedFn: () => computed._computedFn,
 };
-const watch = {};
+const watch = {
+  _watch: {},
+  getRootWatch: () => watch._watch,
+  getModuleWatch: module => watch._watch[module],
+};
 
 const ccContext = {
   isDebug: false,
@@ -54,7 +60,6 @@ const ccContext = {
   // like componentDidCatch in react 16.*
   isStrict: false,
   returnRootState: false,
-  isModuleMode: false,
   isCcAlreadyStartup: false,
   //  cc allow multi react class register to a module by default, but if want to control some module 
   //  to only allow register one react class, flag the module name as true in this option object
@@ -129,12 +134,6 @@ const ccContext = {
   ],
   store: {
     _state: {
-      [MODULE_GLOBAL]: {
-
-      },
-      [MODULE_CC]: {
-
-      }
     },
     getState: function (module) {
       if (module) return getState(module);
@@ -152,7 +151,11 @@ const ccContext = {
     },
     getGlobalState: function () {
       return ccContext.store._state[MODULE_GLOBAL];
-    }
+    },
+    //对state直接赋值，cc启动的时候某些场景需要调用此函数
+    initStateDangerously: (module, state)=>{
+      ccContext.store._state[module] = state;
+    },
   },
   reducer: {
     _reducer: {

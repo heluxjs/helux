@@ -1,5 +1,5 @@
 import util from '../support/util';
-import pickOneRef from './helper/pick-one-ref';
+import pickOneRef from '../core/ref/pick-one-ref';
 
 export default function (event, ...args) {
   if (event === undefined) {

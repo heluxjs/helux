@@ -17,20 +17,20 @@ import {
 import ccContext from '../../cc-context';
 import util, { isPlainJsonObject, makeHandlerKey } from '../../support/util';
 import co from 'co';
-import extractStateByKeys from './extract-state-by-keys';
-import setConnectedState from './set-connected-state';
+import extractStateByKeys from '../state/extract-state-by-keys';
+import setConnectedState from '../state/set-connected-state';
 import buildCcClassContext from './build-cc-class-context';
 import catchCcError from './catch-cc-error';
-import mapModuleAndCcClassKeys from './map-module-and-cc-class-keys';
-import unsetRef from './unset-ref';
-import setRef from './set-ref';
+import mapModuleAndCcClassKeys from '../mapper/map-module-and-cc-class-keys';
+import unsetRef from '../ref/unset-ref';
+import setRef from '../ref/set-ref';
 import runLater from './run-later';
-import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
+import getAndStoreValidGlobalState from '../state/get-and-store-valid-global-state';
 import computeCcUniqueKey from './compute-cc-unique-key';
 import getFeatureStrAndStpMapping from './get-feature-str-and-stpmapping';
-import extractStateByCcsync from './extract-state-by-ccsync';
-
-import * as ev from './event';
+import extractStateByCcsync from '../state/extract-state-by-ccsync';
+import * as checker from '../checker';
+import * as ev from '../event';
 
 const { verifyKeys, ccClassDisplayName, styleStr, color, verboseInfo, makeError, justWarning, throwCcHmrError } = util;
 const {
@@ -64,34 +64,17 @@ function handleError(err, throwError = true) {
 }
 
 function checkStoreModule(module, checkGlobalModule = true, throwError = true) {
-  if (!ccContext.isModuleMode) {
-    if (module !== MODULE_DEFAULT) {
-      handleError(me(ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE, vbi(`module:${module}`)), throwError);
-      return false;
-    } else return true;
-  } else {
-    if (checkGlobalModule && module === MODULE_GLOBAL) {
-      handleError(me(ERR.CC_CLASS_MODULE_GLOBAL_DECLARE_NOT_ALLOWED), throwError);
-      return false;
-    }
-
-    if (!_state[module]) {
-      handleError(me(ERR.CC_CLASS_STORE_MODULE_INVALID, vbi(`module:${module} is not configured in cc's store`)), throwError);
-      return false;
-    } else return true;
+  if (checkGlobalModule && module === MODULE_GLOBAL) {
+    handleError(me(ERR.CC_CLASS_MODULE_GLOBAL_DECLARE_NOT_ALLOWED), throwError);
+    return false;
   }
-}
 
-function checkReducerModule(reducerModule, throwError = true) {
-  if (!ccContext.isModuleMode) {
-    if (reducerModule != MODULE_DEFAULT) {
-      handleError(me(ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE, `reducerModule:${reducerModule}`), throwError);
-    }
-  } else {
-    //this check can be optional?? if user don't configure a reducer for a module, may be he really don't want to use dispatch
-    // if (!_reducer[reducerModule]) {
-    //   handleError(me(ERR.CC_CLASS_REDUCER_MODULE_INVALID, `reducerModule:${reducerModule}`), throwError);
-    // }
+  try{
+    checker.checkModuleName(module, false, `module[${module}] is not configured in store`);
+    return true;
+  }catch(err){
+    handleError(err, throwError);
+    return false;
   }
 }
 
@@ -282,10 +265,10 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
   const { stateToPropMapping } = getFeatureStrAndStpMapping(connectSpec);
 
   const contextMap = ccContext.ccClassKey_ccClassContext_;
-  const ct = contextMap[ccClassKey];
-  if (ct !== undefined) {// analyze is ccClassKey really duplicated
+  const ctx = contextMap[ccClassKey];
+  if (ctx !== undefined) {// analyze is ccClassKey really duplicated
     if (util.isHotReloadMode()) {
-      const str1 = ct.originalGlobalStateKeys.toString() + ct.originalSharedStateKeys.toString() + JSON.stringify(ct.stateToPropMapping);
+      const str1 = ctx.originalGlobalStateKeys.toString() + ctx.originalSharedStateKeys.toString() + JSON.stringify(ctx.stateToPropMapping);
       const str2 = originalGlobalStateKeys.toString() + originalSharedStateKeys.toString() + JSON.stringify(stateToPropMapping);
       if (str1 !== str2) {
         throw me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`);
@@ -486,7 +469,6 @@ export default function register(ccClassKey, {
     const _reducerModule = reducerModule || _curStateModule;//if reducerModule not defined, will be equal module;
 
     checkStoreModule(_curStateModule);
-    checkReducerModule(_reducerModule);
 
     const { sharedStateKeys: sKeys, globalStateKeys: gKeys } =
       mapModuleAssociateDataToCcContext(extendInputClass, ccClassKey, _curStateModule, inputSharedStateKeys, inputGlobalStateKeys, connect);
@@ -541,7 +523,7 @@ export default function register(ccClassKey, {
             // bind connectedState to $$connectedState
             this.$$connectedState = ccClassContext.connectedState || {};
 
-            // bind refComputed,computed result will been collected into refComputed by __$$recoverState later
+            // bind refComputed,computed result will been collected into refComputed by calling __$$recoverState later
             this.$$refComputed = {};
 
             this.__$$recoverState(_curStateModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey);

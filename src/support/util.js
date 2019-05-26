@@ -296,6 +296,10 @@ export function clearObject(object, excludeKeys=[]) {
   });
 }
 
+export function okeys(obj){
+  return Object.keys(obj);
+}
+
 export default {
   clearObject,
   makeError,

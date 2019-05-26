@@ -33,16 +33,15 @@ export const ERR = {
   CC_MODULE_KEY_CC_FOUND: 1004,
   CC_MODULE_NAME_INVALID: 1005,
   CC_STORE_STATE_INVALID: 1006,
-  CC_STORE_MAPPING_IS_NOT_ALLOWED_IN_NON_MODULE: 1007,
   CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID: 1008,
   CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID: 1009,
   CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID: 1010,
-  CC_COMPUTED_MODULE_INVALID_IN_STARTUP_OPTION: 1011,
   CC_MODULE_NOT_FOUND: 1012,
   CC_DISPATCH_STRING_INVALID: 1013,
   CC_DISPATCH_PARAM_INVALID: 1014,
   CC_NO_DISPATCHER_FOUND: 1015,
   CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION: 1016,
+  CC_MODULE_NAME_HAS_NO_STATE:1017,
 
   CC_CLASS_KEY_DUPLICATE: 1100,
   CC_CLASS_NOT_FOUND: 1101,
@@ -87,11 +86,9 @@ export const ERR_MESSAGE = {
   [ERR.CC_MODULE_KEY_CC_FOUND]: 'key:"$$cc" is a built-in module name for concent,you can not configure it or the name like it in you store or reducer! ',
   [ERR.CC_MODULE_NAME_INVALID]: `module name is invalid, /^[\$\#\&a-zA-Z0-9_-]+$/.test() is false. `,
   [ERR.CC_STORE_STATE_INVALID]: `module state of store must be a plain json object! `,
-  [ERR.CC_STORE_MAPPING_IS_NOT_ALLOWED_IN_NON_MODULE]: `sharedToGlobalMapping is not allowed to supply to startup's options in non module. `,
   [ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `argument moduleReducer is invalid, must be a function!`,
   [ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `argument reducer is invalid, must be a plain json object(not an array also)!`,
   [ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!`,
-  [ERR.CC_COMPUTED_MODULE_INVALID_IN_STARTUP_OPTION]: `one of the computed keys is not a valid module name in store!`,
   [ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION]: `one of the watch keys is not a valid module name in store!`,
   [ERR.CC_MODULE_NOT_FOUND]: `module not found!`,
   [ERR.CC_DISPATCH_STRING_INVALID]: `dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)、(moduleName)/(functionName)、(moduleName)/(reducerModuleName)/(functionName)`,
@@ -111,6 +108,7 @@ export const ERR_MESSAGE = {
       <App />
     </CcDispatcher>
   `,
+  [ERR.CC_MODULE_NAME_HAS_NO_STATE]:`there is no module state in the store for your input module name`,
 
   [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   `,
   [ERR.CC_CLASS_INSTANCE_OPTION_INVALID]: 'ccOption must be a plain json object! ',

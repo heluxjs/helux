@@ -1,4 +1,4 @@
-import mapSharedKeyToGlobal from './map-shared-key-to-global';
+import mapSharedKeyToGlobal from '../mapper/map-shared-key-to-global';
 import util from '../../support/util';
 
 export default function (moduleName, moduleSharedKeyToGlobalKeyConfig) {

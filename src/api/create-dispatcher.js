@@ -1,4 +1,4 @@
-import register from '../core/helper/register';
+import register from '../core/base/register';
 import React from 'react';
 import { CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';

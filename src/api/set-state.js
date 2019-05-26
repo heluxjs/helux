@@ -1,4 +1,4 @@
-import setState from './helper/set-state';
+import setState from '../core/state/set-state';
 
 function throwApiCallError(){
   throw new Error(`api doc: cc.setState(module:string, state:Object, lazyMs?:Number, throwError?:Boolean)`);

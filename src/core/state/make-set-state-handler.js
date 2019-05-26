@@ -5,7 +5,7 @@ import setState from './set-state';
 import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import extractStateByKeys from './extract-state-by-keys';
 
-export default function (module) {
+export default function(module) {
   return state => {
     try {
       setState(module, state, 0, true);

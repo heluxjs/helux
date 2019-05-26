@@ -1,7 +1,11 @@
 import ccContext from '../cc-context';
-import * as helper from './helper';
+import * as base from '../core/base';
 import { ERR, MODULE_GLOBAL } from '../support/constant';
 import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
+import initModuleState from '../core/state/init-module-state';
+import initModuleReducer from '../core/reducer/init-module-reducer';
+import * as checker from '../core/checker';
+import makeSetStateHandler from '../core/state/make-set-state-handler';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
 
@@ -46,9 +50,6 @@ export default function (module, config, option = {}) {
   if (!ccContext.isCcAlreadyStartup) {
     throw new Error('cc is not startup yet, you can not call cc.configure!');
   }
-  if (!ccContext.isModuleMode) {
-    throw new Error('cc is running in non module node, can not call cc.configure');
-  }
   if (!util.isPlainJsonObject(config)) {
     throw new Error('[[configure]] param type error, config is not plain json object!');
   }
@@ -59,8 +60,12 @@ export default function (module, config, option = {}) {
   const { state, reducer, computed, watch, init, sharedToGlobalMapping, isClassSingle } = config;
   const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
 
-  helper.checkModuleName(module);
-  helper.checkModuleState(state, module);
+
+  initModuleState(module, state);
+  initModuleReducer(module, reducer);
+
+  checker.checkModuleName(module);
+  checker.checkModuleState(state, module);
 
   const _state = ccContext.store._state;
   const _reducer = ccContext.reducer._reducer;
@@ -84,7 +89,7 @@ export default function (module, config, option = {}) {
     }
     const reducerModuleNames = Object.keys(optionReducer);
     reducerModuleNames.forEach(rmName => {
-      helper.checkModuleName(rmName);
+      checker.checkModuleName(rmName);
       const moduleReducer = optionReducer[rmName];
       if (!isPlainJsonObject(moduleReducer)) {
         throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] reducer 's value is invalid`));
@@ -125,14 +130,14 @@ export default function (module, config, option = {}) {
   setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
 
   if (sharedToGlobalMapping) {
-    helper.handleModuleSharedToGlobalMapping(module, sharedToGlobalMapping);
+    base.handleModuleSharedToGlobalMapping(module, sharedToGlobalMapping);
   }
 
   if (init) {
     if (typeof init !== 'function') {
       throw new Error('init value must be a function!');
     }
-    init(helper.getStateHandlerForInit(module));
+    init(makeSetStateHandler(module));
   }
 
 
