@@ -60,12 +60,8 @@ export default function (module, config, option = {}) {
   const { state, reducer, computed, watch, init, sharedToGlobalMapping, isClassSingle } = config;
   const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
 
-
   initModuleState(module, state);
   initModuleReducer(module, reducer);
-
-  checker.checkModuleName(module);
-  checker.checkModuleState(state, module);
 
   const _state = ccContext.store._state;
   const _reducer = ccContext.reducer._reducer;

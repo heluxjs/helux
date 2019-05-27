@@ -25,6 +25,18 @@ export default function ({
     util.justTip(`cc version ${ccContext.info.version}`);
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
+    ccContext.isStrict = isStrict;
+    ccContext.isDebug = isDebug;
+
+    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
+    boot.configModuleSingleClass(moduleSingleClass);
+
+    boot.configStoreState(store);
+    boot.configRootReducer(reducer);
+    boot.configRootComputed(computed);
+    boot.configRootWatch(watch);
+    boot.executeRootInit(init);
+    boot.configMiddlewares(middlewares);
 
     if (ccContext.isCcAlreadyStartup) {
       const err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -79,18 +91,6 @@ export default function ({
       window.CC_CONTEXT = ccContext;
       window.ccc = ccContext;
     }
-
-    ccContext.isStrict = isStrict;
-    ccContext.isDebug = isDebug;
-    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
-    boot.configModuleSingleClass(moduleSingleClass);
-
-    boot.configStoreState(store);
-    boot.configRootReducer(reducer);
-    boot.configRootComputed(computed);
-    boot.configRootWatch(watch);
-    boot.executeRootInit(init);
-    boot.configMiddlewares(middlewares);
 
     ccContext.isCcAlreadyStartup = true;
   } catch (err) {

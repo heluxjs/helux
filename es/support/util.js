@@ -323,6 +323,9 @@ export function clearObject(object, excludeKeys) {
     if (!excludeKeys.includes(key)) delete object[key];
   });
 }
+export function okeys(obj) {
+  return Object.keys(obj);
+}
 export default {
   clearObject: clearObject,
   makeError: makeError,

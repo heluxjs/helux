@@ -1,4 +1,4 @@
-var _computedValue, _computedFn, _state2, _reducer;
+var _computedValue, _computedFn, _reducer;
 
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
 var refs = {};
@@ -40,9 +40,23 @@ var setStateByModuleAndKey = function setStateByModuleAndKey(module, key, value)
 
 var computed = {
   _computedValue: (_computedValue = {}, _computedValue[MODULE_GLOBAL] = {}, _computedValue[MODULE_DEFAULT] = {}, _computedValue[MODULE_CC] = {}, _computedValue),
-  _computedFn: (_computedFn = {}, _computedFn[MODULE_GLOBAL] = {}, _computedFn[MODULE_DEFAULT] = {}, _computedFn[MODULE_CC] = {}, _computedFn)
+  _computedFn: (_computedFn = {}, _computedFn[MODULE_GLOBAL] = {}, _computedFn[MODULE_DEFAULT] = {}, _computedFn[MODULE_CC] = {}, _computedFn),
+  getRootComputedValue: function getRootComputedValue() {
+    return computed._computedValue;
+  },
+  getRootComputedFn: function getRootComputedFn() {
+    return computed._computedFn;
+  }
 };
-var watch = {};
+var watch = {
+  _watch: {},
+  getRootWatch: function getRootWatch() {
+    return watch._watch;
+  },
+  getModuleWatch: function getModuleWatch(module) {
+    return watch._watch[module];
+  }
+};
 var ccContext = {
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
@@ -50,7 +64,6 @@ var ccContext = {
   // like componentDidCatch in react 16.*
   isStrict: false,
   returnRootState: false,
-  isModuleMode: false,
   isCcAlreadyStartup: false,
   //  cc allow multi react class register to a module by default, but if want to control some module 
   //  to only allow register one react class, flag the module name as true in this option object
@@ -97,7 +110,7 @@ var ccContext = {
   //  all global keys that exclude sharedToGlobalMapping keys
   pureGlobalStateKeys: [],
   store: {
-    _state: (_state2 = {}, _state2[MODULE_GLOBAL] = {}, _state2[MODULE_CC] = {}, _state2),
+    _state: {},
     getState: function getState(module) {
       if (module) return _getState(module);else return ccContext.store._state;
     },
@@ -113,6 +126,10 @@ var ccContext = {
     },
     getGlobalState: function getGlobalState() {
       return ccContext.store._state[MODULE_GLOBAL];
+    },
+    //对state直接赋值，cc启动的时候某些场景需要调用此函数
+    initStateDangerously: function initStateDangerously(module, state) {
+      ccContext.store._state[module] = state;
     }
   },
   reducer: {

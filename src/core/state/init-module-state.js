@@ -9,11 +9,11 @@ export default function(module, state, rootStateCanNotContainInputModule = true)
 
   const rootState = ccContext.store.getState();
   rootState[module] = state;
-  ccContext.moduleName_stateKeys_[module] = Object.keys(state);
+  const statKeys = Object.keys(state);
+  ccContext.moduleName_stateKeys_[module] = statKeys;
 
   if (module === MODULE_GLOBAL) {
     const globalStateKeys = ccContext.globalStateKeys;
-    const keys = Object.keys();
-    keys.forEach(key => globalStateKeys.push(key));
+    statKeys.forEach(key => globalStateKeys.push(key));
   }
 }

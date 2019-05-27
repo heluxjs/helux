@@ -17,7 +17,7 @@ export function appendGlobalState(globalState){
   // todo
 }
 
-export function configStoreState(storeState, sharedToGlobalMapping){
+export function configStoreState(storeState){
   const sharedToGlobalMapping = ccContext.sharedToGlobalMapping;
   if (!isPlainJsonObject(storeState)) {
     throw new Error(`the storeState is not a plain json object!`);
@@ -59,7 +59,8 @@ export function configRootReducer(rootReducer){
 
   const len = moduleNames.length;
   for (let i = 0; i < len; i++) {
-    initModuleReducer(moduleNames[i], rootReducer[moduleName]);
+    const moduleName = moduleNames[i];
+    initModuleReducer(moduleName, rootReducer[moduleName]);
   }
 }
 
@@ -88,7 +89,7 @@ export function executeRootInit(init){
 
   const moduleNames = okeys(init);
   moduleNames.forEach(moduleName => {
-    checker.checkModuleName(moduleName, true, `there is no module state defined in store for init.${moduleName}`);
+    checker.checkModuleName(moduleName, false, `there is no module state defined in store for init.${moduleName}`);
     const initFn = init[moduleName];
     if (initFn) {
       initFn(makeSetStateHandler(moduleName));
@@ -115,4 +116,15 @@ export function configMiddlewares(middlewares){
     const ccMiddlewares = ccContext.middlewares;
     middlewares.forEach(m => ccMiddlewares.push(m));
   }
+}
+
+export default {
+  configStoreState,
+  configRootReducer,
+  configRootComputed,
+  configRootWatch,
+  executeRootInit,
+  configSharedToGlobalMapping,
+  configModuleSingleClass,
+  configMiddlewares,
 }

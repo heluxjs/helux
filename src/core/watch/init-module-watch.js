@@ -7,7 +7,7 @@ const { safeGetObjectFromObject, isPlainJsonObject } = util;
 /**
  * 设置watch值，过滤掉一些无效的key
  */
-export function setModuleWatch(module, moduleWatch){
+export default function(module, moduleWatch){
   if (!isPlainJsonObject(moduleWatch)) {
     throw new Error(`StartUpOption.watch.${module}'s value is not a plain json object!`);
   }
