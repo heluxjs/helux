@@ -122,5 +122,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "unpkg": "dist/concent.js",
-  "version": "1.2.6"
+  "version": "1.2.7"
 }
