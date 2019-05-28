@@ -319,10 +319,6 @@ export function clearObject(object, excludeKeys, reset) {
     excludeKeys = [];
   }
 
-  if (reset === void 0) {
-    reset = {};
-  }
-
   if (Array.isArray(object)) object.length = 0;else Object.keys(object).forEach(function (key) {
     if (!excludeKeys.includes(key)) delete object[key];else {
       if (reset) object[key] = reset;
