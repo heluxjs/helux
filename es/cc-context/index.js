@@ -158,7 +158,7 @@ var ccContext = {
   refs: refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.9',
+    version: '1.2.10',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear'

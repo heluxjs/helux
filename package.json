@@ -113,7 +113,7 @@
     "url": "git+https://github.com/concentjs/concent.git"
   },
   "scripts": {
-    "build": "npm run build:commonjs && npm run build:es-old && npm run build:umd && npm run build:umd:min",
+    "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
     "build:es": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-old": "cross-env BABEL_ENV=es babel src --out-dir es",
