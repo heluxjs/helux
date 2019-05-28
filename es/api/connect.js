@@ -1,4 +1,5 @@
 import register from './register';
+
 /**
  * 
  * @param {*} ccClassKey 
@@ -11,14 +12,7 @@ import register from './register';
  * @param {Array<string>} [option.sharedStateKeys]
  * @param {Array<string>} [option.globalStateKeys]
  */
-
-export default function (ccClassKey, connectSpec, option) {
-  if (option === void 0) {
-    option = {};
-  }
-
-  var mergedOption = Object.assign({
-    connect: connectSpec
-  }, option);
+export default function (ccClassKey, connectSpec, option = {}) {
+  const mergedOption = Object.assign({ connect: connectSpec }, option);
   return register(ccClassKey, mergedOption);
 }

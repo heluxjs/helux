@@ -1,5 +1,6 @@
-import util from '../../support/util';
+import util from '../../support/util'
+
 export default function (connectedState, module, key, value) {
-  var moduleConnState = util.safeGetObjectFromObject(connectedState, module);
+  const moduleConnState = util.safeGetObjectFromObject(connectedState, module);
   moduleConnState[key] = value;
 }

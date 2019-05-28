@@ -1,4 +1,5 @@
 import register from './register';
+
 /****
  * short for register
  * the option's definition is also been changed
@@ -11,28 +12,16 @@ import register from './register';
  * option.reducerModule is called re for short 
  * option.extendInputClass is called ex for short 
  */
-
-export default function (ccClassKey, _temp) {
-  var _ref = _temp === void 0 ? {} : _temp,
-      module = _ref.m,
-      sharedStateKeys = _ref.s,
-      globalStateKeys = _ref.g,
-      storedStateKeys = _ref.st,
-      connect = _ref.c,
-      isSingle = _ref.is,
-      asyncLifecycleHook = _ref.as,
-      reducerModule = _ref.re,
-      extendInputClass = _ref.ex;
-
-  return register(ccClassKey, {
-    extendInputClass: extendInputClass,
-    module: module,
-    sharedStateKeys: sharedStateKeys,
-    globalStateKeys: globalStateKeys,
-    storedStateKeys: storedStateKeys,
-    connect: connect,
-    isSingle: isSingle,
-    asyncLifecycleHook: asyncLifecycleHook,
-    reducerModule: reducerModule
-  });
+export default function (ccClassKey, {
+  m: module,
+  s: sharedStateKeys,
+  g: globalStateKeys,
+  st: storedStateKeys,
+  c: connect,
+  is: isSingle,
+  as: asyncLifecycleHook,
+  re: reducerModule,
+  ex: extendInputClass,
+} = {}) {
+  return register(ccClassKey, { extendInputClass, module, sharedStateKeys, globalStateKeys, storedStateKeys, connect, isSingle, asyncLifecycleHook, reducerModule });
 }
