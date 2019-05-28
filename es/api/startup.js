@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import util, { clearObject } from '../support/util';
-import { ERR, MODULE_DEFAULT, CC_DISPATCHER_BOX, CC_DISPATCHER } from '../support/constant';
+import { ERR, MODULE_DEFAULT, CC_DISPATCHER_BOX, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
@@ -40,14 +40,6 @@ export default function (_temp) {
     ccContext.errorHandler = errorHandler;
     ccContext.isStrict = isStrict;
     ccContext.isDebug = isDebug;
-    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
-    boot.configModuleSingleClass(moduleSingleClass);
-    boot.configStoreState(store);
-    boot.configRootReducer(reducer);
-    boot.configRootComputed(computed);
-    boot.configRootWatch(watch);
-    boot.executeRootInit(init);
-    boot.configMiddlewares(middlewares);
 
     if (ccContext.isCcAlreadyStartup) {
       var err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -55,8 +47,7 @@ export default function (_temp) {
       if (util.isHotReloadMode()) {
         clearObject(ccContext.globalStateKeys);
         clearObject(ccContext.reducer._reducer);
-        clearObject(ccContext.store._state, [MODULE_DEFAULT]); //MODULE_DEFAULT cannot be cleared, cause in hot reload mode, createDispatcher() will trigger register again
-
+        clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL], {});
         clearObject(ccContext.computed._computedFn);
         clearObject(ccContext.computed._computedValue);
         clearObject(ccContext.event_handlers_);
@@ -74,6 +65,15 @@ export default function (_temp) {
         util.hotReloadWarning(err);
       } else throw err;
     }
+
+    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
+    boot.configModuleSingleClass(moduleSingleClass);
+    boot.configStoreState(store);
+    boot.configRootReducer(reducer);
+    boot.configRootComputed(computed);
+    boot.configRootWatch(watch);
+    boot.executeRootInit(init);
+    boot.configMiddlewares(middlewares);
 
     if (autoCreateDispatcher) {
       if (!ccContext.refs[CC_DISPATCHER]) {

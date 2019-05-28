@@ -314,13 +314,19 @@ export function randomNumber(lessThan) {
   var seed = Math.random();
   return parseInt(seed * lessThan);
 }
-export function clearObject(object, excludeKeys) {
+export function clearObject(object, excludeKeys, reset) {
   if (excludeKeys === void 0) {
     excludeKeys = [];
   }
 
+  if (reset === void 0) {
+    reset = {};
+  }
+
   if (Array.isArray(object)) object.length = 0;else Object.keys(object).forEach(function (key) {
-    if (!excludeKeys.includes(key)) delete object[key];
+    if (!excludeKeys.includes(key)) delete object[key];else {
+      if (reset) object[key] = reset;
+    }
   });
 }
 export function okeys(obj) {

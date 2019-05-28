@@ -238,7 +238,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.4',
+      version: '1.2.7',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -553,13 +553,19 @@
     var seed = Math.random();
     return parseInt(seed * lessThan);
   }
-  function clearObject(object, excludeKeys) {
+  function clearObject(object, excludeKeys, reset) {
     if (excludeKeys === void 0) {
       excludeKeys = [];
     }
 
+    if (reset === void 0) {
+      reset = {};
+    }
+
     if (Array.isArray(object)) object.length = 0;else Object.keys(object).forEach(function (key) {
-      if (!excludeKeys.includes(key)) delete object[key];
+      if (!excludeKeys.includes(key)) delete object[key];else {
+        if (reset) object[key] = reset;
+      }
     });
   }
   function okeys(obj) {
@@ -1339,7 +1345,7 @@
     if (moduleName !== MODULE_GLOBAL) {
       if (moduleStateMustNotDefinedInStore === true) {
         //要求模块状态应该不存在
-        if (_state[moduleName]) {
+        if (isObjectNotNull(_state[moduleName])) {
           //但是却存在了
           throw makeError$1(ERR.CC_MODULE_NAME_DUPLICATE, vbi$2(_vbiMsg));
         }
@@ -3740,14 +3746,6 @@
       ccContext.errorHandler = errorHandler;
       ccContext.isStrict = isStrict;
       ccContext.isDebug = isDebug;
-      configSharedToGlobalMapping(sharedToGlobalMapping);
-      configModuleSingleClass(moduleSingleClass);
-      configStoreState(store);
-      configRootReducer(reducer);
-      configRootComputed(computed);
-      configRootWatch(watch);
-      executeRootInit(init);
-      configMiddlewares(middlewares);
 
       if (ccContext.isCcAlreadyStartup) {
         var err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -3755,8 +3753,7 @@
         if (util.isHotReloadMode()) {
           clearObject(ccContext.globalStateKeys);
           clearObject(ccContext.reducer._reducer);
-          clearObject(ccContext.store._state, [MODULE_DEFAULT]); //MODULE_DEFAULT cannot be cleared, cause in hot reload mode, createDispatcher() will trigger register again
-
+          clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL], {});
           clearObject(ccContext.computed._computedFn);
           clearObject(ccContext.computed._computedValue);
           clearObject(ccContext.event_handlers_);
@@ -3774,6 +3771,15 @@
           util.hotReloadWarning(err);
         } else throw err;
       }
+
+      configSharedToGlobalMapping(sharedToGlobalMapping);
+      configModuleSingleClass(moduleSingleClass);
+      configStoreState(store);
+      configRootReducer(reducer);
+      configRootComputed(computed);
+      configRootWatch(watch);
+      executeRootInit(init);
+      configMiddlewares(middlewares);
 
       if (autoCreateDispatcher) {
         if (!ccContext.refs[CC_DISPATCHER]) {

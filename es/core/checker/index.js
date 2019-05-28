@@ -50,7 +50,7 @@ export function checkModuleName(moduleName, moduleStateMustNotDefinedInStore, vb
   if (moduleName !== MODULE_GLOBAL) {
     if (moduleStateMustNotDefinedInStore === true) {
       //要求模块状态应该不存在
-      if (_state[moduleName]) {
+      if (util.isObjectNotNull(_state[moduleName])) {
         //但是却存在了
         throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, vbi(_vbiMsg));
       }
