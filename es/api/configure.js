@@ -79,8 +79,6 @@ export default function (module, config, option) {
       middlewares = _option.middlewares;
   initModuleState(module, state);
   initModuleReducer(module, reducer);
-  checker.checkModuleName(module);
-  checker.checkModuleState(state, module);
   var _state = ccContext.store._state;
   var _reducer = ccContext.reducer._reducer;
   _state[module] = state;

@@ -38,7 +38,7 @@ export function checkModuleName(moduleName, moduleStateMustNotDefinedInStore = t
   checkModuleNameBasically(moduleName);
   if (moduleName !== MODULE_GLOBAL) {
     if (moduleStateMustNotDefinedInStore === true) {//要求模块状态应该不存在
-      if (_state[moduleName]) {//但是却存在了
+      if (util.isObjectNotNull(_state[moduleName])) {//但是却存在了
         throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, vbi(_vbiMsg));
       }
     } else {//要求模块状态应该存在

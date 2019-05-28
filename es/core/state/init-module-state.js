@@ -9,12 +9,12 @@ export default function (module, state, rootStateCanNotContainInputModule) {
   if (rootStateCanNotContainInputModule) checker.checkModuleNameAndState(module, state);else checker.checkModuleNameBasicallyAndState(module, state);
   var rootState = ccContext.store.getState();
   rootState[module] = state;
-  ccContext.moduleName_stateKeys_[module] = Object.keys(state);
+  var statKeys = Object.keys(state);
+  ccContext.moduleName_stateKeys_[module] = statKeys;
 
   if (module === MODULE_GLOBAL) {
     var globalStateKeys = ccContext.globalStateKeys;
-    var keys = Object.keys();
-    keys.forEach(function (key) {
+    statKeys.forEach(function (key) {
       return globalStateKeys.push(key);
     });
   }

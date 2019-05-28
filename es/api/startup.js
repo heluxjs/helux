@@ -38,6 +38,16 @@ export default function (_temp) {
     util.justTip("cc version " + ccContext.info.version);
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
+    ccContext.isStrict = isStrict;
+    ccContext.isDebug = isDebug;
+    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
+    boot.configModuleSingleClass(moduleSingleClass);
+    boot.configStoreState(store);
+    boot.configRootReducer(reducer);
+    boot.configRootComputed(computed);
+    boot.configRootWatch(watch);
+    boot.executeRootInit(init);
+    boot.configMiddlewares(middlewares);
 
     if (ccContext.isCcAlreadyStartup) {
       var err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -96,16 +106,6 @@ export default function (_temp) {
       window.ccc = ccContext;
     }
 
-    ccContext.isStrict = isStrict;
-    ccContext.isDebug = isDebug;
-    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
-    boot.configModuleSingleClass(moduleSingleClass);
-    boot.configStoreState(store);
-    boot.configRootReducer(reducer);
-    boot.configRootComputed(computed);
-    boot.configRootWatch(watch);
-    boot.executeRootInit(init);
-    boot.configMiddlewares(middlewares);
     ccContext.isCcAlreadyStartup = true;
   } catch (err) {
     if (errorHandler) errorHandler(err);else throw err;

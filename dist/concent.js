@@ -3399,12 +3399,12 @@
     if (rootStateCanNotContainInputModule) checkModuleNameAndState(module, state);else checkModuleNameBasicallyAndState(module, state);
     var rootState = ccContext.store.getState();
     rootState[module] = state;
-    ccContext.moduleName_stateKeys_[module] = Object.keys(state);
+    var statKeys = Object.keys(state);
+    ccContext.moduleName_stateKeys_[module] = statKeys;
 
     if (module === MODULE_GLOBAL) {
       var globalStateKeys = ccContext.globalStateKeys;
-      var keys = Object.keys();
-      keys.forEach(function (key) {
+      statKeys.forEach(function (key) {
         return globalStateKeys.push(key);
       });
     }
@@ -3613,13 +3613,13 @@
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
-      var _moduleName = moduleNames[i];
-      var moduleState = storeState[_moduleName];
-      initModuleState(_moduleName, moduleState);
-      var sharedKey_globalKey_ = sharedToGlobalMapping[_moduleName];
+      var moduleName = moduleNames[i];
+      var moduleState = storeState[moduleName];
+      initModuleState(moduleName, moduleState);
+      var sharedKey_globalKey_ = sharedToGlobalMapping[moduleName];
 
       if (sharedKey_globalKey_) {
-        handleModuleSharedToGlobalMapping(_moduleName, sharedKey_globalKey_);
+        handleModuleSharedToGlobalMapping(moduleName, sharedKey_globalKey_);
       }
     }
 
@@ -3641,7 +3641,8 @@
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
-      initModuleReducer(moduleNames[i], rootReducer[moduleName]);
+      var moduleName = moduleNames[i];
+      initModuleReducer(moduleName, rootReducer[moduleName]);
     }
   }
   function configRootComputed(computed) {
@@ -3673,7 +3674,7 @@
 
     var moduleNames = okeys$1(init);
     moduleNames.forEach(function (moduleName) {
-      checkModuleName(moduleName, true, "there is no module state defined in store for init." + moduleName);
+      checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
       var initFn = init[moduleName];
 
       if (initFn) {
@@ -3737,6 +3738,16 @@
       util.justTip("cc version " + ccContext.info.version);
       ccContext.isHot = isHot;
       ccContext.errorHandler = errorHandler;
+      ccContext.isStrict = isStrict;
+      ccContext.isDebug = isDebug;
+      configSharedToGlobalMapping(sharedToGlobalMapping);
+      configModuleSingleClass(moduleSingleClass);
+      configStoreState(store);
+      configRootReducer(reducer);
+      configRootComputed(computed);
+      configRootWatch(watch);
+      executeRootInit(init);
+      configMiddlewares(middlewares);
 
       if (ccContext.isCcAlreadyStartup) {
         var err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -3795,16 +3806,6 @@
         window.ccc = ccContext;
       }
 
-      ccContext.isStrict = isStrict;
-      ccContext.isDebug = isDebug;
-      configSharedToGlobalMapping(sharedToGlobalMapping);
-      configModuleSingleClass(moduleSingleClass);
-      configStoreState(store);
-      configRootReducer(reducer);
-      configRootComputed(computed);
-      configRootWatch(watch);
-      executeRootInit(init);
-      configMiddlewares(middlewares);
       ccContext.isCcAlreadyStartup = true;
     } catch (err) {
       if (errorHandler) errorHandler(err);else throw err;
@@ -4129,8 +4130,6 @@
         middlewares = _option.middlewares;
     initModuleState(module, state);
     initModuleReducer(module, reducer);
-    checkModuleName(module);
-    checkModuleState(state, module);
     var _state = ccContext.store._state;
     var _reducer = ccContext.reducer._reducer;
     _state[module] = state;

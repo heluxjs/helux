@@ -31,13 +31,13 @@ export function configStoreState(storeState) {
   var len = moduleNames.length;
 
   for (var i = 0; i < len; i++) {
-    var _moduleName = moduleNames[i];
-    var moduleState = storeState[_moduleName];
-    initModuleState(_moduleName, moduleState);
-    var sharedKey_globalKey_ = sharedToGlobalMapping[_moduleName];
+    var moduleName = moduleNames[i];
+    var moduleState = storeState[moduleName];
+    initModuleState(moduleName, moduleState);
+    var sharedKey_globalKey_ = sharedToGlobalMapping[moduleName];
 
     if (sharedKey_globalKey_) {
-      handleModuleSharedToGlobalMapping(_moduleName, sharedKey_globalKey_);
+      handleModuleSharedToGlobalMapping(moduleName, sharedKey_globalKey_);
     }
   }
 
@@ -59,7 +59,8 @@ export function configRootReducer(rootReducer) {
   var len = moduleNames.length;
 
   for (var i = 0; i < len; i++) {
-    initModuleReducer(moduleNames[i], rootReducer[moduleName]);
+    var moduleName = moduleNames[i];
+    initModuleReducer(moduleName, rootReducer[moduleName]);
   }
 }
 export function configRootComputed(computed) {
@@ -91,7 +92,7 @@ export function executeRootInit(init) {
 
   var moduleNames = okeys(init);
   moduleNames.forEach(function (moduleName) {
-    checker.checkModuleName(moduleName, true, "there is no module state defined in store for init." + moduleName);
+    checker.checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
     var initFn = init[moduleName];
 
     if (initFn) {
