@@ -29,7 +29,7 @@ export default function(module, moduleWatch){
       ccModuleWatch[key] = fn;
     } else {
       //strict?
-      justWarning(`watch.${module}'s key[${key}] is not declared in store.${module}!`);
+      util.justWarning(`watch.${module}'s key[${key}] is not declared in store.${module}!`);
     }
   });
 }

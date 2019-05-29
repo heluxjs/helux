@@ -19,6 +19,9 @@ export const BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE = 301;
 export const BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE = 302;
 export const BROADCAST_TRIGGERED_BY_CC_API_SET_STATE = 303;
 
+export const  CURSOR_KEY = Symbol('__for_sync_param_cursor__');
+export const  CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
+
 //  two kind of state extraction
 //    cc will use ccInstance's sharedStateKeys and globalStateKeys to extract committed state  
 export const STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;

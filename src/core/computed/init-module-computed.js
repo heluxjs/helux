@@ -28,7 +28,7 @@ export default function(module, computed){
       moduleComputedValue[key] = computedValue;
     } else {
       //strict?
-      justWarning(`computed.${module}'s key[${key}] is not declared in store.${module}'s state!`);
+      util.justWarning(`computed.${module}'s key[${key}] is not declared in store.${module}'s state!`);
     }
   });
 }

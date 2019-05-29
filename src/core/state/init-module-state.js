@@ -7,6 +7,7 @@ export default function(module, state, rootStateCanNotContainInputModule = true)
   if (rootStateCanNotContainInputModule) checker.checkModuleNameAndState(module, state);
   else checker.checkModuleNameBasicallyAndState(module, state);
 
+  // ccContext.store.setState(module, state);
   const rootState = ccContext.store.getState();
   rootState[module] = state;
   const statKeys = Object.keys(state);

@@ -11,7 +11,7 @@ function setValue(obj, keys, lastKeyIndex, keyIndex, value){
 
 export default (ccsync, value, ccint, defaultState) => {
   let _value = value;
-  if (ccint !== undefined) {
+  if (ccint === true) {
     try {
       _value = parseInt(value);
     } catch (err) { }

@@ -132,6 +132,7 @@ const ccContext = {
   pureGlobalStateKeys: [
 
   ],
+  //store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     _state: {
     },

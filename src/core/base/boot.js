@@ -9,6 +9,7 @@ import makeSetStateHandler from '../state/make-set-state-handler';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
+import co from 'co';
 
 const { isPlainJsonObject, okeys } = util;
 
@@ -92,7 +93,9 @@ export function executeRootInit(init){
     checker.checkModuleName(moduleName, false, `there is no module state defined in store for init.${moduleName}`);
     const initFn = init[moduleName];
     if (initFn) {
-      initFn(makeSetStateHandler(moduleName));
+      co(initFn).then(state=>{
+        makeSetStateHandler(moduleName)(state)
+      });
     }
   });
 }

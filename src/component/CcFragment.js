@@ -1,17 +1,17 @@
 import React, { Component, Fragment } from 'react';
 import {
-  MODULE_DEFAULT, CC_FRAGMENT_PREFIX,
+  MODULE_DEFAULT, CC_FRAGMENT_PREFIX, CURSOR_KEY, CCSYNC_KEY,
   MODULE_GLOBAL, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE
 } from '../support/constant';
 import ccContext from '../cc-context';
-import util from '../support/util';
+import * as util from '../support/util';
 import getFeatureStrAndStpMapping from '../core/base/get-feature-str-and-stpmapping';
 import * as ev from '../core/event';
 import * as ccRef from '../core/ref';
 import * as base from '../core/base';
 import extractStateByCcsync from '../core/state/extract-state-by-ccsync';
 
-const { ccClassKey_ccClassContext_, fragmentFeature_classKey_, computed } = ccContext;
+const { ccClassKey_ccClassContext_, fragmentFeature_classKey_, computed, store } = ccContext;
 
 /**
  * 根据connect参数动态的把CcFragment划为某个ccClassKey的实例，同时计算出stateToPropMapping值
@@ -35,6 +35,9 @@ function getFragmentClassKeyAndStpMapping(connectSpec) {
     return { ccClassKey, stateToPropMapping };
   }
 }
+
+const cursorKey = CURSOR_KEY;
+const ccSyncKey = CCSYNC_KEY;
 
 export default class CcFragment extends Component {
   constructor(props, context) {
@@ -61,8 +64,10 @@ export default class CcFragment extends Component {
     const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, MODULE_DEFAULT);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
-    this.$$connectedState = ccClassKey_ccClassContext_[ccClassKey].connectedState || {};
-
+    const ctx = ccClassKey_ccClassContext_[ccClassKey];
+    const connectedComputed = ctx.connectedComputed || {};
+    const connectedState = ctx.connectedState || {};
+    
     // only bind reactForceUpdateRef for CcFragment
     const reactForceUpdateRef = this.forceUpdate.bind(this);
     const ccState = {
@@ -104,7 +109,7 @@ export default class CcFragment extends Component {
 
         const setter = e => {
           if(e.currentTarget && e.type){
-            this.__fragmentParams.sync(e, cursor);
+            this.__fragmentParams.sync(e, { [cursorKey]: cursor });
           }else{
             stateArr[cursor] = e;
             this.cc.reactForceUpdate();
@@ -155,9 +160,9 @@ export default class CcFragment extends Component {
     const dispatcher = ccRef.getDispatcherRef();
     this.state = state;
     const __fragmentParams = {
-      connectedComputed: computed._computedValue,
+      connectedComputed,
+      connectedState,
       hook,
-      connectedState: this.$$connectedState,
       emit: (event, ...args) => {
         ev.findEventHandlersToPerform(event, { identity: null }, ...args);
       },
@@ -168,29 +173,46 @@ export default class CcFragment extends Component {
         ev.bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, null, handler);
       },
       onIdentity: (event, identity, handler)=>{
-        ev.bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, identity, handler);
+        ev.bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event,  identity, handler);
       },
       dispatch: dispatcher.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1, ccKey),
       effect: dispatcher.__$$getEffectHandler(ccKey),
       xeffect: dispatcher.__$$getXEffectHandler(ccKey),
-      sync: (e, cursor)=>{
-        const currentTarget = e.currentTarget;
-        const { value, dataset } = currentTarget;
+      //seat1, seat2仅仅用于占位
+      sync: (e, cursor, seat1, seat2)=>{
+        if(typeof e === 'string'){
+          const syncFn = __fragmentParams.sync.bind(null, {[ccSyncKey]:e}, cursor);//此时的e是ccsync, cursor是bindedInt
+          return syncFn;
+        } else {
+          if(cursor!==null && typeof cursor === 'object' && cursor[cursorKey]!==undefined){// syncLocalHookState 同步本地的hook状态
+            const _cursor = cursor[cursorKey];
+            __hookMeta.stateArr[_cursor] = e.currentTarget.value;
+            this.cc.reactForceUpdate();
+          }else{
+            let ccint='', ccsync='', value='',mockE = e;
+            if(typeof e === 'object' && e[ccSyncKey]!==undefined){
+              ccint = cursor;
+              ccsync = e[ccSyncKey];
+              value = seat1; //这个值由函数注入
+              mockE = { currentTarget: { value, dataset: { ccsync, ccint } } };
+            }else{
+              const currentTarget = e.currentTarget;
+              value = currentTarget.value;
+              const dataset = currentTarget.dataset;
+              ccint = dataset.ccint;
+              ccsync = dataset.ccsync;
+            }
 
-        if(cursor!=undefined){// syncLocalHookState 同步本地的hook状态
-          __hookMeta.stateArr[cursor] = value;
-          this.cc.reactForceUpdate();
-        }else{
-          const { ccint, ccsync } = dataset;
-          if (!ccsync) {
-            return util.justWarning(`data-ccsync attr no found, you must define it while using syncLocal`);
-          }
-        
-          if(ccsync.includes('/')){// syncModuleState 同步模块的state状态
-            dispatcher.$$sync(e, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
-          }else{// syncLocalState 同步本地的state状态
-            const { state } = extractStateByCcsync(ccsync, value, ccint, this.state);
-            __fragmentParams.setState(state);
+            if (!ccsync) {
+              return util.justWarning(`data-ccsync attr no found, you must define it while using syncLocal`);
+            }
+          
+            if(ccsync.includes('/')){// syncModuleState 同步模块的state状态
+              dispatcher.$$sync(mockE, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
+            }else{// syncLocalState 同步本地的state状态
+              const { state } = extractStateByCcsync(ccsync, value, ccint, this.state);
+              __fragmentParams.setState(state);
+            }
           }
         }
       },

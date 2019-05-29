@@ -9,6 +9,7 @@ import {
   CHANGE_BY_BROADCASTED_SHARED_STATE,
   CHANGE_BY_BROADCASTED_GLOBAL_STATE_AND_SHARED_STATE,
 
+  CURSOR_KEY, CCSYNC_KEY,
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE,
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
@@ -37,7 +38,7 @@ const {
   store: { _state, getState, setState: ccStoreSetState, setStateByModuleAndKey },
   reducer: { _reducer }, refStore, globalMappingKey_sharedKey_,
   computed: { _computedValue },
-  moduleName_sharedStateKeys_, moduleName_globalStateKeys_,
+  moduleName_sharedStateKeys_, moduleName_globalStateKeys_, moduleName_stateKeys_,
   ccKey_ref_, ccKey_option_, globalCcClassKeys, moduleName_ccClassKeys_, ccClassKey_ccClassContext_,
   globalMappingKey_toModules_, globalMappingKey_fromModule_, globalKey_toModules_, sharedKey_globalMappingKeyDescriptor_,
   middlewares
@@ -298,7 +299,7 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
  */
 function getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, moduleName, ccClassGlobalStateKeys, ccClassSharedStateKeys) {
   if (isDispatcher) {//dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
-    return { sharedStateKeys: moduleName_sharedStateKeys_[moduleName] || [], globalStateKeys: [] }
+    return { sharedStateKeys: moduleName_stateKeys_[moduleName] || [], globalStateKeys: [] }
   }
 
   let globalStateKeys, sharedStateKeys;
@@ -507,6 +508,13 @@ export default function register(ccClassKey, {
               '__$$getInvokeHandler', '__$$getXInvokeHandler','__$$makeInvokeHandler',
               '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler',
             ]);
+            if(this.$$computed)this.$$computed = this.$$computed.bind(this, this);//把this直接当参数传入
+            if(this.$$cache){
+              this.$$cache = this.$$cache.bind(this, this);
+              this.$$refCache = this.$$cache();
+            }else{
+              this.$$refCache = {};
+            }
 
             // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
             if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true;
@@ -579,13 +587,19 @@ export default function register(ccClassKey, {
         //可以在类的componentWillMount里调用 this.props.$$attach(this)
         $$attach(childRef){
           const attachMethods = [
-            '$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di',
+            '$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', 
             '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off',
             '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect',
             '$$moduleComputed', '$$globalComputed', '$$refComputed', '$$connectedComputed', 
-            '$$forceSyncState',  'setState', 'setGlobalState', 'forceUpdate',
+            '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate',
           ];
           attachMethods.forEach(m=> childRef[m] = this[m]);
+          if(childRef.$$cache){
+            childRef.$$cache = childRef.$$cache.bind(this, childRef);
+            childRef.$$refCache = childRef.$$cache();
+          }else{
+            childRef.$$refCache = {};
+          }
         }
 
         __$$mapCcToInstance(
@@ -679,6 +693,7 @@ export default function register(ccClassKey, {
                       effect: this.__$$getEffectHandler(ccKey), xeffect: this.__$$getXEffectHandler(ccKey),
                       invoke: this.__$$getInvokeHandler(), xinvoke: this.__$$getXInvokeHandler(),
                       moduleState: getState(targetModule), connectedState: ccClassContext[currentModule],
+                      moduleComputed: _computedValue[currentModule],
                       state: this.state, store: getState(), globalState: getState(MODULE_GLOBAL),
                       dispatch, dispatchIdentity, d: dispatch, di: dispatchIdentity,
                     });
@@ -861,7 +876,7 @@ export default function register(ccClassKey, {
                 let _partialSharedState = partialSharedState;
                 if (needClone) _partialSharedState = util.clone(partialSharedState);// this clone operation may cause performance issue, if partialSharedState is too big!!
 
-                const { ccUniqueKey: currentCcKey } = this.cc.ccState;
+                const { ccUniqueKey: currentCcKey, module: currentModule } = this.cc.ccState;
                 const ccClassKey_isHandled_ = {};//record which ccClassKey has been handled
 
                 // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered reactSetState
@@ -1078,7 +1093,8 @@ export default function register(ccClassKey, {
               } else {
                 if (forceSync) justWarning(`you are trying change another module's state, forceSync=true in not allowed, cc will ignore it!` + vbi(`module:${module} currentModule${currentModule}`));
                 if (reactCallback) justWarning(`callback for react.setState will be ignore`);
-                this.cc.prepareBroadcastState(stateFor, btb, module, state, true, delay, identity);
+                //触发修改转态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是是OF_ONE_MODULE
+                this.cc.prepareBroadcastState(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, btb, module, state, true, delay, identity);
               }
             }
           }
@@ -1225,10 +1241,34 @@ export default function register(ccClassKey, {
           handler().catch(handleCcFnError);
         }
 
-        $$sync(event, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
+        // when CCSYNC_KEY:   stateFor=ccint, seat1=ccdelay, seat2=ccidt, seat3=stateFor
+        $$sync(event, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, seat1, seat2, seat3, seat4) {
+          if (typeof event === 'string') {
+            const ccint = stateFor=== true || stateFor === 'true';
+            const syncFn = this.$$sync.bind(this, { [CCSYNC_KEY]: event }, ccint, seat1, seat2, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+            return syncFn;
+          }
+
+          let targetE = event, targetStateFor = stateFor;
+          if (event[CCSYNC_KEY] != undefined) {
+            const ccsync = event[CCSYNC_KEY];
+            const ccint = stateFor;
+            const ccdelay = seat1;
+            const ccidt = seat2;
+            targetStateFor = seat3;
+            let value = seat4;
+            //此时的value就是event
+            if (typeof value === 'object' && value.currentTarget !== undefined) {
+              //a real event
+              value = value.currentTarget.value;
+            }
+            targetE = { currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } } };
+            
+          }
+
           const currentModule = this.cc.ccState.module;
           let _module = currentModule, _delay = -1, _identity = '';
-          const currentTarget = event.currentTarget;
+          const currentTarget = targetE.currentTarget;
           let { value, dataset } = currentTarget;
           const { ccdelay, ccidt = '', ccint, ccsync } = dataset;
 
@@ -1239,14 +1279,16 @@ export default function register(ccClassKey, {
           if(ccsync.includes('/')){
             _module = ccsync.split('/')[0];
           }
-          const { state } = extractStateByCcsync(ccsync, value, ccint, getState(_module));
+
+          const fullState = _module !== currentModule? getState(_module): this.state;
+          const { state } = extractStateByCcsync(ccsync, value, ccint, fullState);
 
           if (ccdelay) {
             try { _delay = parseInt(ccdelay); } catch (err) { }
           }
           if (ccidt) _identity = ccidt;
 
-          this.$$changeState(state, { ccKey: this.cc.ccKey, stateFor, module: _module, delay: _delay, identity: _identity });
+          this.$$changeState(state, { ccKey: this.cc.ccKey, stateFor:targetStateFor, module: _module, delay: _delay, identity: _identity });
         }
 
         componentDidUpdate() {
