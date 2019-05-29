@@ -9,6 +9,7 @@ import _call from './api/call';
 import _setGlobalState from './api/set-global-state';
 import _setState from './api/set-state';
 import _getState from './api/get-state';
+import _getComputed from './api/get-computed';
 import _emit from './api/emit';
 import _emitWith from './api/emit-with';
 import _off from './api/off';
@@ -30,6 +31,7 @@ export const call = _call;
 export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const getState = _getState;
+export const getComputed = _getComputed;
 export const emit = _emit;
 export const emitWith = _emitWith;
 export const off = _off;
@@ -57,6 +59,7 @@ const defaultExport = {
   setGlobalState,
   setState,
   getState,
+  getComputed,
   ccContext,
   createDispatcher,
   CcFragment,

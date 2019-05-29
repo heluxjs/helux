@@ -1,3 +1,45 @@
+#### 2019-05-30
+* 新暴露顶层api；getComputed(module:string)
+* 更友好的sync函数，支持对已封装的组件提取值
+```
+/** 老版本写法 */
+<input data-ccsync="foo/age" onChange={sync} />
+
+/** 新版本的写法(注：两种写法都同时支持) */
+<input onChange={sync('foo/age')} />
+
+/** 对第三方组件绑定同步句柄，因为第三方组件不支持绑定data-*的写法，此时使用sync的动态绑定就可以了（注：需要第三方组件暴露的函数的第一位参数就是要同步的值） */
+import { Input, Select } from 'antd';
+
+<Input onChange={sync('foo/age')} />
+<Select onChange={sync('foo/age')} />
+```
+* 支持ccClass定义`$$cache`,值从`$$refCache`里获取
+> 通常一些组件挂载完毕后，一些视图或者结果不需要重复计算，就可以定义在`$$cache`里(注：你也可以直接定义在class里，`$$cache`是个可选项功能）
+```
+@register('Foo')
+class Foo extends Component{
+  doSomething = ()=>{
+    console.log('your logic code here');
+  }
+  $$cache(){
+    const columns = [
+      {
+        key:'age',
+        dataIndex:'age',
+        render: value=><span onClick={this.doSomething}>{value}</span>
+      }
+    ];
+    const options = [{id:1,name:'go'},{id:2,name:'jump'}].map(v=><Option key={v.id} value={v.id}>{v.name}</Option>);
+    return {columns, options};
+  }
+  render(){
+    const {columns, options} = this.$$refCache;
+  }
+}
+
+```
+
 #### 2019-05-28
 * 对目录结构做优化，方便以后更容易扩展
 * 优化util.clearObject，支持传入reset参数

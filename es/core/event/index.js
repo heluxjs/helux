@@ -52,7 +52,7 @@ function _deleteEventHandlers(handlers) {
 export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler) {
   const handlers = util.safeGetArrayFromObject(event_handlers_, event);
   if (typeof handler !== 'function') {
-    return justWarning(`event ${event}'s handler is not a function!`);
+    return util.justWarning(`event ${event}'s handler is not a function!`);
   }
   const targetHandlerIndex = handlers.findIndex(v => v.ccUniqueKey === ccUniqueKey && v.identity === identity);
   const handlerKeys = util.safeGetArrayFromObject(ccUniqueKey_handlerKeys_, ccUniqueKey);

@@ -19,10 +19,12 @@ const PICK_SINGLETON_INS = 3;
 export default function (keyDesc, method, ...args) {
   const { ccClassKey_ccClassContext_, ccKey_ref_ } = ccContext;
 
-  let ccClassKey = '', ccKey = '';
+  let ccClassKey = ''; 
+  let ccKey = '';
   if (keyDesc.includes('/')) {
     const [key1, key2] = keyDesc.split('/');
-    ccClassKey = key1, ccKey = key2;
+    ccClassKey = key1;
+    ccKey = key2;
   }else{
     ccClassKey = keyDesc;
   }

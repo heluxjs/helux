@@ -132,6 +132,7 @@ const ccContext = {
   pureGlobalStateKeys: [
 
   ],
+  //store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     _state: {
     },
@@ -199,7 +200,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.12',
+    version: '1.2.9',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
