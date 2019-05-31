@@ -148,8 +148,8 @@ run({
       }
     },
     init: async ()=>{
-      sleep(1900);
-      return {count:666}
+      await sleep(3900);
+      return {count:888}
     },//定义init，模拟从后端异步获取新的初始化数据
   }
 })
