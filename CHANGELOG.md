@@ -1,4 +1,12 @@
 #### 2019-05-30
+* feature add: clone-module
+* feature add: top api dispatch now support call like dispatch('*/doSomeThing', gogo);
+会匹配所有名字叫doSomeThing执行，这通常对克隆性的模块可以群派发一个动作
+``` 
+```
+* bug fix: updateConnectedState 漏播$$global的state
+
+#### 2019-05-30
 * 新暴露顶层api；getComputed(module:string)
 * 更友好的sync函数，支持对已封装的组件提取值
 ```

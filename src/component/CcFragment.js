@@ -202,6 +202,7 @@ export default class CcFragment extends Component {
               ccint = dataset.ccint;
               ccsync = dataset.ccsync;
             }
+            if(e.stopPropagation)e.stopPropagation();
 
             if (!ccsync) {
               return util.justWarning(`data-ccsync attr no found, you must define it while using syncLocal`);
@@ -228,6 +229,7 @@ export default class CcFragment extends Component {
         });
       },
       state: this.state,
+      props,
       setState: (state)=>{
         this.setState(state, ()=> this.cc.reactForceUpdate());
       }

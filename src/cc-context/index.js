@@ -166,6 +166,9 @@ const ccContext = {
       [MODULE_CC]: {
 
       }
+    },
+    _reducerName_FullReducerNameList_:{
+      
     }
   },
   computed,
@@ -180,6 +183,9 @@ const ccContext = {
       const mergedState = Object.assign({}, fullStoredState, partialStoredState);
       _state[ccUniqueKey] = mergedState;
     },
+  },
+  init:{
+    _init:{}
   },
   ccKey_ref_: refs,
   //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
@@ -200,7 +206,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.9',
+    version: '1.2.13',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

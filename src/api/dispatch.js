@@ -8,6 +8,7 @@ export default function (action, payLoadWhenActionIsString, identity='', [ccClas
     throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any), when action is String, second param means payload`);
   }
   
+  let dispatchFn;
   try {
     if (ccClassKey && ccKey) {
       const uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
@@ -15,7 +16,7 @@ export default function (action, payLoadWhenActionIsString, identity='', [ccClas
       if (!targetRef) {
         throw new Error(`no ref found for uniqueCcKey:${uKey}!`);
       } else {
-        targetRef.$$dispatch(action, payLoadWhenActionIsString);
+        dispatchFn = targetRef.$$dispatch;
       }
     } else {
       let module = '';
@@ -23,12 +24,28 @@ export default function (action, payLoadWhenActionIsString, identity='', [ccClas
         module = action.split('/')[0];
       }
 
-      const ref = pickOneRef(module);
-      if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-        ref.__fragmentParams.dispatch(action, payLoadWhenActionIsString, identity);
-      } else {
-        ref.$$dispatchForModule(action, payLoadWhenActionIsString, identity);
+      let ref;
+      if(module!=='*'){
+        ref = pickOneRef(module);
+      }else{
+        ref = pickOneRef();
       }
+
+      if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
+        dispatchFn = ref.__fragmentParams.dispatch;
+      } else {
+        dispatchFn = ref.$$dispatchForModule;
+      }
+    }
+
+    if(typeof action === 'string' && action.startsWith('*')){
+        const reducerName = action.split('/').pop();
+        const rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+        rnList_.forEach(fullReducerName=>{
+          dispatchFn(fullReducerName, payLoadWhenActionIsString, identity);
+        });
+    }else{
+      dispatchFn(action, payLoadWhenActionIsString, identity)
     }
   } catch (err) {
     if (throwError) throw err;

@@ -98,6 +98,7 @@ export function executeRootInit(init){
       });
     }
   });
+  ccContext.init._init = init;
 }
 
 export function configSharedToGlobalMapping(sharedToGlobalMapping) {

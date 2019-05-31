@@ -90,6 +90,7 @@ export default function ({
     if (window) {
       window.CC_CONTEXT = ccContext;
       window.ccc = ccContext;
+      window.cccc = ccContext.computed._computedValue;
     }
 
     ccContext.isCcAlreadyStartup = true;
