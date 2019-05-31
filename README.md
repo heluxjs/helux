@@ -1,4 +1,4 @@
-# concent [C_C]
+# concent
 <p align="center">
   <a href="#">
     <img width="500" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png">
