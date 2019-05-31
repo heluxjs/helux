@@ -98,6 +98,8 @@ $ yarn add concent
 import React, {Component} from 'react';
 import cc, { register, run, CcFragment } from 'concent';
 
+const sleep = (ms=2000) => new Promise(resolve=> setTimeout(resolve, ms));
+
 //定义两个模块，foo 和 counter
 run({
   foo:{
@@ -145,7 +147,10 @@ run({
         // dispatch('updateCount', count);
       }
     },
-    init: setState=> setTimeout(()=> setState({count:666}, 1000)),//定义init，模拟从后端异步获取新的初始化数据
+    init: async ()=>{
+      sleep(1900);
+      return {count:666}
+    },//定义init，模拟从后端异步获取新的初始化数据
   }
 })
 
