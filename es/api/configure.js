@@ -4,6 +4,8 @@ import { ERR, MODULE_GLOBAL } from '../support/constant';
 import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
 import initModuleState from '../core/state/init-module-state';
 import initModuleReducer from '../core/reducer/init-module-reducer';
+import initModuleComputed from '../core/computed/init-module-computed';
+import initModuleWatch from '../core/watch/init-module-watch';
 import * as checker from '../core/checker';
 import makeSetStateHandler from '../core/state/make-set-state-handler';
 
@@ -68,11 +70,10 @@ export default function (module, config, option = {}) {
   _state[module] = state;
 
   if (computed) {
-    ccContext.computed._computedFn[module] = computed;
-    ccContext.computed._computedValue[module] = {};
+    initModuleComputed(module, computed);
   }
   if (watch) {
-    ccContext.watch[module] = watch
+    initModuleWatch(module, watch);
   }
 
   if (isClassSingle === true) {

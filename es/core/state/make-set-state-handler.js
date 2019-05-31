@@ -11,7 +11,7 @@ export default function(module) {
       setState(module, state, 0, true);
     } catch (err) {
       if (module == MODULE_GLOBAL) {
-        getAndStoreValidGlobalState(state);
+        getAndStoreValidGlobalState(state, module);
       } else {
         const moduleState = ccContext.store.getState(module);
         if (!moduleState) {

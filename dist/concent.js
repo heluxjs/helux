@@ -1,34 +1,3 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -247,7 +216,8 @@ if (!this._inheritsLoose) {
       }
     },
     reducer: {
-      _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer)
+      _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer),
+      _reducerName_FullReducerNameList_: {}
     },
     computed: computed,
     watch: watch,
@@ -259,6 +229,9 @@ if (!this._inheritsLoose) {
         var mergedState = Object.assign({}, fullStoredState, partialStoredState);
         _state[ccUniqueKey] = mergedState;
       }
+    },
+    init: {
+      _init: {}
     },
     ccKey_ref_: refs,
     //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
@@ -272,7 +245,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.9',
+      version: '1.2.13',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1128,13 +1101,31 @@ if (!this._inheritsLoose) {
   var ccStoreSetState = ccContext.store.setState;
   var ccGlobalStateKeys = ccContext.globalStateKeys;
   var tip = "note! you are trying set state for global module, but the state you commit include some invalid keys which is not declared in cc's global state, \ncc will ignore them, but if this result is not as you expected, please check your committed global state!";
-  function getAndStoreValidGlobalState (globalState) {
+  function getAndStoreValidGlobalState (globalState, tipModule, tipCcClassKey) {
+    if (tipModule === void 0) {
+      tipModule = '';
+    }
+
+    if (tipCcClassKey === void 0) {
+      tipCcClassKey = '';
+    }
+
     var _extractStateByKeys = extractStateByKeys(globalState, ccGlobalStateKeys),
         validGlobalState = _extractStateByKeys.partialState,
         isStateEmpty = _extractStateByKeys.isStateEmpty;
 
-    if (Object.keys(validGlobalState) < Object.keys(globalState)) {
-      justWarning(tip);
+    var vKeys = okeys(validGlobalState);
+    var allKeys = okeys(globalState);
+
+    if (vKeys.length < allKeys.length) {
+      //??? need strict?
+      var invalidKeys = allKeys.filter(function (k) {
+        return !vKeys.includes(k);
+      });
+      justWarning(tip + ',invalid keys: ' + invalidKeys.join(',') + ', make sure the keys is invalid and their values are not undefined');
+      console.log(globalState);
+      if (tipModule) justWarning('module is ' + tipModule);
+      if (tipCcClassKey) justWarning('ccClassKey is ' + tipCcClassKey);
     }
 
     ccStoreSetState(MODULE_GLOBAL, validGlobalState);
@@ -1955,18 +1946,28 @@ if (!this._inheritsLoose) {
   }
 
   function watchValueForRef(refWatchFn, refEntireState, userCommitState) {
+    var shouldCurrentRefUpdate = true;
+
     if (refWatchFn) {
       var refWatch = refWatchFn();
       var watchStateKeys = Object.keys(refWatch);
+      var len = watchStateKeys.length;
+      var shouldNouUpdateLen = 0;
       watchStateKeys.forEach(function (key) {
         var commitValue = userCommitState[key];
 
         if (commitValue !== undefined) {
           var watchFn = refWatch[key];
-          watchFn(commitValue, refEntireState[key]); // watchFn(newValue, oldValue);
+          var ret = watchFn(commitValue, refEntireState[key]); // watchFn(newValue, oldValue);
+
+          if (ret === false) shouldNouUpdateLen++;
         }
-      });
+      }); //只有所有watch都返回false，才不触发当前实例更新
+
+      if (shouldNouUpdateLen === len) shouldCurrentRefUpdate = false;
     }
+
+    return shouldCurrentRefUpdate;
   }
 
   function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
@@ -2129,16 +2130,7 @@ if (!this._inheritsLoose) {
                   _props$ccOption = props.ccOption,
                   ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
               var originalCcKey = ccKey;
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler']);
-              if (_this.$$computed) _this.$$computed = _this.$$computed.bind(_assertThisInitialized(_this), _assertThisInitialized(_this)); //把this直接当参数传入
-
-              if (_this.$$cache) {
-                _this.$$cache = _this.$$cache.bind(_assertThisInitialized(_this), _assertThisInitialized(_this));
-                _this.$$refCache = _this.$$cache();
-              } else {
-                _this.$$refCache = {};
-              } // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
-
+              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
 
               if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true; // if you flag syncGlobalState false, that means this ccInstance's globalState changing will not effect cc's globalState and not effected by cc's globalState changing
 
@@ -2176,7 +2168,23 @@ if (!this._inheritsLoose) {
                 ccOption.storedStateKeys = storedStateKeys;
               }
 
-              _this.__$$mapCcToInstance(isSingle, _asyncLifecycleHook2, ccClassKey, originalCcKey, newCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, ccOption.storedStateKeys, ccOption, ccClassContext, _curStateModule, _reducerModule, sharedStateKeys, globalStateKeys);
+              _this.__$$mapCcToInstance(isSingle, _asyncLifecycleHook2, ccClassKey, originalCcKey, newCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, ccOption.storedStateKeys, ccOption, ccClassContext, _curStateModule, _reducerModule, sharedStateKeys, globalStateKeys); // debugger;
+
+
+              console.log(ccContext); //放在__$$mapCcToInstance，防止$$cache取this.connectedComputed报错undefined
+              //$$cache要注意使用规范
+
+              if (_this.$$computed) _this.$$computed = _this.$$computed.bind(_assertThisInitialized(_this), _assertThisInitialized(_this)); //把this直接当参数传入
+
+              if (_this.$$watch) _this.$$watch = _this.$$watch.bind(_assertThisInitialized(_this), _assertThisInitialized(_this));
+              if (_this.$$execute) _this.$$execute = _this.$$execute.bind(_assertThisInitialized(_this), _assertThisInitialized(_this));
+
+              if (_this.$$cache) {
+                _this.$$cache = _this.$$cache.bind(_assertThisInitialized(_this), _assertThisInitialized(_this));
+                _this.$$refCache = _this.$$cache();
+              } else {
+                _this.$$refCache = {};
+              }
             } catch (err) {
               catchCcError(err);
             }
@@ -2292,7 +2300,9 @@ if (!this._inheritsLoose) {
               beforeBroadcastState: this.$$beforeBroadcastState,
               afterSetState: this.$$afterSetState,
               reactSetState: function reactSetState(state, cb) {
-                ccState.renderCount += 1;
+                ccState.renderCount += 1; //让dispatch里取的state最新的
+
+                _this3.state = Object.assign(_this3.state, state);
                 reactSetStateRef(state, cb);
               },
               reactForceUpdate: function reactForceUpdate(state, cb) {
@@ -2446,7 +2456,9 @@ if (!this._inheritsLoose) {
                   if (context) {
                     var dispatch = _this3.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey);
 
-                    var dispatchIdentity = _this3.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey, identity);
+                    var dispatchIdentity = _this3.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey, identity); //不能将state赋给executionContextForUser，给一个getState才能保证dispatch函数的state是最新的
+                    //目前先保留state
+
 
                     var executionContextForUser = Object.assign(executionContext, {
                       effect: _this3.__$$getEffectHandler(ccKey),
@@ -2457,6 +2469,12 @@ if (!this._inheritsLoose) {
                       connectedState: ccClassContext[currentModule],
                       moduleComputed: _computedValue$1[currentModule],
                       state: _this3.state,
+                      getState: function getState() {
+                        return _this3.state;
+                      },
+                      getModuleState: function getModuleState() {
+                        return getState(MODULE_GLOBAL);
+                      },
                       store: getState(),
                       globalState: getState(MODULE_GLOBAL),
                       dispatch: dispatch,
@@ -2551,6 +2569,11 @@ if (!this._inheritsLoose) {
                 });
               },
               prepareReactSetState: function prepareReactSetState(identity, changedBy, state, stateFor, next, reactCallback) {
+                // 通过规范来约束用户，只要是可能变化的数据，都不要在$$cache里存
+                // 要不然$$cache就没意义了
+                // if(this.$$cache){
+                //   this.$$refCache = this.$$cache();
+                // }
                 if (stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
                   if (next) next();
                   return;
@@ -2583,13 +2606,19 @@ if (!this._inheritsLoose) {
                   }
                 }
 
+                var shouldCurrentRefUpdate = true;
+
                 if (!util.isObjectNotNull(state)) {
                   if (next) next();
                   return;
                 } else {
                   var thisState = _this3.state;
                   computeValueForRef(_this3.$$computed, _this3.$$refComputed, thisState, state);
-                  watchValueForRef(_this3.$$watch, thisState, state);
+                  shouldCurrentRefUpdate = watchValueForRef(_this3.$$watch, thisState, state);
+                }
+
+                if (shouldCurrentRefUpdate === false) {
+                  if (next) next();
                 }
 
                 if (_this3.$$beforeSetState) {
@@ -2620,7 +2649,7 @@ if (!this._inheritsLoose) {
               },
               prepareBroadcastGlobalState: function prepareBroadcastGlobalState(identity, broadcastTriggeredBy, globalState, delay) {
                 //!!! save global state to store
-                var _getAndStoreValidGlob = getAndStoreValidGlobalState(globalState),
+                var _getAndStoreValidGlob = getAndStoreValidGlobalState(globalState, currentModule, ccClassKey),
                     validGlobalState = _getAndStoreValidGlob.partialState,
                     isStateEmpty = _getAndStoreValidGlob.isStateEmpty;
 
@@ -2818,6 +2847,15 @@ if (!this._inheritsLoose) {
                       });
                     });
                   }
+                } //!!! 注意，这里要把global提出来播，例如一个属于$$default模块的实例提交得有$$global模块的数据，是需要被播出去的
+
+
+                var _extractStateByKeys10 = extractStateByKeys(originalState, ccContext.globalStateKeys),
+                    toToBroadcastGlobalState = _extractStateByKeys10.partialState,
+                    isEmptyG = _extractStateByKeys10.isStateEmpty;
+
+                if (!isEmptyG) {
+                  broadcastConnectedState(MODULE_GLOBAL, toToBroadcastGlobalState);
                 }
 
                 broadcastConnectedState(moduleName, originalState);
@@ -2828,9 +2866,9 @@ if (!this._inheritsLoose) {
                   var globalStateKeys = classContext.globalStateKeys,
                       ccKeys = classContext.ccKeys;
 
-                  var _extractStateByKeys10 = extractStateByKeys(globalSate, globalStateKeys),
-                      partialState = _extractStateByKeys10.partialState,
-                      isStateEmpty = _extractStateByKeys10.isStateEmpty;
+                  var _extractStateByKeys11 = extractStateByKeys(globalSate, globalStateKeys),
+                      partialState = _extractStateByKeys11.partialState,
+                      isStateEmpty = _extractStateByKeys11.isStateEmpty;
 
                   if (!isStateEmpty) {
                     ccKeys.forEach(function (ccKey) {
@@ -3224,6 +3262,10 @@ if (!this._inheritsLoose) {
                 }
               } else {
                 return Promise.reject(me$3(ERR.CC_DISPATCH_PARAM_INVALID));
+              }
+
+              if (_module === '*') {
+                return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
               } // pick user input reducerModule firstly
 
 
@@ -3321,6 +3363,7 @@ if (!this._inheritsLoose) {
               };
             }
 
+            if (event.stopPropagation) event.stopPropagation();
             var currentModule = this.cc.ccState.module;
 
             var _module = currentModule,
@@ -3594,7 +3637,7 @@ if (!this._inheritsLoose) {
         setState(module, state, 0, true);
       } catch (err) {
         if (module == MODULE_GLOBAL) {
-          getAndStoreValidGlobalState(state);
+          getAndStoreValidGlobalState(state, module);
         } else {
           var moduleState = ccContext.store.getState(module);
 
@@ -3623,8 +3666,15 @@ if (!this._inheritsLoose) {
 
     if (!reducer) return;
     if (rootReducerCanNotContainInputModule) checkReducerModuleName(module);else checkModuleNameBasically(module);
-    var _reducer = ccContext.reducer._reducer;
+    var _ccContext$reducer = ccContext.reducer,
+        _reducer = _ccContext$reducer._reducer,
+        _reducerName_FullReducerNameList_ = _ccContext$reducer._reducerName_FullReducerNameList_;
     _reducer[module] = reducer;
+    var reducerNames = okeys(reducer);
+    reducerNames.forEach(function (name) {
+      var list = safeGetArrayFromObject(_reducerName_FullReducerNameList_, name);
+      list.push(module + "/" + name);
+    });
   }
 
   var safeGetObjectFromObject$1 = safeGetObjectFromObject,
@@ -3781,6 +3831,7 @@ if (!this._inheritsLoose) {
         });
       }
     });
+    ccContext.init._init = init;
   }
   function configSharedToGlobalMapping(sharedToGlobalMapping) {
     if (!isPlainJsonObject$3(sharedToGlobalMapping)) {
@@ -3904,6 +3955,7 @@ if (!this._inheritsLoose) {
       if (window) {
         window.CC_CONTEXT = ccContext;
         window.ccc = ccContext;
+        window.cccc = ccContext.computed._computedValue;
       }
 
       ccContext.isCcAlreadyStartup = true;
@@ -3911,6 +3963,206 @@ if (!this._inheritsLoose) {
       if (errorHandler) errorHandler(err);else throw err;
     }
   }
+
+  var ccGlobalStateKeys$1 = ccContext.globalStateKeys;
+
+  function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
+    var globalState = ccContext.store.getGlobalState();
+
+    if (inputGlobalConf) {
+      if (!util.isPlainJsonObject(inputGlobalConf)) {
+        throw new Error("option.global" + label + " is not a plain json object");
+      }
+
+      var globalConfKeys = Object.keys(inputGlobalConf);
+      globalConfKeys.forEach(function (gKey) {
+        if (storedGlobalConf.hasOwnProperty(gKey)) {
+          throw new Error("key[" + gKey + "] duplicated in global." + label.toLowerCase());
+        }
+
+        var confValue = inputGlobalConf[gKey];
+        storedGlobalConf[gKey] = confValue;
+        if (label === 'State') ccGlobalStateKeys$1.push(gKey);else if (label === 'Computed') {
+          var val = globalState[gKey];
+          var computedVal = confValue(val, val, globalState);
+          ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
+        }
+      });
+    }
+  }
+  /**
+   * @description configure module、state、option to cc
+   * @author zzk
+   * @export
+   * @param {string} module
+   * @param {{state:object, reducer:object, watch:object, computed:object, init:object, sharedToGlobalMapping:object, isClassSingle:boolean}} config
+   * @param {object} [option] reducer、init、sharedToGlobalMapping
+   * @param {{[reducerModuleName:string]:{[fnName:string]:function}}} [option.reducer]
+   * @param {object} [option.globalState] will been merged to $$global module state
+   * @param {object} [option.globalWatch] will been merged to $$global module watch
+   * @param {object} [option.globalComputed] will been merged to $$global module computed
+   * @param {function[]} [option.middlewares]
+   */
+
+
+  function configure (module, config, option) {
+    if (option === void 0) {
+      option = {};
+    }
+
+    if (!ccContext.isCcAlreadyStartup) {
+      throw new Error('cc is not startup yet, you can not call cc.configure!');
+    }
+
+    if (!util.isPlainJsonObject(config)) {
+      throw new Error('[[configure]] param type error, config is not plain json object!');
+    }
+
+    if (module === MODULE_GLOBAL) {
+      throw new Error('cc do not allow configure global module');
+    }
+
+    var state = config.state,
+        reducer = config.reducer,
+        computed = config.computed,
+        watch = config.watch,
+        init = config.init,
+        sharedToGlobalMapping = config.sharedToGlobalMapping,
+        isClassSingle = config.isClassSingle;
+    var _option = option,
+        optionReducer = _option.reducer,
+        globalState = _option.globalState,
+        globalWatch = _option.globalWatch,
+        globalComputed = _option.globalComputed,
+        middlewares = _option.middlewares;
+    initModuleState(module, state);
+    initModuleReducer(module, reducer);
+    var _state = ccContext.store._state;
+    var _reducer = ccContext.reducer._reducer;
+    _state[module] = state;
+
+    if (computed) {
+      initModuleComputed(module, computed);
+    }
+
+    if (watch) {
+      initModuleWatch(module, watch);
+    }
+
+    if (isClassSingle === true) {
+      ccContext.moduleSingleClass[module] = true;
+    }
+
+    if (optionReducer) {
+      if (!isPlainJsonObject(optionReducer)) {
+        throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] 's moduleReducer is invalid"));
+      }
+
+      var reducerModuleNames = Object.keys(optionReducer);
+      reducerModuleNames.forEach(function (rmName) {
+        checkModuleName(rmName);
+        var moduleReducer = optionReducer[rmName];
+
+        if (!isPlainJsonObject(moduleReducer)) {
+          throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] reducer 's value is invalid"));
+        }
+
+        if (rmName == MODULE_GLOBAL) {
+          //merge input globalReducer to existed globalReducer
+          var typesOfGlobal = Object.keys(moduleReducer);
+          var globalReducer = _reducer[MODULE_GLOBAL];
+          typesOfGlobal.forEach(function (type) {
+            if (globalReducer[type]) {
+              throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo("type " + type));
+            }
+
+            var reducerFn = moduleReducer[type];
+
+            if (typeof reducerFn !== 'function') {
+              throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
+            }
+
+            globalReducer[type] = reducerFn;
+          });
+        } else {
+          _reducer[rmName] = moduleReducer;
+        }
+      });
+    }
+
+    if (reducer) {
+      if (!isPlainJsonObject(reducer)) {
+        throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("config.reducer is not a plain json object"));
+      }
+
+      _reducer[module] = reducer;
+    }
+
+    var storedGlobalState = _state[MODULE_GLOBAL];
+    var storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
+    var storedGlobalWatch = ccContext.watch[MODULE_GLOBAL]; //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
+
+    setGlobalConfig(storedGlobalState, globalState, 'State');
+    setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
+    setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
+
+    if (sharedToGlobalMapping) {
+      handleModuleSharedToGlobalMapping(module, sharedToGlobalMapping);
+    }
+
+    if (init) {
+      if (typeof init !== 'function') {
+        throw new Error('init value must be a function!');
+      }
+
+      init(makeSetStateHandler(module));
+    }
+
+    if (middlewares && middlewares.length > 0) {
+      var ccMiddlewares = ccContext.middlewares;
+      middlewares.forEach(function (m) {
+        if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
+        ccMiddlewares.push(m);
+      });
+    }
+  }
+
+  var _computedValue$2 = ccContext.computed._computedValue;
+  var _getComputed = (function (module) {
+    return _computedValue$2[module];
+  });
+
+  /**
+   * @param {string} newModule
+   * @param {string} existingModule
+   */
+
+  var _cloneModule = (function (newModule, existingModule, _temp) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        state = _ref.state;
+
+    if (!ccContext.isCcAlreadyStartup) {
+      throw new Error('cc is not startup yet');
+    }
+
+    checkModuleNameBasically(newModule);
+    checkModuleName(existingModule, false);
+    var mState = ccContext.store.getState(existingModule);
+    var stateCopy = clone(mState);
+    if (state) stateCopy = Object.assign(stateCopy, state);
+    var reducer = ccContext.reducer._reducer[existingModule];
+    var computed = ccContext.computed._computedFn[existingModule];
+    var watch = ccContext.watch._watch[existingModule];
+    var init = ccContext.init._init[existingModule];
+    var confObj = {
+      state: stateCopy
+    };
+    if (reducer) confObj.reducer = reducer;
+    if (computed) confObj.computed = computed;
+    if (watch) confObj.watch = watch;
+    if (init) confObj.init = init;
+    configure(newModule, confObj);
+  });
 
   /**
    * load will call startup
@@ -4157,170 +4409,6 @@ if (!this._inheritsLoose) {
     return register$1(ccClassKey, option);
   }
 
-  var ccGlobalStateKeys$1 = ccContext.globalStateKeys;
-
-  function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
-    var globalState = ccContext.store.getGlobalState();
-
-    if (inputGlobalConf) {
-      if (!util.isPlainJsonObject(inputGlobalConf)) {
-        throw new Error("option.global" + label + " is not a plain json object");
-      }
-
-      var globalConfKeys = Object.keys(inputGlobalConf);
-      globalConfKeys.forEach(function (gKey) {
-        if (storedGlobalConf.hasOwnProperty(gKey)) {
-          throw new Error("key[" + gKey + "] duplicated in global." + label.toLowerCase());
-        }
-
-        var confValue = inputGlobalConf[gKey];
-        storedGlobalConf[gKey] = confValue;
-        if (label === 'State') ccGlobalStateKeys$1.push(gKey);else if (label === 'Computed') {
-          var val = globalState[gKey];
-          var computedVal = confValue(val, val, globalState);
-          ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
-        }
-      });
-    }
-  }
-  /**
-   * @description configure module、state、option to cc
-   * @author zzk
-   * @export
-   * @param {string} module
-   * @param {{state:object, reducer:object, watch:object, computed:object, init:object, sharedToGlobalMapping:object, isClassSingle:boolean}} config
-   * @param {object} [option] reducer、init、sharedToGlobalMapping
-   * @param {{[reducerModuleName:string]:{[fnName:string]:function}}} [option.reducer]
-   * @param {object} [option.globalState] will been merged to $$global module state
-   * @param {object} [option.globalWatch] will been merged to $$global module watch
-   * @param {object} [option.globalComputed] will been merged to $$global module computed
-   * @param {function[]} [option.middlewares]
-   */
-
-
-  function _configure (module, config, option) {
-    if (option === void 0) {
-      option = {};
-    }
-
-    if (!ccContext.isCcAlreadyStartup) {
-      throw new Error('cc is not startup yet, you can not call cc.configure!');
-    }
-
-    if (!util.isPlainJsonObject(config)) {
-      throw new Error('[[configure]] param type error, config is not plain json object!');
-    }
-
-    if (module === MODULE_GLOBAL) {
-      throw new Error('cc do not allow configure global module');
-    }
-
-    var state = config.state,
-        reducer = config.reducer,
-        computed = config.computed,
-        watch = config.watch,
-        init = config.init,
-        sharedToGlobalMapping = config.sharedToGlobalMapping,
-        isClassSingle = config.isClassSingle;
-    var _option = option,
-        optionReducer = _option.reducer,
-        globalState = _option.globalState,
-        globalWatch = _option.globalWatch,
-        globalComputed = _option.globalComputed,
-        middlewares = _option.middlewares;
-    initModuleState(module, state);
-    initModuleReducer(module, reducer);
-    var _state = ccContext.store._state;
-    var _reducer = ccContext.reducer._reducer;
-    _state[module] = state;
-
-    if (computed) {
-      ccContext.computed._computedFn[module] = computed;
-      ccContext.computed._computedValue[module] = {};
-    }
-
-    if (watch) {
-      ccContext.watch[module] = watch;
-    }
-
-    if (isClassSingle === true) {
-      ccContext.moduleSingleClass[module] = true;
-    }
-
-    if (optionReducer) {
-      if (!isPlainJsonObject(optionReducer)) {
-        throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] 's moduleReducer is invalid"));
-      }
-
-      var reducerModuleNames = Object.keys(optionReducer);
-      reducerModuleNames.forEach(function (rmName) {
-        checkModuleName(rmName);
-        var moduleReducer = optionReducer[rmName];
-
-        if (!isPlainJsonObject(moduleReducer)) {
-          throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] reducer 's value is invalid"));
-        }
-
-        if (rmName == MODULE_GLOBAL) {
-          //merge input globalReducer to existed globalReducer
-          var typesOfGlobal = Object.keys(moduleReducer);
-          var globalReducer = _reducer[MODULE_GLOBAL];
-          typesOfGlobal.forEach(function (type) {
-            if (globalReducer[type]) {
-              throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo("type " + type));
-            }
-
-            var reducerFn = moduleReducer[type];
-
-            if (typeof reducerFn !== 'function') {
-              throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
-            }
-
-            globalReducer[type] = reducerFn;
-          });
-        } else {
-          _reducer[rmName] = moduleReducer;
-        }
-      });
-    }
-
-    if (reducer) {
-      if (!isPlainJsonObject(reducer)) {
-        throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("config.reducer is not a plain json object"));
-      }
-
-      _reducer[module] = reducer;
-    }
-
-    var storedGlobalState = _state[MODULE_GLOBAL];
-    var storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
-    var storedGlobalWatch = ccContext.watch[MODULE_GLOBAL]; //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
-
-    setGlobalConfig(storedGlobalState, globalState, 'State');
-    setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
-    setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
-
-    if (sharedToGlobalMapping) {
-      handleModuleSharedToGlobalMapping(module, sharedToGlobalMapping);
-    }
-
-    if (init) {
-      if (typeof init !== 'function') {
-        throw new Error('init value must be a function!');
-      }
-
-      init(makeSetStateHandler(module));
-    }
-
-    if (middlewares && middlewares.length > 0) {
-      var ccMiddlewares = ccContext.middlewares;
-      middlewares.forEach(function (m) {
-        if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
-        ccMiddlewares.push(m);
-      });
-    }
-  }
-
   var vbi$4 = util.verboseInfo;
   /**
    * @description
@@ -4439,10 +4527,7 @@ if (!this._inheritsLoose) {
 
   var getState$1 = ccContext.store.getState;
 
-  var _computedValue$2 = ccContext.computed._computedValue;
-  var _getComputed = (function (module) {
-    return _computedValue$2[module];
-  });
+  var getGlobalState = ccContext.store.getGlobalState;
 
   function _emit (event) {
     if (event === undefined) {
@@ -4527,6 +4612,8 @@ if (!this._inheritsLoose) {
       throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any), when action is String, second param means payload");
     }
 
+    var dispatchFn;
+
     try {
       if (ccClassKey && ccKey) {
         var uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
@@ -4535,7 +4622,7 @@ if (!this._inheritsLoose) {
         if (!targetRef) {
           throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
         } else {
-          targetRef.$$dispatch(action, payLoadWhenActionIsString);
+          dispatchFn = targetRef.$$dispatch;
         }
       } else {
         var module = '';
@@ -4544,22 +4631,81 @@ if (!this._inheritsLoose) {
           module = action.split('/')[0];
         }
 
-        var ref = pickOneRef(module);
+        var ref;
+
+        if (module !== '*') {
+          ref = pickOneRef(module);
+        } else {
+          ref = pickOneRef();
+        }
 
         if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-          ref.__fragmentParams.dispatch(action, payLoadWhenActionIsString, identity);
+          dispatchFn = ref.__fragmentParams.dispatch;
         } else {
-          ref.$$dispatchForModule(action, payLoadWhenActionIsString, identity);
+          dispatchFn = ref.$$dispatchForModule;
         }
+      }
+
+      if (typeof action === 'string' && action.startsWith('*')) {
+        var reducerName = action.split('/').pop();
+        var rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+        rnList_.forEach(function (fullReducerName) {
+          dispatchFn(fullReducerName, payLoadWhenActionIsString, identity);
+        });
+      } else {
+        dispatchFn(action, payLoadWhenActionIsString, identity);
       }
     } catch (err) {
       if (throwError) throw err;else util.justWarning(err.message);
     }
   }
 
-  var ccKey_ref_$3 = ccContext.ccKey_ref_;
+  var ccKey_ref_$3 = ccContext.ccKey_ref_,
+      ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_;
+  function getRefsByClassKey (ccClassKey) {
+    var refs = [];
+    var ccClassContext = ccClassKey_ccClassContext_$2[ccClassKey];
+
+    if (!ccClassContext) {
+      return refs;
+    }
+
+    var ccKeys = ccClassContext.ccKeys;
+    ccKeys.filter(function (k) {
+      var ref = ccKey_ref_$3[k];
+      if (ref) refs.push(ref);
+    });
+    return refs;
+  }
+
+  var _execute = (function (ccClassKey) {
+    var refs = getRefsByClassKey(ccClassKey);
+    refs.forEach(function (ref) {
+      if (ref.$$execute) ref.$$execute();
+    });
+  });
+
+  function getRefs () {
+    var refs = [];
+    var ccKey_ref_ = ccContext.ccKey_ref_;
+    var ccKeys = okeys(ccKey_ref_);
+    ccKeys.forEach(function (k) {
+      var ref = ccKey_ref_[k];
+      if (ref) refs.push(ref);
+    });
+    return refs;
+  }
+
+  var _executeAll = (function () {
+    var refs = getRefs();
+    refs.forEach(function (ref) {
+      if (ref.$$execute) ref.$$execute();
+    });
+  });
+
+  var ccKey_ref_$4 = ccContext.ccKey_ref_;
   function getDispatcherRef () {
-    var ref = ccKey_ref_$3[CC_DISPATCHER];
+    var ref = ccKey_ref_$4[CC_DISPATCHER];
 
     if (!ref) {
       if (util.isHotReloadMode()) {
@@ -4572,7 +4718,7 @@ if (!this._inheritsLoose) {
     return ref;
   }
 
-  var ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_,
+  var ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
       fragmentFeature_classKey_ = ccContext.fragmentFeature_classKey_;
   /**
    * 根据connect参数动态的把CcFragment划为某个ccClassKey的实例，同时计算出stateToPropMapping值
@@ -4657,7 +4803,7 @@ if (!this._inheritsLoose) {
       var moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
       var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_, MODULE_DEFAULT);
       if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
-      var ctx = ccClassKey_ccClassContext_$2[ccClassKey];
+      var ctx = ccClassKey_ccClassContext_$3[ccClassKey];
       var connectedComputed = ctx.connectedComputed || {};
       var connectedState = ctx.connectedState || {}; // only bind reactForceUpdateRef for CcFragment
 
@@ -4848,6 +4994,8 @@ if (!this._inheritsLoose) {
                 ccsync = dataset.ccsync;
               }
 
+              if (e.stopPropagation) e.stopPropagation();
+
               if (!ccsync) {
                 return justWarning("data-ccsync attr no found, you must define it while using syncLocal");
               }
@@ -4884,6 +5032,7 @@ if (!this._inheritsLoose) {
           });
         },
         state: _this.state,
+        props: props,
         setState: function setState(state) {
           _this.setState(state, function () {
             return _this.cc.reactForceUpdate();
@@ -4970,17 +5119,19 @@ if (!this._inheritsLoose) {
   }(React.Component);
 
   var startup$1 = startup;
+  var cloneModule = _cloneModule;
   var load = _load;
   var run = _load;
   var register$2 = register$1;
   var r = _r;
   var registerToDefault = _registerToDefault;
   var registerSingleClassToDefault = _registerSingleClassToDefault;
-  var configure = _configure;
+  var configure$1 = configure;
   var call = _call;
   var setGlobalState$1 = setGlobalState;
   var setState$1 = _setState;
   var getState$2 = getState$1;
+  var getGlobalState$1 = getGlobalState;
   var getComputed = _getComputed;
   var emit = _emit;
   var emitWith = _emitWith;
@@ -4989,8 +5140,11 @@ if (!this._inheritsLoose) {
   var dispatch = _dispatch;
   var ccContext$1 = ccContext;
   var createDispatcher$1 = createDispatcher;
+  var execute = _execute;
+  var executeAll = _executeAll;
   var CcFragment$1 = CcFragment;
   var defaultExport = {
+    cloneModule: cloneModule,
     emit: emit,
     emitWith: emitWith,
     off: off,
@@ -5003,14 +5157,17 @@ if (!this._inheritsLoose) {
     r: r,
     registerToDefault: registerToDefault,
     registerSingleClassToDefault: registerSingleClassToDefault,
-    configure: configure,
+    configure: configure$1,
     call: call,
     setGlobalState: setGlobalState$1,
+    getGlobalState: getGlobalState$1,
     setState: setState$1,
     getState: getState$2,
     getComputed: getComputed,
     ccContext: ccContext$1,
     createDispatcher: createDispatcher$1,
+    execute: execute,
+    executeAll: executeAll,
     CcFragment: CcFragment$1
   };
 
@@ -5019,17 +5176,19 @@ if (!this._inheritsLoose) {
   }
 
   exports.startup = startup$1;
+  exports.cloneModule = cloneModule;
   exports.load = load;
   exports.run = run;
   exports.register = register$2;
   exports.r = r;
   exports.registerToDefault = registerToDefault;
   exports.registerSingleClassToDefault = registerSingleClassToDefault;
-  exports.configure = configure;
+  exports.configure = configure$1;
   exports.call = call;
   exports.setGlobalState = setGlobalState$1;
   exports.setState = setState$1;
   exports.getState = getState$2;
+  exports.getGlobalState = getGlobalState$1;
   exports.getComputed = getComputed;
   exports.emit = emit;
   exports.emitWith = emitWith;
@@ -5038,6 +5197,8 @@ if (!this._inheritsLoose) {
   exports.dispatch = dispatch;
   exports.ccContext = ccContext$1;
   exports.createDispatcher = createDispatcher$1;
+  exports.execute = execute;
+  exports.executeAll = executeAll;
   exports.CcFragment = CcFragment$1;
   exports.default = defaultExport;
 
