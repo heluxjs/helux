@@ -552,8 +552,6 @@ export default function register(ccClassKey, {
               ccOption, ccClassContext, _curStateModule, _reducerModule, sharedStateKeys, globalStateKeys
             );
             
-            // debugger;
-            console.log(ccContext);
             //放在__$$mapCcToInstance，防止$$cache取this.connectedComputed报错undefined
             //$$cache要注意使用规范
             if(this.$$computed)this.$$computed = this.$$computed.bind(this, this);//把this直接当参数传入
