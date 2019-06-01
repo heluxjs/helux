@@ -29,6 +29,7 @@ if (!this._inheritsLoose) {
   }
 }
 
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -276,7 +277,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.17',
+      version: '1.2.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2161,7 +2162,7 @@ if (!this._inheritsLoose) {
                   _props$ccOption = props.ccOption,
                   ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
               var originalCcKey = ccKey;
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
+              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler', '$$onUrlChanged']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
 
               if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true; // if you flag syncGlobalState false, that means this ccInstance's globalState changing will not effect cc's globalState and not effected by cc's globalState changing
 
@@ -2262,7 +2263,7 @@ if (!this._inheritsLoose) {
           _proto.$$attach = function $$attach(childRef) {
             var _this2 = this;
 
-            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect', '$$moduleComputed', '$$globalComputed', '$$refComputed', '$$connectedComputed', '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate'];
+            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect', '$$moduleComputed', '$$globalComputed', '$$refComputed', '$$connectedComputed', '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate', '$$onUrlChanged'];
             attachMethods.forEach(function (m) {
               return childRef[m] = _this2[m];
             });
@@ -4810,7 +4811,8 @@ if (!this._inheritsLoose) {
           _props$connect = props.connect,
           connectSpec = _props$connect === void 0 ? {} : _props$connect,
           _props$state = props.state,
-          state = _props$state === void 0 ? {} : _props$state;
+          state = _props$state === void 0 ? {} : _props$state,
+          onUrlChanged = props.onUrlChanged;
 
       var _getFragmentClassKeyA = getFragmentClassKeyAndStpMapping(connectSpec),
           ccClassKey = _getFragmentClassKeyA.ccClassKey,
@@ -4855,7 +4857,9 @@ if (!this._inheritsLoose) {
         renderCount: 0,
         initTime: Date.now()
       };
+      if (onUrlChanged) onUrlChanged = onUrlChanged.bind(_assertThisInitialized(_this));
       _this.cc = {
+        onUrlChanged: onUrlChanged,
         ccState: ccState,
         reactForceUpdate: function reactForceUpdate(state, cb) {
           ccState.renderCount += 1;

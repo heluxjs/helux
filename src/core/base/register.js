@@ -515,7 +515,7 @@ export default function register(ccClassKey, {
               '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync',
               '__$$getEffectHandler', '__$$getXEffectHandler','__$$makeEffectHandler',
               '__$$getInvokeHandler', '__$$getXInvokeHandler','__$$makeInvokeHandler',
-              '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler',
+              '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler', '$$onUrlChanged',
             ]);
 
             // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
@@ -605,7 +605,7 @@ export default function register(ccClassKey, {
             '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off',
             '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect',
             '$$moduleComputed', '$$globalComputed', '$$refComputed', '$$connectedComputed', 
-            '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate',
+            '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate', '$$onUrlChanged'
           ];
           attachMethods.forEach(m=> childRef[m] = this[m]);
           if(childRef.$$cache){
