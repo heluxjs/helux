@@ -245,7 +245,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.13',
+      version: '1.2.14',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -4127,11 +4127,6 @@
     }
   }
 
-  var _computedValue$2 = ccContext.computed._computedValue;
-  var _getComputed = (function (module) {
-    return _computedValue$2[module];
-  });
-
   /**
    * @param {string} newModule
    * @param {string} existingModule
@@ -4139,7 +4134,11 @@
 
   var _cloneModule = (function (newModule, existingModule, _temp) {
     var _ref = _temp === void 0 ? {} : _temp,
-        state = _ref.state;
+        state = _ref.state,
+        reducer = _ref.reducer,
+        computed = _ref.computed,
+        watch = _ref.watch,
+        init = _ref.init;
 
     if (!ccContext.isCcAlreadyStartup) {
       throw new Error('cc is not startup yet');
@@ -4150,17 +4149,21 @@
     var mState = ccContext.store.getState(existingModule);
     var stateCopy = clone(mState);
     if (state) stateCopy = Object.assign(stateCopy, state);
-    var reducer = ccContext.reducer._reducer[existingModule];
-    var computed = ccContext.computed._computedFn[existingModule];
-    var watch = ccContext.watch._watch[existingModule];
-    var init = ccContext.init._init[existingModule];
+    var reducerEx = ccContext.reducer._reducer[existingModule] || {};
+    if (reducer) reducerEx = Object.assign(reducerEx, reducer);
+    var computedEx = ccContext.computed._computedFn[existingModule] || {};
+    if (computed) computedEx = Object.assign(computedEx, computed);
+    var watchEx = ccContext.watch._watch[existingModule] || {};
+    if (watch) watchEx = Object.assign(watchEx, watch);
+    var initEx = ccContext.init._init[existingModule];
+    if (init) initEx = init;
     var confObj = {
-      state: stateCopy
+      state: stateCopy,
+      reducer: reducerEx,
+      computed: computedEx,
+      watch: watchEx
     };
-    if (reducer) confObj.reducer = reducer;
-    if (computed) confObj.computed = computed;
-    if (watch) confObj.watch = watch;
-    if (init) confObj.init = init;
+    if (initEx) confObj.init = initEx;
     configure(newModule, confObj);
   });
 
@@ -4528,6 +4531,11 @@
   var getState$1 = ccContext.store.getState;
 
   var getGlobalState = ccContext.store.getGlobalState;
+
+  var _computedValue$2 = ccContext.computed._computedValue;
+  var _getComputed = (function (module) {
+    return _computedValue$2[module];
+  });
 
   function _emit (event) {
     if (event === undefined) {
