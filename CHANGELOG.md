@@ -1,9 +1,30 @@
 #### 2019-05-30
-* feature add: clone-module
+* feature add: clone-module，支持对已存在的模块（包括其state，reducer，init，watch，computed）进行克隆，并重写其中一部分配置
+要注意，同样是在concent启动后才支持调用此函数
+```
+import { run, cloneModule } from 'concent';
+const baseModule = {
+  state:{
+    name:'',
+    age:22,
+  },
+  reducer:{
+    incAge({moduleState}){
+      return {age:moduleState.age+1};
+    }
+  }
+}
+
+run({
+  foo:baseModule,
+});
+
+clone('foo2', baseModule, {state:{age:33}});
+clone('foo3', baseModule, {state:{age:44}});
+
+```
 * feature add: top api dispatch now support call like dispatch('*/doSomeThing', gogo);
 会匹配所有名字叫doSomeThing执行，这通常对克隆性的模块可以群派发一个动作
-``` 
-```
 * bug fix: updateConnectedState 漏播$$global的state
 
 #### 2019-05-30
