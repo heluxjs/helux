@@ -21,6 +21,7 @@ import _ccContext from './cc-context';
 import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
 import _executeAll from './api/execute-all';
+import _getRefs from './api/get-refs';
 import _CcFragment from './component/CcFragment';
 
 export const startup = _startup;
@@ -47,6 +48,7 @@ export const ccContext = _ccContext;
 export const createDispatcher = _createDispatcher;
 export const execute = _execute;
 export const executeAll = _executeAll;
+export const getRefs = _getRefs;
 export const CcFragment = _CcFragment;
 
 const defaultExport = {
@@ -74,6 +76,7 @@ const defaultExport = {
   createDispatcher,
   execute,
   executeAll,
+  getRefs,
   CcFragment,
 }
 

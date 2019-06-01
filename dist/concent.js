@@ -1,3 +1,34 @@
+if (!this._assertThisInitialized) {
+  this._assertThisInitialized = function (self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+  }
+}
+if (!this._extends) {
+  this._extends = function () {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    };
+    return _extends.apply(this, arguments);
+  }
+}
+if (!this._inheritsLoose) {
+  this._inheritsLoose = function (subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
+    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+}
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -245,7 +276,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.14',
+      version: '1.2.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -5150,6 +5181,7 @@
   var createDispatcher$1 = createDispatcher;
   var execute = _execute;
   var executeAll = _executeAll;
+  var getRefs$1 = getRefs;
   var CcFragment$1 = CcFragment;
   var defaultExport = {
     cloneModule: cloneModule,
@@ -5176,6 +5208,7 @@
     createDispatcher: createDispatcher$1,
     execute: execute,
     executeAll: executeAll,
+    getRefs: getRefs$1,
     CcFragment: CcFragment$1
   };
 
@@ -5207,6 +5240,7 @@
   exports.createDispatcher = createDispatcher$1;
   exports.execute = execute;
   exports.executeAll = executeAll;
+  exports.getRefs = getRefs$1;
   exports.CcFragment = CcFragment$1;
   exports.default = defaultExport;
 
