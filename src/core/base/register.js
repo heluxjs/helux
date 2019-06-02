@@ -636,6 +636,9 @@ export default function register(ccClassKey, {
           } else {
             childRef.$$refCache = {};
           }
+          const childRefState = childRef.state;
+          this.state = Object.assign(childRefState, this.state);
+          this.cc.childRef = childRef;
         }
 
         __$$mapCcToInstance(
@@ -1384,6 +1387,10 @@ export default function register(ccClassKey, {
           } else {
             // now cc class extends ReactComponent, render user inputted ReactClass
             const props = Object.assign(this, this.props);
+            if(!this.cc.childRef){
+              throw new Error('you forgot to call this.props.$$attach(this) in componentWillMount!');
+            }
+            this.cc.childRef.state = this.state;
             return React.createElement(ReactClass, props);
           }
         }

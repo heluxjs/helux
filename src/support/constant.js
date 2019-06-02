@@ -3,6 +3,7 @@
 export const MODULE_GLOBAL = '$$global';
 export const MODULE_DEFAULT = '$$default';
 export const MODULE_CC = '$$cc';
+export const MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
 
 export const CC_FRAGMENT_PREFIX = '$$Fragment';
 export const CC_DISPATCHER = '$$Dispatcher';
