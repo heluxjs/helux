@@ -206,7 +206,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.19',
+    version: '1.2.20',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
