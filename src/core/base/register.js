@@ -656,9 +656,9 @@ export default function register(ccClassKey, {
               this.state = Object.assign(this.state, state);
               reactSetStateRef(state, cb);
             },
-            reactForceUpdate: (state, cb) => {
+            reactForceUpdate: (cb) => {
               ccState.renderCount += 1;
-              reactForceUpdateRef(state, cb);
+              reactForceUpdateRef(cb);
             },
             setState: (state, cb, delay = -1) => {
               this.$$changeState(state, { ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, delay });

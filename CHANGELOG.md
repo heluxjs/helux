@@ -1,3 +1,15 @@
+#### 2019-06-20
+* CcFragment的onUrlChanged从prop里迁移到render的回调参数列表里
+```
+<CcFragment render={({onUrlChanged, forUpdate})=>{
+
+  onUrlChanged((params, action, history)=>{
+    console.log('changed');
+    forUpdate();
+  });
+}}/>
+```
+
 #### 2019-05-30
 * feature add: clone-module，支持对已存在的模块（包括其state，reducer，init，watch，computed）进行克隆，并重写其中一部分配置
 要注意，同样是在concent启动后才支持调用此函数
