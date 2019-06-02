@@ -553,7 +553,7 @@ export default function register(ccClassKey, {
             //这些方法是cc交给用户定义的，放置到cc下统一管理，因为多重装饰器模式下，这里属性是从this上取不到的
             //放在__$$recoverState之前，优先设置this.cc.computed
             if (this.$$computed) this.cc.computed = this.$$computed.bind(this);
-            if (this.$$onUrlChanged) this.cc.$$onUrlChanged = this.$$onUrlChanged.bind(this);
+            if (this.$$onUrlChanged) this.cc.onUrlChanged = this.$$onUrlChanged.bind(this);
             if (this.$$watch) this.cc.watch = this.$$watch.bind(this);
             if (this.$$execute) this.cc.execute = this.$$execute.bind(this);
             //$$cache要注意使用规范
@@ -667,6 +667,7 @@ export default function register(ccClassKey, {
           }
 
           this.cc = {
+            onUrlChanged:null,
             watch: null,
             computed: null,
             refComputed: {},
