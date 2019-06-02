@@ -511,11 +511,12 @@ export default function register(ccClassKey, {
             const { ccKey, ccOption = {} } = props;
             const originalCcKey = ccKey;
 
+            //这些方法是cc自己注入的
             util.bindThis(this, [
               '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync',
               '__$$getEffectHandler', '__$$getXEffectHandler','__$$makeEffectHandler',
               '__$$getInvokeHandler', '__$$getXInvokeHandler','__$$makeInvokeHandler',
-              '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler', '$$onUrlChanged',
+              '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler',
             ]);
 
             // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
@@ -552,13 +553,14 @@ export default function register(ccClassKey, {
               ccOption, ccClassContext, _curStateModule, _reducerModule, sharedStateKeys, globalStateKeys
             );
             
-            //放在__$$mapCcToInstance，防止$$cache取this.connectedComputed报错undefined
+            //这些方法是cc交给用户定义的
+            if(this.$$computed)this.$$computed = this.$$computed.bind(this);
+            if(this.$$onUrlChanged)this.$$onUrlChanged = this.$$onUrlChanged.bind(this);
+            if(this.$$watch)this.$$watch = this.$$watch.bind(this);
+            if(this.$$execute)this.$$execute = this.$$execute.bind(this);
             //$$cache要注意使用规范
-            if(this.$$computed)this.$$computed = this.$$computed.bind(this, this);//把this直接当参数传入
-            if(this.$$watch)this.$$watch = this.$$watch.bind(this, this);
-            if(this.$$execute)this.$$execute = this.$$execute.bind(this, this);
             if(this.$$cache){
-              this.$$cache = this.$$cache.bind(this, this);
+              this.$$cache = this.$$cache.bind(this);
               this.$$refCache = this.$$cache();
             }else{
               this.$$refCache = {};
