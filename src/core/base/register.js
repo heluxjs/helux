@@ -3,20 +3,14 @@ import React from 'react';
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
   MODULE_DEFAULT, MODULE_GLOBAL, ERR, CC_FRAGMENT_PREFIX, CC_DISPATCHER,
-  CHANGE_BY_SELF,
-  CHANGE_BY_BROADCASTED_GLOBAL_STATE_FROM_OTHER_MODULE,
-  CHANGE_BY_BROADCASTED_GLOBAL_STATE,
-  CHANGE_BY_BROADCASTED_SHARED_STATE,
-  CHANGE_BY_BROADCASTED_GLOBAL_STATE_AND_SHARED_STATE,
-
-  CURSOR_KEY, CCSYNC_KEY,
+  CCSYNC_KEY,
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE,
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
   STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
-import util, { isPlainJsonObject, makeHandlerKey } from '../../support/util';
+import util, { isPlainJsonObject } from '../../support/util';
 import co from 'co';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import setConnectedState from '../state/set-connected-state';
@@ -757,7 +751,7 @@ export default function register(ccClassKey, {
                   _partialState = partialState;
                   this.$$changeState(partialState, {
                     identity, ccKey, stateFor, module: targetModule, forceSync, cb: newCb, type,
-                    reducerModule, changedBy: CHANGE_BY_SELF, calledBy, fnName, delay
+                    reducerModule, calledBy, fnName, delay
                   });
                 }).then(() => {
                   if (__innerCb) __innerCb(null, _partialState);
@@ -798,7 +792,7 @@ export default function register(ccClassKey, {
                 this.cc.__invokeWith(reducerFn, executionContext);
               });
             },
-            prepareReactSetState: (identity, changedBy, state, stateFor, next, reactCallback) => {
+            prepareReactSetState: (identity, calledBy, state, stateFor, next, reactCallback) => {
               // 通过规范来约束用户，只要是可能变化的数据，都不要在$$cache里存
               // 要不然$$cache就没意义了
               // if(this.$$cache){
@@ -828,14 +822,13 @@ export default function register(ccClassKey, {
               }
 
               let shouldCurrentRefUpdate = true;
-              if (!util.isObjectNotNull(state)) {
+              if (calledBy !== FORCE_UPDATE && !util.isObjectNotNull(state)) {
                 if (next) next();
                 return;
-              } else {
-                const thisState = this.state;
-                computeValueForRef(this.cc.computed, this.cc.refComputed, thisState, state);
-                shouldCurrentRefUpdate = watchValueForRef(this.cc.watch, thisState, state);
               }
+              const thisState = this.state;
+              computeValueForRef(this.cc.computed, this.cc.refComputed, thisState, state);
+              shouldCurrentRefUpdate = watchValueForRef(this.cc.watch, thisState, state);
 
               if (shouldCurrentRefUpdate === false) {
                 if (next) next();
@@ -843,13 +836,13 @@ export default function register(ccClassKey, {
 
               if (this.$$beforeSetState) {
                 if (asyncLifecycleHook) {
-                  this.$$beforeSetState({ changedBy });
+                  this.$$beforeSetState({ state });
                   this.cc.reactSetState(state, reactCallback);
                   if (next) next();
                 } else {
                   // if user don't call next in ccIns's $$beforeSetState,reactSetState will never been invoked
                   // $$beforeSetState(context, next){}
-                  this.$$beforeSetState({ changedBy }, () => {
+                  this.$$beforeSetState({ state }, () => {
                     this.cc.reactSetState(state, reactCallback);
                     if (next) next();
                   });
@@ -978,23 +971,20 @@ export default function register(ccClassKey, {
                       const ref = ccKey_ref_[ccKey];
                       if (ref) {
                         const option = ccKey_option_[ccKey];
-                        let toSet = null, changedBy = -1;
+                        let toSet = null;
                         if (option.syncSharedState && option.syncGlobalState) {
-                          changedBy = CHANGE_BY_BROADCASTED_GLOBAL_STATE_AND_SHARED_STATE;
                           toSet = mergedStateForCurrentCcClass;
                         } else if (option.syncSharedState) {
-                          changedBy = CHANGE_BY_BROADCASTED_SHARED_STATE;
                           toSet = sharedStateForCurrentCcClass;
                         } else if (option.syncGlobalState) {
-                          changedBy = CHANGE_BY_BROADCASTED_GLOBAL_STATE;
                           toSet = globalStateForCurrentCcClass;
                         }
 
                         if (toSet) {
                           if (ccContext.isDebug) {
-                            console.log(ss(`ref ${ccKey} to be rendered state(changedBy ${changedBy}) is broadcast from same module's other ref ${currentCcKey}`), cl());
+                            console.log(ss(`received state for ref ${ccKey} is broadcasted from same module's other ref ${currentCcKey}`), cl());
                           }
-                          ref.cc.prepareReactSetState(identity, changedBy, toSet, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY)
+                          ref.cc.prepareReactSetState(identity, 'broadcastState', toSet, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY)
                         };
                       }
                     });
@@ -1027,7 +1017,7 @@ export default function register(ccClassKey, {
                             if (ccContext.isDebug) {
                               console.log(ss(`ref ${ccKey} to be rendered state(only global state) is broadcast from other module ${moduleName}`), cl());
                             }
-                            ref.cc.prepareReactSetState(identity, CHANGE_BY_BROADCASTED_GLOBAL_STATE_FROM_OTHER_MODULE, globalStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY)
+                            ref.cc.prepareReactSetState(identity, 'broadcastState', globalStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY)
                           }
                         }
                       });
@@ -1058,7 +1048,7 @@ export default function register(ccClassKey, {
                     if (ref) {
                       const option = ccKey_option_[ccKey];
                       if (option.syncGlobalState === true) {
-                        ref.cc.prepareReactSetState(identity, CHANGE_BY_BROADCASTED_GLOBAL_STATE, partialState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+                        ref.cc.prepareReactSetState(identity, 'broadcastGlobalState', partialState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
                       }
                     }
                   });
@@ -1132,7 +1122,7 @@ export default function register(ccClassKey, {
         //           and be careful: cc will clone this piece of state before broadcasting, so it will overwrite the target module's state !!!
         //        if ccIns option.syncSharedState is true, change it's own state and broadcast the state to target module
         $$changeState(state, {
-          ccKey, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, broadcastTriggeredBy, changedBy,
+          ccKey, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, broadcastTriggeredBy,
           forceSync, cb: reactCallback, type, reducerModule, calledBy, fnName, delay = -1, identity } = {}
         ) {//executionContext
           if (state == undefined) return;//do nothing
@@ -1150,7 +1140,7 @@ export default function register(ccClassKey, {
               const btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
               if (module === currentModule) {
                 // who trigger $$changeState, who will change the whole received state 
-                this.cc.prepareReactSetState(identity, changedBy || CHANGE_BY_SELF, state, stateFor, () => {
+                this.cc.prepareReactSetState(identity, calledBy, state, stateFor, () => {
                   //if forceSync=true, cc clone the input state
                   if (forceSync === true) {
                     this.cc.prepareBroadcastState(stateFor, btb, module, state, true, delay, identity);
@@ -1171,7 +1161,7 @@ export default function register(ccClassKey, {
 
           const middlewaresLen = middlewares.length;
           if (middlewaresLen > 0) {
-            const passToMiddleware = { ccKey, state, stateFor, module, type, reducerModule, broadcastTriggeredBy, changedBy, forceSync, calledBy, fnName };
+            const passToMiddleware = { ccKey, state, stateFor, module, type, reducerModule, broadcastTriggeredBy, forceSync, calledBy, fnName };
             let index = 0;
             const next = () => {
               if (index === middlewaresLen) {// all middlewares been executed

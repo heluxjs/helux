@@ -277,7 +277,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.21',
+      version: '1.2.22',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2206,7 +2206,7 @@ if (!this._inheritsLoose) {
               //放在__$$recoverState之前，优先设置this.cc.computed
 
               if (_this.$$computed) _this.cc.computed = _this.$$computed.bind(_assertThisInitialized(_this));
-              if (_this.$$onUrlChanged) _this.cc.$$onUrlChanged = _this.$$onUrlChanged.bind(_assertThisInitialized(_this));
+              if (_this.$$onUrlChanged) _this.cc.onUrlChanged = _this.$$onUrlChanged.bind(_assertThisInitialized(_this));
               if (_this.$$watch) _this.cc.watch = _this.$$watch.bind(_assertThisInitialized(_this));
               if (_this.$$execute) _this.cc.execute = _this.$$execute.bind(_assertThisInitialized(_this)); //$$cache要注意使用规范
 
@@ -2347,6 +2347,7 @@ if (!this._inheritsLoose) {
             }
 
             this.cc = {
+              onUrlChanged: null,
               watch: null,
               computed: null,
               refComputed: {},
