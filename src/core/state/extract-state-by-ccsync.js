@@ -1,4 +1,5 @@
 import ccContext from '../../cc-context';
+import * as util from '../../support/util';
 
 function setValue(obj, keys, lastKeyIndex, keyIndex, value){
   const key = keys[keyIndex];
@@ -12,9 +13,12 @@ function setValue(obj, keys, lastKeyIndex, keyIndex, value){
 export default (ccsync, value, ccint, defaultState) => {
   let _value = value;
   if (ccint === true) {
-    try {
-      _value = parseInt(value);
-    } catch (err) { }
+    _value = parseInt(value);
+    //strict?
+    if(Number.isNaN(_value)){
+      util.justWarning(`${value} can not convert to int but you set ccint as true!！`);
+      _value = value;
+    }
   }
   
   let module = null, keys = [];
