@@ -607,7 +607,7 @@ export default function register(ccClassKey, {
             '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off',
             '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect',
             '$$moduleComputed', '$$globalComputed', '$$refComputed', '$$connectedComputed', 
-            '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate', '$$onUrlChanged'
+            '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate',
           ];
           attachMethods.forEach(m=> childRef[m] = this[m]);
           if(childRef.$$cache){
