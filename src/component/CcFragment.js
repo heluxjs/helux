@@ -80,7 +80,9 @@ export default class CcFragment extends Component {
       ccState,
       reactForceUpdate: (cb) => {
         ccState.renderCount += 1;
-        reactForceUpdateRef(cb);
+        //方便用户直接绑定forceUpdate
+        if(typeof cb !== 'function')reactForceUpdateRef();
+        else reactForceUpdateRef(cb);
       },
       reactSetState: (state, cb)=>{
         ccState.renderCount += 1;
