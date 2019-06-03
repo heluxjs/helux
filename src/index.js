@@ -16,6 +16,7 @@ import _emit from './api/emit';
 import _emitWith from './api/emit-with';
 import _off from './api/off';
 import _connect from './api/connect';
+import _connectDumb from './api/connect-dumb';
 import _dispatch from './api/dispatch';
 import _ccContext from './cc-context';
 import _createDispatcher from './api/create-dispatcher';
@@ -43,6 +44,7 @@ export const emit = _emit;
 export const emitWith = _emitWith;
 export const off = _off;
 export const connect = _connect;
+export const connectDumb = _connectDumb;
 export const dispatch = _dispatch;
 export const ccContext = _ccContext;
 export const createDispatcher = _createDispatcher;
@@ -57,6 +59,7 @@ const defaultExport = {
   emitWith,
   off,
   connect,
+  connectDumb,
   dispatch,
   startup,
   load,
