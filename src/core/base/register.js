@@ -687,17 +687,17 @@ export default function register(ccClassKey, {
               ccState.renderCount += 1;
               reactForceUpdateRef(cb);
             },
-            setState: (state, cb, delay = -1) => {
-              this.$$changeState(state, { ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, delay });
+            setState: (state, cb, delay = -1, identity) => {
+              this.$$changeState(state, { ccKey, identity, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, delay });
             },
-            forceSyncState: (state, cb, delay = -1) => {
-              this.$$changeState(state, { forceSync: true, ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, delay });
+            forceSyncState: (state, cb, delay = -1, identity) => {
+              this.$$changeState(state, { forceSync: true, identity, ccKey, module: currentModule, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cb, calledBy: SET_STATE, delay });
             },
             setGlobalState: (partialGlobalState, delay = -1, broadcastTriggeredBy = BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE) => {
               this.$$changeState(partialGlobalState, { ccKey, module: MODULE_GLOBAL, broadcastTriggeredBy, calledBy: SET_GLOBAL_STATE, delay });
             },
-            forceUpdate: (cb, delay) => {
-              this.$$changeState(this.state, { ccKey, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: currentModule, cb, calledBy: FORCE_UPDATE, delay });
+            forceUpdate: (cb, delay, identity) => {
+              this.$$changeState(this.state, { ccKey, identity, stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module: currentModule, cb, calledBy: FORCE_UPDATE, delay });
             },
 
             // change other module's state, the difference between effect and xeffect is:
