@@ -28,7 +28,7 @@ const setStateByModuleAndKey = (module, key, value) => {
 
   if (watchFn) {
     const fn = watchFn[key];
-    if (fn) fn(value, oldValue);//fn(newValue, oldValue)
+    if (fn) fn(value, oldValue, moduleState);//fn(newValue, oldValue)
   }
   moduleState[key] = value;
 }

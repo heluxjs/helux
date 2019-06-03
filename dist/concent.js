@@ -49,11 +49,6 @@ if (!this._inheritsLoose) {
   var CC_FRAGMENT_PREFIX = '$$Fragment';
   var CC_DISPATCHER = '$$Dispatcher';
   var CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
-  var CHANGE_BY_SELF = 100;
-  var CHANGE_BY_BROADCASTED_GLOBAL_STATE = 101;
-  var CHANGE_BY_BROADCASTED_GLOBAL_STATE_FROM_OTHER_MODULE = 102;
-  var CHANGE_BY_BROADCASTED_SHARED_STATE = 103;
-  var CHANGE_BY_BROADCASTED_GLOBAL_STATE_AND_SHARED_STATE = 104;
   var BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD = 300;
   var BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE = 301;
   var BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE = 302;
@@ -277,7 +272,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.22',
+      version: '1.2.23',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2562,7 +2557,6 @@ if (!this._inheritsLoose) {
                       cb: newCb,
                       type: type,
                       reducerModule: reducerModule,
-                      changedBy: CHANGE_BY_SELF,
                       calledBy: calledBy,
                       fnName: fnName,
                       delay: delay
@@ -2632,7 +2626,7 @@ if (!this._inheritsLoose) {
                   _this3.cc.__invokeWith(reducerFn, executionContext);
                 });
               },
-              prepareReactSetState: function prepareReactSetState(identity, changedBy, state, stateFor, next, reactCallback) {
+              prepareReactSetState: function prepareReactSetState(identity, calledBy, state, stateFor, next, reactCallback) {
                 // 通过规范来约束用户，只要是可能变化的数据，都不要在$$cache里存
                 // 要不然$$cache就没意义了
                 // if(this.$$cache){
@@ -2672,14 +2666,14 @@ if (!this._inheritsLoose) {
 
                 var shouldCurrentRefUpdate = true;
 
-                if (!util.isObjectNotNull(state)) {
+                if (calledBy !== FORCE_UPDATE && !util.isObjectNotNull(state)) {
                   if (next) next();
                   return;
-                } else {
-                  var thisState = _this3.state;
-                  computeValueForRef(_this3.cc.computed, _this3.cc.refComputed, thisState, state);
-                  shouldCurrentRefUpdate = watchValueForRef(_this3.cc.watch, thisState, state);
                 }
+
+                var thisState = _this3.state;
+                computeValueForRef(_this3.cc.computed, _this3.cc.refComputed, thisState, state);
+                shouldCurrentRefUpdate = watchValueForRef(_this3.cc.watch, thisState, state);
 
                 if (shouldCurrentRefUpdate === false) {
                   if (next) next();
@@ -2688,7 +2682,7 @@ if (!this._inheritsLoose) {
                 if (_this3.$$beforeSetState) {
                   if (asyncLifecycleHook) {
                     _this3.$$beforeSetState({
-                      changedBy: changedBy
+                      state: state
                     });
 
                     _this3.cc.reactSetState(state, reactCallback);
@@ -2698,7 +2692,7 @@ if (!this._inheritsLoose) {
                     // if user don't call next in ccIns's $$beforeSetState,reactSetState will never been invoked
                     // $$beforeSetState(context, next){}
                     _this3.$$beforeSetState({
-                      changedBy: changedBy
+                      state: state
                     }, function () {
                       _this3.cc.reactSetState(state, reactCallback);
 
@@ -2848,26 +2842,22 @@ if (!this._inheritsLoose) {
 
                         if (ref) {
                           var option = ccKey_option_$1[ccKey];
-                          var toSet = null,
-                              changedBy = -1;
+                          var toSet = null;
 
                           if (option.syncSharedState && option.syncGlobalState) {
-                            changedBy = CHANGE_BY_BROADCASTED_GLOBAL_STATE_AND_SHARED_STATE;
                             toSet = mergedStateForCurrentCcClass;
                           } else if (option.syncSharedState) {
-                            changedBy = CHANGE_BY_BROADCASTED_SHARED_STATE;
                             toSet = sharedStateForCurrentCcClass;
                           } else if (option.syncGlobalState) {
-                            changedBy = CHANGE_BY_BROADCASTED_GLOBAL_STATE;
                             toSet = globalStateForCurrentCcClass;
                           }
 
                           if (toSet) {
                             if (ccContext.isDebug) {
-                              console.log(ss$1("ref " + ccKey + " to be rendered state(changedBy " + changedBy + ") is broadcast from same module's other ref " + currentCcKey), cl$1());
+                              console.log(ss$1("received state for ref " + ccKey + " is broadcasted from same module's other ref " + currentCcKey), cl$1());
                             }
 
-                            ref.cc.prepareReactSetState(identity, changedBy, toSet, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+                            ref.cc.prepareReactSetState(identity, 'broadcastState', toSet, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
                           }
                         }
                       });
@@ -2902,7 +2892,7 @@ if (!this._inheritsLoose) {
                                 console.log(ss$1("ref " + ccKey + " to be rendered state(only global state) is broadcast from other module " + moduleName), cl$1());
                               }
 
-                              ref.cc.prepareReactSetState(identity, CHANGE_BY_BROADCASTED_GLOBAL_STATE_FROM_OTHER_MODULE, globalStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+                              ref.cc.prepareReactSetState(identity, 'broadcastState', globalStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
                             }
                           }
                         });
@@ -2940,7 +2930,7 @@ if (!this._inheritsLoose) {
                         var option = ccKey_option_$1[ccKey];
 
                         if (option.syncGlobalState === true) {
-                          ref.cc.prepareReactSetState(identity, CHANGE_BY_BROADCASTED_GLOBAL_STATE, partialState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+                          ref.cc.prepareReactSetState(identity, 'broadcastGlobalState', partialState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
                         }
                       }
                     });
@@ -3047,7 +3037,6 @@ if (!this._inheritsLoose) {
                 stateFor = _ref4$stateFor === void 0 ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY : _ref4$stateFor,
                 module = _ref4.module,
                 broadcastTriggeredBy = _ref4.broadcastTriggeredBy,
-                changedBy = _ref4.changedBy,
                 forceSync = _ref4.forceSync,
                 reactCallback = _ref4.cb,
                 type = _ref4.type,
@@ -3075,7 +3064,7 @@ if (!this._inheritsLoose) {
 
                 if (module === currentModule) {
                   // who trigger $$changeState, who will change the whole received state 
-                  _this4.cc.prepareReactSetState(identity, changedBy || CHANGE_BY_SELF, state, stateFor, function () {
+                  _this4.cc.prepareReactSetState(identity, calledBy, state, stateFor, function () {
                     //if forceSync=true, cc clone the input state
                     if (forceSync === true) {
                       _this4.cc.prepareBroadcastState(stateFor, btb, module, state, true, delay, identity);
@@ -3103,7 +3092,6 @@ if (!this._inheritsLoose) {
                 type: type,
                 reducerModule: reducerModule,
                 broadcastTriggeredBy: broadcastTriggeredBy,
-                changedBy: changedBy,
                 forceSync: forceSync,
                 calledBy: calledBy,
                 fnName: fnName
