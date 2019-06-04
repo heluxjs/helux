@@ -16,12 +16,20 @@ const MyDumd = ({state, cc})=>{
 
 const MyDumd_ = connectDumb({
   connect: { foo: '*' },
-  mapComputed: {
-    cool(state) {
-      return state.name + '_' +  Date.now();
-    }
+  mapState:(connectedState, props)=>{
+    const foo = connectedState.foo;
+    return {a1:foo.age, b1:foo.name, c1:foo.age + foo.name}
   }
 })(MyDumd);
+```
+* feature add: sync函数支持绑定默认值了
+```
+<Button onClick={this.$$sync('foo/name', 'gogogo')}>
+```
+* feature add: 新增自动取反函数
+```
+//每一点点击都会对原值取反
+<Button onClick={this.$$toggleBool('foo/isOk')}>
 ```
 
 #### 2019-06-02
