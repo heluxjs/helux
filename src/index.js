@@ -23,6 +23,7 @@ import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
 import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
+import _getConnectedState from './api/get-connected-state';
 import _CcFragment from './component/CcFragment';
 
 export const startup = _startup;
@@ -39,6 +40,7 @@ export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const getState = _getState;
 export const getGlobalState = _getGlobalState;
+export const getConnectedState = _getConnectedState;
 export const getComputed = _getComputed;
 export const emit = _emit;
 export const emitWith = _emitWith;
@@ -75,6 +77,7 @@ const defaultExport = {
   setState,
   getState,
   getComputed,
+  getConnectedState,
   ccContext,
   createDispatcher,
   execute,
