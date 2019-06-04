@@ -1308,12 +1308,12 @@ export default function register(ccClassKey, {
           this.__$$sync({ type: 'bool' }, e);
         }
         $$syncInt(e, delay = -1, idt = '') {
-          if (typeof e === 'string') return this.__$$sync.bind(this, { [ccSyncKey]: e, type: 'int', delay, idt });
+          if (typeof e === 'string') return this.__$$sync.bind(this, { [CCSYNC_KEY]: e, type: 'int', delay, idt });
           this.__$$sync({ type: 'int' }, e);
         }
         // when CCSYNC_KEY:   stateFor=ccint, seat1=ccdelay, seat2=ccidt, seat3=stateFor
         $$sync(e, val, delay, idt) {
-          if (typeof event === 'string') {
+          if (typeof e === 'string') {
             return this.__$$sync.bind(this, { [CCSYNC_KEY]: e, val, delay, idt });
           } else if (e && e[MOCKE_KEY]) {
             this.__$$sync(e);
