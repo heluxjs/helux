@@ -3,14 +3,14 @@ import React from 'react';
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
   MODULE_DEFAULT, MODULE_GLOBAL, ERR, CC_FRAGMENT_PREFIX, CC_DISPATCHER,
-  CCSYNC_KEY,
+  CCSYNC_KEY, MOCKE_KEY,
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE,
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
   STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
-import util, { isPlainJsonObject } from '../../support/util';
+import util, { isPlainJsonObject, isEvent } from '../../support/util';
 import co from 'co';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import setConnectedState from '../state/set-connected-state';
@@ -22,6 +22,7 @@ import setRef from '../ref/set-ref';
 import runLater from './run-later';
 import getAndStoreValidGlobalState from '../state/get-and-store-valid-global-state';
 import computeCcUniqueKey from './compute-cc-unique-key';
+import buildMockEvent from './build-mock-event';
 import getFeatureStrAndStpMapping from './get-feature-str-and-stpmapping';
 import extractStateByCcsync from '../state/extract-state-by-ccsync';
 import * as checker from '../checker';
@@ -507,10 +508,10 @@ export default function register(ccClassKey, {
 
             //这些方法是cc自己注入的
             util.bindThis(this, [
-              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync',
-              '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler',
+              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '$$toggleBool',
+              '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$sync', '$$syncInt',
               '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler',
-              '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler',
+              '__$$getChangeStateHandler', '__$$getDispatchHandler',
             ]);
 
             // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
@@ -598,7 +599,7 @@ export default function register(ccClassKey, {
           const attachMethods = [
             '$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di',
             '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off',
-            '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect',
+            '$$sync', '$$toggleBool', '$$syncInt', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect',
             '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate',
           ];
           attachMethods.forEach(m => {
@@ -1291,9 +1292,6 @@ export default function register(ccClassKey, {
             }).catch(catchCcError);
           }
         }
-        __$$getSyncHandler(stateFor) {
-          return (e) => this.$$sync(e, stateFor);
-        }
 
         $$domDispatch(event) {
           const currentTarget = event.currentTarget;
@@ -1305,54 +1303,54 @@ export default function register(ccClassKey, {
           handler().catch(handleCcFnError);
         }
 
+        $$toggleBool(e, delay = -1, idt=''){
+          if (typeof e === 'string') return this.__$$sync.bind(this, { [CCSYNC_KEY]: e, type: 'bool', delay, idt });
+          this.__$$sync({ type: 'bool' }, e);
+        }
+        $$syncInt(e, delay = -1, idt = '') {
+          if (typeof e === 'string') return this.__$$sync.bind(this, { [ccSyncKey]: e, type: 'int', delay, idt });
+          this.__$$sync({ type: 'int' }, e);
+        }
         // when CCSYNC_KEY:   stateFor=ccint, seat1=ccdelay, seat2=ccidt, seat3=stateFor
-        $$sync(event, stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, seat1, seat2, seat3, seat4) {
+        $$sync(e, val, delay, idt) {
           if (typeof event === 'string') {
-            const ccint = stateFor === true || stateFor === 'true';
-            const syncFn = this.$$sync.bind(this, { [CCSYNC_KEY]: event }, ccint, seat1, seat2, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
-            return syncFn;
+            return this.__$$sync.bind(this, { [CCSYNC_KEY]: e, val, delay, idt });
+          } else if (e && e[MOCKE_KEY]) {
+            this.__$$sync(e);
           }
-
-          let targetE = event, targetStateFor = stateFor;
-          if (event[CCSYNC_KEY] != undefined) {
-            const ccsync = event[CCSYNC_KEY];
-            const ccint = stateFor;
-            const ccdelay = seat1;
-            const ccidt = seat2;
-            targetStateFor = seat3;
-            let value = seat4;
-            //此时的value就是event
-            if (typeof value === 'object' && value.currentTarget !== undefined) {
-              //a real event
-              value = value.currentTarget.value;
-            }
-            targetE = { currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } } };
+          this.__$$sync({ type: 'val' }, e);
+        }
+        __$$sync(spec, e){
+          let mockE = null;
+          if (spec[MOCKE_KEY]) {
+            mockE = spec
+          } else if (spec[CCSYNC_KEY] !== undefined) {//来自$$sync生成的setter调用
+            mockE = buildMockEvent(spec, e);
+          } else {
+            if (isEvent(e)) mockE = e;
           }
-          if (event.stopPropagation) event.stopPropagation();
-
-          const currentModule = this.cc.ccState.module;
-          let _module = currentModule, _delay = -1, _identity = '';
-          const currentTarget = targetE.currentTarget;
-          let { value, dataset } = currentTarget;
-          const { ccdelay, ccidt = '', ccint, ccsync } = dataset;
-
-          if (!ccsync) {
-            return justWarning(`data-ccsync attr no found, you must define it while using this.$$sync`);
-          }
-
+          if (!mockE) return;//参数无效
+          if (e && e.stopPropagation) e.stopPropagation();
+          
+          const currentTarget = mockE.currentTarget;
+          const dataset = currentTarget.dataset;
+          const {ccsync, ccint, ccdelay, ccidt} = dataset;
+          const value = currentTarget.value;
+          
+          let currentModule = this.cc.ccState.module;
+          let _module = currentModule;
           if (ccsync.includes('/')) {
             _module = ccsync.split('/')[0];
           }
-
+          
           const fullState = _module !== currentModule ? getState(_module) : this.state;
-          const { state } = extractStateByCcsync(ccsync, value, ccint, fullState);
-
-          if (ccdelay) {
-            try { _delay = parseInt(ccdelay); } catch (err) { }
+          const { state } = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool);
+          
+          const targetStateFor = mockE.stateFor;
+          if (!targetStateFor) {
+            targetStateFor = _module !== currentModule ? STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE : STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
           }
-          if (ccidt) _identity = ccidt;
-
-          this.$$changeState(state, { ccKey: this.cc.ccKey, stateFor: targetStateFor, module: _module, delay: _delay, identity: _identity });
+          this.$$changeState(state, { ccKey: this.cc.ccKey, stateFor: targetStateFor, module: _module, delay: ccdelay, identity: ccidt });
         }
 
         componentDidUpdate() {

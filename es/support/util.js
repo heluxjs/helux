@@ -303,6 +303,40 @@ export function okeys(obj){
   return Object.keys(obj);
 }
 
+export function flatObject(connectedState, alias, allowKeyDup = false) {
+  const modules = okeys(connectedState);
+  const fObj = {};
+  modules.forEach(m => {
+    const subObj = connectedState[m];
+    const keys = okeys(subObj);
+    keys.forEach(k => {
+      const aliasKey = alias[`${m}/${k}`];
+      if (fObj[k]!=undefined) {//重复了，看看有没有别名
+        if(aliasKey){
+          fObj[aliasKey] = subObj[k];
+        }else{
+          if(allowKeyDup === true){
+            fObj[k] = subObj[k];//重写
+          }else{
+            throw `key[${k}] duplicate in module ${m}`;
+          }
+        }
+      }else{
+        if(aliasKey){
+          fObj[aliasKey] = subObj[k];
+        }else{
+          fObj[k] = subObj[k];
+        }
+      }
+    });
+  });
+  return fObj;
+}
+
+export function isEvent(e){
+  return e && e.currentTarget && e.type;
+}
+
 export default {
   clearObject,
   makeError,

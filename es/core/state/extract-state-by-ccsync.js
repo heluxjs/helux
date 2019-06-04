@@ -1,52 +1,62 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 
-function setValue(obj, keys, lastKeyIndex, keyIndex, value){
+function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool = false) {
   const key = keys[keyIndex];
-  if(lastKeyIndex === keyIndex ){
-    obj[key] = value;
-  }else{
-    setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value)
+  if (lastKeyIndex === keyIndex) {
+    if (isToggleBool === true) {
+      const oriVal = obj[key];
+      if (typeof oriVal !== 'boolean') {
+        util.justWarning(`key[${key}]'s value type is not boolean`);
+      } else {
+        obj[key] = !oriVal;
+      }
+    } else {
+      obj[key] = value;
+    }
+  } else {
+    setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value, isToggleBool)
   }
 }
 
-export default (ccsync, value, ccint, defaultState) => {
+export default (ccsync, value, ccint, oriState, isToggleBool) => {
   let _value = value;
   if (ccint === true) {
     _value = parseInt(value);
     //strict?
-    if(Number.isNaN(_value)){
+    if (Number.isNaN(_value)) {
       util.justWarning(`${value} can not convert to int but you set ccint as true!！`);
       _value = value;
     }
   }
-  
+
   let module = null, keys = [];
-  if(ccsync.includes('/')){
+  if (ccsync.includes('/')) {
     const [_module, restStr] = ccsync.split('/');
     module = _module;
-    if(restStr.includes('.')){
+    if (restStr.includes('.')) {
       keys = restStr.split('.');
-    }else{
+    } else {
       keys = [restStr];
     }
-  }else if(ccsync.includes('.')){
+  } else if (ccsync.includes('.')) {
     keys = ccsync.split('.');
-  }else{
+  } else {
     keys = [ccsync];
   }
 
   if (keys.length == 1) {
-    return { module, state: { [keys[0]]: _value } };
+    const targetStateKey = keys[0];
+    if (isToggleBool === true) {
+      return { module, state: { [targetStateKey]: !oriState[targetStateKey] } };
+    } else {
+      return { module, state: { [targetStateKey]: _value } };
+    }
   } else {
     const [key, ...restKeys] = keys;
-    let targetState;
+    const subState = oriState[key];
 
-    if (module) targetState = ccContext.store.getState(module);
-    else targetState = defaultState;
-    const subState = targetState[key];
-
-    setValue(subState, restKeys, restKeys.length - 1, 0, _value);
+    setValue(subState, restKeys, restKeys.length - 1, 0, _value, isToggleBool);
     return { module, state: { [key]: subState } }
   }
 }

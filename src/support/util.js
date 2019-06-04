@@ -333,6 +333,10 @@ export function flatObject(connectedState, alias, allowKeyDup = false) {
   return fObj;
 }
 
+export function isEvent(e){
+  return e && e.currentTarget && e.type;
+}
+
 export default {
   clearObject,
   makeError,

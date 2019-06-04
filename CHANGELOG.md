@@ -1,4 +1,30 @@
-#### 2019-06-20
+#### 2019-06-03
+* feature add: 新增顶层函数connectDumb，支持用户快速连接无状态组件
+```
+const MyDumd = ({state, cc})=>{
+  return (
+    <div>
+      <h1>{state.age}</h1>
+      <h1>{state.name}</h1>
+      <h1>{state.cool}</h1>
+      <h1>{state.info.addr}</h1>
+      <h1>{state.info.f1}</h1>
+      <input value={state.name} onChange={cc.sync('foo/name')} />
+    </div>
+  );
+}
+
+const MyDumd_ = connectDumb({
+  connect: { foo: '*' },
+  mapComputed: {
+    cool(state) {
+      return state.name + '_' +  Date.now();
+    }
+  }
+})(MyDumd);
+```
+
+#### 2019-06-02
 * CcFragment的onUrlChanged从prop里迁移到render的回调参数列表里
 ```
 <CcFragment render={({onUrlChanged, forUpdate})=>{

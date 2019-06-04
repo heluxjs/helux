@@ -30,11 +30,12 @@ if (!this._inheritsLoose) {
 }
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
-  typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
-  (factory((global.ReactControlCenter = {}),global._assertThisInitialized,global._inheritsLoose,global.React,global.ReactDOM));
-}(this, (function (exports,_assertThisInitialized,_inheritsLoose,React,ReactDOM) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/readOnlyError'), require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
+  typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/readOnlyError', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
+  (factory((global.ReactControlCenter = {}),global._readOnlyError,global._assertThisInitialized,global._inheritsLoose,global.React,global.ReactDOM));
+}(this, (function (exports,_readOnlyError,_assertThisInitialized,_inheritsLoose,React,ReactDOM) { 'use strict';
 
+  _readOnlyError = _readOnlyError && _readOnlyError.hasOwnProperty('default') ? _readOnlyError['default'] : _readOnlyError;
   _assertThisInitialized = _assertThisInitialized && _assertThisInitialized.hasOwnProperty('default') ? _assertThisInitialized['default'] : _assertThisInitialized;
   _inheritsLoose = _inheritsLoose && _inheritsLoose.hasOwnProperty('default') ? _inheritsLoose['default'] : _inheritsLoose;
   var React__default = 'default' in React ? React['default'] : React;
@@ -54,7 +55,8 @@ if (!this._inheritsLoose) {
   var BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE = 302;
   var BROADCAST_TRIGGERED_BY_CC_API_SET_STATE = 303;
   var CURSOR_KEY = Symbol('__for_sync_param_cursor__');
-  var CCSYNC_KEY = Symbol('__for_sync_param_ccsync__'); //  two kind of state extraction
+  var CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
+  var MOCKE_KEY = Symbol('__for_mock_event__'); //  two kind of state extraction
   //    cc will use ccInstance's sharedStateKeys and globalStateKeys to extract committed state  
 
   var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1; //    cc will use one module's sharedStateKeys and globalStateKeys to extract committed state  
@@ -141,7 +143,7 @@ if (!this._inheritsLoose) {
 
     if (watchFn) {
       var _fn = watchFn[key];
-      if (_fn) _fn(value, oldValue); //fn(newValue, oldValue)
+      if (_fn) _fn(value, oldValue, moduleState); //fn(newValue, oldValue)
     }
 
     moduleState[key] = value;
@@ -272,7 +274,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.23',
+      version: '1.2.26',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -600,6 +602,44 @@ if (!this._inheritsLoose) {
   }
   function okeys(obj) {
     return Object.keys(obj);
+  }
+  function flatObject(connectedState, alias, allowKeyDup) {
+    if (allowKeyDup === void 0) {
+      allowKeyDup = false;
+    }
+
+    var modules = okeys(connectedState);
+    var fObj = {};
+    modules.forEach(function (m) {
+      var subObj = connectedState[m];
+      var keys = okeys(subObj);
+      keys.forEach(function (k) {
+        var aliasKey = alias[m + "/" + k];
+
+        if (fObj[k] != undefined) {
+          //重复了，看看有没有别名
+          if (aliasKey) {
+            fObj[aliasKey] = subObj[k];
+          } else {
+            if (allowKeyDup === true) {
+              fObj[k] = subObj[k]; //重写
+            } else {
+              throw "key[" + k + "] duplicate in module " + m;
+            }
+          }
+        } else {
+          if (aliasKey) {
+            fObj[aliasKey] = subObj[k];
+          } else {
+            fObj[k] = subObj[k];
+          }
+        }
+      });
+    });
+    return fObj;
+  }
+  function isEvent(e) {
+    return e && e.currentTarget && e.type;
   }
   var util = {
     clearObject: clearObject,
@@ -1222,6 +1262,80 @@ if (!this._inheritsLoose) {
     };
   }
 
+  var buildMockEvent = (function (spec, e, stateFor) {
+    var _ref;
+
+    var ccint = '',
+        ccsync = '',
+        ccidt = '',
+        value = '',
+        ccdelay = -1,
+        isToggleBool = false;
+    var specSyncKey = spec[CCSYNC_KEY];
+    var type = spec.type;
+
+    if (specSyncKey !== undefined) {
+      //来自生成的sync生成的setter函数调用
+      ccsync = specSyncKey;
+      ccdelay = spec.delay;
+      ccidt = spec.idt;
+
+      if (type === 'val') {
+        //set value
+        //优先从spec里取，取不到的话，从e里面分析并提取
+        var val = spec.val;
+
+        if (val === undefined) {
+          if (isEvent(e)) {
+            value = e.currentTarget.value;
+          } else {
+            value = e;
+          }
+        } else {
+          value = val;
+        }
+      } else if (type === 'bool') {
+        //toggle bool
+        isToggleBool = true;
+      } else if (type === 'int') {
+        //convert
+        ccint = true;
+      } else return null;
+    } else {
+      //来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
+      if (isEvent(e)) {
+        // e is event
+        var currentTarget = e.currentTarget;
+        value = currentTarget.value;
+        var dataset = currentTarget.dataset;
+        if (type === 'int') ccint = true;else ccint = dataset.ccint != undefined;
+        ccsync = dataset.ccsync;
+        if (!ccsync) return null;
+        ccidt = dataset.ccidt;
+        var dataSetDelay = dataset.ccdelay;
+
+        if (dataSetDelay) {
+          try {
+            ccdelay = parseInt(dataSetDelay);
+          } catch (err) {}
+        }
+      } else {
+        //<Input onChange={this.sync}/> is invalid
+        return null;
+      }
+    }
+
+    return _ref = {}, _ref[MOCKE_KEY] = 1, _ref.currentTarget = {
+      value: value,
+      dataset: {
+        ccsync: ccsync,
+        ccint: ccint,
+        ccdelay: ccdelay,
+        ccidt: ccidt
+      }
+    }, _ref.stateFor = stateFor, _ref.isToggleBool = isToggleBool, _ref;
+  });
+
   var _state = ccContext.store._state;
   /**
    * 根据connect参数算出ccClassKey值和stateToPropMapping值
@@ -1279,17 +1393,31 @@ if (!this._inheritsLoose) {
     };
   }
 
-  function setValue(obj, keys, lastKeyIndex, keyIndex, value) {
+  function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool) {
+    if (isToggleBool === void 0) {
+      isToggleBool = false;
+    }
+
     var key = keys[keyIndex];
 
     if (lastKeyIndex === keyIndex) {
-      obj[key] = value;
+      if (isToggleBool === true) {
+        var oriVal = obj[key];
+
+        if (typeof oriVal !== 'boolean') {
+          justWarning("key[" + key + "]'s value type is not boolean");
+        } else {
+          obj[key] = !oriVal;
+        }
+      } else {
+        obj[key] = value;
+      }
     } else {
-      setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value);
+      setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value, isToggleBool);
     }
   }
 
-  var extractStateByCcsync = (function (ccsync, value, ccint, defaultState) {
+  var extractStateByCcsync = (function (ccsync, value, ccint, oriState, isToggleBool) {
     var _value = value;
 
     if (ccint === true) {
@@ -1323,26 +1451,35 @@ if (!this._inheritsLoose) {
     }
 
     if (keys.length == 1) {
-      var _state;
+      var targetStateKey = keys[0];
 
-      return {
-        module: module,
-        state: (_state = {}, _state[keys[0]] = _value, _state)
-      };
+      if (isToggleBool === true) {
+        var _state;
+
+        return {
+          module: module,
+          state: (_state = {}, _state[targetStateKey] = !oriState[targetStateKey], _state)
+        };
+      } else {
+        var _state2;
+
+        return {
+          module: module,
+          state: (_state2 = {}, _state2[targetStateKey] = _value, _state2)
+        };
+      }
     } else {
-      var _state2;
+      var _state3;
 
       var _keys = keys,
           key = _keys[0],
           restKeys = _keys.slice(1);
 
-      var targetState;
-      if (module) targetState = ccContext.store.getState(module);else targetState = defaultState;
-      var subState = targetState[key];
-      setValue(subState, restKeys, restKeys.length - 1, 0, _value);
+      var subState = oriState[key];
+      setValue(subState, restKeys, restKeys.length - 1, 0, _value, isToggleBool);
       return {
         module: module,
-        state: (_state2 = {}, _state2[key] = subState, _state2)
+        state: (_state3 = {}, _state3[key] = subState, _state3)
       };
     }
   });
@@ -2161,7 +2298,7 @@ if (!this._inheritsLoose) {
                   ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
               var originalCcKey = ccKey; //这些方法是cc自己注入的
 
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler', '__$$getSyncHandler']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
+              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '$$toggleBool', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$sync', '$$syncInt', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
 
               if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true; // if you flag syncGlobalState false, that means this ccInstance's globalState changing will not effect cc's globalState and not effected by cc's globalState changing
 
@@ -2261,7 +2398,7 @@ if (!this._inheritsLoose) {
           _proto.$$attach = function $$attach(childRef) {
             var _this2 = this;
 
-            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect', '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate'];
+            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$toggleBool', '$$syncInt', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect', '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate'];
             attachMethods.forEach(function (m) {
               childRef[m] = _this2[m].bind(_this2);
             }); //这些负责搜集结果的key，单独绑定
@@ -2368,13 +2505,14 @@ if (!this._inheritsLoose) {
                 ccState.renderCount += 1;
                 reactForceUpdateRef(cb);
               },
-              setState: function setState(state, cb, delay) {
+              setState: function setState(state, cb, delay, identity) {
                 if (delay === void 0) {
                   delay = -1;
                 }
 
                 _this3.$$changeState(state, {
                   ccKey: ccKey,
+                  identity: identity,
                   module: currentModule,
                   stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
                   cb: cb,
@@ -2382,13 +2520,14 @@ if (!this._inheritsLoose) {
                   delay: delay
                 });
               },
-              forceSyncState: function forceSyncState(state, cb, delay) {
+              forceSyncState: function forceSyncState(state, cb, delay, identity) {
                 if (delay === void 0) {
                   delay = -1;
                 }
 
                 _this3.$$changeState(state, {
                   forceSync: true,
+                  identity: identity,
                   ccKey: ccKey,
                   module: currentModule,
                   stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
@@ -2414,9 +2553,10 @@ if (!this._inheritsLoose) {
                   delay: delay
                 });
               },
-              forceUpdate: function forceUpdate(cb, delay) {
+              forceUpdate: function forceUpdate(cb, delay, identity) {
                 _this3.$$changeState(_this3.state, {
                   ccKey: ccKey,
+                  identity: identity,
                   stateFor: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
                   module: currentModule,
                   cb: cb,
@@ -3338,14 +3478,6 @@ if (!this._inheritsLoose) {
             };
           };
 
-          _proto.__$$getSyncHandler = function __$$getSyncHandler(stateFor) {
-            var _this9 = this;
-
-            return function (e) {
-              return _this9.$$sync(e, stateFor);
-            };
-          };
-
           _proto.$$domDispatch = function $$domDispatch(event) {
             var currentTarget = event.currentTarget;
             var value = currentTarget.value,
@@ -3367,71 +3499,83 @@ if (!this._inheritsLoose) {
             var handler = this.__$$getDispatchHandler(STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, ccdelay, ccKey, ccidt);
 
             handler()["catch"](handleCcFnError);
+          };
+
+          _proto.$$toggleBool = function $$toggleBool(e, delay, idt) {
+            var _this$__$$sync$bind;
+
+            if (delay === void 0) {
+              delay = -1;
+            }
+
+            if (idt === void 0) {
+              idt = '';
+            }
+
+            if (typeof e === 'string') return this.__$$sync.bind(this, (_this$__$$sync$bind = {}, _this$__$$sync$bind[CCSYNC_KEY] = e, _this$__$$sync$bind.type = 'bool', _this$__$$sync$bind.delay = delay, _this$__$$sync$bind.idt = idt, _this$__$$sync$bind));
+
+            this.__$$sync({
+              type: 'bool'
+            }, e);
+          };
+
+          _proto.$$syncInt = function $$syncInt(e, delay, idt) {
+            var _this$__$$sync$bind2;
+
+            if (delay === void 0) {
+              delay = -1;
+            }
+
+            if (idt === void 0) {
+              idt = '';
+            }
+
+            if (typeof e === 'string') return this.__$$sync.bind(this, (_this$__$$sync$bind2 = {}, _this$__$$sync$bind2[ccSyncKey] = e, _this$__$$sync$bind2.type = 'int', _this$__$$sync$bind2.delay = delay, _this$__$$sync$bind2.idt = idt, _this$__$$sync$bind2));
+
+            this.__$$sync({
+              type: 'int'
+            }, e);
           } // when CCSYNC_KEY:   stateFor=ccint, seat1=ccdelay, seat2=ccidt, seat3=stateFor
           ;
 
-          _proto.$$sync = function $$sync(event, stateFor, seat1, seat2, seat3, seat4) {
-            if (stateFor === void 0) {
-              stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
-            }
-
+          _proto.$$sync = function $$sync(e, val, delay, idt) {
             if (typeof event === 'string') {
-              var _this$$$sync$bind;
+              var _this$__$$sync$bind3;
 
-              var _ccint = stateFor === true || stateFor === 'true';
-
-              var syncFn = this.$$sync.bind(this, (_this$$$sync$bind = {}, _this$$$sync$bind[CCSYNC_KEY] = event, _this$$$sync$bind), _ccint, seat1, seat2, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
-              return syncFn;
+              return this.__$$sync.bind(this, (_this$__$$sync$bind3 = {}, _this$__$$sync$bind3[CCSYNC_KEY] = e, _this$__$$sync$bind3.val = val, _this$__$$sync$bind3.delay = delay, _this$__$$sync$bind3.idt = idt, _this$__$$sync$bind3));
+            } else if (e && e[MOCKE_KEY]) {
+              this.__$$sync(e);
             }
 
-            var targetE = event,
-                targetStateFor = stateFor;
+            this.__$$sync({
+              type: 'val'
+            }, e);
+          };
 
-            if (event[CCSYNC_KEY] != undefined) {
-              var _ccsync = event[CCSYNC_KEY];
-              var _ccint2 = stateFor;
-              var _ccdelay = seat1;
-              var _ccidt = seat2;
-              targetStateFor = seat3;
-              var _value = seat4; //此时的value就是event
+          _proto.__$$sync = function __$$sync(spec, e) {
+            var mockE = null;
 
-              if (typeof _value === 'object' && _value.currentTarget !== undefined) {
-                //a real event
-                _value = _value.currentTarget.value;
-              }
-
-              targetE = {
-                currentTarget: {
-                  value: _value,
-                  dataset: {
-                    ccsync: _ccsync,
-                    ccint: _ccint2,
-                    ccdelay: _ccdelay,
-                    ccidt: _ccidt
-                  }
-                }
-              };
+            if (spec[MOCKE_KEY]) {
+              mockE = spec;
+            } else if (spec[CCSYNC_KEY] !== undefined) {
+              //来自$$sync生成的setter调用
+              mockE = buildMockEvent(spec, e);
+            } else {
+              if (isEvent(e)) mockE = e;
             }
 
-            if (event.stopPropagation) event.stopPropagation();
-            var currentModule = this.cc.ccState.module;
+            if (!mockE) return; //参数无效
 
-            var _module = currentModule,
-                _delay = -1,
-                _identity = '';
-
-            var currentTarget = targetE.currentTarget;
-            var value = currentTarget.value,
-                dataset = currentTarget.dataset;
-            var ccdelay = dataset.ccdelay,
-                _dataset$ccidt2 = dataset.ccidt,
-                ccidt = _dataset$ccidt2 === void 0 ? '' : _dataset$ccidt2,
+            if (e && e.stopPropagation) e.stopPropagation();
+            var currentTarget = mockE.currentTarget;
+            var dataset = currentTarget.dataset;
+            var ccsync = dataset.ccsync,
                 ccint = dataset.ccint,
-                ccsync = dataset.ccsync;
-
-            if (!ccsync) {
-              return justWarning$1("data-ccsync attr no found, you must define it while using this.$$sync");
-            }
+                ccdelay = dataset.ccdelay,
+                ccidt = dataset.ccidt;
+            var value = currentTarget.value;
+            var currentModule = this.cc.ccState.module;
+            var _module = currentModule;
 
             if (ccsync.includes('/')) {
               _module = ccsync.split('/')[0];
@@ -3439,22 +3583,21 @@ if (!this._inheritsLoose) {
 
             var fullState = _module !== currentModule ? getState(_module) : this.state;
 
-            var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, fullState),
+            var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool),
                 state = _extractStateByCcsync.state;
 
-            if (ccdelay) {
-              try {
-                _delay = parseInt(ccdelay);
-              } catch (err) {}
+            var targetStateFor = mockE.stateFor;
+
+            if (!targetStateFor) {
+              targetStateFor = (_readOnlyError("targetStateFor"), _module !== currentModule ? STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE : STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
             }
 
-            if (ccidt) _identity = ccidt;
             this.$$changeState(state, {
               ccKey: this.cc.ccKey,
               stateFor: targetStateFor,
               module: _module,
-              delay: _delay,
-              identity: _identity
+              delay: ccdelay,
+              identity: ccidt
             });
           };
 
@@ -4662,114 +4805,9 @@ if (!this._inheritsLoose) {
     return register$1(ccClassKey, mergedOption);
   }
 
-  function _dispatch (action, payLoadWhenActionIsString, identity, _temp) {
-    if (identity === void 0) {
-      identity = '';
-    }
-
-    var _ref = _temp === void 0 ? [] : _temp,
-        ccClassKey = _ref[0],
-        ccKey = _ref[1],
-        throwError = _ref[2];
-
-    if (action === undefined && payLoadWhenActionIsString === undefined) {
-      throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any), when action is String, second param means payload");
-    }
-
-    var dispatchFn;
-
-    try {
-      if (ccClassKey && ccKey) {
-        var uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
-        var targetRef = ccContext.refs[uKey];
-
-        if (!targetRef) {
-          throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
-        } else {
-          dispatchFn = targetRef.$$dispatch;
-        }
-      } else {
-        var module = '';
-
-        if (typeof action == 'string' && action.includes('/')) {
-          module = action.split('/')[0];
-        }
-
-        var ref;
-
-        if (module !== '*') {
-          ref = pickOneRef(module);
-        } else {
-          ref = pickOneRef();
-        }
-
-        if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-          dispatchFn = ref.__fragmentParams.dispatch;
-        } else {
-          dispatchFn = ref.$$dispatchForModule;
-        }
-      }
-
-      if (typeof action === 'string' && action.startsWith('*')) {
-        var reducerName = action.split('/').pop();
-        var rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
-        rnList_.forEach(function (fullReducerName) {
-          dispatchFn(fullReducerName, payLoadWhenActionIsString, identity);
-        });
-      } else {
-        dispatchFn(action, payLoadWhenActionIsString, identity);
-      }
-    } catch (err) {
-      if (throwError) throw err;else util.justWarning(err.message);
-    }
-  }
-
-  var ccKey_ref_$3 = ccContext.ccKey_ref_,
-      ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_;
-  function getRefsByClassKey (ccClassKey) {
-    var refs = [];
-    var ccClassContext = ccClassKey_ccClassContext_$2[ccClassKey];
-
-    if (!ccClassContext) {
-      return refs;
-    }
-
-    var ccKeys = ccClassContext.ccKeys;
-    ccKeys.filter(function (k) {
-      var ref = ccKey_ref_$3[k];
-      if (ref) refs.push(ref);
-    });
-    return refs;
-  }
-
-  var _execute = (function (ccClassKey) {
-    var refs = getRefsByClassKey(ccClassKey);
-    refs.forEach(function (ref) {
-      if (ref.$$execute) ref.$$execute();
-    });
-  });
-
-  function getRefs () {
-    var refs = [];
-    var ccKey_ref_ = ccContext.ccKey_ref_;
-    var ccKeys = okeys(ccKey_ref_);
-    ccKeys.forEach(function (k) {
-      var ref = ccKey_ref_[k];
-      if (ref) refs.push(ref);
-    });
-    return refs;
-  }
-
-  var _executeAll = (function () {
-    var refs = getRefs();
-    refs.forEach(function (ref) {
-      if (ref.$$execute) ref.$$execute();
-    });
-  });
-
-  var ccKey_ref_$4 = ccContext.ccKey_ref_;
+  var ccKey_ref_$3 = ccContext.ccKey_ref_;
   function getDispatcherRef () {
-    var ref = ccKey_ref_$4[CC_DISPATCHER];
+    var ref = ccKey_ref_$3[CC_DISPATCHER];
 
     if (!ref) {
       if (util.isHotReloadMode()) {
@@ -4782,7 +4820,7 @@ if (!this._inheritsLoose) {
     return ref;
   }
 
-  var ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
+  var ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_,
       fragmentFeature_classKey_ = ccContext.fragmentFeature_classKey_;
   /**
    * 根据connect参数动态的把CcFragment划为某个ccClassKey的实例，同时计算出stateToPropMapping值
@@ -4823,7 +4861,7 @@ if (!this._inheritsLoose) {
   }
 
   var cursorKey = CURSOR_KEY;
-  var ccSyncKey = CCSYNC_KEY;
+  var ccSyncKey$1 = CCSYNC_KEY;
 
   var CcFragment =
   /*#__PURE__*/
@@ -4867,7 +4905,7 @@ if (!this._inheritsLoose) {
       var moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
       var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_, MODULE_DEFAULT);
       if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
-      var ctx = ccClassKey_ccClassContext_$3[ccClassKey];
+      var ctx = ccClassKey_ccClassContext_$2[ccClassKey];
       var connectedComputed = ctx.connectedComputed || {};
       var connectedState = ctx.connectedState || {};
 
@@ -4932,9 +4970,9 @@ if (!this._inheritsLoose) {
 
           var setter = function setter(e) {
             if (e.currentTarget && e.type) {
-              var _this$__fragmentParam;
+              var _sync;
 
-              _this.__fragmentParams.sync(e, (_this$__fragmentParam = {}, _this$__fragmentParam[cursorKey] = cursor, _this$__fragmentParam));
+              __sync((_sync = {}, _sync[cursorKey] = cursor, _sync), e);
             } else {
               stateArr[cursor] = e;
 
@@ -4994,7 +5032,98 @@ if (!this._inheritsLoose) {
       };
       var dispatcher = getDispatcherRef();
       _this.state = state;
+
+      var __sync = function __sync(spec, e) {
+        if (spec[cursorKey] !== undefined) {
+          //来自hook生成的setter调用
+          var _cursor = spec[cursorKey];
+          __hookMeta.stateArr[_cursor] = e.currentTarget.value;
+
+          _this.cc.reactForceUpdate();
+
+          return;
+        }
+
+        var mockE = buildMockEvent(spec, e, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
+        if (!mockE) return; //参数无效
+
+        var currentTarget = mockE.currentTarget;
+        var dataset = currentTarget.dataset;
+        if (e && e.stopPropagation) e.stopPropagation();
+
+        if (dataset.ccsync.includes('/')) {
+          // syncModuleState 同步模块的state状态
+          dispatcher.$$sync(mockE);
+        } else {
+          // syncLocalState 同步本地的state状态
+          var _extractStateByCcsync = extractStateByCcsync(dataset.ccsync, currentTarget.value, dataset.ccint, _this.state, mockE.isToggleBool),
+              _state = _extractStateByCcsync.state;
+
+          __fragmentParams.setState(_state);
+        }
+      };
+
       var __fragmentParams = {
+        toggleBool: function toggleBool(e, delay, idt) {
+          var _sync$bind;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[ccSyncKey$1] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.idt = idt, _sync$bind));
+
+          __sync({
+            type: 'bool'
+          }, e);
+        },
+        //if <Input onChange={(value:string, value2:string)=>void} />
+        // <Input onChange={this.sync} /> not work!!!
+        // <Input onChange={this.sync('foo/f1')} /> ok
+        // only <input data-ccsync="foo/f1" onChange={this.sync} /> ok
+        // only <input onChange={this.sync('foo/f1')} /> ok
+        sync: function sync(e, val, delay, idt) {
+          var _sync$bind2;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[ccSyncKey$1] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
+
+          __sync({
+            type: 'val'
+          }, e);
+        },
+        // <Input onChange={this.syncInt} /> not work!!!
+        // <Input onChange={this.syncInt('foo/bar')} /> ok
+        // <input onChange={this.syncInt('foo/bar')} /> ok
+        // <input data-ccsync="foo/f1" onChange={this.syncInt('foo/fq')} /> ok
+        syncInt: function syncInt(e, delay, idt) {
+          var _sync$bind3;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[ccSyncKey$1] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3));
+
+          __sync({
+            type: 'int'
+          }, e);
+        },
         onUrlChanged: function onUrlChanged(cb) {
           _this.cc.onUrlChanged = cb.bind(_assertThisInitialized(_this));
         },
@@ -5029,73 +5158,6 @@ if (!this._inheritsLoose) {
         effect: dispatcher.__$$getEffectHandler(ccKey),
         xeffect: dispatcher.__$$getXEffectHandler(ccKey),
         //seat1, seat2仅仅用于占位
-        sync: function sync(e, cursor, seat1, seat2) {
-          if (typeof e === 'string') {
-            var _fragmentParams$sync;
-
-            var syncFn = __fragmentParams.sync.bind(null, (_fragmentParams$sync = {}, _fragmentParams$sync[ccSyncKey] = e, _fragmentParams$sync), cursor); //此时的e是ccsync, cursor是bindedInt
-
-
-            return syncFn;
-          } else {
-            if (cursor !== null && typeof cursor === 'object' && cursor[cursorKey] !== undefined) {
-              // syncLocalHookState 同步本地的hook状态
-              var _cursor = cursor[cursorKey];
-              __hookMeta.stateArr[_cursor] = e.currentTarget.value;
-
-              _this.cc.reactForceUpdate();
-            } else {
-              var ccint = '',
-                  ccsync = '',
-                  value = '',
-                  mockE = e;
-
-              if (typeof e === 'object' && e[ccSyncKey] !== undefined) {
-                ccint = cursor;
-                ccsync = e[ccSyncKey];
-                value = seat1; //这个值由函数注入
-                //a real event
-
-                if (typeof value === 'object' && value.currentTarget !== undefined) {
-                  value = value.currentTarget.value;
-                }
-
-                mockE = {
-                  currentTarget: {
-                    value: value,
-                    dataset: {
-                      ccsync: ccsync,
-                      ccint: ccint
-                    }
-                  }
-                };
-              } else {
-                var currentTarget = e.currentTarget;
-                value = currentTarget.value;
-                var dataset = currentTarget.dataset;
-                ccint = dataset.ccint;
-                ccsync = dataset.ccsync;
-              }
-
-              if (e.stopPropagation) e.stopPropagation();
-
-              if (!ccsync) {
-                return justWarning("data-ccsync attr no found, you must define it while using syncLocal");
-              }
-
-              if (ccsync.includes('/')) {
-                // syncModuleState 同步模块的state状态
-                dispatcher.$$sync(mockE, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
-              } else {
-                // syncLocalState 同步本地的state状态
-                var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, _this.state),
-                    _state = _extractStateByCcsync.state;
-
-                __fragmentParams.setState(_state);
-              }
-            }
-          }
-        },
         setModuleState: function setModuleState(module, state, delayMs) {
           dispatcher.$$changeState(state, {
             ccKey: ccKey,
@@ -5202,6 +5264,157 @@ if (!this._inheritsLoose) {
     return CcFragment;
   }(React.Component);
 
+  /**
+  mapComputed = {
+    fullName(state){
+      return state.firstName + state.lastName;
+    }
+  };
+  */
+
+  function _connectDumb(connect, mapState, alias, Dumb, props) {
+    var render = function render(cc) {
+      var connectedState = cc.connectedState;
+      var flatedObj;
+
+      if (mapState) {
+        flatedObj = mapState(connectedState, props) || {};
+      } else {
+        flatedObj = flatObject(connectedState, alias);
+      }
+
+      return React__default.createElement(Dumb, {
+        state: flatedObj,
+        connectedState: connectedState,
+        cc: cc,
+        props: props
+      });
+    };
+
+    return React__default.createElement(CcFragment, {
+      connect: connect,
+      render: render
+    });
+  }
+
+  var _connectDumb$1 = (function (_ref) {
+    var connect = _ref.connect,
+        _ref$alias = _ref.alias,
+        alias = _ref$alias === void 0 ? {} : _ref$alias,
+        _ref$mapState = _ref.mapState,
+        mapState = _ref$mapState === void 0 ? {} : _ref$mapState;
+    return function (Dumb) {
+      return function (props) {
+        return _connectDumb(connect, mapState, alias, Dumb, props);
+      };
+    };
+  });
+
+  function _dispatch (action, payLoadWhenActionIsString, identity, _temp) {
+    if (identity === void 0) {
+      identity = '';
+    }
+
+    var _ref = _temp === void 0 ? [] : _temp,
+        ccClassKey = _ref[0],
+        ccKey = _ref[1],
+        throwError = _ref[2];
+
+    if (action === undefined && payLoadWhenActionIsString === undefined) {
+      throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any), when action is String, second param means payload");
+    }
+
+    var dispatchFn;
+
+    try {
+      if (ccClassKey && ccKey) {
+        var uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
+        var targetRef = ccContext.refs[uKey];
+
+        if (!targetRef) {
+          throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
+        } else {
+          dispatchFn = targetRef.$$dispatch;
+        }
+      } else {
+        var module = '';
+
+        if (typeof action == 'string' && action.includes('/')) {
+          module = action.split('/')[0];
+        }
+
+        var ref;
+
+        if (module !== '*') {
+          ref = pickOneRef(module);
+        } else {
+          ref = pickOneRef();
+        }
+
+        if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
+          dispatchFn = ref.__fragmentParams.dispatch;
+        } else {
+          dispatchFn = ref.$$dispatchForModule;
+        }
+      }
+
+      if (typeof action === 'string' && action.startsWith('*')) {
+        var reducerName = action.split('/').pop();
+        var rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+        rnList_.forEach(function (fullReducerName) {
+          dispatchFn(fullReducerName, payLoadWhenActionIsString, identity);
+        });
+      } else {
+        dispatchFn(action, payLoadWhenActionIsString, identity);
+      }
+    } catch (err) {
+      if (throwError) throw err;else util.justWarning(err.message);
+    }
+  }
+
+  var ccKey_ref_$4 = ccContext.ccKey_ref_,
+      ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_;
+  function getRefsByClassKey (ccClassKey) {
+    var refs = [];
+    var ccClassContext = ccClassKey_ccClassContext_$3[ccClassKey];
+
+    if (!ccClassContext) {
+      return refs;
+    }
+
+    var ccKeys = ccClassContext.ccKeys;
+    ccKeys.filter(function (k) {
+      var ref = ccKey_ref_$4[k];
+      if (ref) refs.push(ref);
+    });
+    return refs;
+  }
+
+  var _execute = (function (ccClassKey) {
+    var refs = getRefsByClassKey(ccClassKey);
+    refs.forEach(function (ref) {
+      if (ref.$$execute) ref.$$execute();
+    });
+  });
+
+  function getRefs () {
+    var refs = [];
+    var ccKey_ref_ = ccContext.ccKey_ref_;
+    var ccKeys = okeys(ccKey_ref_);
+    ccKeys.forEach(function (k) {
+      var ref = ccKey_ref_[k];
+      if (ref) refs.push(ref);
+    });
+    return refs;
+  }
+
+  var _executeAll = (function () {
+    var refs = getRefs();
+    refs.forEach(function (ref) {
+      if (ref.$$execute) ref.$$execute();
+    });
+  });
+
   var startup$1 = startup;
   var cloneModule = _cloneModule;
   var load = _load;
@@ -5221,6 +5434,7 @@ if (!this._inheritsLoose) {
   var emitWith = _emitWith;
   var off = _off;
   var connect = _connect;
+  var connectDumb = _connectDumb$1;
   var dispatch = _dispatch;
   var ccContext$1 = ccContext;
   var createDispatcher$1 = createDispatcher;
@@ -5234,6 +5448,7 @@ if (!this._inheritsLoose) {
     emitWith: emitWith,
     off: off,
     connect: connect,
+    connectDumb: connectDumb,
     dispatch: dispatch,
     startup: startup$1,
     load: load,
@@ -5280,6 +5495,7 @@ if (!this._inheritsLoose) {
   exports.emitWith = emitWith;
   exports.off = off;
   exports.connect = connect;
+  exports.connectDumb = connectDumb;
   exports.dispatch = dispatch;
   exports.ccContext = ccContext$1;
   exports.createDispatcher = createDispatcher$1;

@@ -28,7 +28,7 @@ const setStateByModuleAndKey = (module, key, value) => {
 
   if (watchFn) {
     const fn = watchFn[key];
-    if (fn) fn(value, oldValue);//fn(newValue, oldValue)
+    if (fn) fn(value, oldValue, moduleState);//fn(newValue, oldValue)
   }
   moduleState[key] = value;
 }
@@ -206,7 +206,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.23',
+    version: '1.2.26',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
