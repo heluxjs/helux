@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>连接函数组件 · concent</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;hr&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="连接函数组件 · concent"/><meta property="og:type" content="website"/><meta property="og:url" content="https://github.com/concentjs/concent/"/><meta property="og:description" content="&lt;hr&gt;
+"/><meta property="og:image" content="https://github.com/concentjs/concent/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://github.com/concentjs/concent/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><link rel="alternate" type="application/atom+xml" href="https://github.com/concentjs/concent/blog/atom.xml" title="concent Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://github.com/concentjs/concent/blog/feed.xml" title="concent Blog RSS Feed"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/favicon.ico" alt="concent"/><h2 class="headerTitleWithLogo">concent</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/doc1" target="_self">Docs</a></li><li class="siteNavGroupActive"><a href="/docs/api-top-run" target="_self">API</a></li><li class=""><a href="/docs/doc2" target="_self">API2</a></li><li class=""><a href="/help" target="_self">Help</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>顶层api</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">顶层api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-top-run">run</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-configure">configure</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-clone-module">cloneModule</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-register">register</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-connect">connect</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/api-top-connect-dumb">connectDumb</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-emit">api-top-emit</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-emit-with">api-top-emit-with</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-dispatch">api-top-dispatch</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-get-state">api-top-get-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-get-global-state">api-top-get-global-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-get-computed">api-top-get-computed</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-set-state">api-top-set-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-set-global-state">api-top-set-global-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-call">api-top-call</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-execute">api-top-execute</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-execute-all">api-top-execute-all</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">模块api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-module-dispatch">dispatch</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">类api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-class-watch">api-class-watch</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-computed">api-class-computed</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-on-url-changed">api-class-on-url-changed</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-cache">api-class-cache</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-before-set-state">api-class-before-set-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-before-broadcast">api-class-before-broadcast</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">实例api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-ref-dispatch">api-ref-dispatch</a></li><li class="navListItem"><a class="navItem" href="/docs/api-ref-effect">api-ref-effect</a></li><li class="navListItem"><a class="navItem" href="/docs/api-ref-invoke">api-ref-invoke</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">CcFragment api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/doc5">Fifth Document</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">连接函数组件</h1></header><article><div><span><hr>
+<p><code>connectDumb</code>提供能力连接你的函数组件和<code>store</code>，方便你既想写函数组价，又想获得<code>concent</code>提供的全部功能支持</p>
+<h2><a class="anchor" aria-hidden="true" id="函数签名定义"></a><a href="#函数签名定义" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>函数签名定义</h2>
+<pre><code class="hljs"><span class="hljs-string">connectDumb:</span> ({
+  connect?:ConnectSpec,
+<span class="hljs-symbol">  mapState:</span>:(connectedState, props)
+})=&gt; (<span class="hljs-string">fn:</span>(<span class="hljs-string">props:</span>{<span class="hljs-string">state:</span>object, <span class="hljs-string">cc:</span>CcFnProvider})=&gt;ReactDom) =&gt; <span class="hljs-string">wrappedComponent:</span>CcFragment
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="参数解释"></a><a href="#参数解释" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>参数解释</h2>
+<ul>
+<li>connect<br/>
+要连接的模块</li>
+<li>mapState<br/>
+提供的回调，让用户可以挑选<code>connectedState</code>做2次计算与封装</li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="如何使用"></a><a href="#如何使用" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>如何使用</h2>
+<pre><code class="hljs"><span class="hljs-keyword">import</span> {connectDumb} <span class="hljs-keyword">from</span> <span class="hljs-string">'concent'</span>;
+
+<span class="hljs-keyword">const</span> MyDumb = <span class="hljs-function">(<span class="hljs-params">{state, cc}</span>)=&gt;</span>{
+  <span class="hljs-keyword">const</span> [localF1, f1Setter] =cc.hook.useState(<span class="hljs-string">''</span>);
+  <span class="hljs-keyword">return</span> (
+    <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>f1: {state.f1}<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>f2: {state.f2}<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">br</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">placeholder</span>=<span class="hljs-string">"输入临时f1"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">{localF1}</span> <span class="hljs-attr">onChange</span>=<span class="hljs-string">{f1Setter}</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">onClick</span>=<span class="hljs-string">{cc.sync(</span>'<span class="hljs-attr">foo</span>/<span class="hljs-attr">f1</span>', <span class="hljs-attr">localF1</span>)}&gt;</span>确认改变foo模块的f1<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  );
+}
+
+const SmartDumb = connectDumb({
+  connect:{foo:'*'},
+  mapState(connectedState){
+    return {...connectedState.foo};
+  }
+})(MyDumb);
+</span></code></pre>
+<h2><a class="anchor" aria-hidden="true" id="cc工具函数"></a><a href="#cc工具函数" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>cc工具函数</h2>
+<h3><a class="anchor" aria-hidden="true" id="属性-connectedstate"></a><a href="#属性-connectedstate" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>【属性】connectedState</h3>
+<pre><code class="hljs"><span class="hljs-keyword">const</span> MyDumb = <span class="hljs-function">(<span class="hljs-params">{state, cc}</span>)=&gt;</span>{
+  <span class="hljs-keyword">const</span> connectedState = cc.connectedState;<span class="hljs-comment">//获得你连接上的状态</span>
+}
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="属性-connectedcomputed"></a><a href="#属性-connectedcomputed" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>【属性】connectedComputed</h3>
+<pre><code class="hljs"><span class="hljs-keyword">const</span> MyDumb = <span class="hljs-function">(<span class="hljs-params">{state, cc}</span>)=&gt;</span>{
+  <span class="hljs-keyword">const</span> connectedComputed = cc.connectedComputed;<span class="hljs-comment">//获得你连接上的状态的计算结果</span>
+}
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="属性-hook"></a><a href="#属性-hook" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>【属性】hook</h3>
+<p>hook是<code>concent</code>自带的功能，不是来自于react，所以你可以在react16版本之前一样的使用，使用方法和react一样，以下做一些简介</p>
+<ul>
+<li>hook.useState(initState:any)=&gt; [state:any, setter:function]<br />
+定义本地临时状态</li>
+</ul>
+<pre><code class="hljs"><span class="hljs-keyword">const</span> MyDumb = <span class="hljs-function">(<span class="hljs-params">{state, cc}</span>)=&gt;</span>{
+  <span class="hljs-keyword">const</span> [localVal, valSetter] = cc.hook.useState(<span class="hljs-string">''</span>);
+}
+</code></pre>
+<ul>
+<li>hook.useEffect(cb:()=&gt;function | undefined, valArr:(string|number)[])=&gt; void<br />
+定义副作用</li>
+</ul>
+<blockquote>
+<p>如果不传递第二个值数组，那么第一个回调函数在每次组件渲染(包括组成初次渲染)后都会执行。<br />
+如果传递第二个值数组为<code>[]</code>，那么第一个回调函数只在初次渲染后执行，其他时候不再执行。<br />
+如果传递第二个值数组为带值得，那么第一个回调函数初次渲染后执行后，后面的执行已否要看数组里的值有没有变化。<br />
+第一个回调函数如果返回了一个函数，那么组件卸载时将触发这个函数的执行，通常我们将其称为清理函数<br /></p>
+</blockquote>
+<h2><a class="anchor" aria-hidden="true" id="在线示例"></a><a href="#在线示例" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>在线示例</h2>
+<h3><a class="anchor" aria-hidden="true" id="hook-sync-https-stackblitzcom-edit-ccapi-top-connect-dumb-1file-indexjs"></a><a href="#hook-sync-https-stackblitzcom-edit-ccapi-top-connect-dumb-1file-indexjs" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><a href="https://stackblitz.com/edit/ccapi-top-connect-dumb-1?file=index.js">hook、sync</a></h3>
+<blockquote>
+<p>本示例中你将看到cc工具函数的hook与sync能力</p>
+</blockquote>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/api-top-connect"><span class="arrow-prev">← </span><span>connect</span></a><a class="docs-next button" href="/docs/api-top-emit"><span>api-top-emit</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#函数签名定义">函数签名定义</a></li><li><a href="#参数解释">参数解释</a></li><li><a href="#如何使用">如何使用</a></li><li><a href="#cc工具函数">cc工具函数</a><ul class="toc-headings"><li><a href="#属性-connectedstate">【属性】connectedState</a></li><li><a href="#属性-connectedcomputed">【属性】connectedComputed</a></li><li><a href="#属性-hook">【属性】hook</a></li></ul></li><li><a href="#在线示例">在线示例</a><ul class="toc-headings"><li><a href="#hook-sync-https-stackblitzcom-edit-ccapi-top-connect-dumb-1file-indexjs">hook、sync</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/favicon.ico" alt="concent" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/docs/en/doc2.html">Guides (or other categories)</a><a href="/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/en/users.html">User Showcase</a><a href="http://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Your Name or Your Company Name</section></footer></div></body></html>

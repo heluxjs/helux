@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>reducer函数参数列表里的dispatch · concent</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;reducer函数参数列表里解构出的dispatch句柄方便用户调用其他reducer函数，方便用户将业务逻辑解耦为不同的reducer函数后，可以自由组合调用.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="reducer函数参数列表里的dispatch · concent"/><meta property="og:type" content="website"/><meta property="og:url" content="https://github.com/concentjs/concent/"/><meta property="og:description" content="&lt;p&gt;reducer函数参数列表里解构出的dispatch句柄方便用户调用其他reducer函数，方便用户将业务逻辑解耦为不同的reducer函数后，可以自由组合调用.&lt;/p&gt;
+"/><meta property="og:image" content="https://github.com/concentjs/concent/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://github.com/concentjs/concent/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><link rel="alternate" type="application/atom+xml" href="https://github.com/concentjs/concent/blog/atom.xml" title="concent Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://github.com/concentjs/concent/blog/feed.xml" title="concent Blog RSS Feed"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/favicon.ico" alt="concent"/><h2 class="headerTitleWithLogo">concent</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/doc1" target="_self">Docs</a></li><li class="siteNavGroupActive"><a href="/docs/api-top-run" target="_self">API</a></li><li class=""><a href="/docs/doc2" target="_self">API2</a></li><li class=""><a href="/help" target="_self">Help</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>模块api</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">顶层api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-top-run">run</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-configure">configure</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-clone-module">cloneModule</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-register">register</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-connect">connect</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-connect-dumb">connectDumb</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-emit">api-top-emit</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-emit-with">api-top-emit-with</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-dispatch">api-top-dispatch</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-get-state">api-top-get-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-get-global-state">api-top-get-global-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-get-computed">api-top-get-computed</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-set-state">api-top-set-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-set-global-state">api-top-set-global-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-call">api-top-call</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-execute">api-top-execute</a></li><li class="navListItem"><a class="navItem" href="/docs/api-top-execute-all">api-top-execute-all</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">模块api</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/docs/api-module-dispatch">dispatch</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">类api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-class-watch">api-class-watch</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-computed">api-class-computed</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-on-url-changed">api-class-on-url-changed</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-cache">api-class-cache</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-before-set-state">api-class-before-set-state</a></li><li class="navListItem"><a class="navItem" href="/docs/api-class-before-broadcast">api-class-before-broadcast</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">实例api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/api-ref-dispatch">api-ref-dispatch</a></li><li class="navListItem"><a class="navItem" href="/docs/api-ref-effect">api-ref-effect</a></li><li class="navListItem"><a class="navItem" href="/docs/api-ref-invoke">api-ref-invoke</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">CcFragment api</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/doc5">Fifth Document</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">reducer函数参数列表里的dispatch</h1></header><article><div><span><p>reducer函数参数列表里解构出的dispatch句柄方便用户调用其他reducer函数，方便用户将业务逻辑解耦为不同的reducer函数后，可以自由组合调用.
+dispatch函数返回一个Promise对象，让你的dispatch调用可以串行执行</p>
+<h2><a class="anchor" aria-hidden="true" id="函数签名定义"></a><a href="#函数签名定义" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>函数签名定义</h2>
+<pre><code class="hljs">dispatch:<span class="hljs-function">(<span class="hljs-params">routeDescriptor:<span class="hljs-built_in">string</span>, payload?:object, delay?:<span class="hljs-built_in">number</span>, identity?:<span class="hljs-built_in">string</span></span>)=&gt;</span><span class="hljs-built_in">Promise</span>&lt;object&gt;
+dispatch:<span class="hljs-function">(<span class="hljs-params">{<span class="hljs-keyword">type</span>:<span class="hljs-built_in">string</span>, <span class="hljs-built_in">module</span>?:<span class="hljs-built_in">string</span>, reducerModule?:<span class="hljs-built_in">string</span>, payload?:object, delay?:<span class="hljs-built_in">number</span>, identity?:<span class="hljs-built_in">string</span>}</span>)=&gt;</span><span class="hljs-built_in">Promise</span>&lt;object&gt;
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="使用-type-调用"></a><a href="#使用-type-调用" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>使用<code>type</code>调用</h2>
+<p>大多数场景，推荐使用基于<code>routeDescriptor</code>直接调用reducer函数，dispatch句柄暗含了调用方的上下文（所属模块），</p>
+<blockquote>
+<p>所以通常情况下<code>routeDescriptor</code>可以等同于<code>type</code>，concent会自动命中这个模块的命名为type的reducer函数去执行</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-comment">// code in foo/reducer.js</span>
+
+<span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setLoading</span>(<span class="hljs-params">{payload:loading}</span>)</span>{
+  <span class="hljs-keyword">return</span> {loading};
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{dispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'setLoading'</span>, <span class="hljs-literal">true</span>);
+  <span class="hljs-keyword">await</span> api.updateF1(f1);
+  <span class="hljs-comment">//下面两句话可以写为 return {f1, loading:false}，这样就只触发一次渲染</span>
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'setLoading'</span>, <span class="hljs-literal">false</span>);
+  <span class="hljs-keyword">return</span> {f1};
+}
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="使用-modulename-type-调用"></a><a href="#使用-modulename-type-调用" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>使用<code>moduleName/type</code>调用</h2>
+<p>用户可以显式的重设上下文的模块信息。</p>
+<blockquote>
+<p>上面的updateF1在调用dispatch时，等同于如下写法</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{dispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'foo/setLoading'</span>, <span class="hljs-literal">true</span>);
+  <span class="hljs-keyword">await</span> api.updateF1(f1);
+  <span class="hljs-comment">//下面两句话可以写为 return {f1, loading:false}，这样就只触发一次渲染</span>
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'foo/setLoading'</span>, <span class="hljs-literal">false</span>);
+  <span class="hljs-keyword">return</span> {f1};
+}
+
+</code></pre>
+<p>如果你想调用其他模块的reducer函数，因为可以重设模块信息，就很方便了</p>
+<blockquote>
+<p>使用<code>moduleName/type</code>告诉concent要调用bar模块的someModuleStateChanged方法</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{dispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'bar/someModuleStateChanged'</span>, {<span class="hljs-attr">changedKey</span>:<span class="hljs-string">'f1'</span>, <span class="hljs-attr">value</span>:f1, <span class="hljs-attr">module</span>:<span class="hljs-string">'foo'</span>});
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'foo/setLoading'</span>, <span class="hljs-literal">true</span>);
+  <span class="hljs-keyword">await</span> api.updateF1(f1);
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'foo/setLoading'</span>, <span class="hljs-literal">false</span>);
+  <span class="hljs-keyword">return</span> {f1};
+}
+
+</code></pre>
+<p>通常情况下，foo模块的reducer只会由foo模块的cc实例触发调用，如果用户设计的这个模块会被其他模块的cc实例调用时：</p>
+<blockquote>
+<p>解构出来的module就是调用方的module</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{module, ispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'bar/someModuleStateChanged'</span>, {<span class="hljs-attr">changedKey</span>:<span class="hljs-string">'f1'</span>, <span class="hljs-attr">value</span>:f1, <span class="hljs-built_in">module</span>});
+}
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="使用-modulename-reducermodule-type-调用"></a><a href="#使用-modulename-reducermodule-type-调用" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>使用<code>moduleName/reducerModule/type</code>调用</h2>
+<p>大多数时候，我们的reducer模块和state模块是放在一起的，但是因为concent允许配置一些通用的reducer函数，它们和state模块没关系，此时我们就可以用此语法来调用reducer</p>
+<blockquote>
+<p>调用common模块下的track函数去修改foo模块的f1值</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{dispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'foo/common/track'</span>, {f1});
+}
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="使用-reducermodule-type-调用"></a><a href="#使用-reducermodule-type-调用" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>使用<code>/reducerModule/type</code>调用</h2>
+<p>如果我们想修改的数据所属的模块的跟着调用方的上下文走</p>
+<blockquote>
+<p>调用方cc实例属于哪个模块X，就调用common模块下的track函数去修改X模块的f1值</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{dispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'/common/track'</span>, {f1});
+}
+</code></pre>
+<blockquote>
+<p>等同于写为</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{module, dispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">`<span class="hljs-subst">${<span class="hljs-built_in">module</span>}</span>/common/track`</span>, {f1});
+}
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="设置delay参数"></a><a href="#设置delay参数" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>设置delay参数</h2>
+<p>delay参数单位为ms，表示当前dispatch函数修改了目标模块的状态后，是否延迟广播通知其他同样关心此模块的这些转态的cc实例<br />
+默认是0，没有延迟，每一次的状态变更都会实时广播出去</p>
+<blockquote>
+<p>以下写法表示，如果存在有其他关心bar模块的任意一个key <code>changedKey</code>、<code>value</code>、<code>module</code>的cc实例，它们都会在2秒后被触发渲染</p>
+</blockquote>
+<pre><code class="hljs"><span class="hljs-comment">// code in bar/reducer.js</span>
+<span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">someModuleStateChanged</span>(<span class="hljs-params">{payload:{changedKey:<span class="hljs-string">'f1'</span>, value:f1, module}}</span>)</span>{
+  <span class="hljs-keyword">return</span> {<span class="hljs-attr">changedKey</span>:<span class="hljs-string">'f1'</span>, <span class="hljs-attr">value</span>:f1, <span class="hljs-built_in">module</span>};
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">updateF1</span>(<span class="hljs-params">{module, ispatch, payload:f1}</span>)</span>{
+  <span class="hljs-keyword">await</span> dispatch(<span class="hljs-string">'bar/someModuleStateChanged'</span>, {<span class="hljs-attr">changedKey</span>:<span class="hljs-string">'f1'</span>, <span class="hljs-attr">value</span>:f1, <span class="hljs-built_in">module</span>}, <span class="hljs-number">2000</span>);
+}
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="使用action调用"></a><a href="#使用action调用" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>使用Action调用</h2>
+<p>Action是一个描述怎么调用reducer的对象<br/>
+<code>Action: {type:string, module?:string, reducerModule?:string, payload?:object, delay?:number, identity?:string}</code></p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/api-top-execute-all"><span class="arrow-prev">← </span><span>api-top-execute-all</span></a><a class="docs-next button" href="/docs/api-module-effect"><span>Next</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#函数签名定义">函数签名定义</a></li><li><a href="#使用-type-调用">使用<code>type</code>调用</a></li><li><a href="#使用-modulename-type-调用">使用<code>moduleName/type</code>调用</a></li><li><a href="#使用-modulename-reducermodule-type-调用">使用<code>moduleName/reducerModule/type</code>调用</a></li><li><a href="#使用-reducermodule-type-调用">使用<code>/reducerModule/type</code>调用</a></li><li><a href="#设置delay参数">设置delay参数</a></li><li><a href="#使用action调用">使用Action调用</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/favicon.ico" alt="concent" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/docs/en/doc2.html">Guides (or other categories)</a><a href="/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/en/users.html">User Showcase</a><a href="http://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Your Name or Your Company Name</section></footer></div></body></html>
