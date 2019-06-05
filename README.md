@@ -75,6 +75,8 @@ concent是一个专为`react`提供状态管理服务的框架，重新定义`st
 ## 搭配react-router使用
 请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，搭配使用非常的简单和容易。
 
+## 精彩小实例集合
+[在线练习和理解，效果更佳](https://stackblitz.com/@fantasticsoul)
 ___
 ## 📦 快速开始
 确保你本地机器上安装有[nodejs](http://nodejs.cn/download/)。
