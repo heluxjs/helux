@@ -761,7 +761,6 @@ export default function register(ccClassKey, {
 
                   }
 
-
                   _partialState = partialState;
                   this.$$changeState(partialState, {
                     identity, ccKey, stateFor, module: targetModule, forceSync, cb: newCb, type,
