@@ -25,6 +25,7 @@ import computeCcUniqueKey from './compute-cc-unique-key';
 import buildMockEvent from './build-mock-event';
 import getFeatureStrAndStpMapping from './get-feature-str-and-stpmapping';
 import extractStateByCcsync from '../state/extract-state-by-ccsync';
+import getChainId from './get-chain-id';
 import * as checker from '../checker';
 import * as ev from '../event';
 
@@ -724,13 +725,14 @@ export default function register(ccClassKey, {
             __invokeWith: (userLogicFn, executionContext, ...args) => {
               const {
                 ccKey, stateFor, module: targetModule = currentModule, context = false, forceSync = false,
-                cb, __innerCb, type, reducerModule, calledBy, fnName, delay = -1, identity
+                cb, __innerCb, type, reducerModule, calledBy, fnName, delay = -1, identity, chainId, chainDepth
               } = executionContext;
               isStateModuleValid(targetModule, currentModule, cb, (err, newCb) => {
                 if (err) return handleCcFnError(err, __innerCb);
                 if (context) {
-                  const dispatch = this.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey);
-                  const dispatchIdentity = this.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey, identity);
+                  const nextChainDepth = chainDepth + 1;
+                  const dispatch = this.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey, identity, chainId, nextChainDepth);
+                  const dispatchIdentity = this.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, ccKey, identity, chainId, nextChainDepth);
 
                   //不能将state赋给executionContextForUser，给一个getState才能保证dispatch函数的state是最新的
                   //目前先保留state
@@ -749,6 +751,17 @@ export default function register(ccClassKey, {
 
                 let _partialState = null;
                 co.wrap(userLogicFn)(...args).then(partialState => {
+                  __innerCb(null, partialState);
+                  if (chainDepth === 1) {//是源头调用者
+                    // 获取chainId_state_的state和当前当前partialState做一次合并，然后触发$$changeState
+                    // !!!这里可以做优化了，不用派发状态，暂存在对应的chainId之下
+                    // return __innerCb();
+                  }else{//非源头调用
+                    //这里现在差一个标记，来决定要不要$$changeState或者 merge到 chainId_state_下
+
+                  }
+
+
                   _partialState = partialState;
                   this.$$changeState(partialState, {
                     identity, ccKey, stateFor, module: targetModule, forceSync, cb: newCb, type,
@@ -764,7 +777,7 @@ export default function register(ccClassKey, {
 
             dispatch: ({
               ccKey, stateFor, module: inputModule, reducerModule: inputReducerModule, identity,
-              forceSync = false, type, payload, cb: reactCallback, __innerCb, delay = -1 } = {}
+              forceSync = false, type, payload, cb: reactCallback, __innerCb, delay = -1, chainId, chainDepth } = {}
             ) => {
               //if module not defined, targetStateModule will be currentModule
               const targetStateModule = inputModule || currentModule;
@@ -788,7 +801,7 @@ export default function register(ccClassKey, {
                 if (err) return __innerCb(err);
                 const executionContext = {
                   ccKey, stateFor, ccUniqueKey, ccOption, module: targetStateModule, reducerModule: targetReducerModule, type,
-                  payload, forceSync, cb: newCb, context: true, __innerCb, calledBy: DISPATCH, delay, identity
+                  payload, forceSync, cb: newCb, context: true, __innerCb, calledBy: DISPATCH, delay, identity, chainId, chainDepth
                 };
                 this.cc.__invokeWith(reducerFn, executionContext);
               });
@@ -1232,7 +1245,9 @@ export default function register(ccClassKey, {
             }
           }
         }
-        __$$getDispatchHandler(stateFor, originalComputedStateModule, originalComputedReducerModule, inputType, inputPayload, delay = -1, ccKey, defaultIdentity = '') {
+        __$$getDispatchHandler(stateFor, originalComputedStateModule, originalComputedReducerModule, inputType, inputPayload, delay = -1, ccKey, defaultIdentity = '', chainId, chainDepth) {
+          let _chainId = chainId || getChainId();
+          let _chainDepth = chainDepth || 1;
           return (paramObj = {}, payloadWhenFirstParamIsString, userInputIdentity) => {
             const paramObjType = typeof paramObj;
             let _module = originalComputedStateModule, _reducerModule, _forceSync = false, _type, _payload = inputPayload, _cb, _delay = delay;
@@ -1283,13 +1298,15 @@ export default function register(ccClassKey, {
 
             // pick user input reducerModule firstly
             let targetReducerModule = _reducerModule || (originalComputedReducerModule || module);
-            return new Promise((resolve, reject) => {
+            const p = new Promise((resolve, reject) => {
               this.cc.dispatch(
                 {
                   stateFor, module: _module, reducerModule: targetReducerModule, forceSync: _forceSync, type: _type, payload: _payload,
-                  cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject), delay: _delay, ccKey, identity: _identity
+                  cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject), delay: _delay, ccKey, identity: _identity, 
+                  chainId: _chainId, chainDepth: _chainDepth
                 });
             }).catch(catchCcError);
+            return p;
           }
         }
 

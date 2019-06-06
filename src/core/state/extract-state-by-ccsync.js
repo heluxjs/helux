@@ -1,4 +1,3 @@
-import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 
 function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool = false) {

@@ -173,7 +173,7 @@ export default class CcFragment extends Component {
     this.state = state;
 
     const __sync = (spec, e) => {
-      if(spec[cursorKey] !== undefined){//来自hook生成的setter调用
+      if (spec[cursorKey] !== undefined) {//来自hook生成的setter调用
         const _cursor = spec[cursorKey];
         __hookMeta.stateArr[_cursor] = e.currentTarget.value;
         this.cc.reactForceUpdate();
@@ -182,7 +182,7 @@ export default class CcFragment extends Component {
 
       const mockE = base.buildMockEvent(spec, e, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE);
       if (!mockE) return;//参数无效
-      
+
       const currentTarget = mockE.currentTarget;
       const dataset = currentTarget.dataset;
 
@@ -196,7 +196,7 @@ export default class CcFragment extends Component {
     };
 
     const __fragmentParams = {
-      toggleBool: (e, delay = -1, idt='') => {
+      toggleBool: (e, delay = -1, idt = '') => {
         if (typeof e === 'string') return __sync.bind(null, { [ccSyncKey]: e, type: 'bool', delay, idt });
         __sync({ type: 'bool' }, e);
       },
@@ -205,17 +205,20 @@ export default class CcFragment extends Component {
       // <Input onChange={this.sync('foo/f1')} /> ok
       // only <input data-ccsync="foo/f1" onChange={this.sync} /> ok
       // only <input onChange={this.sync('foo/f1')} /> ok
-      sync: (e, val, delay = -1, idt='') => {
+      sync: (e, val, delay = -1, idt = '') => {
         if (typeof e === 'string') return __sync.bind(null, { [ccSyncKey]: e, type: 'val', val, delay, idt });
-        __sync({ type: 'val' }, e);
+        __sync({ type: 'val' }, e);//allow <input data-ccsync="foo/f1" onChange={this.sync} />
+      },
+      set: (ccsync, val, delay, idt) => {
+        __sync({ [ccSyncKey]: ccsync, type: 'val', val, delay, idt });
       },
       // <Input onChange={this.syncInt} /> not work!!!
       // <Input onChange={this.syncInt('foo/bar')} /> ok
       // <input onChange={this.syncInt('foo/bar')} /> ok
       // <input data-ccsync="foo/f1" onChange={this.syncInt('foo/fq')} /> ok
-      syncInt: (e, delay = -1, idt='') => {
+      syncInt: (e, delay = -1, idt = '') => {
         if (typeof e === 'string') return __sync.bind(null, { [ccSyncKey]: e, type: 'int', delay, idt });
-        __sync({ type: 'int' }, e);
+        __sync({ type: 'int' }, e);//<input data-ccsync="foo/f1" onChange={this.syncInt} />
       },
       onUrlChanged: (cb) => {
         this.cc.onUrlChanged = cb.bind(this);
@@ -238,16 +241,16 @@ export default class CcFragment extends Component {
       dispatch: dispatcher.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1, ccKey),
       effect: dispatcher.__$$getEffectHandler(ccKey),
       xeffect: dispatcher.__$$getXEffectHandler(ccKey),
-      //seat1, seat2仅仅用于占位
-      setModuleState: (module, state, delayMs) => {
+      setModuleState: (module, state, delay, identity) => {
         dispatcher.$$changeState(state, {
           ccKey, module, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-          broadcastTriggeredBy: null, delayMs
+          broadcastTriggeredBy: null, delay, identity
         });
       },
-      setGlobalState: (state, delayMs) => {
+      setGlobalState: (state, delay, identity) => {
         dispatcher.$$changeState(state, {
-          ccKey, MODULE_GLOBAL, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, broadcastTriggeredBy: null, delayMs
+          ccKey, MODULE_GLOBAL, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
+          broadcastTriggeredBy: null, delay, identity
         });
       },
       state,
