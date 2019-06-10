@@ -1142,10 +1142,10 @@ export default function register(ccClassKey, {
           this.$$dispatchIdentity = di;
           this.$$dispatchForModule = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, currentModule, null, null, null, -1);
 
-          this.$$invoke = this.__$$getInvokeHandler();
-          this.$$xinvoke = this.__$$getXInvokeHandler();
-          this.$$effect = this.__$$getEffectHandler(ccKey);
-          this.$$xeffect = this.__$$getXEffectHandler(ccKey);
+          this.$$invoke = this.__$$getInvokeHandler(ccKey, ccUniqueKey);
+          this.$$xinvoke = this.__$$getXInvokeHandler(ccKey, ccUniqueKey);
+          this.$$effect = this.__$$getEffectHandler(ccKey, ccUniqueKey);
+          this.$$xeffect = this.__$$getXEffectHandler(ccKey, ccUniqueKey);
 
           this.$$emit = thisCC.emit;
           this.$$emitIdentity = thisCC.emitIdentity;
