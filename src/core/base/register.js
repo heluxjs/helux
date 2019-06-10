@@ -1431,7 +1431,7 @@ export default function register(ccClassKey, {
           const fullState = _module !== currentModule ? getState(_module) : this.state;
           const { state } = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool);
 
-          const targetStateFor = mockE.stateFor;
+          let targetStateFor = mockE.stateFor;
           if (!targetStateFor) {
             targetStateFor = _module !== currentModule ? STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE : STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
           }
