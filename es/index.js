@@ -24,6 +24,7 @@ import _execute from './api/execute';
 import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
 import _getConnectedState from './api/get-connected-state';
+import _appendState from './api/appendState';
 import _CcFragment from './component/CcFragment';
 import * as _cst from './support/constant';
 
@@ -56,6 +57,7 @@ export const executeAll = _executeAll;
 export const getRefs = _getRefs;
 export const CcFragment = _CcFragment;
 export const cst = _cst;
+export const appendState = _appendState;
 
 const defaultExport = {
   cloneModule,
@@ -87,6 +89,7 @@ const defaultExport = {
   getRefs,
   CcFragment,
   cst,
+  appendState,
 }
 
 if (window) {

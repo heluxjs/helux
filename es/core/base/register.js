@@ -777,11 +777,10 @@ export default function register(ccClassKey, {
                   args.unshift(executionContextForUser);
                 }
 
-                if (chainDepth === 1) {
-                  send(SIG_FN_START, { chainId, fn: userLogicFn });
-                }
+                send(SIG_FN_START, { module: targetModule, chainId, fn: userLogicFn });
                 co.wrap(userLogicFn)(...args).then(partialState => {
                   let commitStateList = [];
+                  send(SIG_FN_END, { module: targetModule, chainId });
 
                   // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
                   if (isChainIdLazy(chainId)) {//来自于惰性派发的调用
@@ -793,9 +792,6 @@ export default function register(ccClassKey, {
                       } else {
                         commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
                         removeChainState(chainId);
-                        if (chainId === oriChainId) {//是源头调用
-                          send(SIG_FN_END, { chainId });
-                        }
                       }
                     }
                   } else {
@@ -811,7 +807,7 @@ export default function register(ccClassKey, {
 
                   if (__innerCb) __innerCb(null, partialState);
                 }).catch(err => {
-                  send(SIG_FN_ERR, { chainId });
+                  send(SIG_FN_ERR, { module: targetModule, chainId });
                   handleCcFnError(err, __innerCb);
                 });
               });
@@ -1363,13 +1359,6 @@ export default function register(ccClassKey, {
               return Promise.reject(me(ERR.CC_DISPATCH_PARAM_INVALID));
             }
 
-            // let _sourceModule = sourceModule;
-            // if (isLazy === true) {//发现isLazy为true，一定重写_sourceModule，此时有可能是调用链源头，也可能是调用链中间调用lazyDispatch
-            //   _sourceModule = _module;
-            // } else if (!_sourceModule) {//首次调用__$$getDispatchHandler时是没有sourceModule值的，在这里赋值
-            //   _sourceModule = _module;
-            // }
-
             if (_module === '*') {
               return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
             }
@@ -1381,7 +1370,7 @@ export default function register(ccClassKey, {
                 stateFor, module: _module, reducerModule: nowReducerModule, forceSync: _forceSync, type: _type, payload: _payload,
                 cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject),
                 ccKey, ccUniqueKey, ccClassKey, delay: _delay, identity: _identity,
-                isLazy, chainId: _chainId, chainDepth: _chainDepth, oriChainId: _oriChainId
+                isLazy, chainId: _chainId, chainDepth: _chainDepth, oriChainId: _oriChainId,
                 // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
               });
             }).catch(catchCcError);

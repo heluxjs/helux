@@ -63,7 +63,6 @@ export default function ({
     boot.configRootWatch(watch);
     boot.executeRootInit(init);
     boot.configMiddlewares(middlewares);
-    boot.configPlugins(plugins);
 
     if (autoCreateDispatcher) {
       if (!ccContext.refs[CC_DISPATCHER]) {
@@ -96,6 +95,8 @@ export default function ({
     }
 
     ccContext.isCcAlreadyStartup = true;
+    //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+    boot.configPlugins(plugins);
   } catch (err) {
     if (errorHandler) errorHandler(err);
     else throw err;

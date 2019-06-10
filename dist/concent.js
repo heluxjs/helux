@@ -1,3 +1,34 @@
+if (!this._assertThisInitialized) {
+  this._assertThisInitialized = function (self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+  }
+}
+if (!this._extends) {
+  this._extends = function () {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    };
+    return _extends.apply(this, arguments);
+  }
+}
+if (!this._inheritsLoose) {
+  this._inheritsLoose = function (subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
+    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+}
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/readOnlyError'), require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/readOnlyError', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -237,6 +268,16 @@
     pureGlobalStateKeys: [],
     //store里的setState行为会自动触发模块级别的computed、watch函数
     store: {
+      appendState: function appendState(module, state) {
+        var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
+        var stateKeys = safeGetArrayFromObject(moduleName_stateKeys_, module);
+        okeys(state).forEach(function (k) {
+          if (!stateKeys.includes(k)) {
+            stateKeys.push(k);
+          }
+        });
+        ccContext.store.setState(module, state);
+      },
       _state: {},
       getState: function getState(module) {
         if (module) return _getState(module);else return ccContext.store._state;
@@ -289,7 +330,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.226.1',
+      version: '1.2.27',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2779,15 +2820,17 @@
                     args.unshift(executionContextForUser);
                   }
 
-                  if (chainDepth === 1) {
-                    send(SIG_FN_START, {
-                      chainId: chainId,
-                      fn: userLogicFn
-                    });
-                  }
-
+                  send(SIG_FN_START, {
+                    module: targetModule,
+                    chainId: chainId,
+                    fn: userLogicFn
+                  });
                   co_1.wrap(userLogicFn).apply(void 0, args).then(function (partialState) {
-                    var commitStateList = []; // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
+                    var commitStateList = [];
+                    send(SIG_FN_END, {
+                      module: targetModule,
+                      chainId: chainId
+                    }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
 
                     if (isChainIdLazy(chainId)) {
                       //来自于惰性派发的调用
@@ -2799,13 +2842,6 @@
                         if (isChainExited(chainId)) ; else {
                           commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
                           removeChainState(chainId);
-
-                          if (chainId === oriChainId) {
-                            //是源头调用
-                            send(SIG_FN_END, {
-                              chainId: chainId
-                            });
-                          }
                         }
                       }
                     } else {
@@ -2834,6 +2870,7 @@
                     if (__innerCb) __innerCb(null, partialState);
                   })["catch"](function (err) {
                     send(SIG_FN_ERR, {
+                      module: targetModule,
                       chainId: chainId
                     });
                     handleCcFnError(err, __innerCb);
@@ -3626,13 +3663,7 @@
                 }
               } else {
                 return Promise.reject(me$3(ERR.CC_DISPATCH_PARAM_INVALID));
-              } // let _sourceModule = sourceModule;
-              // if (isLazy === true) {//发现isLazy为true，一定重写_sourceModule，此时有可能是调用链源头，也可能是调用链中间调用lazyDispatch
-              //   _sourceModule = _module;
-              // } else if (!_sourceModule) {//首次调用__$$getDispatchHandler时是没有sourceModule值的，在这里赋值
-              //   _sourceModule = _module;
-              // }
-
+              }
 
               if (_module === '*') {
                 return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
@@ -4132,243 +4163,6 @@
     });
   }
 
-  var isPlainJsonObject$3 = isPlainJsonObject,
-      okeys$1 = okeys;
-  function configStoreState(storeState) {
-    var sharedToGlobalMapping = ccContext.sharedToGlobalMapping;
-
-    if (!isPlainJsonObject$3(storeState)) {
-      throw new Error("the storeState is not a plain json object!");
-    }
-
-    var globalStateKeys = ccContext.globalStateKeys,
-        pureGlobalStateKeys = ccContext.pureGlobalStateKeys,
-        store = ccContext.store;
-    store.initStateDangerously(MODULE_CC, {});
-    if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
-    if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$1(storeState);
-    var len = moduleNames.length;
-
-    for (var i = 0; i < len; i++) {
-      var moduleName = moduleNames[i];
-      var moduleState = storeState[moduleName];
-      initModuleState(moduleName, moduleState);
-      var sharedKey_globalKey_ = sharedToGlobalMapping[moduleName];
-
-      if (sharedKey_globalKey_) {
-        handleModuleSharedToGlobalMapping(moduleName, sharedKey_globalKey_);
-      }
-    }
-
-    var globalMappingKey_sharedKey_ = ccContext.globalMappingKey_sharedKey_;
-    globalStateKeys.reduce(function (pKeys, gKey) {
-      if (!globalMappingKey_sharedKey_[gKey]) pKeys.push(gKey);
-      return pKeys;
-    }, pureGlobalStateKeys);
-  }
-  /**
-   * 
-   * @param {{[reducerModuleName:string]:{[reducerFnType:string]:function}}} rootReducer 
-   */
-
-  function configRootReducer(rootReducer) {
-    var moduleNames = okeys$1(rootReducer);
-    if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
-    if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-    var len = moduleNames.length;
-
-    for (var i = 0; i < len; i++) {
-      var moduleName = moduleNames[i];
-      initModuleReducer(moduleName, rootReducer[moduleName]);
-    }
-  }
-  function configRootComputed(computed) {
-    if (!isPlainJsonObject$3(computed)) {
-      throw new Error("StartUpOption.computed is not a plain json object!");
-    }
-
-    var moduleNames = okeys$1(computed);
-    moduleNames.forEach(function (m) {
-      return initModuleComputed(m, computed[m]);
-    });
-  }
-  function configRootWatch(watch) {
-    if (!isPlainJsonObject$3(watch)) {
-      throw new Error("StartUpOption.watch is not a plain json object!");
-    }
-
-    var moduleNames = Object.keys(watch);
-    moduleNames.forEach(function (m) {
-      return initModuleWatch(m, watch[m]);
-    });
-  }
-  function executeRootInit(init) {
-    if (!init) return;
-
-    if (!isPlainJsonObject$3(init)) {
-      throw new Error('StartupOption.init is valid, it must be a object like {[module:string]:Function}!');
-    }
-
-    var moduleNames = okeys$1(init);
-    moduleNames.forEach(function (moduleName) {
-      checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
-      var initFn = init[moduleName];
-
-      if (initFn) {
-        co_1(initFn).then(function (state) {
-          makeSetStateHandler(moduleName)(state);
-        });
-      }
-    });
-    ccContext.init._init = init;
-  }
-  function configSharedToGlobalMapping(sharedToGlobalMapping) {
-    if (!isPlainJsonObject$3(sharedToGlobalMapping)) {
-      throw new Error("StartupOption.sharedToGlobalMapping is not a plain json object!");
-    }
-
-    safeAssignObjectValue(ccContext.sharedToGlobalMapping, sharedToGlobalMapping);
-  }
-  function configModuleSingleClass(moduleSingleClass) {
-    if (!isPlainJsonObject$3(moduleSingleClass)) {
-      throw new Error("StartupOption.moduleSingleClass is not a plain json object!");
-    }
-
-    safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
-  }
-  function configMiddlewares(middlewares) {
-    if (middlewares.length > 0) {
-      var ccMiddlewares = ccContext.middlewares;
-      ccMiddlewares.length = 0; //防止热加载重复多次载入middlewares
-
-      middlewares.forEach(function (m) {
-        return ccMiddlewares.push(m);
-      });
-    }
-  }
-  function configPlugins(plugins) {
-    if (plugins.length > 0) {
-      var ccPlugins = ccContext.plugins;
-      ccPlugins.length = 0; //防止热加载重复多次载入plugins
-
-      plugins.forEach(function (p) {
-        return ccPlugins.push(p);
-      });
-    }
-  }
-
-  function startup (_temp) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        _ref$store = _ref.store,
-        store = _ref$store === void 0 ? {} : _ref$store,
-        _ref$reducer = _ref.reducer,
-        reducer = _ref$reducer === void 0 ? {} : _ref$reducer,
-        _ref$init = _ref.init,
-        init = _ref$init === void 0 ? null : _ref$init,
-        _ref$computed = _ref.computed,
-        computed = _ref$computed === void 0 ? {} : _ref$computed,
-        _ref$watch = _ref.watch,
-        watch = _ref$watch === void 0 ? {} : _ref$watch,
-        _ref$sharedToGlobalMa = _ref.sharedToGlobalMapping,
-        sharedToGlobalMapping = _ref$sharedToGlobalMa === void 0 ? {} : _ref$sharedToGlobalMa,
-        _ref$moduleSingleClas = _ref.moduleSingleClass,
-        moduleSingleClass = _ref$moduleSingleClas === void 0 ? {} : _ref$moduleSingleClas,
-        _ref$middlewares = _ref.middlewares,
-        middlewares = _ref$middlewares === void 0 ? [] : _ref$middlewares,
-        _ref$plugins = _ref.plugins,
-        plugins = _ref$plugins === void 0 ? [] : _ref$plugins,
-        _ref$isStrict = _ref.isStrict,
-        isStrict = _ref$isStrict === void 0 ? false : _ref$isStrict,
-        _ref$isDebug = _ref.isDebug,
-        isDebug = _ref$isDebug === void 0 ? false : _ref$isDebug,
-        _ref$errorHandler = _ref.errorHandler,
-        errorHandler = _ref$errorHandler === void 0 ? null : _ref$errorHandler,
-        _ref$isHot = _ref.isHot,
-        isHot = _ref$isHot === void 0 ? false : _ref$isHot,
-        _ref$autoCreateDispat = _ref.autoCreateDispatcher,
-        autoCreateDispatcher = _ref$autoCreateDispat === void 0 ? true : _ref$autoCreateDispat;
-
-    try {
-      util.justTip("cc version " + ccContext.info.version);
-      ccContext.isHot = isHot;
-      ccContext.errorHandler = errorHandler;
-      ccContext.isStrict = isStrict;
-      ccContext.isDebug = isDebug;
-
-      if (ccContext.isCcAlreadyStartup) {
-        var err = util.makeError(ERR.CC_ALREADY_STARTUP);
-
-        if (util.isHotReloadMode()) {
-          clearObject(ccContext.globalStateKeys);
-          clearObject(ccContext.reducer._reducer);
-          clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
-          clearObject(ccContext.computed._computedFn);
-          clearObject(ccContext.computed._computedValue);
-          clearObject(ccContext.event_handlers_);
-          clearObject(ccContext.ccUniqueKey_handlerKeys_);
-          var cct = ccContext.ccClassKey_ccClassContext_;
-          Object.keys(cct).forEach(function (ccClassKey) {
-            var ctx = cct[ccClassKey];
-            clearObject(ctx.ccKeys);
-          });
-          clearObject(ccContext.handlerKey_handler_);
-          clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
-          clearObject(ccContext.refs, [CC_DISPATCHER]);
-          clearObject(ccContext.fragmentCcKeys);
-          clearObject(ccContext.ccKey_option_);
-          util.hotReloadWarning(err);
-        } else throw err;
-      }
-
-      configSharedToGlobalMapping(sharedToGlobalMapping);
-      configModuleSingleClass(moduleSingleClass);
-      configStoreState(store);
-      configRootReducer(reducer);
-      configRootComputed(computed);
-      configRootWatch(watch);
-      executeRootInit(init);
-      configMiddlewares(middlewares);
-      configPlugins(plugins);
-
-      if (autoCreateDispatcher) {
-        if (!ccContext.refs[CC_DISPATCHER]) {
-          var Dispatcher = createDispatcher();
-          var box = document.querySelector("#" + CC_DISPATCHER_BOX);
-
-          if (!box) {
-            box = document.createElement('div');
-            box.id = CC_DISPATCHER_BOX;
-            var boxSt = box.style;
-            boxSt.position = 'fixed';
-            boxSt.left = 0;
-            boxSt.top = 0;
-            boxSt.display = 'none';
-            boxSt.zIndex = -888666;
-            document.body.append(box);
-          }
-
-          ReactDOM.render(React__default.createElement(Dispatcher), box);
-          util.justTip("[[startUp]]: cc create a CcDispatcher automatically");
-        } else {
-          util.justTip("[[startUp]]: CcDispatcher existed already");
-        }
-      } else {
-        throw 'customizing Dispatcher is not allowed in current version cc';
-      }
-
-      if (window) {
-        window.CC_CONTEXT = ccContext;
-        window.ccc = ccContext;
-        window.cccc = ccContext.computed._computedValue;
-      }
-
-      ccContext.isCcAlreadyStartup = true;
-    } catch (err) {
-      if (errorHandler) errorHandler(err);else throw err;
-    }
-  }
-
   var ccGlobalStateKeys$1 = ccContext.globalStateKeys;
 
   function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
@@ -4529,6 +4323,270 @@
         if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
         ccMiddlewares.push(m);
       });
+    }
+
+    ccContext.plugins.forEach(function (p) {
+      if (p.writeModuleState) {
+        var pluginName = p.name;
+
+        if (pluginName !== module) {
+          var pluginState = ccContext.store.getState(pluginName);
+          p.writeModuleState(pluginState, module);
+        }
+      }
+    });
+  }
+
+  var isPlainJsonObject$3 = isPlainJsonObject,
+      okeys$1 = okeys;
+  var getState$1 = ccContext.store.getState;
+  function configStoreState(storeState) {
+    var sharedToGlobalMapping = ccContext.sharedToGlobalMapping;
+
+    if (!isPlainJsonObject$3(storeState)) {
+      throw new Error("the storeState is not a plain json object!");
+    }
+
+    var globalStateKeys = ccContext.globalStateKeys,
+        pureGlobalStateKeys = ccContext.pureGlobalStateKeys,
+        store = ccContext.store;
+    store.initStateDangerously(MODULE_CC, {});
+    if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
+    if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
+    var moduleNames = okeys$1(storeState);
+    var len = moduleNames.length;
+
+    for (var i = 0; i < len; i++) {
+      var moduleName = moduleNames[i];
+      var moduleState = storeState[moduleName];
+      initModuleState(moduleName, moduleState);
+      var sharedKey_globalKey_ = sharedToGlobalMapping[moduleName];
+
+      if (sharedKey_globalKey_) {
+        handleModuleSharedToGlobalMapping(moduleName, sharedKey_globalKey_);
+      }
+    }
+
+    var globalMappingKey_sharedKey_ = ccContext.globalMappingKey_sharedKey_;
+    globalStateKeys.reduce(function (pKeys, gKey) {
+      if (!globalMappingKey_sharedKey_[gKey]) pKeys.push(gKey);
+      return pKeys;
+    }, pureGlobalStateKeys);
+  }
+  /**
+   * 
+   * @param {{[reducerModuleName:string]:{[reducerFnType:string]:function}}} rootReducer 
+   */
+
+  function configRootReducer(rootReducer) {
+    var moduleNames = okeys$1(rootReducer);
+    if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
+    if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
+    var len = moduleNames.length;
+
+    for (var i = 0; i < len; i++) {
+      var moduleName = moduleNames[i];
+      initModuleReducer(moduleName, rootReducer[moduleName]);
+    }
+  }
+  function configRootComputed(computed) {
+    if (!isPlainJsonObject$3(computed)) {
+      throw new Error("StartUpOption.computed is not a plain json object!");
+    }
+
+    var moduleNames = okeys$1(computed);
+    moduleNames.forEach(function (m) {
+      return initModuleComputed(m, computed[m]);
+    });
+  }
+  function configRootWatch(watch) {
+    if (!isPlainJsonObject$3(watch)) {
+      throw new Error("StartUpOption.watch is not a plain json object!");
+    }
+
+    var moduleNames = Object.keys(watch);
+    moduleNames.forEach(function (m) {
+      return initModuleWatch(m, watch[m]);
+    });
+  }
+  function executeRootInit(init) {
+    if (!init) return;
+
+    if (!isPlainJsonObject$3(init)) {
+      throw new Error('StartupOption.init is valid, it must be a object like {[module:string]:Function}!');
+    }
+
+    var moduleNames = okeys$1(init);
+    moduleNames.forEach(function (moduleName) {
+      checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
+      var initFn = init[moduleName];
+
+      if (initFn) {
+        co_1(initFn).then(function (state) {
+          makeSetStateHandler(moduleName)(state);
+        });
+      }
+    });
+    ccContext.init._init = init;
+  }
+  function configSharedToGlobalMapping(sharedToGlobalMapping) {
+    if (!isPlainJsonObject$3(sharedToGlobalMapping)) {
+      throw new Error("StartupOption.sharedToGlobalMapping is not a plain json object!");
+    }
+
+    safeAssignObjectValue(ccContext.sharedToGlobalMapping, sharedToGlobalMapping);
+  }
+  function configModuleSingleClass(moduleSingleClass) {
+    if (!isPlainJsonObject$3(moduleSingleClass)) {
+      throw new Error("StartupOption.moduleSingleClass is not a plain json object!");
+    }
+
+    safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
+  }
+  function configMiddlewares(middlewares) {
+    if (middlewares.length > 0) {
+      var ccMiddlewares = ccContext.middlewares;
+      ccMiddlewares.length = 0; //防止热加载重复多次载入middlewares
+
+      middlewares.forEach(function (m) {
+        return ccMiddlewares.push(m);
+      });
+    }
+  }
+  function configPlugins(plugins) {
+    if (plugins.length > 0) {
+      var ccPlugins = ccContext.plugins;
+      ccPlugins.length = 0; //防止热加载重复多次载入plugins
+
+      var moduleNames = okeys$1(ccContext.moduleName_stateKeys_);
+      plugins.forEach(function (p) {
+        ccPlugins.push(p);
+
+        if (p.configure) {
+          var conf = p.configure();
+          p.name = conf.module;
+          configure(conf.module, conf);
+          moduleNames.forEach(function (m) {
+            if (p.writeModuleState) {
+              p.writeModuleState(conf.state, m);
+            }
+          });
+        } else {
+          throw new Error('a plugin must export configure handler!');
+        }
+      });
+    }
+  }
+
+  function startup (_temp) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        _ref$store = _ref.store,
+        store = _ref$store === void 0 ? {} : _ref$store,
+        _ref$reducer = _ref.reducer,
+        reducer = _ref$reducer === void 0 ? {} : _ref$reducer,
+        _ref$init = _ref.init,
+        init = _ref$init === void 0 ? null : _ref$init,
+        _ref$computed = _ref.computed,
+        computed = _ref$computed === void 0 ? {} : _ref$computed,
+        _ref$watch = _ref.watch,
+        watch = _ref$watch === void 0 ? {} : _ref$watch,
+        _ref$sharedToGlobalMa = _ref.sharedToGlobalMapping,
+        sharedToGlobalMapping = _ref$sharedToGlobalMa === void 0 ? {} : _ref$sharedToGlobalMa,
+        _ref$moduleSingleClas = _ref.moduleSingleClass,
+        moduleSingleClass = _ref$moduleSingleClas === void 0 ? {} : _ref$moduleSingleClas,
+        _ref$middlewares = _ref.middlewares,
+        middlewares = _ref$middlewares === void 0 ? [] : _ref$middlewares,
+        _ref$plugins = _ref.plugins,
+        plugins = _ref$plugins === void 0 ? [] : _ref$plugins,
+        _ref$isStrict = _ref.isStrict,
+        isStrict = _ref$isStrict === void 0 ? false : _ref$isStrict,
+        _ref$isDebug = _ref.isDebug,
+        isDebug = _ref$isDebug === void 0 ? false : _ref$isDebug,
+        _ref$errorHandler = _ref.errorHandler,
+        errorHandler = _ref$errorHandler === void 0 ? null : _ref$errorHandler,
+        _ref$isHot = _ref.isHot,
+        isHot = _ref$isHot === void 0 ? false : _ref$isHot,
+        _ref$autoCreateDispat = _ref.autoCreateDispatcher,
+        autoCreateDispatcher = _ref$autoCreateDispat === void 0 ? true : _ref$autoCreateDispat;
+
+    try {
+      util.justTip("cc version " + ccContext.info.version);
+      ccContext.isHot = isHot;
+      ccContext.errorHandler = errorHandler;
+      ccContext.isStrict = isStrict;
+      ccContext.isDebug = isDebug;
+
+      if (ccContext.isCcAlreadyStartup) {
+        var err = util.makeError(ERR.CC_ALREADY_STARTUP);
+
+        if (util.isHotReloadMode()) {
+          clearObject(ccContext.globalStateKeys);
+          clearObject(ccContext.reducer._reducer);
+          clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
+          clearObject(ccContext.computed._computedFn);
+          clearObject(ccContext.computed._computedValue);
+          clearObject(ccContext.event_handlers_);
+          clearObject(ccContext.ccUniqueKey_handlerKeys_);
+          var cct = ccContext.ccClassKey_ccClassContext_;
+          Object.keys(cct).forEach(function (ccClassKey) {
+            var ctx = cct[ccClassKey];
+            clearObject(ctx.ccKeys);
+          });
+          clearObject(ccContext.handlerKey_handler_);
+          clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
+          clearObject(ccContext.refs, [CC_DISPATCHER]);
+          clearObject(ccContext.fragmentCcKeys);
+          clearObject(ccContext.ccKey_option_);
+          util.hotReloadWarning(err);
+        } else throw err;
+      }
+
+      configSharedToGlobalMapping(sharedToGlobalMapping);
+      configModuleSingleClass(moduleSingleClass);
+      configStoreState(store);
+      configRootReducer(reducer);
+      configRootComputed(computed);
+      configRootWatch(watch);
+      executeRootInit(init);
+      configMiddlewares(middlewares);
+
+      if (autoCreateDispatcher) {
+        if (!ccContext.refs[CC_DISPATCHER]) {
+          var Dispatcher = createDispatcher();
+          var box = document.querySelector("#" + CC_DISPATCHER_BOX);
+
+          if (!box) {
+            box = document.createElement('div');
+            box.id = CC_DISPATCHER_BOX;
+            var boxSt = box.style;
+            boxSt.position = 'fixed';
+            boxSt.left = 0;
+            boxSt.top = 0;
+            boxSt.display = 'none';
+            boxSt.zIndex = -888666;
+            document.body.append(box);
+          }
+
+          ReactDOM.render(React__default.createElement(Dispatcher), box);
+          util.justTip("[[startUp]]: cc create a CcDispatcher automatically");
+        } else {
+          util.justTip("[[startUp]]: CcDispatcher existed already");
+        }
+      } else {
+        throw 'customizing Dispatcher is not allowed in current version cc';
+      }
+
+      if (window) {
+        window.CC_CONTEXT = ccContext;
+        window.ccc = ccContext;
+        window.cccc = ccContext.computed._computedValue;
+      }
+
+      ccContext.isCcAlreadyStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+
+      configPlugins(plugins);
+    } catch (err) {
+      if (errorHandler) errorHandler(err);else throw err;
     }
   }
 
@@ -4935,7 +4993,7 @@
     setState(module, state, lazyMs, throwError);
   }
 
-  var getState$1 = ccContext.store.getState;
+  var getState$2 = ccContext.store.getState;
 
   var getGlobalState = ccContext.store.getGlobalState;
 
@@ -5646,6 +5704,8 @@
     return ctx.connectedState || {};
   });
 
+  var appendState = ccContext.store.appendState;
+
   var startup$1 = startup;
   var cloneModule = _cloneModule;
   var load = _load;
@@ -5658,7 +5718,7 @@
   var call = _call;
   var setGlobalState$1 = setGlobalState;
   var setState$1 = _setState;
-  var getState$2 = getState$1;
+  var getState$3 = getState$2;
   var getGlobalState$1 = getGlobalState;
   var getConnectedState = _getConnectedState;
   var getComputed = _getComputed;
@@ -5675,6 +5735,7 @@
   var getRefs$1 = getRefs;
   var CcFragment$1 = CcFragment;
   var cst = _cst;
+  var appendState$1 = appendState;
   var defaultExport = {
     cloneModule: cloneModule,
     emit: emit,
@@ -5695,7 +5756,7 @@
     setGlobalState: setGlobalState$1,
     getGlobalState: getGlobalState$1,
     setState: setState$1,
-    getState: getState$2,
+    getState: getState$3,
     getComputed: getComputed,
     getConnectedState: getConnectedState,
     ccContext: ccContext$1,
@@ -5704,7 +5765,8 @@
     executeAll: executeAll,
     getRefs: getRefs$1,
     CcFragment: CcFragment$1,
-    cst: cst
+    cst: cst,
+    appendState: appendState$1
   };
 
   if (window) {
@@ -5723,7 +5785,7 @@
   exports.call = call;
   exports.setGlobalState = setGlobalState$1;
   exports.setState = setState$1;
-  exports.getState = getState$2;
+  exports.getState = getState$3;
   exports.getGlobalState = getGlobalState$1;
   exports.getConnectedState = getConnectedState;
   exports.getComputed = getComputed;
@@ -5740,6 +5802,7 @@
   exports.getRefs = getRefs$1;
   exports.CcFragment = CcFragment$1;
   exports.cst = cst;
+  exports.appendState = appendState$1;
   exports.default = defaultExport;
 
   Object.defineProperty(exports, '__esModule', { value: true });
