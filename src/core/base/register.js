@@ -1295,7 +1295,7 @@ export default function register(ccClassKey, {
           delay = -1, defaultIdentity = '', chainId, chainDepth, oriChainId
           // sourceModule, oriChainId, oriChainDepth
         ) {
-          return (paramObj = {}, payloadWhenFirstParamIsString, userInputIdentity) => {
+          return (paramObj = {}, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
 
             let _chainId, _chainDepth, _oriChainId;
             // let  _oriChainId, _oriChainDepth;
@@ -1337,6 +1337,7 @@ export default function register(ccClassKey, {
               const slashCount = paramObj.split('').filter(v => v === '/').length;
               _payload = payloadWhenFirstParamIsString;
               if (userInputIdentity) _identity = userInputIdentity;
+              if (userInputDelay !== undefined) _delay = userInputDelay;
 
               if (slashCount === 0) {
                 _type = paramObj;
