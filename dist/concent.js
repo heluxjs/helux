@@ -329,7 +329,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.29',
+      version: '1.2.30',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -3314,10 +3314,10 @@ if (!this._inheritsLoose) {
             this.$$dispatch = d;
             this.$$dispatchIdentity = di;
             this.$$dispatchForModule = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, currentModule, null, null, null, -1);
-            this.$$invoke = this.__$$getInvokeHandler();
-            this.$$xinvoke = this.__$$getXInvokeHandler();
-            this.$$effect = this.__$$getEffectHandler(ccKey);
-            this.$$xeffect = this.__$$getXEffectHandler(ccKey);
+            this.$$invoke = this.__$$getInvokeHandler(ccKey, ccUniqueKey);
+            this.$$xinvoke = this.__$$getXInvokeHandler(ccKey, ccUniqueKey);
+            this.$$effect = this.__$$getEffectHandler(ccKey, ccUniqueKey);
+            this.$$xeffect = this.__$$getXEffectHandler(ccKey, ccUniqueKey);
             this.$$emit = thisCC.emit;
             this.$$emitIdentity = thisCC.emitIdentity;
             this.$$emitWith = thisCC.emitWith;
@@ -3482,6 +3482,7 @@ if (!this._inheritsLoose) {
               } else if (firstParamType === 'object') {
                 var _this6$cc2;
 
+                //firstParam: {fn:function, delay:number, identity:string}
                 // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
                 var fn = firstParam.fn;
                 delete firstParam.fn;
@@ -3569,7 +3570,7 @@ if (!this._inheritsLoose) {
               defaultIdentity = '';
             }
 
-            return function (paramObj, payloadWhenFirstParamIsString, userInputIdentity) {
+            return function (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
               if (paramObj === void 0) {
                 paramObj = {};
               }
@@ -3635,6 +3636,7 @@ if (!this._inheritsLoose) {
                 }).length;
                 _payload = payloadWhenFirstParamIsString;
                 if (userInputIdentity) _identity = userInputIdentity;
+                if (userInputDelay !== undefined) _delay = userInputDelay;
 
                 if (slashCount === 0) {
                   _type = paramObj;

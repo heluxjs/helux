@@ -1142,10 +1142,10 @@ export default function register(ccClassKey, {
           this.$$dispatchIdentity = di;
           this.$$dispatchForModule = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, currentModule, null, null, null, -1);
 
-          this.$$invoke = this.__$$getInvokeHandler();
-          this.$$xinvoke = this.__$$getXInvokeHandler();
-          this.$$effect = this.__$$getEffectHandler(ccKey);
-          this.$$xeffect = this.__$$getXEffectHandler(ccKey);
+          this.$$invoke = this.__$$getInvokeHandler(ccKey, ccUniqueKey);
+          this.$$xinvoke = this.__$$getXInvokeHandler(ccKey, ccUniqueKey);
+          this.$$effect = this.__$$getEffectHandler(ccKey, ccUniqueKey);
+          this.$$xeffect = this.__$$getXEffectHandler(ccKey, ccUniqueKey);
 
           this.$$emit = thisCC.emit;
           this.$$emitIdentity = thisCC.emitIdentity;
@@ -1252,6 +1252,8 @@ export default function register(ccClassKey, {
             if (firstParamType === 'function') {
               return this.cc.__invoke(firstParam, { context: giveContextToUserLoginFn, methodName, ccKey, ccUniqueKey }, ...args);
             } else if (firstParamType === 'object') {
+              //firstParam: {fn:function, delay:number, identity:string}
+
               // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
               const fn = firstParam.fn;
               delete firstParam.fn;
@@ -1295,7 +1297,7 @@ export default function register(ccClassKey, {
           delay = -1, defaultIdentity = '', chainId, chainDepth, oriChainId
           // sourceModule, oriChainId, oriChainDepth
         ) {
-          return (paramObj = {}, payloadWhenFirstParamIsString, userInputIdentity) => {
+          return (paramObj = {}, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
 
             let _chainId, _chainDepth, _oriChainId;
             // let  _oriChainId, _oriChainDepth;
@@ -1337,6 +1339,7 @@ export default function register(ccClassKey, {
               const slashCount = paramObj.split('').filter(v => v === '/').length;
               _payload = payloadWhenFirstParamIsString;
               if (userInputIdentity) _identity = userInputIdentity;
+              if (userInputDelay !== undefined) _delay = userInputDelay;
 
               if (slashCount === 0) {
                 _type = paramObj;
