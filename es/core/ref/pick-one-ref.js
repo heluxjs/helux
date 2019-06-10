@@ -2,6 +2,7 @@ import ccContext from '../../cc-context';
 import { CC_DISPATCHER, MODULE_DEFAULT, CC_FRAGMENT_PREFIX } from '../../support/constant';
 
 /****
+ * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
  * pick one ccInstance ref randomly
  */
 export default function(module, mustBelongToModule = false) {

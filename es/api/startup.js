@@ -15,6 +15,7 @@ export default function ({
   sharedToGlobalMapping = {},
   moduleSingleClass = {},
   middlewares = [],
+  plugins = [],
   isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
   isDebug = false,
   errorHandler = null,
@@ -62,6 +63,7 @@ export default function ({
     boot.configRootWatch(watch);
     boot.executeRootInit(init);
     boot.configMiddlewares(middlewares);
+    boot.configPlugins(plugins);
 
     if (autoCreateDispatcher) {
       if (!ccContext.refs[CC_DISPATCHER]) {

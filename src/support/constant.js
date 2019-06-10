@@ -17,6 +17,12 @@ export const BROADCAST_TRIGGERED_BY_CC_API_SET_STATE = 303;
 export const  CURSOR_KEY = Symbol('__for_sync_param_cursor__');
 export const  CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
 export const  MOCKE_KEY = Symbol('__for_mock_event__');
+export const  LAZY_KEY = Symbol('__lazy_handle_state__');
+
+export const SIG_FN_START = 10;
+export const SIG_FN_END = 11;
+export const SIG_FN_QUIT = 12;
+export const SIG_FN_ERR = 13;
 
 //  two kind of state extraction
 //    cc will use ccInstance's sharedStateKeys and globalStateKeys to extract committed state  

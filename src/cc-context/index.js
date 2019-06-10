@@ -1,4 +1,5 @@
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
+import * as util from '../support/util';
 
 const refs = {};
 const setStateByModule = (module, partialState) => {
@@ -90,6 +91,7 @@ const ccContext = {
       sharedStateKeys,
       globalStateKeys,
       connectedState:{},
+      connectedComputed:{},
       ccKeys: [],
       stateToPropMapping: null,
       connectedModule:{}
@@ -134,6 +136,16 @@ const ccContext = {
   ],
   //store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
+    appendState: function (module, state) {
+      const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
+      const stateKeys = util.safeGetArrayFromObject(moduleName_stateKeys_, module);
+      util.okeys(state).forEach(k => {
+        if (!stateKeys.includes(k)) {
+          stateKeys.push(k);
+        }
+      });
+      ccContext.store.setState(module, state);
+    },
     _state: {
     },
     getState: function (module) {
@@ -206,7 +218,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.26',
+    version: '1.226.10',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
@@ -219,6 +231,7 @@ const ccContext = {
   fragmentCcKeys: [],
   errorHandler: null,
   middlewares: [],
+  plugins:[],
 }
 
 if (window && !window.sss) {

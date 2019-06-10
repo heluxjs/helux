@@ -238,7 +238,10 @@ export default class CcFragment extends Component {
       onIdentity: (event, identity, handler) => {
         ev.bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, identity, handler);
       },
-      dispatch: dispatcher.__$$getDispatchHandler(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1, ccKey),
+      dispatch: dispatcher.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1),
+      callDispatch: (...args) => {
+        return this.__fragmentParams.dispatch.bind(this, ...args);
+      },
       effect: dispatcher.__$$getEffectHandler(ccKey),
       xeffect: dispatcher.__$$getXEffectHandler(ccKey),
       setModuleState: (module, state, delay, identity) => {

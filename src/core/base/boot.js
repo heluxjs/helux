@@ -10,20 +10,22 @@ import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
 import co from 'co';
+import configure from '../../api/configure';
 
 const { isPlainJsonObject, okeys } = util;
+const { store: { getState } } = ccContext;
 
 /** 对已有的store.$$global状态追加新的state */
-export function appendGlobalState(globalState){
+export function appendGlobalState(globalState) {
   // todo
 }
 
-export function configStoreState(storeState){
+export function configStoreState(storeState) {
   const sharedToGlobalMapping = ccContext.sharedToGlobalMapping;
   if (!isPlainJsonObject(storeState)) {
     throw new Error(`the storeState is not a plain json object!`);
   }
-  const {globalStateKeys, pureGlobalStateKeys, store} = ccContext;
+  const { globalStateKeys, pureGlobalStateKeys, store } = ccContext;
   store.initStateDangerously(MODULE_CC, {});
 
   if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
@@ -53,10 +55,10 @@ export function configStoreState(storeState){
  * 
  * @param {{[reducerModuleName:string]:{[reducerFnType:string]:function}}} rootReducer 
  */
-export function configRootReducer(rootReducer){
+export function configRootReducer(rootReducer) {
   const moduleNames = okeys(rootReducer);
-  if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT]={};
-  if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL]={};
+  if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
+  if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
 
   const len = moduleNames.length;
   for (let i = 0; i < len; i++) {
@@ -65,7 +67,7 @@ export function configRootReducer(rootReducer){
   }
 }
 
-export function configRootComputed(computed){
+export function configRootComputed(computed) {
   if (!isPlainJsonObject(computed)) {
     throw new Error(`StartUpOption.computed is not a plain json object!`);
   }
@@ -81,7 +83,7 @@ export function configRootWatch(watch) {
   moduleNames.forEach(m => initModuleWatch(m, watch[m]));
 }
 
-export function executeRootInit(init){
+export function executeRootInit(init) {
   if (!init) return;
 
   if (!isPlainJsonObject(init)) {
@@ -93,7 +95,7 @@ export function executeRootInit(init){
     checker.checkModuleName(moduleName, false, `there is no module state defined in store for init.${moduleName}`);
     const initFn = init[moduleName];
     if (initFn) {
-      co(initFn).then(state=>{
+      co(initFn).then(state => {
         makeSetStateHandler(moduleName)(state)
       });
     }
@@ -108,17 +110,44 @@ export function configSharedToGlobalMapping(sharedToGlobalMapping) {
   util.safeAssignObjectValue(ccContext.sharedToGlobalMapping, sharedToGlobalMapping);
 }
 
-export function configModuleSingleClass(moduleSingleClass){
+export function configModuleSingleClass(moduleSingleClass) {
   if (!isPlainJsonObject(moduleSingleClass)) {
     throw new Error(`StartupOption.moduleSingleClass is not a plain json object!`);
   }
   util.safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
 }
 
-export function configMiddlewares(middlewares){
+export function configMiddlewares(middlewares) {
   if (middlewares.length > 0) {
     const ccMiddlewares = ccContext.middlewares;
+    ccMiddlewares.length = 0;//防止热加载重复多次载入middlewares
     middlewares.forEach(m => ccMiddlewares.push(m));
+  }
+}
+
+export function configPlugins(plugins) {
+  if (plugins.length > 0) {
+    const ccPlugins = ccContext.plugins;
+    ccPlugins.length = 0;//防止热加载重复多次载入plugins
+
+    const moduleNames = okeys(ccContext.moduleName_stateKeys_);
+
+    plugins.forEach(p => {
+      ccPlugins.push(p);
+      if (p.configure) {
+        const conf = p.configure();
+        p.name = conf.module;
+        configure(conf.module, conf);
+
+        moduleNames.forEach(m => {
+          if (p.writeModuleState) {
+            p.writeModuleState(conf.state, m);
+          }
+        });
+      }else{
+        throw new Error('a plugin must export configure handler!');
+      }
+    });
   }
 }
 
@@ -131,4 +160,5 @@ export default {
   configSharedToGlobalMapping,
   configModuleSingleClass,
   configMiddlewares,
+  configPlugins,
 }

@@ -14,8 +14,9 @@ export default function (ccClassKey, moduleName, originalSharedStateKeys, origin
 
   let ccClassContext = contextMap[ccClassKey];
   if (forCcFragment === true) {
-    //对于CcFragment的调用，ccClassContext可能是已存在的，因为cc根据CcFragment的connect参数为当前CcFragment分配一个ccClassKey，
-    //多个CcFragment实例的connect一样的话，会被分配给同一个ccClassKey
+    //对于CcFragment的调用，ccClassContext可能是已存在的，
+    //因为cc根据CcFragment的connect参数计算ccClassKey
+    //多个CcFragment实例的connect一样的话，会计算出同一个ccClassKey
     if (ccClassContext === undefined) {
       ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
     }

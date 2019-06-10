@@ -90,6 +90,7 @@ const ccContext = {
       sharedStateKeys,
       globalStateKeys,
       connectedState:{},
+      connectedComputed:{},
       ccKeys: [],
       stateToPropMapping: null,
       connectedModule:{}
@@ -206,7 +207,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.26',
+    version: '1.226.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
@@ -219,6 +220,7 @@ const ccContext = {
   fragmentCcKeys: [],
   errorHandler: null,
   middlewares: [],
+  plugins:[],
 }
 
 if (window && !window.sss) {

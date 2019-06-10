@@ -29,11 +29,12 @@ export function isValueNotNull(value) {
 export function isObjectNotNull(object) {
   if (object === null || object === undefined) {
     return false;
-  } else if (Object.keys(object).length > 0) {
-    return true;
-  } else {
-    return false;
   }
+  if (Object.keys(object).length > 0) {
+    return true;
+  }
+  return false;
+
 }
 
 export function isPlainJsonObject(obj, canBeArray = false) {

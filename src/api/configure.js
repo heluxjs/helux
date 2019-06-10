@@ -145,4 +145,15 @@ export default function (module, config, option = {}) {
       ccMiddlewares.push(m)
     });
   }
+
+  ccContext.plugins.forEach(p => {
+    if (p.writeModuleState) {
+      const pluginName = p.name;
+      if (pluginName !== module) {
+        const pluginState = ccContext.store.getState(pluginName);
+        p.writeModuleState(pluginState, module);
+      }
+    }
+  });
+
 }

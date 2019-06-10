@@ -15,6 +15,7 @@ export default function ({
   sharedToGlobalMapping = {},
   moduleSingleClass = {},
   middlewares = [],
+  plugins = [],
   isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
   isDebug = false,
   errorHandler = null,
@@ -94,6 +95,8 @@ export default function ({
     }
 
     ccContext.isCcAlreadyStartup = true;
+    //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+    boot.configPlugins(plugins);
   } catch (err) {
     if (errorHandler) errorHandler(err);
     else throw err;

@@ -23,7 +23,9 @@ import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
 import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
+import _getConnectedState from './api/get-connected-state';
 import _CcFragment from './component/CcFragment';
+import * as _cst from './support/constant';
 
 export const startup = _startup;
 export const cloneModule = _cloneModule;
@@ -39,6 +41,7 @@ export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const getState = _getState;
 export const getGlobalState = _getGlobalState;
+export const getConnectedState = _getConnectedState;
 export const getComputed = _getComputed;
 export const emit = _emit;
 export const emitWith = _emitWith;
@@ -52,6 +55,7 @@ export const execute = _execute;
 export const executeAll = _executeAll;
 export const getRefs = _getRefs;
 export const CcFragment = _CcFragment;
+export const cst = _cst;
 
 const defaultExport = {
   cloneModule,
@@ -75,12 +79,14 @@ const defaultExport = {
   setState,
   getState,
   getComputed,
+  getConnectedState,
   ccContext,
   createDispatcher,
   execute,
   executeAll,
   getRefs,
   CcFragment,
+  cst,
 }
 
 if (window) {

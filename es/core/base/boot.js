@@ -115,10 +115,19 @@ export function configModuleSingleClass(moduleSingleClass){
   util.safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
 }
 
-export function configMiddlewares(middlewares){
+export function configMiddlewares(middlewares) {
   if (middlewares.length > 0) {
     const ccMiddlewares = ccContext.middlewares;
+    ccMiddlewares.length = 0;//防止热加载重复多次载入middlewares
     middlewares.forEach(m => ccMiddlewares.push(m));
+  }
+}
+
+export function configPlugins(plugins) {
+  if (plugins.length > 0) {
+    const ccPlugins = ccContext.plugins;
+    ccPlugins.length = 0;//防止热加载重复多次载入plugins
+    plugins.forEach(p => ccPlugins.push(p));
   }
 }
 
@@ -131,4 +140,5 @@ export default {
   configSharedToGlobalMapping,
   configModuleSingleClass,
   configMiddlewares,
+  configPlugins,
 }
