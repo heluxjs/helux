@@ -8,7 +8,8 @@ import {
   BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
   STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-  SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR
+  SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR,
+  SHARE_STATE_BELONG_TO_MODULE, SHARE_STATE_BELONG_TO_SHARED_STATE_KEYS,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import util, { isPlainJsonObject, isEvent, okeys } from '../../support/util';
@@ -30,6 +31,10 @@ import { getChainId, setChainState, setAndGetChainStateList, exitChain, removeCh
 import { send } from '../plugin';
 import * as checker from '../checker';
 import * as ev from '../event';
+import watchKeyForRef from '../watch/watch-key-for-ref';
+import computeValueForRef from '../computed/compute-value-for-ref';
+import getWatchSpec from '../watch/get-watch-spec';
+import getComputedSpec from '../computed/get-computed-spec';
 
 const { verifyKeys, ccClassDisplayName, styleStr, color, verboseInfo, makeError, justWarning, throwCcHmrError } = util;
 const {
@@ -283,21 +288,14 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
     sharedStateKeys, globalStateKeys, stateToPropMapping);
 }
 
-/****
- * it is very important for cc to know how to extract committed state for the following broadcast operation with stateFor value
- * 
- * if stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cc will treat this state as a ccInstance's state, 
- * then cc will use the ccClass's globalStateKeys and sharedStateKeys to extract the state.
- * usually ccInstance's $$invoke, $$dispatch method will trigger this extraction strategy
- * ------------------------------------------------------------------------------------------------------------------------
- * if stateFor = STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, cc will treat this state as a module state, 
- * then cc will use the this module's globalStateKeys and sharedStateKeys to extract the state.
- * usually ccInstance's $$effect, $$xeffect, $$invokeWith and dispatch handler in reducer function's block
- * will trigger this extraction strategy
+/**
+ * register针对sharedStateKeys设定的默认策略是
+ * SHARE_STATE_BELONG_TO_MODULE：sharedStateKeys仅仅代表关心变化的key，concent允许实例调用的reducer提交不属于sharedStateKeys描述的key，但是属于这个模块的key
  */
-function getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, moduleName, ccClassGlobalStateKeys, ccClassSharedStateKeys) {
-  if (isDispatcher) {//dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
-    return { sharedStateKeys: moduleName_stateKeys_[moduleName] || [], globalStateKeys: [] }
+function getSuitableGlobalStateKeysAndSharedStateKeys(sharedStrategy, isDispatcher, stateFor, moduleName, ccClassGlobalStateKeys, ccClassSharedStateKeys) {
+  ////dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
+  if (sharedStrategy == SHARE_STATE_BELONG_TO_MODULE || isDispatcher) {
+    return { sharedStateKeys: moduleName_stateKeys_[moduleName] || [], globalStateKeys: moduleName_stateKeys_[MODULE_GLOBAL] || [] }
   }
 
   let globalStateKeys, sharedStateKeys;
@@ -314,7 +312,7 @@ function getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, mo
     throw new Error(`stateFor is not set correctly! `)
     // return justWarning(`stateFor is not set correctly, prepareBroadcastState failed!`)
   }
-  return { globalStateKeys, sharedStateKeys };
+  return { sharedStateKeys, globalStateKeys };
 }
 
 function _throwForExtendInputClassAsFalseCheck(ccClassKey) {
@@ -349,44 +347,6 @@ function mapModuleAssociateDataToCcContext(extendInputClass, ccClassKey, stateMo
   return { sharedStateKeys: targetSharedStateKeys, globalStateKeys: targetGlobalStateKeys };
 }
 
-function computeValueForRef(refComputedFn, refComputed, unchangedState, commitState) {
-  if (refComputedFn) {
-    const toBeComputed = refComputedFn();
-    const toBeComputedKeys = Object.keys(toBeComputed);
-    toBeComputedKeys.forEach(key => {
-      const fn = toBeComputed[key];
-      const newValue = commitState[key];
-      if (newValue !== undefined) {
-        const computedValue = fn(newValue, unchangedState[key], unchangedState);
-        refComputed[key] = computedValue;
-      }
-    })
-  }
-}
-
-function watchValueForRef(refWatchFn, refEntireState, userCommitState) {
-  let shouldCurrentRefUpdate = true;
-  if (refWatchFn) {
-    const refWatch = refWatchFn();
-    const watchStateKeys = Object.keys(refWatch);
-    const len = watchStateKeys.length;
-    let shouldNouUpdateLen = 0;
-    watchStateKeys.forEach(key => {
-      const commitValue = userCommitState[key];
-      if (commitValue !== undefined) {
-        const watchFn = refWatch[key];
-        const ret = watchFn(commitValue, refEntireState[key]);// watchFn(newValue, oldValue);
-        if (ret === false) shouldNouUpdateLen++;
-      }
-    });
-
-    //只有所有watch都返回false，才不触发当前实例更新
-    if (shouldNouUpdateLen === len) shouldCurrentRefUpdate = false;
-  }
-
-  return shouldCurrentRefUpdate;
-}
-
 function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
   const { stateToPropMapping, connectedModule } = targetClassContext;
   if (connectedModule[commitModule] === 1) {
@@ -405,7 +365,15 @@ function updateConnectedState(targetClassContext, commitModule, commitState, com
     if (isSetConnectedStateTriggered === true) {
       ccKeys.forEach(ccUniKey => {
         const ref = ccKey_ref_[ccUniKey];
-        if (ref) ref.cc.reactForceUpdate();
+        if (ref) {
+          const refCc = ref.cc;
+          const watchSpec = refCc.watchSpec;
+          const computedSpec = refCc.computedSpec;
+          const shouldCurrentRefUpdate = watchKeyForRef(commitModule, watchSpec, refCc.ccState.connect, getState(commitModule), commitState, ref.__fragmentParams);
+          //如果ref是CcFragment实例，将获得ctx
+          computeValueForRef(commitModule, computedSpec, refCc.refComputed, refCc.refConnectedComputed, ref.state, commitState, ref.__fragmentParams);
+          if (shouldCurrentRefUpdate) refCc.reactForceUpdate();
+        }
       });
     }
   }
@@ -457,6 +425,7 @@ export default function register(ccClassKey, {
   reducerModule,
   extendInputClass = true,
   isSingle = false,
+  sharedStrategy = SHARE_STATE_BELONG_TO_MODULE,
   asyncLifecycleHook = true,// is asyncLifecycleHook = false, it may block cc broadcast state to other when it takes a long time to finish
   __checkStartUp = true,
   __calledBy,
@@ -511,7 +480,7 @@ export default function register(ccClassKey, {
 
             //这些方法是cc自己注入的
             util.bindThis(this, [
-              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '$$toggleBool',
+              '__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '$$toggleBool', '$$set',
               '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$sync', '$$syncInt',
               '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler',
               '__$$getChangeStateHandler', '__$$getDispatchHandler',
@@ -550,9 +519,15 @@ export default function register(ccClassKey, {
             this.$$refComputed = this.cc.refComputed;
             //这些方法是cc交给用户定义的，放置到cc下统一管理，因为多重装饰器模式下，这里属性是从this上取不到的
             //放在__$$recoverState之前，优先设置this.cc.computed
-            if (this.$$computed) this.cc.computed = this.$$computed.bind(this);
+            if (this.$$watch) {
+              this.cc.watch = this.$$watch.bind(this);
+              this.cc.watchSpec = getWatchSpec(this.cc.watch);
+            }
+            if (this.$$computed) {
+              this.cc.computed = this.$$computed.bind(this);
+              this.cc.computedSpec = getComputedSpec(this.cc.computed);
+            }
             if (this.$$onUrlChanged) this.cc.onUrlChanged = this.$$onUrlChanged.bind(this);
-            if (this.$$watch) this.cc.watch = this.$$watch.bind(this);
             if (this.$$execute) this.cc.execute = this.$$execute.bind(this);
             //$$cache要注意使用规范
             if (this.$$cache) {
@@ -562,7 +537,7 @@ export default function register(ccClassKey, {
               this.$$refCache = {};
             }
 
-            this.__$$recoverState(_curStateModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey);
+            this.__$$recoverState(_curStateModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey, connect);
           } catch (err) {
             catchCcError(err);
           }
@@ -570,11 +545,10 @@ export default function register(ccClassKey, {
 
         // never care nextProps, in cc mode, reduce unnecessary render which cause by receiving new props;
         shouldComponentUpdate(nextProps, nextState) {
-
           return this.state !== nextState;
         }
 
-        __$$recoverState(currentModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey) {
+        __$$recoverState(currentModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey, connect) {
           let refState = refStore._state[ccUniqueKey] || {};
 
           const sharedState = _state[currentModule];
@@ -594,7 +568,14 @@ export default function register(ccClassKey, {
           const selfState = this.state;
           const entireState = Object.assign({}, selfState, refState, partialSharedState, partialGlobalState);
           this.state = entireState;
-          computeValueForRef(this.cc.computed, this.cc.refComputed, entireState, entireState);
+          const thisCc = this.cc;
+
+          const computedSpec = thisCc.computedSpec, refComputed = thisCc.refComputed, refConnectedComputed = thisCc.refConnectedComputed;
+          computeValueForRef(currentModule, computedSpec, refComputed, refConnectedComputed, entireState, entireState);
+          okeys(connect).forEach(m=>{
+            const mState = getState(m);
+            computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
+          });
         }
 
         //!!! 存在多重装饰器时
@@ -602,7 +583,7 @@ export default function register(ccClassKey, {
         $$attach(childRef) {
           const attachMethods = [
             '$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di',
-            '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off',
+            '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$set',
             '$$sync', '$$toggleBool', '$$syncInt', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect',
             '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate',
           ];
@@ -620,6 +601,8 @@ export default function register(ccClassKey, {
             if (cRef[method]) {
               childRef[method] = childRef[method].bind(childRef);
               this.cc[ccMethod] = childRef[method];
+              if (method === '$$watch') this.cc.watchSpec = getWatchSpec(this.cc.$$watch);
+              else if (method === '$$computed') this.cc.computedSpec = getComputedSpec(this.cc.$$computed);
             }
           }
 
@@ -652,6 +635,10 @@ export default function register(ccClassKey, {
             ccOption, ccClassContext, module: currentModule, reducerModule: currentReducerModule, sharedStateKeys, globalStateKeys, initTime: Date.now(),
             connect, isControlledByConcent
           };
+          const refConnectedComputed = {};
+          okeys(connect).forEach(moduleName => {
+            refConnectedComputed[moduleName] = {};
+          });
 
           const { duplicate, notArray, keyElementNotString } = verifyKeys(sharedStateKeys, storedStateKeys);
           if (notArray) {
@@ -670,8 +657,11 @@ export default function register(ccClassKey, {
           this.cc = {
             onUrlChanged: null,
             watch: null,
+            watchSpec: null,
             computed: null,
+            computedSpec: null,
             refComputed: {},
+            refConnectedComputed,//定义在类里的带模块名字的computedKey计算计算结果收集对象
             connectedComputed: {},
             globalComputed: {},
             moduleComputed: {},
@@ -874,14 +864,16 @@ export default function register(ccClassKey, {
                 }
               }
 
-              //确保forceUpdate能够刷新cc实例
+              //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
               if (calledBy !== FORCE_UPDATE && !util.isObjectNotNull(state)) {
                 if (next) next();
                 return;
               }
               const thisState = this.state;
-              computeValueForRef(this.cc.computed, this.cc.refComputed, thisState, state);
-              let shouldCurrentRefUpdate = watchValueForRef(this.cc.watch, thisState, state);
+              const thisCc = this.cc;
+              const { module: stateModule, connect } = thisCc.ccState;
+              computeValueForRef(stateModule, thisCc.computedSpec, thisCc.refComputed, thisCc.refConnectedComputed, thisState, state);
+              const shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state);
 
               if (shouldCurrentRefUpdate === false) {
                 if (next) next();
@@ -932,16 +924,12 @@ export default function register(ccClassKey, {
                 startBroadcastGlobalState();
               }
             },
-            prepareBroadcastState: (stateFor, broadcastTriggeredBy, moduleName, committedState, needClone, delay, identity) => {
+            syncCommittedStateToStore: (stateFor, moduleName, committedState)=>{
               let targetSharedStateKeys, targetGlobalStateKeys;
-              try {
-                const isDispatcher = this.cc.ccClassKey === CC_DISPATCHER;
-                const result = getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, moduleName, globalStateKeys, sharedStateKeys);
-                targetSharedStateKeys = result.sharedStateKeys;
-                targetGlobalStateKeys = result.globalStateKeys;
-              } catch (err) {
-                return justWarning(`${err.message} prepareBroadcastState failed!`)
-              }
+              const isDispatcher = this.cc.ccClassKey === CC_DISPATCHER;
+              const result = getSuitableGlobalStateKeysAndSharedStateKeys(sharedStrategy, isDispatcher, stateFor, moduleName, globalStateKeys, sharedStateKeys);
+              targetSharedStateKeys = result.sharedStateKeys;
+              targetGlobalStateKeys = result.globalStateKeys;
 
               let skipBroadcastRefState = false;
               if (stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
@@ -957,6 +945,10 @@ export default function register(ccClassKey, {
               if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);
               if (!isPartialGlobalStateEmpty) ccStoreSetState(MODULE_GLOBAL, partialGlobalState);
 
+              return { partialSharedState, partialGlobalState, module_globalState_, skipBroadcastRefState };
+            },
+            prepareBroadcastState: (broadcastInfo, stateFor, broadcastTriggeredBy, moduleName, committedState, needClone, delay, identity) => {
+              const { skipBroadcastRefState, partialSharedState, partialGlobalState, module_globalState_ } = broadcastInfo;
               const startBroadcastState = () => {
                 if (this.$$beforeBroadcastState) {//check if user define a life cycle hook $$beforeBroadcastState
                   if (asyncLifecycleHook) {
@@ -985,7 +977,6 @@ export default function register(ccClassKey, {
                 if (needClone) _partialSharedState = util.clone(partialSharedState);// this clone operation may cause performance issue, if partialSharedState is too big!!
 
                 const { ccUniqueKey: currentCcKey } = this.cc.ccState;
-                const ccClassKey_isHandled_ = {};//record which ccClassKey has been handled
 
                 // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered reactSetState
                 // so flag ignoreCurrentCcKey as true;
@@ -995,9 +986,6 @@ export default function register(ccClassKey, {
                 if (ccClassKeys) {
                   //  these ccClass are watching the same module's state
                   ccClassKeys.forEach(ccClassKey => {
-                    //  flag this ccClassKey been handled
-                    ccClassKey_isHandled_[ccClassKey] = true;
-
                     const classContext = ccClassKey_ccClassContext_[ccClassKey];
                     const { ccKeys, sharedStateKeys, globalStateKeys } = classContext;
                     if (ccKeys.length === 0) return;
@@ -1045,6 +1033,7 @@ export default function register(ccClassKey, {
                   });
                 }
 
+                //这一段是为sharedToGlobalMapping工作，将来可能需要删掉......，不提供sharedToGlobalMapping功能了
                 if (util.isObjectNotNull(module_globalState_)) {
                   const moduleNames = Object.keys(module_globalState_);
                   moduleNames.forEach(mName => {
@@ -1080,7 +1069,8 @@ export default function register(ccClassKey, {
                 }
               }
 
-              //!!! 注意，这里要把global提出来播，例如一个属于$$default模块的实例提交得有$$global模块的数据，是需要被播出去的
+              // !!! 注意，因为属于某个模块foo的实例调用setState提交的state里可能含有$$global模块的状态
+              // 所以这里要尝试把可能含有的$$global状态提取出来播出去
               const {
                 partialState: toToBroadcastGlobalState, isStateEmpty: isEmptyG
               } = extractStateByKeys(originalState, ccContext.globalStateKeys);
@@ -1194,23 +1184,31 @@ export default function register(ccClassKey, {
               const ccState = this.cc.ccState;
               const currentModule = ccState.module;
               const btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
+
               if (module === currentModule) {
+                const allowBroadcast = ccState.ccOption.syncSharedState || forceSync;
+                let broadcastInfo = null;
+                if (allowBroadcast) {
+                  //在prepareReactSetState之前把状态存储到store，
+                  //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+                  //也防止prepareReactSetState里有异步的钩子函数，导致state同步到store有延迟而出现其他bug
+                  broadcastInfo = this.cc.syncCommittedStateToStore(stateFor, module, state);
+                }
+
                 // who trigger $$changeState, who will change the whole received state 
                 this.cc.prepareReactSetState(identity, calledBy, state, stateFor, () => {
-                  //if forceSync=true, cc clone the input state
-                  if (forceSync === true) {
-                    this.cc.prepareBroadcastState(stateFor, btb, module, state, true, delay, identity);
-                  } else if (ccState.ccOption.syncSharedState) {
-                    this.cc.prepareBroadcastState(stateFor, btb, module, state, false, delay, identity);
-                  } else {
-                    // stop broadcast state!
+                  if(allowBroadcast){
+                    const needClone = forceSync === true; //if forceSync=true, cc clone the input state
+                    this.cc.prepareBroadcastState(broadcastInfo, stateFor, btb, module, state, needClone, delay, identity);
                   }
                 }, reactCallback);
               } else {
                 if (forceSync) justWarning(`you are trying change another module's state, forceSync=true in not allowed, cc will ignore it!` + vbi(`module:${module} currentModule${currentModule}`));
                 if (reactCallback) justWarning(`callback for react.setState will be ignore`);
-                //触发修改转态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是是OF_ONE_MODULE
-                this.cc.prepareBroadcastState(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, btb, module, state, true, delay, identity);
+
+                const broadcastInfo = this.cc.syncCommittedStateToStore(stateFor, module, state);
+                //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
+                this.cc.prepareBroadcastState(broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, btb, module, state, true, delay, identity);
               }
             }
           }
@@ -1399,14 +1397,17 @@ export default function register(ccClassKey, {
           if (typeof e === 'string') return this.__$$sync.bind(this, { [CCSYNC_KEY]: e, type: 'int', delay, idt });
           this.__$$sync({ type: 'int' }, e);
         }
+        $$set(ccsync, val, delay, idt) {
+          this.__$$sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, idt });
+        }
         // when CCSYNC_KEY:   stateFor=ccint, seat1=ccdelay, seat2=ccidt, seat3=stateFor
         $$sync(e, val, delay, idt) {
           if (typeof e === 'string') {
             return this.__$$sync.bind(this, { [CCSYNC_KEY]: e, type: 'val', val, delay, idt });
           } else if (e && e[MOCKE_KEY]) {
-            this.__$$sync(e);
+            return this.__$$sync(e);
           }
-          this.__$$sync({ type: 'val' }, e);
+          this.__$$sync({ type: 'val' }, e);// for <input data-ccsync="foo/f1" onChange={this.$$sync} />
         }
         __$$sync(spec, e) {
           let mockE = null;

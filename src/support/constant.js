@@ -24,11 +24,19 @@ export const SIG_FN_END = 11;
 export const SIG_FN_QUIT = 12;
 export const SIG_FN_ERR = 13;
 
+// sharedStateKeys仅仅代表关心变化的key，concent允许实例调用的reducer提交不属于sharedStateKeys描述的key，但是属于这个模块的key
+export const SHARE_STATE_BELONG_TO_MODULE = 1;
+// sharedStateKeys既代表关心变化的key也代表能提交到store的key，concent只允许实例调用的reducer提交属于sharedStateKeys描述的key
+export const SHARE_STATE_BELONG_TO_SHARED_STATE_KEYS = 2;
+
 //  two kind of state extraction
 //    cc will use ccInstance's sharedStateKeys and globalStateKeys to extract committed state  
 export const STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;
 //    cc will use one module's sharedStateKeys and globalStateKeys to extract committed state  
 export const STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;
+
+export const EFFECT_AVAILABLE = 1;
+export const EFFECT_STOPPED = 0;
 
 export const ERR = {
   CC_ALREADY_STARTUP: 1000,

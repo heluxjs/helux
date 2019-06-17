@@ -1,16 +1,17 @@
-import { CCSYNC_KEY, MOCKE_KEY} from '../../support/constant';
+import { CCSYNC_KEY, MOCKE_KEY } from '../../support/constant';
 import { isEvent } from '../../support/util';
 
 
 export default (spec, e, stateFor) => {
-  let ccint = '', ccsync = '', ccidt = '', value = '', ccdelay = -1, isToggleBool = false;
+  let ccint = false, ccsync = '', ccidt = '', value = '', ccdelay = -1, isToggleBool = false;
   const specSyncKey = spec[CCSYNC_KEY];
   const type = spec.type;
   if (specSyncKey !== undefined) {//来自生成的sync生成的setter函数调用
     ccsync = specSyncKey;
     ccdelay = spec.delay;
     ccidt = spec.idt
-    if (type === 'val') {//set value
+    if (type === 'val' || type === 'int') {//set value
+      ccint = type === 'int';//convert to int
 
       //优先从spec里取，取不到的话，从e里面分析并提取
       const val = spec.val;
@@ -25,8 +26,6 @@ export default (spec, e, stateFor) => {
       }
     } else if (type === 'bool') {//toggle bool
       isToggleBool = true;
-    } else if (type === 'int') {//convert
-      ccint = true;
     } else return null;
   } else {//来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
     if (isEvent(e)) {// e is event
@@ -53,5 +52,5 @@ export default (spec, e, stateFor) => {
     }
   }
 
-  return { [MOCKE_KEY]:1, currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } }, stateFor, isToggleBool };
+  return { [MOCKE_KEY]: 1, currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } }, stateFor, isToggleBool };
 }

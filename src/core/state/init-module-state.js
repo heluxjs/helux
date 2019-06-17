@@ -9,7 +9,10 @@ export default function(module, state, rootStateCanNotContainInputModule = true)
 
   // ccContext.store.setState(module, state);
   const rootState = ccContext.store.getState();
+  const prevRootState = ccContext.store.getPrevState();
   rootState[module] = state;
+  prevRootState[module] = Object.assign({}, state);
+
   const statKeys = Object.keys(state);
   ccContext.moduleName_stateKeys_[module] = statKeys;
 

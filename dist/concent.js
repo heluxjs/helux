@@ -60,12 +60,18 @@ if (!this._inheritsLoose) {
   var SIG_FN_START = 10;
   var SIG_FN_END = 11;
   var SIG_FN_QUIT = 12;
-  var SIG_FN_ERR = 13; //  two kind of state extraction
+  var SIG_FN_ERR = 13; // sharedStateKeys仅仅代表关心变化的key，concent允许实例调用的reducer提交不属于sharedStateKeys描述的key，但是属于这个模块的key
+
+  var SHARE_STATE_BELONG_TO_MODULE = 1; // sharedStateKeys既代表关心变化的key也代表能提交到store的key，concent只允许实例调用的reducer提交属于sharedStateKeys描述的key
+
+  var SHARE_STATE_BELONG_TO_SHARED_STATE_KEYS = 2; //  two kind of state extraction
   //    cc will use ccInstance's sharedStateKeys and globalStateKeys to extract committed state  
 
   var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1; //    cc will use one module's sharedStateKeys and globalStateKeys to extract committed state  
 
   var STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;
+  var EFFECT_AVAILABLE = 1;
+  var EFFECT_STOPPED = 0;
   var ERR = {
     CC_ALREADY_STARTUP: 1000,
     CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE: 1001,
@@ -148,8 +154,12 @@ if (!this._inheritsLoose) {
     SIG_FN_END: SIG_FN_END,
     SIG_FN_QUIT: SIG_FN_QUIT,
     SIG_FN_ERR: SIG_FN_ERR,
+    SHARE_STATE_BELONG_TO_MODULE: SHARE_STATE_BELONG_TO_MODULE,
+    SHARE_STATE_BELONG_TO_SHARED_STATE_KEYS: SHARE_STATE_BELONG_TO_SHARED_STATE_KEYS,
     STATE_FOR_ONE_CC_INSTANCE_FIRSTLY: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
     STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
+    EFFECT_AVAILABLE: EFFECT_AVAILABLE,
+    EFFECT_STOPPED: EFFECT_STOPPED,
     ERR: ERR,
     ERR_MESSAGE: ERR_MESSAGE,
     default: constant
@@ -169,25 +179,38 @@ if (!this._inheritsLoose) {
     return _state[module];
   };
 
+  var _getPrevState = function getPrevState(module) {
+    var _prevState = ccContext.store._prevState;
+    return _prevState[module];
+  };
+
   var setStateByModuleAndKey = function setStateByModuleAndKey(module, key, value) {
     var moduleState = _getState(module);
+
+    var prevModuleState = _getPrevState(module);
 
     var moduleComputedFn = computed._computedFn[module];
     var watchFn = watch[module];
     var oldValue = moduleState[key];
+    prevModuleState[key] = oldValue;
+    var keyDesc = {
+      key: key,
+      module: module,
+      moduleState: moduleState
+    };
 
     if (moduleComputedFn) {
       var fn = moduleComputedFn[key];
 
       if (fn) {
-        var computedValue = fn(value, oldValue, moduleState);
+        var computedValue = fn(value, oldValue, keyDesc);
         computed._computedValue[module][key] = computedValue;
       }
     }
 
     if (watchFn) {
       var _fn = watchFn[key];
-      if (_fn) _fn(value, oldValue, moduleState); //fn(newValue, oldValue)
+      if (_fn) _fn(value, oldValue, keyDesc); //fn(newValue, oldValue)
     }
 
     moduleState[key] = value;
@@ -278,8 +301,13 @@ if (!this._inheritsLoose) {
         ccContext.store.setState(module, state);
       },
       _state: {},
+      _prevState: {//辅助CcFragment defineEffect之用
+      },
       getState: function getState(module) {
         if (module) return _getState(module);else return ccContext.store._state;
+      },
+      getPrevState: function getPrevState(module) {
+        if (module) return _getPrevState(module);else return ccContext.store._prevState;
       },
       setState: function setState(module, partialSharedState) {
         setStateByModule(module, partialSharedState);
@@ -329,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.30',
+      version: '1.2.31',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1324,7 +1352,7 @@ if (!this._inheritsLoose) {
   var buildMockEvent = (function (spec, e, stateFor) {
     var _ref;
 
-    var ccint = '',
+    var ccint = false,
         ccsync = '',
         ccidt = '',
         value = '',
@@ -1339,9 +1367,11 @@ if (!this._inheritsLoose) {
       ccdelay = spec.delay;
       ccidt = spec.idt;
 
-      if (type === 'val') {
+      if (type === 'val' || type === 'int') {
         //set value
+        ccint = type === 'int'; //convert to int
         //优先从spec里取，取不到的话，从e里面分析并提取
+
         var val = spec.val;
 
         if (val === undefined) {
@@ -1356,9 +1386,6 @@ if (!this._inheritsLoose) {
       } else if (type === 'bool') {
         //toggle bool
         isToggleBool = true;
-      } else if (type === 'int') {
-        //convert
-        ccint = true;
       } else return null;
     } else {
       //来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
@@ -1821,6 +1848,148 @@ if (!this._inheritsLoose) {
     offEventHandlersByCcUniqueKey: offEventHandlersByCcUniqueKey
   });
 
+  function shouldSkipKey (key, stateModule, connectSpecLike, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag) {
+    if (writeRefComputedWhenRefIsCfrag === void 0) {
+      writeRefComputedWhenRefIsCfrag = false;
+    }
+
+    var skip = false;
+    var keyModule = '';
+    var stateKey = key;
+
+    if (key.includes('/')) {
+      // moduledKey : 'foo/f1'
+      var _key$split = key.split('/'),
+          tmpKeyModule = _key$split[0],
+          unmoduledKey = _key$split[1];
+
+      keyModule = tmpKeyModule; //这个key的模块不是提交state所属的模块，也不属于global模块, 对应的watch就需要排除掉
+      //因为setState只提交自己模块的数据，所以如果tmpKeyModule是其他模块，这里并不会被触发
+      //dispatch调用如果指定了其他模块，是会触发这里的逻辑的
+
+      if (keyModule !== MODULE_GLOBAL && keyModule !== stateModule) {
+        skip = true;
+      } else if (!connectSpecLike[stateModule]) {
+        //key的模块没有在connect里定义过
+        //??? need strict
+        skip = true;
+      } else if (!moduleStateKeys.includes(unmoduledKey) && !globalStateKeys.includes(unmoduledKey)) {
+        //??? need strict
+        justWarning("moduled key[" + key + "] is invalid");
+        skip = true;
+      } else {
+        stateKey = unmoduledKey;
+      }
+    } else {
+      if (ctx && ctx.isCcFragment) {
+        //必需强制为true，才会写state;
+        if (writeRefComputedWhenRefIsCfrag !== true) skip = true;
+      }
+    }
+
+    return {
+      skip: skip,
+      stateKey: stateKey,
+      keyModule: keyModule
+    };
+  }
+
+  var getState = ccContext.store.getState;
+  var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
+  function watchKeyForRef (stateModule, watchSpec, connect, refEntireState, userCommitState, ctx) {
+    var shouldCurrentRefUpdate = true;
+
+    if (watchSpec) {
+      var globalStateKeys = moduleName_stateKeys_[MODULE_GLOBAL];
+      var moduleStateKeys = moduleName_stateKeys_[stateModule];
+      var refWatch = watchSpec;
+      var watchStateKeys = okeys(refWatch);
+      var len = watchStateKeys.length;
+      var shouldNouUpdateLen = 0;
+      watchStateKeys.forEach(function (key) {
+        var _shouldSkipKey = shouldSkipKey(key, stateModule, connect, moduleStateKeys, globalStateKeys),
+            stateKey = _shouldSkipKey.stateKey,
+            skip = _shouldSkipKey.skip,
+            keyModule = _shouldSkipKey.keyModule;
+
+        if (skip) return;
+        var commitValue = userCommitState[stateKey];
+
+        if (commitValue !== undefined) {
+          var watchFn = refWatch[key];
+          var targetModule = keyModule || stateModule;
+          var moduleState = getState(targetModule);
+          var keyDesc = {
+            key: stateKey,
+            module: targetModule,
+            moduleState: moduleState
+          };
+          var ret = watchFn(commitValue, refEntireState[stateKey], keyDesc, ctx); // watchFn(newValue, oldValue);
+
+          if (ret === false) shouldNouUpdateLen++;
+        }
+      }); //只有所有watch都返回false，才不触发当前实例更新
+
+      if (shouldNouUpdateLen === len) shouldCurrentRefUpdate = false;
+    }
+
+    return shouldCurrentRefUpdate;
+  }
+
+  var getState$1 = ccContext.store.getState;
+  var moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_; //CcFragment实例调用会提供ctx
+
+  function computeValueForRef (stateModule, computedSpec, refComputed, refConnectedComputed, oldState, commitState, ctx, writeRefComputedWhenRefIsCfrag) {
+    if (computedSpec) {
+      var globalStateKeys = moduleName_stateKeys_$1[MODULE_GLOBAL];
+      var moduleStateKeys = moduleName_stateKeys_$1[stateModule];
+      var toBeComputed = computedSpec;
+      var toBeComputedKeys = okeys(toBeComputed);
+      toBeComputedKeys.forEach(function (key) {
+        var _shouldSkipKey = shouldSkipKey(key, stateModule, refConnectedComputed, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag),
+            stateKey = _shouldSkipKey.stateKey,
+            skip = _shouldSkipKey.skip,
+            keyModule = _shouldSkipKey.keyModule;
+
+        if (skip) return;
+        var newValue = commitState[stateKey];
+
+        if (newValue !== undefined) {
+          var fn = toBeComputed[key]; //用原始定义当然key去取fn
+
+          var targetModule = keyModule || stateModule;
+          var moduleState = getState$1(targetModule);
+          var keyDesc = {
+            key: stateKey,
+            module: targetModule,
+            moduleState: moduleState
+          };
+          var computedValue = fn(newValue, oldState[stateKey], keyDesc, ctx);
+
+          if (keyModule) {
+            refConnectedComputed[keyModule][stateKey] = computedValue;
+          } else {
+            refComputed[stateKey] = computedValue;
+          }
+        }
+      });
+    }
+  }
+
+  function getWatchSpec (watch, ctx) {
+    var watchSpec;
+    var watchType = typeof watch;
+    if (watchType === 'function') watchSpec = watch(ctx);else if (watchType === 'object' && !Array.isArray(watch)) watchSpec = watch;else throw new Error('watch type can only be a function or a plain json object');
+    return watchSpec;
+  }
+
+  function getComputedSpec (computed, ctx) {
+    var computedSpec;
+    var computedType = typeof computed;
+    if (computedType === 'function') computedSpec = computed(ctx);else if (computedType === 'object' && !Array.isArray(computed)) computedSpec = computed;else throw new Error('computed type can only be a function or a plain json object');
+    return computedSpec;
+  }
+
   var verifyKeys$1 = util.verifyKeys,
       ccClassDisplayName$1 = util.ccClassDisplayName,
       styleStr$1 = util.styleStr,
@@ -1831,7 +2000,7 @@ if (!this._inheritsLoose) {
       throwCcHmrError$2 = util.throwCcHmrError;
   var _ccContext$store = ccContext.store,
       _state$1 = _ccContext$store._state,
-      getState = _ccContext$store.getState,
+      getState$2 = _ccContext$store.getState,
       ccStoreSetState$1 = _ccContext$store.setState,
       setStateByModuleAndKey$1 = _ccContext$store.setStateByModuleAndKey,
       _reducer$1 = ccContext.reducer._reducer,
@@ -1840,7 +2009,7 @@ if (!this._inheritsLoose) {
       _computedValue$1 = ccContext.computed._computedValue,
       moduleName_sharedStateKeys_ = ccContext.moduleName_sharedStateKeys_,
       moduleName_globalStateKeys_ = ccContext.moduleName_globalStateKeys_,
-      moduleName_stateKeys_ = ccContext.moduleName_stateKeys_,
+      moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_,
       ccKey_ref_$2 = ccContext.ccKey_ref_,
       ccKey_option_$1 = ccContext.ccKey_option_,
       globalCcClassKeys = ccContext.globalCcClassKeys,
@@ -1920,11 +2089,11 @@ if (!this._inheritsLoose) {
         globalStateKeys = inputGlobalStateKeys;
 
     if (inputSharedStateKeys === '*') {
-      sharedStateKeys = Object.keys(getState(module));
+      sharedStateKeys = Object.keys(getState$2(module));
     }
 
     if (inputGlobalStateKeys === '*') {
-      globalStateKeys = Object.keys(getState(MODULE_GLOBAL));
+      globalStateKeys = Object.keys(getState$2(MODULE_GLOBAL));
     }
 
     var _verifyKeys = verifyKeys$1(sharedStateKeys, globalStateKeys),
@@ -1944,7 +2113,7 @@ if (!this._inheritsLoose) {
       throw me$3(ERR.CC_CLASS_GLOBAL_STATE_KEYS_DUPLICATE_WITH_SHARED_STATE_KEYS, vbi$3("ccClassKey:" + ccClassKey + " globalStateKeys:" + globalStateKeys + " sharedStateKeys:" + sharedStateKeys));
     }
 
-    var globalState = getState(MODULE_GLOBAL);
+    var globalState = getState$2(MODULE_GLOBAL);
     var hasGlobalMappingKeyInSharedStateKeys = false;
     var matchedGlobalKey, matchedSharedKey;
     var len = globalStateKeys.length;
@@ -2138,26 +2307,18 @@ if (!this._inheritsLoose) {
 
     buildCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, originalGlobalStateKeys, sharedStateKeys, globalStateKeys, stateToPropMapping);
   }
-  /****
-   * it is very important for cc to know how to extract committed state for the following broadcast operation with stateFor value
-   * 
-   * if stateFor = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, cc will treat this state as a ccInstance's state, 
-   * then cc will use the ccClass's globalStateKeys and sharedStateKeys to extract the state.
-   * usually ccInstance's $$invoke, $$dispatch method will trigger this extraction strategy
-   * ------------------------------------------------------------------------------------------------------------------------
-   * if stateFor = STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, cc will treat this state as a module state, 
-   * then cc will use the this module's globalStateKeys and sharedStateKeys to extract the state.
-   * usually ccInstance's $$effect, $$xeffect, $$invokeWith and dispatch handler in reducer function's block
-   * will trigger this extraction strategy
+  /**
+   * register针对sharedStateKeys设定的默认策略是
+   * SHARE_STATE_BELONG_TO_MODULE：sharedStateKeys仅仅代表关心变化的key，concent允许实例调用的reducer提交不属于sharedStateKeys描述的key，但是属于这个模块的key
    */
 
 
-  function getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, moduleName, ccClassGlobalStateKeys, ccClassSharedStateKeys) {
-    if (isDispatcher) {
-      //dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
+  function getSuitableGlobalStateKeysAndSharedStateKeys(sharedStrategy, isDispatcher, stateFor, moduleName, ccClassGlobalStateKeys, ccClassSharedStateKeys) {
+    ////dispatcher实例调用的话，本身是不携带任何***StateKeys信息的
+    if (sharedStrategy == SHARE_STATE_BELONG_TO_MODULE || isDispatcher) {
       return {
-        sharedStateKeys: moduleName_stateKeys_[moduleName] || [],
-        globalStateKeys: []
+        sharedStateKeys: moduleName_stateKeys_$2[moduleName] || [],
+        globalStateKeys: moduleName_stateKeys_$2[MODULE_GLOBAL] || []
       };
     }
 
@@ -2177,8 +2338,8 @@ if (!this._inheritsLoose) {
     }
 
     return {
-      globalStateKeys: globalStateKeys,
-      sharedStateKeys: sharedStateKeys
+      sharedStateKeys: sharedStateKeys,
+      globalStateKeys: globalStateKeys
     };
   }
 
@@ -2212,47 +2373,6 @@ if (!this._inheritsLoose) {
     };
   }
 
-  function computeValueForRef(refComputedFn, refComputed, unchangedState, commitState) {
-    if (refComputedFn) {
-      var toBeComputed = refComputedFn();
-      var toBeComputedKeys = Object.keys(toBeComputed);
-      toBeComputedKeys.forEach(function (key) {
-        var fn = toBeComputed[key];
-        var newValue = commitState[key];
-
-        if (newValue !== undefined) {
-          var computedValue = fn(newValue, unchangedState[key], unchangedState);
-          refComputed[key] = computedValue;
-        }
-      });
-    }
-  }
-
-  function watchValueForRef(refWatchFn, refEntireState, userCommitState) {
-    var shouldCurrentRefUpdate = true;
-
-    if (refWatchFn) {
-      var refWatch = refWatchFn();
-      var watchStateKeys = Object.keys(refWatch);
-      var len = watchStateKeys.length;
-      var shouldNouUpdateLen = 0;
-      watchStateKeys.forEach(function (key) {
-        var commitValue = userCommitState[key];
-
-        if (commitValue !== undefined) {
-          var watchFn = refWatch[key];
-          var ret = watchFn(commitValue, refEntireState[key]); // watchFn(newValue, oldValue);
-
-          if (ret === false) shouldNouUpdateLen++;
-        }
-      }); //只有所有watch都返回false，才不触发当前实例更新
-
-      if (shouldNouUpdateLen === len) shouldCurrentRefUpdate = false;
-    }
-
-    return shouldCurrentRefUpdate;
-  }
-
   function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
     var stateToPropMapping = targetClassContext.stateToPropMapping,
         connectedModule = targetClassContext.connectedModule;
@@ -2273,7 +2393,16 @@ if (!this._inheritsLoose) {
       if (isSetConnectedStateTriggered === true) {
         ccKeys.forEach(function (ccUniKey) {
           var ref = ccKey_ref_$2[ccUniKey];
-          if (ref) ref.cc.reactForceUpdate();
+
+          if (ref) {
+            var refCc = ref.cc;
+            var watchSpec = refCc.watchSpec;
+            var computedSpec = refCc.computedSpec;
+            var shouldCurrentRefUpdate = watchKeyForRef(commitModule, watchSpec, refCc.ccState.connect, getState$2(commitModule), commitState, ref.__fragmentParams); //如果ref是CcFragment实例，将获得ctx
+
+            computeValueForRef(commitModule, computedSpec, refCc.refComputed, refCc.refConnectedComputed, ref.state, commitState, ref.__fragmentParams);
+            if (shouldCurrentRefUpdate) refCc.reactForceUpdate();
+          }
         });
       }
     }
@@ -2346,6 +2475,8 @@ if (!this._inheritsLoose) {
         extendInputClass = _ref$extendInputClass === void 0 ? true : _ref$extendInputClass,
         _ref$isSingle = _ref.isSingle,
         isSingle = _ref$isSingle === void 0 ? false : _ref$isSingle,
+        _ref$sharedStrategy = _ref.sharedStrategy,
+        sharedStrategy = _ref$sharedStrategy === void 0 ? SHARE_STATE_BELONG_TO_MODULE : _ref$sharedStrategy,
         _ref$asyncLifecycleHo = _ref.asyncLifecycleHook,
         asyncLifecycleHook = _ref$asyncLifecycleHo === void 0 ? true : _ref$asyncLifecycleHo,
         _ref$__checkStartUp = _ref.__checkStartUp,
@@ -2414,7 +2545,7 @@ if (!this._inheritsLoose) {
                   ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
               var originalCcKey = ccKey; //这些方法是cc自己注入的
 
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '$$toggleBool', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$sync', '$$syncInt', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
+              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '$$changeState', '__$$recoverState', '$$domDispatch', '$$sync', '$$toggleBool', '$$set', '__$$getEffectHandler', '__$$getXEffectHandler', '__$$makeEffectHandler', '__$$sync', '$$syncInt', '__$$getInvokeHandler', '__$$getXInvokeHandler', '__$$makeInvokeHandler', '__$$getChangeStateHandler', '__$$getDispatchHandler']); // if you flag syncSharedState false, that means this ccInstance's state changing will not effect other ccInstance and not effected by other ccInstance's state changing
 
               if (ccOption.syncSharedState === undefined) ccOption.syncSharedState = true; // if you flag syncGlobalState false, that means this ccInstance's globalState changing will not effect cc's globalState and not effected by cc's globalState changing
 
@@ -2453,9 +2584,17 @@ if (!this._inheritsLoose) {
               _this.$$refComputed = _this.cc.refComputed; //这些方法是cc交给用户定义的，放置到cc下统一管理，因为多重装饰器模式下，这里属性是从this上取不到的
               //放在__$$recoverState之前，优先设置this.cc.computed
 
-              if (_this.$$computed) _this.cc.computed = _this.$$computed.bind(_assertThisInitialized(_this));
+              if (_this.$$watch) {
+                _this.cc.watch = _this.$$watch.bind(_assertThisInitialized(_this));
+                _this.cc.watchSpec = getWatchSpec(_this.cc.watch);
+              }
+
+              if (_this.$$computed) {
+                _this.cc.computed = _this.$$computed.bind(_assertThisInitialized(_this));
+                _this.cc.computedSpec = getComputedSpec(_this.cc.computed);
+              }
+
               if (_this.$$onUrlChanged) _this.cc.onUrlChanged = _this.$$onUrlChanged.bind(_assertThisInitialized(_this));
-              if (_this.$$watch) _this.cc.watch = _this.$$watch.bind(_assertThisInitialized(_this));
               if (_this.$$execute) _this.cc.execute = _this.$$execute.bind(_assertThisInitialized(_this)); //$$cache要注意使用规范
 
               if (_this.$$cache) {
@@ -2465,7 +2604,7 @@ if (!this._inheritsLoose) {
                 _this.$$refCache = {};
               }
 
-              _this.__$$recoverState(_curStateModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey);
+              _this.__$$recoverState(_curStateModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey, connect);
             } catch (err) {
               catchCcError(err);
             }
@@ -2480,7 +2619,7 @@ if (!this._inheritsLoose) {
             return this.state !== nextState;
           };
 
-          _proto.__$$recoverState = function __$$recoverState(currentModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey) {
+          _proto.__$$recoverState = function __$$recoverState(currentModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey, connect) {
             var refState = refStore._state[ccUniqueKey] || {};
             var sharedState = _state$1[currentModule];
             var globalState = _state$1[MODULE_GLOBAL];
@@ -2506,7 +2645,15 @@ if (!this._inheritsLoose) {
             var selfState = this.state;
             var entireState = Object.assign({}, selfState, refState, partialSharedState, partialGlobalState);
             this.state = entireState;
-            computeValueForRef(this.cc.computed, this.cc.refComputed, entireState, entireState);
+            var thisCc = this.cc;
+            var computedSpec = thisCc.computedSpec,
+                refComputed = thisCc.refComputed,
+                refConnectedComputed = thisCc.refConnectedComputed;
+            computeValueForRef(currentModule, computedSpec, refComputed, refConnectedComputed, entireState, entireState);
+            okeys(connect).forEach(function (m) {
+              var mState = getState$2(m);
+              computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
+            });
           } //!!! 存在多重装饰器时
           //!!! 必需在类的 【componentWillMount】 里调用 this.props.$$attach(this)
           ;
@@ -2514,7 +2661,7 @@ if (!this._inheritsLoose) {
           _proto.$$attach = function $$attach(childRef) {
             var _this2 = this;
 
-            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$toggleBool', '$$syncInt', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect', '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate'];
+            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$set', '$$sync', '$$toggleBool', '$$syncInt', '$$invoke', '$$xinvoke', '$$effect', '$$xeffect', '$$forceSyncState', 'setState', 'setGlobalState', 'forceUpdate'];
             attachMethods.forEach(function (m) {
               childRef[m] = _this2[m].bind(_this2);
             }); //这些负责搜集结果的key，单独绑定
@@ -2528,6 +2675,7 @@ if (!this._inheritsLoose) {
               if (cRef[method]) {
                 childRef[method] = childRef[method].bind(childRef);
                 _this2.cc[ccMethod] = childRef[method];
+                if (method === '$$watch') _this2.cc.watchSpec = getWatchSpec(_this2.cc.$$watch);else if (method === '$$computed') _this2.cc.computedSpec = getComputedSpec(_this2.cc.$$computed);
               }
             }; //这些方法绑定的this指向childRef
 
@@ -2575,6 +2723,10 @@ if (!this._inheritsLoose) {
               connect: connect,
               isControlledByConcent: isControlledByConcent
             };
+            var refConnectedComputed = {};
+            okeys(connect).forEach(function (moduleName) {
+              refConnectedComputed[moduleName] = {};
+            });
 
             var _verifyKeys2 = verifyKeys$1(sharedStateKeys, storedStateKeys),
                 duplicate = _verifyKeys2.duplicate,
@@ -2600,8 +2752,12 @@ if (!this._inheritsLoose) {
             this.cc = {
               onUrlChanged: null,
               watch: null,
+              watchSpec: null,
               computed: null,
+              computedSpec: null,
               refComputed: {},
+              refConnectedComputed: refConnectedComputed,
+              //定义在类里的带模块名字的computedKey计算计算结果收集对象
               connectedComputed: {},
               globalComputed: {},
               moduleComputed: {},
@@ -2800,17 +2956,17 @@ if (!this._inheritsLoose) {
                       invoke: _this3.__$$getInvokeHandler(ccKey, ccUniqueKey),
                       xinvoke: _this3.__$$getXInvokeHandler(ccKey, ccUniqueKey),
                       //指的是目标模块的state
-                      moduleState: getState(targetModule),
+                      moduleState: getState$2(targetModule),
                       //指的是目标模块的的moduleComputed
                       moduleComputed: _computedValue$1[targetModule],
                       //!!!指是调用源cc类的connectedState
                       connectedState: sourceClassContext.connectedState,
                       //!!!指是调用源cc类的connectedComputed
                       connectedComputed: sourceClassContext.connectedComputed,
-                      globalState: getState(MODULE_GLOBAL),
+                      globalState: getState$2(MODULE_GLOBAL),
                       state: _this3.state,
-                      getModuleState: getState,
-                      store: getState(),
+                      getModuleState: getState$2,
+                      store: getState$2(),
                       dispatch: dispatch,
                       dispatchIdentity: dispatchIdentity,
                       d: dispatch,
@@ -2981,7 +3137,7 @@ if (!this._inheritsLoose) {
 
                     refStore.setState(ccUniqueKey, partialState);
                   }
-                } //确保forceUpdate能够刷新cc实例
+                } //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
 
 
                 if (calledBy !== FORCE_UPDATE && !util.isObjectNotNull(state)) {
@@ -2990,8 +3146,12 @@ if (!this._inheritsLoose) {
                 }
 
                 var thisState = _this3.state;
-                computeValueForRef(_this3.cc.computed, _this3.cc.refComputed, thisState, state);
-                var shouldCurrentRefUpdate = watchValueForRef(_this3.cc.watch, thisState, state);
+                var thisCc = _this3.cc;
+                var _thisCc$ccState = thisCc.ccState,
+                    stateModule = _thisCc$ccState.module,
+                    connect = _thisCc$ccState.connect;
+                computeValueForRef(stateModule, thisCc.computedSpec, thisCc.refComputed, thisCc.refConnectedComputed, thisState, state);
+                var shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state);
 
                 if (shouldCurrentRefUpdate === false) {
                   if (next) next();
@@ -3059,18 +3219,12 @@ if (!this._inheritsLoose) {
                   startBroadcastGlobalState();
                 }
               },
-              prepareBroadcastState: function prepareBroadcastState(stateFor, broadcastTriggeredBy, moduleName, committedState, needClone, delay, identity) {
+              syncCommittedStateToStore: function syncCommittedStateToStore(stateFor, moduleName, committedState) {
                 var targetSharedStateKeys, targetGlobalStateKeys;
-
-                try {
-                  var isDispatcher = _this3.cc.ccClassKey === CC_DISPATCHER;
-                  var result = getSuitableGlobalStateKeysAndSharedStateKeys(isDispatcher, stateFor, moduleName, globalStateKeys, sharedStateKeys);
-                  targetSharedStateKeys = result.sharedStateKeys;
-                  targetGlobalStateKeys = result.globalStateKeys;
-                } catch (err) {
-                  return justWarning$1(err.message + " prepareBroadcastState failed!");
-                }
-
+                var isDispatcher = _this3.cc.ccClassKey === CC_DISPATCHER;
+                var result = getSuitableGlobalStateKeysAndSharedStateKeys(sharedStrategy, isDispatcher, stateFor, moduleName, globalStateKeys, sharedStateKeys);
+                targetSharedStateKeys = result.sharedStateKeys;
+                targetGlobalStateKeys = result.globalStateKeys;
                 var skipBroadcastRefState = false;
 
                 if (stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
@@ -3089,6 +3243,18 @@ if (!this._inheritsLoose) {
 
                 if (!isPartialSharedStateEmpty) ccStoreSetState$1(moduleName, partialSharedState);
                 if (!isPartialGlobalStateEmpty) ccStoreSetState$1(MODULE_GLOBAL, partialGlobalState);
+                return {
+                  partialSharedState: partialSharedState,
+                  partialGlobalState: partialGlobalState,
+                  module_globalState_: module_globalState_,
+                  skipBroadcastRefState: skipBroadcastRefState
+                };
+              },
+              prepareBroadcastState: function prepareBroadcastState(broadcastInfo, stateFor, broadcastTriggeredBy, moduleName, committedState, needClone, delay, identity) {
+                var skipBroadcastRefState = broadcastInfo.skipBroadcastRefState,
+                    partialSharedState = broadcastInfo.partialSharedState,
+                    partialGlobalState = broadcastInfo.partialGlobalState,
+                    module_globalState_ = broadcastInfo.module_globalState_;
 
                 var startBroadcastState = function startBroadcastState() {
                   if (_this3.$$beforeBroadcastState) {
@@ -3123,8 +3289,7 @@ if (!this._inheritsLoose) {
                   var _partialSharedState = partialSharedState;
                   if (needClone) _partialSharedState = util.clone(partialSharedState); // this clone operation may cause performance issue, if partialSharedState is too big!!
 
-                  var currentCcKey = _this3.cc.ccState.ccUniqueKey;
-                  // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered reactSetState
+                  var currentCcKey = _this3.cc.ccState.ccUniqueKey; // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered reactSetState
                   // so flag ignoreCurrentCcKey as true;
 
                   var ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
@@ -3180,7 +3345,8 @@ if (!this._inheritsLoose) {
                         }
                       });
                     });
-                  }
+                  } //这一段是为sharedToGlobalMapping工作，将来可能需要删掉......，不提供sharedToGlobalMapping功能了
+
 
                   if (util.isObjectNotNull(module_globalState_)) {
                     var moduleNames = Object.keys(module_globalState_);
@@ -3217,7 +3383,8 @@ if (!this._inheritsLoose) {
                       });
                     });
                   }
-                } //!!! 注意，这里要把global提出来播，例如一个属于$$default模块的实例提交得有$$global模块的数据，是需要被播出去的
+                } // !!! 注意，因为属于某个模块foo的实例调用setState提交的state里可能含有$$global模块的状态
+                // 所以这里要尝试把可能含有的$$global状态提取出来播出去
 
 
                 var _extractStateByKeys10 = extractStateByKeys(originalState, ccContext.globalStateKeys),
@@ -3385,20 +3552,32 @@ if (!this._inheritsLoose) {
                 var btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
 
                 if (module === currentModule) {
-                  // who trigger $$changeState, who will change the whole received state 
+                  var allowBroadcast = ccState.ccOption.syncSharedState || forceSync;
+                  var broadcastInfo = null;
+
+                  if (allowBroadcast) {
+                    //在prepareReactSetState之前把状态存储到store，
+                    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+                    //也防止prepareReactSetState里有异步的钩子函数，导致state同步到store有延迟而出现其他bug
+                    broadcastInfo = _this4.cc.syncCommittedStateToStore(stateFor, module, state);
+                  } // who trigger $$changeState, who will change the whole received state 
+
+
                   _this4.cc.prepareReactSetState(identity, calledBy, state, stateFor, function () {
-                    //if forceSync=true, cc clone the input state
-                    if (forceSync === true) {
-                      _this4.cc.prepareBroadcastState(stateFor, btb, module, state, true, delay, identity);
-                    } else if (ccState.ccOption.syncSharedState) {
-                      _this4.cc.prepareBroadcastState(stateFor, btb, module, state, false, delay, identity);
+                    if (allowBroadcast) {
+                      var needClone = forceSync === true; //if forceSync=true, cc clone the input state
+
+                      _this4.cc.prepareBroadcastState(broadcastInfo, stateFor, btb, module, state, needClone, delay, identity);
                     }
                   }, reactCallback);
                 } else {
                   if (forceSync) justWarning$1("you are trying change another module's state, forceSync=true in not allowed, cc will ignore it!" + vbi$3("module:" + module + " currentModule" + currentModule));
-                  if (reactCallback) justWarning$1("callback for react.setState will be ignore"); //触发修改转态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是是OF_ONE_MODULE
+                  if (reactCallback) justWarning$1("callback for react.setState will be ignore");
 
-                  _this4.cc.prepareBroadcastState(STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, btb, module, state, true, delay, identity);
+                  var _broadcastInfo = _this4.cc.syncCommittedStateToStore(stateFor, module, state); //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
+
+
+                  _this4.cc.prepareBroadcastState(_broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, btb, module, state, true, delay, identity);
                 }
               }
             };
@@ -3757,6 +3936,12 @@ if (!this._inheritsLoose) {
             this.__$$sync({
               type: 'int'
             }, e);
+          };
+
+          _proto.$$set = function $$set(ccsync, val, delay, idt) {
+            var _this$__$$sync;
+
+            this.__$$sync((_this$__$$sync = {}, _this$__$$sync[CCSYNC_KEY] = ccsync, _this$__$$sync.type = 'val', _this$__$$sync.val = val, _this$__$$sync.delay = delay, _this$__$$sync.idt = idt, _this$__$$sync));
           } // when CCSYNC_KEY:   stateFor=ccint, seat1=ccdelay, seat2=ccidt, seat3=stateFor
           ;
 
@@ -3766,12 +3951,13 @@ if (!this._inheritsLoose) {
 
               return this.__$$sync.bind(this, (_this$__$$sync$bind3 = {}, _this$__$$sync$bind3[CCSYNC_KEY] = e, _this$__$$sync$bind3.type = 'val', _this$__$$sync$bind3.val = val, _this$__$$sync$bind3.delay = delay, _this$__$$sync$bind3.idt = idt, _this$__$$sync$bind3));
             } else if (e && e[MOCKE_KEY]) {
-              this.__$$sync(e);
+              return this.__$$sync(e);
             }
 
             this.__$$sync({
               type: 'val'
-            }, e);
+            }, e); // for <input data-ccsync="foo/f1" onChange={this.$$sync} />
+
           };
 
           _proto.__$$sync = function __$$sync(spec, e) {
@@ -3803,7 +3989,7 @@ if (!this._inheritsLoose) {
               _module = ccsync.split('/')[0];
             }
 
-            var fullState = _module !== currentModule ? getState(_module) : this.state;
+            var fullState = _module !== currentModule ? getState$2(_module) : this.state;
 
             var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool),
                 state = _extractStateByCcsync.state;
@@ -3960,7 +4146,9 @@ if (!this._inheritsLoose) {
     if (rootStateCanNotContainInputModule) checkModuleNameAndState(module, state);else checkModuleNameBasicallyAndState(module, state); // ccContext.store.setState(module, state);
 
     var rootState = ccContext.store.getState();
+    var prevRootState = ccContext.store.getPrevState();
     rootState[module] = state;
+    prevRootState[module] = Object.assign({}, state);
     var statKeys = Object.keys(state);
     ccContext.moduleName_stateKeys_[module] = statKeys;
 
@@ -4340,7 +4528,7 @@ if (!this._inheritsLoose) {
 
   var isPlainJsonObject$3 = isPlainJsonObject,
       okeys$1 = okeys;
-  var getState$1 = ccContext.store.getState;
+  var getState$3 = ccContext.store.getState;
   function configStoreState(storeState) {
     var sharedToGlobalMapping = ccContext.sharedToGlobalMapping;
 
@@ -4994,7 +5182,12 @@ if (!this._inheritsLoose) {
     setState(module, state, lazyMs, throwError);
   }
 
-  var getState$2 = ccContext.store.getState;
+  function _set (moduledKeyPath, val, delay, idt) {
+    var dispatcher = pickOneRef();
+    dispatcher.$$set(moduledKeyPath, val, delay, idt);
+  }
+
+  var getState$4 = ccContext.store.getState;
 
   var getGlobalState = ccContext.store.getGlobalState;
 
@@ -5088,11 +5281,22 @@ if (!this._inheritsLoose) {
   }
 
   var ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_,
-      fragmentFeature_classKey_ = ccContext.fragmentFeature_classKey_;
+      fragmentFeature_classKey_ = ccContext.fragmentFeature_classKey_,
+      _ccContext$store$1 = ccContext.store,
+      getState$5 = _ccContext$store$1.getState,
+      getPrevState = _ccContext$store$1.getPrevState,
+      moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_;
+  var seq = 0; //虽然CcFragment实例默认属于$$default模块，但是它的state是独立的，
+
+  function getStateModule() {
+    seq++;
+    return Symbol("__for_cc_fragment_state_" + seq + "__");
+  }
   /**
    * 根据connect参数动态的把CcFragment划为某个ccClassKey的实例，同时计算出stateToPropMapping值
    * @param connectSpec 形如: {foo:'*', bar:['b1', 'b2']}
    */
+
 
   function getFragmentClassKeyAndStpMapping(connectSpec) {
     if (!isObjectNotNull(connectSpec)) {
@@ -5129,6 +5333,12 @@ if (!this._inheritsLoose) {
 
   var cursorKey = CURSOR_KEY;
   var ccSyncKey = CCSYNC_KEY;
+  var idSeq = 0;
+
+  function getEId() {
+    idSeq++;
+    return Symbol("__autoGen_" + idSeq + "__");
+  }
 
   var CcFragment =
   /*#__PURE__*/
@@ -5166,6 +5376,8 @@ if (!this._inheritsLoose) {
         ccKey = ck;
       }
 
+      var outProps = props.props || props; //把最外层的props传递给用户
+
       buildCcClassContext(ccClassKey, MODULE_DEFAULT, [], [], [], [], stateToPropMapping, true);
       setRef(_assertThisInitialized(_this), false, ccClassKey, ccKey, ccUniqueKey, {}, true); // for CcFragment, just put ccClassKey to module's cc class keys
 
@@ -5180,7 +5392,13 @@ if (!this._inheritsLoose) {
 
       var reactSetStateRef = _this.setState.bind(_assertThisInitialized(_this));
 
+      var refConnectedComputed = {};
+      var refComputed = {};
+      okeys(connectSpec).forEach(function (moduleName) {
+        refConnectedComputed[moduleName] = {};
+      });
       var ccState = {
+        stateModule: getStateModule(),
         module: MODULE_DEFAULT,
         ccClassKey: ccClassKey,
         ccKey: ccKey,
@@ -5188,11 +5406,19 @@ if (!this._inheritsLoose) {
         isCcUniqueKeyAutoGenerated: isCcUniqueKeyAutoGenerated,
         stateToPropMapping: stateToPropMapping,
         renderCount: 0,
-        initTime: Date.now()
+        initTime: Date.now(),
+        connect: connectSpec
       };
       _this.cc = {
         // onUrlChanged: null,
+        prevState: state,
         ccState: ccState,
+        refConnectedComputed: refConnectedComputed,
+        refComputed: refComputed,
+        watch: null,
+        watchSpec: null,
+        computed: null,
+        computedSpec: null,
         reactForceUpdate: function reactForceUpdate(cb) {
           ccState.renderCount += 1; //方便用户直接绑定forceUpdate
 
@@ -5200,9 +5426,10 @@ if (!this._inheritsLoose) {
         },
         reactSetState: function reactSetState(state, cb) {
           ccState.renderCount += 1;
-          reactSetStateRef(state, function () {
-            if (typeof cb !== 'function') reactForceUpdateRef();else reactForceUpdateRef(cb);
-          });
+          reactSetStateRef(state, cb); // reactSetStateRef(state, () => {
+          //   if (typeof cb !== 'function') reactForceUpdateRef();
+          //   else reactForceUpdateRef(cb);
+          // });
         }
       }; // hook implement fo CcFragment
 
@@ -5330,7 +5557,88 @@ if (!this._inheritsLoose) {
         }
       };
 
+      var effectItems = []; // {fn:function, status:0, eId:'', immediate:true}
+
+      var effectReturnCbs = []; // {fn:function, status:0, eId:'', immediate:true}
+
+      _this.__staticEffectMeta = {
+        effectItems: effectItems,
+        effectReturnCbs: effectReturnCbs
+      };
       var __fragmentParams = {
+        isCcFragment: true,
+        refComputed: refComputed,
+        refConnectedComputed: refConnectedComputed,
+        connectedComputed: connectedComputed,
+        connectedState: connectedState,
+        // 新增defineEffect相关的支持
+        defineEffect: function defineEffect(fn, stateKeys, eId, immediate) {
+          if (immediate === void 0) {
+            immediate = true;
+          }
+
+          if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
+
+          if (stateKeys !== null && stateKeys !== undefined) {
+            if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+          }
+
+          var _fn = fn.bind(_assertThisInitialized(_this), _this.__fragmentParams, outProps);
+
+          var _eId = eId || getEId();
+
+          var effectItem = {
+            fn: _fn,
+            stateKeys: stateKeys,
+            status: EFFECT_AVAILABLE,
+            eId: _eId,
+            immediate: immediate
+          };
+          effectItems.push(effectItem);
+        },
+        stopEffect: function stopEffect(eId) {
+          var target = effectItems.find(function (v) {
+            return v.eId === eId;
+          });
+          if (target) target.status = EFFECT_STOPPED;
+        },
+        resumeEffect: function resumeEffect(eId) {
+          var target = effectItems.find(function (v) {
+            return v.eId === eId;
+          });
+          if (target) target.status = EFFECT_AVAILABLE;
+        },
+        removeEffect: function removeEffect(eId) {
+          var targetIdx = effectItems.findIndex(function (v) {
+            return v.eId === eId;
+          });
+          if (targetIdx >= 0) effectItems.splice(targetIdx, 1);
+        },
+        stopAllEffect: function stopAllEffect() {
+          effectItems.forEach(function (v) {
+            return v.status = EFFECT_STOPPED;
+          });
+        },
+        resumeAllEffect: function resumeAllEffect() {
+          effectItems.forEach(function (v) {
+            return v.status = EFFECT_AVAILABLE;
+          });
+        },
+        removeAllEffect: function removeAllEffect() {
+          effectItems.length = 0;
+        },
+        defineWatch: function defineWatch(watch) {
+          var watchSpec = getWatchSpec(watch, _this.__fragmentParams);
+          _this.cc.watch = watch;
+          _this.cc.watchSpec = watchSpec;
+        },
+        defineComputed: function defineComputed(computed) {
+          var computedSpec = getComputedSpec(computed, _this.__fragmentParams);
+          _this.cc.computed = computed;
+          _this.cc.computedSpec = computedSpec;
+        },
+        method: {},
+        // ------ end ------
         toggleBool: function toggleBool(e, delay, idt) {
           var _sync$bind;
 
@@ -5401,8 +5709,6 @@ if (!this._inheritsLoose) {
         onUrlChanged: function onUrlChanged(cb) {
           _this.cc.onUrlChanged = cb.bind(_assertThisInitialized(_this));
         },
-        connectedComputed: connectedComputed,
-        connectedState: connectedState,
         hook: hook,
         emit: function emit(event) {
           for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -5462,11 +5768,19 @@ if (!this._inheritsLoose) {
         },
         state: state,
         props: props,
+        outProps: outProps,
         setState: function setState(state, cb) {
-          _this.cc.reactSetState(state, cb);
+          var thisCc = _this.cc;
+          var thisState = _this.state;
+          var _thisCc$ccState = thisCc.ccState,
+              stateModule = _thisCc$ccState.stateModule,
+              connect = _thisCc$ccState.connect;
+          computeValueForRef(stateModule, thisCc.computedSpec, thisCc.refComputed, thisCc.refConnectedComputed, thisState, state, __fragmentParams, true);
+          var shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state);
+          if (shouldCurrentRefUpdate) _this.cc.reactSetState(state, cb);
         },
         forceUpdate: function forceUpdate(cb) {
-          _this.cc.reactForceUpdate(cb);
+          _this.__fragmentParams.setState(_this.state, cb);
         }
       };
       _this.__fragmentParams = __fragmentParams;
@@ -5475,42 +5789,156 @@ if (!this._inheritsLoose) {
 
     var _proto = CcFragment.prototype;
 
-    _proto.componentDidMount = function componentDidMount() {
+    _proto.componentWillMount = function componentWillMount() {
+      var _this2 = this;
+
+      var setup = this.props.setup;
+
+      if (setup) {
+        var ctx = this.__fragmentParams;
+        if (typeof setup !== 'function') throw new Error('type of setup must be function');
+        var methodObj = setup(this.__fragmentParams);
+        if (!isPlainJsonObject(methodObj)) throw new Error('type of setup return result must be an plain json object');
+        okeys(methodObj).forEach(function (name) {
+          var method = methodObj[name];
+          if (typeof method === 'function') methodObj[name] = method.bind(_this2, ctx);
+        });
+        ctx.method = methodObj;
+      }
+
+      var thisCc = this.cc;
+      var thisState = this.state;
+      var _thisCc$ccState2 = thisCc.ccState,
+          stateModule = _thisCc$ccState2.stateModule,
+          connect = _thisCc$ccState2.connect;
+      var computedSpec = thisCc.computedSpec,
+          refComputed = thisCc.refComputed,
+          refConnectedComputed = thisCc.refConnectedComputed;
+      computeValueForRef(stateModule, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams);
+      okeys(connect).forEach(function (m) {
+        var mState = getState$5(m);
+        computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
+      });
+    };
+
+    _proto.executeHookEffect = function executeHookEffect(callByDidMount) {
       var _this$__hookMeta = this.__hookMeta,
           effectCbArr = _this$__hookMeta.effectCbArr,
           effectCbReturnArr = _this$__hookMeta.effectCbReturnArr;
-      this.__hookMeta.isCcFragmentMounted = true;
-      effectCbArr.forEach(function (cb) {
-        var cbReturn = cb();
 
-        if (typeof cbReturn === 'function') {
-          effectCbReturnArr.push(cbReturn);
-        } else {
-          effectCbReturnArr.push(null);
-        }
-      });
-    };
-
-    _proto.componentDidUpdate = function componentDidUpdate() {
-      var _this$__hookMeta2 = this.__hookMeta,
-          effectCbArr = _this$__hookMeta2.effectCbArr,
-          effectCbReturnArr = _this$__hookMeta2.effectCbReturnArr,
-          effectSeeResult = _this$__hookMeta2.effectSeeResult;
-      effectCbArr.forEach(function (cb, idx) {
-        var shouldEffectExecute = effectSeeResult[idx];
-
-        if (shouldEffectExecute) {
+      if (callByDidMount) {
+        this.__hookMeta.isCcFragmentMounted = true;
+        effectCbArr.forEach(function (cb) {
           var cbReturn = cb();
 
           if (typeof cbReturn === 'function') {
-            effectCbReturnArr[idx] = cbReturn;
+            effectCbReturnArr.push(cbReturn);
+          } else {
+            effectCbReturnArr.push(null);
           }
-        }
-      });
+        });
+      } else {
+        var effectSeeResult = this.__hookMeta.effectSeeResult;
+        effectCbArr.forEach(function (cb, idx) {
+          var shouldEffectExecute = effectSeeResult[idx];
+
+          if (shouldEffectExecute) {
+            var cbReturn = cb();
+
+            if (typeof cbReturn === 'function') {
+              effectCbReturnArr[idx] = cbReturn;
+            }
+          }
+        });
+      }
     };
 
-    _proto.shouldComponentUpdate = function shouldComponentUpdate() {
-      return false;
+    _proto.executeSetupEffect = function executeSetupEffect(callByDidMount) {
+      var effectItems = this.__staticEffectMeta.effectItems;
+
+      if (callByDidMount) {
+        effectItems.forEach(function (item) {
+          if (item.immediate === false) return;
+          item.fn();
+        });
+      } else {
+        //callByDidUpdate
+        var prevState = this.cc.prevState;
+        var curState = this.state;
+        effectItems.forEach(function (item) {
+          var status = item.status,
+              stateKeys = item.stateKeys,
+              fn = item.fn;
+          if (status === EFFECT_STOPPED) return;
+
+          if (stateKeys) {
+            var keysLen = stateKeys.length;
+            if (keysLen === 0) return;
+            var shouldEffectExecute = false;
+
+            for (var i = 0; i < keysLen; i++) {
+              var key = stateKeys[i];
+              var targetCurState = void 0,
+                  targetPrevState = void 0,
+                  targetKey = void 0;
+
+              if (key.includes('/')) {
+                var _key$split = key.split('/'),
+                    module = _key$split[0],
+                    unmoduledKey = _key$split[1];
+
+                var _prevState = getPrevState(module);
+
+                if (!_prevState) {
+                  justWarning("key[" + key + "] is invalid, its module[" + module + "] has not been declared in store!");
+                  continue;
+                }
+
+                if (!moduleName_stateKeys_$3[module].includes(unmoduledKey)) {
+                  justWarning("key[" + key + "] is invalid, its unmoduledKey[" + unmoduledKey + "] has not been declared in state!");
+                  continue;
+                }
+
+                targetCurState = getState$5(module);
+                targetPrevState = _prevState;
+                targetKey = unmoduledKey;
+              } else {
+                targetCurState = curState;
+                targetPrevState = prevState;
+                targetKey = key;
+              }
+
+              if (targetPrevState[targetKey] !== targetCurState[targetKey]) {
+                shouldEffectExecute = true;
+                break;
+              }
+            }
+
+            if (shouldEffectExecute) {
+              fn();
+            }
+          } else {
+            fn();
+          }
+        });
+      }
+    };
+
+    _proto.componentDidMount = function componentDidMount() {
+      this.executeSetupEffect(true);
+      this.executeHookEffect(true);
+    };
+
+    _proto.shouldComponentUpdate = function shouldComponentUpdate(_, nextState) {
+      var curState = this.state;
+      this.cc.prevState = curState;
+      return curState !== nextState;
+    };
+
+    _proto.componentDidUpdate = function componentDidUpdate() {
+      this.executeSetupEffect();
+      this.executeHookEffect();
+      this.cc.prevState = this.state; //!!!  重置prevState，防止其他模块的更新操作再次执行executeSetupEffect时，判断shouldEffectExecute失效
     };
 
     _proto.componentWillUnmount = function componentWillUnmount() {
@@ -5556,41 +5984,51 @@ if (!this._inheritsLoose) {
   };
   */
 
-  function _connectDumb(connect, mapState, alias, Dumb, props) {
-    var render = function render(cc) {
-      var connectedState = cc.connectedState;
-      var flatedObj;
+  function _connectDumb(connect, state, setup, mapState, alias, Dumb, props) {
+    var render = function render(ctx) {
+      var mappedState = {};
 
       if (mapState) {
-        flatedObj = mapState(connectedState, props) || {};
-      } else {
-        flatedObj = flatObject(connectedState, alias);
+        var _state = ctx.state,
+            connectedState = ctx.connectedState;
+
+        if (mapState === true) {
+          mappedState = flatObject(connectedState, alias);
+        } else {
+          mappedState = mapState(_state, connectedState, props) || {};
+        }
       }
 
       return React__default.createElement(Dumb, {
-        state: flatedObj,
-        connectedState: connectedState,
-        cc: cc,
+        mappedState: mappedState,
+        ctx: ctx,
         props: props
       });
     };
 
     return React__default.createElement(CcFragment, {
+      props: props,
       connect: connect,
+      state: state,
+      setup: setup,
       render: render
     });
   }
 
   var _connectDumb$1 = (function (_ref) {
     var connect = _ref.connect,
+        state = _ref.state,
+        setup = _ref.setup,
         _ref$alias = _ref.alias,
         alias = _ref$alias === void 0 ? {} : _ref$alias,
-        _ref$mapState = _ref.mapState,
-        mapState = _ref$mapState === void 0 ? {} : _ref$mapState;
+        mapState = _ref.mapState;
     return function (Dumb) {
-      return function (props) {
-        return _connectDumb(connect, mapState, alias, Dumb, props);
+      //这样写可以避免react dev tool显示的dom为Unknown
+      var ConnectedFragment = function ConnectedFragment(props) {
+        return _connectDumb(connect, state, setup, mapState, alias, Dumb, props);
       };
+
+      return ConnectedFragment;
     };
   });
 
@@ -5719,7 +6157,8 @@ if (!this._inheritsLoose) {
   var call = _call;
   var setGlobalState$1 = setGlobalState;
   var setState$1 = _setState;
-  var getState$3 = getState$2;
+  var set = _set;
+  var getState$6 = getState$4;
   var getGlobalState$1 = getGlobalState;
   var getConnectedState = _getConnectedState;
   var getComputed = _getComputed;
@@ -5755,9 +6194,10 @@ if (!this._inheritsLoose) {
     configure: configure$1,
     call: call,
     setGlobalState: setGlobalState$1,
-    getGlobalState: getGlobalState$1,
     setState: setState$1,
-    getState: getState$3,
+    set: set,
+    getGlobalState: getGlobalState$1,
+    getState: getState$6,
     getComputed: getComputed,
     getConnectedState: getConnectedState,
     ccContext: ccContext$1,
@@ -5786,7 +6226,8 @@ if (!this._inheritsLoose) {
   exports.call = call;
   exports.setGlobalState = setGlobalState$1;
   exports.setState = setState$1;
-  exports.getState = getState$3;
+  exports.set = set;
+  exports.getState = getState$6;
   exports.getGlobalState = getGlobalState$1;
   exports.getConnectedState = getConnectedState;
   exports.getComputed = getComputed;

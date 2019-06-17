@@ -13,23 +13,31 @@ const getState = (module) => {
   return _state[module];
 }
 
+const getPrevState = (module) => {
+  const _prevState = ccContext.store._prevState;
+  return _prevState[module];
+}
+
 const setStateByModuleAndKey = (module, key, value) => {
   const moduleState = getState(module);
+  const prevModuleState = getPrevState(module);
   const moduleComputedFn = computed._computedFn[module];
   const watchFn = watch[module];
   const oldValue = moduleState[key];
+  prevModuleState[key] = oldValue;
 
+  const keyDesc = { key, module, moduleState };
   if (moduleComputedFn) {
     const fn = moduleComputedFn[key];
     if (fn) {
-      const computedValue = fn(value, oldValue, moduleState);
+      const computedValue = fn(value, oldValue, keyDesc);
       computed._computedValue[module][key] = computedValue;
     }
   }
 
   if (watchFn) {
     const fn = watchFn[key];
-    if (fn) fn(value, oldValue, moduleState);//fn(newValue, oldValue)
+    if (fn) fn(value, oldValue, keyDesc);//fn(newValue, oldValue)
   }
   moduleState[key] = value;
 }
@@ -148,9 +156,15 @@ const ccContext = {
     },
     _state: {
     },
+    _prevState:{//辅助CcFragment defineEffect之用
+    },
     getState: function (module) {
       if (module) return getState(module);
       else return ccContext.store._state;
+    },
+    getPrevState: function (module) {
+      if (module) return getPrevState(module);
+      else return ccContext.store._prevState;
     },
     setState: function (module, partialSharedState) {
       setStateByModule(module, partialSharedState);
@@ -218,7 +232,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.30',
+    version: '1.2.31',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

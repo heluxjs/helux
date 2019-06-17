@@ -10,21 +10,25 @@ mapComputed = {
 };
 */
 
-function _connectDumb(connect, mapState, alias, Dumb, props) {
-  const render = (cc) => {
-    const { connectedState } = cc;
-    let flatedObj;
+function _connectDumb(connect, state, setup, mapState, alias, Dumb, props) {
+  const render = (ctx) => {
+    let mappedState = {};
     if (mapState) {
-      flatedObj = mapState(connectedState, props) || {};
-    } else {
-      flatedObj = util.flatObject(connectedState, alias);
+      const { state, connectedState } = ctx;
+      if (mapState === true) {
+        mappedState = util.flatObject(connectedState, alias);
+      } else {
+        mappedState = mapState(state, connectedState, props) || {};
+      }
     }
-
-    return React.createElement(Dumb, { state: flatedObj, connectedState, cc, props });
+    return React.createElement(Dumb, { mappedState, ctx, props });
   };
-  return React.createElement(CcFragment, { connect, render });
+
+  return React.createElement(CcFragment, { props, connect, state, setup, render });
 }
 
-export default ({ connect, alias = {}, mapState = {} }) => Dumb => (props) => {
-  return _connectDumb(connect, mapState, alias, Dumb, props);
+export default ({ connect, state, setup, alias = {}, mapState }) => Dumb => {
+  //这样写可以避免react dev tool显示的dom为Unknown
+  const ConnectedFragment = props => _connectDumb(connect, state, setup, mapState, alias, Dumb, props);
+  return ConnectedFragment;
 }
