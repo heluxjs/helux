@@ -357,7 +357,7 @@ export default class CcFragment extends Component {
         const thisState = this.state;
         const { stateModule, connect } = thisCc.ccState;
         computeValueForRef(stateModule, thisCc.computedSpec, thisCc.refComputed, thisCc.refConnectedComputed, thisState, state, __fragmentParams, true);
-        const shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state);
+        const shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state, this.__fragmentParams);
         if (shouldCurrentRefUpdate) this.cc.reactSetState(state, cb);
       },
       forceUpdate: (cb) => {
@@ -385,11 +385,14 @@ export default class CcFragment extends Component {
     const thisState = this.state;
     const { stateModule, connect } = thisCc.ccState;
     const computedSpec = thisCc.computedSpec, refComputed = thisCc.refComputed, refConnectedComputed = thisCc.refConnectedComputed;
-    computeValueForRef(stateModule, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams);
-    util.okeys(connect).forEach(m=>{
-      const mState = getState(m);
-      computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
-    });
+    if (computedSpec) {
+      //这里操作的是moduleState，最后一个参数置为true，让无模块的stateKey的计算值能写到refComputed里,
+      computeValueForRef(stateModule, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams, true);
+      util.okeys(connect).forEach(m => {
+        const mState = getState(m);
+        computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState, this.__fragmentParams);
+      });
+    }
   }
   executeHookEffect(callByDidMount) {
     const { effectCbArr, effectCbReturnArr } = this.__hookMeta;

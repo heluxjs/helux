@@ -334,8 +334,17 @@ export function flatObject(connectedState, alias, allowKeyDup = false) {
   return fObj;
 }
 
-export function isEvent(e){
-  return e && e.currentTarget && e.type;
+export function convertToStandardEvent(e) {
+  let ret = null;
+  if (e) {
+    if (e.currentTarget && e.type) {
+      ret = e;
+    } else if (e.nativeEvent && e.target) {
+      e.currentTarget = e.target;
+      ret = e;
+    }
+  }
+  return ret;
 }
 
 export default {

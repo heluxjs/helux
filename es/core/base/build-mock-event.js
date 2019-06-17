@@ -1,6 +1,5 @@
 import { CCSYNC_KEY, MOCKE_KEY } from '../../support/constant';
-import { isEvent } from '../../support/util';
-
+import { convertToStandardEvent } from '../../support/util';
 
 export default (spec, e, stateFor) => {
   let ccint = false, ccsync = '', ccidt = '', value = '', ccdelay = -1, isToggleBool = false;
@@ -16,8 +15,9 @@ export default (spec, e, stateFor) => {
       //优先从spec里取，取不到的话，从e里面分析并提取
       const val = spec.val;
       if (val === undefined) {
-        if (isEvent(e)) {
-          value = e.currentTarget.value;
+        const se =convertToStandardEvent(e);
+        if (se) {
+          value = se.currentTarget.value;
         } else {
           value = e;
         }
@@ -28,8 +28,9 @@ export default (spec, e, stateFor) => {
       isToggleBool = true;
     } else return null;
   } else {//来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
-    if (isEvent(e)) {// e is event
-      const currentTarget = e.currentTarget;
+    const se =convertToStandardEvent(e);
+    if (se) {// e is event
+      const currentTarget = se.currentTarget;
       value = currentTarget.value;
       const dataset = currentTarget.dataset;
 

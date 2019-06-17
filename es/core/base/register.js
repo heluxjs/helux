@@ -12,7 +12,7 @@ import {
   SHARE_STATE_BELONG_TO_MODULE, SHARE_STATE_BELONG_TO_SHARED_STATE_KEYS,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
-import util, { isPlainJsonObject, isEvent, okeys } from '../../support/util';
+import util, { isPlainJsonObject, convertToStandardEvent, okeys } from '../../support/util';
 import co from 'co';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import setConnectedState from '../state/set-connected-state';
@@ -1412,11 +1412,11 @@ export default function register(ccClassKey, {
         __$$sync(spec, e) {
           let mockE = null;
           if (spec[MOCKE_KEY]) {
-            mockE = spec
+            mockE = spec;
           } else if (spec[CCSYNC_KEY] !== undefined) {//来自$$sync生成的setter调用
             mockE = buildMockEvent(spec, e);
           } else {
-            if (isEvent(e)) mockE = e;
+            mockE = convertToStandardEvent(e);
           }
           if (!mockE) return;//参数无效
           if (e && e.stopPropagation) e.stopPropagation();

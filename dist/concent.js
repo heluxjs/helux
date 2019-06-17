@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.31',
+      version: '1.2.32',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -724,8 +724,19 @@ if (!this._inheritsLoose) {
     });
     return fObj;
   }
-  function isEvent(e) {
-    return e && e.currentTarget && e.type;
+  function convertToStandardEvent(e) {
+    var ret = null;
+
+    if (e) {
+      if (e.currentTarget && e.type) {
+        ret = e;
+      } else if (e.nativeEvent && e.target) {
+        e.currentTarget = e.target;
+        ret = e;
+      }
+    }
+
+    return ret;
   }
   var util = {
     clearObject: clearObject,
@@ -1375,8 +1386,10 @@ if (!this._inheritsLoose) {
         var val = spec.val;
 
         if (val === undefined) {
-          if (isEvent(e)) {
-            value = e.currentTarget.value;
+          var se = convertToStandardEvent(e);
+
+          if (se) {
+            value = se.currentTarget.value;
           } else {
             value = e;
           }
@@ -1389,9 +1402,11 @@ if (!this._inheritsLoose) {
       } else return null;
     } else {
       //来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
-      if (isEvent(e)) {
+      var _se = convertToStandardEvent(e);
+
+      if (_se) {
         // e is event
-        var currentTarget = e.currentTarget;
+        var currentTarget = _se.currentTarget;
         value = currentTarget.value;
         var dataset = currentTarget.dataset;
         if (type === 'int') ccint = true;else ccint = dataset.ccint != undefined;
@@ -1623,7 +1638,7 @@ if (!this._inheritsLoose) {
   function send(sig, payload) {
     var plugins = ccContext.plugins;
     plugins.forEach(function (p) {
-      if (p.subscribe) p.subscribe(sig, payload);
+      if (p.receive) p.receive(sig, payload);
     });
   }
 
@@ -1881,6 +1896,7 @@ if (!this._inheritsLoose) {
         stateKey = unmoduledKey;
       }
     } else {
+      //如果是CcFragment实例调用watch，写无模块的key
       if (ctx && ctx.isCcFragment) {
         //必需强制为true，才会写state;
         if (writeRefComputedWhenRefIsCfrag !== true) skip = true;
@@ -3969,7 +3985,7 @@ if (!this._inheritsLoose) {
               //来自$$sync生成的setter调用
               mockE = buildMockEvent(spec, e);
             } else {
-              if (isEvent(e)) mockE = e;
+              mockE = convertToStandardEvent(e);
             }
 
             if (!mockE) return; //参数无效
@@ -5776,7 +5792,7 @@ if (!this._inheritsLoose) {
               stateModule = _thisCc$ccState.stateModule,
               connect = _thisCc$ccState.connect;
           computeValueForRef(stateModule, thisCc.computedSpec, thisCc.refComputed, thisCc.refConnectedComputed, thisState, state, __fragmentParams, true);
-          var shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state);
+          var shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state, _this.__fragmentParams);
           if (shouldCurrentRefUpdate) _this.cc.reactSetState(state, cb);
         },
         forceUpdate: function forceUpdate(cb) {
@@ -5814,11 +5830,15 @@ if (!this._inheritsLoose) {
       var computedSpec = thisCc.computedSpec,
           refComputed = thisCc.refComputed,
           refConnectedComputed = thisCc.refConnectedComputed;
-      computeValueForRef(stateModule, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams);
-      okeys(connect).forEach(function (m) {
-        var mState = getState$5(m);
-        computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
-      });
+
+      if (computedSpec) {
+        //这里操作的是moduleState，最后一个参数置为true，让无模块的stateKey的计算值能写到refComputed里,
+        computeValueForRef(stateModule, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams, true);
+        okeys(connect).forEach(function (m) {
+          var mState = getState$5(m);
+          computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState, _this2.__fragmentParams);
+        });
+      }
     };
 
     _proto.executeHookEffect = function executeHookEffect(callByDidMount) {

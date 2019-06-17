@@ -26,6 +26,7 @@ export default function (key, stateModule, connectSpecLike, moduleStateKeys, glo
       stateKey = unmoduledKey;
     }
   } else {
+    //如果是CcFragment实例调用watch，写无模块的key
     if (ctx && ctx.isCcFragment) {
       //必需强制为true，才会写state;
       if (writeRefComputedWhenRefIsCfrag !== true) skip = true;
