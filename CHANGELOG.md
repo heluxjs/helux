@@ -1,5 +1,5 @@
 #### 2019-06-17
-* feature add: connectDumb支持setup，现在你可以将所以的方法提升为静态的属性了，不用再render函数里一遍一遍的声明
+* feature add: connectDumb支持setup，现在你可以将所以的方法提升为静态的属性了，不用在render函数里一遍一遍的声明
 > [在线示例](https://stackblitz.com/edit/cc-connect-dumb-setup)
 
 #### 2019-06-03
