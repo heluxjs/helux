@@ -406,7 +406,7 @@ export default class CcFragment extends Component {
           _identity = delay;
         }
         dispatcher.$$changeState(_state, {
-          ccKey, _module, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, _delay, _identity
+          ccKey, module:_module, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, delay:_delay, identity:_identity
         });
       },
       setGlobalState: (state, delay, identity) => {
@@ -611,4 +611,5 @@ export default class CcFragment extends Component {
       return view;
     }
   }
+
 }

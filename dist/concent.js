@@ -29,6 +29,7 @@ if (!this._inheritsLoose) {
   }
 }
 
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -348,7 +349,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.34',
+      version: '1.2.35',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -6026,10 +6027,10 @@ if (!this._inheritsLoose) {
 
           dispatcher.$$changeState(_state, {
             ccKey: ccKey,
-            _module: _module,
+            module: _module,
             stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-            _delay: _delay,
-            _identity: _identity
+            delay: _delay,
+            identity: _identity
           });
         },
         setGlobalState: function setGlobalState(state, delay, identity) {
