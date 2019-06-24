@@ -193,8 +193,14 @@ const ccContext = {
 
       }
     },
+    _reducerCaller:{
+    },
+    _lazyReducerCaller:{
+    },
     _reducerName_FullReducerNameList_:{
-      
+    },
+    _reducerModule_fnNames_:{
+
     }
   },
   computed,
@@ -232,7 +238,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.32',
+    version: '1.2.33',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

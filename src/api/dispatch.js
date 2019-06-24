@@ -1,54 +1,5 @@
-import util from '../support/util';
-import {CC_FRAGMENT_PREFIX} from '../support/constant';
-import ccContext from '../cc-context';
-import pickOneRef from '../core/ref/pick-one-ref';
+import dispatch from '../core/base/dispatch';
 
-export default function (action, payLoadWhenActionIsString, identity='', [ccClassKey, ccKey, throwError] = []) {
-  if (action === undefined && payLoadWhenActionIsString === undefined) {
-    throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any), when action is String, second param means payload`);
-  }
-  
-  let dispatchFn;
-  try {
-    if (ccClassKey && ccKey) {
-      const uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
-      const targetRef = ccContext.refs[uKey];
-      if (!targetRef) {
-        throw new Error(`no ref found for uniqueCcKey:${uKey}!`);
-      } else {
-        dispatchFn = targetRef.$$dispatch;
-      }
-    } else {
-      let module = '';
-      if(typeof action == 'string' && action.includes('/')){
-        module = action.split('/')[0];
-      }
-
-      let ref;
-      if(module!=='*'){
-        ref = pickOneRef(module);
-      }else{
-        ref = pickOneRef();
-      }
-
-      if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-        dispatchFn = ref.__fragmentParams.dispatch;
-      } else {
-        dispatchFn = ref.$$dispatchForModule;
-      }
-    }
-
-    if(typeof action === 'string' && action.startsWith('*')){
-        const reducerName = action.split('/').pop();
-        const rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
-        rnList_.forEach(fullReducerName=>{
-          dispatchFn(fullReducerName, payLoadWhenActionIsString, identity);
-        });
-    }else{
-      dispatchFn(action, payLoadWhenActionIsString, identity)
-    }
-  } catch (err) {
-    if (throwError) throw err;
-    else util.justWarning(err.message);
-  }
+export default function (action, payLoadWhenActionIsString, delay, identity, option) {
+  dispatch(false, action, payLoadWhenActionIsString, delay, identity, option);
 }

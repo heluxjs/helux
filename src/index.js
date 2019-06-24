@@ -18,7 +18,9 @@ import _emitWith from './api/emit-with';
 import _off from './api/off';
 import _connect from './api/connect';
 import _connectDumb from './api/connect-dumb';
+import _connectPure from './api/connect-pure';
 import _dispatch from './api/dispatch';
+import _lazyDispatch from './api/lazyDispatch';
 import _ccContext from './cc-context';
 import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
@@ -26,6 +28,8 @@ import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
 import _getConnectedState from './api/get-connected-state';
 import _appendState from './api/appendState';
+import _reducer from './api/reducer';
+import _lazyReducer from './api/lazyReducer';
 import _CcFragment from './component/CcFragment';
 import * as _cst from './support/constant';
 
@@ -51,12 +55,16 @@ export const emitWith = _emitWith;
 export const off = _off;
 export const connect = _connect;
 export const connectDumb = _connectDumb;
+export const connectPure = _connectPure;
 export const dispatch = _dispatch;
+export const lazyDispatch = _lazyDispatch;
 export const ccContext = _ccContext;
 export const createDispatcher = _createDispatcher;
 export const execute = _execute;
 export const executeAll = _executeAll;
 export const getRefs = _getRefs;
+export const reducer = _reducer;
+export const lazyReducer = _lazyReducer;
 export const CcFragment = _CcFragment;
 export const cst = _cst;
 export const appendState = _appendState;
@@ -68,7 +76,9 @@ const defaultExport = {
   off,
   connect,
   connectDumb,
+  connectPure,
   dispatch,
+  lazyDispatch,
   startup,
   load,
   run,
@@ -90,6 +100,8 @@ const defaultExport = {
   execute,
   executeAll,
   getRefs,
+  reducer,
+  lazyReducer,
   CcFragment,
   cst,
   appendState,

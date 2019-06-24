@@ -46,7 +46,7 @@ export default function (store = {}, option = {}) {
     moduleSingleClass: _moduleSingleClass,
   }
 
-  const { middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, reducer } = option;
+  const { middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, reducer, isReducerArgsOldMode, bindCtxToMethod } = option;
   if (reducer) {
     if (!util.isPlainJsonObject(reducer)) {
       throw new Error('[[load]]: param option.reducer error, it is not a plain json object');
@@ -56,7 +56,9 @@ export default function (store = {}, option = {}) {
     });
   }
 
-  const mergedOption = Object.assign(startupOption, { middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher });
+  const mergedOption = Object.assign(startupOption, {
+    middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, isReducerArgsOldMode, bindCtxToMethod
+  });
 
   startup(mergedOption);
 }

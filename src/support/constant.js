@@ -9,11 +9,6 @@ export const CC_FRAGMENT_PREFIX = '$$Fragment';
 export const CC_DISPATCHER = '$$Dispatcher';
 export const CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
 
-export const BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD = 300;
-export const BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE = 301;
-export const BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE = 302;
-export const BROADCAST_TRIGGERED_BY_CC_API_SET_STATE = 303;
-
 export const  CURSOR_KEY = Symbol('__for_sync_param_cursor__');
 export const  CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
 export const  MOCKE_KEY = Symbol('__for_mock_event__');
@@ -169,8 +164,4 @@ export default {
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
   STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
 
-  BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
-  BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE,
-  BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE,
-  BROADCAST_TRIGGERED_BY_CC_API_SET_STATE,
 }

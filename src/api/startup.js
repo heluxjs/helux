@@ -21,6 +21,8 @@ export default function ({
   errorHandler = null,
   isHot = false,
   autoCreateDispatcher = true,
+  isReducerArgsOldMode = false,
+  bindCtxToMethod = false,
 } = {}) {
   try {
     util.justTip(`cc version ${ccContext.info.version}`);
@@ -28,6 +30,8 @@ export default function ({
     ccContext.errorHandler = errorHandler;
     ccContext.isStrict = isStrict;
     ccContext.isDebug = isDebug;
+    ccContext.isReducerArgsOldMode = isReducerArgsOldMode;
+    ccContext.bindCtxToMethod = bindCtxToMethod;
 
     if (ccContext.isCcAlreadyStartup) {
       const err = util.makeError(ERR.CC_ALREADY_STARTUP);

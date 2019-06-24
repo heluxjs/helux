@@ -1,3 +1,4 @@
+
 if (!this._assertThisInitialized) {
   this._assertThisInitialized = function (self) {
     if (self === void 0) {
@@ -49,10 +50,6 @@ if (!this._inheritsLoose) {
   var CC_FRAGMENT_PREFIX = '$$Fragment';
   var CC_DISPATCHER = '$$Dispatcher';
   var CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
-  var BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD = 300;
-  var BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE = 301;
-  var BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE = 302;
-  var BROADCAST_TRIGGERED_BY_CC_API_SET_STATE = 303;
   var CURSOR_KEY = Symbol('__for_sync_param_cursor__');
   var CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
   var MOCKE_KEY = Symbol('__for_mock_event__');
@@ -127,11 +124,7 @@ if (!this._inheritsLoose) {
     ERR: ERR,
     ERR_MESSAGE: ERR_MESSAGE,
     STATE_FOR_ONE_CC_INSTANCE_FIRSTLY: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
-    STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-    BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD: BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
-    BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE: BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE,
-    BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE: BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE,
-    BROADCAST_TRIGGERED_BY_CC_API_SET_STATE: BROADCAST_TRIGGERED_BY_CC_API_SET_STATE
+    STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE
   };
 
   var _cst = /*#__PURE__*/Object.freeze({
@@ -142,10 +135,6 @@ if (!this._inheritsLoose) {
     CC_FRAGMENT_PREFIX: CC_FRAGMENT_PREFIX,
     CC_DISPATCHER: CC_DISPATCHER,
     CC_DISPATCHER_BOX: CC_DISPATCHER_BOX,
-    BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD: BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD,
-    BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE: BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE,
-    BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE: BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE,
-    BROADCAST_TRIGGERED_BY_CC_API_SET_STATE: BROADCAST_TRIGGERED_BY_CC_API_SET_STATE,
     CURSOR_KEY: CURSOR_KEY,
     CCSYNC_KEY: CCSYNC_KEY,
     MOCKE_KEY: MOCKE_KEY,
@@ -329,7 +318,10 @@ if (!this._inheritsLoose) {
     },
     reducer: {
       _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer),
-      _reducerName_FullReducerNameList_: {}
+      _reducerCaller: {},
+      _lazyReducerCaller: {},
+      _reducerName_FullReducerNameList_: {},
+      _reducerModule_fnNames_: {}
     },
     computed: computed,
     watch: watch,
@@ -357,7 +349,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.32',
+      version: '1.2.33',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2636,7 +2628,7 @@ if (!this._inheritsLoose) {
           };
 
           _proto.__$$recoverState = function __$$recoverState(currentModule, globalStateKeys, sharedStateKeys, ccOption, ccUniqueKey, connect) {
-            var refState = refStore._state[ccUniqueKey] || {};
+            var refStoredState = refStore._state[ccUniqueKey] || {};
             var sharedState = _state$1[currentModule];
             var globalState = _state$1[MODULE_GLOBAL];
             var syncSharedState = ccOption.syncSharedState,
@@ -2658,18 +2650,21 @@ if (!this._inheritsLoose) {
               partialGlobalState = _partialState;
             }
 
-            var selfState = this.state;
-            var entireState = Object.assign({}, selfState, refState, partialSharedState, partialGlobalState);
+            var refState = this.state;
+            var entireState = Object.assign({}, refState, refStoredState, partialSharedState, partialGlobalState);
             this.state = entireState;
             var thisCc = this.cc;
-            var computedSpec = thisCc.computedSpec,
-                refComputed = thisCc.refComputed,
-                refConnectedComputed = thisCc.refConnectedComputed;
-            computeValueForRef(currentModule, computedSpec, refComputed, refConnectedComputed, entireState, entireState);
-            okeys(connect).forEach(function (m) {
-              var mState = getState$2(m);
-              computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
-            });
+            var computedSpec = thisCc.computedSpec;
+
+            if (computedSpec) {
+              var refComputed = thisCc.refComputed,
+                  refConnectedComputed = thisCc.refConnectedComputed;
+              computeValueForRef(currentModule, computedSpec, refComputed, refConnectedComputed, entireState, entireState);
+              okeys(connect).forEach(function (m) {
+                var mState = getState$2(m);
+                computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
+              });
+            }
           } //!!! 存在多重装饰器时
           //!!! 必需在类的 【componentWillMount】 里调用 this.props.$$attach(this)
           ;
@@ -2831,21 +2826,17 @@ if (!this._inheritsLoose) {
                   delay: delay
                 });
               },
-              setGlobalState: function setGlobalState(partialGlobalState, delay, broadcastTriggeredBy) {
+              setGlobalState: function setGlobalState(partialGlobalState, delay, identity) {
                 if (delay === void 0) {
                   delay = -1;
-                }
-
-                if (broadcastTriggeredBy === void 0) {
-                  broadcastTriggeredBy = BROADCAST_TRIGGERED_BY_CC_INSTANCE_SET_GLOBAL_STATE;
                 }
 
                 _this3.$$changeState(partialGlobalState, {
                   ccKey: ccKey,
                   module: MODULE_GLOBAL,
-                  broadcastTriggeredBy: broadcastTriggeredBy,
                   calledBy: SET_GLOBAL_STATE,
-                  delay: delay
+                  delay: delay,
+                  identity: identity
                 });
               },
               forceUpdate: function forceUpdate(cb, delay, identity) {
@@ -2950,39 +2941,44 @@ if (!this._inheritsLoose) {
                     _executionContext$del = executionContext.delay,
                     delay = _executionContext$del === void 0 ? -1 : _executionContext$del,
                     identity = executionContext.identity,
+                    refState = executionContext.refState,
                     chainId = executionContext.chainId,
                     chainDepth = executionContext.chainDepth,
                     oriChainId = executionContext.oriChainId;
                 isStateModuleValid(targetModule, currentModule, cb, function (err, newCb) {
                   if (err) return handleCcFnError(err, __innerCb);
+                  var moduleState = getState$2(targetModule);
 
                   if (context) {
                     var nextChainDepth = chainDepth + 1; //暂时不考虑在ctx提供lazyDispatch功能
 
-                    var dispatch = _this3.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, identity, chainId, nextChainDepth, oriChainId);
+                    var dispatch = _this3.__$$getDispatchHandler(refState, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, identity, chainId, nextChainDepth, oriChainId);
 
-                    var dispatchIdentity = _this3.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, identity, chainId, nextChainDepth, oriChainId);
+                    var dispatchIdentity = _this3.__$$getDispatchHandler(refState, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule, null, null, delay, identity, chainId, nextChainDepth, oriChainId);
 
                     var sourceClassContext = ccClassKey_ccClassContext_$1[ccClassKey]; //不能将state赋给executionContextForUser，给一个getState才能保证dispatch函数的state是最新的
                     //目前先保留state
+
+                    var _refState = refState || _this3.state; //优先取透传的，再取自己的，因为有可能是Dispatcher调用
+
 
                     var executionContextForUser = Object.assign(executionContext, {
                       effect: _this3.__$$getEffectHandler(ccKey, ccUniqueKey),
                       xeffect: _this3.__$$getXEffectHandler(ccKey, ccUniqueKey),
                       invoke: _this3.__$$getInvokeHandler(ccKey, ccUniqueKey),
                       xinvoke: _this3.__$$getXInvokeHandler(ccKey, ccUniqueKey),
+                      rootState: getState$2(),
+                      globalState: getState$2(MODULE_GLOBAL),
                       //指的是目标模块的state
-                      moduleState: getState$2(targetModule),
+                      moduleState: moduleState,
                       //指的是目标模块的的moduleComputed
                       moduleComputed: _computedValue$1[targetModule],
-                      //!!!指是调用源cc类的connectedState
+                      //!!!指的是调用源cc类的connectedState
                       connectedState: sourceClassContext.connectedState,
-                      //!!!指是调用源cc类的connectedComputed
+                      //!!!指的是调用源cc类的connectedComputed
                       connectedComputed: sourceClassContext.connectedComputed,
-                      globalState: getState$2(MODULE_GLOBAL),
-                      state: _this3.state,
-                      getModuleState: getState$2,
-                      store: getState$2(),
+                      //!!!指的是调用源cc类实例的state
+                      refState: _refState,
                       dispatch: dispatch,
                       dispatchIdentity: dispatchIdentity,
                       d: dispatch,
@@ -2996,6 +2992,11 @@ if (!this._inheritsLoose) {
                     chainId: chainId,
                     fn: userLogicFn
                   });
+
+                  if (calledBy === DISPATCH) {
+                    if (ccContext.isReducerArgsOldMode === false) args.unshift(executionContext.payload, moduleState);
+                  }
+
                   co_1.wrap(userLogicFn).apply(void 0, args).then(function (partialState) {
                     var commitStateList = [];
                     send(SIG_FN_END, {
@@ -3050,7 +3051,7 @@ if (!this._inheritsLoose) {
               },
               dispatch: function dispatch(_temp2) {
                 var _ref2 = _temp2 === void 0 ? {} : _temp2,
-                    isLazy = _ref2.isLazy,
+                    refState = _ref2.refState,
                     ccKey = _ref2.ccKey,
                     ccUniqueKey = _ref2.ccUniqueKey,
                     ccClassKey = _ref2.ccClassKey,
@@ -3108,9 +3109,9 @@ if (!this._inheritsLoose) {
                     calledBy: DISPATCH,
                     delay: delay,
                     identity: identity,
+                    refState: refState,
                     chainId: chainId,
                     chainDepth: chainDepth,
-                    isLazy: isLazy,
                     oriChainId: oriChainId
                   };
 
@@ -3199,7 +3200,7 @@ if (!this._inheritsLoose) {
                   if (next) next();
                 }
               },
-              prepareBroadcastGlobalState: function prepareBroadcastGlobalState(identity, broadcastTriggeredBy, globalState, delay) {
+              prepareBroadcastGlobalState: function prepareBroadcastGlobalState(identity, globalState, delay) {
                 //!!! save global state to store
                 var _getAndStoreValidGlob = getAndStoreValidGlobalState(globalState, currentModule, ccClassKey),
                     validGlobalState = _getAndStoreValidGlob.partialState,
@@ -3210,15 +3211,11 @@ if (!this._inheritsLoose) {
                     if (_this3.$$beforeBroadcastState) {
                       //check if user define a life cycle hook $$beforeBroadcastState
                       if (asyncLifecycleHook) {
-                        _this3.$$beforeBroadcastState({
-                          broadcastTriggeredBy: broadcastTriggeredBy
-                        });
+                        _this3.$$beforeBroadcastState({});
 
                         _this3.cc.broadcastGlobalState(identity, validGlobalState);
                       } else {
-                        _this3.$$beforeBroadcastState({
-                          broadcastTriggeredBy: broadcastTriggeredBy
-                        }, function () {
+                        _this3.$$beforeBroadcastState({}, function () {
                           _this3.cc.broadcastGlobalState(identity, validGlobalState);
                         });
                       }
@@ -3266,7 +3263,7 @@ if (!this._inheritsLoose) {
                   skipBroadcastRefState: skipBroadcastRefState
                 };
               },
-              prepareBroadcastState: function prepareBroadcastState(broadcastInfo, stateFor, broadcastTriggeredBy, moduleName, committedState, needClone, delay, identity) {
+              prepareBroadcastState: function prepareBroadcastState(broadcastInfo, stateFor, moduleName, committedState, needClone, delay, identity) {
                 var skipBroadcastRefState = broadcastInfo.skipBroadcastRefState,
                     partialSharedState = broadcastInfo.partialSharedState,
                     partialGlobalState = broadcastInfo.partialGlobalState,
@@ -3276,15 +3273,11 @@ if (!this._inheritsLoose) {
                   if (_this3.$$beforeBroadcastState) {
                     //check if user define a life cycle hook $$beforeBroadcastState
                     if (asyncLifecycleHook) {
-                      _this3.$$beforeBroadcastState({
-                        broadcastTriggeredBy: broadcastTriggeredBy
-                      }, function () {
+                      _this3.$$beforeBroadcastState({}, function () {
                         _this3.cc.broadcastState(skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, partialGlobalState, module_globalState_, needClone, identity);
                       });
                     } else {
-                      _this3.$$beforeBroadcastState({
-                        broadcastTriggeredBy: broadcastTriggeredBy
-                      });
+                      _this3.$$beforeBroadcastState({});
 
                       _this3.cc.broadcastState(skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, partialGlobalState, module_globalState_, needClone, identity);
                     }
@@ -3486,17 +3479,18 @@ if (!this._inheritsLoose) {
             };
             var thisCC = this.cc; // when call $$dispatch in a ccInstance, state extraction strategy will be STATE_FOR_ONE_CC_INSTANCE_FIRSTLY
 
-            var d = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, currentModule, null, null, null, -1);
+            var d = this.__$$getDispatchHandler(null, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, currentModule, null, null, null, -1);
 
-            var di = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, currentModule, null, null, null, -1, ccKey); //ccKey is identity by default
+            var di = this.__$$getDispatchHandler(null, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, currentModule, null, null, null, -1, ccKey); //ccKey is identity by default
 
 
-            this.$$lazyDispatch = this.__$$getDispatchHandler(true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, currentModule, null, null, null, -1);
+            this.$$lazyDispatch = this.__$$getDispatchHandler(null, true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, currentModule, null, null, null, -1);
             this.$$d = d;
             this.$$di = di;
             this.$$dispatch = d;
             this.$$dispatchIdentity = di;
-            this.$$dispatchForModule = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, currentModule, null, null, null, -1);
+            this.$$dispatchForModule = this.__$$getDispatchHandler(null, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, currentModule, null, null, null, -1);
+            this.$$lazyDispatchForModule = this.__$$getDispatchHandler(null, true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, currentModule, null, null, null, -1);
             this.$$invoke = this.__$$getInvokeHandler(ccKey, ccUniqueKey);
             this.$$xinvoke = this.__$$getXInvokeHandler(ccKey, ccUniqueKey);
             this.$$effect = this.__$$getEffectHandler(ccKey, ccUniqueKey);
@@ -3539,7 +3533,8 @@ if (!this._inheritsLoose) {
                 _ref4$stateFor = _ref4.stateFor,
                 stateFor = _ref4$stateFor === void 0 ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY : _ref4$stateFor,
                 module = _ref4.module,
-                broadcastTriggeredBy = _ref4.broadcastTriggeredBy,
+                _ref4$skipMiddleware = _ref4.skipMiddleware,
+                skipMiddleware = _ref4$skipMiddleware === void 0 ? false : _ref4$skipMiddleware,
                 forceSync = _ref4.forceSync,
                 reactCallback = _ref4.cb,
                 type = _ref4.type,
@@ -3561,11 +3556,10 @@ if (!this._inheritsLoose) {
 
             var _doChangeState = function _doChangeState() {
               if (module == MODULE_GLOBAL) {
-                _this4.cc.prepareBroadcastGlobalState(identity, broadcastTriggeredBy, state, delay);
+                _this4.cc.prepareBroadcastGlobalState(identity, state, delay);
               } else {
                 var ccState = _this4.cc.ccState;
                 var currentModule = ccState.module;
-                var btb = broadcastTriggeredBy || BROADCAST_TRIGGERED_BY_CC_INSTANCE_METHOD;
 
                 if (module === currentModule) {
                   var allowBroadcast = ccState.ccOption.syncSharedState || forceSync;
@@ -3583,7 +3577,7 @@ if (!this._inheritsLoose) {
                     if (allowBroadcast) {
                       var needClone = forceSync === true; //if forceSync=true, cc clone the input state
 
-                      _this4.cc.prepareBroadcastState(broadcastInfo, stateFor, btb, module, state, needClone, delay, identity);
+                      _this4.cc.prepareBroadcastState(broadcastInfo, stateFor, module, state, needClone, delay, identity);
                     }
                   }, reactCallback);
                 } else {
@@ -3593,10 +3587,16 @@ if (!this._inheritsLoose) {
                   var _broadcastInfo = _this4.cc.syncCommittedStateToStore(stateFor, module, state); //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
 
 
-                  _this4.cc.prepareBroadcastState(_broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, btb, module, state, true, delay, identity);
+                  _this4.cc.prepareBroadcastState(_broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, true, delay, identity);
                 }
               }
             };
+
+            if (skipMiddleware === true) {
+              _doChangeState();
+
+              return;
+            }
 
             var middlewaresLen = middlewares.length;
 
@@ -3609,7 +3609,6 @@ if (!this._inheritsLoose) {
                 module: module,
                 reducerModule: reducerModule,
                 type: type,
-                broadcastTriggeredBy: broadcastTriggeredBy,
                 forceSync: forceSync,
                 calledBy: calledBy,
                 fnName: fnName
@@ -3753,7 +3752,7 @@ if (!this._inheritsLoose) {
             };
           };
 
-          _proto.__$$getDispatchHandler = function __$$getDispatchHandler(isLazy, ccKey, ccUniqueKey, ccClassKey, stateFor, targetModule, targetReducerModule, inputType, inputPayload, delay, defaultIdentity, chainId, chainDepth, oriChainId // sourceModule, oriChainId, oriChainDepth
+          _proto.__$$getDispatchHandler = function __$$getDispatchHandler(refState, isLazy, ccKey, ccUniqueKey, ccClassKey, stateFor, targetModule, targetReducerModule, inputType, inputPayload, delay, defaultIdentity, chainId, chainDepth, oriChainId // sourceModule, oriChainId, oriChainDepth
           ) {
             var _this8 = this;
 
@@ -3825,8 +3824,16 @@ if (!this._inheritsLoose) {
                 _cb = cb;
                 _delay = _delay2;
                 if (identity) _identity = identity;
-              } else if (paramObjType === 'string') {
-                var slashCount = paramObj.split('').filter(function (v) {
+              } else if (paramObjType === 'string' || paramObjType === 'function') {
+                var targetFirstParam = paramObj;
+
+                if (paramObjType === 'function') {
+                  var fnName = paramObj.__fnName;
+                  if (!fnName) throw new Error('you are calling a unnamed function!!!');
+                  targetFirstParam = fnName; // _module = paramObjType.stateModule || module;
+                }
+
+                var slashCount = targetFirstParam.split('').filter(function (v) {
                   return v === '/';
                 }).length;
                 _payload = payloadWhenFirstParamIsString;
@@ -3834,28 +3841,28 @@ if (!this._inheritsLoose) {
                 if (userInputDelay !== undefined) _delay = userInputDelay;
 
                 if (slashCount === 0) {
-                  _type = paramObj;
+                  _type = targetFirstParam;
                 } else if (slashCount === 1) {
-                  var _paramObj$split = paramObj.split('/'),
-                      _module4 = _paramObj$split[0],
-                      _type2 = _paramObj$split[1];
+                  var _targetFirstParam$spl = targetFirstParam.split('/'),
+                      _module4 = _targetFirstParam$spl[0],
+                      _type2 = _targetFirstParam$spl[1];
 
                   _module = _module4;
                   _reducerModule = _module;
                   _type = _type2;
                 } else if (slashCount === 2) {
-                  var _paramObj$split2 = paramObj.split('/'),
-                      _module5 = _paramObj$split2[0],
-                      _reducerModule3 = _paramObj$split2[1],
-                      _type3 = _paramObj$split2[2];
+                  var _targetFirstParam$spl2 = targetFirstParam.split('/'),
+                      _module5 = _targetFirstParam$spl2[0],
+                      _reducerModule3 = _targetFirstParam$spl2[1],
+                      _type3 = _targetFirstParam$spl2[2];
 
-                  if (_module5 === '' || _module5 === ' ') _module = targetModule; //paramObj may like: /foo/changeName
+                  if (_module5 === '' || _module5 === ' ') _module = targetModule; //targetFirstParam may like: /foo/changeName
                   else _module = _module5;
                   _module = _module5;
                   _reducerModule = _reducerModule3;
                   _type = _type3;
                 } else {
-                  return Promise.reject(me$3(ERR.CC_DISPATCH_STRING_INVALID, vbi$3(paramObj)));
+                  return Promise.reject(me$3(ERR.CC_DISPATCH_STRING_INVALID, vbi$3(targetFirstParam)));
                 }
               } else {
                 return Promise.reject(me$3(ERR.CC_DISPATCH_PARAM_INVALID));
@@ -3882,7 +3889,7 @@ if (!this._inheritsLoose) {
                   ccClassKey: ccClassKey,
                   delay: _delay,
                   identity: _identity,
-                  isLazy: isLazy,
+                  refState: refState,
                   chainId: _chainId,
                   chainDepth: _chainDepth,
                   oriChainId: _oriChainId // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
@@ -3913,7 +3920,7 @@ if (!this._inheritsLoose) {
                 ccKey = _this$cc.ccKey,
                 ccUniqueKey = _this$cc.ccUniqueKey;
 
-            var handler = this.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, ccdelay, ccidt);
+            var handler = this.__$$getDispatchHandler(null, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, module, reducerModule, type, payload, ccdelay, ccidt);
 
             handler()["catch"](handleCcFnError);
           };
@@ -4234,9 +4241,9 @@ if (!this._inheritsLoose) {
     return oneRef;
   }
 
-  function setState (module, state, lazyMs, throwError) {
-    if (lazyMs === void 0) {
-      lazyMs = -1;
+  function setState (module, state, delay, identity, skipMiddleware, throwError) {
+    if (delay === void 0) {
+      delay = -1;
     }
 
     if (throwError === void 0) {
@@ -4249,8 +4256,9 @@ if (!this._inheritsLoose) {
         ccKey: '[[top api:cc.setState]]',
         module: module,
         stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-        broadcastTriggeredBy: BROADCAST_TRIGGERED_BY_CC_API_SET_STATE,
-        lazyMs: lazyMs
+        delay: delay,
+        identity: identity,
+        skipMiddleware: skipMiddleware
       });
     } catch (err) {
       if (throwError) throw err;else util.justWarning(err.message);
@@ -4285,6 +4293,76 @@ if (!this._inheritsLoose) {
     };
   }
 
+  function dispatch (isLazy, action, payLoadWhenActionIsString, delay, identity, _temp) {
+    if (identity === void 0) {
+      identity = '';
+    }
+
+    var _ref = _temp === void 0 ? {} : _temp,
+        ccClassKey = _ref.ccClassKey,
+        ccKey = _ref.ccKey,
+        throwError = _ref.throwError;
+
+    if (action === undefined && payLoadWhenActionIsString === undefined) {
+      throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload");
+    }
+
+    var dispatchFn;
+
+    try {
+      if (ccClassKey && ccKey) {
+        var uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
+        var targetRef = ccContext.refs[uKey];
+
+        if (!targetRef) {
+          throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
+        } else {
+          dispatchFn = isLazy ? targetRef.$$lazyDispatch : targetRef.$$dispatch;
+        }
+      } else {
+        var module = '';
+
+        if (typeof action == 'string' && action.includes('/')) {
+          module = action.split('/')[0];
+        }
+
+        var ref;
+
+        if (module !== '*') {
+          ref = pickOneRef(module);
+        } else {
+          ref = pickOneRef();
+        }
+
+        if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
+          dispatchFn = isLazy ? ref.__fragmentParams.lazyDispatch : ref.__fragmentParams.dispatch;
+        } else {
+          dispatchFn = isLazy ? ref.$$lazyDispatchForModule : ref.$$dispatchForModule;
+        }
+      }
+
+      if (typeof action === 'string' && action.startsWith('*')) {
+        var reducerName = action.split('/').pop();
+        var rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+        rnList_.forEach(function (fullReducerName) {
+          dispatchFn(fullReducerName, payLoadWhenActionIsString, delay, identity);
+        });
+      } else {
+        dispatchFn(action, payLoadWhenActionIsString, delay, identity);
+      }
+    } catch (err) {
+      if (throwError) throw err;else util.justWarning(err.message);
+    }
+  }
+
+  function dispatch$1 (action, payLoadWhenActionIsString, delay, identity, option) {
+    dispatch(false, action, payLoadWhenActionIsString, delay, identity, option);
+  }
+
+  function lazyDispatch (action, payLoadWhenActionIsString, delay, identity, option) {
+    dispatch(true, action, payLoadWhenActionIsString, delay, identity, option);
+  }
+
   function initModuleReducer (module, reducer, rootReducerCanNotContainInputModule) {
     if (rootReducerCanNotContainInputModule === void 0) {
       rootReducerCanNotContainInputModule = true;
@@ -4294,10 +4372,37 @@ if (!this._inheritsLoose) {
     if (rootReducerCanNotContainInputModule) checkReducerModuleName(module);else checkModuleNameBasically(module);
     var _ccContext$reducer = ccContext.reducer,
         _reducer = _ccContext$reducer._reducer,
-        _reducerName_FullReducerNameList_ = _ccContext$reducer._reducerName_FullReducerNameList_;
+        _reducerCaller = _ccContext$reducer._reducerCaller,
+        _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller,
+        _reducerName_FullReducerNameList_ = _ccContext$reducer._reducerName_FullReducerNameList_,
+        _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_;
     _reducer[module] = reducer;
+    var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module);
+    var subLazyReducerCaller = safeGetObjectFromObject(_lazyReducerCaller, module);
+    var fnNames = safeGetArrayFromObject(_reducerModule_fnNames_, module);
     var reducerNames = okeys(reducer);
     reducerNames.forEach(function (name) {
+      fnNames.push(name);
+
+      subReducerCaller[name] = function (payload, delay, idt) {
+        return dispatch$1(module + "/" + name, payload, delay, idt);
+      };
+
+      subLazyReducerCaller[name] = function (payload, delay, idt) {
+        return lazyDispatch(module + "/" + name, payload, delay, idt);
+      };
+
+      var reducerFn = reducer[name];
+
+      if (typeof reducerFn !== 'function') {
+        throw new Error("reducer key[" + name + "] 's value is not a function");
+      } else {
+        reducerFn.__fnName = name; //!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
+      } // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
+      // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
+      // reducerFn.stateModule = module;
+
+
       var list = safeGetArrayFromObject(_reducerName_FullReducerNameList_, name);
       list.push(module + "/" + name);
     });
@@ -4712,7 +4817,11 @@ if (!this._inheritsLoose) {
         _ref$isHot = _ref.isHot,
         isHot = _ref$isHot === void 0 ? false : _ref$isHot,
         _ref$autoCreateDispat = _ref.autoCreateDispatcher,
-        autoCreateDispatcher = _ref$autoCreateDispat === void 0 ? true : _ref$autoCreateDispat;
+        autoCreateDispatcher = _ref$autoCreateDispat === void 0 ? true : _ref$autoCreateDispat,
+        _ref$isReducerArgsOld = _ref.isReducerArgsOldMode,
+        isReducerArgsOldMode = _ref$isReducerArgsOld === void 0 ? false : _ref$isReducerArgsOld,
+        _ref$bindCtxToMethod = _ref.bindCtxToMethod,
+        bindCtxToMethod = _ref$bindCtxToMethod === void 0 ? false : _ref$bindCtxToMethod;
 
     try {
       util.justTip("cc version " + ccContext.info.version);
@@ -4720,6 +4829,8 @@ if (!this._inheritsLoose) {
       ccContext.errorHandler = errorHandler;
       ccContext.isStrict = isStrict;
       ccContext.isDebug = isDebug;
+      ccContext.isReducerArgsOldMode = isReducerArgsOldMode;
+      ccContext.bindCtxToMethod = bindCtxToMethod;
 
       if (ccContext.isCcAlreadyStartup) {
         var err = util.makeError(ERR.CC_ALREADY_STARTUP);
@@ -4901,7 +5012,9 @@ if (!this._inheritsLoose) {
         errorHandler = _option.errorHandler,
         isHot = _option.isHot,
         autoCreateDispatcher = _option.autoCreateDispatcher,
-        reducer = _option.reducer;
+        reducer = _option.reducer,
+        isReducerArgsOldMode = _option.isReducerArgsOldMode,
+        bindCtxToMethod = _option.bindCtxToMethod;
 
     if (reducer) {
       if (!util.isPlainJsonObject(reducer)) {
@@ -4920,7 +5033,9 @@ if (!this._inheritsLoose) {
       isDebug: isDebug,
       errorHandler: errorHandler,
       isHot: isHot,
-      autoCreateDispatcher: autoCreateDispatcher
+      autoCreateDispatcher: autoCreateDispatcher,
+      isReducerArgsOldMode: isReducerArgsOldMode,
+      bindCtxToMethod: bindCtxToMethod
     });
     startup(mergedOption);
   }
@@ -5157,9 +5272,9 @@ if (!this._inheritsLoose) {
    * note! cc will filter the input state to meet global state shape and only pass the filtered state to global module
    */
 
-  function setGlobalState (state, lazyMs, throwError) {
-    if (lazyMs === void 0) {
-      lazyMs = -1;
+  function setGlobalState (state, delayMs, throwError) {
+    if (delayMs === void 0) {
+      delayMs = -1;
     }
 
     if (throwError === void 0) {
@@ -5168,19 +5283,19 @@ if (!this._inheritsLoose) {
 
     try {
       var ref = pickOneRef();
-      ref.setGlobalState(state, lazyMs, BROADCAST_TRIGGERED_BY_CC_API_SET_GLOBAL_STATE);
+      ref.setGlobalState(state, delayMs);
     } catch (err) {
       if (throwError) throw err;else util.justWarning(err.message);
     }
   }
 
   function throwApiCallError() {
-    throw new Error("api doc: cc.setState(module:string, state:Object, lazyMs?:Number, throwError?:Boolean)");
+    throw new Error("api doc: cc.setState(module:string, state:object, delayMs?:number, skipMiddleware?:boolean, throwError?:boolean)");
   }
 
-  function _setState (module, state, lazyMs, throwError) {
-    if (lazyMs === void 0) {
-      lazyMs = -1;
+  function _setState (module, state, delayMs, identity, skipMiddleware, throwError) {
+    if (delayMs === void 0) {
+      delayMs = -1;
     }
 
     if (throwError === void 0) {
@@ -5195,7 +5310,7 @@ if (!this._inheritsLoose) {
       throwApiCallError();
     }
 
-    setState(module, state, lazyMs, throwError);
+    setState(module, state, delayMs, identity, skipMiddleware, throwError);
   }
 
   function _set (moduledKeyPath, val, delay, idt) {
@@ -5301,7 +5416,9 @@ if (!this._inheritsLoose) {
       _ccContext$store$1 = ccContext.store,
       getState$5 = _ccContext$store$1.getState,
       getPrevState = _ccContext$store$1.getPrevState,
-      moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_;
+      moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
+      _reducerModule_fnNames_ = ccContext.reducer._reducerModule_fnNames_;
+  var okeys$2 = okeys;
   var seq = 0; //虽然CcFragment实例默认属于$$default模块，但是它的state是独立的，
 
   function getStateModule() {
@@ -5347,8 +5464,6 @@ if (!this._inheritsLoose) {
     }
   }
 
-  var cursorKey = CURSOR_KEY;
-  var ccSyncKey = CCSYNC_KEY;
   var idSeq = 0;
 
   function getEId() {
@@ -5369,7 +5484,10 @@ if (!this._inheritsLoose) {
           _props$connect = props.connect,
           connectSpec = _props$connect === void 0 ? {} : _props$connect,
           _props$state = props.state,
-          state = _props$state === void 0 ? {} : _props$state;
+          state = _props$state === void 0 ? {} : _props$state,
+          module = props.module; // 自动赋值connect
+
+      if (module && !connectSpec[module]) connectSpec[module] = '*';
 
       var _getFragmentClassKeyA = getFragmentClassKeyAndStpMapping(connectSpec),
           ccClassKey = _getFragmentClassKeyA.ccClassKey,
@@ -5393,12 +5511,14 @@ if (!this._inheritsLoose) {
       }
 
       var outProps = props.props || props; //把最外层的props传递给用户
+      //计算fragment所属的模块
 
-      buildCcClassContext(ccClassKey, MODULE_DEFAULT, [], [], [], [], stateToPropMapping, true);
+      var fragmentModule = module || okeys$2(connectSpec)[0] || MODULE_DEFAULT;
+      buildCcClassContext(ccClassKey, fragmentModule, [], [], [], [], stateToPropMapping, true);
       setRef(_assertThisInitialized(_this), false, ccClassKey, ccKey, ccUniqueKey, {}, true); // for CcFragment, just put ccClassKey to module's cc class keys
 
       var moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
-      var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_, MODULE_DEFAULT);
+      var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_, fragmentModule);
       if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
       var ctx = ccClassKey_ccClassContext_$2[ccClassKey];
       var connectedComputed = ctx.connectedComputed || {};
@@ -5410,12 +5530,12 @@ if (!this._inheritsLoose) {
 
       var refConnectedComputed = {};
       var refComputed = {};
-      okeys(connectSpec).forEach(function (moduleName) {
+      okeys$2(connectSpec).forEach(function (moduleName) {
         refConnectedComputed[moduleName] = {};
       });
       var ccState = {
         stateModule: getStateModule(),
-        module: MODULE_DEFAULT,
+        module: fragmentModule,
         ccClassKey: ccClassKey,
         ccKey: ccKey,
         ccUniqueKey: ccUniqueKey,
@@ -5482,7 +5602,7 @@ if (!this._inheritsLoose) {
             if (e.currentTarget && e.type) {
               var _sync;
 
-              __sync((_sync = {}, _sync[cursorKey] = cursor, _sync), e);
+              __sync((_sync = {}, _sync[CURSOR_KEY] = cursor, _sync), e);
             } else {
               stateArr[cursor] = e;
 
@@ -5544,9 +5664,9 @@ if (!this._inheritsLoose) {
       _this.state = state;
 
       var __sync = function __sync(spec, e) {
-        if (spec[cursorKey] !== undefined) {
+        if (spec[CURSOR_KEY] !== undefined) {
           //来自hook生成的setter调用
-          var _cursor = spec[cursorKey];
+          var _cursor = spec[CURSOR_KEY];
           __hookMeta.stateArr[_cursor] = e.currentTarget.value;
 
           _this.cc.reactForceUpdate();
@@ -5567,19 +5687,25 @@ if (!this._inheritsLoose) {
         } else {
           // syncLocalState 同步本地的state状态
           var _extractStateByCcsync = extractStateByCcsync(dataset.ccsync, currentTarget.value, dataset.ccint, _this.state, mockE.isToggleBool),
-              _state = _extractStateByCcsync.state;
+              _state2 = _extractStateByCcsync.state;
 
-          __fragmentParams.setState(_state);
+          __fragmentParams.setState(_state2);
         }
       };
 
       var effectItems = []; // {fn:function, status:0, eId:'', immediate:true}
 
-      var effectReturnCbs = []; // {fn:function, status:0, eId:'', immediate:true}
+      var eid_effectReturnCb_ = {}; // fn
+
+      var attchModuleToCcsync = function attchModuleToCcsync(ccsync) {
+        var _ccsync = ccsync;
+        if (!_ccsync.includes('/')) _ccsync = _this.cc.ccState.module + "/ccsync";
+        return _ccsync;
+      };
 
       _this.__staticEffectMeta = {
         effectItems: effectItems,
-        effectReturnCbs: effectReturnCbs
+        eid_effectReturnCb_: eid_effectReturnCb_
       };
       var __fragmentParams = {
         isCcFragment: true,
@@ -5653,9 +5779,12 @@ if (!this._inheritsLoose) {
           _this.cc.computed = computed;
           _this.cc.computedSpec = computedSpec;
         },
-        method: {},
+        settings: {},
+        reducer: {},
+        lazyReducer: {},
         // ------ end ------
-        toggleBool: function toggleBool(e, delay, idt) {
+        //对布尔值自动取反
+        syncBool: function syncBool(e, delay, idt) {
           var _sync$bind;
 
           if (delay === void 0) {
@@ -5666,20 +5795,13 @@ if (!this._inheritsLoose) {
             idt = '';
           }
 
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[ccSyncKey] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.idt = idt, _sync$bind));
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.idt = idt, _sync$bind));
 
           __sync({
             type: 'bool'
           }, e);
         },
-        //if <Input onChange={(value:string, value2:string)=>void} />
-        // <Input onChange={this.sync} /> not work!!!
-        // <Input onChange={this.sync('foo/f1')} /> ok
-        // only <input data-ccsync="foo/f1" onChange={this.sync} /> ok
-        // only <input onChange={this.sync('foo/f1')} /> ok
-        sync: function sync(e, val, delay, idt) {
-          var _sync$bind2;
-
+        syncmBool: function syncmBool(e, delay, idt) {
           if (delay === void 0) {
             delay = -1;
           }
@@ -5688,23 +5810,24 @@ if (!this._inheritsLoose) {
             idt = '';
           }
 
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[ccSyncKey] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
+          if (typeof e === 'string') {
+            var _sync$bind2;
+
+            var _ccsync = attchModuleToCcsync(e);
+
+            return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = _ccsync, _sync$bind2.type = 'bool', _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
+          }
 
           __sync({
-            type: 'val'
-          }, e); //allow <input data-ccsync="foo/f1" onChange={this.sync} />
-
+            type: 'bool'
+          }, e);
         },
-        set: function set(ccsync, val, delay, idt) {
-          var _sync2;
-
-          __sync((_sync2 = {}, _sync2[ccSyncKey] = ccsync, _sync2.type = 'val', _sync2.val = val, _sync2.delay = delay, _sync2.idt = idt, _sync2));
-        },
-        // <Input onChange={this.syncInt} /> not work!!!
-        // <Input onChange={this.syncInt('foo/bar')} /> ok
-        // <input onChange={this.syncInt('foo/bar')} /> ok
-        // <input data-ccsync="foo/f1" onChange={this.syncInt('foo/fq')} /> ok
-        syncInt: function syncInt(e, delay, idt) {
+        //if <Input onChange={(value:string, value2:string)=>void} />
+        // <Input onChange={ctx.sync} /> not work!!!
+        // <Input onChange={ctx.sync('foo/f1')} /> ok
+        // only <input data-ccsync="foo/f1" onChange={ctx.sync} /> ok
+        // only <input onChange={ctx.sync('foo/f1')} /> ok
+        sync: function sync(e, val, delay, idt) {
           var _sync$bind3;
 
           if (delay === void 0) {
@@ -5715,11 +5838,120 @@ if (!this._inheritsLoose) {
             idt = '';
           }
 
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[ccSyncKey] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3));
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'val', _sync$bind3.val = val, _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3));
+
+          __sync({
+            type: 'val'
+          }, e); //allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
+
+        },
+        syncm: function syncm(e, val, delay, idt) {
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          if (typeof e === 'string') {
+            var _sync$bind4;
+
+            var _ccsync = attchModuleToCcsync(e);
+
+            return __sync.bind(null, (_sync$bind4 = {}, _sync$bind4[CCSYNC_KEY] = _ccsync, _sync$bind4.type = 'val', _sync$bind4.val = val, _sync$bind4.delay = delay, _sync$bind4.idt = idt, _sync$bind4));
+          }
+
+          __sync({
+            type: 'val'
+          }, e);
+        },
+        //因为val可以是任意类型值，所以不再需要提供setInt
+        set: function set(ccsync, val, delay, idt) {
+          var _sync2;
+
+          __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'val', _sync2.val = val, _sync2.delay = delay, _sync2.idt = idt, _sync2));
+        },
+        //自动包含模块的set
+        setm: function setm(ccsync, val, delay, idt) {
+          var _sync3;
+
+          var _ccsync = attchModuleToCcsync(ccsync);
+
+          __sync((_sync3 = {}, _sync3[CCSYNC_KEY] = _ccsync, _sync3.type = 'val', _sync3.val = val, _sync3.delay = delay, _sync3.idt = idt, _sync3));
+        },
+        //对布尔值自动取反
+        setBool: function setBool(ccsync, delay, idt) {
+          var _sync4;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          __sync((_sync4 = {}, _sync4[CCSYNC_KEY] = ccsync, _sync4.type = 'bool', _sync4.delay = delay, _sync4.idt = idt, _sync4));
+        },
+        //自动包含模块的setToggle
+        setmBool: function setmBool(ccsync, delay, idt) {
+          var _sync5;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          var _ccsync = attchModuleToCcsync(ccsync);
+
+          __sync((_sync5 = {}, _sync5[CCSYNC_KEY] = _ccsync, _sync5.type = 'bool', _sync5.delay = delay, _sync5.idt = idt, _sync5));
+        },
+        // <Input onChange={ctx.syncInt} /> not work!!!
+        // <Input onChange={ctx.syncInt('foo/bar')} /> ok
+        // <input onChange={ctx.syncInt('foo/bar')} /> ok
+        // <input data-ccsync="foo/f1" onChange={ctx.syncInt('foo/fq')} /> ok
+        syncInt: function syncInt(e, delay, idt) {
+          var _sync$bind5;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind5 = {}, _sync$bind5[CCSYNC_KEY] = e, _sync$bind5.type = 'int', _sync$bind5.delay = delay, _sync$bind5.idt = idt, _sync$bind5));
 
           __sync({
             type: 'int'
-          }, e); //<input data-ccsync="foo/f1" onChange={this.syncInt} />
+          }, e); //<input data-ccsync="foo/f1" onChange={ctx.syncInt} />
+
+        },
+        syncmInt: function syncmInt(e, delay, idt) {
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          if (typeof e === 'string') {
+            var _sync$bind6;
+
+            var _ccsync = attchModuleToCcsync(e);
+
+            return __sync.bind(null, (_sync$bind6 = {}, _sync$bind6[CCSYNC_KEY] = _ccsync, _sync$bind6.type = 'int', _sync$bind6.delay = delay, _sync$bind6.idt = idt, _sync$bind6));
+          }
+
+          __sync({
+            type: 'int'
+          }, e); //<input data-ccsync="foo/f1" onChange={ctx.syncInt} />
 
         },
         onUrlChanged: function onUrlChanged(cb) {
@@ -5745,12 +5977,21 @@ if (!this._inheritsLoose) {
           }].concat(args));
         },
         on: function on(event, handler) {
-          bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, null, handler);
+          bindEventHandlerToCcContext(_this.cc.ccState.module, ccClassKey, ccUniqueKey, event, null, handler);
         },
         onIdentity: function onIdentity(event, identity, handler) {
-          bindEventHandlerToCcContext(MODULE_DEFAULT, ccClassKey, ccUniqueKey, event, identity, handler);
+          bindEventHandlerToCcContext(_this.cc.ccState.module, ccClassKey, ccUniqueKey, event, identity, handler);
         },
-        dispatch: dispatcher.__$$getDispatchHandler(false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, MODULE_DEFAULT, null, null, null, -1),
+        dispatch: function dispatch(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
+          var d = dispatcher.__$$getDispatchHandler(_this.state, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, _this.cc.ccState.module, null, null, null, -1);
+
+          d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
+        },
+        lazyDispatch: function lazyDispatch(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
+          var d = dispatcher.__$$getDispatchHandler(_this.state, true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, _this.cc.ccState.module, null, null, null, -1);
+
+          d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
+        },
         callDispatch: function callDispatch() {
           var _this$__fragmentParam;
 
@@ -5760,27 +6001,40 @@ if (!this._inheritsLoose) {
 
           return (_this$__fragmentParam = _this.__fragmentParams.dispatch).bind.apply(_this$__fragmentParam, [_assertThisInitialized(_this)].concat(args));
         },
+        callLazyDispatch: function callLazyDispatch() {
+          var _this$__fragmentParam2;
+
+          for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            args[_key4] = arguments[_key4];
+          }
+
+          return (_this$__fragmentParam2 = _this.__fragmentParams.lazyDispatch).bind.apply(_this$__fragmentParam2, [_assertThisInitialized(_this)].concat(args));
+        },
         effect: dispatcher.__$$getEffectHandler(ccKey),
         xeffect: dispatcher.__$$getXEffectHandler(ccKey),
         setModuleState: function setModuleState(module, state, delay, identity) {
-          dispatcher.$$changeState(state, {
+          var _module = module,
+              _state = state,
+              _delay = delay,
+              _identity = identity;
+
+          if (typeof module === 'object') {
+            _module = _this.cc.ccState.module;
+            _state = module;
+            _delay = state;
+            _identity = delay;
+          }
+
+          dispatcher.$$changeState(_state, {
             ccKey: ccKey,
-            module: module,
+            _module: _module,
             stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-            broadcastTriggeredBy: null,
-            delay: delay,
-            identity: identity
+            _delay: _delay,
+            _identity: _identity
           });
         },
         setGlobalState: function setGlobalState(state, delay, identity) {
-          dispatcher.$$changeState(state, {
-            ccKey: ccKey,
-            MODULE_GLOBAL: MODULE_GLOBAL,
-            stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-            broadcastTriggeredBy: null,
-            delay: delay,
-            identity: identity
-          });
+          _this.__fragmentParams.setModuleState(MODULE_GLOBAL, state, delay, identity);
         },
         state: state,
         props: props,
@@ -5808,33 +6062,60 @@ if (!this._inheritsLoose) {
     _proto.componentWillMount = function componentWillMount() {
       var _this2 = this;
 
-      var setup = this.props.setup;
-
-      if (setup) {
-        var ctx = this.__fragmentParams;
-        if (typeof setup !== 'function') throw new Error('type of setup must be function');
-        var methodObj = setup(this.__fragmentParams);
-        if (!isPlainJsonObject(methodObj)) throw new Error('type of setup return result must be an plain json object');
-        okeys(methodObj).forEach(function (name) {
-          var method = methodObj[name];
-          if (typeof method === 'function') methodObj[name] = method.bind(_this2, ctx);
-        });
-        ctx.method = methodObj;
-      }
-
+      var _this$props = this.props,
+          setup = _this$props.setup,
+          bindCtxToMethod = _this$props.bindCtxToMethod;
+      var ctx = this.__fragmentParams;
+      var reducer = ctx.reducer;
+      var lazyReducer = ctx.lazyReducer;
       var thisCc = this.cc;
       var thisState = this.state;
       var _thisCc$ccState2 = thisCc.ccState,
           stateModule = _thisCc$ccState2.stateModule,
           connect = _thisCc$ccState2.connect;
-      var computedSpec = thisCc.computedSpec,
-          refComputed = thisCc.refComputed,
-          refConnectedComputed = thisCc.refConnectedComputed;
+      var dispatch = this.__fragmentParams.dispatch;
+      var lazyDispatch = this.__fragmentParams.lazyDispatch;
+      var connectModules = okeys$2(connect); //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
+
+      connectModules.forEach(function (m) {
+        var refReducerFnObj = safeGetObjectFromObject(reducer, m);
+        var refLazyReducerFnObj = safeGetObjectFromObject(lazyReducer, m);
+        var fnNames = _reducerModule_fnNames_[m] || [];
+        fnNames.forEach(function (fnName) {
+          refReducerFnObj[fnName] = function (payload, delay, idt) {
+            return dispatch(m + "/" + fnName, payload, delay, idt);
+          };
+
+          refLazyReducerFnObj[fnName] = function (payload, delay, idt) {
+            return lazyDispatch(m + "/" + fnName, payload, delay, idt);
+          };
+        });
+      }); //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后，分析computedSpec之前
+
+      if (setup) {
+        if (typeof setup !== 'function') throw new Error('type of setup must be function');
+        var settingsObj = setup(this.__fragmentParams) || {};
+        if (!isPlainJsonObject(settingsObj)) throw new Error('type of setup return result must be an plain json object');
+        var globalBindCtx = ccContext.bindCtxToMethod; //优先读自己的，再读全局的
+
+        if (bindCtxToMethod === true || globalBindCtx === true && bindCtxToMethod !== false) {
+          okeys$2(settingsObj).forEach(function (name) {
+            var settingValue = settingsObj[name];
+            if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(_this2, ctx);
+          });
+        }
+
+        ctx.settings = settingsObj;
+      }
+
+      var computedSpec = thisCc.computedSpec; //触发计算computed
 
       if (computedSpec) {
-        //这里操作的是moduleState，最后一个参数置为true，让无模块的stateKey的计算值能写到refComputed里,
+        var refComputed = thisCc.refComputed,
+            refConnectedComputed = thisCc.refConnectedComputed; //这里操作的是moduleState，最后一个参数置为true，让无模块的stateKey的计算值能写到refComputed里,
+
         computeValueForRef(stateModule, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams, true);
-        okeys(connect).forEach(function (m) {
+        connectModules.forEach(function (m) {
           var mState = getState$5(m);
           computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState, _this2.__fragmentParams);
         });
@@ -5842,6 +6123,7 @@ if (!this._inheritsLoose) {
     };
 
     _proto.executeHookEffect = function executeHookEffect(callByDidMount) {
+      var ctx = this.__fragmentParams;
       var _this$__hookMeta = this.__hookMeta,
           effectCbArr = _this$__hookMeta.effectCbArr,
           effectCbReturnArr = _this$__hookMeta.effectCbReturnArr;
@@ -5849,7 +6131,7 @@ if (!this._inheritsLoose) {
       if (callByDidMount) {
         this.__hookMeta.isCcFragmentMounted = true;
         effectCbArr.forEach(function (cb) {
-          var cbReturn = cb();
+          var cbReturn = cb(ctx);
 
           if (typeof cbReturn === 'function') {
             effectCbReturnArr.push(cbReturn);
@@ -5863,7 +6145,7 @@ if (!this._inheritsLoose) {
           var shouldEffectExecute = effectSeeResult[idx];
 
           if (shouldEffectExecute) {
-            var cbReturn = cb();
+            var cbReturn = cb(ctx);
 
             if (typeof cbReturn === 'function') {
               effectCbReturnArr[idx] = cbReturn;
@@ -5874,12 +6156,16 @@ if (!this._inheritsLoose) {
     };
 
     _proto.executeSetupEffect = function executeSetupEffect(callByDidMount) {
-      var effectItems = this.__staticEffectMeta.effectItems;
+      var _this$__staticEffectM = this.__staticEffectMeta,
+          effectItems = _this$__staticEffectM.effectItems,
+          eid_effectReturnCb_ = _this$__staticEffectM.eid_effectReturnCb_;
+      var ctx = this.__fragmentParams;
 
       if (callByDidMount) {
         effectItems.forEach(function (item) {
           if (item.immediate === false) return;
-          item.fn();
+          var cb = item.fn(ctx);
+          if (cb) eid_effectReturnCb_[item.eId] = cb;
         });
       } else {
         //callByDidUpdate
@@ -5888,7 +6174,8 @@ if (!this._inheritsLoose) {
         effectItems.forEach(function (item) {
           var status = item.status,
               stateKeys = item.stateKeys,
-              fn = item.fn;
+              fn = item.fn,
+              eId = item.eId;
           if (status === EFFECT_STOPPED) return;
 
           if (stateKeys) {
@@ -5935,10 +6222,13 @@ if (!this._inheritsLoose) {
             }
 
             if (shouldEffectExecute) {
-              fn();
+              var cb = fn(ctx);
+              if (cb) eid_effectReturnCb_[eId] = cb;
             }
           } else {
-            fn();
+            var _cb = fn(ctx);
+
+            if (_cb) eid_effectReturnCb_[eId] = _cb;
           }
         });
       }
@@ -5962,10 +6252,17 @@ if (!this._inheritsLoose) {
     };
 
     _proto.componentWillUnmount = function componentWillUnmount() {
+      var ctx = this.__fragmentParams;
+
       this.__hookMeta.effectCbReturnArr.forEach(function (cb) {
-        if (cb) cb();
+        if (typeof cb === 'function') cb(ctx);
       });
 
+      var eid_effectReturnCb_ = this.__staticEffectMeta.eid_effectReturnCb_;
+      okeys$2(eid_effectReturnCb_).forEach(function (eId) {
+        var cb = eid_effectReturnCb_[eId];
+        if (typeof cb === 'function') cb(ctx);
+      });
       var _this$cc$ccState = this.cc.ccState,
           ccUniqueKey = _this$cc$ccState.ccUniqueKey,
           ccClassKey = _this$cc$ccState.ccClassKey;
@@ -5975,9 +6272,9 @@ if (!this._inheritsLoose) {
     };
 
     _proto.render = function render() {
-      var _this$props = this.props,
-          children = _this$props.children,
-          render = _this$props.render;
+      var _this$props2 = this.props,
+          children = _this$props2.children,
+          render = _this$props2.render;
       var view = render || children;
 
       if (typeof view === 'function') {
@@ -5996,123 +6293,92 @@ if (!this._inheritsLoose) {
     return CcFragment;
   }(React.Component);
 
-  /**
-  mapComputed = {
-    fullName(state){
-      return state.firstName + state.lastName;
-    }
-  };
-  */
-
-  function _connectDumb(connect, state, setup, mapState, alias, Dumb, props) {
+  function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, mapState, alias, Dumb, props) {
     var render = function render(ctx) {
-      var mappedState = {};
+      var connectedState = ctx.connectedState;
 
-      if (mapState) {
-        var _state = ctx.state,
-            connectedState = ctx.connectedState;
+      if (mapProps) {
+        //和mapState保持参数一致
+        var generatedProps = mapProps(ctx);
+        if (mapState) throw new Error('mapState is not allowed when you specify mapProps in args');
+        return React__default.createElement(Dumb, generatedProps);
+      } else {
+        var mappedState = {};
 
-        if (mapState === true) {
-          mappedState = flatObject(connectedState, alias);
-        } else {
-          mappedState = mapState(_state, connectedState, props) || {};
+        if (mapState) {
+          if (mapState === true) {
+            mappedState = flatObject(connectedState, alias);
+          } else {
+            //mapState重点强调映射state，所以前三位参数都是给用户选择的，最后一个才是ctx
+            mappedState = mapState(ctx) || {};
+          }
         }
-      }
 
-      return React__default.createElement(Dumb, {
-        mappedState: mappedState,
-        ctx: ctx,
-        props: props
-      });
-    };
+        ctx.mappedState = mappedState; //将mappedState绑在ctx上，方便其他地方使用
+
+        return React__default.createElement(Dumb, {
+          mappedState: mappedState,
+          ctx: ctx,
+          props: props
+        });
+      }
+    }; //ccKey由实例化的Dumb组件props上透传下来
+
 
     return React__default.createElement(CcFragment, {
+      ccKey: props.ccKey,
       props: props,
+      module: module,
       connect: connect,
       state: state,
       setup: setup,
+      bindCtxToMethod: bindCtxToMethod,
       render: render
     });
   }
 
-  var _connectDumb$1 = (function (_ref) {
-    var connect = _ref.connect,
+  var connectDumb = (function (_ref) {
+    var mapProps = _ref.mapProps,
+        mapState = _ref.mapState,
+        module = _ref.module,
+        connect = _ref.connect,
         state = _ref.state,
         setup = _ref.setup,
+        bindCtxToMethod = _ref.bindCtxToMethod,
         _ref$alias = _ref.alias,
-        alias = _ref$alias === void 0 ? {} : _ref$alias,
-        mapState = _ref.mapState;
+        alias = _ref$alias === void 0 ? {} : _ref$alias;
     return function (Dumb) {
       //这样写可以避免react dev tool显示的dom为Unknown
       var ConnectedFragment = function ConnectedFragment(props) {
-        return _connectDumb(connect, state, setup, mapState, alias, Dumb, props);
+        return _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, mapState, alias, Dumb, props);
       };
 
       return ConnectedFragment;
     };
   });
 
-  function _dispatch (action, payLoadWhenActionIsString, identity, _temp) {
-    if (identity === void 0) {
-      identity = '';
-    }
+  var _connectPure = (function (_temp) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        module = _ref.module,
+        mapProps = _ref.mapProps,
+        mapState = _ref.mapState,
+        connect = _ref.connect,
+        state = _ref.state,
+        setup = _ref.setup,
+        bindCtxToMethod = _ref.bindCtxToMethod;
 
-    var _ref = _temp === void 0 ? [] : _temp,
-        ccClassKey = _ref[0],
-        ccKey = _ref[1],
-        throwError = _ref[2];
-
-    if (action === undefined && payLoadWhenActionIsString === undefined) {
-      throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any), when action is String, second param means payload");
-    }
-
-    var dispatchFn;
-
-    try {
-      if (ccClassKey && ccKey) {
-        var uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
-        var targetRef = ccContext.refs[uKey];
-
-        if (!targetRef) {
-          throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
-        } else {
-          dispatchFn = targetRef.$$dispatch;
-        }
-      } else {
-        var module = '';
-
-        if (typeof action == 'string' && action.includes('/')) {
-          module = action.split('/')[0];
-        }
-
-        var ref;
-
-        if (module !== '*') {
-          ref = pickOneRef(module);
-        } else {
-          ref = pickOneRef();
-        }
-
-        if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-          dispatchFn = ref.__fragmentParams.dispatch;
-        } else {
-          dispatchFn = ref.$$dispatchForModule;
-        }
-      }
-
-      if (typeof action === 'string' && action.startsWith('*')) {
-        var reducerName = action.split('/').pop();
-        var rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
-        rnList_.forEach(function (fullReducerName) {
-          dispatchFn(fullReducerName, payLoadWhenActionIsString, identity);
-        });
-      } else {
-        dispatchFn(action, payLoadWhenActionIsString, identity);
-      }
-    } catch (err) {
-      if (throwError) throw err;else util.justWarning(err.message);
-    }
-  }
+    if (mapState) throw new Error('mapState is not allowed in connectPure method args');
+    var _mapProps = mapProps;
+    if (!mapProps) _mapProps = function _mapProps() {};
+    return connectDumb({
+      module: module,
+      mapProps: _mapProps,
+      connect: connect,
+      state: state,
+      setup: setup,
+      bindCtxToMethod: bindCtxToMethod
+    });
+  });
 
   var ccKey_ref_$4 = ccContext.ccKey_ref_,
       ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_;
@@ -6165,6 +6431,10 @@ if (!this._inheritsLoose) {
 
   var appendState = ccContext.store.appendState;
 
+  var _reducerCaller = ccContext.reducer._reducerCaller;
+
+  var _lazyReducerCaller = ccContext.reducer._lazyReducerCaller;
+
   var startup$1 = startup;
   var cloneModule = _cloneModule;
   var load = _load;
@@ -6186,13 +6456,17 @@ if (!this._inheritsLoose) {
   var emitWith = _emitWith;
   var off = _off;
   var connect = _connect;
-  var connectDumb = _connectDumb$1;
-  var dispatch = _dispatch;
+  var connectDumb$1 = connectDumb;
+  var connectPure = _connectPure;
+  var dispatch$2 = dispatch$1;
+  var lazyDispatch$1 = lazyDispatch;
   var ccContext$1 = ccContext;
   var createDispatcher$1 = createDispatcher;
   var execute = _execute;
   var executeAll = _executeAll;
   var getRefs$1 = getRefs;
+  var reducer = _reducerCaller;
+  var lazyReducer = _lazyReducerCaller;
   var CcFragment$1 = CcFragment;
   var cst = _cst;
   var appendState$1 = appendState;
@@ -6202,8 +6476,10 @@ if (!this._inheritsLoose) {
     emitWith: emitWith,
     off: off,
     connect: connect,
-    connectDumb: connectDumb,
-    dispatch: dispatch,
+    connectDumb: connectDumb$1,
+    connectPure: connectPure,
+    dispatch: dispatch$2,
+    lazyDispatch: lazyDispatch$1,
     startup: startup$1,
     load: load,
     run: run,
@@ -6225,6 +6501,8 @@ if (!this._inheritsLoose) {
     execute: execute,
     executeAll: executeAll,
     getRefs: getRefs$1,
+    reducer: reducer,
+    lazyReducer: lazyReducer,
     CcFragment: CcFragment$1,
     cst: cst,
     appendState: appendState$1
@@ -6255,13 +6533,17 @@ if (!this._inheritsLoose) {
   exports.emitWith = emitWith;
   exports.off = off;
   exports.connect = connect;
-  exports.connectDumb = connectDumb;
-  exports.dispatch = dispatch;
+  exports.connectDumb = connectDumb$1;
+  exports.connectPure = connectPure;
+  exports.dispatch = dispatch$2;
+  exports.lazyDispatch = lazyDispatch$1;
   exports.ccContext = ccContext$1;
   exports.createDispatcher = createDispatcher$1;
   exports.execute = execute;
   exports.executeAll = executeAll;
   exports.getRefs = getRefs$1;
+  exports.reducer = reducer;
+  exports.lazyReducer = lazyReducer;
   exports.CcFragment = CcFragment$1;
   exports.cst = cst;
   exports.appendState = appendState$1;
