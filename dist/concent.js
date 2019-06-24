@@ -348,7 +348,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.36',
+      version: '1.2.37',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -5532,6 +5532,8 @@ if (!this._inheritsLoose) {
       var ctx = ccClassKey_ccClassContext_$2[ccClassKey];
       var connectedComputed = ctx.connectedComputed || {};
       var connectedState = ctx.connectedState || {};
+      var moduleState = connectedState[fragmentModule] || {};
+      var moduleComputed = connectedComputed[fragmentModule] || {};
 
       var reactForceUpdateRef = _this.forceUpdate.bind(_assertThisInitialized(_this));
 
@@ -5722,6 +5724,8 @@ if (!this._inheritsLoose) {
         refConnectedComputed: refConnectedComputed,
         connectedComputed: connectedComputed,
         connectedState: connectedState,
+        moduleState: moduleState,
+        moduleComputed: moduleComputed,
         // 新增defineEffect相关的支持
         defineEffect: function defineEffect(fn, stateKeys, eId, immediate) {
           if (immediate === void 0) {

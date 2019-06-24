@@ -93,6 +93,9 @@ export default class CcFragment extends Component {
     const connectedComputed = ctx.connectedComputed || {};
     const connectedState = ctx.connectedState || {};
 
+    const moduleState = connectedState[fragmentModule] || {};
+    const moduleComputed = connectedComputed[fragmentModule] || {};
+
     const reactForceUpdateRef = this.forceUpdate.bind(this);
     const reactSetStateRef = this.setState.bind(this);
 
@@ -255,6 +258,8 @@ export default class CcFragment extends Component {
       refConnectedComputed,
       connectedComputed,
       connectedState,
+      moduleState,
+      moduleComputed,
       // 新增defineEffect相关的支持
       defineEffect: (fn, stateKeys, eId, immediate = true) => {
         if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
