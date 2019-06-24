@@ -29,7 +29,6 @@ if (!this._inheritsLoose) {
   }
 }
 
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -349,7 +348,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.35',
+      version: '1.2.36',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1173,16 +1172,19 @@ if (!this._inheritsLoose) {
     var isHot = util.isHotReloadMode();
 
     if (forCcFragment === true) {
+      //因为CcFragment不强调类的概念，ccClassKey是自动生成的，所以对于标记了ccKey的CcFragment实例
+      //通过fragmentCcKeys来排除有没有重复，如果这里通过classContext去查就是不对的，因为不同的classContext可以包含相同的ccKey
       var fragmentCcKeys = ccContext.fragmentCcKeys;
 
-      if (fragmentCcKeys.includes(ccKey)) {
+      if (fragmentCcKeys.includes(ccUniqueKey)) {
+        //指定了ccKey的CcFragment，ccUniqueKey和ccKey是一样的
         throw me$2(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$1("<CcFragment ccKey=\"" + ccKey + "\" />")); // if(isHot){
         //   util.justWarning(`cc found you supply a duplicate ccKey:${ccKey} to CcFragment, but now cc is running in hot reload mode, so if this message is wrong, you can ignore it.`);
         // }else{
         //   throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`<CcFragment ccKey="${ccKey}" />`));
         // }
       } else {
-        fragmentCcKeys.push(ccKey);
+        fragmentCcKeys.push(ccUniqueKey);
       }
     }
 
@@ -1217,10 +1219,17 @@ if (!this._inheritsLoose) {
       ccKey_option_ = ccContext.ccKey_option_,
       ccUniqueKey_handlerKeys_ = ccContext.ccUniqueKey_handlerKeys_,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
-      handlerKey_handler_ = ccContext.handlerKey_handler_;
+      handlerKey_handler_ = ccContext.handlerKey_handler_,
+      fragmentCcKeys = ccContext.fragmentCcKeys;
   function unsetRef (ccClassKey, ccUniqueKey) {
     if (ccContext.isDebug) {
       console.log(styleStr(ccUniqueKey + " unset ref"), color('purple'));
+    }
+
+    var fIndex = fragmentCcKeys.indexOf(ccUniqueKey);
+
+    if (fIndex >= 0) {
+      fragmentCcKeys.splice(fIndex, 1);
     } // ccContext.ccKey_ref_[ccUniqueKey] = null;
 
 
@@ -6326,6 +6335,7 @@ if (!this._inheritsLoose) {
 
 
     return React__default.createElement(CcFragment, {
+      key: props.key,
       ccKey: props.ccKey,
       props: props,
       module: module,

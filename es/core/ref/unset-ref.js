@@ -2,12 +2,18 @@ import ccContext from '../../cc-context';
 import { decCcKeyInsCount } from './set-ref';
 import { styleStr, color } from '../../support/util';
 
-const { ccKey_ref_, ccKey_option_, ccUniqueKey_handlerKeys_, ccClassKey_ccClassContext_, handlerKey_handler_ } = ccContext;
+const { ccKey_ref_, ccKey_option_, ccUniqueKey_handlerKeys_, ccClassKey_ccClassContext_, handlerKey_handler_, fragmentCcKeys } = ccContext;
 
 export default function (ccClassKey, ccUniqueKey) {
   if (ccContext.isDebug) {
     console.log(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
   }
+
+  const fIndex = fragmentCcKeys.indexOf(ccUniqueKey);
+  if(fIndex>=0){
+    fragmentCcKeys.splice(fIndex, 1);
+  }
+
   // ccContext.ccKey_ref_[ccUniqueKey] = null;
   delete ccKey_ref_[ccUniqueKey];
   delete ccKey_option_[ccUniqueKey];

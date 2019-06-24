@@ -28,7 +28,7 @@ function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, 
   };
 
   //ccKey由实例化的Dumb组件props上透传下来
-  return React.createElement(CcFragment, { ccKey: props.ccKey, props, module, connect, state, setup, bindCtxToMethod, render });
+  return React.createElement(CcFragment, { key:props.key, ccKey: props.ccKey, props, module, connect, state, setup, bindCtxToMethod, render });
 }
 
 export default ({ mapProps, mapState, module, connect, state, setup, bindCtxToMethod, alias = {} }) => Dumb => {

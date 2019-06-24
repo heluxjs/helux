@@ -45,8 +45,11 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
 
   const isHot = util.isHotReloadMode();
   if (forCcFragment === true) {
+    //因为CcFragment不强调类的概念，ccClassKey是自动生成的，所以对于标记了ccKey的CcFragment实例
+    //通过fragmentCcKeys来排除有没有重复，如果这里通过classContext去查就是不对的，因为不同的classContext可以包含相同的ccKey
     const fragmentCcKeys = ccContext.fragmentCcKeys;
-    if (fragmentCcKeys.includes(ccKey)) {
+    if (fragmentCcKeys.includes(ccUniqueKey)) {
+      //指定了ccKey的CcFragment，ccUniqueKey和ccKey是一样的
       throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`<CcFragment ccKey="${ccKey}" />`));
       // if(isHot){
       //   util.justWarning(`cc found you supply a duplicate ccKey:${ccKey} to CcFragment, but now cc is running in hot reload mode, so if this message is wrong, you can ignore it.`);
@@ -54,7 +57,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
       //   throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`<CcFragment ccKey="${ccKey}" />`));
       // }
     } else {
-      fragmentCcKeys.push(ccKey);
+      fragmentCcKeys.push(ccUniqueKey);
     }
   }
 
