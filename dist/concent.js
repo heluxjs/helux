@@ -1,4 +1,3 @@
-
 if (!this._assertThisInitialized) {
   this._assertThisInitialized = function (self) {
     if (self === void 0) {
@@ -349,7 +348,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.2.33',
+      version: '1.2.34',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
