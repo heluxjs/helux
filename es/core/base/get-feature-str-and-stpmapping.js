@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import util from '../../support/util';
+import util, { okeys } from '../../support/util';
 
 const { store: { _state } } = ccContext;
 
@@ -32,7 +32,7 @@ export default function getFeatureStrAndStpMapping(connectSpec) {
       if (val !== '*') throw new Error(invalidConnectItem(m));
       else {
         featureStrs.push(`${feature}*`);
-        Object.keys(moduleState).forEach(sKey => stateToPropMapping[`${m}/${sKey}`] = sKey);
+        okeys(moduleState).forEach(sKey => stateToPropMapping[`${m}/${sKey}`] = sKey);
       }
     } else if (!Array.isArray(val)) {
       throw new Error(invalidConnectItem(m));

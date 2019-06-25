@@ -12,7 +12,6 @@ export default function ({
   init = null,
   computed = {},
   watch = {},
-  sharedToGlobalMapping = {},
   moduleSingleClass = {},
   middlewares = [],
   plugins = [],
@@ -58,9 +57,7 @@ export default function ({
       else throw err;
     }
 
-    boot.configSharedToGlobalMapping(sharedToGlobalMapping);
     boot.configModuleSingleClass(moduleSingleClass);
-
     boot.configStoreState(store);
     boot.configRootReducer(reducer);
     boot.configRootComputed(computed);

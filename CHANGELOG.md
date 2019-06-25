@@ -1,3 +1,12 @@
+#### 2019-06-25
+1.3.0发布，做了如下重要改进
+- 不再将$$globalState状态合并到ccClass的state里，将带来如下好处
+> 避免做moduleState和GlobalState的key命名冲突检查
+> module的reducer提交的状态不会再隐含的去修改globalState，降低bug几率，让各个模块的reducer只能严格修改自己的状态
+- 去掉多余的sharedToGlobalMapping逻辑，该逻辑实用性太小，且容易出bug
+- connectDumb支持对各个包含的fn组件定义各自独立的state
+- 实现了$$attach逻辑，class组件可以通过设置isPropsProxy来让concent用属性代理模式装饰目标react类
+
 #### 2019-06-17
 * feature add: connectDumb支持setup，现在你可以将所以的方法提升为静态的属性了，不用在render函数里一遍一遍的声明
 > [在线示例](https://stackblitz.com/edit/cc-connect-dumb-setup)

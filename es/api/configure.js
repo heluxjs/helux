@@ -40,8 +40,8 @@ function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
  * @author zzk
  * @export
  * @param {string} module
- * @param {{state:object, reducer:object, watch:object, computed:object, init:object, sharedToGlobalMapping:object, isClassSingle:boolean}} config
- * @param {object} [option] reducer、init、sharedToGlobalMapping
+ * @param {{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean}} config
+ * @param {object} [option] reducer、init
  * @param {{[reducerModuleName:string]:{[fnName:string]:function}}} [option.reducer]
  * @param {object} [option.globalState] will been merged to $$global module state
  * @param {object} [option.globalWatch] will been merged to $$global module watch
@@ -59,7 +59,7 @@ export default function (module, config, option = {}) {
     throw new Error('cc do not allow configure global module');
   }
 
-  const { state, reducer, computed, watch, init, sharedToGlobalMapping, isClassSingle } = config;
+  const { state, reducer, computed, watch, init, isClassSingle } = config;
   const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
 
   initModuleState(module, state);
@@ -125,10 +125,6 @@ export default function (module, config, option = {}) {
   setGlobalConfig(storedGlobalState, globalState, 'State');
   setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
   setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
-
-  if (sharedToGlobalMapping) {
-    base.handleModuleSharedToGlobalMapping(module, sharedToGlobalMapping);
-  }
 
   if (init) {
     if (typeof init !== 'function') {

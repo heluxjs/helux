@@ -60,6 +60,7 @@ function getEId() {
 export default class CcFragment extends Component {
   constructor(props, context) {
     super(props, context);
+    this.__beforeMount = this.__beforeMount.bind(this);
 
     let { ccKey, connect: connectSpec = {}, state = {}, module } = props;
     // 自动赋值connect
@@ -81,7 +82,7 @@ export default class CcFragment extends Component {
     //计算fragment所属的模块
     let fragmentModule = module || okeys(connectSpec)[0] || MODULE_DEFAULT;
 
-    base.buildCcClassContext(ccClassKey, fragmentModule, [], [], [], [], stateToPropMapping, true);
+    base.buildCcClassContext(ccClassKey, fragmentModule, [], [], stateToPropMapping, true);
     ccRef.setRef(this, false, ccClassKey, ccKey, ccUniqueKey, {}, true);
 
     // for CcFragment, just put ccClassKey to module's cc class keys
@@ -435,9 +436,11 @@ export default class CcFragment extends Component {
       },
     };
     this.__fragmentParams = __fragmentParams;
+
+    this.__beforeMount();
   }
 
-  componentWillMount() {
+  __beforeMount(){
     const { setup, bindCtxToMethod } = this.props;
     const ctx = this.__fragmentParams;
 
@@ -490,6 +493,7 @@ export default class CcFragment extends Component {
       });
     }
   }
+
   executeHookEffect(callByDidMount) {
     const ctx = this.__fragmentParams;
     const { effectCbArr, effectCbReturnArr } = this.__hookMeta;
