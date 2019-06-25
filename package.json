@@ -1,6 +1,6 @@
 {
   "_from": "concent",
-  "_id": "concent@1.3.0",
+  "_id": "concent@1.3.1",
   "_inBundle": false,
   "_integrity": "sha512-YuakaB+lTidx3v4cMrObLoKISm+26UVRqtD6qXscHQ3gWR6SQTVBnKxv+JdiJ+06GMmgIY6e8816TqLkcSw1Pg==",
   "_location": "/concent",
@@ -123,5 +123,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "unpkg": "dist/concent.js",
-  "version": "1.3.0"
+  "version": "1.3.1"
 }

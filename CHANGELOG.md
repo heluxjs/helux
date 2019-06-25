@@ -1,4 +1,7 @@
 #### 2019-06-25
+1.3.1发布，优化connectedState更新方式，现connectedState只是一个指向store.state的引用，updateConnectedState逻辑里，只负责检查提交的状态里有没有包含connectSpec里定义的key，有的话直接更新具体的引用
+
+#### 2019-06-25
 1.3.0发布，做了如下重要改进
 - 不再将$$globalState状态合并到ccClass的state里，将带来如下好处
 > 避免做moduleState和GlobalState的key命名冲突检查

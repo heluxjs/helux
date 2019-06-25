@@ -328,7 +328,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.3.0',
+      version: '1.3.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1010,14 +1010,9 @@ if (!this._inheritsLoose) {
     };
   }
 
-  function setConnectedState (connectedState, module, key, value) {
-    var moduleConnState = util.safeGetObjectFromObject(connectedState, module);
-    moduleConnState[key] = value;
-  }
-
   var me = util.makeError,
       throwCcHmrError$1 = util.throwCcHmrError;
-  function buildCcClassContext (ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, forCcFragment) {
+  function buildCcClassContext (ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, connectedModuleNames, forCcFragment) {
     if (forCcFragment === void 0) {
       forCcFragment = false;
     }
@@ -1047,28 +1042,26 @@ if (!this._inheritsLoose) {
 
     if (stateToPropMapping) {
       var _state = ccContext.store._state;
-      var connectedState = ccClassContext.connectedState;
-      var prefixedKeys = Object.keys(stateToPropMapping);
-      var len = prefixedKeys.length;
+      var connectedState = ccClassContext.connectedState; // const prefixedKeys = Object.keys(stateToPropMapping);
+      // const len = prefixedKeys.length;
+      // for (let i = 0; i < len; i++) {
+      //   const prefixedKey = prefixedKeys[i];
+      //   const [targetModule, targetStateKey] = prefixedKey.split('/');// prefixedKey : 'foo/f1'
+      //   connectedModule[targetModule] = 1;
+      //   const moduleState = _state[targetModule];
+      //   connectedState[targetModule] = moduleState;
+      //   // setConnectedState(connectedState, targetModule, targetStateKey, moduleState[targetStateKey]);
+      //   if(!connectedComputed[targetModule]){//绑定_computedValue的引用到connectedComputed上
+      //     connectedComputed[targetModule] = _computedValue[targetModule];
+      //   }
+      // }
+      //直接赋值引用
 
-      for (var i = 0; i < len; i++) {
-        var prefixedKey = prefixedKeys[i];
-
-        var _prefixedKey$split = prefixedKey.split('/'),
-            targetModule = _prefixedKey$split[0],
-            targetStateKey = _prefixedKey$split[1]; // prefixedKey : 'foo/f1'
-
-
-        connectedModule[targetModule] = 1;
-        var moduleState = _state[targetModule];
-        setConnectedState(connectedState, targetModule, targetStateKey, moduleState[targetStateKey]);
-
-        if (!connectedComputed[targetModule]) {
-          //绑定_computedValue的引用到connectedComputed上
-          connectedComputed[targetModule] = _computedValue[targetModule];
-        }
-      }
-
+      connectedModuleNames.forEach(function (m) {
+        connectedState[m] = _state[m];
+        connectedComputed[m] = _computedValue[m];
+        connectedModule[m] = 1; //记录连接的模块
+      });
       ccClassContext.stateToPropMapping = stateToPropMapping;
       ccClassContext.connectedModule = connectedModule;
       ccClassContext.connectedComputed = connectedComputed;
@@ -1241,43 +1234,6 @@ if (!this._inheritsLoose) {
       cb();
     }, delay);
   });
-
-  var ccStoreSetState = ccContext.store.setState;
-  var ccGlobalStateKeys = ccContext.globalStateKeys;
-  var tip = "note! you are trying set state for global module, but the state you commit include some invalid keys which is not declared in cc's global state, \ncc will ignore them, but if this result is not as you expected, please check your committed global state!";
-  function getAndStoreValidGlobalState (globalState, tipModule, tipCcClassKey) {
-    if (tipModule === void 0) {
-      tipModule = '';
-    }
-
-    if (tipCcClassKey === void 0) {
-      tipCcClassKey = '';
-    }
-
-    var _extractStateByKeys = extractStateByKeys(globalState, ccGlobalStateKeys),
-        validGlobalState = _extractStateByKeys.partialState,
-        isStateEmpty = _extractStateByKeys.isStateEmpty;
-
-    var vKeys = okeys(validGlobalState);
-    var allKeys = okeys(globalState);
-
-    if (vKeys.length < allKeys.length) {
-      //??? need strict?
-      var invalidKeys = allKeys.filter(function (k) {
-        return !vKeys.includes(k);
-      });
-      justWarning(tip + ',invalid keys: ' + invalidKeys.join(',') + ', make sure the keys is invalid and their values are not undefined');
-      console.log(globalState);
-      if (tipModule) justWarning('module is ' + tipModule);
-      if (tipCcClassKey) justWarning('ccClassKey is ' + tipCcClassKey);
-    }
-
-    ccStoreSetState(MODULE_GLOBAL, validGlobalState);
-    return {
-      partialState: validGlobalState,
-      isStateEmpty: isStateEmpty
-    };
-  }
 
   var _currentIndex = 0;
   var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
@@ -1469,7 +1425,8 @@ if (!this._inheritsLoose) {
     });
     return {
       featureStr: featureStrs.join('|'),
-      stateToPropMapping: stateToPropMapping
+      stateToPropMapping: stateToPropMapping,
+      connectedModuleNames: moduleNames
     };
   }
 
@@ -1996,7 +1953,7 @@ if (!this._inheritsLoose) {
   var _ccContext$store = ccContext.store,
       _state$1 = _ccContext$store._state,
       getState$2 = _ccContext$store.getState,
-      ccStoreSetState$1 = _ccContext$store.setState,
+      ccStoreSetState = _ccContext$store.setState,
       _reducer$1 = ccContext.reducer._reducer,
       refStore = ccContext.refStore,
       _computedValue$1 = ccContext.computed._computedValue,
@@ -2108,7 +2065,8 @@ if (!this._inheritsLoose) {
     }
 
     var _getFeatureStrAndStpM = getFeatureStrAndStpMapping(connectSpec),
-        stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping;
+        stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping,
+        connectedModuleNames = _getFeatureStrAndStpM.connectedModuleNames;
 
     var contextMap = ccContext.ccClassKey_ccClassContext_;
     var ctx = contextMap[ccClassKey];
@@ -2129,7 +2087,7 @@ if (!this._inheritsLoose) {
       }
     }
 
-    buildCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping);
+    buildCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, connectedModuleNames);
   }
   /**
    * register针对sharedStateKeys设定的默认策略是
@@ -2171,17 +2129,29 @@ if (!this._inheritsLoose) {
         connectedModule = targetClassContext.connectedModule;
 
     if (connectedModule[commitModule] === 1) {
-      var connectedState = targetClassContext.connectedState,
-          ccKeys = targetClassContext.ccKeys;
+      var ccKeys = targetClassContext.ccKeys;
       var isSetConnectedStateTriggered = false;
-      commitStateKeys.forEach(function (sKey) {
-        var moduledStateKey = commitModule + "/" + sKey;
+      var len = commitStateKeys.length;
+
+      for (var i = 0; i < len; i++) {
+        var moduledStateKey = commitModule + "/" + commitStateKeys[i];
 
         if (stateToPropMapping[moduledStateKey]) {
-          setConnectedState(connectedState, commitModule, sKey, commitState[sKey]);
           isSetConnectedStateTriggered = true;
+          break; //只要感知到有一个key发生变化，就可以跳出循环了，
+          //因为connectedState指向的是store里state的引用，更新动作在store里修改时就已完成
         }
-      }); //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
+      } // const { connectedState, ccKeys } = targetClassContext;
+      // let isSetConnectedStateTriggered = false;
+      // commitStateKeys.forEach(sKey => {
+      //   const moduledStateKey = `${commitModule}/${sKey}`;
+      //   if (stateToPropMapping[moduledStateKey]) {
+      //     setConnectedState(connectedState, commitModule, sKey, commitState[sKey]);
+      //     isSetConnectedStateTriggered = true;
+      //   }
+      // });
+      //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
+
 
       if (isSetConnectedStateTriggered === true) {
         ccKeys.forEach(function (ccUniKey) {
@@ -3014,7 +2984,7 @@ if (!this._inheritsLoose) {
                     partialSharedState = _extractStateByKeys4.partialState; //!!! save state to store
 
 
-                if (!isPartialSharedStateEmpty) ccStoreSetState$1(moduleName, partialSharedState);
+                if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);
                 return {
                   partialSharedState: partialSharedState,
                   skipBroadcastRefState: skipBroadcastRefState
@@ -3892,6 +3862,43 @@ if (!this._inheritsLoose) {
     } catch (err) {
       if (throwError) throw err;else util.justWarning(err.message);
     }
+  }
+
+  var ccStoreSetState$1 = ccContext.store.setState;
+  var ccGlobalStateKeys = ccContext.globalStateKeys;
+  var tip = "note! you are trying set state for global module, but the state you commit include some invalid keys which is not declared in cc's global state, \ncc will ignore them, but if this result is not as you expected, please check your committed global state!";
+  function getAndStoreValidGlobalState (globalState, tipModule, tipCcClassKey) {
+    if (tipModule === void 0) {
+      tipModule = '';
+    }
+
+    if (tipCcClassKey === void 0) {
+      tipCcClassKey = '';
+    }
+
+    var _extractStateByKeys = extractStateByKeys(globalState, ccGlobalStateKeys),
+        validGlobalState = _extractStateByKeys.partialState,
+        isStateEmpty = _extractStateByKeys.isStateEmpty;
+
+    var vKeys = okeys(validGlobalState);
+    var allKeys = okeys(globalState);
+
+    if (vKeys.length < allKeys.length) {
+      //??? need strict?
+      var invalidKeys = allKeys.filter(function (k) {
+        return !vKeys.includes(k);
+      });
+      justWarning(tip + ',invalid keys: ' + invalidKeys.join(',') + ', make sure the keys is invalid and their values are not undefined');
+      console.log(globalState);
+      if (tipModule) justWarning('module is ' + tipModule);
+      if (tipCcClassKey) justWarning('ccClassKey is ' + tipCcClassKey);
+    }
+
+    ccStoreSetState$1(MODULE_GLOBAL, validGlobalState);
+    return {
+      partialState: validGlobalState,
+      isStateEmpty: isStateEmpty
+    };
   }
 
   function makeSetStateHandler (module) {
@@ -5019,14 +5026,16 @@ if (!this._inheritsLoose) {
 
     var _getFeatureStrAndStpM = getFeatureStrAndStpMapping(connectSpec),
         featureStr = _getFeatureStrAndStpM.featureStr,
-        stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping;
+        stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping,
+        connectedModuleNames = _getFeatureStrAndStpM.connectedModuleNames;
 
     var ccClassKey = fragmentFeature_classKey_[featureStr];
 
     if (ccClassKey) {
       return {
         ccClassKey: ccClassKey,
-        stateToPropMapping: stateToPropMapping
+        stateToPropMapping: stateToPropMapping,
+        connectedModuleNames: connectedModuleNames
       };
     } else {
       var oldFragmentNameCount = ccContext.fragmentNameCount;
@@ -5036,7 +5045,8 @@ if (!this._inheritsLoose) {
       fragmentFeature_classKey_[featureStr] = ccClassKey;
       return {
         ccClassKey: ccClassKey,
-        stateToPropMapping: stateToPropMapping
+        stateToPropMapping: stateToPropMapping,
+        connectedModuleNames: connectedModuleNames
       };
     }
   }
@@ -5069,7 +5079,8 @@ if (!this._inheritsLoose) {
 
       var _getFragmentClassKeyA = getFragmentClassKeyAndStpMapping(connectSpec),
           ccClassKey = _getFragmentClassKeyA.ccClassKey,
-          stateToPropMapping = _getFragmentClassKeyA.stateToPropMapping;
+          stateToPropMapping = _getFragmentClassKeyA.stateToPropMapping,
+          connectedModuleNames = _getFragmentClassKeyA.connectedModuleNames;
 
       var ccUniqueKey = '',
           isCcUniqueKeyAutoGenerated = false;
@@ -5092,7 +5103,7 @@ if (!this._inheritsLoose) {
       //计算fragment所属的模块
 
       var fragmentModule = module || okeys$2(connectSpec)[0] || MODULE_DEFAULT;
-      buildCcClassContext(ccClassKey, fragmentModule, [], [], stateToPropMapping, true);
+      buildCcClassContext(ccClassKey, fragmentModule, [], [], stateToPropMapping, connectedModuleNames, true);
       setRef(_assertThisInitialized(_this), false, ccClassKey, ccKey, ccUniqueKey, {}, true); // for CcFragment, just put ccClassKey to module's cc class keys
 
       var moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
@@ -5623,8 +5634,8 @@ if (!this._inheritsLoose) {
           _this.__fragmentParams.setModuleState(MODULE_GLOBAL, state, delay, identity);
         },
         state: state,
-        props: props,
-        outProps: outProps,
+        props: outProps,
+        fragmentProps: props,
         setState: function setState(state, cb) {
           var thisCc = _this.cc;
           var thisState = _this.state;

@@ -13,14 +13,13 @@ import ccContext from '../../cc-context';
 import util, { isPlainJsonObject, convertToStandardEvent, okeys } from '../../support/util';
 import co from 'co';
 import extractStateByKeys from '../state/extract-state-by-keys';
-import setConnectedState from '../state/set-connected-state';
+// import setConnectedState from '../state/set-connected-state';
 import buildCcClassContext from './build-cc-class-context';
 import catchCcError from './catch-cc-error';
 import mapModuleAndCcClassKeys from '../mapper/map-module-and-cc-class-keys';
 import unsetRef from '../ref/unset-ref';
 import setRef from '../ref/set-ref';
 import runLater from './run-later';
-import getAndStoreValidGlobalState from '../state/get-and-store-valid-global-state';
 import computeCcUniqueKey from './compute-cc-unique-key';
 import buildMockEvent from './build-mock-event';
 import getFeatureStrAndStpMapping from './get-feature-str-and-stpmapping';
@@ -127,7 +126,7 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
   if (ccClassKey.toLowerCase().substring(0, fragmentPrefixLen) === CC_FRAGMENT_PREFIX) {
     throw me(ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED);
   }
-  const { stateToPropMapping } = getFeatureStrAndStpMapping(connectSpec);
+  const { stateToPropMapping, connectedModuleNames } = getFeatureStrAndStpMapping(connectSpec);
 
   const contextMap = ccContext.ccClassKey_ccClassContext_;
   const ctx = contextMap[ccClassKey];
@@ -145,7 +144,7 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
     }
   }
 
-  buildCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping);
+  buildCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, connectedModuleNames);
 }
 
 /**
@@ -186,16 +185,29 @@ function mapModuleAssociateDataToCcContext(ccClassKey, stateModule, sharedStateK
 function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
   const { stateToPropMapping, connectedModule } = targetClassContext;
   if (connectedModule[commitModule] === 1) {
-    const { connectedState, ccKeys } = targetClassContext;
 
+    const { ccKeys } = targetClassContext;
     let isSetConnectedStateTriggered = false;
-    commitStateKeys.forEach(sKey => {
-      const moduledStateKey = `${commitModule}/${sKey}`;
+    const len = commitStateKeys.length;
+    for (let i = 0; i < len; i++) {
+      const moduledStateKey = `${commitModule}/${commitStateKeys[i]}`;
       if (stateToPropMapping[moduledStateKey]) {
-        setConnectedState(connectedState, commitModule, sKey, commitState[sKey]);
         isSetConnectedStateTriggered = true;
+        break;
+        //只要感知到有一个key发生变化，就可以跳出循环了，
+        //因为connectedState指向的是store里state的引用，更新动作在store里修改时就已完成
       }
-    });
+    }
+
+    // const { connectedState, ccKeys } = targetClassContext;
+    // let isSetConnectedStateTriggered = false;
+    // commitStateKeys.forEach(sKey => {
+    //   const moduledStateKey = `${commitModule}/${sKey}`;
+    //   if (stateToPropMapping[moduledStateKey]) {
+    //     setConnectedState(connectedState, commitModule, sKey, commitState[sKey]);
+    //     isSetConnectedStateTriggered = true;
+    //   }
+    // });
 
     //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
     if (isSetConnectedStateTriggered === true) {

@@ -7,7 +7,7 @@ const { store: { _state } } = ccContext;
  * 根据connect参数算出ccClassKey值和stateToPropMapping值
  */
 export default function getFeatureStrAndStpMapping(connectSpec) {
-  if(!util.isPlainJsonObject(connectSpec)){
+  if (!util.isPlainJsonObject(connectSpec)) {
     throw new Error(`CcFragment or CcClass's prop connect type error, it is not a plain json object`);
   }
 
@@ -49,5 +49,5 @@ export default function getFeatureStrAndStpMapping(connectSpec) {
     }
   });
 
-  return { featureStr: featureStrs.join('|'), stateToPropMapping };
+  return { featureStr: featureStrs.join('|'), stateToPropMapping, connectedModuleNames: moduleNames };
 }

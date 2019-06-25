@@ -5,7 +5,7 @@ import setConnectedState from '../state/set-connected-state';
 
 const { makeError: me, throwCcHmrError } = util;
 
-export default function (ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, forCcFragment = false) {
+export default function (ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, connectedModuleNames, forCcFragment = false) {
 
   const contextMap = ccContext.ccClassKey_ccClassContext_;
   const _computedValue = ccContext.computed._computedValue;
@@ -32,21 +32,30 @@ export default function (ccClassKey, moduleName, originalSharedStateKeys, shared
   if (stateToPropMapping) {
     const _state = ccContext.store._state;
     const connectedState = ccClassContext.connectedState;
-    const prefixedKeys = Object.keys(stateToPropMapping);
-    const len = prefixedKeys.length;
+    // const prefixedKeys = Object.keys(stateToPropMapping);
+    // const len = prefixedKeys.length;
 
-    for (let i = 0; i < len; i++) {
-      const prefixedKey = prefixedKeys[i];
-      const [targetModule, targetStateKey] = prefixedKey.split('/');// prefixedKey : 'foo/f1'
-      connectedModule[targetModule] = 1;
-      const moduleState = _state[targetModule];
-      setConnectedState(connectedState, targetModule, targetStateKey, moduleState[targetStateKey]);
+    // for (let i = 0; i < len; i++) {
+    //   const prefixedKey = prefixedKeys[i];
+    //   const [targetModule, targetStateKey] = prefixedKey.split('/');// prefixedKey : 'foo/f1'
+    //   connectedModule[targetModule] = 1;
+    //   const moduleState = _state[targetModule];
 
-      if(!connectedComputed[targetModule]){//绑定_computedValue的引用到connectedComputed上
-        connectedComputed[targetModule] = _computedValue[targetModule];
-      }
-    }
-    
+    //   connectedState[targetModule] = moduleState;
+    //   // setConnectedState(connectedState, targetModule, targetStateKey, moduleState[targetStateKey]);
+
+    //   if(!connectedComputed[targetModule]){//绑定_computedValue的引用到connectedComputed上
+    //     connectedComputed[targetModule] = _computedValue[targetModule];
+    //   }
+    // }
+
+    //直接赋值引用
+    connectedModuleNames.forEach(m => {
+      connectedState[m] = _state[m];
+      connectedComputed[m] = _computedValue[m];
+      connectedModule[m] = 1;//记录连接的模块
+    });
+
     ccClassContext.stateToPropMapping = stateToPropMapping;
     ccClassContext.connectedModule = connectedModule;
     ccClassContext.connectedComputed = connectedComputed;
