@@ -83,21 +83,14 @@ const ccContext = {
   moduleName_sharedStateKeys_: {
 
   },
-  // map from moduleName to globalStateKeys
-  moduleName_globalStateKeys_: {
-
-  },
   // 映射好模块的状态所有key并缓存住，用于提高性能
   moduleName_stateKeys_: {
 
   },
-  //to let cc know which ccClass are watching globalStateKeys
-  globalCcClassKeys: [],
   /**
     ccClassContext:{
       module,
       sharedStateKeys,
-      globalStateKeys,
       connectedState:{},
       connectedComputed:{},
       ccKeys: [],
@@ -106,29 +99,6 @@ const ccContext = {
     }
   */
   ccClassKey_ccClassContext_: {
-
-  },
-  // [globalKey]:${modules}, let cc know what modules are watching a same globalKey
-  globalKey_toModules_: {
-
-  },
-  sharedToGlobalMapping: {
-
-  },
-  //  translate sharedToGlobalMapping object to another shape: {sharedKey: {globalMappingKey, fromModule}, ... }
-  sharedKey_globalMappingKeyDescriptor_: {
-
-  },
-  // [globalKey]:${sharedKey}
-  globalMappingKey_sharedKey_: {
-
-  },
-  // [globalKey]:${modules}, let cc know what modules are watching a same globalMappingKey
-  globalMappingKey_toModules_: {
-
-  },
-  // let cc know a globalMappingKey is mapped from which module
-  globalMappingKey_fromModule_: {
 
   },
   // globalStateKeys is maintained by cc automatically,
@@ -238,7 +208,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.2.37',
+    version: '1.238.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

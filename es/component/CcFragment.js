@@ -391,11 +391,13 @@ export default class CcFragment extends Component {
         ev.bindEventHandlerToCcContext(this.cc.ccState.module, ccClassKey, ccUniqueKey, event, identity, handler);
       },
       dispatch: (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
-        const d = dispatcher.__$$getDispatchHandler(this.state, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, this.cc.ccState.module, null, null, null, -1)
+        const stateModule = this.cc.ccState.module;
+        const d = dispatcher.__$$getDispatchHandler(this.state, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, stateModule, stateModule, null, null, -1)
         d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
       },
       lazyDispatch: (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
-        const d = dispatcher.__$$getDispatchHandler(this.state, true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, this.cc.ccState.module, null, null, null, -1)
+        const stateModule = this.cc.ccState.module;
+        const d = dispatcher.__$$getDispatchHandler(this.state, true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, stateModule, stateModule, null, null, -1)
         d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
       },
       callDispatch: (...args) => this.__fragmentParams.dispatch.bind(this, ...args),

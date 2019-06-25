@@ -5,8 +5,7 @@ import setConnectedState from '../state/set-connected-state';
 
 const { makeError: me, throwCcHmrError } = util;
 
-export default function (ccClassKey, moduleName, originalSharedStateKeys, originalGlobalStateKeys,
-  sharedStateKeys, globalStateKeys, stateToPropMapping, forCcFragment = false) {
+export default function (ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, forCcFragment = false) {
 
   const contextMap = ccContext.ccClassKey_ccClassContext_;
   const _computedValue = ccContext.computed._computedValue;
@@ -18,14 +17,14 @@ export default function (ccClassKey, moduleName, originalSharedStateKeys, origin
     //因为cc根据CcFragment的connect参数计算ccClassKey
     //多个CcFragment实例的connect一样的话，会计算出同一个ccClassKey
     if (ccClassContext === undefined) {
-      ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
+      ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, originalSharedStateKeys);
     }
   } else {
     //对于register调用，ccClassContext一定是不存在的, 如果存在就报错
     if (ccClassContext !== undefined) {
       throwCcHmrError(me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`))
     }
-    ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, globalStateKeys, originalSharedStateKeys, originalGlobalStateKeys);
+    ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, sharedStateKeys, originalSharedStateKeys);
   }
 
   const connectedModule = {};

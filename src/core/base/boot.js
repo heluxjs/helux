@@ -3,7 +3,6 @@ import * as util from '../../support/util';
 import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
-import handleModuleSharedToGlobalMapping from './handle-module-shared-to-global-mapping';
 import initModuleState from '../state/init-module-state';
 import makeSetStateHandler from '../state/make-set-state-handler';
 import initModuleReducer from '../reducer/init-module-reducer';
@@ -21,11 +20,10 @@ export function appendGlobalState(globalState) {
 }
 
 export function configStoreState(storeState) {
-  const sharedToGlobalMapping = ccContext.sharedToGlobalMapping;
   if (!isPlainJsonObject(storeState)) {
     throw new Error(`the storeState is not a plain json object!`);
   }
-  const { globalStateKeys, pureGlobalStateKeys, store } = ccContext;
+  const store = ccContext.store;
   store.initStateDangerously(MODULE_CC, {});
 
   if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
@@ -37,18 +35,7 @@ export function configStoreState(storeState) {
     const moduleName = moduleNames[i];
     const moduleState = storeState[moduleName];
     initModuleState(moduleName, moduleState);
-
-    const sharedKey_globalKey_ = sharedToGlobalMapping[moduleName];
-    if (sharedKey_globalKey_) {
-      handleModuleSharedToGlobalMapping(moduleName, sharedKey_globalKey_);
-    }
   }
-
-  const globalMappingKey_sharedKey_ = ccContext.globalMappingKey_sharedKey_;
-  globalStateKeys.reduce((pKeys, gKey) => {
-    if (!globalMappingKey_sharedKey_[gKey]) pKeys.push(gKey);
-    return pKeys;
-  }, pureGlobalStateKeys);
 }
 
 /**
@@ -103,12 +90,6 @@ export function executeRootInit(init) {
   ccContext.init._init = init;
 }
 
-export function configSharedToGlobalMapping(sharedToGlobalMapping) {
-  if (!isPlainJsonObject(sharedToGlobalMapping)) {
-    throw new Error(`StartupOption.sharedToGlobalMapping is not a plain json object!`);
-  }
-  util.safeAssignObjectValue(ccContext.sharedToGlobalMapping, sharedToGlobalMapping);
-}
 
 export function configModuleSingleClass(moduleSingleClass) {
   if (!isPlainJsonObject(moduleSingleClass)) {
@@ -157,7 +138,6 @@ export default {
   configRootComputed,
   configRootWatch,
   executeRootInit,
-  configSharedToGlobalMapping,
   configModuleSingleClass,
   configMiddlewares,
   configPlugins,
