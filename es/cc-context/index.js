@@ -22,7 +22,7 @@ const setStateByModuleAndKey = (module, key, value) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
   const moduleComputedFn = computed._computedFn[module];
-  const watchFn = watch[module];
+  const watchFn = watch._watch[module];
   const oldValue = moduleState[key];
   prevModuleState[key] = oldValue;
 
@@ -208,7 +208,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.3.3',
+    version: '1.3.4',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

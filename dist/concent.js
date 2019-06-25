@@ -1,34 +1,3 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('assert'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'assert', 'react-dom'], factory) :
@@ -174,7 +143,7 @@ if (!this._inheritsLoose) {
     var prevModuleState = _getPrevState(module);
 
     var moduleComputedFn = computed._computedFn[module];
-    var watchFn = watch[module];
+    var watchFn = watch._watch[module];
     var oldValue = moduleState[key];
     prevModuleState[key] = oldValue;
     var keyDesc = {
@@ -328,7 +297,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.3.3',
+      version: '1.3.4',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
