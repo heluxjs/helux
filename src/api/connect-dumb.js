@@ -1,16 +1,13 @@
 import CcFragment from '../component/CcFragment';
 import * as util from '../support/util';
 import React from 'react';
-import { type } from 'os';
-
 
 function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, mapState, alias, Dumb, props) {
   const render = (ctx) => {
     const { connectedState } = ctx;
     if (mapProps) {
-      //和mapState保持参数一致
       const generatedProps = mapProps(ctx);
-      if(mapState) throw new Error('mapState is not allowed when you specify mapProps in args');
+      if (mapState) throw new Error('mapState is not allowed when you specify mapProps in args');
       return React.createElement(Dumb, generatedProps);
     } else {
       let mappedState = {};
@@ -18,7 +15,6 @@ function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, 
         if (mapState === true) {
           mappedState = util.flatObject(connectedState, alias);
         } else {
-          //mapState重点强调映射state，所以前三位参数都是给用户选择的，最后一个才是ctx
           mappedState = mapState(ctx) || {};
         }
       }
@@ -29,10 +25,10 @@ function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, 
   };
 
   //ccKey由实例化的Dumb组件props上透传下来
-  return React.createElement(CcFragment, { key:props.key, ccKey: props.ccKey, props, module, connect, state, setup, bindCtxToMethod, render });
+  return React.createElement(CcFragment, { key: props.key, ccKey: props.ccKey, props, module, connect, state, setup, bindCtxToMethod, render });
 }
 
-export default ({ mapProps, mapState, module, connect, state, setup, bindCtxToMethod, alias = {} }) => Dumb => {
+export default ({ mapProps, mapState, module, connect, state = {}, setup, bindCtxToMethod, alias = {} }) => Dumb => {
 
   //对state做克隆,防止用同一个concnetDumb结果包不同的fn组件,共享了同一份state
   //const c = concnetDumb({state:{info:{a:1}}});

@@ -1,39 +1,8 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
-
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('assert'), require('react-dom'), require('os')) :
-  typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'assert', 'react-dom', 'os'], factory) :
-  (factory((global.ReactControlCenter = {}),global._assertThisInitialized,global._inheritsLoose,global.React,global.assert,global.ReactDOM,global.os));
-}(this, (function (exports,_assertThisInitialized,_inheritsLoose,React,assert,ReactDOM,os) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('assert'), require('react-dom')) :
+  typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'assert', 'react-dom'], factory) :
+  (factory((global.ReactControlCenter = {}),global._assertThisInitialized,global._inheritsLoose,global.React,global.assert,global.ReactDOM));
+}(this, (function (exports,_assertThisInitialized,_inheritsLoose,React,assert,ReactDOM) { 'use strict';
 
   _assertThisInitialized = _assertThisInitialized && _assertThisInitialized.hasOwnProperty('default') ? _assertThisInitialized['default'] : _assertThisInitialized;
   _inheritsLoose = _inheritsLoose && _inheritsLoose.hasOwnProperty('default') ? _inheritsLoose['default'] : _inheritsLoose;
@@ -328,7 +297,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.3.1',
+      version: '1.3.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -5859,6 +5828,10 @@ if (!this._inheritsLoose) {
       });
 
       var eid_effectReturnCb_ = this.__staticEffectMeta.eid_effectReturnCb_;
+      Object.getOwnPropertySymbols(eid_effectReturnCb_).forEach(function (symbolKey) {
+        var cb = eid_effectReturnCb_[symbolKey];
+        if (typeof cb === 'function') cb(ctx);
+      });
       okeys$2(eid_effectReturnCb_).forEach(function (eId) {
         var cb = eid_effectReturnCb_[eId];
         if (typeof cb === 'function') cb(ctx);
@@ -5898,7 +5871,6 @@ if (!this._inheritsLoose) {
       var connectedState = ctx.connectedState;
 
       if (mapProps) {
-        //和mapState保持参数一致
         var generatedProps = mapProps(ctx);
         if (mapState) throw new Error('mapState is not allowed when you specify mapProps in args');
         return React__default.createElement(Dumb, generatedProps);
@@ -5909,7 +5881,6 @@ if (!this._inheritsLoose) {
           if (mapState === true) {
             mappedState = flatObject(connectedState, alias);
           } else {
-            //mapState重点强调映射state，所以前三位参数都是给用户选择的，最后一个才是ctx
             mappedState = mapState(ctx) || {};
           }
         }
@@ -5943,7 +5914,8 @@ if (!this._inheritsLoose) {
         mapState = _ref.mapState,
         module = _ref.module,
         connect = _ref.connect,
-        state = _ref.state,
+        _ref$state = _ref.state,
+        state = _ref$state === void 0 ? {} : _ref$state,
         setup = _ref.setup,
         bindCtxToMethod = _ref.bindCtxToMethod,
         _ref$alias = _ref.alias,

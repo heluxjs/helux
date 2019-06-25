@@ -599,6 +599,10 @@ export default class CcFragment extends Component {
       if (typeof cb === 'function') cb(ctx);
     });
     const eid_effectReturnCb_ = this.__staticEffectMeta.eid_effectReturnCb_;
+    Object.getOwnPropertySymbols(eid_effectReturnCb_).forEach(symbolKey => {
+      const cb = eid_effectReturnCb_[symbolKey];
+      if (typeof cb === 'function') cb(ctx);
+    });
     okeys(eid_effectReturnCb_).forEach(eId => {
       const cb = eid_effectReturnCb_[eId];
       if (typeof cb === 'function') cb(ctx);
