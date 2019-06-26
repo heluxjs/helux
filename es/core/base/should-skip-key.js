@@ -2,13 +2,18 @@
 import { MODULE_GLOBAL } from '../../support/constant';
 import * as util from '../../support/util';
 
-export default function (key, stateModule, connectSpecLike, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag = false) {
+export default function (specModule, key, stateModule, connectSpecLike, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag = false) {
   let skip = false;
   let keyModule = '';
   let stateKey = key;
 
   if (key.includes('/')) {// moduledKey : 'foo/f1'
-    const [tmpKeyModule, unmoduledKey] = key.split('/');
+    let [tmpKeyModule, unmoduledKey] = key.split('/');
+
+    if (tmpKeyModule === '') {// '/f1'，观察实例所属模块的key
+      tmpKeyModule = specModule;
+    }
+
     keyModule = tmpKeyModule;
     //这个key的模块不是提交state所属的模块，也不属于global模块, 对应的watch就需要排除掉
     //因为setState只提交自己模块的数据，所以如果tmpKeyModule是其他模块，这里并不会被触发

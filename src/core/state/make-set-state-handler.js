@@ -8,7 +8,7 @@ import extractStateByKeys from './extract-state-by-keys';
 export default function(module) {
   return state => {
     try {
-      setState(module, state, 0, true);
+      setState(module, state, 0);
     } catch (err) {
       if (module == MODULE_GLOBAL) {
         getAndStoreValidGlobalState(state, module);

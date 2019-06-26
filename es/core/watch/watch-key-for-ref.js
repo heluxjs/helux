@@ -12,18 +12,18 @@ export default function(stateModule, watchSpec, connect, refEntireState, userCom
     const globalStateKeys = moduleName_stateKeys_[MODULE_GLOBAL];
     const moduleStateKeys = moduleName_stateKeys_[stateModule];
 
-    const refWatch = watchSpec;
-    const watchStateKeys = util.okeys(refWatch);
+    const { watchFns, module:watchSpecModule } = watchSpec;
+    const watchStateKeys = util.okeys(watchFns);
     const len = watchStateKeys.length;
     let shouldNouUpdateLen = 0;
 
     watchStateKeys.forEach(key => {
-      const { stateKey, skip, keyModule } = shouldSkipKey(key, stateModule, connect, moduleStateKeys, globalStateKeys);
+      const { stateKey, skip, keyModule } = shouldSkipKey(watchSpecModule, key, stateModule, connect, moduleStateKeys, globalStateKeys);
       if (skip) return;
 
       const commitValue = userCommitState[stateKey];
       if (commitValue !== undefined) {
-        const watchFn = refWatch[key];
+        const watchFn = watchFns[key];
         const targetModule = keyModule || stateModule;
         const moduleState = getState(targetModule);
         const keyDesc = { key: stateKey, module: targetModule, moduleState };

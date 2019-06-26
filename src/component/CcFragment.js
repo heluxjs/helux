@@ -230,7 +230,13 @@ export default class CcFragment extends Component {
       const dataset = currentTarget.dataset;
 
       if (e && e.stopPropagation) e.stopPropagation();
-      if (dataset.ccsync.includes('/')) {// syncModuleState 同步模块的state状态
+
+      const ccsync = dataset.ccsync;
+      if (ccsync.startsWith('/')) {
+        dataset.ccsync = `${this.cc.ccState.module}${ccsync}`;//附加上默认模块值
+      }
+
+      if (ccsync.includes('/')) {// syncModuleState 同步模块的state状态
         dispatcher.$$sync(mockE);
       } else {// syncLocalState 同步本地的state状态
         const { state } = extractStateByCcsync(dataset.ccsync, currentTarget.value, dataset.ccint, this.state, mockE.isToggleBool);
@@ -240,11 +246,6 @@ export default class CcFragment extends Component {
 
     const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
     const eid_effectReturnCb_ = {};// fn
-    const attchModuleToCcsync = (ccsync) => {
-      let _ccsync = ccsync;
-      if (!_ccsync.includes('/')) _ccsync = `${this.cc.ccState.module}/ccsync`;
-      return _ccsync;
-    }
 
     this.__staticEffectMeta = {
       effectItems,
@@ -254,6 +255,7 @@ export default class CcFragment extends Component {
     let isWatchDefined = false;
     let isComputedDefined = false;
     const __fragmentParams = {
+      module: fragmentModule,
       isCcFragment: true,
       refComputed,
       refConnectedComputed,
@@ -296,13 +298,13 @@ export default class CcFragment extends Component {
       },
       defineWatch: (watch) => {
         if (isWatchDefined) throw new Error('defineWatch can only been one time');
-        const watchSpec = getWatchSpec(watch, this.__fragmentParams);
+        const watchSpec = getWatchSpec(watch, this.__fragmentParams, this.cc.ccState.module);
         this.cc.watch = watch;
         this.cc.watchSpec = watchSpec;
       },
       defineComputed: (computed) => {
         if (isComputedDefined) throw new Error('defineComputed can only been one time');
-        const computedSpec = getComputedSpec(computed, this.__fragmentParams);
+        const computedSpec = getComputedSpec(computed, this.__fragmentParams, this.cc.ccState.module);
         this.cc.computed = computed;
         this.cc.computedSpec = computedSpec;
       },
@@ -316,47 +318,23 @@ export default class CcFragment extends Component {
         if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, idt });
         __sync({ type: 'bool' }, e);
       },
-      syncmBool: (e, delay = -1, idt = '') => {
-        if (typeof e === 'string') {
-          const _ccsync = attchModuleToCcsync(e);
-          return __sync.bind(null, { [CCSYNC_KEY]: _ccsync, type: 'bool', delay, idt });
-        }
-        __sync({ type: 'bool' }, e);
-      },
       //if <Input onChange={(value:string, value2:string)=>void} />
       // <Input onChange={ctx.sync} /> not work!!!
       // <Input onChange={ctx.sync('foo/f1')} /> ok
       // only <input data-ccsync="foo/f1" onChange={ctx.sync} /> ok
       // only <input onChange={ctx.sync('foo/f1')} /> ok
       sync: (e, val, delay = -1, idt = '') => {
-        if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, idt });
+        if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: _ccsync, type: 'val', val, delay, idt });
         __sync({ type: 'val' }, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
-      },
-      syncm: (e, val, delay = -1, idt = '') => {
-        if (typeof e === 'string') {
-          const _ccsync = attchModuleToCcsync(e);
-          return __sync.bind(null, { [CCSYNC_KEY]: _ccsync, type: 'val', val, delay, idt });
-        }
-        __sync({ type: 'val' }, e);
       },
 
       //因为val可以是任意类型值，所以不再需要提供setInt
       set: (ccsync, val, delay, idt) => {
         __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, idt });
       },
-      //自动包含模块的set
-      setm: (ccsync, val, delay, idt) => {
-        const _ccsync = attchModuleToCcsync(ccsync);
-        __sync({ [CCSYNC_KEY]: _ccsync, type: 'val', val, delay, idt });
-      },
       //对布尔值自动取反
       setBool:(ccsync, delay = -1, idt = '')=>{
         __sync({ [CCSYNC_KEY]:ccsync, type: 'bool', delay, idt });
-      },
-      //自动包含模块的setToggle
-      setmBool:(ccsync, delay = -1, idt = '')=>{
-        const _ccsync = attchModuleToCcsync(ccsync);
-        __sync({ [CCSYNC_KEY]:_ccsync, type: 'bool', delay, idt });
       },
 
       // <Input onChange={ctx.syncInt} /> not work!!!
@@ -365,13 +343,6 @@ export default class CcFragment extends Component {
       // <input data-ccsync="foo/f1" onChange={ctx.syncInt('foo/fq')} /> ok
       syncInt: (e, delay = -1, idt = '') => {
         if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, idt });
-        __sync({ type: 'int' }, e);//<input data-ccsync="foo/f1" onChange={ctx.syncInt} />
-      },
-      syncmInt: (e, delay = -1, idt = '') => {
-        if (typeof e === 'string') {
-          const _ccsync = attchModuleToCcsync(e);
-          return __sync.bind(null, { [CCSYNC_KEY]: _ccsync, type: 'int', delay, idt });
-        }
         __sync({ type: 'int' }, e);//<input data-ccsync="foo/f1" onChange={ctx.syncInt} />
       },
 

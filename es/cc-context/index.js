@@ -200,15 +200,13 @@ const ccContext = {
   // when component unmounted, it's handler will been removed
   handlerKey_handler_: {
   },
-
-
   ccKey_option_: {
 
   },
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.3.4',
+    version: '1.3.5',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

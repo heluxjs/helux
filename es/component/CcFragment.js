@@ -254,6 +254,7 @@ export default class CcFragment extends Component {
     let isWatchDefined = false;
     let isComputedDefined = false;
     const __fragmentParams = {
+      module: fragmentModule,
       isCcFragment: true,
       refComputed,
       refConnectedComputed,
@@ -296,13 +297,13 @@ export default class CcFragment extends Component {
       },
       defineWatch: (watch) => {
         if (isWatchDefined) throw new Error('defineWatch can only been one time');
-        const watchSpec = getWatchSpec(watch, this.__fragmentParams);
+        const watchSpec = getWatchSpec(watch, this.__fragmentParams, this.cc.ccState.module);
         this.cc.watch = watch;
         this.cc.watchSpec = watchSpec;
       },
       defineComputed: (computed) => {
         if (isComputedDefined) throw new Error('defineComputed can only been one time');
-        const computedSpec = getComputedSpec(computed, this.__fragmentParams);
+        const computedSpec = getComputedSpec(computed, this.__fragmentParams, this.cc.ccState.module);
         this.cc.computed = computed;
         this.cc.computedSpec = computedSpec;
       },

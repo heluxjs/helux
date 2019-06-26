@@ -328,7 +328,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.3.4',
+      version: '1.3.5',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1799,7 +1799,7 @@ if (!this._inheritsLoose) {
     offEventHandlersByCcUniqueKey: offEventHandlersByCcUniqueKey
   });
 
-  function shouldSkipKey (key, stateModule, connectSpecLike, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag) {
+  function shouldSkipKey (specModule, key, stateModule, connectSpecLike, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag) {
     if (writeRefComputedWhenRefIsCfrag === void 0) {
       writeRefComputedWhenRefIsCfrag = false;
     }
@@ -1813,6 +1813,11 @@ if (!this._inheritsLoose) {
       var _key$split = key.split('/'),
           tmpKeyModule = _key$split[0],
           unmoduledKey = _key$split[1];
+
+      if (tmpKeyModule === '') {
+        // '/f1'，观察实例所属模块的key
+        tmpKeyModule = specModule;
+      }
 
       keyModule = tmpKeyModule; //这个key的模块不是提交state所属的模块，也不属于global模块, 对应的watch就需要排除掉
       //因为setState只提交自己模块的数据，所以如果tmpKeyModule是其他模块，这里并不会被触发
@@ -1854,12 +1859,13 @@ if (!this._inheritsLoose) {
     if (watchSpec) {
       var globalStateKeys = moduleName_stateKeys_[MODULE_GLOBAL];
       var moduleStateKeys = moduleName_stateKeys_[stateModule];
-      var refWatch = watchSpec;
-      var watchStateKeys = okeys(refWatch);
+      var watchFns = watchSpec.watchFns,
+          watchSpecModule = watchSpec.module;
+      var watchStateKeys = okeys(watchFns);
       var len = watchStateKeys.length;
       var shouldNouUpdateLen = 0;
       watchStateKeys.forEach(function (key) {
-        var _shouldSkipKey = shouldSkipKey(key, stateModule, connect, moduleStateKeys, globalStateKeys),
+        var _shouldSkipKey = shouldSkipKey(watchSpecModule, key, stateModule, connect, moduleStateKeys, globalStateKeys),
             stateKey = _shouldSkipKey.stateKey,
             skip = _shouldSkipKey.skip,
             keyModule = _shouldSkipKey.keyModule;
@@ -1868,7 +1874,7 @@ if (!this._inheritsLoose) {
         var commitValue = userCommitState[stateKey];
 
         if (commitValue !== undefined) {
-          var watchFn = refWatch[key];
+          var watchFn = watchFns[key];
           var targetModule = keyModule || stateModule;
           var moduleState = getState(targetModule);
           var keyDesc = {
@@ -1895,10 +1901,11 @@ if (!this._inheritsLoose) {
     if (computedSpec) {
       var globalStateKeys = moduleName_stateKeys_$1[MODULE_GLOBAL];
       var moduleStateKeys = moduleName_stateKeys_$1[stateModule];
-      var toBeComputed = computedSpec;
-      var toBeComputedKeys = okeys(toBeComputed);
+      var computedFns = computedSpec.computedFns,
+          computedSpecModule = computedSpec.module;
+      var toBeComputedKeys = okeys(computedFns);
       toBeComputedKeys.forEach(function (key) {
-        var _shouldSkipKey = shouldSkipKey(key, stateModule, refConnectedComputed, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag),
+        var _shouldSkipKey = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag),
             stateKey = _shouldSkipKey.stateKey,
             skip = _shouldSkipKey.skip,
             keyModule = _shouldSkipKey.keyModule;
@@ -1907,7 +1914,7 @@ if (!this._inheritsLoose) {
         var newValue = commitState[stateKey];
 
         if (newValue !== undefined) {
-          var fn = toBeComputed[key]; //用原始定义当然key去取fn
+          var fn = computedFns[key]; //用原始定义当然key去取fn
 
           var targetModule = keyModule || stateModule;
           var moduleState = getState$1(targetModule);
@@ -1928,18 +1935,24 @@ if (!this._inheritsLoose) {
     }
   }
 
-  function getWatchSpec (watch, ctx) {
-    var watchSpec;
+  function getWatchSpec (watch, ctx, module) {
+    var watchFns;
     var watchType = typeof watch;
-    if (watchType === 'function') watchSpec = watch(ctx);else if (watchType === 'object' && !Array.isArray(watch)) watchSpec = watch;else throw new Error('watch type can only be a function or a plain json object');
-    return watchSpec;
+    if (watchType === 'function') watchFns = watch(ctx);else if (watchType === 'object' && !Array.isArray(watch)) watchFns = watch;else throw new Error('watch type can only be a function or a plain json object');
+    return {
+      watchFns: watchFns,
+      module: module
+    };
   }
 
-  function getComputedSpec (computed, ctx) {
-    var computedSpec;
+  function getComputedSpec (computed, ctx, module) {
+    var computedFns;
     var computedType = typeof computed;
-    if (computedType === 'function') computedSpec = computed(ctx);else if (computedType === 'object' && !Array.isArray(computed)) computedSpec = computed;else throw new Error('computed type can only be a function or a plain json object');
-    return computedSpec;
+    if (computedType === 'function') computedFns = computed(ctx);else if (computedType === 'object' && !Array.isArray(computed)) computedFns = computed;else throw new Error('computed type can only be a function or a plain json object');
+    return {
+      computedFns: computedFns,
+      module: module
+    };
   }
 
   var verifyKeys$1 = util.verifyKeys,
@@ -2336,13 +2349,14 @@ if (!this._inheritsLoose) {
               //放在__$$recoverState之前，优先设置this.cc.computed
 
               if (_this.$$watch) {
-                _this.cc.watch = _this.$$watch.bind(_assertThisInitialized(_this));
-                _this.cc.watchSpec = getWatchSpec(_this.cc.watch);
+                _this.cc.watch = _this.$$watch.bind(_assertThisInitialized(_this)); //区别于CcFragment, 对于class组件，不把this当作上下文传进去了
+
+                _this.cc.watchSpec = getWatchSpec(_this.cc.watch, null, _curStateModule);
               }
 
               if (_this.$$computed) {
                 _this.cc.computed = _this.$$computed.bind(_assertThisInitialized(_this));
-                _this.cc.computedSpec = getComputedSpec(_this.cc.computed);
+                _this.cc.computedSpec = getComputedSpec(_this.cc.computed, null, _curStateModule);
               }
 
               if (_this.$$onUrlChanged) _this.cc.onUrlChanged = _this.$$onUrlChanged.bind(_assertThisInitialized(_this));
@@ -2425,13 +2439,15 @@ if (!this._inheritsLoose) {
             childRef.$$globalComputed = this.cc.globalComputed;
             childRef.$$connectedState = this.cc.connectedState;
             childRef.$$globalState = this.cc.globalState;
-            childRef.cc = this.cc;
+            var thisCc = this.cc;
+            var curModule = thisCc.ccState.module;
+            childRef.cc = thisCc;
 
             var bindChildRefCcApi = function bindChildRefCcApi(cRef, method, ccMethod) {
               if (cRef[method]) {
                 childRef[method] = childRef[method].bind(childRef);
-                _this2.cc[ccMethod] = childRef[method];
-                if (method === '$$watch') _this2.cc.watchSpec = getWatchSpec(_this2.cc.$$watch);else if (method === '$$computed') _this2.cc.computedSpec = getComputedSpec(_this2.cc.$$computed);
+                thisCc[ccMethod] = childRef[method];
+                if (method === '$$watch') thisCc.watchSpec = getWatchSpec(thisCc.$$watch, null, curModule);else if (method === '$$computed') thisCc.computedSpec = getComputedSpec(thisCc.$$computed, null, curModule);
               }
             }; //这些方法绑定的this指向childRef
 
@@ -3904,7 +3920,7 @@ if (!this._inheritsLoose) {
   function makeSetStateHandler (module) {
     return function (state) {
       try {
-        setState(module, state, 0, true);
+        setState(module, state, 0);
       } catch (err) {
         if (module == MODULE_GLOBAL) {
           getAndStoreValidGlobalState(state, module);
@@ -5299,6 +5315,7 @@ if (!this._inheritsLoose) {
         eid_effectReturnCb_: eid_effectReturnCb_
       };
       var __fragmentParams = {
+        module: fragmentModule,
         isCcFragment: true,
         refComputed: refComputed,
         refConnectedComputed: refConnectedComputed,
@@ -5363,12 +5380,12 @@ if (!this._inheritsLoose) {
           effectItems.length = 0;
         },
         defineWatch: function defineWatch(watch) {
-          var watchSpec = getWatchSpec(watch, _this.__fragmentParams);
+          var watchSpec = getWatchSpec(watch, _this.__fragmentParams, _this.cc.ccState.module);
           _this.cc.watch = watch;
           _this.cc.watchSpec = watchSpec;
         },
         defineComputed: function defineComputed(computed) {
-          var computedSpec = getComputedSpec(computed, _this.__fragmentParams);
+          var computedSpec = getComputedSpec(computed, _this.__fragmentParams, _this.cc.ccState.module);
           _this.cc.computed = computed;
           _this.cc.computedSpec = computedSpec;
         },

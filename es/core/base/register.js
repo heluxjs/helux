@@ -366,11 +366,12 @@ export default function register(ccClassKey, {
             //放在__$$recoverState之前，优先设置this.cc.computed
             if (this.$$watch) {
               this.cc.watch = this.$$watch.bind(this);
-              this.cc.watchSpec = getWatchSpec(this.cc.watch);
+              //区别于CcFragment, 对于class组件，不把this当作上下文传进去了
+              this.cc.watchSpec = getWatchSpec(this.cc.watch, null, _curStateModule);
             }
             if (this.$$computed) {
               this.cc.computed = this.$$computed.bind(this);
-              this.cc.computedSpec = getComputedSpec(this.cc.computed);
+              this.cc.computedSpec = getComputedSpec(this.cc.computed, null, _curStateModule);
             }
             if (this.$$onUrlChanged) this.cc.onUrlChanged = this.$$onUrlChanged.bind(this);
             if (this.$$execute) this.cc.execute = this.$$execute.bind(this);
@@ -448,14 +449,16 @@ export default function register(ccClassKey, {
           childRef.$$globalComputed = this.cc.globalComputed;
           childRef.$$connectedState = this.cc.connectedState ;
           childRef.$$globalState = this.cc.globalState;
-          childRef.cc = this.cc ;
 
+          const thisCc = this.cc;
+          const curModule = thisCc.ccState.module;
+          childRef.cc = thisCc;
           const bindChildRefCcApi = (cRef, method, ccMethod) => {
             if (cRef[method]) {
               childRef[method] = childRef[method].bind(childRef);
-              this.cc[ccMethod] = childRef[method];
-              if (method === '$$watch') this.cc.watchSpec = getWatchSpec(this.cc.$$watch);
-              else if (method === '$$computed') this.cc.computedSpec = getComputedSpec(this.cc.$$computed);
+              thisCc[ccMethod] = childRef[method];
+              if (method === '$$watch') thisCc.watchSpec = getWatchSpec(thisCc.$$watch, null, curModule);
+              else if (method === '$$computed') thisCc.computedSpec = getComputedSpec(thisCc.$$computed, null, curModule);
             }
           }
 

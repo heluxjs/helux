@@ -12,15 +12,15 @@ export default function(stateModule, computedSpec, refComputed, refConnectedComp
     const globalStateKeys = moduleName_stateKeys_[MODULE_GLOBAL];
     const moduleStateKeys = moduleName_stateKeys_[stateModule];
 
-    const toBeComputed = computedSpec;
-    const toBeComputedKeys = util.okeys(toBeComputed);
+    const { computedFns, module: computedSpecModule } = computedSpec;
+    const toBeComputedKeys = util.okeys(computedFns);
     toBeComputedKeys.forEach(key => {
-      const { stateKey, skip, keyModule } = shouldSkipKey(key, stateModule, refConnectedComputed, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag);
+      const { stateKey, skip, keyModule } = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag);
       if (skip) return;
 
       const newValue = commitState[stateKey];
       if (newValue !== undefined) {
-        const fn = toBeComputed[key];//用原始定义当然key去取fn
+        const fn = computedFns[key];//用原始定义当然key去取fn
         const targetModule = keyModule || stateModule;
         const moduleState = getState(targetModule);
         const keyDesc = { key: stateKey, module: targetModule, moduleState };
