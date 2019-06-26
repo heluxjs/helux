@@ -328,7 +328,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.3.5',
+      version: '1.3.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -5287,8 +5287,13 @@ if (!this._inheritsLoose) {
         var currentTarget = mockE.currentTarget;
         var dataset = currentTarget.dataset;
         if (e && e.stopPropagation) e.stopPropagation();
+        var ccsync = dataset.ccsync;
 
-        if (dataset.ccsync.includes('/')) {
+        if (ccsync.startsWith('/')) {
+          dataset.ccsync = "" + _this.cc.ccState.module + ccsync; //附加上默认模块值
+        }
+
+        if (ccsync.includes('/')) {
           // syncModuleState 同步模块的state状态
           dispatcher.$$sync(mockE);
         } else {
@@ -5303,12 +5308,6 @@ if (!this._inheritsLoose) {
       var effectItems = []; // {fn:function, status:0, eId:'', immediate:true}
 
       var eid_effectReturnCb_ = {}; // fn
-
-      var attchModuleToCcsync = function attchModuleToCcsync(ccsync) {
-        var _ccsync = ccsync;
-        if (!_ccsync.includes('/')) _ccsync = _this.cc.ccState.module + "/ccsync";
-        return _ccsync;
-      };
 
       _this.__staticEffectMeta = {
         effectItems: effectItems,
@@ -5411,7 +5410,14 @@ if (!this._inheritsLoose) {
             type: 'bool'
           }, e);
         },
-        syncmBool: function syncmBool(e, delay, idt) {
+        //if <Input onChange={(value:string, value2:string)=>void} />
+        // <Input onChange={ctx.sync} /> not work!!!
+        // <Input onChange={ctx.sync('foo/f1')} /> ok
+        // only <input data-ccsync="foo/f1" onChange={ctx.sync} /> ok
+        // only <input onChange={ctx.sync('foo/f1')} /> ok
+        sync: function sync(e, val, delay, idt) {
+          var _sync$bind2;
+
           if (delay === void 0) {
             delay = -1;
           }
@@ -5420,24 +5426,38 @@ if (!this._inheritsLoose) {
             idt = '';
           }
 
-          if (typeof e === 'string') {
-            var _sync$bind2;
-
-            var _ccsync = attchModuleToCcsync(e);
-
-            return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = _ccsync, _sync$bind2.type = 'bool', _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
-          }
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = _ccsync, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
 
           __sync({
-            type: 'bool'
-          }, e);
+            type: 'val'
+          }, e); //allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
+
         },
-        //if <Input onChange={(value:string, value2:string)=>void} />
-        // <Input onChange={ctx.sync} /> not work!!!
-        // <Input onChange={ctx.sync('foo/f1')} /> ok
-        // only <input data-ccsync="foo/f1" onChange={ctx.sync} /> ok
-        // only <input onChange={ctx.sync('foo/f1')} /> ok
-        sync: function sync(e, val, delay, idt) {
+        //因为val可以是任意类型值，所以不再需要提供setInt
+        set: function set(ccsync, val, delay, idt) {
+          var _sync2;
+
+          __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'val', _sync2.val = val, _sync2.delay = delay, _sync2.idt = idt, _sync2));
+        },
+        //对布尔值自动取反
+        setBool: function setBool(ccsync, delay, idt) {
+          var _sync3;
+
+          if (delay === void 0) {
+            delay = -1;
+          }
+
+          if (idt === void 0) {
+            idt = '';
+          }
+
+          __sync((_sync3 = {}, _sync3[CCSYNC_KEY] = ccsync, _sync3.type = 'bool', _sync3.delay = delay, _sync3.idt = idt, _sync3));
+        },
+        // <Input onChange={ctx.syncInt} /> not work!!!
+        // <Input onChange={ctx.syncInt('foo/bar')} /> ok
+        // <input onChange={ctx.syncInt('foo/bar')} /> ok
+        // <input data-ccsync="foo/f1" onChange={ctx.syncInt('foo/fq')} /> ok
+        syncInt: function syncInt(e, delay, idt) {
           var _sync$bind3;
 
           if (delay === void 0) {
@@ -5448,116 +5468,7 @@ if (!this._inheritsLoose) {
             idt = '';
           }
 
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'val', _sync$bind3.val = val, _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3));
-
-          __sync({
-            type: 'val'
-          }, e); //allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
-
-        },
-        syncm: function syncm(e, val, delay, idt) {
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          if (typeof e === 'string') {
-            var _sync$bind4;
-
-            var _ccsync = attchModuleToCcsync(e);
-
-            return __sync.bind(null, (_sync$bind4 = {}, _sync$bind4[CCSYNC_KEY] = _ccsync, _sync$bind4.type = 'val', _sync$bind4.val = val, _sync$bind4.delay = delay, _sync$bind4.idt = idt, _sync$bind4));
-          }
-
-          __sync({
-            type: 'val'
-          }, e);
-        },
-        //因为val可以是任意类型值，所以不再需要提供setInt
-        set: function set(ccsync, val, delay, idt) {
-          var _sync2;
-
-          __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'val', _sync2.val = val, _sync2.delay = delay, _sync2.idt = idt, _sync2));
-        },
-        //自动包含模块的set
-        setm: function setm(ccsync, val, delay, idt) {
-          var _sync3;
-
-          var _ccsync = attchModuleToCcsync(ccsync);
-
-          __sync((_sync3 = {}, _sync3[CCSYNC_KEY] = _ccsync, _sync3.type = 'val', _sync3.val = val, _sync3.delay = delay, _sync3.idt = idt, _sync3));
-        },
-        //对布尔值自动取反
-        setBool: function setBool(ccsync, delay, idt) {
-          var _sync4;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          __sync((_sync4 = {}, _sync4[CCSYNC_KEY] = ccsync, _sync4.type = 'bool', _sync4.delay = delay, _sync4.idt = idt, _sync4));
-        },
-        //自动包含模块的setToggle
-        setmBool: function setmBool(ccsync, delay, idt) {
-          var _sync5;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          var _ccsync = attchModuleToCcsync(ccsync);
-
-          __sync((_sync5 = {}, _sync5[CCSYNC_KEY] = _ccsync, _sync5.type = 'bool', _sync5.delay = delay, _sync5.idt = idt, _sync5));
-        },
-        // <Input onChange={ctx.syncInt} /> not work!!!
-        // <Input onChange={ctx.syncInt('foo/bar')} /> ok
-        // <input onChange={ctx.syncInt('foo/bar')} /> ok
-        // <input data-ccsync="foo/f1" onChange={ctx.syncInt('foo/fq')} /> ok
-        syncInt: function syncInt(e, delay, idt) {
-          var _sync$bind5;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind5 = {}, _sync$bind5[CCSYNC_KEY] = e, _sync$bind5.type = 'int', _sync$bind5.delay = delay, _sync$bind5.idt = idt, _sync$bind5));
-
-          __sync({
-            type: 'int'
-          }, e); //<input data-ccsync="foo/f1" onChange={ctx.syncInt} />
-
-        },
-        syncmInt: function syncmInt(e, delay, idt) {
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          if (typeof e === 'string') {
-            var _sync$bind6;
-
-            var _ccsync = attchModuleToCcsync(e);
-
-            return __sync.bind(null, (_sync$bind6 = {}, _sync$bind6[CCSYNC_KEY] = _ccsync, _sync$bind6.type = 'int', _sync$bind6.delay = delay, _sync$bind6.idt = idt, _sync$bind6));
-          }
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3));
 
           __sync({
             type: 'int'
