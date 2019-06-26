@@ -32,7 +32,6 @@ import watchKeyForRef from '../watch/watch-key-for-ref';
 import computeValueForRef from '../computed/compute-value-for-ref';
 import getWatchSpec from '../watch/get-watch-spec';
 import getComputedSpec from '../computed/get-computed-spec';
-import { ok } from 'assert';
 
 const { verifyKeys, ccClassDisplayName, styleStr, color, verboseInfo, makeError, justWarning, throwCcHmrError } = util;
 const {

@@ -328,7 +328,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.3.6',
+      version: '1.3.7',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -5426,7 +5426,7 @@ if (!this._inheritsLoose) {
             idt = '';
           }
 
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = _ccsync, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
+          if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
 
           __sync({
             type: 'val'

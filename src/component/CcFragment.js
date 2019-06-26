@@ -324,7 +324,7 @@ export default class CcFragment extends Component {
       // only <input data-ccsync="foo/f1" onChange={ctx.sync} /> ok
       // only <input onChange={ctx.sync('foo/f1')} /> ok
       sync: (e, val, delay = -1, idt = '') => {
-        if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: _ccsync, type: 'val', val, delay, idt });
+        if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, idt });
         __sync({ type: 'val' }, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
       },
 
