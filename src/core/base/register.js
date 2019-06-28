@@ -618,13 +618,14 @@ export default function register(ccClassKey, {
                   //调用前先加1
                   chainId_depth_[chainId] =  chainId_depth_[chainId] + 1;
 
+                  const dStateFor = getStateFor(targetModule, _curStateModule);
                   //暂时不考虑在ctx提供lazyDispatch功能
                   const dispatch = this.__$$getDispatchHandler(
-                    refState, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule,
+                    refState, false, ccKey, ccUniqueKey, ccClassKey, dStateFor, targetModule, reducerModule,
                     null, null, -1, identity, chainId, oriChainId, chainId_depth_
                   );
                   const dispatchIdentity = this.__$$getDispatchHandler(
-                    refState, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, targetModule, reducerModule,
+                    refState, false, ccKey, ccUniqueKey, ccClassKey, dStateFor, targetModule, reducerModule,
                     null, null, -1, identity, chainId, oriChainId, chainId_depth_
                   );
 
