@@ -80,7 +80,7 @@ export default class CcFragment extends Component {
     const outProps = props.props || props;//把最外层的props传递给用户
 
     //计算fragment所属的模块
-    let fragmentModule = module || okeys(connectSpec)[0] || MODULE_DEFAULT;
+    const fragmentModule = module || okeys(connectSpec)[0] || MODULE_DEFAULT;
 
     base.buildCcClassContext(ccClassKey, fragmentModule, [], [], stateToPropMapping, connectedModuleNames, true);
     ccRef.setRef(this, false, ccClassKey, ccKey, ccUniqueKey, {}, true);
@@ -374,8 +374,10 @@ export default class CcFragment extends Component {
       },
       callDispatch: (...args) => this.__fragmentParams.dispatch.bind(this, ...args),
       callLazyDispatch: (...args) => this.__fragmentParams.lazyDispatch.bind(this, ...args),
-      effect: dispatcher.__$$getEffectHandler(ccKey),
-      xeffect: dispatcher.__$$getXEffectHandler(ccKey),
+
+      invoke: dispatcher.__$$getInvokeHandler(fragmentModule, ccKey, ccUniqueKey, ccClassKey),
+      lazyInvoke: dispatcher.__$$getInvokeHandler(fragmentModule, ccKey, ccUniqueKey, ccClassKey, { isLazy: true }),
+
       setModuleState: (module, state, delay, identity) => {
         let _module = module, _state = state, _delay = delay, _identity = identity;
         if (typeof module === 'object') {

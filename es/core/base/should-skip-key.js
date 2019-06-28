@@ -12,6 +12,7 @@ export default function (specModule, key, stateModule, connectSpecLike, moduleSt
 
     if (tmpKeyModule === '') {// '/f1'，观察实例所属模块的key
       tmpKeyModule = specModule;
+      stateKey = specModule + key;
     }
 
     keyModule = tmpKeyModule;
