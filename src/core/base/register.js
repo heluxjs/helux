@@ -283,7 +283,7 @@ function getNewChainData(isLazy, chainId, oriChainId, chainId_depth_) {
 
 export default function register(ccClassKey, {
   module = MODULE_DEFAULT,
-  sharedStateKeys: inputSharedStateKeys = [],
+  sharedStateKeys: inputSharedStateKeys = '*',
   storedStateKeys: inputStoredStateKeys = [],
   connect = {},
   reducerModule,
