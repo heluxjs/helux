@@ -365,12 +365,12 @@ export default class CcFragment extends Component {
       dispatch: (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
         const stateModule = this.cc.ccState.module;
         const d = dispatcher.__$$getDispatchHandler(this.state, false, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, stateModule, stateModule, null, null, -1)
-        d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
+        return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
       },
       lazyDispatch: (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
         const stateModule = this.cc.ccState.module;
         const d = dispatcher.__$$getDispatchHandler(this.state, true, ccKey, ccUniqueKey, ccClassKey, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, stateModule, stateModule, null, null, -1)
-        d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
+        return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
       },
       callDispatch: (...args) => this.__fragmentParams.dispatch.bind(this, ...args),
       callLazyDispatch: (...args) => this.__fragmentParams.lazyDispatch.bind(this, ...args),
