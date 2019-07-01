@@ -29,6 +29,7 @@ if (!this._inheritsLoose) {
   }
 }
 
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -334,7 +335,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.1',
+      version: '1.4.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -4890,7 +4891,7 @@ if (!this._inheritsLoose) {
         _storedStateKeys = storedStateKeys;
       }
 
-      var _sharedStateKeys;
+      var _sharedStateKeys = sharedStateKeys;
 
       if (sharedStateKeys === '*') {
         _sharedStateKeys = moduleName_stateKeys_$3[fragmentModule];

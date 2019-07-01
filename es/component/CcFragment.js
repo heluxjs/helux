@@ -72,7 +72,7 @@ export default class CcFragment extends Component {
       _storedStateKeys = storedStateKeys;
     }
 
-    let _sharedStateKeys;
+    let _sharedStateKeys = sharedStateKeys;
     if (sharedStateKeys === '*') {
       _sharedStateKeys = moduleName_stateKeys_[fragmentModule];
     }
