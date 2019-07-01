@@ -206,7 +206,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.3.11',
+    version: '1.40.0',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
@@ -222,10 +222,7 @@ const ccContext = {
   plugins:[],
 }
 
-if (window && !window.sss) {
-  window.sss = ccContext.store._state;
-}
-
+util.bindToWindow('sss',ccContext.store._state );
 
 export function getCcContext() {
   return ccContext;

@@ -7,7 +7,6 @@ import register from './register';
  * @param {object} option 
  * @param {boolean} [option.isPropsProxy] default is false
  * @param {boolean} [option.isSingle] default is false
- * @param {boolean} [option.asyncLifecycleHook] 
  * @param {string} [option.module]
  * @param {Array<string>} [option.sharedStateKeys]
  */

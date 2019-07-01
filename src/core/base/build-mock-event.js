@@ -1,7 +1,7 @@
 import { CCSYNC_KEY, MOCKE_KEY } from '../../support/constant';
 import { convertToStandardEvent } from '../../support/util';
 
-export default (spec, e, stateFor) => {
+export default (spec, e) => {
   let ccint = false, ccsync = '', ccidt = '', value = '', ccdelay = -1, isToggleBool = false;
   const specSyncKey = spec[CCSYNC_KEY];
   const type = spec.type;
@@ -53,5 +53,5 @@ export default (spec, e, stateFor) => {
     }
   }
 
-  return { [MOCKE_KEY]: 1, currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } }, stateFor, isToggleBool };
+  return { [MOCKE_KEY]: 1, currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } }, isToggleBool };
 }

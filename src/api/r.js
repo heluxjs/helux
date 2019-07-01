@@ -7,7 +7,6 @@ import register from './register';
  * option.sharedStateKeys is called s for short 
  * option.connect is called pm for c 
  * option.isSingle is called is for short 
- * option.asyncLifecycleHook is called as for short 
  * option.reducerModule is called re for short 
  * option.isPropsProxy is called ip for short 
  */
@@ -17,9 +16,8 @@ export default function (ccClassKey, {
   st: storedStateKeys,
   c: connect,
   is: isSingle,
-  as: asyncLifecycleHook,
   re: reducerModule,
   ip: isPropsProxy,
 } = {}) {
-  return register(ccClassKey, { isPropsProxy, module, sharedStateKeys, storedStateKeys, connect, isSingle, asyncLifecycleHook, reducerModule });
+  return register(ccClassKey, { isPropsProxy, module, sharedStateKeys, storedStateKeys, connect, isSingle, reducerModule });
 }

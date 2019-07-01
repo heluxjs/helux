@@ -62,17 +62,6 @@ import register from '../core/base/register';
  * if you only allow current cc class only initialize one time, 
  * that means there is only one cc instance can be existed for current cc class at most,
  * you can define registerOption.isSingle as true, it just like singleton mode in java coding^_^
- * @param {string} [registerOption.asyncLifecycleHook] default is true
- * we can define cc class lifecycle method $$beforeSetState、$$afterSetState、$$beforeBroadcastState,
- * but they are synchronous by default,
- * if you define registerOption.isSingle as true, these three method's second param will be next handler
- *  * ============   !!!!!!  ============
- *  you must call next, if you don't want to block any of next operation in cc core
- * ```
- * $$beforeSetState(executeContext, next){
- *  // here if you don't call next(), it will block reactSetState, broadcastState and etc operations ~_~
- * }
- * ```
  */
 export default function (ccClassKey, registerOption) {
   if (registerOption) {
