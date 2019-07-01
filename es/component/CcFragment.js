@@ -103,7 +103,7 @@ export default class CcFragment extends Component {
     const connectedComputed = ctx.connectedComputed || {};
     const connectedState = ctx.connectedState || {};
 
-    const moduleState = getState[fragmentModule];
+    const moduleState = getState(fragmentModule);
     const moduleComputed = _computedValue[fragmentModule] || {};
 
     const reactForceUpdateRef = this.forceUpdate.bind(this);

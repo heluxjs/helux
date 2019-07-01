@@ -334,7 +334,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.0',
+      version: '1.4.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -4929,7 +4929,7 @@ if (!this._inheritsLoose) {
       var ctx = ccClassKey_ccClassContext_$3[ccClassKey];
       var connectedComputed = ctx.connectedComputed || {};
       var connectedState = ctx.connectedState || {};
-      var moduleState = getState$6[fragmentModule];
+      var moduleState = getState$6(fragmentModule);
       var moduleComputed = _computedValue$3[fragmentModule] || {};
 
       var reactForceUpdateRef = _this.forceUpdate.bind(_assertThisInitialized(_this));
