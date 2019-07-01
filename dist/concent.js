@@ -29,7 +29,6 @@ if (!this._inheritsLoose) {
   }
 }
 
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -335,7 +334,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.2',
+      version: '1.4.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -3184,7 +3183,7 @@ if (!this._inheritsLoose) {
                 _ref4$chainId_depth_ = _ref4.chainId_depth_,
                 chainId_depth_ = _ref4$chainId_depth_ === void 0 ? {} : _ref4$chainId_depth_;
 
-            return function (firstParam, payload) {
+            return function (firstParam, payload, delay, identity) {
               var _getNewChainData = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
                   _chainId = _getNewChainData._chainId,
                   _oriChainId = _getNewChainData._oriChainId;
@@ -3199,7 +3198,9 @@ if (!this._inheritsLoose) {
                 module: module,
                 chainId: _chainId,
                 oriChainId: _oriChainId,
-                chainId_depth_: chainId_depth_
+                chainId_depth_: chainId_depth_,
+                delay: delay,
+                identity: identity
               };
               var err = new Error("param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:{fn:function, delay:number, identity:string}, ...args:any[])");
 
@@ -3209,12 +3210,8 @@ if (!this._inheritsLoose) {
                 //firstParam: {fn:function, delay:number, identity:string}
                 // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
                 var fn = firstParam.fn,
-                    delay = firstParam.delay,
-                    identity = firstParam.identity,
                     userInputModule = firstParam.module;
                 if (typeof fn != 'function') throw err;
-                option.delay = delay;
-                option.identity = identity;
                 if (userInputModule) option.module = userInputModule; //用某个模块的实例去修改另外模块的数据
 
                 return _this5.cc.__invoke(fn, option, payload);

@@ -687,11 +687,14 @@ export default function register(ccClassKey, {
           return this.__$$makeInvokeHandler(targetRef, module, ccKey, ccUniqueKey, ccClassKey, chainData);
         }
         __$$makeInvokeHandler(targetRef, module, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, isLazy, chainId_depth_ = {} } = {}) {
-          return (firstParam, payload) => {
+          return (firstParam, payload, delay, identity) => {
             const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
             const firstParamType = typeof firstParam;
-            const option = {targetRef, ccKey, ccUniqueKey, ccClassKey, calledBy: INVOKE, module, chainId: _chainId, oriChainId: _oriChainId, chainId_depth_ };
+            const option = {
+              targetRef, ccKey, ccUniqueKey, ccClassKey, calledBy: INVOKE, module,
+              chainId: _chainId, oriChainId: _oriChainId, chainId_depth_, delay, identity,
+            };
 
             const err = new Error(`param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:{fn:function, delay:number, identity:string}, ...args:any[])`);
             if (firstParamType === 'function') {
@@ -700,10 +703,8 @@ export default function register(ccClassKey, {
               //firstParam: {fn:function, delay:number, identity:string}
 
               // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
-              const { fn, delay, identity, module: userInputModule } = firstParam;
+              const { fn, module: userInputModule } = firstParam;
               if (typeof fn != 'function') throw err;
-              option.delay = delay;
-              option.identity = identity;
               if (userInputModule) option.module = userInputModule;//用某个模块的实例去修改另外模块的数据
 
               return this.cc.__invoke(fn, option, payload)
