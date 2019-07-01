@@ -7,15 +7,14 @@ const getState = ccContext.store.getState;
 const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 
 //CcFragment实例调用会提供ctx
-export default function(stateModule, computedSpec, refComputed, refConnectedComputed, oldState, commitState, ctx, writeRefComputedWhenRefIsCfrag) {
+export default function(stateModule, computedSpec, refComputed, refConnectedComputed, oldState, commitState, ctx) {
   if (computedSpec) {
-    const globalStateKeys = moduleName_stateKeys_[MODULE_GLOBAL];
     const moduleStateKeys = moduleName_stateKeys_[stateModule];
 
     const { computedFns, module: computedSpecModule } = computedSpec;
     const toBeComputedKeys = util.okeys(computedFns);
     toBeComputedKeys.forEach(key => {
-      const { stateKey, skip, keyModule } = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys, globalStateKeys, ctx, writeRefComputedWhenRefIsCfrag);
+      const { stateKey, skip, keyModule } = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys, ctx);
       if (skip) return;
 
       const newValue = commitState[stateKey];

@@ -1,3 +1,8 @@
+#### 2019-07-01
+1.4.0 发布，统一CcFragment和CcClass的使用体验
+* CcFragment允许指定专属模块
+* CcFragment的state有模块state和私有state合并而来
+
 #### 2019-06-28
 1.3.8 发布，做了一下重大更新
 * 优化invoke参数列表，和reducer完全保持一致

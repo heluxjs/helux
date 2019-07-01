@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import util, { clearObject } from '../support/util';
+import util, { clearObject, bindToWindow } from '../support/util';
 import { ERR, MODULE_DEFAULT, CC_DISPATCHER_BOX, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
@@ -90,9 +90,9 @@ export default function ({
     }
 
     if (window) {
-      window.CC_CONTEXT = ccContext;
-      window.ccc = ccContext;
-      window.cccc = ccContext.computed._computedValue;
+      bindToWindow('CC_CONTEXT', ccContext);
+      bindToWindow('ccc', ccContext);
+      bindToWindow('cccc', ccContext.computed._computedValue);
     }
 
     ccContext.isCcAlreadyStartup = true;

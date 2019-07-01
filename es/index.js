@@ -32,6 +32,7 @@ import _reducer from './api/reducer';
 import _lazyReducer from './api/lazyReducer';
 import _CcFragment from './component/CcFragment';
 import * as _cst from './support/constant';
+import * as util from './support/util';
 
 export const startup = _startup;
 export const cloneModule = _cloneModule;
@@ -107,8 +108,6 @@ const defaultExport = {
   appendState,
 }
 
-if (window) {
-  window.cc = defaultExport;
-}
+util.bindToWindow('cc', defaultExport);
 
 export default defaultExport;

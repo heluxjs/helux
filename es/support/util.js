@@ -345,6 +345,17 @@ export function convertToStandardEvent(e) {
   return ret;
 }
 
+//防止有些在线IDE，绑定失败
+export function bindToWindow(key, obj) {
+  if (window) {
+    window[key] = obj;
+  } else {
+    setTimeout(() => {
+      if (window) window[key] = obj;
+    }, 6000);
+  }
+}
+
 export default {
   clearObject,
   makeError,

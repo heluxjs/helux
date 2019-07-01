@@ -2,7 +2,7 @@ import CcFragment from '../component/CcFragment';
 import * as util from '../support/util';
 import React from 'react';
 
-function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, mapState, alias, Dumb, props) {
+function _connectDumb(mapProps, module, sharedStateKeys, connect, state, setup, bindCtxToMethod, mapState, alias, Dumb, props) {
   const render = (ctx) => {
     const { connectedState } = ctx;
     if (mapProps) {
@@ -25,10 +25,10 @@ function _connectDumb(mapProps, module, connect, state, setup, bindCtxToMethod, 
   };
 
   //ccKey由实例化的Dumb组件props上透传下来
-  return React.createElement(CcFragment, { key: props.key, ccKey: props.ccKey, props, module, connect, state, setup, bindCtxToMethod, render });
+  return React.createElement(CcFragment, { key: props.key, ccKey: props.ccKey, props, module, sharedStateKeys, connect, state, setup, bindCtxToMethod, render });
 }
 
-export default ({ mapProps, mapState, module, connect, state = {}, setup, bindCtxToMethod, alias = {} }) => Dumb => {
+export default ({ mapProps, mapState, module, sharedStateKeys, connect, state = {}, setup, bindCtxToMethod, alias = {} }) => Dumb => {
 
   //对state做克隆,防止用同一个concnetDumb结果包不同的fn组件,共享了同一份state
   //const c = concnetDumb({state:{info:{a:1}}});
@@ -44,6 +44,6 @@ export default ({ mapProps, mapState, module, connect, state = {}, setup, bindCt
   }
 
   //这样写可以避免react dev tool显示的dom为Unknown
-  const ConnectedFragment = props => _connectDumb(mapProps, module, connect, clonedState, setup, bindCtxToMethod, mapState, alias, Dumb, props);
+  const ConnectedFragment = props => _connectDumb(mapProps, module, sharedStateKeys, connect, clonedState, setup, bindCtxToMethod, mapState, alias, Dumb, props);
   return ConnectedFragment;
 }
