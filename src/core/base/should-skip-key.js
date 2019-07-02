@@ -1,7 +1,7 @@
 
 import * as util from '../../support/util';
 
-export default function (specModule, key, stateModule, connectSpecLike, moduleStateKeys, ctx) {
+export default function (specModule, key, stateModule, connectSpecLike, moduleStateKeys) {
   let skip = false;
   let keyModule = '';
   let stateKey = key;
