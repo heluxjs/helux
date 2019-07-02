@@ -269,9 +269,9 @@ export default class CcFragment extends Component {
       refComputed,
       refConnectedComputed,
       connectedComputed,
+      moduleComputed,
       connectedState,
       moduleState,
-      moduleComputed,
       // 新增defineEffect相关的支持
       defineEffect: (fn, stateKeys, eId, immediate = true) => {
         if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
@@ -381,8 +381,6 @@ export default class CcFragment extends Component {
         const d = dispatcher.__$$getDispatchHandler(this, this.state, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1)
         return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
       },
-      callDispatch: (...args) => this.__fragmentParams.dispatch.bind(this, ...args),
-      callLazyDispatch: (...args) => this.__fragmentParams.lazyDispatch.bind(this, ...args),
 
       invoke: dispatcher.__$$getInvokeHandler(this, fragmentModule, ccKey, ccUniqueKey, ccClassKey),
       lazyInvoke: dispatcher.__$$getInvokeHandler(this, fragmentModule, ccKey, ccUniqueKey, ccClassKey, { isLazy: true }),
