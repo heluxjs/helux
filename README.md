@@ -258,9 +258,9 @@ ___
 ___
 ## 图文介绍
 ### cc渲染流程
-![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-core.png)
+![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
 ### cc组件工作流程
-![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-process.png)
+![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-process.png)
 
 ### [concent是什么](https://concentjs.github.io/concent-site/docs/doc-intro-what-is-concent)
 ### [在cc里用class和function实现counter](https://juejin.im/post/5c8f77bdf265da60ec2812f7)
