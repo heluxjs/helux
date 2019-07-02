@@ -34,7 +34,7 @@ export default function ({
     ccContext.bindCtxToMethod = bindCtxToMethod;
 
     const err = util.makeError(ERR.CC_ALREADY_STARTUP);
-    clearContextIfUnderHotReloadMode(err);
+    clearContextIfUnderHotReloadMode(true, err);
 
     boot.configModuleSingleClass(moduleSingleClass);
     boot.configStoreState(store);

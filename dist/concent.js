@@ -334,7 +334,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.5',
+      version: '1.4.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -4205,33 +4205,73 @@ if (!this._inheritsLoose) {
     }
   }
 
-  function clearContextIfUnderHotReloadMode (warningErr) {
+  var justCalledByStartUp = false;
+
+  function _clearInsAssociation() {
+    clearObject(ccContext.event_handlers_);
+    clearObject(ccContext.ccUniqueKey_handlerKeys_);
+    var cct = ccContext.ccClassKey_ccClassContext_;
+    Object.keys(cct).forEach(function (ccClassKey) {
+      var ctx = cct[ccClassKey];
+      clearObject(ctx.ccKeys);
+    });
+    clearObject(ccContext.handlerKey_handler_);
+    clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
+    clearObject(ccContext.refs, [CC_DISPATCHER]);
+    clearObject(ccContext.fragmentCcKeys);
+    clearObject(ccContext.ccKey_option_);
+  }
+
+  function _clearAll() {
+    clearObject(ccContext.globalStateKeys);
+    clearObject(ccContext.reducer._reducer);
+    clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
+    clearObject(ccContext.computed._computedFn);
+    clearObject(ccContext.computed._computedValue);
+
+    _clearInsAssociation();
+  }
+
+  function _prepareClear(cb) {
     if (ccContext.isCcAlreadyStartup) {
       if (util.isHotReloadMode()) {
-        //只有处于
-        clearObject(ccContext.globalStateKeys);
-        clearObject(ccContext.reducer._reducer);
-        clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
-        clearObject(ccContext.computed._computedFn);
-        clearObject(ccContext.computed._computedValue);
-        clearObject(ccContext.event_handlers_);
-        clearObject(ccContext.ccUniqueKey_handlerKeys_);
-        var cct = ccContext.ccClassKey_ccClassContext_;
-        Object.keys(cct).forEach(function (ccClassKey) {
-          var ctx = cct[ccClassKey];
-          clearObject(ctx.ccKeys);
-        });
-        clearObject(ccContext.handlerKey_handler_);
-        clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
-        clearObject(ccContext.refs, [CC_DISPATCHER]);
-        clearObject(ccContext.fragmentCcKeys);
-        clearObject(ccContext.ccKey_option_);
-        var err = warningErr || new Error('attention: this method is only can been invoked before your app rendered!!');
-        util.justTip(err);
+        cb();
       } else {
         util.justWarning(new Error('clear operation failed, current runtime is not running under hot reload mode!'));
       }
     }
+  }
+
+  function clearContextIfUnderHotReloadMode (clearAll, warningErrForClearAll) {
+    if (clearAll === void 0) {
+      clearAll = false;
+    }
+
+    _prepareClear(function () {
+      if (clearAll) {
+        justCalledByStartUp = true;
+
+        _clearAll();
+
+        util.justWarning(warningErrForClearAll);
+      } else {
+        // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
+        // 在stackblitz的 hot reload 模式下，当用户将启动cc的命名单独放置在一个脚本里，
+        // 如果用户修改了启动相关文件, 则会触发 runConcent renderApp，
+        // runConcent调用清理把justCalledByStartUp置为true，则renderApp就可以不用执行了
+        // 随后只是改了某个component文件时，则只会触发 renderApp，
+        // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
+        if (justCalledByStartUp) {
+          justCalledByStartUp = false;
+          return;
+        }
+
+        var err = new Error("attention: if you call this method, it must been invoked before your app rendered !!");
+        util.justWarning(err);
+
+        _clearInsAssociation();
+      }
+    });
   }
 
   function startup (_temp) {
@@ -4276,7 +4316,7 @@ if (!this._inheritsLoose) {
       ccContext.isReducerArgsOldMode = isReducerArgsOldMode;
       ccContext.bindCtxToMethod = bindCtxToMethod;
       var err = util.makeError(ERR.CC_ALREADY_STARTUP);
-      clearContextIfUnderHotReloadMode(err);
+      clearContextIfUnderHotReloadMode(true, err);
       configModuleSingleClass(moduleSingleClass);
       configStoreState(store);
       configRootReducer(reducer);
