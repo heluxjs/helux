@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import util, { clearObject, bindToWindow } from '../support/util';
-import { ERR, MODULE_DEFAULT, CC_DISPATCHER_BOX, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
+import util, { bindToWindow } from '../support/util';
+import { ERR, CC_DISPATCHER_BOX, CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
+import clearContextIfUnderHotReloadMode from './clear-context-if-under-hot-reload-mode';
 
 export default function ({
   store = {},
@@ -32,30 +33,8 @@ export default function ({
     ccContext.isReducerArgsOldMode = isReducerArgsOldMode;
     ccContext.bindCtxToMethod = bindCtxToMethod;
 
-    if (ccContext.isCcAlreadyStartup) {
-      const err = util.makeError(ERR.CC_ALREADY_STARTUP);
-      if (util.isHotReloadMode()) {
-        clearObject(ccContext.globalStateKeys);
-        clearObject(ccContext.reducer._reducer);
-        clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
-        clearObject(ccContext.computed._computedFn);
-        clearObject(ccContext.computed._computedValue);
-        clearObject(ccContext.event_handlers_);
-        clearObject(ccContext.ccUniqueKey_handlerKeys_);
-        const cct = ccContext.ccClassKey_ccClassContext_;
-        Object.keys(cct).forEach(ccClassKey => {
-          const ctx = cct[ccClassKey];
-          clearObject(ctx.ccKeys);
-        });
-        clearObject(ccContext.handlerKey_handler_);
-        clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
-        clearObject(ccContext.refs, [CC_DISPATCHER]);
-        clearObject(ccContext.fragmentCcKeys);
-        clearObject(ccContext.ccKey_option_);
-        util.hotReloadWarning(err);
-      }
-      else throw err;
-    }
+    const err = util.makeError(ERR.CC_ALREADY_STARTUP);
+    clearContextIfUnderHotReloadMode(err);
 
     boot.configModuleSingleClass(moduleSingleClass);
     boot.configStoreState(store);

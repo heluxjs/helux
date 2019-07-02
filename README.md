@@ -1,4 +1,4 @@
-# concent
+# [concent, 点击了解更多](https://concentjs.github.io/concent-site/)
 <p align="center">
   <a href="#">
     <img width="500" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png">
@@ -75,8 +75,6 @@ concent是一个专为`react`提供状态管理服务的框架，重新定义`st
 ## 搭配react-router使用
 请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，搭配使用非常的简单和容易。
 
-## 精彩小实例集合
-[在线练习和理解，效果更佳](https://stackblitz.com/@fantasticsoul)
 ___
 ## 📦 快速开始
 确保你本地机器上安装有[nodejs](http://nodejs.cn/download/)。
@@ -100,6 +98,7 @@ $ yarn add concent
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
 > 探索concent从这里开始，[点我看以下代码的在线示例](https://stackblitz.com/edit/concent-quick-start?file=index.js)
+
 ```javascript
 import React, {Component} from 'react';
 import cc, { register, run, CcFragment } from 'concent';
@@ -248,6 +247,7 @@ export default App;
 ```
 ___
 ## 🔨更多精彩示例
+### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
 ### [cc版本的ant-design-pro](https://github.com/fantasticsoul/rcc-antd-pro)
 ### [一个相对完整的示例](https://stackblitz.com/edit/cc-awesome)
 ### [有趣的counter](https://stackblitz.com/edit/funny-counter)
@@ -259,10 +259,10 @@ ___
 ## 图文介绍
 ### cc渲染流程
 ![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-core.png)
-### `react类`、`cc类`和`cc实例`三者之间的关系
-![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc2.png)
-### cc组件的`state`和`$$connectedState`是怎么来的
-![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-class-and-ins.png)
+### cc组件工作流程
+![](https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/cc-process.png)
+
+### [concent是什么](https://concentjs.github.io/concent-site/docs/doc-intro-what-is-concent)
 ### [在cc里用class和function实现counter](https://juejin.im/post/5c8f77bdf265da60ec2812f7)
 ### [聊一聊cc的变化侦测和hook实现](https://juejin.im/post/5c8d99f4e51d4555816d6335)
 ### [在cc里玩转无状态组件](https://juejin.im/post/5c838107f265da2dca389593)

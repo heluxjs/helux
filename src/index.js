@@ -30,6 +30,7 @@ import _getConnectedState from './api/get-connected-state';
 import _appendState from './api/appendState';
 import _reducer from './api/reducer';
 import _lazyReducer from './api/lazyReducer';
+import _clearContextIfUnderHotReloadMode from './api/clear-context-if-under-hot-reload-mode';
 import _CcFragment from './component/CcFragment';
 import * as _cst from './support/constant';
 import * as util from './support/util';
@@ -66,6 +67,7 @@ export const executeAll = _executeAll;
 export const getRefs = _getRefs;
 export const reducer = _reducer;
 export const lazyReducer = _lazyReducer;
+export const clearContextIfUnderHotReloadMode = _clearContextIfUnderHotReloadMode;
 export const CcFragment = _CcFragment;
 export const cst = _cst;
 export const appendState = _appendState;
@@ -103,6 +105,7 @@ const defaultExport = {
   getRefs,
   reducer,
   lazyReducer,
+  clearContextIfUnderHotReloadMode,
   CcFragment,
   cst,
   appendState,

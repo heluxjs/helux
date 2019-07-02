@@ -337,9 +337,9 @@ export default function register(ccClassKey, {
         //!!! 必需在类的【constructor】 里调用 this.props.$$attach(this),紧接着state定义之后
         $$attach(childRef) {
           const attachMethods = [
-            '$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di',
-            '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$set', '$$setBool',
-            '$$sync', '$$syncBool', '$$syncInt', '$$invoke', '$$lazyInvoke',
+            '$$domDispatch', '$$dispatch', '$$lazyDispatch', '$$invoke', '$$lazyInvoke',
+            '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off',
+            '$$sync', '$$syncBool', '$$syncInt', '$$set', '$$setBool',
             'setState', 'setGlobalState', 'setModuleState', 'forceUpdate',
           ];
           attachMethods.forEach(m => {
@@ -518,8 +518,8 @@ export default function register(ccClassKey, {
                     targetRef, refState, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
                     null, null, -1, identity, chainId, oriChainId, chainId_depth_
                   );
-                  const dispatchIdentity = this.__$$getDispatchHandler(
-                    targetRef, refState, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
+                  const lazyDispatch = this.__$$getDispatchHandler(
+                    targetRef, refState, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
                     null, null, -1, identity, chainId, oriChainId, chainId_depth_
                   );
 
@@ -534,6 +534,8 @@ export default function register(ccClassKey, {
 
                       //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
                       lazyInvoke: this.__$$getInvokeHandler(targetRef, targetModule, ccKey, ccUniqueKey, ccClassKey, { isLazy:true, oriChainId, chainId_depth_ }),
+                      dispatch, lazyDispatch,
+
                       rootState: getState(),
                       globalState: getState(MODULE_GLOBAL),
                       //指的是目标模块的state
@@ -550,7 +552,6 @@ export default function register(ccClassKey, {
                       refState: _refState,
                       //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
 
-                      dispatch, dispatchIdentity, d: dispatch, di: dispatchIdentity,
                     });
                 }
 
@@ -651,15 +652,8 @@ export default function register(ccClassKey, {
           }
 
           const thisCC = this.cc;
-          const d = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-          const di = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1, ccKey);//ccKey is identity by default
+          this.$$dispatch = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
           this.$$lazyDispatch = this.__$$getDispatchHandler(this, null, true, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-          this.$$d = d;
-          this.$$di = di;
-          this.$$dispatch = d;
-          this.$$dispatchIdentity = di;
-          this.$$dispatchForModule = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-          this.$$lazyDispatchForModule = this.__$$getDispatchHandler(this, null, true, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
 
           this.$$invoke = this.__$$getInvokeHandler(this, _curStateModule, ccKey, ccUniqueKey, ccClassKey);
           this.$$lazyInvoke = this.__$$getInvokeHandler(this, _curStateModule, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });

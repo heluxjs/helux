@@ -1,34 +1,3 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -334,7 +303,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.3',
+      version: '1.4.5',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2654,7 +2623,7 @@ if (!this._inheritsLoose) {
           _proto.$$attach = function $$attach(childRef) {
             var _this2 = this;
 
-            var attachMethods = ['$$domDispatch', '$$dispatch', '$$dispatchIdentity', '$$d', '$$di', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$set', '$$setBool', '$$sync', '$$syncBool', '$$syncInt', '$$invoke', '$$lazyInvoke', 'setState', 'setGlobalState', 'setModuleState', 'forceUpdate'];
+            var attachMethods = ['$$domDispatch', '$$dispatch', '$$lazyDispatch', '$$invoke', '$$lazyInvoke', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$syncBool', '$$syncInt', '$$set', '$$setBool', 'setState', 'setGlobalState', 'setModuleState', 'forceUpdate'];
             attachMethods.forEach(function (m) {
               childRef[m] = _this2[m].bind(_this2);
             }); //这些负责搜集结果的key，单独绑定
@@ -2913,7 +2882,7 @@ if (!this._inheritsLoose) {
 
                     var dispatch = _this3.__$$getDispatchHandler(targetRef, refState, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
 
-                    var dispatchIdentity = _this3.__$$getDispatchHandler(targetRef, refState, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
+                    var lazyDispatch = _this3.__$$getDispatchHandler(targetRef, refState, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
 
                     var sourceClassContext = ccClassKey_ccClassContext_$2[ccClassKey]; //不能将state赋给executionContextForUser，给一个getState才能保证dispatch函数的state是最新的
                     //目前先保留state
@@ -2934,6 +2903,8 @@ if (!this._inheritsLoose) {
                         oriChainId: oriChainId,
                         chainId_depth_: chainId_depth_
                       }),
+                      dispatch: dispatch,
+                      lazyDispatch: lazyDispatch,
                       rootState: getState$3(),
                       globalState: getState$3(MODULE_GLOBAL),
                       //指的是目标模块的state
@@ -2945,12 +2916,8 @@ if (!this._inheritsLoose) {
                       //!!!指的是调用源cc类的connectedComputed
                       connectedComputed: sourceClassContext.connectedComputed,
                       //!!!指的是调用源cc类实例的state
-                      refState: _refState,
-                      //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
-                      dispatch: dispatch,
-                      dispatchIdentity: dispatchIdentity,
-                      d: dispatch,
-                      di: dispatchIdentity
+                      refState: _refState //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
+
                     });
                   }
 
@@ -3126,19 +3093,8 @@ if (!this._inheritsLoose) {
               }
             };
             var thisCC = this.cc;
-
-            var d = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-
-            var di = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1, ccKey); //ccKey is identity by default
-
-
+            this.$$dispatch = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
             this.$$lazyDispatch = this.__$$getDispatchHandler(this, null, true, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-            this.$$d = d;
-            this.$$di = di;
-            this.$$dispatch = d;
-            this.$$dispatchIdentity = di;
-            this.$$dispatchForModule = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-            this.$$lazyDispatchForModule = this.__$$getDispatchHandler(this, null, true, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
             this.$$invoke = this.__$$getInvokeHandler(this, _curStateModule, ccKey, ccUniqueKey, ccClassKey);
             this.$$lazyInvoke = this.__$$getInvokeHandler(this, _curStateModule, ccKey, ccUniqueKey, ccClassKey, {
               isLazy: true
@@ -4218,6 +4174,35 @@ if (!this._inheritsLoose) {
     }
   }
 
+  function clearContextIfUnderHotReloadMode (warningErr) {
+    if (ccContext.isCcAlreadyStartup) {
+      if (util.isHotReloadMode()) {
+        //只有处于
+        clearObject(ccContext.globalStateKeys);
+        clearObject(ccContext.reducer._reducer);
+        clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
+        clearObject(ccContext.computed._computedFn);
+        clearObject(ccContext.computed._computedValue);
+        clearObject(ccContext.event_handlers_);
+        clearObject(ccContext.ccUniqueKey_handlerKeys_);
+        var cct = ccContext.ccClassKey_ccClassContext_;
+        Object.keys(cct).forEach(function (ccClassKey) {
+          var ctx = cct[ccClassKey];
+          clearObject(ctx.ccKeys);
+        });
+        clearObject(ccContext.handlerKey_handler_);
+        clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
+        clearObject(ccContext.refs, [CC_DISPATCHER]);
+        clearObject(ccContext.fragmentCcKeys);
+        clearObject(ccContext.ccKey_option_);
+        var err = warningErr || new Error('attention: this method is only can been invoked before your app rendered!!');
+        util.justTip(err);
+      } else {
+        util.justWarning(new Error('clear operation failed, current runtime is not running under hot reload mode!'));
+      }
+    }
+  }
+
   function startup (_temp) {
     var _ref = _temp === void 0 ? {} : _temp,
         _ref$store = _ref.store,
@@ -4259,32 +4244,8 @@ if (!this._inheritsLoose) {
       ccContext.isDebug = isDebug;
       ccContext.isReducerArgsOldMode = isReducerArgsOldMode;
       ccContext.bindCtxToMethod = bindCtxToMethod;
-
-      if (ccContext.isCcAlreadyStartup) {
-        var err = util.makeError(ERR.CC_ALREADY_STARTUP);
-
-        if (util.isHotReloadMode()) {
-          clearObject(ccContext.globalStateKeys);
-          clearObject(ccContext.reducer._reducer);
-          clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
-          clearObject(ccContext.computed._computedFn);
-          clearObject(ccContext.computed._computedValue);
-          clearObject(ccContext.event_handlers_);
-          clearObject(ccContext.ccUniqueKey_handlerKeys_);
-          var cct = ccContext.ccClassKey_ccClassContext_;
-          Object.keys(cct).forEach(function (ccClassKey) {
-            var ctx = cct[ccClassKey];
-            clearObject(ctx.ccKeys);
-          });
-          clearObject(ccContext.handlerKey_handler_);
-          clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
-          clearObject(ccContext.refs, [CC_DISPATCHER]);
-          clearObject(ccContext.fragmentCcKeys);
-          clearObject(ccContext.ccKey_option_);
-          util.hotReloadWarning(err);
-        } else throw err;
-      }
-
+      var err = util.makeError(ERR.CC_ALREADY_STARTUP);
+      clearContextIfUnderHotReloadMode(err);
       configModuleSingleClass(moduleSingleClass);
       configStoreState(store);
       configRootReducer(reducer);
@@ -5827,6 +5788,7 @@ if (!this._inheritsLoose) {
   var getRefs$1 = getRefs;
   var reducer = _reducerCaller;
   var lazyReducer = _lazyReducerCaller;
+  var clearContextIfUnderHotReloadMode$1 = clearContextIfUnderHotReloadMode;
   var CcFragment$1 = CcFragment;
   var cst = _cst;
   var appendState$1 = appendState;
@@ -5863,6 +5825,7 @@ if (!this._inheritsLoose) {
     getRefs: getRefs$1,
     reducer: reducer,
     lazyReducer: lazyReducer,
+    clearContextIfUnderHotReloadMode: clearContextIfUnderHotReloadMode$1,
     CcFragment: CcFragment$1,
     cst: cst,
     appendState: appendState$1
@@ -5901,6 +5864,7 @@ if (!this._inheritsLoose) {
   exports.getRefs = getRefs$1;
   exports.reducer = reducer;
   exports.lazyReducer = lazyReducer;
+  exports.clearContextIfUnderHotReloadMode = clearContextIfUnderHotReloadMode$1;
   exports.CcFragment = CcFragment$1;
   exports.cst = cst;
   exports.appendState = appendState$1;
