@@ -79,8 +79,8 @@ const ccContext = {
   moduleName_ccClassKeys_: {
 
   },
-  // map from moduleName to sharedStateKeys
-  moduleName_sharedStateKeys_: {
+  // map from moduleName to watchedKeys
+  moduleName_watchedKeys_: {
 
   },
   // 映射好模块的状态所有key并缓存住，用于提高性能
@@ -90,7 +90,7 @@ const ccContext = {
   /**
     ccClassContext:{
       module,
-      sharedStateKeys,
+      watchedKeys,
       connectedState:{},
       connectedComputed:{},
       ccKeys: [],
@@ -206,7 +206,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.4.8',
+    version: '1.4.9',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',

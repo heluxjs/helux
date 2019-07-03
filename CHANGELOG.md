@@ -1,4 +1,8 @@
 #### 2019-07-03
+1.4.9 发布
+* 重命名sharedStateKeys to watchedKeys, storedStateKeys to storedKeys, 使其更符合上下文语境
+
+#### 2019-07-03
 1.4.7 发布
 * optimize: 新增属性__$$isUnmounted标记已卸载
 * optimize: 去掉顶层api调用里的dispatchForModule逻辑

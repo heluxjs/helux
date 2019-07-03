@@ -8,7 +8,7 @@ import register from './register';
  * @param {boolean} [option.isPropsProxy] default is false
  * @param {boolean} [option.isSingle] default is false
  * @param {string} [option.module]
- * @param {Array<string>} [option.sharedStateKeys]
+ * @param {Array<string>} [option.watchedKeys]
  */
 export default function (ccClassKey, connectSpec, option = {}) {
   const mergedOption = Object.assign({ connect: connectSpec }, option);

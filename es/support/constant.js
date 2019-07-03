@@ -19,10 +19,7 @@ export const SIG_FN_END = 11;
 export const SIG_FN_QUIT = 12;
 export const SIG_FN_ERR = 13;
 
-//  two kind of state extraction
-//    cc will use ccInstance's sharedStateKeys and globalStateKeys to extract committed state  
 export const STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;
-//    cc will use one module's sharedStateKeys and globalStateKeys to extract committed state  
 export const STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;
 
 export const EFFECT_AVAILABLE = 1;
@@ -67,14 +64,11 @@ export const ERR = {
   CC_CLASS_INSTANCE_METHOD_NOT_FOUND: 1203,
   CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID: 1204,
   CC_CLASS_INSTANCE_MORE_THAN_ONE: 1205,
-  CC_CLASS_INSTANCE_STORED_STATE_KEYS_DUPLICATE_WITH_SHARED_KEYS: 1206,
-  CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_STATE_KEYS: 1207,
-
-  CC_STORED_STATE_KEYS_OR_SHARED_KEYS_NOT_ARRAY: 1300,
-  CC_STORED_STATE_KEYS_OR_SHARED_KEYS_INCLUDE_NON_STRING_ELEMENT: 1301,
-
-  CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY: 1402,
-  CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT: 1403,
+  CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS: 1207,
+  
+  CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS: 1401,
+  CC_ARG_KEYS_NOT_AN_ARRAY: 1402,
+  CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT: 1403,
 
   CC_REDUCER_ACTION_TYPE_NAMING_INVALID: 1500,
   CC_REDUCER_ACTION_TYPE_DUPLICATE: 1501,
@@ -122,8 +116,8 @@ export const ERR_MESSAGE = {
   [ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND]: 'ccClass instance method not found, make sure the instance include the method! ',
   [ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID]: 'ccClass instance invoke callWith method with invalid args! ',
   [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: 'ccClass is declared as singleton, now cc found you are trying new another one instance! ',
-  [ERR.CC_CLASS_INSTANCE_STORED_STATE_KEYS_DUPLICATE_WITH_SHARED_KEYS]: 'some of your storedStateKeys has been declared in CCClass sharedStateKeys!',
-  [ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_STATE_KEYS]: 'you must explicitly specify a ccKey for ccInstance if you want to use storeStateKeys!',
+  [ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS]: 'some of your storedKeys has been declared in CcClass watchedKeys!',
+  [ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS]: 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!',
 
   [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate while you register a react class!  ',
   [ERR.CC_CLASS_NOT_FOUND]: 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ',
@@ -133,11 +127,8 @@ export const ERR_MESSAGE = {
   [ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID]: 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!',
   [ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED]: '$$fragment is cc built-in class key prefix, your class key can not start with it!',
 
-  [ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_NOT_ARRAY]: 'storedStateKeys or sharedStateKeys is not an Array!',
-  [ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_INCLUDE_NON_STRING_ELEMENT]: 'storedStateKeys or sharedStateKeys include non string element',
-
-  [ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY]: `globalStateKeys or sharedStateKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set sharedStateKeys='*' and globalStateKeys='*'`,
-  [ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT]: 'globalStateKeys or sharedStateKeys include non string element!',
+  [ERR.CC_ARG_KEYS_NOT_AN_ARRAY]: `watchedKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set watchedKeys='*' and globalStateKeys='*'`,
+  [ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT]: 'watchedKeys include non string element!',
 
   [ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID]: `action type's naming is invalid, correct one may like: fooModule/fooType. `,
   [ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE]: `action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!`,
@@ -157,5 +148,4 @@ export default {
 
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
   STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-
 }
