@@ -7,51 +7,51 @@
 
 <p>
 
-<a href='https://www.npmjs.com/package/concent' style='margin: 0 0.5rem;'>
+<a href='https://www.npmjs.com/package/concent' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/package-json/v/concentjs/concent/master.svg?label=npm%20version' alt='npm version' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/issues/concentjs/concent.svg' alt='issues open' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/npm/dw/react-control-center.svg?label=rcc%20downloads' alt='downloads' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/last-commit/concentjs/concent.svg' alt='last commit' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/commit-activity/m/concentjs/concent.svg' alt='commit activity' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
   <img src='https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc-svg/build.png' alt='build:passing' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/npm/l/concent.svg' alt='license:MIT' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/david/dev/concentjs/concent.svg' alt='dev dependencies' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/bundlephobia/minzip/concent.svg' alt='mini bundle size' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/package-json/dependency-version/concentjs/concent/co.svg' alt='co version' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/followers/fantasticsoul.svg?style=social' alt='followers' height='18'>
 </a>
 
-<a href='#' style='margin: 0 0.5rem;'>
+<a href='#' style='display:inline-block;margin: 0 0.5rem;'>
 <img src='https://img.shields.io/github/stars/concentjs/concent.svg?style=social' alt='concent star' height='18'>
 </a>
 
@@ -94,7 +94,78 @@ $ npm i --save concent
 ```sh
 $ yarn add concent
 ```
-### counter示例
+
+### 新手counter示例
+将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
+
+```javascript
+import React, { Component, Fragment } from 'react';
+import { register, run } from 'concent';
+
+//运行concent，载入模块配置
+run({
+  counter: {//定义counter模块
+    state: {//定义state
+      count: 0,
+    },
+    reducer: {
+      inc(payload, moduleState) {
+        return { count: moduleState.count + 1 };
+      },
+      dec(payload, moduleState) {
+        return { count: moduleState.count - 1 };
+      }
+    }
+  }
+})
+
+//定义类组件
+class Counter extends Component {
+  //setState 能够将数据将同步到store，广播到其他实例
+  inc = () => {
+    this.setState({ count: this.state.count + 1 });
+  }
+  dec = () => {
+    this.setState({ count: this.state.count - 1 });
+  }
+  //调用dispatch, 同样的能够将数据将同步到store，广播到其他实例
+  incD = () => {
+    this.$$dispatch('inc');
+  }
+  decD = () => {
+    this.$$dispatch('dec');
+  }
+  render() {
+    //concent注入counter模块的数据到state
+    const { count } = this.state;
+    return (
+      <div style={{ padding: '12px', margin: '6px' }}>
+        <div>count: {count}</div>
+        <button>inc by setState</button>
+        <button>dec by setState</button>
+        <br />
+        <button>inc by dispatch</button>
+        <button>dec by dispatch</button>
+      </div>
+    );
+  }
+}
+//注册成为属于counter模块的名字为Counter cc类
+const CcCounter_ = register('Counter', 'counter')(Counter);
+
+function App() {
+  return (
+    <Fragment>
+      <CcCounter_ />
+      <CcCounter_ />
+    </Fragment>
+  )
+}
+
+export default App;
+```
+
+### 进阶counter示例
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
 > 探索concent从这里开始，[点我看以下代码的在线示例](https://stackblitz.com/edit/concent-quick-start?file=index.js)
@@ -245,6 +316,9 @@ function App(){
 
 export default App;
 ```
+
+### [0入侵，渐进式实例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
+
 ___
 ## 🔨更多精彩示例
 ### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
