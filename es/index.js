@@ -3,8 +3,6 @@ import _cloneModule from './api/clone-module';
 import _load from './api/load';
 import _register from './api/register';
 import _r from './api/r';
-import _registerToDefault from './api/register-to-default';
-import _registerSingleClassToDefault from './api/register-single-class-to-default';
 import _configure from './api/configure';
 import _call from './api/call';
 import _setGlobalState from './api/set-global-state';
@@ -41,8 +39,6 @@ export const load = _load;
 export const run = _load;
 export const register = _register;
 export const r = _r;
-export const registerToDefault = _registerToDefault;
-export const registerSingleClassToDefault = _registerSingleClassToDefault;
 export const configure = _configure;
 export const call = _call;
 export const setGlobalState = _setGlobalState;
@@ -87,8 +83,6 @@ const defaultExport = {
   run,
   register,
   r,
-  registerToDefault,
-  registerSingleClassToDefault,
   configure,
   call,
   setGlobalState,

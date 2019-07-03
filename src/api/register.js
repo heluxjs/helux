@@ -37,11 +37,11 @@ import register from '../core/base/register';
  * ```
  *    this.$$dispatch({module:'M2', reducerModule:'R2', type:'doStaff', payload:{foo:1, bar:2}});
  * ```
- * @param {string} [registerOption.isPropsProxy] default is true
+ * @param {string} [registerOption.isPropsProxy] default is false
  * cc alway use strategy of reverse inheritance to wrap your react class, that meas you can call cc instance method from `this` directly
  * but if you meet multi decorator in your legacy project and want to change it to cc, to make it still works well in cc mode,
  * you can set isPropsProxy as true, then cc will use strategy of prop proxy to wrap your react class, in this situation, 
- * all the cc instance method and property you can only get them from `this.props`, for example
+ * all the cc instance method and property you can get them from both `this.props` and `this.`, for example
  * ```
  *    @cc.register('BasicForms',{
  *      connect: {'form': ['regularFormSubmitting']},
@@ -64,9 +64,17 @@ import register from '../core/base/register';
  * you can define registerOption.isSingle as true, it just like singleton mode in java coding^_^
  */
 export default function (ccClassKey, registerOption) {
+  let _registerOption = registerOption;
   if (registerOption) {
-    delete registerOption.__checkStartUp;
-    delete registerOption.__calledBy;
+    const optType = typeof registerOption;
+    if (optType === 'object') {
+      delete registerOption.__checkStartUp;
+      delete registerOption.__calledBy;
+    } else if (optType === 'string') {
+      _registerOption = { module: registerOption }
+    } else {
+      throw new Error('type of param registerOption is invalid!');
+    }
   }
-  return register(ccClassKey, registerOption);
+  return register(ccClassKey, _registerOption);
 }

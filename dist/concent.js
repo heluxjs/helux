@@ -334,7 +334,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.7',
+      version: '1.4.8',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -4552,11 +4552,11 @@ if (!this._inheritsLoose) {
    * ```
    *    this.$$dispatch({module:'M2', reducerModule:'R2', type:'doStaff', payload:{foo:1, bar:2}});
    * ```
-   * @param {string} [registerOption.isPropsProxy] default is true
+   * @param {string} [registerOption.isPropsProxy] default is false
    * cc alway use strategy of reverse inheritance to wrap your react class, that meas you can call cc instance method from `this` directly
    * but if you meet multi decorator in your legacy project and want to change it to cc, to make it still works well in cc mode,
    * you can set isPropsProxy as true, then cc will use strategy of prop proxy to wrap your react class, in this situation, 
-   * all the cc instance method and property you can only get them from `this.props`, for example
+   * all the cc instance method and property you can get them from both `this.props` and `this.`, for example
    * ```
    *    @cc.register('BasicForms',{
    *      connect: {'form': ['regularFormSubmitting']},
@@ -4580,12 +4580,24 @@ if (!this._inheritsLoose) {
    */
 
   function register$1 (ccClassKey, registerOption) {
+    var _registerOption = registerOption;
+
     if (registerOption) {
-      delete registerOption.__checkStartUp;
-      delete registerOption.__calledBy;
+      var optType = typeof registerOption;
+
+      if (optType === 'object') {
+        delete registerOption.__checkStartUp;
+        delete registerOption.__calledBy;
+      } else if (optType === 'string') {
+        _registerOption = {
+          module: registerOption
+        };
+      } else {
+        throw new Error('type of param registerOption is invalid!');
+      }
     }
 
-    return register(ccClassKey, registerOption);
+    return register(ccClassKey, _registerOption);
   }
 
   /****
@@ -4618,27 +4630,6 @@ if (!this._inheritsLoose) {
       isSingle: isSingle,
       reducerModule: reducerModule
     });
-  }
-
-  function _registerToDefault (ccClassKey, option) {
-    if (option === void 0) {
-      option = {};
-    }
-
-    if (!option.sharedStateKeys) option.sharedStateKeys = '*';
-    option.module = MODULE_DEFAULT;
-    return register$1(ccClassKey, option);
-  }
-
-  function _registerSingleClassToDefault (ccClassKey, option) {
-    if (option === void 0) {
-      option = {};
-    }
-
-    if (!option.sharedStateKeys) option.sharedStateKeys = '*';
-    option.module = MODULE_DEFAULT;
-    option.isSingle = true;
-    return register$1(ccClassKey, option);
   }
 
   var vbi$4 = util.verboseInfo;
@@ -5836,8 +5827,6 @@ if (!this._inheritsLoose) {
   var run = _load;
   var register$2 = register$1;
   var r = _r;
-  var registerToDefault = _registerToDefault;
-  var registerSingleClassToDefault = _registerSingleClassToDefault;
   var configure$1 = configure;
   var call = _call;
   var setGlobalState$1 = setGlobalState;
@@ -5881,8 +5870,6 @@ if (!this._inheritsLoose) {
     run: run,
     register: register$2,
     r: r,
-    registerToDefault: registerToDefault,
-    registerSingleClassToDefault: registerSingleClassToDefault,
     configure: configure$1,
     call: call,
     setGlobalState: setGlobalState$1,
@@ -5912,8 +5899,6 @@ if (!this._inheritsLoose) {
   exports.run = run;
   exports.register = register$2;
   exports.r = r;
-  exports.registerToDefault = registerToDefault;
-  exports.registerSingleClassToDefault = registerSingleClassToDefault;
   exports.configure = configure$1;
   exports.call = call;
   exports.setGlobalState = setGlobalState$1;
