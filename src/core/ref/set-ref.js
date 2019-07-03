@@ -40,7 +40,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
     console.log(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
   }
   if (!util.isCcOptionValid(ccOption)) {
-    throw me(ERR.CC_CLASS_INSTANCE_OPTION_INVALID, vbi(`a standard default ccOption may like: {"storedStateKeys": []}`));
+    throw me(ERR.CC_CLASS_INSTANCE_OPTION_INVALID, vbi(`a standard default ccOption may like: {"storedKeys": []}`));
   }
 
   const isHot = util.isHotReloadMode();

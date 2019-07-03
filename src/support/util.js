@@ -98,12 +98,12 @@ export function throwCcHmrError(err){
 }
 
 /** make ccClassContext */
-export function makeCcClassContext(module, ccClassKey, sharedStateKeys, originalSharedStateKeys) {
+export function makeCcClassContext(module, ccClassKey, watchedKeys, originalWatchedKeys) {
   return {
     module,
     ccClassKey,
-    originalSharedStateKeys,
-    sharedStateKeys,
+    originalWatchedKeys,
+    watchedKeys,
     ccKeys: [],
     connectedState: {},
     stateToPropMapping: null,

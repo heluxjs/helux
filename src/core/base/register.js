@@ -10,8 +10,6 @@ import {
 import ccContext from '../../cc-context';
 import util, { convertToStandardEvent, okeys } from '../../support/util';
 import co from 'co';
-import extractStateByKeys from '../state/extract-state-by-keys';
-// import setConnectedState from '../state/set-connected-state';
 import buildCcClassContext from './build-cc-class-context';
 import catchCcError from './catch-cc-error';
 import mapModuleAndCcClassKeys from '../mapper/map-module-and-cc-class-keys';
@@ -35,7 +33,7 @@ const {
   store: { _state, getState},
   reducer: { _reducer }, refStore,
   computed: { _computedValue },
-  moduleName_sharedStateKeys_,  ccClassKey_ccClassContext_,
+  moduleName_watchedKeys_,  ccClassKey_ccClassContext_,
 } = ccContext;
 const cl = color;
 const ss = styleStr;
@@ -79,19 +77,19 @@ function isStateModuleValid(inputModule, currentModule, reactCallback, cb) {
   }
 }
 
-function getSharedKeys(module, ccClassKey, inputSharedStateKeys) {
-  let sharedStateKeys = inputSharedStateKeys;
-  if (inputSharedStateKeys === '*') {
-    sharedStateKeys = Object.keys(getState(module));
+function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
+  let watchedKeys = inputWatchedKeys;
+  if (inputWatchedKeys === '*') {
+    watchedKeys = Object.keys(getState(module));
   }
-  const { notArray, keyElementNotString } = verifyKeys(sharedStateKeys, []);
+  const { notArray, keyElementNotString } = verifyKeys(watchedKeys, []);
   if (notArray) {
-    throw me(ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_NOT_ARRAY, vbi(`ccClassKey:${ccClassKey}`));
+    throw me(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi(`ccClassKey:${ccClassKey}`));
   }
   if (keyElementNotString) {
-    throw me(ERR.CC_CLASS_GLOBAL_STATE_KEYS_OR_SHARED_STATE_KEYS_INCLUDE_NON_STRING_ELEMENT, vbi(`ccClassKey:${ccClassKey}`));
+    throw me(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi(`ccClassKey:${ccClassKey}`));
   }
-  return sharedStateKeys;
+  return watchedKeys;
 }
 
 function checkCcStartupOrNot() {
@@ -100,17 +98,16 @@ function checkCcStartupOrNot() {
   }
 }
 
-//to let cc know a specified module are watching what sharedStateKeys
-function mapModuleAndSharedStateKeys(moduleName, partialSharedStateKeys) {
-  let sharedStateKeysOfModule = moduleName_sharedStateKeys_[moduleName];
-  if (!sharedStateKeysOfModule) sharedStateKeysOfModule = moduleName_sharedStateKeys_[moduleName] = [];
-  partialSharedStateKeys.forEach(sKey => {
-    if (!sharedStateKeysOfModule.includes(sKey)) sharedStateKeysOfModule.push(sKey);
+//to let cc know a specified module are watching what state keys
+function mapModuleAndWatchedStateKeys(moduleName, partialWatchedKeys) {
+  const watchedKeysOfModule = util.safeGetArrayFromObject(moduleName_watchedKeys_, moduleName);
+  partialWatchedKeys.forEach(sKey => {
+    if (!watchedKeysOfModule.includes(sKey)) watchedKeysOfModule.push(sKey);
   });
 }
 
-//tell cc this ccClass is watching some sharedStateKeys of a module state
-function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, connectSpec) {
+//tell cc this ccClass is watching some keys of a module state
+function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, connectSpec) {
   let fragmentPrefixLen = CC_FRAGMENT_PREFIX.length;
   if (ccClassKey.toLowerCase().substring(0, fragmentPrefixLen) === CC_FRAGMENT_PREFIX) {
     throw me(ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED);
@@ -121,8 +118,8 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
   const ctx = contextMap[ccClassKey];
   if (ctx !== undefined) {// analyze is ccClassKey really duplicated
     if (util.isHotReloadMode()) {
-      const str1 = ctx.originalSharedStateKeys.toString() + JSON.stringify(ctx.stateToPropMapping);
-      const str2 = originalSharedStateKeys.toString() + JSON.stringify(stateToPropMapping);
+      const str1 = ctx.originalWatchedKeys.toString() + JSON.stringify(ctx.stateToPropMapping);
+      const str2 = originalWatchedKeys.toString() + JSON.stringify(stateToPropMapping);
       if (str1 !== str2) {
         throw me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`);
       } else {
@@ -133,19 +130,19 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalSharedSt
     }
   }
 
-  buildCcClassContext(ccClassKey, moduleName, originalSharedStateKeys, sharedStateKeys, stateToPropMapping, connectedModuleNames);
+  buildCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, stateToPropMapping, connectedModuleNames);
 }
 
-function mapModuleAssociateDataToCcContext(ccClassKey, stateModule, sharedStateKeys, connectSpec) {
+function mapModuleAssociateDataToCcContext(ccClassKey, stateModule, watchedKeys, connectSpec) {
 
-  const targetSharedStateKeys = getSharedKeys(stateModule, ccClassKey, sharedStateKeys);
+  const targetWatchedKeys = getWatchedStateKeys(stateModule, ccClassKey, watchedKeys);
 
-  mapCcClassKeyAndCcClassContext(ccClassKey, stateModule, sharedStateKeys, targetSharedStateKeys, connectSpec)
-  mapModuleAndSharedStateKeys(stateModule, targetSharedStateKeys);
+  mapCcClassKeyAndCcClassContext(ccClassKey, stateModule, watchedKeys, targetWatchedKeys, connectSpec)
+  mapModuleAndWatchedStateKeys(stateModule, targetWatchedKeys);
 
   mapModuleAndCcClassKeys(stateModule, ccClassKey);
 
-  return targetSharedStateKeys;
+  return targetWatchedKeys;
 }
 
 function _promiseErrorHandler(resolve, reject) {
@@ -188,8 +185,8 @@ function getNewChainData(isLazy, chainId, oriChainId, chainId_depth_) {
 
 export default function register(ccClassKey, {
   module = MODULE_DEFAULT,
-  sharedStateKeys: inputSharedStateKeys = '*',
-  storedStateKeys: inputStoredStateKeys = [],
+  watchedKeys: inputWatchedKeys = '*',
+  storedKeys: inputStoredKeys = [],
   connect = {},
   reducerModule,
   isPropsProxy = false,
@@ -208,21 +205,23 @@ export default function register(ccClassKey, {
       }
     }
 
+
+
     const _curStateModule = module;
     const _reducerModule = reducerModule || _curStateModule;//if reducerModule not defined, will be equal module;
 
     checkStoreModule(_curStateModule);
 
-    const sKeys = mapModuleAssociateDataToCcContext(ccClassKey, _curStateModule, inputSharedStateKeys, connect);
-    const sharedStateKeys = sKeys;
-    const isIssArr = Array.isArray(inputStoredStateKeys);
-    if (!isIssArr && inputStoredStateKeys !== '*') {
-      throw new Error(`register.option.storedStateKeys type err, it is must be an array or string *`)
+    const sKeys = mapModuleAssociateDataToCcContext(ccClassKey, _curStateModule, inputWatchedKeys, connect);
+    const watchedKeys = sKeys;
+    const isIssArr = Array.isArray(inputStoredKeys);
+    if (!isIssArr && inputStoredKeys !== '*') {
+      throw new Error(`register.option.storedKeys type err, it is must be an array or string *`)
     }
     if (isIssArr) {
-      inputStoredStateKeys.forEach(v => {
+      inputStoredKeys.forEach(v => {
         if (sKeys.includes(v)) {
-          throw new Error(`register.option.storedStateKeys key err, the key[${v}] is already been declared in sharedStateKeys`)
+          throw new Error(`register.option.storedKeys key err, the key[${v}] is already been declared in watchedKeys`)
         }
       });
     }
@@ -255,19 +254,19 @@ export default function register(ccClassKey, {
             const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
             setRef(this, isSingle, ccClassKey, newCcKey, ccUniqueKey, ccOption);
 
-            if (!ccOption.storedStateKeys) {
-              ccOption.storedStateKeys = inputStoredStateKeys;
+            if (!ccOption.storedKeys) {
+              ccOption.storedKeys = inputStoredKeys;
             }
-            if (ccOption.storedStateKeys === '*') {
-              const toExcludeKeys = moduleName_sharedStateKeys_[_curStateModule];
+            if (ccOption.storedKeys === '*') {
+              const toExcludeKeys = moduleName_watchedKeys_[_curStateModule];
               const allKeys = Object.keys(this.state);
-              const storedStateKeys = allKeys.filter(k => !toExcludeKeys.includes(k));
-              ccOption.storedStateKeys = storedStateKeys;
+              const storedKeys = allKeys.filter(k => !toExcludeKeys.includes(k));
+              ccOption.storedKeys = storedKeys;
             }
 
             this.__$$mapCcToInstance(
-              isSingle, ccClassKey, originalCcKey, newCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, ccOption.storedStateKeys,
-              ccOption, ccClassContext, _curStateModule, _reducerModule, sharedStateKeys, connect
+              isSingle, ccClassKey, originalCcKey, newCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, ccOption.storedKeys,
+              ccOption, ccClassContext, _curStateModule, _reducerModule, watchedKeys, connect
             );
 
             this.$$connectedState = this.cc.connectedState;
@@ -406,15 +405,15 @@ export default function register(ccClassKey, {
         }
 
         __$$mapCcToInstance(
-          isSingle, ccClassKey, originalCcKey, ccKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, storedStateKeys,
-          ccOption, ccClassContext, currentModule, currentReducerModule, sharedStateKeys, connect
+          isSingle, ccClassKey, originalCcKey, ccKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, storedKeys,
+          ccOption, ccClassContext, currentModule, currentReducerModule, watchedKeys, connect
         ) {
           const reactSetStateRef = this.setState.bind(this);
           const reactForceUpdateRef = this.forceUpdate.bind(this);
-          const isControlledByConcent = sharedStateKeys.length > 0 || util.isObjectNotNull(connect);
+          const isControlledByConcent = watchedKeys.length > 0 || util.isObjectNotNull(connect);
           const ccState = {
-            renderCount: 1, isSingle, ccClassKey, ccKey, originalCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, storedStateKeys,
-            ccOption, ccClassContext, module: currentModule, reducerModule: currentReducerModule, sharedStateKeys, initTime: Date.now(),
+            renderCount: 1, isSingle, ccClassKey, ccKey, originalCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, storedKeys,
+            ccOption, ccClassContext, module: currentModule, reducerModule: currentReducerModule, watchedKeys, initTime: Date.now(),
             connect, isControlledByConcent
           };
           const refConnectedComputed = {};
@@ -422,18 +421,18 @@ export default function register(ccClassKey, {
             refConnectedComputed[moduleName] = {};
           });
 
-          const { duplicate, notArray, keyElementNotString } = verifyKeys(sharedStateKeys, storedStateKeys);
+          const { duplicate, notArray, keyElementNotString } = verifyKeys(watchedKeys, storedKeys);
           if (notArray) {
-            throw me(ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_NOT_ARRAY, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey}`));
+            throw me(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey}`));
           }
           if (keyElementNotString) {
-            throw me(ERR.CC_STORED_STATE_KEYS_OR_SHARED_KEYS_INCLUDE_NON_STRING_ELEMENT, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey}`));
+            throw me(ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey}`));
           }
           if (duplicate) {
-            throw me(ERR.CC_CLASS_INSTANCE_STORED_STATE_KEYS_DUPLICATE_WITH_SHARED_KEYS, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey} sharedStateKeys:${sharedStateKeys} storedStateKeys:${storedStateKeys}`));
+            throw me(ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey} watchedKeys:${watchedKeys} storedKeys:${storedKeys}`));
           }
-          if (storedStateKeys.length > 0 && isCcUniqueKeyAutoGenerated) {
-            throw me(ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_STATE_KEYS, vbi(`ccClassKey:${ccClassKey}`));
+          if (storedKeys.length > 0 && isCcUniqueKeyAutoGenerated) {
+            throw me(ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS, vbi(`ccClassKey:${ccClassKey}`));
           }
 
           const connectedState = ccClassContext.connectedState || {};
@@ -555,7 +554,6 @@ export default function register(ccClassKey, {
                       //!!!指的是调用源cc类实例的state
                       refState: _refState,
                       //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
-
                     });
                 }
 

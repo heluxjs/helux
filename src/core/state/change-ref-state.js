@@ -64,7 +64,7 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
   // }
   const thisState = targetRef.state;
   const thisCc = targetRef.cc;
-  const { module: stateModule, connect, storedStateKeys, ccOption } = thisCc.ccState;
+  const { module: stateModule, connect, storedKeys, ccOption } = thisCc.ccState;
   const ccUniqueKey = thisCc.ccUniqueKey;
 
   if (stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY) {
@@ -78,11 +78,11 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
     }
   }
 
-  if (storedStateKeys.length > 0) {
-    const { partialState, isStateEmpty } = extractStateByKeys(state, storedStateKeys);
+  if (storedKeys.length > 0) {
+    const { partialState, isStateEmpty } = extractStateByKeys(state, storedKeys);
     if (!isStateEmpty) {
       if (ccOption.storeInLocalStorage === true) {
-        const { partialState: entireStoredState } = extractStateByKeys(thisState, storedStateKeys);
+        const { partialState: entireStoredState } = extractStateByKeys(thisState, storedKeys);
         const currentStoredState = Object.assign({}, entireStoredState, partialState);
         localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
       }
@@ -179,15 +179,15 @@ function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFo
       //  these ccClass are watching the same module's state
       ccClassKeys.forEach(ccClassKey => {
         const classContext = ccClassKey_ccClassContext_[ccClassKey];
-        const { ccKeys, sharedStateKeys, originalSharedStateKeys } = classContext;
+        const { ccKeys, watchedKeys, originalWatchedKeys } = classContext;
         if (ccKeys.length === 0) return;
-        if (sharedStateKeys.length === 0) return;
+        if (watchedKeys.length === 0) return;
 
         let sharedStateForCurrentCcClass;
-        if (originalSharedStateKeys === '*') {
+        if (originalWatchedKeys === '*') {
           sharedStateForCurrentCcClass = partialSharedState;
         } else {
-          const { partialState, isStateEmpty } = extractStateByKeys(partialSharedState, sharedStateKeys, true);
+          const { partialState, isStateEmpty } = extractStateByKeys(partialSharedState, watchedKeys, true);
           if (isStateEmpty) return;
           sharedStateForCurrentCcClass = partialState;
         }
