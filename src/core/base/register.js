@@ -272,6 +272,7 @@ export default function register(ccClassKey, {
 
             this.$$connectedState = this.cc.connectedState;
             this.$$globalState = this.cc.globalState;
+            this.$$moduleState = this.cc.moduleState;
             this.$$refComputed = this.cc.refComputed;
             this.$$refConnectedComputed = this.cc.refConnectedComputed;
 
@@ -354,6 +355,7 @@ export default function register(ccClassKey, {
           childRef.$$globalComputed = this.cc.globalComputed;
           childRef.$$connectedState = this.cc.connectedState ;
           childRef.$$globalState = this.cc.globalState;
+          childRef.$$moduleState = this.cc.moduleState;
 
           const thisCc = this.cc;
           const curModule = thisCc.ccState.module;
@@ -436,6 +438,7 @@ export default function register(ccClassKey, {
 
           const connectedState = ccClassContext.connectedState || {};
           const globalState = getState(MODULE_GLOBAL);
+          const moduleState = getState(_curStateModule);
 
           this.cc = {
             isChildRefMounted:false,
@@ -451,6 +454,7 @@ export default function register(ccClassKey, {
             moduleComputed: {},
             connectedState,
             globalState,
+            moduleState,
             execute: null,
             ccState,
             ccClassKey,
@@ -859,6 +863,10 @@ export default function register(ccClassKey, {
           unsetRef(ccClassKey, ccUniqueKey);
           //if father component implement componentWillUnmount，call it again
           if (super.componentWillUnmount) super.componentWillUnmount();
+
+          //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
+          // Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
+          this.__$$isUnmounted = true;
         }
 
         render() {

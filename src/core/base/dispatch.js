@@ -34,7 +34,7 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, ident
       if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
         dispatchFn = isLazy ? ref.__fragmentParams.lazyDispatch : ref.__fragmentParams.dispatch;
       } else {
-        dispatchFn = isLazy ? ref.$$lazyDispatchForModule : ref.$$dispatchForModule;
+        dispatchFn = isLazy ? ref.$$lazyDispatch : ref.$$dispatch;
       }
     }
 

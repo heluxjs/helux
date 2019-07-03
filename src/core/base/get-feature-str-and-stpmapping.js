@@ -6,7 +6,7 @@ const { store: { _state } } = ccContext;
 /**
  * 根据connect参数算出ccClassKey值和stateToPropMapping值
  */
-export default function getFeatureStrAndStpMapping(connectSpec, fragmentModule) {
+export default function getFeatureStrAndStpMapping(connectSpec, fragmentModule, sharedStateKeys) {
   if (!util.isPlainJsonObject(connectSpec)) {
     throw new Error(`CcFragment or CcClass's prop connect type error, it is not a plain json object`);
   }
@@ -49,5 +49,14 @@ export default function getFeatureStrAndStpMapping(connectSpec, fragmentModule) 
     }
   });
 
-  return { featureStr: fragmentModule + '/' + featureStrs.join('|'), stateToPropMapping, connectedModuleNames: moduleNames };
+  if (fragmentModule) {
+    if (sharedStateKeys === '*') featureStrs.unshift(`${fragmentModule}/*`);
+    else {
+      sharedStateKeys.sort();
+      const tmpStr = `${fragmentModule}/` + sharedStateKeys.join(',');
+      featureStrs.unshift(tmpStr);
+    }
+  }
+
+  return { featureStr: featureStrs.join('|'), stateToPropMapping, connectedModuleNames: moduleNames };
 }

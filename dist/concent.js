@@ -1,34 +1,3 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
-
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@babel/runtime/helpers/esm/assertThisInitialized'), require('@babel/runtime/helpers/esm/inheritsLoose'), require('react'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', '@babel/runtime/helpers/esm/assertThisInitialized', '@babel/runtime/helpers/esm/inheritsLoose', 'react', 'react-dom'], factory) :
@@ -334,7 +303,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.6',
+      version: '1.4.7',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1376,7 +1345,7 @@ if (!this._inheritsLoose) {
    * 根据connect参数算出ccClassKey值和stateToPropMapping值
    */
 
-  function getFeatureStrAndStpMapping(connectSpec, fragmentModule) {
+  function getFeatureStrAndStpMapping(connectSpec, fragmentModule, sharedStateKeys) {
     if (!util.isPlainJsonObject(connectSpec)) {
       throw new Error("CcFragment or CcClass's prop connect type error, it is not a plain json object");
     }
@@ -1422,8 +1391,17 @@ if (!this._inheritsLoose) {
         featureStrs.push(feature);
       }
     });
+
+    if (fragmentModule) {
+      if (sharedStateKeys === '*') featureStrs.unshift(fragmentModule + "/*");else {
+        sharedStateKeys.sort();
+        var tmpStr = fragmentModule + "/" + sharedStateKeys.join(',');
+        featureStrs.unshift(tmpStr);
+      }
+    }
+
     return {
-      featureStr: fragmentModule + '/' + featureStrs.join('|'),
+      featureStr: featureStrs.join('|'),
       stateToPropMapping: stateToPropMapping,
       connectedModuleNames: moduleNames
     };
@@ -1798,7 +1776,7 @@ if (!this._inheritsLoose) {
     offEventHandlersByCcUniqueKey: offEventHandlersByCcUniqueKey
   });
 
-  function shouldSkipKey (specModule, key, stateModule, connectSpecLike, moduleStateKeys, ctx) {
+  function shouldSkipKey (specModule, key, stateModule, connectSpecLike, moduleStateKeys) {
     var skip = false;
     var keyModule = '';
     var stateKey = key;
@@ -1851,7 +1829,7 @@ if (!this._inheritsLoose) {
           computedSpecModule = computedSpec.module;
       var toBeComputedKeys = okeys(computedFns);
       toBeComputedKeys.forEach(function (key) {
-        var _shouldSkipKey = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys, ctx),
+        var _shouldSkipKey = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys),
             stateKey = _shouldSkipKey.stateKey,
             skip = _shouldSkipKey.skip,
             keyModule = _shouldSkipKey.keyModule;
@@ -1872,7 +1850,11 @@ if (!this._inheritsLoose) {
           var computedValue = fn(newValue, oldState[stateKey], keyDesc, ctx);
 
           if (keyModule) {
-            refConnectedComputed[keyModule][stateKey] = computedValue;
+            refConnectedComputed[keyModule][stateKey] = computedValue; //计算的目标key的模块和实例所属模块值一样时，也向refComputed赋值
+
+            if (keyModule === computedSpecModule) {
+              refComputed[stateKey] = computedValue;
+            }
           } else {
             refComputed[stateKey] = computedValue;
           }
@@ -2112,7 +2094,7 @@ if (!this._inheritsLoose) {
       });
     }
 
-    thisCc.reactSetState(state, reactCallback);
+    if (targetRef.__$$isUnmounted !== true) thisCc.reactSetState(state, reactCallback);
     if (next) next();
   }
 
@@ -2581,6 +2563,7 @@ if (!this._inheritsLoose) {
 
               _this.$$connectedState = _this.cc.connectedState;
               _this.$$globalState = _this.cc.globalState;
+              _this.$$moduleState = _this.cc.moduleState;
               _this.$$refComputed = _this.cc.refComputed;
               _this.$$refConnectedComputed = _this.cc.refConnectedComputed; //这些方法是cc交给用户定义的，放置到cc下统一管理，因为多重装饰器模式下，这里属性是从this上取不到的
               //放在__$$recoverState之前，优先设置this.cc.computed
@@ -2666,6 +2649,7 @@ if (!this._inheritsLoose) {
             childRef.$$globalComputed = this.cc.globalComputed;
             childRef.$$connectedState = this.cc.connectedState;
             childRef.$$globalState = this.cc.globalState;
+            childRef.$$moduleState = this.cc.moduleState;
             var thisCc = this.cc;
             var curModule = thisCc.ccState.module;
             childRef.cc = thisCc;
@@ -2767,6 +2751,7 @@ if (!this._inheritsLoose) {
 
             var connectedState = ccClassContext.connectedState || {};
             var globalState = getState$3(MODULE_GLOBAL);
+            var moduleState = getState$3(_curStateModule);
             this.cc = {
               isChildRefMounted: false,
               onUrlChanged: null,
@@ -2782,6 +2767,7 @@ if (!this._inheritsLoose) {
               moduleComputed: {},
               connectedState: connectedState,
               globalState: globalState,
+              moduleState: moduleState,
               execute: null,
               ccState: ccState,
               ccClassKey: ccClassKey,
@@ -3486,7 +3472,10 @@ if (!this._inheritsLoose) {
             offEventHandlersByCcUniqueKey(ccUniqueKey);
             unsetRef(ccClassKey, ccUniqueKey); //if father component implement componentWillUnmount，call it again
 
-            if (_ToBeExtendedClass.prototype.componentWillUnmount) _ToBeExtendedClass.prototype.componentWillUnmount.call(this);
+            if (_ToBeExtendedClass.prototype.componentWillUnmount) _ToBeExtendedClass.prototype.componentWillUnmount.call(this); //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
+            // Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
+
+            this.__$$isUnmounted = true;
           };
 
           _proto.render = function render() {
@@ -3781,7 +3770,7 @@ if (!this._inheritsLoose) {
         if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
           dispatchFn = isLazy ? ref.__fragmentParams.lazyDispatch : ref.__fragmentParams.dispatch;
         } else {
-          dispatchFn = isLazy ? ref.$$lazyDispatchForModule : ref.$$dispatchForModule;
+          dispatchFn = isLazy ? ref.$$lazyDispatch : ref.$$dispatch;
         }
       }
 
@@ -4847,16 +4836,16 @@ if (!this._inheritsLoose) {
    * @param connectSpec 形如: {foo:'*', bar:['b1', 'b2']}
    */
 
-  function getFragmentClassKeyAndStpMapping(connectSpec, fragmentModule) {
+  function getFragmentClassKeyAndStpMapping(connectSpec, fragmentModule, sharedStateKeys) {
+    //代表没有connect到store任何模块的CcFragment，也没有指定具体属于哪个模块
     if (!isObjectNotNull(connectSpec) && fragmentModule == MODULE_DEFAULT) {
-      //代表没有connect到store任何模块的CcFragment
       return {
         ccClassKey: CC_FRAGMENT_PREFIX + "_0",
         stateToPropMapping: null
       };
     }
 
-    var _getFeatureStrAndStpM = getFeatureStrAndStpMapping(connectSpec, fragmentModule),
+    var _getFeatureStrAndStpM = getFeatureStrAndStpMapping(connectSpec, fragmentModule, sharedStateKeys),
         featureStr = _getFeatureStrAndStpM.featureStr,
         stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping,
         connectedModuleNames = _getFeatureStrAndStpM.connectedModuleNames;
@@ -4926,7 +4915,7 @@ if (!this._inheritsLoose) {
         _sharedStateKeys = moduleName_stateKeys_$3[fragmentModule];
       }
 
-      var _getFragmentClassKeyA = getFragmentClassKeyAndStpMapping(connectSpec, fragmentModule),
+      var _getFragmentClassKeyA = getFragmentClassKeyAndStpMapping(connectSpec, fragmentModule, sharedStateKeys),
           ccClassKey = _getFragmentClassKeyA.ccClassKey,
           stateToPropMapping = _getFragmentClassKeyA.stateToPropMapping,
           connectedModuleNames = _getFragmentClassKeyA.connectedModuleNames;
@@ -5150,9 +5139,9 @@ if (!this._inheritsLoose) {
         refComputed: refComputed,
         refConnectedComputed: refConnectedComputed,
         connectedComputed: connectedComputed,
+        moduleComputed: moduleComputed,
         connectedState: connectedState,
         moduleState: moduleState,
-        moduleComputed: moduleComputed,
         // 新增defineEffect相关的支持
         defineEffect: function defineEffect(fn, stateKeys, eId, immediate) {
           if (immediate === void 0) {
@@ -5347,24 +5336,6 @@ if (!this._inheritsLoose) {
           var d = dispatcher.__$$getDispatchHandler(_assertThisInitialized(_this), _this.state, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1);
 
           return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
-        },
-        callDispatch: function callDispatch() {
-          var _this$__fragmentParam;
-
-          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
-          }
-
-          return (_this$__fragmentParam = _this.__fragmentParams.dispatch).bind.apply(_this$__fragmentParam, [_assertThisInitialized(_this)].concat(args));
-        },
-        callLazyDispatch: function callLazyDispatch() {
-          var _this$__fragmentParam2;
-
-          for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            args[_key4] = arguments[_key4];
-          }
-
-          return (_this$__fragmentParam2 = _this.__fragmentParams.lazyDispatch).bind.apply(_this$__fragmentParam2, [_assertThisInitialized(_this)].concat(args));
         },
         invoke: dispatcher.__$$getInvokeHandler(_assertThisInitialized(_this), fragmentModule, ccKey, ccUniqueKey, ccClassKey),
         lazyInvoke: dispatcher.__$$getInvokeHandler(_assertThisInitialized(_this), fragmentModule, ccKey, ccUniqueKey, ccClassKey, {
@@ -5648,6 +5619,7 @@ if (!this._inheritsLoose) {
       offEventHandlersByCcUniqueKey(ccUniqueKey);
       unsetRef(ccClassKey, ccUniqueKey);
       if (_Component.prototype.componentWillUnmount) _Component.prototype.componentWillUnmount.call(this);
+      this.__$$isUnmounted = true;
     };
 
     _proto.render = function render() {

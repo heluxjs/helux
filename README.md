@@ -1,7 +1,7 @@
 # [concent, 点击了解更多](https://concentjs.github.io/concent-site/)
 <p align="center">
   <a href="#">
-    <img width="500" src="https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc/banner.png">
+    <img width="500" src="https://raw.githubusercontent.com/concentjs/concent-site/master/img/banner.png">
   </a>
 </p>
 

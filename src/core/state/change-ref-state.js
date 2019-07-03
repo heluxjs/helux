@@ -107,7 +107,8 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
   if (targetRef.$$beforeSetState) {
     targetRef.$$beforeSetState({ state });
   }
-  thisCc.reactSetState(state, reactCallback);
+
+  if (targetRef.__$$isUnmounted !== true) thisCc.reactSetState(state, reactCallback);
   if (next) next();
 }
 
