@@ -1,3 +1,10 @@
+#### 2019-07-03
+1.4.7 发布
+* optimize: 新增属性__$$isUnmounted标记已卸载
+* optimize: 去掉顶层api调用里的dispatchForModule逻辑
+* optimize: 为CcClass添加$$moduleState属性
+* bug fix: 优化CcFragment classKey计算逻辑,防止属于同一个模块但是观察这不同的key的Fragment计算出相同的classKey;
+
 #### 2019-07-01
 1.4.0 发布，统一CcFragment和CcClass的使用体验
 * CcFragment允许指定专属模块
