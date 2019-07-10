@@ -25,7 +25,12 @@ export default function (stateModule, computedSpec, refComputed, refConnectedCom
 
         const computedValue = fn(newValue, oldState[stateKey], keyDesc, ctx);
         if (keyModule) {
-          refConnectedComputed[keyModule][stateKey] = computedValue;
+
+          const targetConnectedComputed = refConnectedComputed[keyModule];
+          //防止foo模块的实例，定义的watchKey是 foo/f1, 此时skip是false，但是结果不会向refConnectedComputed里放
+          if(targetConnectedComputed){
+            targetConnectedComputed[stateKey] = computedValue;
+          }
 
           //计算的目标key的模块和实例所属模块值一样时，也向refComputed赋值
           if (keyModule === computedSpecModule) {

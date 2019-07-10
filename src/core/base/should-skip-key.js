@@ -20,15 +20,13 @@ export default function (specModule, key, stateModule, connectSpecLike, moduleSt
     //dispatch调用如果指定了其他模块，是会触发这里的逻辑的
     if (keyModule !== stateModule) {
       skip = true;
-    } else if (!connectSpecLike[stateModule]) {//key的模块没有在connect里定义过
-      //??? need strict
-      skip = true;
-    } else if (!moduleStateKeys.includes(unmoduledKey)) {
-      //??? need strict
-      util.justWarning(`moduled key[${key}] is invalid`);
-      skip = true;
     } else {
-      stateKey = unmoduledKey;
+      //支持定义属于foo模块的实例里定义的watchKey形如: 'foo/f1', '/f1', 'f1' 都能够被触发watch
+      if (moduleStateKeys.includes(unmoduledKey) || connectSpecLike[stateModule]) {
+        stateKey = unmoduledKey;
+      } else {
+        skip = true
+      }
     }
   }
 
