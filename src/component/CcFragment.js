@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React from 'react';
 import {
   MODULE_DEFAULT, CC_FRAGMENT_PREFIX, CURSOR_KEY, CCSYNC_KEY,
   MODULE_GLOBAL, EFFECT_AVAILABLE, EFFECT_STOPPED, 
@@ -56,7 +56,7 @@ function getEId() {
   return Symbol(`__autoGen_${idSeq}__`);
 }
 
-export default class CcFragment extends Component {
+export default class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__beforeMount = this.__beforeMount.bind(this);
@@ -306,14 +306,14 @@ export default class CcFragment extends Component {
       removeAllEffect: () => {
         effectItems.length = 0;
       },
-      defineWatch: (watch) => {
-        if (isWatchDefined) throw new Error('defineWatch can only been one time');
+      defineWatch: (watch, immediateOpt) => {
+        if (isWatchDefined) throw new Error('defineWatch can only been called one time');
         const watchSpec = getWatchSpec(watch, this.__fragmentParams, this.cc.ccState.module);
         this.cc.watch = watch;
         this.cc.watchSpec = watchSpec;
       },
       defineComputed: (computed) => {
-        if (isComputedDefined) throw new Error('defineComputed can only been one time');
+        if (isComputedDefined) throw new Error('defineComputed can only been called one time');
         const computedSpec = getComputedSpec(computed, this.__fragmentParams, this.cc.ccState.module);
         this.cc.computed = computed;
         this.cc.computedSpec = computedSpec;
@@ -604,7 +604,8 @@ export default class CcFragment extends Component {
     const view = render || children;
     if (typeof view === 'function') {
       this.__fragmentParams.state = this.state;//注意这里，一定要每次都取最新的
-      return view(this.__fragmentParams) || React.createElement(Fragment);
+      // return view(this.__fragmentParams) || React.createElement(Fragment);
+      return view(this.__fragmentParams) || React.createElement('span', {style:{display:'none'}});
     } else {
       if (React.isValidElement(view)) {
         util.justWarning(`you are trying to specify a react dom to be CcFragment's children, it will never been rendered again no matter how your state changed!!!`);

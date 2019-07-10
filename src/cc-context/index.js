@@ -62,7 +62,34 @@ const watch = {
   getModuleWatch: module => watch._watch[module],
 };
 
+function hotReloadWarning(err){
+  const message = err.message || err;
+  const st = 'color:green;border:1px solid green';
+  console.log(`%c error detected ${message}, cc found app is maybe running in hot reload mode, so cc will silent this error...`, st);
+  console.log(`%c but if this is not as your expectation ,maybe you can reload your whole app to avoid this error message`, st);
+}
+
 const ccContext = {
+  isHotReloadMode: function() {
+    if (ccContext.isHot) return true;
+    
+    let result = false;
+    if (window) {
+      console.log(`%c[[isHotReloadMode]] window.name:${window.name}`, 'color:green;border:1px solid green');
+      if (window.webpackHotUpdate 
+        || window.name === 'previewFrame' //for stackblitz
+        || window.__SANDBOX_DATA__ // for codesandbox
+        ) {
+        result = true;
+      }
+    }
+    return result;
+  },
+  throwCcHmrError: function(err){
+    if(ccContext.isHotReloadMode()){
+      hotReloadWarning(err);
+    }else throw err;
+  },
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,
@@ -206,7 +233,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.4.9',
+    version: '1.4.10',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
@@ -221,8 +248,6 @@ const ccContext = {
   middlewares: [],
   plugins:[],
 }
-
-util.bindToWindow('sss',ccContext.store._state );
 
 export function getCcContext() {
   return ccContext;

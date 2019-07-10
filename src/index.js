@@ -18,16 +18,16 @@ import _connect from './api/connect';
 import _connectDumb from './api/connect-dumb';
 import _connectPure from './api/connect-pure';
 import _dispatch from './api/dispatch';
-import _lazyDispatch from './api/lazyDispatch';
+import _lazyDispatch from './api/lazy-dispatch';
 import _ccContext from './cc-context';
 import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
 import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
 import _getConnectedState from './api/get-connected-state';
-import _appendState from './api/appendState';
+import _appendState from './api/append-state';
 import _reducer from './api/reducer';
-import _lazyReducer from './api/lazyReducer';
+import _lazyReducer from './api/lazy-reducer';
 import _clearContextIfUnderHotReloadMode from './api/clear-context-if-under-hot-reload-mode';
 import _CcFragment from './component/CcFragment';
 import * as _cst from './support/constant';
@@ -105,6 +105,20 @@ const defaultExport = {
   appendState,
 }
 
+const winCc = window.cc;
+if (winCc) {
+  if (winCc.ccContext && winCc.ccContext.info) {
+    const existedVersion = winCc.ccContext.info.version;
+    const nowVersion = ccContext.info.version;
+    //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
+    //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
+    //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
+    if (existedVersion !== nowVersion) {
+      throw new Error(`a existed version concent ${existedVersion} is different with current about to import concent ${existedVersion}, 
+      it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)`);
+    }
+  }
+}
 util.bindToWindow('cc', defaultExport);
 
 export default defaultExport;

@@ -28,7 +28,7 @@ import getWatchSpec from '../watch/get-watch-spec';
 import getComputedSpec from '../computed/get-computed-spec';
 import changeRefState from '../state/change-ref-state';
 
-const { verifyKeys, ccClassDisplayName, styleStr, color, verboseInfo, makeError, justWarning, throwCcHmrError } = util;
+const { verifyKeys, ccClassDisplayName, styleStr, color, verboseInfo, makeError, justWarning } = util;
 const {
   store: { _state, getState},
   reducer: { _reducer }, refStore,
@@ -117,13 +117,13 @@ function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalWatchedK
   const contextMap = ccContext.ccClassKey_ccClassContext_;
   const ctx = contextMap[ccClassKey];
   if (ctx !== undefined) {// analyze is ccClassKey really duplicated
-    if (util.isHotReloadMode()) {
+    if (ccContext.isHotReloadMode()) {
       const str1 = ctx.originalWatchedKeys.toString() + JSON.stringify(ctx.stateToPropMapping);
       const str2 = originalWatchedKeys.toString() + JSON.stringify(stateToPropMapping);
       if (str1 !== str2) {
         throw me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`);
       } else {
-        throwCcHmrError(me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`));
+        ccContext.throwCcHmrError(me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`));
       }
     } else {
       throw me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`);

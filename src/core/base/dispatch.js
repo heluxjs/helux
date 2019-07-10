@@ -3,11 +3,11 @@ import { CC_FRAGMENT_PREFIX } from '../../support/constant';
 import ccContext from '../../cc-context';
 import pickOneRef from '../../core/ref/pick-one-ref';
 
-export default function (isLazy, action, payLoadWhenActionIsString, delay, identity='', {ccClassKey, ccKey, throwError} = {}) {
+export default function (isLazy, action, payLoadWhenActionIsString, delay, identity = '', { ccClassKey, ccKey, throwError } = {}) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {
     throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload`);
   }
-  
+
   let dispatchFn;
   try {
     if (ccClassKey && ccKey) {
@@ -20,14 +20,14 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, ident
       }
     } else {
       let module = '';
-      if(typeof action == 'string' && action.includes('/')){
+      if (typeof action == 'string' && action.includes('/')) {
         module = action.split('/')[0];
       }
 
       let ref;
-      if(module!=='*'){
+      if (module !== '*') {
         ref = pickOneRef(module);
-      }else{
+      } else {
         ref = pickOneRef();
       }
 
@@ -38,14 +38,16 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, ident
       }
     }
 
-    if(typeof action === 'string' && action.startsWith('*')){
-        const reducerName = action.split('/').pop();
-        const rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
-        rnList_.forEach(fullReducerName=>{
-          dispatchFn(fullReducerName, payLoadWhenActionIsString, delay, identity);
-        });
-    }else{
-      dispatchFn(action, payLoadWhenActionIsString, delay, identity)
+    if (typeof action === 'string' && action.startsWith('*')) {
+      const reducerName = action.split('/').pop();
+      const rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+      const tasks = [];
+      rnList_.forEach(fullReducerName => {
+        tasks.push(dispatchFn(fullReducerName, payLoadWhenActionIsString, delay, identity));
+      });
+      return Promise.all(tasks);
+    } else {
+      return dispatchFn(action, payLoadWhenActionIsString, delay, identity);
     }
   } catch (err) {
     if (throwError) throw err;

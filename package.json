@@ -1,6 +1,6 @@
 {
   "_from": "concent",
-  "_id": "concent@1.4.9",
+  "_id": "concent@1.4.10",
   "_inBundle": false,
   "_integrity": "sha512-YuakaB+lTidx3v4cMrObLoKISm+26UVRqtD6qXscHQ3gWR6SQTVBnKxv+JdiJ+06GMmgIY6e8816TqLkcSw1Pg==",
   "_location": "/concent",
@@ -38,7 +38,9 @@
   },
   "bundleDependencies": false,
   "dependencies": {
-    "co": "^4.6.0"
+    "co": "^4.6.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "deprecated": false,
   "description": "control your react component state in a funny way, every react instance of different class if they were registered in concent own the ability of knowing and syncing each other's state, just have a try and discover more^_^",
@@ -51,6 +53,7 @@
     "@babel/plugin-transform-react-jsx": "^7.0.0",
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
+    "@babel/runtime": "^7.5.4",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
     "codecov": "^3.0.2",
@@ -120,8 +123,8 @@
     "build:es-old": "cross-env BABEL_ENV=es babel src --out-dir es",
     "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.js",
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "unpkg": "dist/concent.js",
-  "version": "1.4.9"
+  "version": "1.4.10"
 }

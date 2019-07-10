@@ -30,7 +30,7 @@ function _clearAll() {
 
 function _prepareClear(cb) {
   if (ccContext.isCcAlreadyStartup) {
-    if (util.isHotReloadMode()) {
+    if (ccContext.isHotReloadMode()) {
       cb();
     } else {
       util.justWarning(new Error('clear operation failed, current runtime is not running under hot reload mode!'));

@@ -12,4 +12,4 @@ export default function (module, state, delayMs = -1, identity, skipMiddleware, 
     throwApiCallError();
   }
   setState(module, state, delayMs, identity, skipMiddleware, throwError);
-};
+}
