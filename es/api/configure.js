@@ -1,5 +1,4 @@
 import ccContext from '../cc-context';
-import * as base from '../core/base';
 import { ERR, MODULE_GLOBAL } from '../support/constant';
 import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
 import initModuleState from '../core/state/init-module-state';

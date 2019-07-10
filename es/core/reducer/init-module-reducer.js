@@ -2,7 +2,7 @@ import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
 import dispatch from '../../api/dispatch';
-import lazyDispatch from '../../api/lazyDispatch';
+import lazyDispatch from '../../api/lazy-dispatch';
 
 export default function(module, reducer, rootReducerCanNotContainInputModule = true) {
   if (!reducer) return;

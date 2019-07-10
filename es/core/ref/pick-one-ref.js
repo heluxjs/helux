@@ -23,7 +23,7 @@ export default function(module, mustBelongToModule = false) {
         // find one cc ref later
       }
     } else {
-      throw new Error(`module[${module}] is invalid, is is not declared in store`);
+      throw new Error(`module[${module}] is not declared in store`);
     }
 
     if (module === MODULE_DEFAULT) {

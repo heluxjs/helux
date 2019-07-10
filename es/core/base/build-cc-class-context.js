@@ -1,9 +1,9 @@
 import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
 import util from '../../support/util'
-import setConnectedState from '../state/set-connected-state';
+// import setConnectedState from '../state/set-connected-state';
 
-const { makeError: me, throwCcHmrError } = util;
+const { makeError: me } = util;
 
 export default function (ccClassKey, moduleName, originalWatchedKeys, watchedKeys, stateToPropMapping, connectedModuleNames, forCcFragment = false) {
 
@@ -22,7 +22,7 @@ export default function (ccClassKey, moduleName, originalWatchedKeys, watchedKey
   } else {
     //对于register调用，ccClassContext一定是不存在的, 如果存在就报错
     if (ccClassContext !== undefined) {
-      throwCcHmrError(me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`))
+      ccContext.throwCcHmrError(me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:${ccClassKey} duplicate`))
     }
     ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
   }

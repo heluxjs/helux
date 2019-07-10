@@ -1,22 +1,5 @@
 
 import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC } from './constant';
-import ccContext from '../cc-context';
-
-export function isHotReloadMode() {
-  if (ccContext.isHot) return true;
-  
-  let result = false;
-  if (window) {
-    console.log(`%c[[isHotReloadMode]] window.name:${window.name}`, 'color:green;border:1px solid green');
-    if (window.webpackHotUpdate 
-      || window.name === 'previewFrame' //for stackblitz
-      || window.__SANDBOX_DATA__ // for codesandbox
-      ) {
-      result = true;
-    }
-  }
-  return result;
-}
 
 export function bindThis(_this, methods) {
   methods.forEach(method => _this[method] = _this[method].bind(_this));
@@ -78,23 +61,6 @@ export function makeError(code, extraMessage) {
   const error = new Error(message);
   error.code = code;
   return error;
-}
-
-export function hotReloadWarning(err){
-  const message = err.message || err;
-  const st = 'color:green;border:1px solid green';
-  console.log(`%c error detected ${message}, cc found app is maybe running in hot reload mode, so cc will silent this error...`, st);
-  console.log(`%c but if this is not as your expectation ,maybe you can reload your whole app to avoid this error message`, st);
-}
-
-/**
- * these error may caused by hmr
- * @param {*} err 
- */
-export function throwCcHmrError(err){
-  if(isHotReloadMode()){
-    hotReloadWarning(err);
-  }else throw err;
 }
 
 /** make ccClassContext */
@@ -247,6 +213,15 @@ export function justTip(msg) {
   console.log(`%c${msg}`, 'color:green;border:1px solid green;');
 }
 
+export function strictWarning(err) {
+  //采用动态引入的方式，避免build时报警循环引用
+  const ccContext = require('../cc-context').default;
+  if (ccContext.isStrict) {
+    throw err;
+  }
+  justWarning(err)
+}
+
 export function safeGetObjectFromObject(object, key) {
   let childrenObject = object[key];
   if (!childrenObject) {
@@ -352,16 +327,13 @@ export function bindToWindow(key, obj) {
   } else {
     setTimeout(() => {
       if (window) window[key] = obj;
-    }, 6000);
+    }, 3000);
   }
 }
 
 export default {
   clearObject,
   makeError,
-  throwCcHmrError,
-  hotReloadWarning,
-  isHotReloadMode,
   makeCcClassContext,
   makeUniqueCcKey,
   makeHandlerKey,

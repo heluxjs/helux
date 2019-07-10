@@ -4,7 +4,7 @@ import util from '../support/util';
 /**
  * load will call startup
  * @param {{ [moduleName:string]: config:{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean} }} store
- * @param option
+ * @param {{isStrict:boolean}} option
  */
 
 export default function (store = {}, option = {}) {

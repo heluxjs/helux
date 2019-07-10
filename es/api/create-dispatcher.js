@@ -16,7 +16,7 @@ export default function (CustomizedComponent) {
 
 
   if (ccContext.refs[CC_DISPATCHER]) {
-    if(util.isHotReloadMode()){
+    if(ccContext.isHotReloadMode()){
       util.justTip(`hot reload mode, CC_DISPATCHER existed`);
     }else{
       throw new Error(`CcDispatcher can only be initialize one time`);

@@ -43,7 +43,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
     throw me(ERR.CC_CLASS_INSTANCE_OPTION_INVALID, vbi(`a standard default ccOption may like: {"storedKeys": []}`));
   }
 
-  const isHot = util.isHotReloadMode();
+  const isHot = ccContext.isHotReloadMode();
   if (forCcFragment === true) {
     //因为CcFragment不强调类的概念，ccClassKey是自动生成的，所以对于标记了ccKey的CcFragment实例
     //通过fragmentCcKeys来排除有没有重复，如果这里通过classContext去查就是不对的，因为不同的classContext可以包含相同的ccKey

@@ -1,16 +1,11 @@
-import util from '../../support/util';
-import { STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE } from '../../support/constant';
+import { strictWarning } from '../../support/util';
 import pickOneRef from '../ref/pick-one-ref';
 
-export default function (module, state, delay = -1, identity, skipMiddleware, throwError = false) {
+export default function (module, state, delay = -1, identity, skipMiddleware) {
   try {
     const ref = pickOneRef(module);
-    ref.$$changeState(state, {
-      ccKey: '[[top api:cc.setState]]', module, stateFor: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-      delay, identity, skipMiddleware
-    });
+    ref.$$changeState(state, { ccKey: '[[top api:cc.setState]]', module, delay, identity, skipMiddleware });
   } catch (err) {
-    if (throwError) throw err;
-    else util.justWarning(err.message);
+    strictWarning(err);
   }
 }

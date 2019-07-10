@@ -68,11 +68,10 @@ export default function ({
       throw 'customizing Dispatcher is not allowed in current version cc';
     }
 
-    if (window) {
-      bindToWindow('CC_CONTEXT', ccContext);
-      bindToWindow('ccc', ccContext);
-      bindToWindow('cccc', ccContext.computed._computedValue);
-    }
+    bindToWindow('CC_CONTEXT', ccContext);
+    bindToWindow('ccc', ccContext);
+    bindToWindow('cccc', ccContext.computed._computedValue);
+    bindToWindow('sss',ccContext.store._state );
 
     ccContext.isCcAlreadyStartup = true;
     //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
