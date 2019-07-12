@@ -104,10 +104,6 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
     if (next) next();
   }
 
-  if (targetRef.$$beforeSetState) {
-    targetRef.$$beforeSetState({ state });
-  }
-
   if (targetRef.__$$isUnmounted !== true) thisCc.reactSetState(state, reactCallback);
   if (next) next();
 }
@@ -127,9 +123,6 @@ function syncCommittedStateToStore(moduleName, committedState) {
 function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, moduleName, committedState, delay, identity) {
   const { skipBroadcastRefState, partialSharedState } = broadcastInfo;
   const startBroadcastState = () => {
-    if (targetRef.$$beforeBroadcastState) {//check if user define a life cycle hook $$beforeBroadcastState
-      targetRef.$$beforeBroadcastState({});
-    }
     broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity);
   };
 

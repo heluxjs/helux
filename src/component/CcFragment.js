@@ -437,6 +437,7 @@ export default class CcFragment extends React.Component {
     if (!allModules.includes(module)) allModules.push(module);
 
     //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
+    //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
     allModules.forEach(m => {
       const refReducerFnObj = util.safeGetObjectFromObject(reducer, m);
       const refLazyReducerFnObj = util.safeGetObjectFromObject(lazyReducer, m);
@@ -516,6 +517,7 @@ export default class CcFragment extends React.Component {
     } else {//callByDidUpdate
       const prevState = this.cc.prevState;
       const curState = this.state;
+      const toBeExecutedFns = [];
       effectItems.forEach(item => {
         const { status, stateKeys, fn, eId } = item;
         if (status === EFFECT_STOPPED) return;
@@ -552,13 +554,17 @@ export default class CcFragment extends React.Component {
             }
           }
           if (shouldEffectExecute) {
-            const cb = fn(ctx);
-            if (cb) eid_effectReturnCb_[eId] = cb;
+            toBeExecutedFns.push({fn, eId});
           }
         } else {
-          const cb = fn(ctx);
-          if (cb) eid_effectReturnCb_[eId] = cb;
+          toBeExecutedFns.push({fn, eId});
         }
+      });
+
+      toBeExecutedFns.forEach(item=>{
+        const {fn, eId} = item;
+        const cb = fn(ctx);
+        if (cb) eid_effectReturnCb_[eId] = cb;
       });
     }
   }

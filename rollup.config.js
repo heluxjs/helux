@@ -2,19 +2,27 @@ import nodeResolve from 'rollup-plugin-node-resolve'
 import babel from 'rollup-plugin-babel'
 import replace from 'rollup-plugin-replace'
 import commonjs from 'rollup-plugin-commonjs'
-import {uglify} from 'rollup-plugin-uglify'
+import { uglify } from 'rollup-plugin-uglify'
 import pkg from './package.json'
 
-const env = process.env.NODE_ENV
+const env = process.env.NODE_ENV;
+
+// 排除掉react，不作为打包项目
+const external = ['react', 'react-dom', 'co'].concat(Object.keys(pkg.peerDependencies || {}));
 
 const config = {
   input: 'src/index.js',
-  external: Object.keys(pkg.peerDependencies || {}),
+  // output.exports must be 'default', 'named', 'none', 'auto', or left unspecified (defaults to 'auto')
+  // exports: 'auto', /** Disable warning for default imports */
+  external,
   output: {
     format: 'umd',
-    name: 'ReactControlCenter',
+    name: 'concent',
     globals: {
-      redux: 'ReactControlCenter'
+      //avoid (!) Missing global variable name
+      react: 'React',
+      'react-dom': 'ReactDOM',
+      co: 'co',
     }
   },
   plugins: [
@@ -27,24 +35,24 @@ const config = {
       'process.env.NODE_ENV': JSON.stringify(env)
     }),
     commonjs({
-        namedExports: {
-          'node_modules/react-is/index.js': ['isValidElementType'],
-        }
-      })
-    ]
-  }
-  
-  if (env === 'production') {
-    config.plugins.push(
-      uglify({
-        compress: {
-          pure_getters: true,
-          unsafe: true,
-          unsafe_comps: true,
-          warnings: false
-        }
-      })
-    )
-  }
-  
-  export default config
+      namedExports: {
+        'node_modules/react-is/index.js': ['isValidElementType'],
+      }
+    })
+  ]
+}
+
+if (env === 'production') {
+  config.plugins.push(
+    uglify({
+      compress: {
+        pure_getters: true,
+        unsafe: true,
+        unsafe_comps: true,
+        warnings: false
+      }
+    })
+  )
+}
+
+export default config;

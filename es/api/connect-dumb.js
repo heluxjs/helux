@@ -29,9 +29,8 @@ function _connectDumb(mapProps, module, watchedKeys, connect, state, setup, bind
 }
 
 export default ({ mapProps, mapState, module, watchedKeys, connect, state = {}, setup, bindCtxToMethod, alias = {} }) => Dumb => {
-
-  //对state做克隆,防止用同一个concnetDumb结果包不同的fn组件,共享了同一份state
-  //const c = concnetDumb({state:{info:{a:1}}});
+  //对state做克隆,防止用同一个connectDumb结果包不同的fn组件,共享了同一份state
+  //const c = connectDumb({state:{info:{a:1}}});
   // const UI1_ = c(UI1); const UI2_ = c(UI2);
   // 让UI1_和UI2_各自拥有自己的localState
   const stateType = typeof state;

@@ -1,5 +1,6 @@
 
 import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC } from './constant';
+import ccContext from '../cc-context';
 
 export function bindThis(_this, methods) {
   methods.forEach(method => _this[method] = _this[method].bind(_this));
@@ -214,8 +215,6 @@ export function justTip(msg) {
 }
 
 export function strictWarning(err) {
-  //采用动态引入的方式，避免build时报警循环引用
-  const ccContext = require('../cc-context').default;
   if (ccContext.isStrict) {
     throw err;
   }
