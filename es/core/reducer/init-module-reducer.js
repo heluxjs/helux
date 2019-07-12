@@ -9,7 +9,7 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
   if (rootReducerCanNotContainInputModule) checker.checkReducerModuleName(module);
   else checker.checkModuleNameBasically(module);
 
-  const { _reducer, _reducerCaller, _lazyReducerCaller, _reducerName_FullReducerNameList_, _reducerModule_fnNames_ } = ccContext.reducer;
+  const { _reducer, _reducerCaller, _lazyReducerCaller, _reducerFnName_fullFnNames_, _reducerModule_fnNames_ } = ccContext.reducer;
   _reducer[module] = reducer;
   const subReducerCaller = util.safeGetObjectFromObject(_reducerCaller, module);
   const subLazyReducerCaller = util.safeGetObjectFromObject(_lazyReducerCaller, module);
@@ -31,7 +31,7 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
     // reducerFn.stateModule = module;
 
-    const list = util.safeGetArrayFromObject(_reducerName_FullReducerNameList_, name);
+    const list = util.safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
     list.push(`${module}/${name}`);
   });
 }

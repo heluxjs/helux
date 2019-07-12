@@ -1,33 +1,3 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('co'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', 'react', 'co', 'react-dom'], factory) :
@@ -327,7 +297,7 @@ if (!this._inheritsLoose) {
       _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer),
       _reducerCaller: {},
       _lazyReducerCaller: {},
-      _reducerName_FullReducerNameList_: {},
+      _reducerFnName_fullFnNames_: {},
       _reducerModule_fnNames_: {}
     },
     computed: computed,
@@ -356,7 +326,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.12',
+      version: '1.4.13',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -3557,11 +3527,11 @@ if (!this._inheritsLoose) {
       }
 
       if (typeof action === 'string' && action.startsWith('*')) {
-        var reducerName = action.split('/').pop();
-        var rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+        var reducerModName = action.split('/').pop();
+        var fullFnNames = ccContext.reducer._reducerFnName_fullFnNames_[reducerModName];
         var tasks = [];
-        rnList_.forEach(function (fullReducerName) {
-          tasks.push(dispatchFn(fullReducerName, payLoadWhenActionIsString, delay, identity));
+        fullFnNames.forEach(function (fullFnName) {
+          tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, delay, identity));
         });
         return Promise.all(tasks);
       } else {
@@ -3591,7 +3561,7 @@ if (!this._inheritsLoose) {
         _reducer = _ccContext$reducer._reducer,
         _reducerCaller = _ccContext$reducer._reducerCaller,
         _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller,
-        _reducerName_FullReducerNameList_ = _ccContext$reducer._reducerName_FullReducerNameList_,
+        _reducerFnName_fullFnNames_ = _ccContext$reducer._reducerFnName_fullFnNames_,
         _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_;
     _reducer[module] = reducer;
     var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module);
@@ -3620,7 +3590,7 @@ if (!this._inheritsLoose) {
       // reducerFn.stateModule = module;
 
 
-      var list = safeGetArrayFromObject(_reducerName_FullReducerNameList_, name);
+      var list = safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
       list.push(module + "/" + name);
     });
   }
@@ -3727,6 +3697,7 @@ if (!this._inheritsLoose) {
    * @param {object} [option.globalState] will been merged to $$global module state
    * @param {object} [option.globalWatch] will been merged to $$global module watch
    * @param {object} [option.globalComputed] will been merged to $$global module computed
+   * @param {object} [option.noOpPlugins] concent自己用的信号，防止boot，做一次多余的配置
    * @param {function[]} [option.middlewares]
    */
 
@@ -3759,7 +3730,8 @@ if (!this._inheritsLoose) {
         globalState = _option.globalState,
         globalWatch = _option.globalWatch,
         globalComputed = _option.globalComputed,
-        middlewares = _option.middlewares;
+        middlewares = _option.middlewares,
+        noOpPlugins = _option.noOpPlugins;
     initModuleState(module, state);
     initModuleReducer(module, reducer);
     var _state = ccContext.store._state;
@@ -3847,16 +3819,18 @@ if (!this._inheritsLoose) {
       });
     }
 
-    ccContext.plugins.forEach(function (p) {
-      if (p.writeModuleState) {
-        var pluginName = p.name;
+    if (noOpPlugins !== true) {
+      ccContext.plugins.forEach(function (p) {
+        if (p.writeModuleState) {
+          var pluginModule = p.module;
 
-        if (pluginName !== module) {
-          var pluginState = ccContext.store.getState(pluginName);
-          p.writeModuleState(pluginState, module);
+          if (pluginModule !== module) {
+            var pluginState = ccContext.store.getState(pluginModule);
+            p.writeModuleState(pluginState, module);
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   var isPlainJsonObject$4 = isPlainJsonObject,
@@ -3958,21 +3932,16 @@ if (!this._inheritsLoose) {
       var ccPlugins = ccContext.plugins;
       ccPlugins.length = 0; //防止热加载重复多次载入plugins
 
-      var moduleNames = okeys$2(ccContext.moduleName_stateKeys_);
       plugins.forEach(function (p) {
         ccPlugins.push(p);
 
-        if (p.configure) {
-          var conf = p.configure();
-          p.name = conf.module;
-          configure(conf.module, conf);
-          moduleNames.forEach(function (m) {
-            if (p.writeModuleState) {
-              p.writeModuleState(conf.state, m);
-            }
+        if (p.getConf) {
+          var pluginConf = p.getConf();
+          if (pluginConf.module) configure(pluginConf.module, pluginConf.conf, {
+            noOpPlugins: true
           });
         } else {
-          throw new Error('a plugin must export configure handler!');
+          throw new Error('a plugin must export getConf handler!');
         }
       });
     }

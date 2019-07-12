@@ -39,11 +39,11 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, ident
     }
 
     if (typeof action === 'string' && action.startsWith('*')) {
-      const reducerName = action.split('/').pop();
-      const rnList_ = ccContext.reducer._reducerName_FullReducerNameList_[reducerName];
+      const reducerModName = action.split('/').pop();
+      const fullFnNames = ccContext.reducer._reducerFnName_fullFnNames_[reducerModName];
       const tasks = [];
-      rnList_.forEach(fullReducerName => {
-        tasks.push(dispatchFn(fullReducerName, payLoadWhenActionIsString, delay, identity));
+      fullFnNames.forEach(fullFnName => {
+        tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, delay, identity));
       });
       return Promise.all(tasks);
     } else {

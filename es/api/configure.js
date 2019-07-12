@@ -45,6 +45,7 @@ function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
  * @param {object} [option.globalState] will been merged to $$global module state
  * @param {object} [option.globalWatch] will been merged to $$global module watch
  * @param {object} [option.globalComputed] will been merged to $$global module computed
+ * @param {object} [option.noOpPlugins] concent自己用的信号，防止boot，做一次多余的配置
  * @param {function[]} [option.middlewares]
  */
 export default function (module, config, option = {}) {
@@ -59,7 +60,7 @@ export default function (module, config, option = {}) {
   }
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
-  const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
+  const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares, noOpPlugins } = option;
 
   initModuleState(module, state);
   initModuleReducer(module, reducer);
@@ -141,14 +142,16 @@ export default function (module, config, option = {}) {
     });
   }
 
-  ccContext.plugins.forEach(p => {
-    if (p.writeModuleState) {
-      const pluginName = p.name;
-      if (pluginName !== module) {
-        const pluginState = ccContext.store.getState(pluginName);
-        p.writeModuleState(pluginState, module);
+  if(noOpPlugins!==true){
+    ccContext.plugins.forEach(p => {
+      if (p.writeModuleState) {
+        const pluginModule = p.module;
+        if (pluginModule !== module) {
+          const pluginState = ccContext.store.getState(pluginModule);
+          p.writeModuleState(pluginState, module);
+        }
       }
-    }
-  });
-
+    });
+  }
+  
 }
