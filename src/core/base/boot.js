@@ -111,22 +111,13 @@ export function configPlugins(plugins) {
     const ccPlugins = ccContext.plugins;
     ccPlugins.length = 0;//防止热加载重复多次载入plugins
 
-    const moduleNames = okeys(ccContext.moduleName_stateKeys_);
-
     plugins.forEach(p => {
       ccPlugins.push(p);
-      if (p.configure) {
-        const conf = p.configure();
-        p.name = conf.module;
-        configure(conf.module, conf);
-
-        moduleNames.forEach(m => {
-          if (p.writeModuleState) {
-            p.writeModuleState(conf.state, m);
-          }
-        });
+      if (p.getConf) {
+        const pluginConf = p.getConf();
+        if(pluginConf.module)configure(pluginConf.module, pluginConf.conf, {noOpPlugins:true});
       }else{
-        throw new Error('a plugin must export configure handler!');
+        throw new Error('a plugin must export getConf handler!');
       }
     });
   }
