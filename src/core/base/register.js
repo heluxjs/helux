@@ -555,7 +555,7 @@ export default function register(ccClassKey, {
                     });
                 }
 
-                if (chainId == oriChainId) {//是源头函数结束，发送函数结束的信号给插件
+                if (chainId === oriChainId) {//是源头函数结束，发送函数结束的信号给插件
                   send(SIG_FN_START, { calledBy, module: targetModule, chainId, fn: userLogicFn });
                 }
                 co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(partialState => {
@@ -564,7 +564,7 @@ export default function register(ccClassKey, {
                   const curDepth = chainId_depth_[chainId];
 
                   let commitStateList = [];
-                  if (chainId == oriChainId) {
+                  if (chainId === oriChainId) {
                     send(SIG_FN_END, { calledBy, module: targetModule, chainId, fn: userLogicFn });
                   }
 
@@ -593,7 +593,7 @@ export default function register(ccClassKey, {
 
                   if (__innerCb) __innerCb(null, partialState);
                 }).catch(err => {
-                  if (chainId == oriChainId) {
+                  if (chainId === oriChainId) {
                     send(SIG_FN_ERR, { calledBy, module: targetModule, chainId, fn: userLogicFn });
                   }
                   handleCcFnError(err, __innerCb);
