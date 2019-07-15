@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.14',
+      version: '1.4.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -3089,7 +3089,7 @@ if (!this._inheritsLoose) {
               } // pick user input reducerModule firstly
 
 
-              var nowReducerModule = _reducerModule || targetReducerModule || module;
+              var nowReducerModule = _reducerModule || targetReducerModule || _module;
               var p = new Promise(function (resolve, reject) {
                 _this6.cc.dispatch({
                   targetRef: targetRef,
