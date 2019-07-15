@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.17',
+      version: '1.4.18',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1322,6 +1322,7 @@ if (!this._inheritsLoose) {
 
   function send(sig, payload) {
     var plugins = ccContext.plugins;
+    if (payload.calledBy === INVOKE) return;
     plugins.forEach(function (p) {
       if (p.receive) p.receive(sig, payload);
     });
@@ -2727,6 +2728,7 @@ if (!this._inheritsLoose) {
                   }
 
                   send(SIG_FN_START, {
+                    calledBy: calledBy,
                     module: targetModule,
                     chainId: chainId,
                     fn: userLogicFn
@@ -2737,6 +2739,7 @@ if (!this._inheritsLoose) {
                     var curDepth = chainId_depth_[chainId];
                     var commitStateList = [];
                     send(SIG_FN_END, {
+                      calledBy: calledBy,
                       module: targetModule,
                       chainId: chainId,
                       fn: userLogicFn
@@ -2781,6 +2784,7 @@ if (!this._inheritsLoose) {
                     if (__innerCb) __innerCb(null, partialState);
                   })["catch"](function (err) {
                     send(SIG_FN_ERR, {
+                      calledBy: calledBy,
                       module: targetModule,
                       chainId: chainId,
                       fn: userLogicFn

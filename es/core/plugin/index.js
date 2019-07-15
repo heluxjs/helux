@@ -1,8 +1,11 @@
 import ccContext from '../../cc-context';
+import { INVOKE } from '../../support/constant';
 
 export function send(sig, payload) {
   const plugins = ccContext.plugins;
-  plugins.forEach(p=>{
-    if(p.receive)p.receive(sig, payload);
+  if (payload.calledBy === INVOKE) return;
+
+  plugins.forEach(p => {
+    if (p.receive) p.receive(sig, payload);
   });
 }
