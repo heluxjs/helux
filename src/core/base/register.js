@@ -562,7 +562,7 @@ export default function register(ccClassKey, {
                   const curDepth = chainId_depth_[chainId];
 
                   let commitStateList = [];
-                  send(SIG_FN_END, { module: targetModule, chainId });
+                  send(SIG_FN_END, { module: targetModule, chainId, fn: userLogicFn });
                   // if (chainId == oriChainId) {//是源头函数结束，发送函数结束的信号给插件
                   //   send(SIG_FN_END, { module: targetModule, chainId });
                   // }
@@ -592,7 +592,7 @@ export default function register(ccClassKey, {
 
                   if (__innerCb) __innerCb(null, partialState);
                 }).catch(err => {
-                  send(SIG_FN_ERR, { module: targetModule, chainId });
+                  send(SIG_FN_ERR, { module: targetModule, chainId, fn: userLogicFn });
                   handleCcFnError(err, __innerCb);
                 });
               });
@@ -772,7 +772,7 @@ export default function register(ccClassKey, {
               return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
             }
 
-            // pick user input reducerModule firstly
+            // pick user input reducerModule firstly!
             let nowReducerModule = _reducerModule || (targetReducerModule || _module);
             const p = new Promise((resolve, reject) => {
               this.cc.dispatch({

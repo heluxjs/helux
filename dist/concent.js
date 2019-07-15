@@ -3086,7 +3086,7 @@ if (!this._inheritsLoose) {
 
               if (_module === '*') {
                 return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
-              } // pick user input reducerModule firstly
+              } // pick user input reducerModule firstly!
 
 
               var nowReducerModule = _reducerModule || targetReducerModule || _module;

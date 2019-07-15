@@ -772,7 +772,7 @@ export default function register(ccClassKey, {
               return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
             }
 
-            // pick user input reducerModule firstly
+            // pick user input reducerModule firstly!
             let nowReducerModule = _reducerModule || (targetReducerModule || _module);
             const p = new Promise((resolve, reject) => {
               this.cc.dispatch({
