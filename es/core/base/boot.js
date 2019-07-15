@@ -43,9 +43,9 @@ export function configStoreState(storeState) {
  * @param {{[reducerModuleName:string]:{[reducerFnType:string]:function}}} rootReducer 
  */
 export function configRootReducer(rootReducer) {
-  const moduleNames = okeys(rootReducer);
   if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
   if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
+  const moduleNames = okeys(rootReducer);
 
   const len = moduleNames.length;
   for (let i = 0; i < len; i++) {

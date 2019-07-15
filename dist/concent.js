@@ -1,3 +1,34 @@
+if (!this._assertThisInitialized) {
+  this._assertThisInitialized = function (self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+  }
+}
+if (!this._extends) {
+  this._extends = function () {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    };
+    return _extends.apply(this, arguments);
+  }
+}
+if (!this._inheritsLoose) {
+  this._inheritsLoose = function (subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
+    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+}
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('co'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', 'react', 'co', 'react-dom'], factory) :
@@ -326,7 +357,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.13',
+      version: '1.4.14',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -3860,9 +3891,9 @@
    */
 
   function configRootReducer(rootReducer) {
-    var moduleNames = okeys$2(rootReducer);
     if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
     if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
+    var moduleNames = okeys$2(rootReducer);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
