@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.15',
+      version: '1.4.17',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2738,7 +2738,8 @@ if (!this._inheritsLoose) {
                     var commitStateList = [];
                     send(SIG_FN_END, {
                       module: targetModule,
-                      chainId: chainId
+                      chainId: chainId,
+                      fn: userLogicFn
                     }); // if (chainId == oriChainId) {//是源头函数结束，发送函数结束的信号给插件
                     //   send(SIG_FN_END, { module: targetModule, chainId });
                     // }
@@ -2781,7 +2782,8 @@ if (!this._inheritsLoose) {
                   })["catch"](function (err) {
                     send(SIG_FN_ERR, {
                       module: targetModule,
-                      chainId: chainId
+                      chainId: chainId,
+                      fn: userLogicFn
                     });
                     handleCcFnError(err, __innerCb);
                   });
