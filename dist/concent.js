@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.20',
+      version: '1.4.21',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1322,7 +1322,6 @@ if (!this._inheritsLoose) {
 
   function send(sig, payload) {
     var plugins = ccContext.plugins;
-    if (payload.calledBy === INVOKE) return;
     plugins.forEach(function (p) {
       if (p.receive) p.receive(sig, payload);
     });
@@ -2727,31 +2726,26 @@ if (!this._inheritsLoose) {
                     });
                   }
 
-                  if (chainId === oriChainId) {
-                    //是源头函数结束，发送函数结束的信号给插件
-                    send(SIG_FN_START, {
-                      calledBy: calledBy,
-                      module: targetModule,
-                      chainId: chainId,
-                      fn: userLogicFn
-                    });
-                  }
-
+                  var isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
+                  send(SIG_FN_START, {
+                    isSourceCall: isSourceCall,
+                    calledBy: calledBy,
+                    module: targetModule,
+                    chainId: chainId,
+                    fn: userLogicFn
+                  });
                   co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(function (partialState) {
                     chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
 
                     var curDepth = chainId_depth_[chainId];
                     var commitStateList = [];
-
-                    if (chainId === oriChainId) {
-                      send(SIG_FN_END, {
-                        calledBy: calledBy,
-                        module: targetModule,
-                        chainId: chainId,
-                        fn: userLogicFn
-                      });
-                    } // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
-
+                    send(SIG_FN_END, {
+                      isSourceCall: isSourceCall,
+                      calledBy: calledBy,
+                      module: targetModule,
+                      chainId: chainId,
+                      fn: userLogicFn
+                    }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
 
                     if (isChainIdLazy(chainId)) {
                       //来自于惰性派发的调用
@@ -2788,15 +2782,13 @@ if (!this._inheritsLoose) {
                     });
                     if (__innerCb) __innerCb(null, partialState);
                   })["catch"](function (err) {
-                    if (chainId === oriChainId) {
-                      send(SIG_FN_ERR, {
-                        calledBy: calledBy,
-                        module: targetModule,
-                        chainId: chainId,
-                        fn: userLogicFn
-                      });
-                    }
-
+                    send(SIG_FN_ERR, {
+                      isSourceCall: isSourceCall,
+                      calledBy: calledBy,
+                      module: targetModule,
+                      chainId: chainId,
+                      fn: userLogicFn
+                    });
                     handleCcFnError(err, __innerCb);
                   });
                 });

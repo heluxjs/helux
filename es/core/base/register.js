@@ -555,18 +555,16 @@ export default function register(ccClassKey, {
                     });
                 }
 
-                if (chainId === oriChainId) {//是源头函数结束，发送函数结束的信号给插件
-                  send(SIG_FN_START, { calledBy, module: targetModule, chainId, fn: userLogicFn });
-                }
+                const isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
+                send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
+
                 co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(partialState => {
 
                   chainId_depth_[chainId] =  chainId_depth_[chainId] - 1;//调用结束减1
                   const curDepth = chainId_depth_[chainId];
 
                   let commitStateList = [];
-                  if (chainId === oriChainId) {
-                    send(SIG_FN_END, { calledBy, module: targetModule, chainId, fn: userLogicFn });
-                  }
+                  send(SIG_FN_END, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
 
                   // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
                   if (isChainIdLazy(chainId)) {//来自于惰性派发的调用
@@ -593,9 +591,7 @@ export default function register(ccClassKey, {
 
                   if (__innerCb) __innerCb(null, partialState);
                 }).catch(err => {
-                  if (chainId === oriChainId) {
-                    send(SIG_FN_ERR, { calledBy, module: targetModule, chainId, fn: userLogicFn });
-                  }
+                  send(SIG_FN_ERR, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
                   handleCcFnError(err, __innerCb);
                 });
               });
