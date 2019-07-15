@@ -773,7 +773,7 @@ export default function register(ccClassKey, {
             }
 
             // pick user input reducerModule firstly
-            let nowReducerModule = _reducerModule || (targetReducerModule || module);
+            let nowReducerModule = _reducerModule || (targetReducerModule || _module);
             const p = new Promise((resolve, reject) => {
               this.cc.dispatch({
                 targetRef, module: _module, reducerModule: nowReducerModule, type: _type, payload: _payload,
