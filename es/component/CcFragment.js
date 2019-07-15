@@ -127,7 +127,6 @@ export default class CcFragment extends React.Component {
       ccClassKey,
 
       // onUrlChanged: null,
-      prevState: mergedState,
       ccState,
       refConnectedComputed,
       refComputed,
@@ -402,7 +401,9 @@ export default class CcFragment extends React.Component {
         this.__fragmentParams.setModuleState(MODULE_GLOBAL, state, delay, identity);
       },
       state: mergedState,
+      prevState: mergedState,
       props: outProps,
+      prevProps: outProps,
       fragmentProps: props,
       setState: (state, cb, delay, identity) => {
         changeRefState(state, {
@@ -515,7 +516,7 @@ export default class CcFragment extends React.Component {
         if (cb) eid_effectReturnCb_[item.eId] = cb;
       });
     } else {//callByDidUpdate
-      const prevState = this.cc.prevState;
+      const prevState = ctx.prevState;
       const curState = this.state;
       const toBeExecutedFns = [];
       effectItems.forEach(item => {
@@ -575,13 +576,12 @@ export default class CcFragment extends React.Component {
   shouldComponentUpdate(_, nextState) {
     return this.state !== nextState;
   }
-  componentWillUpdate(){
-    this.cc.prevState = this.state;
-  }
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     this.executeSetupEffect();
     this.executeHookEffect();
-    this.cc.prevState = this.state;//!!!  重置prevState，防止其他模块的更新操作再次执行executeSetupEffect时，判断shouldEffectExecute失效
+    //!!! 记录prevState，prevProps
+    this.__fragmentParams.prevState = prevState;
+    this.__fragmentParams.prevProps = prevProps;
   }
   componentWillUnmount() {
     const ctx = this.__fragmentParams;

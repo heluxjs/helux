@@ -4753,7 +4753,6 @@ if (!this._inheritsLoose) {
         ccUniqueKey: ccUniqueKey,
         ccClassKey: ccClassKey,
         // onUrlChanged: null,
-        prevState: mergedState,
         ccState: ccState,
         refConnectedComputed: refConnectedComputed,
         refComputed: refComputed,
@@ -5142,7 +5141,9 @@ if (!this._inheritsLoose) {
           _this.__fragmentParams.setModuleState(MODULE_GLOBAL, state, delay, identity);
         },
         state: mergedState,
+        prevState: mergedState,
         props: outProps,
+        prevProps: outProps,
         fragmentProps: props,
         setState: function setState(state, cb, delay, identity) {
           changeRefState(state, {
@@ -5289,7 +5290,7 @@ if (!this._inheritsLoose) {
         });
       } else {
         //callByDidUpdate
-        var prevState = this.cc.prevState;
+        var prevState = ctx.prevState;
         var curState = this.state;
         var toBeExecutedFns = [];
         effectItems.forEach(function (item) {
@@ -5373,14 +5374,12 @@ if (!this._inheritsLoose) {
       return this.state !== nextState;
     };
 
-    _proto.componentWillUpdate = function componentWillUpdate() {
-      this.cc.prevState = this.state;
-    };
-
-    _proto.componentDidUpdate = function componentDidUpdate() {
+    _proto.componentDidUpdate = function componentDidUpdate(prevProps, prevState) {
       this.executeSetupEffect();
-      this.executeHookEffect();
-      this.cc.prevState = this.state; //!!!  重置prevState，防止其他模块的更新操作再次执行executeSetupEffect时，判断shouldEffectExecute失效
+      this.executeHookEffect(); //!!! 记录prevState，prevProps
+
+      this.__fragmentParams.prevState = prevState;
+      this.__fragmentParams.prevProps = prevProps;
     };
 
     _proto.componentWillUnmount = function componentWillUnmount() {
