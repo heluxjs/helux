@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.26',
+      version: '1.4.27',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2475,6 +2475,11 @@ if (!this._inheritsLoose) {
               return childRefState[key] = newState[key];
             });
             this.cc.childRef = childRef;
+          };
+
+          _proto.componentWillUpdate = function componentWillUpdate(nextProps, nextState) {
+            //注意这里，赋值最新的props
+            this.props = nextProps;
           };
 
           _proto.componentDidMount = function componentDidMount() {

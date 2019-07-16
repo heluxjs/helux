@@ -393,6 +393,11 @@ export default function register(ccClassKey, {
           this.cc.childRef = childRef;
         }
 
+        componentWillUpdate(nextProps, nextState) {
+          //注意这里，赋值最新的props
+          this.props = nextProps;
+        }
+
         componentDidMount() {
           if(super.componentDidMount)super.componentDidMount();
           if (isPropsProxy === true) {
