@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.24',
+      version: '1.4.25',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2385,7 +2385,8 @@ if (!this._inheritsLoose) {
             }
 
             return _this;
-          } // 如果代理组件或者继承组件没有没有实现scu，则concent采用只比较state的方式来决定组件要不要更新，不再关心nextProps
+          } // 如果代理组件或者继承组件没有没有实现scu，则同时比较nextState nextProps
+          // 因为nextProps不同也会导致重渲染，所以需要约束用户不要把可变数据从props传下来，以提高性能
 
 
           var _proto = CcClass.prototype;
@@ -2399,7 +2400,7 @@ if (!this._inheritsLoose) {
               return _ToBeExtendedClass.prototype.shouldComponentUpdate.call(this, nextProps, nextState);
             }
 
-            return this.state !== nextState;
+            this.props !== nextProps || this.state !== nextState;
           };
 
           _proto.__$$recoverState = function __$$recoverState(currentModule, ccUniqueKey, connect) {
