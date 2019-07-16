@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.25',
+      version: '1.4.26',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2400,7 +2400,7 @@ if (!this._inheritsLoose) {
               return _ToBeExtendedClass.prototype.shouldComponentUpdate.call(this, nextProps, nextState);
             }
 
-            this.props !== nextProps || this.state !== nextState;
+            return this.props !== nextProps || this.state !== nextState;
           };
 
           _proto.__$$recoverState = function __$$recoverState(currentModule, ccUniqueKey, connect) {
