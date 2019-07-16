@@ -558,7 +558,6 @@ export default function register(ccClassKey, {
                 }
 
                 send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
-
                 co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(partialState => {
 
                   chainId_depth_[chainId] =  chainId_depth_[chainId] - 1;//调用结束减1

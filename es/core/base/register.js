@@ -510,7 +510,9 @@ export default function register(ccClassKey, {
                 const moduleState = getState(targetModule);
 
                 let executionContextForUser = {};
+                let isSourceCall = false;
                 if (context) {
+                  isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
                   //调用前先加1
                   chainId_depth_[chainId] =  chainId_depth_[chainId] + 1;
 
@@ -555,9 +557,7 @@ export default function register(ccClassKey, {
                     });
                 }
 
-                const isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
                 send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
-
                 co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(partialState => {
 
                   chainId_depth_[chainId] =  chainId_depth_[chainId] - 1;//调用结束减1

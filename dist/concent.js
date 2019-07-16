@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.21',
+      version: '1.4.22',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2680,9 +2680,11 @@ if (!this._inheritsLoose) {
                   if (err) return handleCcFnError(err, __innerCb);
                   var moduleState = getState$3(targetModule);
                   var executionContextForUser = {};
+                  var isSourceCall = false;
 
                   if (context) {
-                    //调用前先加1
+                    isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1; //调用前先加1
+
                     chainId_depth_[chainId] = chainId_depth_[chainId] + 1; //暂时不考虑在ctx提供lazyDispatch功能
 
                     var dispatch = _this3.__$$getDispatchHandler(targetRef, refState, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
@@ -2726,7 +2728,6 @@ if (!this._inheritsLoose) {
                     });
                   }
 
-                  var isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
                   send(SIG_FN_START, {
                     isSourceCall: isSourceCall,
                     calledBy: calledBy,
