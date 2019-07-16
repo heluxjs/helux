@@ -380,7 +380,7 @@ export default function register(ccClassKey, {
           } else {
             childRef.$$refCache = {};
           }
-          const childRefState = childRef.state;
+          const childRefState = childRef.state || {};
           const newState = Object.assign({}, childRefState, this.state);
           this.state = newState;
 

@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.22',
+      version: '1.4.23',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -4655,6 +4655,10 @@ if (!this._inheritsLoose) {
     return Symbol("__autoGen_" + idSeq + "__");
   }
 
+  function getOutProps(props) {
+    return props.props || props; //把最外层的props传递给用户
+  }
+
   var CcFragment =
   /*#__PURE__*/
   function (_React$Component) {
@@ -4713,8 +4717,7 @@ if (!this._inheritsLoose) {
         ccKey = ck;
       }
 
-      var outProps = props.props || props; //把最外层的props传递给用户
-
+      var outProps = getOutProps(props);
       buildCcClassContext(ccClassKey, fragmentModule, watchedKeys, _watchedKeys, stateToPropMapping, connectedModuleNames, true);
       setRef(_assertThisInitialized(_this), false, ccClassKey, ccKey, ccUniqueKey, {}, true); // for CcFragment, just put ccClassKey to module's cc class keys
 
@@ -4929,7 +4932,7 @@ if (!this._inheritsLoose) {
             if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
           }
 
-          var _fn = fn.bind(_assertThisInitialized(_this), _this.__fragmentParams, outProps);
+          var _fn = fn.bind(_assertThisInitialized(_this), _this.__fragmentParams);
 
           var _eId = eId || getEId();
 
@@ -5375,12 +5378,18 @@ if (!this._inheritsLoose) {
       return this.state !== nextState;
     };
 
+    _proto.componentWillUpdate = function componentWillUpdate(nextProps, nextState) {
+      //注意这里，一定要每次都取最新的
+      this.__fragmentParams.props = getOutProps(nextProps);
+      this.__fragmentParams.state = nextState;
+    };
+
     _proto.componentDidUpdate = function componentDidUpdate(prevProps, prevState) {
       this.executeSetupEffect();
-      this.executeHookEffect(); //!!! 记录prevState，prevProps
+      this.executeHookEffect(); //!!! 将最新的state，props记录prevState，prevProps，方便下一轮渲染用
 
-      this.__fragmentParams.prevState = prevState;
-      this.__fragmentParams.prevProps = prevProps;
+      this.__fragmentParams.prevState = this.state;
+      this.__fragmentParams.prevProps = this.__fragmentParams.props;
     };
 
     _proto.componentWillUnmount = function componentWillUnmount() {
@@ -5415,9 +5424,7 @@ if (!this._inheritsLoose) {
       var view = render || children;
 
       if (typeof view === 'function') {
-        this.__fragmentParams.state = this.state; //注意这里，一定要每次都取最新的
         // return view(this.__fragmentParams) || React.createElement(Fragment);
-
         return view(this.__fragmentParams) || React.createElement('span', {
           style: {
             display: 'none'
