@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.23',
+      version: '1.4.24',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -2465,7 +2465,7 @@ if (!this._inheritsLoose) {
               childRef.$$refCache = {};
             }
 
-            var childRefState = childRef.state;
+            var childRefState = childRef.state || {};
             var newState = Object.assign({}, childRefState, this.state);
             this.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
             // childRef.state = newState;//在childRef进入首次render流程前，提前赋值
@@ -5386,7 +5386,7 @@ if (!this._inheritsLoose) {
 
     _proto.componentDidUpdate = function componentDidUpdate(prevProps, prevState) {
       this.executeSetupEffect();
-      this.executeHookEffect(); //!!! 将最新的state，props记录prevState，prevProps，方便下一轮渲染用
+      this.executeHookEffect(); //!!! 将最新的state，props记录为prevState，prevProps，方便下一轮渲染用
 
       this.__fragmentParams.prevState = this.state;
       this.__fragmentParams.prevProps = this.__fragmentParams.props;

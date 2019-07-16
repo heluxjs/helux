@@ -586,7 +586,7 @@ export default class CcFragment extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     this.executeSetupEffect();
     this.executeHookEffect();
-    //!!! 将最新的state，props记录prevState，prevProps，方便下一轮渲染用
+    //!!! 将最新的state，props记录为prevState，prevProps，方便下一轮渲染用
     this.__fragmentParams.prevState = this.state;
     this.__fragmentParams.prevProps = this.__fragmentParams.props;
   }
