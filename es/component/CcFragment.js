@@ -417,6 +417,9 @@ export default class CcFragment extends React.Component {
           calledBy: FORCE_UPDATE, ccKey, ccUniqueKey, module: fragmentModule, cb, delay, identity
         }, this);
       },
+      changeState(state, option) {
+        changeRefState(state, option, this);
+      }
     };
     this.__fragmentParams = __fragmentParams;
 

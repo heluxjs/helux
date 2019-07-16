@@ -63,6 +63,7 @@ export default class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.__beforeMount = this.__beforeMount.bind(this);
+    const self = this;
 
     let { ccKey, connect: connectSpec = {}, state = {}, module, storedKeys, watchedKeys = '*' } = props;
     //计算fragment所属的模块
@@ -417,7 +418,7 @@ export default class CcFragment extends React.Component {
           calledBy: FORCE_UPDATE, ccKey, ccUniqueKey, module: fragmentModule, cb, delay, identity
         }, this);
       },
-      changeState(state, option) {
+      changeState: (state, option)=> {
         changeRefState(state, option, this);
       }
     };

@@ -357,7 +357,7 @@ if (!this._inheritsLoose) {
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.27',
+      version: '1.4.28',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -3445,13 +3445,21 @@ if (!this._inheritsLoose) {
 
     try {
       var ref = pickOneRef(module);
-      ref.$$changeState(state, {
+      var option = {
         ccKey: '[[top api:cc.setState]]',
         module: module,
         delay: delay,
         identity: identity,
         skipMiddleware: skipMiddleware
-      });
+      };
+
+      if (!ref.$$changeState) {
+        ref.__fragmentParams.changeState(state, option);
+
+        return;
+      }
+
+      ref.$$changeState(state, option);
     } catch (err) {
       strictWarning(err);
     }
@@ -5176,6 +5184,9 @@ if (!this._inheritsLoose) {
             delay: delay,
             identity: identity
           }, _assertThisInitialized(_this));
+        },
+        changeState: function changeState(state, option) {
+          changeRefState(state, option, this);
         }
       };
       _this.__fragmentParams = __fragmentParams;
