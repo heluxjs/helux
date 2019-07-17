@@ -19,7 +19,7 @@
   </a>
 
   <a href='#' style='margin: 0 0.5rem;'>
-  <img src='https://img.shields.io/npm/dw/react-control-center.svg?label=rcc%20downloads' alt='downloads' height='18'>
+  <img src='https://img.shields.io/npm/dw/concent.svg?label=downloads' alt='downloads' height='18'>
   </a>
 
   <a href='#' style='margin: 0 0.5rem;'>
