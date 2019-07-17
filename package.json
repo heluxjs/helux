@@ -39,6 +39,8 @@
   "bundleDependencies": false,
   "dependencies": {
     "co": "^4.6.0",
+    "lodash": "^4.17.13",
+    "mem": "^4.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   },
