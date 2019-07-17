@@ -97,7 +97,7 @@ export const ERR_MESSAGE = {
     cc guess you may set autoCreateDispatcher as false in StartupOption,
     if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, 
     ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:
-    import {createDispatcher} from 'concent';
+    import {createDispatcher} from '@/lib/cc';
     const CcDispatcher = createDispatcher();
     <App>
       <CcDispatcher />

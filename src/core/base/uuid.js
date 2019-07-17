@@ -15,9 +15,10 @@ function genNonceStr(length = 6) {
   return ret;
 }
 
-export default function (forFragment = false) {
+export default function (forFragment = false, tag) {
   const prefix = forFragment === true ? 'CCF' : 'CC';
   _currentIndex++;
-  const nonceStr = genNonceStr();
-  return `${prefix}_${Date.now()}_${nonceStr}_${_currentIndex}`;
+  const nonceStr = tag || genNonceStr();
+  // return `${prefix}_${Date.now()}_${nonceStr}_${_currentIndex}`;
+  return `${prefix}_${nonceStr}_${_currentIndex}`;
 }
