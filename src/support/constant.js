@@ -1,5 +1,3 @@
-
-
 export const MODULE_GLOBAL = '$$global';
 export const MODULE_DEFAULT = '$$default';
 export const MODULE_CC = '$$cc';

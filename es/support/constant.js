@@ -79,62 +79,49 @@ export const ERR = {
 }
 
 export const ERR_MESSAGE = {
-  [ERR.CC_ALREADY_STARTUP]: 'concent startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ',
-  [ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE]: 'you are trying register a module class but cc startup with non module mode! ',
-  [ERR.CC_MODULE_NAME_DUPLICATE]: 'module name duplicate!',
-  [ERR.CC_REGISTER_A_CC_CLASS]: 'registering a cc class is prohibited! ',
-  [ERR.CC_MODULE_KEY_CC_FOUND]: 'key:"$$cc" is a built-in module name for concent,you can not configure it or the name like it in you store or reducer! ',
-  [ERR.CC_MODULE_NAME_INVALID]: `module name is invalid, /^[\$\#\&a-zA-Z0-9_-]+$/.test() is false. `,
-  [ERR.CC_STORE_STATE_INVALID]: `module state of store must be a plain json object! `,
-  [ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `argument moduleReducer is invalid, must be a function!`,
-  [ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `argument reducer is invalid, must be a plain json object(not an array also)!`,
-  [ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!`,
-  [ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION]: `one of the watch keys is not a valid module name in store!`,
-  [ERR.CC_MODULE_NOT_FOUND]: `module not found!`,
-  [ERR.CC_DISPATCH_STRING_INVALID]: `dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)、(moduleName)/(functionName)、(moduleName)/(reducerModuleName)/(functionName)`,
-  [ERR.CC_DISPATCH_PARAM_INVALID]: `dispatch param type is invalid, it must be string or object`,
-  [ERR.CC_NO_DISPATCHER_FOUND]: `
-    cc guess you may set autoCreateDispatcher as false in StartupOption,
-    if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, 
-    ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:
-    import {createDispatcher} from '@/lib/cc';
-    const CcDispatcher = createDispatcher();
-    <App>
-      <CcDispatcher />
-      {/* another jsx */}
-    </App>
-    or
-    <CcDispatcher>
-      <App />
-    </CcDispatcher>
+  [ERR.CC_ALREADY_STARTUP]: '1',
+  [ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE]: '1',
+  [ERR.CC_MODULE_NAME_DUPLICATE]: '1',
+  [ERR.CC_REGISTER_A_CC_CLASS]: '1 ',
+  [ERR.CC_MODULE_KEY_CC_FOUND]: '1',
+  [ERR.CC_MODULE_NAME_INVALID]: `1 `,
+  [ERR.CC_STORE_STATE_INVALID]: `1 `,
+  [ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `1`,
+  [ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `1`,
+  [ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID]: `1`,
+  [ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION]: `1`,
+  [ERR.CC_MODULE_NOT_FOUND]: `1`,
+  [ERR.CC_DISPATCH_STRING_INVALID]: `1`,
+  [ERR.CC_DISPATCH_PARAM_INVALID]: `1`,
+  [ERR.CC_NO_DISPATCHER_FOUND]: `1
   `,
-  [ERR.CC_MODULE_NAME_HAS_NO_STATE]:`there is no module state in the store for your input module name`,
+  [ERR.CC_MODULE_NAME_HAS_NO_STATE]:`1`,
 
-  [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   `,
-  [ERR.CC_CLASS_INSTANCE_OPTION_INVALID]: 'ccOption must be a plain json object! ',
-  [ERR.CC_CLASS_INSTANCE_NOT_FOUND]: 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ',
-  [ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND]: 'ccClass instance method not found, make sure the instance include the method! ',
-  [ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID]: 'ccClass instance invoke callWith method with invalid args! ',
-  [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: 'ccClass is declared as singleton, now cc found you are trying new another one instance! ',
-  [ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS]: 'some of your storedKeys has been declared in CcClass watchedKeys!',
-  [ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS]: 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!',
+  [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `1`,
+  [ERR.CC_CLASS_INSTANCE_OPTION_INVALID]: '1',
+  [ERR.CC_CLASS_INSTANCE_NOT_FOUND]: '1',
+  [ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND]: '1! ',
+  [ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID]: '1 ',
+  [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: '1',
+  [ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS]: '1',
+  [ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS]: '1',
 
-  [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate while you register a react class!  ',
-  [ERR.CC_CLASS_NOT_FOUND]: 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ',
-  [ERR.CC_CLASS_STORE_MODULE_INVALID]: 'ccClass ccOption module value is invalid, can not match it in store! ',
-  [ERR.CC_CLASS_REDUCER_MODULE_INVALID]: 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ',
-  [ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE]: 'you are trying register a react class to a single class module, but cc found the target module has been registered!',
-  [ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID]: 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!',
-  [ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED]: '$$fragment is cc built-in class key prefix, your class key can not start with it!',
+  [ERR.CC_CLASS_KEY_DUPLICATE]: '1 ',
+  [ERR.CC_CLASS_NOT_FOUND]: '1 ',
+  [ERR.CC_CLASS_STORE_MODULE_INVALID]: '1',
+  [ERR.CC_CLASS_REDUCER_MODULE_INVALID]: '1',
+  [ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE]: '1',
+  [ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID]: '1',
+  [ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED]: '1',
 
-  [ERR.CC_ARG_KEYS_NOT_AN_ARRAY]: `watchedKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set watchedKeys='*' and globalStateKeys='*'`,
-  [ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT]: 'watchedKeys include non string element!',
+  [ERR.CC_ARG_KEYS_NOT_AN_ARRAY]: `1`,
+  [ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT]: '1',
 
-  [ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID]: `action type's naming is invalid, correct one may like: fooModule/fooType. `,
-  [ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE]: `action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!`,
-  [ERR.CC_REDUCER_MODULE_NAME_DUPLICATE]: `reducer module name duplicate!`,
-  [ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE]: `reducer action type duplicate!`,
-  [ERR.CC_REDUCER_NOT_A_FUNCTION]: `reducer must be a function!`,
+  [ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID]: `1`,
+  [ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE]: `1`,
+  [ERR.CC_REDUCER_MODULE_NAME_DUPLICATE]: `1`,
+  [ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE]: `1`,
+  [ERR.CC_REDUCER_NOT_A_FUNCTION]: `1`,
 
   // [ERR.REDUCER_KEY_NOT_EXIST_IN_STORE_MODULE]: `reducer key is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in reducer keys!`,
 }

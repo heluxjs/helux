@@ -114,7 +114,7 @@ if (winCc) {
     //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
     //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
     if (existedVersion !== nowVersion) {
-      throw new Error(`a existed version concent ${existedVersion} is different with current about to import concent ${existedVersion}, 
+      throw new Error(`a existed version concent ${existedVersion} is different with current about to import concent ${nowVersion}, 
       it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)`);
     }
   }
