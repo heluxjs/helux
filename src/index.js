@@ -30,6 +30,7 @@ import _reducer from './api/reducer';
 import _lazyReducer from './api/lazy-reducer';
 import _clearContextIfUnderHotReloadMode from './api/clear-context-if-under-hot-reload-mode';
 import _CcFragment from './component/CcFragment';
+import _useConcent from './api/use-concent';
 import * as _cst from './support/constant';
 import * as util from './support/util';
 
@@ -67,6 +68,7 @@ export const clearContextIfUnderHotReloadMode = _clearContextIfUnderHotReloadMod
 export const CcFragment = _CcFragment;
 export const cst = _cst;
 export const appendState = _appendState;
+export const useConcent = _useConcent;
 
 const defaultExport = {
   cloneModule,
@@ -103,6 +105,7 @@ const defaultExport = {
   CcFragment,
   cst,
   appendState,
+  useConcent,
 }
 
 const winCc = window.cc;
