@@ -5,8 +5,8 @@ import shouldSkipKey from '../base/should-skip-key';
 const getState = ccContext.store.getState;
 const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 
-//CcFragment实例调用会提供ctx
-export default function (stateModule, computedSpec, refComputed, refConnectedComputed, oldState, commitState, ctx) {
+//CcFragment实例调用会提供callerCtx
+export default function (stateModule, computedSpec, refComputed, refConnectedComputed, oldState, committedState, callerCtx) {
   if (computedSpec) {
     const moduleStateKeys = moduleName_stateKeys_[stateModule];
 
@@ -16,16 +16,15 @@ export default function (stateModule, computedSpec, refComputed, refConnectedCom
       const { stateKey, skip, keyModule } = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys);
       if (skip) return;
 
-      const newValue = commitState[stateKey];
+      const newValue = committedState[stateKey];
       if (newValue !== undefined) {
         const fn = computedFns[key];//用原始定义当然key去取fn
         const targetModule = keyModule || stateModule;
         const moduleState = getState(targetModule);
-        const keyDesc = { key: stateKey, module: targetModule, moduleState };
+        const fnCtx = { key: stateKey, module: targetModule, moduleState, committedState };
 
-        const computedValue = fn(newValue, oldState[stateKey], keyDesc, ctx);
+        const computedValue = fn(newValue, oldState[stateKey], fnCtx, callerCtx);
         if (keyModule) {
-
           const targetConnectedComputed = refConnectedComputed[keyModule];
           //防止foo模块的实例，定义的watchKey是 foo/f1, 此时skip是false，但是结果不会向refConnectedComputed里放
           if(targetConnectedComputed){

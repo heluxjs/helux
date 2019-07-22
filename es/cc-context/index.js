@@ -2,64 +2,68 @@ import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
 import * as util from '../support/util';
 
 const refs = {};
-const setStateByModule = (module, partialState) => {
-  Object.keys(partialState).forEach(key => {
-    setStateByModuleAndKey(module, key, partialState[key]);
+const setStateByModule = (module, committedState) => {
+  const moduleState = getState(module);
+  const prevModuleState = getPrevState(module);
+  const moduleComputedFns = _computedFn[module];
+  const moduleComputedValue = _computedValue[module];
+  const watchFns = _watch[module];
+
+  Object.keys(committedState).forEach(key => {
+    /** setStateByModuleAndKey */
+    const value = committedState[key];
+
+    const oldValue = moduleState[key];
+    prevModuleState[key] = oldValue;
+  
+    const fnCtx = { key, module, moduleState, committedState };
+    if (moduleComputedFns) {
+      const fn = moduleComputedFns[key];
+      if (fn) {
+        const computedValue = fn(value, oldValue, fnCtx);
+        moduleComputedValue[key] = computedValue;
+      }
+    }
+  
+    if (watchFns) {
+      const fn = watchFns[key];
+      if (fn) fn(value, oldValue, fnCtx);//fn(newValue, oldValue)
+    }
+    moduleState[key] = value;
   });
 }
 
 const getState = (module) => {
-  const _state = ccContext.store._state;
   return _state[module];
 }
 
 const getPrevState = (module) => {
-  const _prevState = ccContext.store._prevState;
   return _prevState[module];
 }
 
-const setStateByModuleAndKey = (module, key, value) => {
-  const moduleState = getState(module);
-  const prevModuleState = getPrevState(module);
-  const moduleComputedFn = computed._computedFn[module];
-  const watchFn = watch._watch[module];
-  const oldValue = moduleState[key];
-  prevModuleState[key] = oldValue;
-
-  const keyDesc = { key, module, moduleState };
-  if (moduleComputedFn) {
-    const fn = moduleComputedFn[key];
-    if (fn) {
-      const computedValue = fn(value, oldValue, keyDesc);
-      computed._computedValue[module][key] = computedValue;
-    }
-  }
-
-  if (watchFn) {
-    const fn = watchFn[key];
-    if (fn) fn(value, oldValue, keyDesc);//fn(newValue, oldValue)
-  }
-  moduleState[key] = value;
-}
-
-const computed = {
-  _computedValue: {
-    [MODULE_GLOBAL]: {},
-    [MODULE_DEFAULT]: {},
-    [MODULE_CC]: {},
-  },
-  _computedFn: {
-    [MODULE_GLOBAL]: {},
-    [MODULE_DEFAULT]: {},
-    [MODULE_CC]: {},
-  },
-  getRootComputedValue: () => computed._computedValue,
-  getRootComputedFn: () => computed._computedFn,
+const _computedValue = {
+  [MODULE_GLOBAL]: {},
+  [MODULE_DEFAULT]: {},
+  [MODULE_CC]: {},
 };
+const _computedFn = {
+  [MODULE_GLOBAL]: {},
+  [MODULE_DEFAULT]: {},
+  [MODULE_CC]: {},
+};
+const computed = {
+  _computedValue,
+  _computedFn,
+  getRootComputedValue: () => _computedValue,
+  getRootComputedFn: () => _computedFn,
+};
+
+/** watch section */
+const _watch = {};
 const watch = {
-  _watch: {},
-  getRootWatch: () => watch._watch,
-  getModuleWatch: module => watch._watch[module],
+  _watch,
+  getRootWatch: () => _watch,
+  getModuleWatch: module => _watch[module],
 };
 
 function hotReloadWarning(err){
@@ -69,6 +73,9 @@ function hotReloadWarning(err){
   console.log(`%c but if this is not as your expectation ,maybe you can reload your whole app to avoid this error message`, st);
 }
 
+/** ccContext section */
+const _state = {};
+const _prevState = {};
 const ccContext = {
   isHotReloadMode: function() {
     if (ccContext.isHot) return true;
@@ -101,18 +108,14 @@ const ccContext = {
   //  to only allow register one react class, flag the module name as true in this option object
   //  example:  {fooModule: true, barModule:true}
   moduleSingleClass: {
-
   },
   moduleName_ccClassKeys_: {
-
   },
   // map from moduleName to watchedKeys
   moduleName_watchedKeys_: {
-
   },
   // 映射好模块的状态所有key并缓存住，用于提高性能
   moduleName_stateKeys_: {
-
   },
   /**
     ccClassContext:{
@@ -126,18 +129,12 @@ const ccContext = {
     }
   */
   ccClassKey_ccClassContext_: {
-
   },
   // globalStateKeys is maintained by cc automatically,
   // when user call cc.setGlobalState, or ccInstance.setGlobalState,
   // commit state will be checked strictly by cc with globalStateKeys,
   // all the keys of commit state must been included in globalStateKeys
   globalStateKeys: [
-
-  ],
-  //  all global keys that exclude sharedToGlobalMapping keys
-  pureGlobalStateKeys: [
-
   ],
   //store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
@@ -151,61 +148,46 @@ const ccContext = {
       });
       ccContext.store.setState(module, state);
     },
-    _state: {
-    },
-    _prevState:{//辅助CcFragment defineEffect之用
-    },
+    _state,
+    _prevState,//辅助CcFragment defineEffect之用
     getState: function (module) {
       if (module) return getState(module);
-      else return ccContext.store._state;
+      else return _state;
     },
     getPrevState: function (module) {
       if (module) return getPrevState(module);
-      else return ccContext.store._prevState;
+      else return _prevState;
     },
     setState: function (module, partialSharedState) {
       setStateByModule(module, partialSharedState);
     },
-    setStateByModuleAndKey,
     setGlobalState: function (partialGlobalState) {
       setStateByModule(MODULE_GLOBAL, partialGlobalState);
     },
-    setGlobalStateByKey: function (key, value) {
-      setStateByModuleAndKey(MODULE_GLOBAL, key, value);
-    },
     getGlobalState: function () {
-      return ccContext.store._state[MODULE_GLOBAL];
+      return _state[MODULE_GLOBAL];
     },
     //对state直接赋值，cc启动的时候某些场景需要调用此函数
     initStateDangerously: (module, state)=>{
-      ccContext.store._state[module] = state;
+      _state[module] = state;
     },
   },
   reducer: {
     _reducer: {
       [MODULE_GLOBAL]: {
-
       },
       [MODULE_CC]: {
-
       }
     },
-    _reducerCaller:{
-    },
-    _lazyReducerCaller:{
-    },
-    _reducerFnName_fullFnNames_:{
-    },
-    _reducerModule_fnNames_:{
-
-    }
+    _reducerCaller: {},
+    _lazyReducerCaller: {},
+    _reducerFnName_fullFnNames_: {},
+    _reducerModule_fnNames_: {}
   },
   computed,
   watch,
   refStore: {
-    _state: {
-
-    },
+    _state: {},
     setState: function (ccUniqueKey, partialStoredState) {
       const _state = ccContext.refStore._state;
       const fullStoredState = _state[ccUniqueKey];
@@ -213,36 +195,29 @@ const ccContext = {
       _state[ccUniqueKey] = mergedState;
     },
   },
-  init:{
-    _init:{}
+  init: {
+    _init: {}
   },
   ccKey_ref_: refs,
   //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
-  event_handlers_: {
-
-  },
+  event_handlers_: {},
   ccUniqueKey_handlerKeys_: {},
   // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
   // it is a ref that towards ccUniqueKeyEvent_handler_'s key
   // when component unmounted, it's handler will been removed
-  handlerKey_handler_: {
-  },
-  ccKey_option_: {
-
-  },
+  handlerKey_handler_: {},
+  ccKey_option_: {},
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.4.30',
+    version: '1.4.31',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
   },
   // fragment association
   fragmentNameCount: 0,
-  fragmentFeature_classKey_: {
-
-  },
+  fragmentFeature_classKey_: {},
   fragmentCcKeys: [],
   errorHandler: null,
   middlewares: [],

@@ -44,7 +44,7 @@ export default (ccsync, value, ccint, oriState, isToggleBool) => {
     keys = [ccsync];
   }
 
-  if (keys.length == 1) {
+  if (keys.length === 1) {
     const targetStateKey = keys[0];
     if (isToggleBool === true) {
       return { module, state: { [targetStateKey]: !oriState[targetStateKey] } };

@@ -1,11 +1,12 @@
 import ccContext from '../cc-context';
-import { ERR, MODULE_GLOBAL } from '../support/constant';
+import { ERR, MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
 import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
 import initModuleState from '../core/state/init-module-state';
 import initModuleReducer from '../core/reducer/init-module-reducer';
 import initModuleComputed from '../core/computed/init-module-computed';
 import initModuleWatch from '../core/watch/init-module-watch';
 import * as checker from '../core/checker';
+import { send } from '../core/plugin';
 import makeSetStateHandler from '../core/state/make-set-state-handler';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
@@ -45,10 +46,9 @@ function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
  * @param {object} [option.globalState] will been merged to $$global module state
  * @param {object} [option.globalWatch] will been merged to $$global module watch
  * @param {object} [option.globalComputed] will been merged to $$global module computed
- * @param {object} [option.noOpPlugins] concent自己用的信号，防止boot，做一次多余的配置
  * @param {function[]} [option.middlewares]
  */
-export default function (module, config, option = {}) {
+export default function(module, config, option = {}) {
   if (!ccContext.isCcAlreadyStartup) {
     throw new Error('cc is not startup yet, you can not call cc.configure!');
   }
@@ -92,7 +92,7 @@ export default function (module, config, option = {}) {
         throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] reducer 's value is invalid`));
       }
 
-      if (rmName == MODULE_GLOBAL) {//merge input globalReducer to existed globalReducer
+      if (rmName === MODULE_GLOBAL) {//merge input globalReducer to existed globalReducer
         const typesOfGlobal = Object.keys(moduleReducer);
         const globalReducer = _reducer[MODULE_GLOBAL];
         typesOfGlobal.forEach(type => {
@@ -142,16 +142,5 @@ export default function (module, config, option = {}) {
     });
   }
 
-  if(noOpPlugins!==true){
-    ccContext.plugins.forEach(p => {
-      if (p.writeModuleState) {
-        const pluginModule = p.module;
-        if (pluginModule !== module) {
-          const pluginState = ccContext.store.getState(pluginModule);
-          p.writeModuleState(pluginState, module);
-        }
-      }
-    });
-  }
-  
+  send(SIG_MODULE_CONFIGURED, module);
 }

@@ -14,7 +14,6 @@ export default function (CustomizedComponent) {
     }
   }
 
-
   if (ccContext.refs[CC_DISPATCHER]) {
     if(ccContext.isHotReloadMode()){
       util.justTip(`hot reload mode, CC_DISPATCHER existed`);

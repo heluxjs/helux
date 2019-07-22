@@ -23,7 +23,7 @@ export default function (state, {
 ) {//executionContext
   const stateFor = getStateFor(module, targetRef.cc.ccState.module);
 
-  if (state == undefined) return;//do nothing
+  if (state === undefined) return;//do nothing
   // const isControlledByConcent = targetRef.cc.ccState.isControlledByConcent;
 
   if (!isPlainJsonObject(state)) {

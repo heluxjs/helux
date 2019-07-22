@@ -8,16 +8,15 @@ import makeSetStateHandler from '../state/make-set-state-handler';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
+import { on } from '../plugin';
 import co from 'co';
-import configure from '../../api/configure';
 
 const { isPlainJsonObject, okeys } = util;
-const { store: { getState } } = ccContext;
 
 /** 对已有的store.$$global状态追加新的state */
-export function appendGlobalState(globalState) {
-  // todo
-}
+// export function appendGlobalState(globalState) {
+//   // todo
+// }
 
 export function configStoreState(storeState) {
   if (!isPlainJsonObject(storeState)) {
@@ -111,13 +110,19 @@ export function configPlugins(plugins) {
     const ccPlugins = ccContext.plugins;
     ccPlugins.length = 0;//防止热加载重复多次载入plugins
 
+    const pluginNameMap = {};
     plugins.forEach(p => {
       ccPlugins.push(p);
-      if (p.getConf) {
-        const pluginConf = p.getConf();
-        if(pluginConf.module)configure(pluginConf.module, pluginConf.conf, {noOpPlugins:true});
-      }else{
-        throw new Error('a plugin must export getConf handler!');
+      if (p.install) {
+        const pluginInfo = p.install(on);
+        const e = new Error('plugin.install must return result:{name:string, options?:object}');
+        if (!pluginInfo) throw e;
+        const pluginName = pluginInfo.name;
+        if (!pluginName) throw e;
+        if (pluginNameMap[pluginName]) throw new Error(`pluginName[${pluginName}] duplicate`);
+        pluginNameMap[pluginName] = 1;
+      } else {
+        throw new Error('a plugin must export install handler!');
       }
     });
   }

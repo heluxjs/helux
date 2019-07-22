@@ -25,6 +25,7 @@
   var SIG_FN_END = 11;
   var SIG_FN_QUIT = 12;
   var SIG_FN_ERR = 13;
+  var SIG_MODULE_CONFIGURED = 14;
   var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;
   var STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;
   var EFFECT_AVAILABLE = 1;
@@ -76,7 +77,7 @@
     CC_REDUCER_MODULE_NAME_DUPLICATE: 1511 // REDUCER_KEY_NOT_EXIST_IN_STORE_MODULE: 1203,
 
   };
-  var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_ALREADY_STARTUP] = '1', _ERR_MESSAGE[ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE] = '1', _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = '1', _ERR_MESSAGE[ERR.CC_REGISTER_A_CC_CLASS] = '1 ', _ERR_MESSAGE[ERR.CC_MODULE_KEY_CC_FOUND] = '1', _ERR_MESSAGE[ERR.CC_MODULE_NAME_INVALID] = "1 ", _ERR_MESSAGE[ERR.CC_STORE_STATE_INVALID] = "1 ", _ERR_MESSAGE[ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "1", _ERR_MESSAGE[ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "1", _ERR_MESSAGE[ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "1", _ERR_MESSAGE[ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION] = "1", _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "1", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "1", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "1", _ERR_MESSAGE[ERR.CC_NO_DISPATCHER_FOUND] = "1\n  ", _ERR_MESSAGE[ERR.CC_MODULE_NAME_HAS_NO_STATE] = "1", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "1", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_OPTION_INVALID] = '1', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NOT_FOUND] = '1', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND] = '1! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID] = '1 ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = '1', _ERR_MESSAGE[ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS] = '1', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS] = '1', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = '1 ', _ERR_MESSAGE[ERR.CC_CLASS_NOT_FOUND] = '1 ', _ERR_MESSAGE[ERR.CC_CLASS_STORE_MODULE_INVALID] = '1', _ERR_MESSAGE[ERR.CC_CLASS_REDUCER_MODULE_INVALID] = '1', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE] = '1', _ERR_MESSAGE[ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID] = '1', _ERR_MESSAGE[ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED] = '1', _ERR_MESSAGE[ERR.CC_ARG_KEYS_NOT_AN_ARRAY] = "1", _ERR_MESSAGE[ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT] = '1', _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID] = "1", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE] = "1", _ERR_MESSAGE[ERR.CC_REDUCER_MODULE_NAME_DUPLICATE] = "1", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE] = "1", _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "1", _ERR_MESSAGE);
+  var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_ALREADY_STARTUP] = 'concent startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ', _ERR_MESSAGE[ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE] = 'you are trying register a module class but cc startup with non module mode! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_REGISTER_A_CC_CLASS] = 'registering a cc class is prohibited! ', _ERR_MESSAGE[ERR.CC_MODULE_KEY_CC_FOUND] = 'key:"$$cc" is a built-in module name for concent,you can not configure it or the name like it in you store or reducer! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_INVALID] = "module name is invalid, /^[$#&a-zA-Z0-9_-]+$/.test() is false. ", _ERR_MESSAGE[ERR.CC_STORE_STATE_INVALID] = "module state of store must be a plain json object! ", _ERR_MESSAGE[ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument moduleReducer is invalid, must be a function!", _ERR_MESSAGE[ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer is invalid, must be a plain json object(not an array also)!", _ERR_MESSAGE[ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!", _ERR_MESSAGE[ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION] = "one of the watch keys is not a valid module name in store!", _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)\u3001(moduleName)/(functionName)\u3001(moduleName)/(reducerModuleName)/(functionName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_NO_DISPATCHER_FOUND] = "\n    cc guess you may set autoCreateDispatcher as false in StartupOption,\n    if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, \n    ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:\n    import {createDispatcher} from 'concent';\n    const CcDispatcher = createDispatcher();\n    <App>\n      <CcDispatcher />\n      {/* another jsx */}\n    </App>\n    or\n    <CcDispatcher>\n      <App />\n    </CcDispatcher>\n  ", _ERR_MESSAGE[ERR.CC_MODULE_NAME_HAS_NO_STATE] = "there is no module state in the store for your input module name", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_OPTION_INVALID] = 'ccOption must be a plain json object! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NOT_FOUND] = 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND] = 'ccClass instance method not found, make sure the instance include the method! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID] = 'ccClass instance invoke callWith method with invalid args! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = 'ccClass is declared as singleton, now cc found you are trying new another one instance! ', _ERR_MESSAGE[ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS] = 'some of your storedKeys has been declared in CcClass watchedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS] = 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate while you register a react class!  ', _ERR_MESSAGE[ERR.CC_CLASS_NOT_FOUND] = 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ', _ERR_MESSAGE[ERR.CC_CLASS_STORE_MODULE_INVALID] = 'ccClass ccOption module value is invalid, can not match it in store! ', _ERR_MESSAGE[ERR.CC_CLASS_REDUCER_MODULE_INVALID] = 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE] = 'you are trying register a react class to a single class module, but cc found the target module has been registered!', _ERR_MESSAGE[ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID] = 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED] = '$$fragment is cc built-in class key prefix, your class key can not start with it!', _ERR_MESSAGE[ERR.CC_ARG_KEYS_NOT_AN_ARRAY] = "watchedKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set watchedKeys='*' and globalStateKeys='*'", _ERR_MESSAGE[ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'watchedKeys include non string element!', _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID] = "action type's naming is invalid, correct one may like: fooModule/fooType. ", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE] = "action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!", _ERR_MESSAGE[ERR.CC_REDUCER_MODULE_NAME_DUPLICATE] = "reducer module name duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE] = "reducer action type duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
   var constant = {
     MODULE_GLOBAL: MODULE_GLOBAL,
     MODULE_DEFAULT: MODULE_DEFAULT,
@@ -103,6 +104,7 @@
     SIG_FN_END: SIG_FN_END,
     SIG_FN_QUIT: SIG_FN_QUIT,
     SIG_FN_ERR: SIG_FN_ERR,
+    SIG_MODULE_CONFIGURED: SIG_MODULE_CONFIGURED,
     STATE_FOR_ONE_CC_INSTANCE_FIRSTLY: STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
     STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE: STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
     EFFECT_AVAILABLE: EFFECT_AVAILABLE,
@@ -118,74 +120,79 @@
     default: constant
   });
 
-  var _computedValue, _computedFn, _reducer;
+  var _computedValue2, _computedFn2, _reducer;
   var refs = {};
 
-  var setStateByModule = function setStateByModule(module, partialState) {
-    Object.keys(partialState).forEach(function (key) {
-      setStateByModuleAndKey(module, key, partialState[key]);
-    });
-  };
-
-  var _getState = function getState(module) {
-    var _state = ccContext.store._state;
-    return _state[module];
-  };
-
-  var _getPrevState = function getPrevState(module) {
-    var _prevState = ccContext.store._prevState;
-    return _prevState[module];
-  };
-
-  var setStateByModuleAndKey = function setStateByModuleAndKey(module, key, value) {
+  var setStateByModule = function setStateByModule(module, committedState) {
     var moduleState = _getState(module);
 
     var prevModuleState = _getPrevState(module);
 
-    var moduleComputedFn = computed._computedFn[module];
-    var watchFn = watch._watch[module];
-    var oldValue = moduleState[key];
-    prevModuleState[key] = oldValue;
-    var keyDesc = {
-      key: key,
-      module: module,
-      moduleState: moduleState
-    };
+    var moduleComputedFns = _computedFn[module];
+    var moduleComputedValue = _computedValue[module];
+    var watchFns = _watch[module];
+    Object.keys(committedState).forEach(function (key) {
+      /** setStateByModuleAndKey */
+      var value = committedState[key];
+      var oldValue = moduleState[key];
+      prevModuleState[key] = oldValue;
+      var fnCtx = {
+        key: key,
+        module: module,
+        moduleState: moduleState,
+        committedState: committedState
+      };
 
-    if (moduleComputedFn) {
-      var fn = moduleComputedFn[key];
+      if (moduleComputedFns) {
+        var fn = moduleComputedFns[key];
 
-      if (fn) {
-        var computedValue = fn(value, oldValue, keyDesc);
-        computed._computedValue[module][key] = computedValue;
+        if (fn) {
+          var computedValue = fn(value, oldValue, fnCtx);
+          moduleComputedValue[key] = computedValue;
+        }
       }
-    }
 
-    if (watchFn) {
-      var _fn = watchFn[key];
-      if (_fn) _fn(value, oldValue, keyDesc); //fn(newValue, oldValue)
-    }
+      if (watchFns) {
+        var _fn = watchFns[key];
+        if (_fn) _fn(value, oldValue, fnCtx); //fn(newValue, oldValue)
+      }
 
-    moduleState[key] = value;
+      moduleState[key] = value;
+    });
   };
+
+  var _getState = function getState(module) {
+    return _state[module];
+  };
+
+  var _getPrevState = function getPrevState(module) {
+    return _prevState[module];
+  };
+
+  var _computedValue = (_computedValue2 = {}, _computedValue2[MODULE_GLOBAL] = {}, _computedValue2[MODULE_DEFAULT] = {}, _computedValue2[MODULE_CC] = {}, _computedValue2);
+
+  var _computedFn = (_computedFn2 = {}, _computedFn2[MODULE_GLOBAL] = {}, _computedFn2[MODULE_DEFAULT] = {}, _computedFn2[MODULE_CC] = {}, _computedFn2);
 
   var computed = {
-    _computedValue: (_computedValue = {}, _computedValue[MODULE_GLOBAL] = {}, _computedValue[MODULE_DEFAULT] = {}, _computedValue[MODULE_CC] = {}, _computedValue),
-    _computedFn: (_computedFn = {}, _computedFn[MODULE_GLOBAL] = {}, _computedFn[MODULE_DEFAULT] = {}, _computedFn[MODULE_CC] = {}, _computedFn),
+    _computedValue: _computedValue,
+    _computedFn: _computedFn,
     getRootComputedValue: function getRootComputedValue() {
-      return computed._computedValue;
+      return _computedValue;
     },
     getRootComputedFn: function getRootComputedFn() {
-      return computed._computedFn;
+      return _computedFn;
     }
   };
+  /** watch section */
+
+  var _watch = {};
   var watch = {
-    _watch: {},
+    _watch: _watch,
     getRootWatch: function getRootWatch() {
-      return watch._watch;
+      return _watch;
     },
     getModuleWatch: function getModuleWatch(module) {
-      return watch._watch[module];
+      return _watch[module];
     }
   };
 
@@ -195,7 +202,11 @@
     console.log("%c error detected " + message + ", cc found app is maybe running in hot reload mode, so cc will silent this error...", st);
     console.log("%c but if this is not as your expectation ,maybe you can reload your whole app to avoid this error message", st);
   }
+  /** ccContext section */
 
+
+  var _state = {};
+  var _prevState = {};
   var ccContext = {
     isHotReloadMode: function isHotReloadMode() {
       if (ccContext.isHot) return true;
@@ -252,8 +263,6 @@
     // commit state will be checked strictly by cc with globalStateKeys,
     // all the keys of commit state must been included in globalStateKeys
     globalStateKeys: [],
-    //  all global keys that exclude sharedToGlobalMapping keys
-    pureGlobalStateKeys: [],
     //store里的setState行为会自动触发模块级别的computed、watch函数
     store: {
       appendState: function appendState(module, state) {
@@ -266,31 +275,27 @@
         });
         ccContext.store.setState(module, state);
       },
-      _state: {},
-      _prevState: {//辅助CcFragment defineEffect之用
-      },
+      _state: _state,
+      _prevState: _prevState,
+      //辅助CcFragment defineEffect之用
       getState: function getState(module) {
-        if (module) return _getState(module);else return ccContext.store._state;
+        if (module) return _getState(module);else return _state;
       },
       getPrevState: function getPrevState(module) {
-        if (module) return _getPrevState(module);else return ccContext.store._prevState;
+        if (module) return _getPrevState(module);else return _prevState;
       },
       setState: function setState(module, partialSharedState) {
         setStateByModule(module, partialSharedState);
       },
-      setStateByModuleAndKey: setStateByModuleAndKey,
       setGlobalState: function setGlobalState(partialGlobalState) {
         setStateByModule(MODULE_GLOBAL, partialGlobalState);
       },
-      setGlobalStateByKey: function setGlobalStateByKey(key, value) {
-        setStateByModuleAndKey(MODULE_GLOBAL, key, value);
-      },
       getGlobalState: function getGlobalState() {
-        return ccContext.store._state[MODULE_GLOBAL];
+        return _state[MODULE_GLOBAL];
       },
       //对state直接赋值，cc启动的时候某些场景需要调用此函数
       initStateDangerously: function initStateDangerously(module, state) {
-        ccContext.store._state[module] = state;
+        _state[module] = state;
       }
     },
     reducer: {
@@ -326,7 +331,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.30',
+      version: '1.4.31',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
@@ -1082,7 +1087,7 @@
     }, _ref.isToggleBool = isToggleBool, _ref;
   });
 
-  var _state = ccContext.store._state;
+  var _state$1 = ccContext.store._state;
   /**
    * 根据connect参数算出ccClassKey值和stateToPropMapping值
    */
@@ -1103,7 +1108,7 @@
     var featureStrs = [];
     var stateToPropMapping = {};
     moduleNames.forEach(function (m) {
-      var moduleState = _state[m];
+      var moduleState = _state$1[m];
       var feature = m + "/";
 
       if (moduleState === undefined) {
@@ -1206,7 +1211,7 @@
       keys = [ccsync];
     }
 
-    if (keys.length == 1) {
+    if (keys.length === 1) {
       var targetStateKey = keys[0];
 
       if (isToggleBool === true) {
@@ -1290,11 +1295,36 @@
     return chainId_isLazy_[chainId] === true;
   }
 
+  var _sig_cbs_;
+  var sig_cbs_ = (_sig_cbs_ = {}, _sig_cbs_[SIG_FN_START] = [], _sig_cbs_[SIG_FN_END] = [], _sig_cbs_[SIG_FN_QUIT] = [], _sig_cbs_[SIG_FN_ERR] = [], _sig_cbs_[SIG_MODULE_CONFIGURED] = [], _sig_cbs_);
   function send(sig, payload) {
-    var plugins = ccContext.plugins;
-    plugins.forEach(function (p) {
-      if (p.receive) p.receive(sig, payload);
+    var cbs = sig_cbs_[sig];
+    cbs.forEach(function (cb) {
+      cb({
+        sig: sig,
+        payload: payload
+      });
     });
+  }
+  function on(sigOrSigs, cb) {
+    function pushCb(sig, cb) {
+      var cbs = sig_cbs_[sig];
+
+      if (!cbs) {
+        console.warn("invalid sig[" + sig + "]");
+        return;
+      }
+
+      cbs.push(cb);
+    }
+
+    if (Array.isArray(sigOrSigs)) {
+      sigOrSigs.forEach(function (sig) {
+        pushCb(sig, cb);
+      });
+    } else {
+      pushCb(sigOrSigs, cb);
+    }
   }
 
   var isModuleNameCcLike$1 = isModuleNameCcLike,
@@ -1559,9 +1589,9 @@
   }
 
   var getState = ccContext.store.getState;
-  var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_; //CcFragment实例调用会提供ctx
+  var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_; //CcFragment实例调用会提供callerCtx
 
-  function computeValueForRef (stateModule, computedSpec, refComputed, refConnectedComputed, oldState, commitState, ctx) {
+  function computeValueForRef (stateModule, computedSpec, refComputed, refConnectedComputed, oldState, committedState, callerCtx) {
     if (computedSpec) {
       var moduleStateKeys = moduleName_stateKeys_[stateModule];
       var computedFns = computedSpec.computedFns,
@@ -1574,19 +1604,20 @@
             keyModule = _shouldSkipKey.keyModule;
 
         if (skip) return;
-        var newValue = commitState[stateKey];
+        var newValue = committedState[stateKey];
 
         if (newValue !== undefined) {
           var fn = computedFns[key]; //用原始定义当然key去取fn
 
           var targetModule = keyModule || stateModule;
           var moduleState = getState(targetModule);
-          var keyDesc = {
+          var fnCtx = {
             key: stateKey,
             module: targetModule,
-            moduleState: moduleState
+            moduleState: moduleState,
+            committedState: committedState
           };
-          var computedValue = fn(newValue, oldState[stateKey], keyDesc, ctx);
+          var computedValue = fn(newValue, oldState[stateKey], fnCtx, callerCtx);
 
           if (keyModule) {
             var targetConnectedComputed = refConnectedComputed[keyModule]; //防止foo模块的实例，定义的watchKey是 foo/f1, 此时skip是false，但是结果不会向refConnectedComputed里放
@@ -1672,7 +1703,7 @@
 
   var getState$1 = ccContext.store.getState;
   var moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_;
-  function watchKeyForRef (stateModule, watchSpec, connect, refEntireState, userCommitState, ctx) {
+  function watchKeyForRef (stateModule, watchSpec, connect, refEntireState, committedState, callerCtx) {
     var shouldCurrentRefUpdate = true;
 
     if (watchSpec) {
@@ -1682,7 +1713,7 @@
           watchSpecModule = watchSpec.module;
       var watchStateKeys = okeys(watchFns);
       var len = watchStateKeys.length;
-      var shouldNouUpdateLen = 0;
+      var shouldNotUpdateLen = 0;
       watchStateKeys.forEach(function (key) {
         var _shouldSkipKey = shouldSkipKey(watchSpecModule, key, stateModule, connect, moduleStateKeys, globalStateKeys),
             stateKey = _shouldSkipKey.stateKey,
@@ -1690,24 +1721,25 @@
             keyModule = _shouldSkipKey.keyModule;
 
         if (skip) return;
-        var commitValue = userCommitState[stateKey];
+        var commitValue = committedState[stateKey];
 
         if (commitValue !== undefined) {
           var watchFn = watchFns[key];
           var targetModule = keyModule || stateModule;
           var moduleState = getState$1(targetModule);
-          var keyDesc = {
+          var fnCtx = {
             key: stateKey,
             module: targetModule,
-            moduleState: moduleState
+            moduleState: moduleState,
+            committedState: committedState
           };
-          var ret = watchFn(commitValue, refEntireState[stateKey], keyDesc, ctx); // watchFn(newValue, oldValue);
+          var ret = watchFn(commitValue, refEntireState[stateKey], fnCtx, callerCtx); // watchFn(newValue, oldValue);
 
-          if (ret === false) shouldNouUpdateLen++;
+          if (ret === false) shouldNotUpdateLen++;
         }
       }); //只有所有watch都返回false，才不触发当前实例更新
 
-      if (shouldNouUpdateLen === len) shouldCurrentRefUpdate = false;
+      if (shouldNotUpdateLen === len) shouldCurrentRefUpdate = false;
     }
 
     return shouldCurrentRefUpdate;
@@ -1756,7 +1788,7 @@
 
     //executionContext
     var stateFor = getStateFor(module, targetRef.cc.ccState.module);
-    if (state == undefined) return; //do nothing
+    if (state === undefined) return; //do nothing
     // const isControlledByConcent = targetRef.cc.ccState.isControlledByConcent;
 
     if (!isPlainJsonObject$1(state)) {
@@ -2035,7 +2067,7 @@
       makeError$2 = util.makeError,
       justWarning$2 = util.justWarning;
   var _ccContext$store$1 = ccContext.store,
-      _state$1 = _ccContext$store$1._state,
+      _state$2 = _ccContext$store$1._state,
       getState$3 = _ccContext$store$1.getState,
       _reducer$1 = ccContext.reducer._reducer,
       refStore$1 = ccContext.refStore,
@@ -2368,14 +2400,16 @@
               return childRef.shouldComponentUpdate(nextProps, nextState);
             } else if (_ToBeExtendedClass.prototype.shouldComponentUpdate) {
               return _ToBeExtendedClass.prototype.shouldComponentUpdate.call(this, nextProps, nextState);
-            }
+            } // return this.props !== nextProps || this.state !== nextState;
 
-            return this.props !== nextProps || this.state !== nextState;
+
+            var isStateChanged = this.state !== nextState;
+            return isStateChanged;
           };
 
           _proto.__$$recoverState = function __$$recoverState(currentModule, ccUniqueKey, connect) {
             var refStoredState = refStore$1._state[ccUniqueKey] || {};
-            var moduleState = _state$1[currentModule];
+            var moduleState = _state$2[currentModule];
             var refState = this.state;
             var entireState = Object.assign({}, refState, refStoredState, moduleState);
             this.state = entireState;
@@ -2860,7 +2894,7 @@
 
                 findEventHandlersToPerform.apply(ev, [event, option].concat(args));
               },
-              on: function on(event, handler) {
+              on: function on$$1(event, handler) {
                 bindEventHandlerToCcContext(currentModule, ccClassKey, ccUniqueKey, event, null, handler);
               },
               onIdentity: function onIdentity(event, identity, handler) {
@@ -3477,7 +3511,7 @@
       try {
         setState(module, state, 0);
       } catch (err) {
-        if (module == MODULE_GLOBAL) {
+        if (module === MODULE_GLOBAL) {
           getAndStoreValidGlobalState(state, module);
         } else {
           var moduleState = ccContext.store.getState(module);
@@ -3682,182 +3716,13 @@
     });
   }
 
-  var ccGlobalStateKeys$1 = ccContext.globalStateKeys;
-
-  function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
-    var globalState = ccContext.store.getGlobalState();
-
-    if (inputGlobalConf) {
-      if (!util.isPlainJsonObject(inputGlobalConf)) {
-        throw new Error("option.global" + label + " is not a plain json object");
-      }
-
-      var globalConfKeys = Object.keys(inputGlobalConf);
-      globalConfKeys.forEach(function (gKey) {
-        if (storedGlobalConf.hasOwnProperty(gKey)) {
-          throw new Error("key[" + gKey + "] duplicated in global." + label.toLowerCase());
-        }
-
-        var confValue = inputGlobalConf[gKey];
-        storedGlobalConf[gKey] = confValue;
-        if (label === 'State') ccGlobalStateKeys$1.push(gKey);else if (label === 'Computed') {
-          var val = globalState[gKey];
-          var computedVal = confValue(val, val, globalState);
-          ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
-        }
-      });
-    }
-  }
-  /**
-   * @description configure module、state、option to cc
-   * @author zzk
-   * @export
-   * @param {string} module
-   * @param {{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean}} config
-   * @param {object} [option] reducer、init
-   * @param {{[reducerModuleName:string]:{[fnName:string]:function}}} [option.reducer]
-   * @param {object} [option.globalState] will been merged to $$global module state
-   * @param {object} [option.globalWatch] will been merged to $$global module watch
-   * @param {object} [option.globalComputed] will been merged to $$global module computed
-   * @param {object} [option.noOpPlugins] concent自己用的信号，防止boot，做一次多余的配置
-   * @param {function[]} [option.middlewares]
-   */
-
-
-  function configure (module, config, option) {
-    if (option === void 0) {
-      option = {};
-    }
-
-    if (!ccContext.isCcAlreadyStartup) {
-      throw new Error('cc is not startup yet, you can not call cc.configure!');
-    }
-
-    if (!util.isPlainJsonObject(config)) {
-      throw new Error('[[configure]] param type error, config is not plain json object!');
-    }
-
-    if (module === MODULE_GLOBAL) {
-      throw new Error('cc do not allow configure global module');
-    }
-
-    var state = config.state,
-        reducer = config.reducer,
-        computed = config.computed,
-        watch = config.watch,
-        init = config.init,
-        isClassSingle = config.isClassSingle;
-    var _option = option,
-        optionReducer = _option.reducer,
-        globalState = _option.globalState,
-        globalWatch = _option.globalWatch,
-        globalComputed = _option.globalComputed,
-        middlewares = _option.middlewares,
-        noOpPlugins = _option.noOpPlugins;
-    initModuleState(module, state);
-    initModuleReducer(module, reducer);
-    var _state = ccContext.store._state;
-    var _reducer = ccContext.reducer._reducer;
-    _state[module] = state;
-
-    if (computed) {
-      initModuleComputed(module, computed);
-    }
-
-    if (watch) {
-      initModuleWatch(module, watch);
-    }
-
-    if (isClassSingle === true) {
-      ccContext.moduleSingleClass[module] = true;
-    }
-
-    if (optionReducer) {
-      if (!isPlainJsonObject(optionReducer)) {
-        throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] 's moduleReducer is invalid"));
-      }
-
-      var reducerModuleNames = Object.keys(optionReducer);
-      reducerModuleNames.forEach(function (rmName) {
-        checkModuleName(rmName);
-        var moduleReducer = optionReducer[rmName];
-
-        if (!isPlainJsonObject(moduleReducer)) {
-          throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] reducer 's value is invalid"));
-        }
-
-        if (rmName == MODULE_GLOBAL) {
-          //merge input globalReducer to existed globalReducer
-          var typesOfGlobal = Object.keys(moduleReducer);
-          var globalReducer = _reducer[MODULE_GLOBAL];
-          typesOfGlobal.forEach(function (type) {
-            if (globalReducer[type]) {
-              throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo("type " + type));
-            }
-
-            var reducerFn = moduleReducer[type];
-
-            if (typeof reducerFn !== 'function') {
-              throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
-            }
-
-            globalReducer[type] = reducerFn;
-          });
-        } else {
-          _reducer[rmName] = moduleReducer;
-        }
-      });
-    }
-
-    if (reducer) {
-      if (!isPlainJsonObject(reducer)) {
-        throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("config.reducer is not a plain json object"));
-      }
-
-      _reducer[module] = reducer;
-    }
-
-    var storedGlobalState = _state[MODULE_GLOBAL];
-    var storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
-    var storedGlobalWatch = ccContext.watch[MODULE_GLOBAL]; //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
-
-    setGlobalConfig(storedGlobalState, globalState, 'State');
-    setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
-    setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
-
-    if (init) {
-      if (typeof init !== 'function') {
-        throw new Error('init value must be a function!');
-      }
-
-      init(makeSetStateHandler(module));
-    }
-
-    if (middlewares && middlewares.length > 0) {
-      var ccMiddlewares = ccContext.middlewares;
-      middlewares.forEach(function (m) {
-        if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
-        ccMiddlewares.push(m);
-      });
-    }
-
-    if (noOpPlugins !== true) {
-      ccContext.plugins.forEach(function (p) {
-        if (p.writeModuleState) {
-          var pluginModule = p.module;
-
-          if (pluginModule !== module) {
-            var pluginState = ccContext.store.getState(pluginModule);
-            p.writeModuleState(pluginState, module);
-          }
-        }
-      });
-    }
-  }
-
   var isPlainJsonObject$4 = isPlainJsonObject,
       okeys$2 = okeys;
-  var getState$4 = ccContext.store.getState;
+  /** 对已有的store.$$global状态追加新的state */
+  // export function appendGlobalState(globalState) {
+  //   // todo
+  // }
+
   function configStoreState(storeState) {
     if (!isPlainJsonObject$4(storeState)) {
       throw new Error("the storeState is not a plain json object!");
@@ -3954,16 +3819,20 @@
       var ccPlugins = ccContext.plugins;
       ccPlugins.length = 0; //防止热加载重复多次载入plugins
 
+      var pluginNameMap = {};
       plugins.forEach(function (p) {
         ccPlugins.push(p);
 
-        if (p.getConf) {
-          var pluginConf = p.getConf();
-          if (pluginConf.module) configure(pluginConf.module, pluginConf.conf, {
-            noOpPlugins: true
-          });
+        if (p.install) {
+          var pluginInfo = p.install(on);
+          var e = new Error('plugin.install must return result:{name:string, options?:object}');
+          if (!pluginInfo) throw e;
+          var pluginName = pluginInfo.name;
+          if (!pluginName) throw e;
+          if (pluginNameMap[pluginName]) throw new Error("pluginName[" + pluginName + "] duplicate");
+          pluginNameMap[pluginName] = 1;
         } else {
-          throw new Error('a plugin must export getConf handler!');
+          throw new Error('a plugin must export install handler!');
         }
       });
     }
@@ -4125,6 +3994,167 @@
     } catch (err) {
       if (errorHandler) errorHandler(err);else throw err;
     }
+  }
+
+  var ccGlobalStateKeys$1 = ccContext.globalStateKeys;
+
+  function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
+    var globalState = ccContext.store.getGlobalState();
+
+    if (inputGlobalConf) {
+      if (!util.isPlainJsonObject(inputGlobalConf)) {
+        throw new Error("option.global" + label + " is not a plain json object");
+      }
+
+      var globalConfKeys = Object.keys(inputGlobalConf);
+      globalConfKeys.forEach(function (gKey) {
+        if (storedGlobalConf.hasOwnProperty(gKey)) {
+          throw new Error("key[" + gKey + "] duplicated in global." + label.toLowerCase());
+        }
+
+        var confValue = inputGlobalConf[gKey];
+        storedGlobalConf[gKey] = confValue;
+        if (label === 'State') ccGlobalStateKeys$1.push(gKey);else if (label === 'Computed') {
+          var val = globalState[gKey];
+          var computedVal = confValue(val, val, globalState);
+          ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
+        }
+      });
+    }
+  }
+  /**
+   * @description configure module、state、option to cc
+   * @author zzk
+   * @export
+   * @param {string} module
+   * @param {{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean}} config
+   * @param {object} [option] reducer、init
+   * @param {{[reducerModuleName:string]:{[fnName:string]:function}}} [option.reducer]
+   * @param {object} [option.globalState] will been merged to $$global module state
+   * @param {object} [option.globalWatch] will been merged to $$global module watch
+   * @param {object} [option.globalComputed] will been merged to $$global module computed
+   * @param {function[]} [option.middlewares]
+   */
+
+
+  function configure (module, config, option) {
+    if (option === void 0) {
+      option = {};
+    }
+
+    if (!ccContext.isCcAlreadyStartup) {
+      throw new Error('cc is not startup yet, you can not call cc.configure!');
+    }
+
+    if (!util.isPlainJsonObject(config)) {
+      throw new Error('[[configure]] param type error, config is not plain json object!');
+    }
+
+    if (module === MODULE_GLOBAL) {
+      throw new Error('cc do not allow configure global module');
+    }
+
+    var state = config.state,
+        reducer = config.reducer,
+        computed = config.computed,
+        watch = config.watch,
+        init = config.init,
+        isClassSingle = config.isClassSingle;
+    var _option = option,
+        optionReducer = _option.reducer,
+        globalState = _option.globalState,
+        globalWatch = _option.globalWatch,
+        globalComputed = _option.globalComputed,
+        middlewares = _option.middlewares,
+        noOpPlugins = _option.noOpPlugins;
+    initModuleState(module, state);
+    initModuleReducer(module, reducer);
+    var _state = ccContext.store._state;
+    var _reducer = ccContext.reducer._reducer;
+    _state[module] = state;
+
+    if (computed) {
+      initModuleComputed(module, computed);
+    }
+
+    if (watch) {
+      initModuleWatch(module, watch);
+    }
+
+    if (isClassSingle === true) {
+      ccContext.moduleSingleClass[module] = true;
+    }
+
+    if (optionReducer) {
+      if (!isPlainJsonObject(optionReducer)) {
+        throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] 's moduleReducer is invalid"));
+      }
+
+      var reducerModuleNames = Object.keys(optionReducer);
+      reducerModuleNames.forEach(function (rmName) {
+        checkModuleName(rmName);
+        var moduleReducer = optionReducer[rmName];
+
+        if (!isPlainJsonObject(moduleReducer)) {
+          throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("module[" + module + "] reducer 's value is invalid"));
+        }
+
+        if (rmName === MODULE_GLOBAL) {
+          //merge input globalReducer to existed globalReducer
+          var typesOfGlobal = Object.keys(moduleReducer);
+          var globalReducer = _reducer[MODULE_GLOBAL];
+          typesOfGlobal.forEach(function (type) {
+            if (globalReducer[type]) {
+              throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo("type " + type));
+            }
+
+            var reducerFn = moduleReducer[type];
+
+            if (typeof reducerFn !== 'function') {
+              throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
+            }
+
+            globalReducer[type] = reducerFn;
+          });
+        } else {
+          _reducer[rmName] = moduleReducer;
+        }
+      });
+    }
+
+    if (reducer) {
+      if (!isPlainJsonObject(reducer)) {
+        throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo("config.reducer is not a plain json object"));
+      }
+
+      _reducer[module] = reducer;
+    }
+
+    var storedGlobalState = _state[MODULE_GLOBAL];
+    var storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
+    var storedGlobalWatch = ccContext.watch[MODULE_GLOBAL]; //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
+
+    setGlobalConfig(storedGlobalState, globalState, 'State');
+    setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
+    setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
+
+    if (init) {
+      if (typeof init !== 'function') {
+        throw new Error('init value must be a function!');
+      }
+
+      init(makeSetStateHandler(module));
+    }
+
+    if (middlewares && middlewares.length > 0) {
+      var ccMiddlewares = ccContext.middlewares;
+      middlewares.forEach(function (m) {
+        if (typeof m !== 'function') throw new Error('one item of option.middlewares is not a function');
+        ccMiddlewares.push(m);
+      });
+    }
+
+    send(SIG_MODULE_CONFIGURED, module);
   }
 
   /**
@@ -4585,7 +4615,7 @@
   var ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
       fragmentFeature_classKey_ = ccContext.fragmentFeature_classKey_,
       _ccContext$store$2 = ccContext.store,
-      getState$5 = _ccContext$store$2.getState,
+      getState$4 = _ccContext$store$2.getState,
       getPrevState = _ccContext$store$2.getPrevState,
       moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
       _reducerModule_fnNames_ = ccContext.reducer._reducerModule_fnNames_,
@@ -4668,7 +4698,7 @@
           tag = props.tag; //计算fragment所属的模块
 
       var fragmentModule = module || MODULE_DEFAULT;
-      var mergedState = Object.assign(state, getState$5(fragmentModule));
+      var mergedState = Object.assign(state, getState$4(fragmentModule));
       _this.state = mergedState;
       var _storedKeys = [];
 
@@ -4715,7 +4745,7 @@
       var ctx = ccClassKey_ccClassContext_$3[ccClassKey];
       var connectedComputed = ctx.connectedComputed || {};
       var connectedState = ctx.connectedState || {};
-      var moduleState = getState$5(fragmentModule);
+      var moduleState = getState$4(fragmentModule);
       var moduleComputed = _computedValue$3[fragmentModule] || {};
 
       var reactForceUpdateRef = _this.forceUpdate.bind(_assertThisInitialized(_this));
@@ -5232,7 +5262,7 @@
 
         computeValueForRef(module, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams);
         connectModules.forEach(function (m) {
-          var mState = getState$5(m);
+          var mState = getState$4(m);
           computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState, _this2.__fragmentParams);
         });
       }
@@ -5323,7 +5353,7 @@
                   continue;
                 }
 
-                targetCurState = getState$5(module);
+                targetCurState = getState$4(module);
                 targetPrevState = _prevState;
                 targetKey = unmoduledKey;
               } else {
@@ -5548,7 +5578,7 @@
     }
 
     var ccKeys = ccClassContext.ccKeys;
-    ccKeys.filter(function (k) {
+    ccKeys.forEach(function (k) {
       var ref = ccKey_ref_$4[k];
       if (ref) refs.push(ref);
     });
@@ -5603,7 +5633,7 @@
   var setGlobalState$1 = setGlobalState;
   var setState$1 = _setState;
   var set = _set;
-  var getState$6 = _getState$1;
+  var getState$5 = _getState$1;
   var getGlobalState$1 = getGlobalState;
   var getConnectedState = _getConnectedState;
   var getComputed = _getComputed;
@@ -5647,7 +5677,7 @@
     setState: setState$1,
     set: set,
     getGlobalState: getGlobalState$1,
-    getState: getState$6,
+    getState: getState$5,
     getComputed: getComputed,
     getConnectedState: getConnectedState,
     ccContext: ccContext$1,
@@ -5690,7 +5720,7 @@
   exports.setGlobalState = setGlobalState$1;
   exports.setState = setState$1;
   exports.set = set;
-  exports.getState = getState$6;
+  exports.getState = getState$5;
   exports.getGlobalState = getGlobalState$1;
   exports.getConnectedState = getConnectedState;
   exports.getComputed = getComputed;

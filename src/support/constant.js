@@ -16,6 +16,7 @@ export const SIG_FN_START = 10;
 export const SIG_FN_END = 11;
 export const SIG_FN_QUIT = 12;
 export const SIG_FN_ERR = 13;
+export const SIG_MODULE_CONFIGURED = 14;
 
 export const STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;
 export const STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;

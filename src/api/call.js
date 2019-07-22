@@ -3,9 +3,6 @@ import util from '../support/util';
 import { ERR } from '../support/constant';
 
 const vbi = util.verboseInfo;
-const PICK_RANDOM_INS = 1;
-const PICK_SPECIFIED_INS = 2;
-const PICK_SINGLETON_INS = 3;
 
 /**
  * @description

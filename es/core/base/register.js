@@ -311,7 +311,9 @@ export default function register(ccClassKey, {
           } else if (super.shouldComponentUpdate) {
             return super.shouldComponentUpdate(nextProps, nextState);
           }
-          return this.props !== nextProps || this.state !== nextState;
+          // return this.props !== nextProps || this.state !== nextState;
+          const isStateChanged = this.state !== nextState;
+          return isStateChanged;
         }
 
         __$$recoverState(currentModule, ccUniqueKey, connect) {

@@ -1,5 +1,4 @@
 
-import * as util from '../../support/util';
 
 export default function (specModule, key, stateModule, connectSpecLike, moduleStateKeys) {
   let skip = false;

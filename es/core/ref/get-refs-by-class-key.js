@@ -9,7 +9,7 @@ export default function (ccClassKey) {
     return refs;
   }
   const ccKeys = ccClassContext.ccKeys;
-  ccKeys.filter(k => {
+  ccKeys.forEach(k => {
     const ref = ccKey_ref_[k];
     if (ref) refs.push(ref);
   });
