@@ -6,13 +6,14 @@ import {
   SIG_MODULE_CONFIGURED
 } from '../../support/constant';
 
-const sig_cbs_ = {
-  [SIG_FN_START]: [],
-  [SIG_FN_END]: [],
-  [SIG_FN_QUIT]: [],
-  [SIG_FN_ERR]: [],
-  [SIG_MODULE_CONFIGURED]: [],
-};
+const sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED];
+
+const sig_cbs_ = {};
+sigs.forEach(sig => sig_cbs_[sig] = []);
+
+export function clearCbs() {
+  sigs.forEach(sig => sig_cbs_[sig].length = 0);
+}
 
 export function send(sig, payload) {
   const cbs = sig_cbs_[sig];

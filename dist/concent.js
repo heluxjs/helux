@@ -1,3 +1,34 @@
+if (!this._assertThisInitialized) {
+  this._assertThisInitialized = function (self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+  }
+}
+if (!this._extends) {
+  this._extends = function () {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    };
+    return _extends.apply(this, arguments);
+  }
+}
+if (!this._inheritsLoose) {
+  this._inheritsLoose = function (subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
+    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+}
+
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('co'), require('react-dom')) :
   typeof define === 'function' && define.amd ? define(['exports', 'react', 'co', 'react-dom'], factory) :
@@ -1295,8 +1326,16 @@
     return chainId_isLazy_[chainId] === true;
   }
 
-  var _sig_cbs_;
-  var sig_cbs_ = (_sig_cbs_ = {}, _sig_cbs_[SIG_FN_START] = [], _sig_cbs_[SIG_FN_END] = [], _sig_cbs_[SIG_FN_QUIT] = [], _sig_cbs_[SIG_FN_ERR] = [], _sig_cbs_[SIG_MODULE_CONFIGURED] = [], _sig_cbs_);
+  var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED];
+  var sig_cbs_ = {};
+  sigs.forEach(function (sig) {
+    return sig_cbs_[sig] = [];
+  });
+  function clearCbs() {
+    sigs.forEach(function (sig) {
+      return sig_cbs_[sig].length = 0;
+    });
+  }
   function send(sig, payload) {
     var cbs = sig_cbs_[sig];
     cbs.forEach(function (cb) {
@@ -3818,6 +3857,8 @@
     if (plugins.length > 0) {
       var ccPlugins = ccContext.plugins;
       ccPlugins.length = 0; //防止热加载重复多次载入plugins
+
+      clearCbs(); //清理掉已映射好的插件回调
 
       var pluginNameMap = {};
       plugins.forEach(function (p) {
