@@ -8,7 +8,7 @@ import makeSetStateHandler from '../state/make-set-state-handler';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
-import { on } from '../plugin';
+import { on, clearCbs } from '../plugin';
 import co from 'co';
 
 const { isPlainJsonObject, okeys } = util;
@@ -109,6 +109,7 @@ export function configPlugins(plugins) {
   if (plugins.length > 0) {
     const ccPlugins = ccContext.plugins;
     ccPlugins.length = 0;//防止热加载重复多次载入plugins
+    clearCbs();//清理掉已映射好的插件回调
 
     const pluginNameMap = {};
     plugins.forEach(p => {
