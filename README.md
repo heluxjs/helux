@@ -160,7 +160,7 @@ class Counter extends Component {
 const CcClazzCounter = register('counter')(Counter);
 ```
 - 基于renderProps注册为cc类组件
-```
+```jsx
 import { registerDumb } from 'concent';
 
 const UI = ({count, inc, dec, incD, decD})=>{
@@ -202,7 +202,7 @@ const mapProps = ctx=>{
 const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
 ```
 --- 基于hook注册为组件
-```
+```jsx
 import { useConcent } from 'concent';
 
 function HookCounter(){
@@ -233,7 +233,7 @@ function HookCounter(){
 
 ```
 --- 更优的hook写法，将函数提升为静态api
-```
+```jsx
 import { useConcent } from 'concent';
 
 //同样的，该函数只在ui首次渲染前被执行一次！！！
