@@ -103,12 +103,11 @@ $ yarn add concent
 
 ### 新手counter示例
 将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
-
+- 运行concent，载入模块配置
 ```javascript
 import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';
 
-//运行concent，载入模块配置
 run({
   counter: {//定义counter模块
     state: {//定义state
@@ -124,8 +123,9 @@ run({
     }
   }
 })
-
-//定义类组件
+```
+- 基于react class注册成为cc类组件
+```jsx
 class Counter extends Component {
   //setState 能够将数据将同步到store，广播到其他实例
   inc = () => {
@@ -134,12 +134,12 @@ class Counter extends Component {
   dec = () => {
     this.setState({ count: this.state.count - 1 });
   }
-  //调用dispatch, 同样的能够将数据将同步到store，广播到其他实例
+  //调用dispatch, 同样的能够将数据将同步到store，广播到其他属于counter模块或者连接到counter模块的实例
   incD = () => {
-    this.$$dispatch('inc');
+    this.ctx.dispatch('inc');
   }
   decD = () => {
-    this.$$dispatch('dec');
+    this.ctx.dispatch('dec');
   }
   render() {
     //concent注入counter模块的数据到state
@@ -147,180 +147,129 @@ class Counter extends Component {
     return (
       <div style={{ padding: '12px', margin: '6px' }}>
         <div>count: {count}</div>
-        <button>inc by setState</button>
-        <button>dec by setState</button>
+        <button onClick={this.inc}>inc by setState</button>
+        <button onClick={this.dec}>dec by setState</button>
         <br />
-        <button>inc by dispatch</button>
-        <button>dec by dispatch</button>
+        <button onClick={this.incD}>inc by dispatch</button>
+        <button onClick={this.decD}>dec by dispatch</button>
       </div>
     );
   }
 }
-//注册成为属于counter模块的名字为Counter cc类
-const CcCounter_ = register('Counter', 'counter')(Counter);
-
-function App() {
-  return (
-    <Fragment>
-      <CcCounter_ />
-      <CcCounter_ />
-    </Fragment>
-  )
-}
-
-export default App;
+//将Counter类注册为CcClazzCounter，属于counter模块
+const CcClazzCounter = register('counter')(Counter);
 ```
+- 基于renderProps注册为cc类组件
+```jsx
+import { registerDumb } from 'concent';
 
-### 进阶counter示例
-将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
-然后执行`npm start`运行起来，在浏览器里开始体验`cc`的神奇效果吧。
-> 探索concent从这里开始，[点我看以下代码的在线示例](https://stackblitz.com/edit/concent-quick-start?file=index.js)
-
-```javascript
-import React, {Component} from 'react';
-import cc, { register, run, CcFragment } from 'concent';
-
-const sleep = (ms=2000) => new Promise(resolve=> setTimeout(resolve, ms));
-
-//定义两个模块，foo 和 counter
-run({
-  foo:{
-    state:{//定义state
-      age:1,
-      name:'concent',
-      info:{
-        addr:'Beijing',
-      }
-    }
-  },
-  counter:{
-    state:{//定义state
-      count:0,
-      loading: '',
-    },
-    watch:{//定义watch，当count值发生变化时，触发此函数执行
-      count(val){
-        if(val==='love'){
-          cc.setState('foo',{name:'now counter/count is '+val});//用cc顶层api修改foo模块的数据
-        }else{
-          cc.setState('foo',{name:'try input love'});
-        }
-      }
-    },
-    computed:{//定义computed，当count值发生变化时，会触发此函数计算，计算的值可以在实例里的this.$$moduleComputed上获得
-      count(val){
-        if(typeof val==='string') return val.split('').reverse().join('');
-        else return val;
-      }
-    },
-    reducer:{//定义reducer函数，用于处理业务逻辑
-      setLoading({payload:loading}){
-        return {loading};
-      },
-      updateCount({payload:count}){
-        return {count};
-      },
-      async uploadCount({dispatch, payload:count}){
-        dispatch('setLoading', '假兮兮的loading');
-        await new Promise(resolve=> setTimeout(resolve, 2000));
-        return {count, loading:''};
-        //或者写为 
-        // dispatch('setLoading', '');
-        // dispatch('updateCount', count);
-      }
-    },
-    init: async ()=>{
-      await sleep(3900);
-      return {count:888}
-    },//定义init，模拟从后端异步获取新的初始化数据
-  }
-})
-
-class Counter extends Component {
-  render(){
-    const {count, loading} = this.state;
+const UI = ({count, inc, dec, incD, decD})=>{
     return (
-      <div style={{padding:'12px', margin:'6px'}}>
-        <p style={{color:'red'}}>{loading}</p>
-        <span>reversed count: {this.$$moduleComputed.count}</span>
-        <br/>
-        {/** this.$$sync提供双向绑定的能力 */}
-        <input data-ccsync="count" onChange={this.$$sync} value={count}/>
+      <div style={{ padding: '12px', margin: '6px' }}>
+        <div>count: {count}</div>
+        <button onClick={inc}>inc by setState</button>
+        <button onClick={dec}>dec by setState</button>
+        <br />
+        <button onClick={incD}>inc by dispatch</button>
+        <button onClick={decD}>dec by dispatch</button>
       </div>
     );
-  }
-}
-const CcCounter_ = register('Counter', {module:'counter', sharedStateKeys:'*'})(Counter);
-
-function App(){
-  return (
-    <div>
-      <CcCounter_ />
-      <CcCounter_ />
-      {/** 这是一个CcFragment，可以快速连接store，同时也支持concent专门为CcFragment实现得hook函数, state是自己的state */}
-      <CcFragment state={{ a: 1, b: 2, c: { c1: 'c1', c2: 'c2' } }} connect={{ 'foo': '*', 'counter': '*' }} render={(params) => {
-        const {state, setState, connectedState, connectedComputed, hook, dispatch, sync} = params;
-
-        //CcFragment实例里hook维护的局部state
-        const [localCount='', setCount] = hook.useState();
-        const [localAge='', setAge] = hook.useState('age');
-
-        const {a, b, c} = state;//CcFragment实例自己的局部state
-
-        hook.useEffect(()=>{
-          alert('CcFragment挂载完毕');
-          return ()=>console.log('CcFragment卸载的时候才会执行这个清理函数');
-        },[]);//第二位参数是空数组，让这个副作用只会在CcFragment挂载完毕执行一次而已
-        return (
-          <div>
-            <h3>count: {connectedState.counter.count}</h3>
-            <h3>age: {connectedState.foo.age}</h3>
-            <h3>name: {connectedState.foo.name}</h3>
-            <p>
-              输入count:<input value={localCount} onChange={e=>setCount(e.currentTarget.value)} />
-              {/** 直接通过dispatch句柄来调用counter模块的uploadCount函数 */}
-              <button onClick={()=>dispatch('counter/uploadCount', localCount)}>点击确认，修改foo模块里的count</button>
-            </p>
-
-            <p>
-              {/** hook的setter自动实现了双向绑定 */}
-              localAge:<input value={localAge} onChange={setAge} />
-            </p>
-
-            <p>
-              setState修改本地转态：
-              {/** 使用setState句柄修改局部state状态 */}
-              <input value={a} onChange={e=>setState({a:e.currentTarget.value})}/>
-            </p>
-
-            <p>
-              sync双向绑定本地状态：
-              {/** 使用sync句柄自动同步转态，data-ccsync里的key不加模块前缀的话，cc只会将和值同步到实例本地状态里 */}
-              <input data-ccsync="b" value={b} onChange={sync}/>
-            </p>
-            <p>
-              c1:<input data-ccsync="c.c1" value={c.c1} onChange={sync}/>
-              c2:<input data-ccsync="c.c2" value={c.c2} onChange={sync}/>
-            </p>
-
-            <p>
-              sync双向绑定模块状态：
-              {/** 使用sync句柄自动同步转态，data-ccsync里的key加了模块名前缀foo，cc会广播这个状态到其他实例 */}
-              <input data-ccsync="foo/age" value={connectedState.foo.age} onChange={sync}/>
-            </p>
-            <p>
-              修改foo模块下的addr值:
-              <input data-ccsync="foo/info.addr" value={connectedState.foo.info.addr} onChange={sync}/>
-            </p>
-
-          </div>
-        )
-      }}/>
-    </div>
-  );
 }
 
-export default App;
+//定义setup，该函数只会在ui初次渲染前执行一次，通常用于定义一些方法，结果会收集到ctx.settings里
+const setup = ctx=>{
+  const inc = () => {
+    ctx.setState({ count: ctx.state.count + 1 });
+  };
+  const dec = () => {
+    ctx.setState({ count: ctx.state.count - 1 });
+  };
+  const incD = () => {
+    ctx.dispatch('inc');
+  };
+  const decD = () => {
+    ctx.dispatch('dec');
+  };
+  return {inc, dec, incD, decD};
+}
+
+//定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
+const mapProps = ctx=>{
+  return {count:ctx.state.count, ...ctx.settings};
+}
+
+//将Counter类注册为CcFnCounter，属于counter模块
+const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
+```
+--- 基于hook注册为组件
+```jsx
+import { useConcent } from 'concent';
+
+function HookCounter(){
+  const {state, setState, dispatch} = useConcent('counter');
+  const inc = () => {
+    setState({ count: ctx.state.count + 1 });
+  };
+  const dec = () => {
+    setState({ count: ctx.state.count - 1 });
+  };
+  const incD = () => {
+    dispatch('inc');
+  };
+  const decD = () => {
+    dispatch('dec');
+  };
+   return (
+      <div style={{ padding: '12px', margin: '6px' }}>
+        <div>count: {count}</div>
+        <button onClick={inc}>inc by setState</button>
+        <button onClick={dec}>dec by setState</button>
+        <br />
+        <button onClick={incD}>inc by dispatch</button>
+        <button onClick={decD}>dec by dispatch</button>
+      </div>
+   );
+}
+
+```
+--- 更优的hook写法，将函数提升为静态api
+```jsx
+import { useConcent } from 'concent';
+
+//同样的，该函数只在ui首次渲染前被执行一次！！！
+const setup = ctx =>{
+  const {state, setState, dispatch} = ctx;
+  const inc = () => {
+    setState({ count: ctx.state.count + 1 });
+  };
+  const dec = () => {
+    setState({ count: ctx.state.count - 1 });
+  };
+  const incD = () => {
+    dispatch('inc');
+  };
+  const decD = () => {
+    dispatch('dec');
+  };
+  return {inc, dec, incD, decD};
+}
+
+function HookCounter(){
+  const {settings, state} = useConcent({module:'counter', setup});
+  const {inc, dec, incD, decD} = settings;
+
+   return (
+      <div style={{ padding: '12px', margin: '6px' }}>
+        <div>count: {state.count}</div>
+        <button onClick={inc}>inc by setState</button>
+        <button onClick={dec}>dec by setState</button>
+        <br />
+        <button onClick={incD}>inc by dispatch</button>
+        <button onClick={decD}>dec by dispatch</button>
+      </div>
+   );
+}
+
 ```
 
 ### [0入侵，渐进式实例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
