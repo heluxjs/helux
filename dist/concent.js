@@ -334,10 +334,10 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.1',
+      version: '1.5.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-      tag: 'xenogear'
+      tag: 'destiny'
     },
     // fragment association
     fragmentNameCount: 0,
@@ -3238,9 +3238,13 @@
       off: off,
       defineWatch: defineWatch,
       defineComputed: defineComputed,
+      defineEffect: defineEffect,
       defineAuxMethod: defineAuxMethod,
       defineExecute: defineExecute,
-      defineEffect: defineEffect,
+      // alias
+      watch: defineWatch,
+      computed: defineComputed,
+      effect: defineEffect,
       __$$ccForceUpdate: makeCcForceUpdateHandler(ref),
       __$$ccSetState: makeCcSetStateHandler(ref)
     };
