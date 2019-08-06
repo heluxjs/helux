@@ -65,7 +65,7 @@ export default function ({
         util.justTip(`[[startUp]]: CcDispatcher existed already`);
       }
     } else {
-      throw 'customizing Dispatcher is not allowed in current version cc';
+      throw new Error('customizing Dispatcher is not allowed in current version cc');
     }
 
     bindToWindow('CC_CONTEXT', ccContext);

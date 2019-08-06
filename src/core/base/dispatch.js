@@ -1,5 +1,4 @@
 import util from '../../support/util';
-import { CC_FRAGMENT_PREFIX } from '../../support/constant';
 import ccContext from '../../cc-context';
 import pickOneRef from '../../core/ref/pick-one-ref';
 
@@ -16,7 +15,7 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, ident
       if (!targetRef) {
         throw new Error(`no ref found for uniqueCcKey:${uKey}!`);
       } else {
-        dispatchFn = isLazy ? targetRef.$$lazyDispatch : targetRef.$$dispatch;
+        dispatchFn = isLazy ? targetRef.ctx.lazyDispatch : targetRef.ctx.dispatch;
       }
     } else {
       let module = '';
@@ -31,16 +30,13 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, ident
         ref = pickOneRef();
       }
 
-      if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-        dispatchFn = isLazy ? ref.__fragmentParams.lazyDispatch : ref.__fragmentParams.dispatch;
-      } else {
-        dispatchFn = isLazy ? ref.$$lazyDispatch : ref.$$dispatch;
-      }
+      dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
     }
 
     if (typeof action === 'string' && action.startsWith('*')) {
       const reducerModName = action.split('/').pop();
       const fullFnNames = ccContext.reducer._reducerFnName_fullFnNames_[reducerModName];
+      if(!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {
         tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, delay, identity));

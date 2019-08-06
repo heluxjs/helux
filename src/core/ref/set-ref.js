@@ -3,13 +3,13 @@ import { ERR } from '../../support/constant'
 import util from '../../support/util'
 
 const { makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
-const ccKey_insCount = {};
+const ccUKey_insCount = {};
 
 function setCcInstanceRef(ccUniqueKey, ref, ccKeys, option, delayMs) {
   function setRef() {
-    ccContext.ccKey_ref_[ccUniqueKey] = ref;
+    ccContext.ccUkey_ref_[ccUniqueKey] = ref;
     ccKeys.push(ccUniqueKey);
-    ccContext.ccKey_option_[ccUniqueKey] = option;
+    ccContext.ccUkey_option_[ccUniqueKey] = option;
   }
   incCcKeyInsCount(ccUniqueKey);
   if (delayMs) {
@@ -20,20 +20,20 @@ function setCcInstanceRef(ccUniqueKey, ref, ccKeys, option, delayMs) {
 }
 
 export function incCcKeyInsCount(ccUniqueKey) {
-  if (ccKey_insCount[ccUniqueKey] === undefined) ccKey_insCount[ccUniqueKey] = 1;
-  else ccKey_insCount[ccUniqueKey] += 1;
+  if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 1;
+  else ccUKey_insCount[ccUniqueKey] += 1;
 }
 export function decCcKeyInsCount(ccUniqueKey) {
-  if (ccKey_insCount[ccUniqueKey] === undefined) ccKey_insCount[ccUniqueKey] = 0;
-  else ccKey_insCount[ccUniqueKey] -= 1;
+  if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 0;
+  else ccUKey_insCount[ccUniqueKey] -= 1;
 }
 export function getCcKeyInsCount(ccUniqueKey) {
-  if (ccKey_insCount[ccUniqueKey] === undefined) return 0;
-  else return ccKey_insCount[ccUniqueKey];
+  if (ccUKey_insCount[ccUniqueKey] === undefined) return 0;
+  else return ccUKey_insCount[ccUniqueKey];
 }
 
 
-export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption, forCcFragment = false) {
+export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption) {
   const classContext = ccContext.ccClassKey_ccClassContext_[ccClassKey];
   const ccKeys = classContext.ccKeys;
   if (ccContext.isDebug) {
@@ -44,28 +44,12 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
   }
 
   const isHot = ccContext.isHotReloadMode();
-  if (forCcFragment === true) {
-    //因为CcFragment不强调类的概念，ccClassKey是自动生成的，所以对于标记了ccKey的CcFragment实例
-    //通过fragmentCcKeys来排除有没有重复，如果这里通过classContext去查就是不对的，因为不同的classContext可以包含相同的ccKey
-    const fragmentCcKeys = ccContext.fragmentCcKeys;
-    if (fragmentCcKeys.includes(ccUniqueKey)) {
-      //指定了ccKey的CcFragment，ccUniqueKey和ccKey是一样的
-      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`<CcFragment ccKey="${ccKey}" />`));
-      // if(isHot){
-      //   util.justWarning(`cc found you supply a duplicate ccKey:${ccKey} to CcFragment, but now cc is running in hot reload mode, so if this message is wrong, you can ignore it.`);
-      // }else{
-      //   throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`<CcFragment ccKey="${ccKey}" />`));
-      // }
-    } else {
-      fragmentCcKeys.push(ccUniqueKey);
-    }
-  }
-
   if (ccKeys.includes(ccUniqueKey)) {
     if (isHot) {
+      // get existed ins count
       const insCount = getCcKeyInsCount(ccUniqueKey);
-      if (isSingle && insCount > 1) throw me(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi(`ccClass:${ccClassKey}`));
-      if (insCount > 2) {// now cc can make sure the ccKey duplicate
+      if (isSingle && insCount > 0) throw me(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi(`ccClass:${ccClassKey}`));
+      if (insCount > 1) {// now cc can make sure the ccKey duplicate
         throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
       }
       // just warning
@@ -80,7 +64,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
       // so cc set ref later
       setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption, 600);
     } else {
-      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
+      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:[${ccClassKey}],ccKey:[${ccUniqueKey}]`));
     }
   } else {
     setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption);

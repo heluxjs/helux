@@ -64,3 +64,18 @@ export function checkModuleNameBasicallyAndState(moduleName, moduleState) {
   checkModuleName(moduleName);
   checkModuleState(moduleState, moduleName);
 }
+
+export function checkStoredKeys(moduleStateKeys, storedKeys) {
+  const isSKeysArr = Array.isArray(storedKeys);
+  if (!isSKeysArr && storedKeys !== '*') {
+    throw new Error(`storedKeys type err, it is must be an array or string *`)
+  }
+
+  if (isSKeysArr) {
+    storedKeys.forEach(sKey => {
+      if (moduleStateKeys.includes(sKey)) {
+        throw new Error(`storedKeys key err, the key[${sKey}] can not be a module state key!`)
+      }
+    });
+  }
+}

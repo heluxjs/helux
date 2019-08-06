@@ -1,22 +1,21 @@
 import _startup from './api/startup';
 import _cloneModule from './api/clone-module';
-import _load from './api/load';
+import _run from './api/run';
+import _connect from './api/connect';
+import _connectDumb from './api/connect-dumb';
 import _register from './api/register';
-import _r from './api/r';
+import _registerDumb from './api/register-dumb';
 import _configure from './api/configure';
 import _call from './api/call';
 import _setGlobalState from './api/set-global-state';
 import _setState from './api/set-state';
 import _set from './api/set';
+import _setValue from './api/set-val';
 import _getState from './api/get-state';
 import _getGlobalState from './api/get-global-state';
 import _getComputed from './api/get-computed';
 import _emit from './api/emit';
-import _emitWith from './api/emit-with';
 import _off from './api/off';
-import _connect from './api/connect';
-import _connectDumb from './api/connect-dumb';
-import _connectPure from './api/connect-pure';
 import _dispatch from './api/dispatch';
 import _lazyDispatch from './api/lazy-dispatch';
 import _ccContext from './cc-context';
@@ -36,25 +35,23 @@ import * as util from './support/util';
 
 export const startup = _startup;
 export const cloneModule = _cloneModule;
-export const load = _load;
-export const run = _load;
+export const run = _run;
+export const connect = _connect;
+export const connectDumb = _connectDumb;
 export const register = _register;
-export const r = _r;
+export const registerDumb = _registerDumb;
 export const configure = _configure;
 export const call = _call;
 export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const set = _set;
+export const setValue = _setValue;
 export const getState = _getState;
 export const getGlobalState = _getGlobalState;
 export const getConnectedState = _getConnectedState;
 export const getComputed = _getComputed;
 export const emit = _emit;
-export const emitWith = _emitWith;
 export const off = _off;
-export const connect = _connect;
-export const connectDumb = _connectDumb;
-export const connectPure = _connectPure;
 export const dispatch = _dispatch;
 export const lazyDispatch = _lazyDispatch;
 export const ccContext = _ccContext;
@@ -73,23 +70,21 @@ export const useConcent = _useConcent;
 const defaultExport = {
   cloneModule,
   emit,
-  emitWith,
   off,
   connect,
   connectDumb,
-  connectPure,
+  register,
+  registerDumb,
+  configure,
   dispatch,
   lazyDispatch,
   startup,
-  load,
   run,
-  register,
-  r,
-  configure,
   call,
   setGlobalState,
   setState,
   set,
+  setValue,
   getGlobalState,
   getState,
   getComputed,

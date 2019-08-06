@@ -1,12 +1,25 @@
 import { CCSYNC_KEY, MOCKE_KEY } from '../../support/constant';
 import { convertToStandardEvent } from '../../support/util';
+import ccContext from '../../cc-context';
 
-export default (spec, e) => {
-  let ccint = false, ccsync = '', ccidt = '', value = '', ccdelay = -1, isToggleBool = false;
-  const specSyncKey = spec[CCSYNC_KEY];
+const { store: { getState } } = ccContext;
+
+function getValFromEvent(e) {
+  const se = convertToStandardEvent(e);
+  if (se) {
+    return se.currentTarget.value;
+  } else {
+    return e;
+  }
+}
+
+export default (spec, e, refModule) => {
+  let ccint = false, ccsync = '', ccidt = '', value = '', extraState = undefined, ccdelay = -1, isToggleBool = false;
+  const syncKey = spec[CCSYNC_KEY];
   const type = spec.type;
-  if (specSyncKey !== undefined) {//来自生成的sync生成的setter函数调用
-    ccsync = specSyncKey;
+  
+  if (syncKey !== undefined) {//来自生成的sync生成的setter函数调用
+    ccsync = syncKey;
     ccdelay = spec.delay;
     ccidt = spec.idt
     if (type === 'val' || type === 'int') {//set value
@@ -15,14 +28,25 @@ export default (spec, e) => {
       //优先从spec里取，取不到的话，从e里面分析并提取
       const val = spec.val;
       if (val === undefined) {
-        const se =convertToStandardEvent(e);
-        if (se) {
-          value = se.currentTarget.value;
-        } else {
-          value = e;
-        }
+        value = getValFromEvent(e);
       } else {
-        value = val;
+        if (typeof val === 'function') {
+          let keyPath, fullKeyPath, module;
+          if (ccsync.includes('/')) {
+            const [_module, _keyPath] = ccsync.split('/');
+            keyPath = _keyPath;
+            fullKeyPath = ccsync;
+            module = _module;
+          } else {
+            keyPath = ccsync;
+            fullKeyPath = `${refModule}/${keyPath}`;
+            module = refModule;
+          }
+
+          extraState = val(getValFromEvent(e), keyPath, { moduleState: getState(module), fullKeyPath });
+        } else {
+          value = val;
+        }
       }
     } else if (type === 'bool') {//toggle bool
       isToggleBool = true;
@@ -35,7 +59,7 @@ export default (spec, e) => {
       const dataset = currentTarget.dataset;
 
       if (type === 'int') ccint = true;
-      else ccint = dataset.ccint != undefined;
+      else ccint = dataset.ccint !== undefined;
 
       ccsync = dataset.ccsync;
       if (!ccsync) return null;
@@ -53,5 +77,5 @@ export default (spec, e) => {
     }
   }
 
-  return { [MOCKE_KEY]: 1, currentTarget: { value, dataset: { ccsync, ccint, ccdelay, ccidt } }, isToggleBool };
+  return { [MOCKE_KEY]: 1, currentTarget: { value, extraState, dataset: { ccsync, ccint, ccdelay, ccidt } }, isToggleBool };
 }

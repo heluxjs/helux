@@ -1,6 +1,6 @@
 import ccContext from '../../cc-context';
 
-const { ccKey_ref_, ccClassKey_ccClassContext_ } = ccContext;
+const { ccUkey_ref_, ccClassKey_ccClassContext_ } = ccContext;
 
 export default function (ccClassKey) {
   let refs = [];
@@ -10,7 +10,7 @@ export default function (ccClassKey) {
   }
   const ccKeys = ccClassContext.ccKeys;
   ccKeys.forEach(k => {
-    const ref = ccKey_ref_[k];
+    const ref = ccUkey_ref_[k];
     if (ref) refs.push(ref);
   });
   return refs;

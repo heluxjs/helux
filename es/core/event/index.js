@@ -1,7 +1,7 @@
 import util from '../../support/util';
 import ccContext from '../../cc-context';
 
-const { event_handlers_, handlerKey_handler_, ccUniqueKey_handlerKeys_, ccKey_ref_} = ccContext;
+const { event_handlers_, handlerKey_handler_, ccUKey_handlerKeys_, ccUkey_ref_} = ccContext;
 
 function _findEventHandlers(event, module, ccClassKey, identity = null) {
   const handlers = event_handlers_[event];
@@ -40,7 +40,7 @@ function _deleteEventHandlers(handlers) {
         const { ccUniqueKey } = h;
         if (toDeleteCcUniqueKeyMap[ccUniqueKey] === 1) {
           eHandlers[idx] = null;
-          delete ccUniqueKey_handlerKeys_[ccUniqueKey];//delete mapping of ccUniqueKey_handlerKeys_;
+          delete ccUKey_handlerKeys_[ccUniqueKey];//delete mapping of ccUKey_handlerKeys_;
         }
       });
       event_handlers_[event] = eHandlers.filter(v => v !== null);//delete event_handlers_
@@ -55,7 +55,7 @@ export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, eve
     return util.justWarning(`event ${event}'s handler is not a function!`);
   }
   const targetHandlerIndex = handlers.findIndex(v => v.ccUniqueKey === ccUniqueKey && v.identity === identity);
-  const handlerKeys = util.safeGetArrayFromObject(ccUniqueKey_handlerKeys_, ccUniqueKey);
+  const handlerKeys = util.safeGetArrayFromObject(ccUKey_handlerKeys_, ccUniqueKey);
   const handlerKey = util.makeHandlerKey(ccUniqueKey, event, identity);
   //  that means the component of ccUniqueKey mounted again 
   //  or user call $$on for a same event in a same instance more than once
@@ -70,10 +70,20 @@ export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, eve
   handlerKey_handler_[handlerKey] = handlerItem;
 }
 
-export function findEventHandlersToPerform(event, { module, ccClassKey, identity }, ...args) {
-  const handlers = _findEventHandlers(event, module, ccClassKey, identity);
+export function findEventHandlersToPerform(event, ...args) {
+  let _event = '', _identity = null, _module = null, _ccClassKey = null;
+  if (typeof event === 'string') {
+    _event = event;
+  } else {
+    _event = event.name;
+    _identity = event.identity;
+    _module = event.module;
+    _ccClassKey = event.ccClassKey;
+  }
+
+  const handlers = _findEventHandlers(_event, _module, _ccClassKey, _identity);
   handlers.forEach(({ ccUniqueKey, handlerKey }) => {
-    if (ccKey_ref_[ccUniqueKey] && handlerKey) {//  confirm the instance is mounted and handler is not been offed
+    if (ccUkey_ref_[ccUniqueKey] && handlerKey) {//  confirm the instance is mounted and handler is not been offed
       const handler = handlerKey_handler_[handlerKey];
       if (handler) handler.fn(...args);
     }
@@ -86,10 +96,24 @@ export function findEventHandlersToOff(event, { module, ccClassKey, identity }) 
 }
 
 export function offEventHandlersByCcUniqueKey(ccUniqueKey) {
-  const handlerKeys = ccUniqueKey_handlerKeys_[ccUniqueKey];
+  const handlerKeys = ccUKey_handlerKeys_[ccUniqueKey];
   if (handlerKeys) {
     const toDeleteHandlers = [];
     handlerKeys.forEach(k => toDeleteHandlers.push(handlerKey_handler_[k]));
     _deleteEventHandlers(toDeleteHandlers);
+  }
+}
+
+export function getEventItem(event, curStateModule, ccClassKey) {
+  //不检查array了... 要求用户需正确传递参数
+  if (typeof event === 'object') {
+    const _event = Object.assign(event);
+    if (event.ctx === true) {
+      _event.module = curStateModule;
+      _event.ccClassKey = ccClassKey;
+    }//否则就允许用户传如自己定义的module, ccClassKey
+    return _event;
+  } else {
+    return { name: event };
   }
 }

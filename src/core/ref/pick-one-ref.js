@@ -6,7 +6,7 @@ import { CC_DISPATCHER, MODULE_DEFAULT, CC_FRAGMENT_PREFIX } from '../../support
  * pick one ccInstance ref randomly
  */
 export default function(module, mustBelongToModule = false) {
-  const { ccKey_ref_, moduleName_ccClassKeys_, ccClassKey_ccClassContext_ } = ccContext;
+  const { ccUkey_ref_, moduleName_ccClassKeys_, ccClassKey_ccClassContext_ } = ccContext;
 
   let ccKeys = [];
   if (module) {
@@ -40,7 +40,7 @@ export default function(module, mustBelongToModule = false) {
     ccKeys = [CC_DISPATCHER];
   }
 
-  const oneRef = ccKey_ref_[ccKeys[0]];
+  const oneRef = ccUkey_ref_[ccKeys[0]];
 
   if (!oneRef) {
     throw new Error('cc found no ref!');

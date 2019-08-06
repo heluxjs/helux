@@ -6,9 +6,6 @@ import util from '../support/util';
 
 export default function (CustomizedComponent) {
   class DefaultComponent extends React.Component {
-    constructor(props, context) {
-      super(props, context);
-    }
     render() {
       return this.props.children || React.createElement('span', {style:{display:'none'}});
     }
@@ -23,5 +20,5 @@ export default function (CustomizedComponent) {
   }
 
   let TargetComponent = CustomizedComponent || DefaultComponent;
-  return register(CC_DISPATCHER, { isSingle: true, __checkStartUp: false, __calledBy: 'cc' })(TargetComponent);
+  return register({ isSingle: true, __checkStartUp: false, __calledBy: 'cc' }, CC_DISPATCHER)(TargetComponent);
 }

@@ -2,9 +2,9 @@ import { CC_DISPATCHER, ERR } from '../../support/constant';
 import ccContext from '../../cc-context';
 import util from '../../support/util';
 
-const { ccKey_ref_ } = ccContext;
+const { ccUkey_ref_ } = ccContext;
 export default function(){
-  const ref = ccKey_ref_[CC_DISPATCHER];
+  const ref = ccUkey_ref_[CC_DISPATCHER];
   if (!ref) {
     if(ccContext.isHotReloadMode()){
       util.justTip('in hot reload mode, CC_DISPATCHER initialized more than one time');

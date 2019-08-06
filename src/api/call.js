@@ -14,7 +14,7 @@ const vbi = util.verboseInfo;
  * @returns
  */
 export default function (keyDesc, method, ...args) {
-  const { ccClassKey_ccClassContext_, ccKey_ref_ } = ccContext;
+  const { ccClassKey_ccClassContext_, ccUkey_ref_ } = ccContext;
 
   let ccClassKey = ''; 
   let ccKey = '';
@@ -28,7 +28,7 @@ export default function (keyDesc, method, ...args) {
 
   const classContext = ccClassKey_ccClassContext_[ccClassKey];
   if (!classContext) {
-    const err = util.makeError(ERR.CC_CLASS_NOT_FOUND, vbi(` ccClassKey:${ccClassKey}`));
+    const err = util.makeError(ERR.CC_CLASS_NOT_FOUND, vbi(`ccClassKey:${ccClassKey}`));
     if (ccContext.isStrict) throw err;
     else return console.error(err);
   }
@@ -36,21 +36,21 @@ export default function (keyDesc, method, ...args) {
   let ref;
   if (ccKey) {
     const ccUniKey = util.makeUniqueCcKey(ccClassKey, ccKey);
-    ref = ccKey_ref_[ccUniKey];
+    ref = ccUkey_ref_[ccUniKey];
   } else {
     const ccKeys = classContext.ccKeys;
-    ref = ccKey_ref_[ccKeys[0]];// pick first one
+    ref = ccUkey_ref_[ccKeys[0]];// pick first one
   }
 
   if (!ref) {
-    const err = util.makeError(ERR.CC_CLASS_INSTANCE_NOT_FOUND, vbi(` ccClassKey:${ccClassKey} ccKey:${ccKey}`));
+    const err = util.makeError(ERR.CC_CLASS_INSTANCE_NOT_FOUND, vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey}`));
     // only error, the target instance may has been unmounted really!
     return console.error(err.message);
   }
 
   var fn = ref[method];
   if (!fn) {
-    const err = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi(` method:${method}`));
+    const err = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi(`method:${method}`));
     // only error
     return console.error(err.message);
   }

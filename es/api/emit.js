@@ -3,12 +3,12 @@ import pickOneRef from '../core/ref/pick-one-ref';
 
 export default function (event, ...args) {
   if (event === undefined) {
-    throw new Error(`api doc: cc.emit(event:String, ...args)`);
+    throw new Error(`api doc: cc.emit(event:string|{name:string, identity?:string, ctx?:boolean}, ...args)`);
   }
 
   try {
     const ref = pickOneRef();
-    ref.$$emit(event, ...args);
+    ref.ctx.emit(event, ...args);
   } catch (err) {
     util.justWarning(err.message)
   }

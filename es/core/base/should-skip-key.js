@@ -1,33 +1,37 @@
 
 
-export default function (specModule, key, stateModule, connectSpecLike, moduleStateKeys) {
+export default function (key, refModule, stateModule, connectSpecLike, moduleStateKeys) {
   let skip = false;
   let keyModule = '';
   let stateKey = key;
 
   if (key.includes('/')) {// moduledKey : 'foo/f1'
     let [tmpKeyModule, unmoduledKey] = key.split('/');
+    stateKey = unmoduledKey;
+    // 'foo/f1': keyModule为foo  , /f1'：keyModule为${refModule}
+    keyModule = tmpKeyModule || refModule;
 
-    if (tmpKeyModule === '') {// '/f1'，观察实例所属模块的key
-      tmpKeyModule = specModule;
-      stateKey = specModule + key;
-    }
-
-    keyModule = tmpKeyModule;
-    //这个key的模块不是提交state所属的模块， 对应的watch就需要排除掉
-    //因为setState只提交自己模块的数据，所以如果tmpKeyModule是其他模块，这里并不会被触发
-    //dispatch调用如果指定了其他模块，是会触发这里的逻辑的
+    // 状态所属模块和keyModule对不上，直接跳过
     if (keyModule !== stateModule) {
-      skip = true;
-    } else {
-      //支持定义属于foo模块的实例里定义的watchKey形如: 'foo/f1', '/f1', 'f1' 都能够被触发watch
-      if (moduleStateKeys.includes(unmoduledKey) || connectSpecLike[stateModule]) {
-        stateKey = unmoduledKey;
-      } else {
-        skip = true
+      return { skip: true };
+    }
+    
+    /**
+     * defineWatch里定义的观察key和register里定义的观察key，是各自独立的，即
+     * foo模块刻意定义watchedKeys为空数组，但是defineWatch里定义了一个key观察函数，该函数依然会被触发
+-    */
+
+    if (stateModule === refModule) {
+      if (!moduleStateKeys.includes(unmoduledKey)) {
+        return { skip: true };
+      }
+    }else{//提交的状态非refModule，检查connectSpec
+      if (!connectSpecLike[stateModule]) {
+        return { skip: true };
       }
     }
   }
 
+  //不用写else 判断moduleStateKeys是否包含unmoduledKey，这个key可能是实例自己持有的key
   return { skip, stateKey, keyModule };
 } 

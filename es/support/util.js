@@ -18,7 +18,10 @@ export function isObjectNotNull(object) {
     return true;
   }
   return false;
+}
 
+export function isObjectNull(object) {
+  return !isObjectNotNull(object);
 }
 
 export function isPlainJsonObject(obj, canBeArray = false) {
@@ -73,7 +76,7 @@ export function makeCcClassContext(module, ccClassKey, watchedKeys, originalWatc
     watchedKeys,
     ccKeys: [],
     connectedState: {},
-    stateToPropMapping: null,
+    connectedModuleKeyMapping: null,
     connectedModule:{},//记录当前cc类连接到了其他哪些模块
   }
 }
@@ -221,10 +224,10 @@ export function strictWarning(err) {
   justWarning(err)
 }
 
-export function safeGetObjectFromObject(object, key) {
+export function safeGetObjectFromObject(object, key, defaultVal = {}) {
   let childrenObject = object[key];
   if (!childrenObject) {
-    childrenObject = object[key] = {};
+    childrenObject = object[key] = defaultVal;
   }
   return childrenObject;
 }
@@ -328,6 +331,17 @@ export function bindToWindow(key, obj) {
       if (window) window[key] = obj;
     }, 3000);
   }
+}
+
+/**
+ * 浅比较两个对象
+ * come from : https://github.com/developit/preact-compat/blob/7c5de00e7c85e2ffd011bf3af02899b63f699d3a/src/index.js#L349
+ */
+
+export function shallowDiffers(a, b) {
+  for (let i in a) if (!(i in b)) return true;
+  for (let i in b) if (a[i] !== b[i]) return true;
+  return false;
 }
 
 export default {

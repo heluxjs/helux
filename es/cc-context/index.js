@@ -90,6 +90,7 @@ const ccContext = {
         result = true;
       }
     }
+    console.log('result is ', result);
     return result;
   },
   throwCcHmrError: function(err){
@@ -111,11 +112,12 @@ const ccContext = {
   },
   moduleName_ccClassKeys_: {
   },
-  // map from moduleName to watchedKeys
-  moduleName_watchedKeys_: {
-  },
   // 映射好模块的状态所有key并缓存住，用于提高性能
   moduleName_stateKeys_: {
+  },
+  // 记录某个模块作为其他被哪些ccClass连接
+  connectedModuleName_ccClassKeys_: {
+
   },
   /**
     ccClassContext:{
@@ -124,8 +126,8 @@ const ccContext = {
       connectedState:{},
       connectedComputed:{},
       ccKeys: [],
-      stateToPropMapping: null,
-      connectedModule:{}
+      connectedModuleduleKeyMapping: null,
+      connectedModuledule:{}
     }
   */
   ccClassKey_ccClassContext_: {
@@ -198,27 +200,28 @@ const ccContext = {
   init: {
     _init: {}
   },
-  ccKey_ref_: refs,
+  ccUkey_ref_: refs,
   //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
   event_handlers_: {},
-  ccUniqueKey_handlerKeys_: {},
+  ccUKey_handlerKeys_: {},
   // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
   // it is a ref that towards ccUniqueKeyEvent_handler_'s key
   // when component unmounted, it's handler will been removed
   handlerKey_handler_: {},
-  ccKey_option_: {},
+  ccUkey_option_: {},
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.4.31',
+    version: '1.5.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'xenogear',
   },
+
   // fragment association
   fragmentNameCount: 0,
-  fragmentFeature_classKey_: {},
-  fragmentCcKeys: [],
+  featureStr_classKey_: {},
+  userClassKey_featureStr_: {},
   errorHandler: null,
   middlewares: [],
   plugins:[],

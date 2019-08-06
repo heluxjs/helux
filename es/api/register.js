@@ -1,4 +1,5 @@
 import register from '../core/base/register';
+import { MODULE_DEFAULT } from '../support/constant';
 
 /****
  * @param {string} ccClassKey a cc class's name, you can register a same react class to cc with different ccClassKey,
@@ -18,7 +19,7 @@ import register from '../core/base/register';
  * cc will find current cc class's reducerModule function named doStaff to execute 
  * and will change current cc class's moudle state,
  * so you don't have to write code like below if current cc class module is M1 
- * and you always want to use R1 reducer function to generate new state
+ * and if you always want to use R1 reducer function to generate new state, you can write like below
  * ```
  *    this.$$dispatch({module:'M1', reducerModule:'R1', type:'doStaff', payload:{foo:1, bar:2}});
  *    // or 
@@ -37,10 +38,10 @@ import register from '../core/base/register';
  * you can set isPropsProxy as true, then cc will use strategy of prop proxy to wrap your react class, in this situation, 
  * all the cc instance method and property you can get them from both `this.props` and `this.`, for example
  * ```
- *    @cc.register('BasicForms',{
+ *    @cc.register({
  *      connect: {'form': ['regularFormSubmitting']},
  *      isPropsProxy: true 
- *    })
+ *    },'BasicForms')
  *    @Form.create()
  *    export default class BasicForms extends PureComponent {
  *      componentDidMount()=>{
@@ -57,18 +58,22 @@ import register from '../core/base/register';
  * that means there is only one cc instance can be existed for current cc class at most,
  * you can define registerOption.isSingle as true, it just like singleton mode in java coding^_^
  */
-export default function (ccClassKey, registerOption) {
+export default function (registerOption, ccClassKey) {
   let _registerOption = registerOption;
-  if (registerOption) {
-    const optType = typeof registerOption;
+  
+  if (_registerOption) {
+    const optType = typeof _registerOption;
     if (optType === 'object') {
-      delete registerOption.__checkStartUp;
-      delete registerOption.__calledBy;
+      delete _registerOption.__checkStartUp;
+      delete _registerOption.__calledBy;
     } else if (optType === 'string') {
-      _registerOption = { module: registerOption }
+      _registerOption = { module: registerOption };
     } else {
-      throw new Error('type of param registerOption is invalid!');
+      throw new Error('registerOption type error, must be array or string');
     }
+  }else{
+    _registerOption = { module: MODULE_DEFAULT };
   }
-  return register(ccClassKey, _registerOption);
+
+  return register(_registerOption, ccClassKey);
 }

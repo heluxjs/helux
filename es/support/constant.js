@@ -3,11 +3,14 @@ export const MODULE_DEFAULT = '$$default';
 export const MODULE_CC = '$$cc';
 export const MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
 
-export const CC_FRAGMENT_PREFIX = '$$Fragment';
+export const CC_CLASS_PREFIX = '$$CcClass';
+export const CC_FRAGMENT_PREFIX = '$$CcFrag';
+export const CC_HOOK_PREFIX = '$$CcHook';
+export const CC_PREFIX = '$$Cc';
+
 export const CC_DISPATCHER = '$$Dispatcher';
 export const CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
 
-export const  CURSOR_KEY = Symbol('__for_sync_param_cursor__');
 export const  CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
 export const  MOCKE_KEY = Symbol('__for_mock_event__');
 export const  LAZY_KEY = Symbol('__lazy_handle_state__');
@@ -52,10 +55,8 @@ export const ERR = {
   CC_CLASS_KEY_DUPLICATE: 1100,
   CC_CLASS_NOT_FOUND: 1101,
   CC_CLASS_STORE_MODULE_INVALID: 1102,
-  CC_CLASS_REDUCER_MODULE_INVALID: 1104,
-  CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE:1106,
-  CC_CLASS_STATE_TO_PROP_MAPPING_INVALID:1107,
-  CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED:1108,
+  CC_CLASS_REDUCER_MODULE_INVALID: 1103,
+  CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED:1104,
 
   CC_CLASS_INSTANCE_KEY_DUPLICATE: 1200,
   CC_CLASS_INSTANCE_OPTION_INVALID: 1201,
@@ -63,7 +64,7 @@ export const ERR = {
   CC_CLASS_INSTANCE_METHOD_NOT_FOUND: 1203,
   CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID: 1204,
   CC_CLASS_INSTANCE_MORE_THAN_ONE: 1205,
-  CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS: 1207,
+  CC_STORED_KEYS_NEED_CCKEY: 1207,
   
   CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS: 1401,
   CC_ARG_KEYS_NOT_AN_ARRAY: 1402,
@@ -109,24 +110,22 @@ export const ERR_MESSAGE = {
   `,
   [ERR.CC_MODULE_NAME_HAS_NO_STATE]:`there is no module state in the store for your input module name`,
 
-  [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   `,
+  [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `ccKey duplicate while new a CcComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CcComponent! if you are sure the key is different, maybe the CcComponent's father Component is also a CcComponent, then you can prefix your ccKey with the father Component's ccKey!   `,
   [ERR.CC_CLASS_INSTANCE_OPTION_INVALID]: 'ccOption must be a plain json object! ',
   [ERR.CC_CLASS_INSTANCE_NOT_FOUND]: 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ',
   [ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND]: 'ccClass instance method not found, make sure the instance include the method! ',
   [ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID]: 'ccClass instance invoke callWith method with invalid args! ',
   [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: 'ccClass is declared as singleton, now cc found you are trying new another one instance! ',
   [ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS]: 'some of your storedKeys has been declared in CcClass watchedKeys!',
-  [ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS]: 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!',
+  [ERR.CC_STORED_KEYS_NEED_CCKEY]: 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!',
 
   [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate while you register a react class!  ',
   [ERR.CC_CLASS_NOT_FOUND]: 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ',
   [ERR.CC_CLASS_STORE_MODULE_INVALID]: 'ccClass ccOption module value is invalid, can not match it in store! ',
   [ERR.CC_CLASS_REDUCER_MODULE_INVALID]: 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ',
-  [ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE]: 'you are trying register a react class to a single class module, but cc found the target module has been registered!',
-  [ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID]: 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!',
   [ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED]: '$$fragment is cc built-in class key prefix, your class key can not start with it!',
 
-  [ERR.CC_ARG_KEYS_NOT_AN_ARRAY]: `watchedKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set watchedKeys='*' and globalStateKeys='*'`,
+  [ERR.CC_ARG_KEYS_NOT_AN_ARRAY]: `watchedKeys is not an Array! if you want to watch all state keys of a module, you can set watchedKeys='*' `,
   [ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT]: 'watchedKeys include non string element!',
 
   [ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID]: `action type's naming is invalid, correct one may like: fooModule/fooType. `,

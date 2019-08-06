@@ -60,7 +60,7 @@ export default function(module, config, option = {}) {
   }
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
-  const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares, noOpPlugins } = option;
+  const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
 
   initModuleState(module, state);
   initModuleReducer(module, reducer);

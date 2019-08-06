@@ -1,42 +1,11 @@
-if (!this._assertThisInitialized) {
-  this._assertThisInitialized = function (self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-}
-if (!this._extends) {
-  this._extends = function () {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-      return target;
-    };
-    return _extends.apply(this, arguments);
-  }
-}
-if (!this._inheritsLoose) {
-  this._inheritsLoose = function (subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); }
-    subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-  }
-}
-
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('co'), require('react-dom')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'react', 'co', 'react-dom'], factory) :
-  (factory((global.concent = {}),global.React,global.co,global.ReactDOM));
-}(this, (function (exports,React,co,ReactDOM) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('co'), require('react'), require('react-dom')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'co', 'react', 'react-dom'], factory) :
+  (factory((global.concent = {}),global.co,global.React,global.ReactDOM));
+}(this, (function (exports,co,React,ReactDOM) { 'use strict';
 
-  React = React && React.hasOwnProperty('default') ? React['default'] : React;
   co = co && co.hasOwnProperty('default') ? co['default'] : co;
+  React = React && React.hasOwnProperty('default') ? React['default'] : React;
   ReactDOM = ReactDOM && ReactDOM.hasOwnProperty('default') ? ReactDOM['default'] : ReactDOM;
 
   var _ERR_MESSAGE;
@@ -45,10 +14,12 @@ if (!this._inheritsLoose) {
   var MODULE_DEFAULT = '$$default';
   var MODULE_CC = '$$cc';
   var MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
-  var CC_FRAGMENT_PREFIX = '$$Fragment';
+  var CC_CLASS_PREFIX = '$$CcClass';
+  var CC_FRAGMENT_PREFIX = '$$CcFrag';
+  var CC_HOOK_PREFIX = '$$CcHook';
+  var CC_PREFIX = '$$Cc';
   var CC_DISPATCHER = '$$Dispatcher';
   var CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
-  var CURSOR_KEY = Symbol('__for_sync_param_cursor__');
   var CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
   var MOCKE_KEY = Symbol('__for_mock_event__');
   var LAZY_KEY = Symbol('__lazy_handle_state__');
@@ -87,17 +58,15 @@ if (!this._inheritsLoose) {
     CC_CLASS_KEY_DUPLICATE: 1100,
     CC_CLASS_NOT_FOUND: 1101,
     CC_CLASS_STORE_MODULE_INVALID: 1102,
-    CC_CLASS_REDUCER_MODULE_INVALID: 1104,
-    CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE: 1106,
-    CC_CLASS_STATE_TO_PROP_MAPPING_INVALID: 1107,
-    CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED: 1108,
+    CC_CLASS_REDUCER_MODULE_INVALID: 1103,
+    CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED: 1104,
     CC_CLASS_INSTANCE_KEY_DUPLICATE: 1200,
     CC_CLASS_INSTANCE_OPTION_INVALID: 1201,
     CC_CLASS_INSTANCE_NOT_FOUND: 1202,
     CC_CLASS_INSTANCE_METHOD_NOT_FOUND: 1203,
     CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID: 1204,
     CC_CLASS_INSTANCE_MORE_THAN_ONE: 1205,
-    CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS: 1207,
+    CC_STORED_KEYS_NEED_CCKEY: 1207,
     CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS: 1401,
     CC_ARG_KEYS_NOT_AN_ARRAY: 1402,
     CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT: 1403,
@@ -108,7 +77,7 @@ if (!this._inheritsLoose) {
     CC_REDUCER_MODULE_NAME_DUPLICATE: 1511 // REDUCER_KEY_NOT_EXIST_IN_STORE_MODULE: 1203,
 
   };
-  var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_ALREADY_STARTUP] = 'concent startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ', _ERR_MESSAGE[ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE] = 'you are trying register a module class but cc startup with non module mode! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_REGISTER_A_CC_CLASS] = 'registering a cc class is prohibited! ', _ERR_MESSAGE[ERR.CC_MODULE_KEY_CC_FOUND] = 'key:"$$cc" is a built-in module name for concent,you can not configure it or the name like it in you store or reducer! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_INVALID] = "module name is invalid, /^[$#&a-zA-Z0-9_-]+$/.test() is false. ", _ERR_MESSAGE[ERR.CC_STORE_STATE_INVALID] = "module state of store must be a plain json object! ", _ERR_MESSAGE[ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument moduleReducer is invalid, must be a function!", _ERR_MESSAGE[ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer is invalid, must be a plain json object(not an array also)!", _ERR_MESSAGE[ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!", _ERR_MESSAGE[ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION] = "one of the watch keys is not a valid module name in store!", _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)\u3001(moduleName)/(functionName)\u3001(moduleName)/(reducerModuleName)/(functionName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_NO_DISPATCHER_FOUND] = "\n    cc guess you may set autoCreateDispatcher as false in StartupOption,\n    if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, \n    ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:\n    import {createDispatcher} from 'concent';\n    const CcDispatcher = createDispatcher();\n    <App>\n      <CcDispatcher />\n      {/* another jsx */}\n    </App>\n    or\n    <CcDispatcher>\n      <App />\n    </CcDispatcher>\n  ", _ERR_MESSAGE[ERR.CC_MODULE_NAME_HAS_NO_STATE] = "there is no module state in the store for your input module name", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "ccKey duplicate while new a CCComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CCComponent! if you are sure the key is different, maybe the CCComponent's father Component is also a CCComponent, then you can prefix your ccKey with the father Component's ccKey!   ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_OPTION_INVALID] = 'ccOption must be a plain json object! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NOT_FOUND] = 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND] = 'ccClass instance method not found, make sure the instance include the method! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID] = 'ccClass instance invoke callWith method with invalid args! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = 'ccClass is declared as singleton, now cc found you are trying new another one instance! ', _ERR_MESSAGE[ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS] = 'some of your storedKeys has been declared in CcClass watchedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS] = 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate while you register a react class!  ', _ERR_MESSAGE[ERR.CC_CLASS_NOT_FOUND] = 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ', _ERR_MESSAGE[ERR.CC_CLASS_STORE_MODULE_INVALID] = 'ccClass ccOption module value is invalid, can not match it in store! ', _ERR_MESSAGE[ERR.CC_CLASS_REDUCER_MODULE_INVALID] = 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ', _ERR_MESSAGE[ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE] = 'you are trying register a react class to a single class module, but cc found the target module has been registered!', _ERR_MESSAGE[ERR.CC_CLASS_STATE_TO_PROP_MAPPING_INVALID] = 'stateToPropMapping is invalid, must be a plain json object, check it in your register method or connect method!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED] = '$$fragment is cc built-in class key prefix, your class key can not start with it!', _ERR_MESSAGE[ERR.CC_ARG_KEYS_NOT_AN_ARRAY] = "watchedKeys is not an Array! if you want to watch all state keys of a module state or all state keys of global state, you can set watchedKeys='*' and globalStateKeys='*'", _ERR_MESSAGE[ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'watchedKeys include non string element!', _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID] = "action type's naming is invalid, correct one may like: fooModule/fooType. ", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE] = "action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!", _ERR_MESSAGE[ERR.CC_REDUCER_MODULE_NAME_DUPLICATE] = "reducer module name duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE] = "reducer action type duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
+  var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_ALREADY_STARTUP] = 'concent startup method con only be invoked one time by user, if cc is under hot reload mode, you can ignore this message ', _ERR_MESSAGE[ERR.CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE] = 'you are trying register a module class but cc startup with non module mode! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_REGISTER_A_CC_CLASS] = 'registering a cc class is prohibited! ', _ERR_MESSAGE[ERR.CC_MODULE_KEY_CC_FOUND] = 'key:"$$cc" is a built-in module name for concent,you can not configure it or the name like it in you store or reducer! ', _ERR_MESSAGE[ERR.CC_MODULE_NAME_INVALID] = "module name is invalid, /^[$#&a-zA-Z0-9_-]+$/.test() is false. ", _ERR_MESSAGE[ERR.CC_STORE_STATE_INVALID] = "module state of store must be a plain json object! ", _ERR_MESSAGE[ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument moduleReducer is invalid, must be a function!", _ERR_MESSAGE[ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer is invalid, must be a plain json object(not an array also)!", _ERR_MESSAGE[ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID] = "argument reducer's value is invalid, must be a plain json object(not an array also), maybe you can use moduleReducer to config the reducer for this module!", _ERR_MESSAGE[ERR.CC_WATCH_MODULE_INVALID_IN_STARTUP_OPTION] = "one of the watch keys is not a valid module name in store!", _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "dispatch param writing is invalid when its type is string, only these 3 is valid: (functionName)\u3001(moduleName)/(functionName)\u3001(moduleName)/(reducerModuleName)/(functionName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_NO_DISPATCHER_FOUND] = "\n    cc guess you may set autoCreateDispatcher as false in StartupOption,\n    if you want CcFragment works well anywhere and anytime, you must initialize only one Dispatcher, \n    ant put it to a place that the Dispatcher will never been mount, so I suggest write it like:\n    import {createDispatcher} from 'concent';\n    const CcDispatcher = createDispatcher();\n    <App>\n      <CcDispatcher />\n      {/* another jsx */}\n    </App>\n    or\n    <CcDispatcher>\n      <App />\n    </CcDispatcher>\n  ", _ERR_MESSAGE[ERR.CC_MODULE_NAME_HAS_NO_STATE] = "there is no module state in the store for your input module name", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "ccKey duplicate while new a CcComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CcComponent! if you are sure the key is different, maybe the CcComponent's father Component is also a CcComponent, then you can prefix your ccKey with the father Component's ccKey!   ", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_OPTION_INVALID] = 'ccOption must be a plain json object! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_NOT_FOUND] = 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND] = 'ccClass instance method not found, make sure the instance include the method! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID] = 'ccClass instance invoke callWith method with invalid args! ', _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = 'ccClass is declared as singleton, now cc found you are trying new another one instance! ', _ERR_MESSAGE[ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS] = 'some of your storedKeys has been declared in CcClass watchedKeys!', _ERR_MESSAGE[ERR.CC_STORED_KEYS_NEED_CCKEY] = 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate while you register a react class!  ', _ERR_MESSAGE[ERR.CC_CLASS_NOT_FOUND] = 'ccClass not found, make sure the supplied ccClassKey been registered to concent!  ', _ERR_MESSAGE[ERR.CC_CLASS_STORE_MODULE_INVALID] = 'ccClass ccOption module value is invalid, can not match it in store! ', _ERR_MESSAGE[ERR.CC_CLASS_REDUCER_MODULE_INVALID] = 'ccClass ccOption reducerModule value is invalid, can not match it in reducer! ', _ERR_MESSAGE[ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED] = '$$fragment is cc built-in class key prefix, your class key can not start with it!', _ERR_MESSAGE[ERR.CC_ARG_KEYS_NOT_AN_ARRAY] = "watchedKeys is not an Array! if you want to watch all state keys of a module, you can set watchedKeys='*' ", _ERR_MESSAGE[ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT] = 'watchedKeys include non string element!', _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NAMING_INVALID] = "action type's naming is invalid, correct one may like: fooModule/fooType. ", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_NO_MODULE] = "action type's module name is invalid, cause cc may not under module mode when you startup, or the store don't include the module name you defined in action type!", _ERR_MESSAGE[ERR.CC_REDUCER_MODULE_NAME_DUPLICATE] = "reducer module name duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE] = "reducer action type duplicate!", _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
   var constant = {
     MODULE_GLOBAL: MODULE_GLOBAL,
     MODULE_DEFAULT: MODULE_DEFAULT,
@@ -124,10 +93,12 @@ if (!this._inheritsLoose) {
     MODULE_DEFAULT: MODULE_DEFAULT,
     MODULE_CC: MODULE_CC,
     MODULE_CC_ROUTER: MODULE_CC_ROUTER,
+    CC_CLASS_PREFIX: CC_CLASS_PREFIX,
     CC_FRAGMENT_PREFIX: CC_FRAGMENT_PREFIX,
+    CC_HOOK_PREFIX: CC_HOOK_PREFIX,
+    CC_PREFIX: CC_PREFIX,
     CC_DISPATCHER: CC_DISPATCHER,
     CC_DISPATCHER_BOX: CC_DISPATCHER_BOX,
-    CURSOR_KEY: CURSOR_KEY,
     CCSYNC_KEY: CCSYNC_KEY,
     MOCKE_KEY: MOCKE_KEY,
     LAZY_KEY: LAZY_KEY,
@@ -253,6 +224,7 @@ if (!this._inheritsLoose) {
           }
       }
 
+      console.log('result is ', result);
       return result;
     },
     throwCcHmrError: function throwCcHmrError(err) {
@@ -272,10 +244,10 @@ if (!this._inheritsLoose) {
     //  example:  {fooModule: true, barModule:true}
     moduleSingleClass: {},
     moduleName_ccClassKeys_: {},
-    // map from moduleName to watchedKeys
-    moduleName_watchedKeys_: {},
     // 映射好模块的状态所有key并缓存住，用于提高性能
     moduleName_stateKeys_: {},
+    // 记录某个模块作为其他被哪些ccClass连接
+    connectedModuleName_ccClassKeys_: {},
 
     /**
       ccClassContext:{
@@ -284,8 +256,8 @@ if (!this._inheritsLoose) {
         connectedState:{},
         connectedComputed:{},
         ccKeys: [],
-        stateToPropMapping: null,
-        connectedModule:{}
+        connectedModuleduleKeyMapping: null,
+        connectedModuledule:{}
       }
     */
     ccClassKey_ccClassContext_: {},
@@ -350,27 +322,27 @@ if (!this._inheritsLoose) {
     init: {
       _init: {}
     },
-    ccKey_ref_: refs,
+    ccUkey_ref_: refs,
     //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
     event_handlers_: {},
-    ccUniqueKey_handlerKeys_: {},
+    ccUKey_handlerKeys_: {},
     // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
     // it is a ref that towards ccUniqueKeyEvent_handler_'s key
     // when component unmounted, it's handler will been removed
     handlerKey_handler_: {},
-    ccKey_option_: {},
+    ccUkey_option_: {},
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.4.31',
+      version: '1.5.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'xenogear'
     },
     // fragment association
     fragmentNameCount: 0,
-    fragmentFeature_classKey_: {},
-    fragmentCcKeys: [],
+    featureStr_classKey_: {},
+    userClassKey_featureStr_: {},
     errorHandler: null,
     middlewares: [],
     plugins: []
@@ -408,6 +380,9 @@ if (!this._inheritsLoose) {
     }
 
     return false;
+  }
+  function isObjectNull(object) {
+    return !isObjectNotNull(object);
   }
   function isPlainJsonObject(obj, canBeArray) {
     if (canBeArray === void 0) {
@@ -463,7 +438,7 @@ if (!this._inheritsLoose) {
       watchedKeys: watchedKeys,
       ccKeys: [],
       connectedState: {},
-      stateToPropMapping: null,
+      connectedModuleKeyMapping: null,
       connectedModule: {} //记录当前cc类连接到了其他哪些模块
 
     };
@@ -606,11 +581,15 @@ if (!this._inheritsLoose) {
 
     justWarning(err);
   }
-  function safeGetObjectFromObject(object, key) {
+  function safeGetObjectFromObject(object, key, defaultVal) {
+    if (defaultVal === void 0) {
+      defaultVal = {};
+    }
+
     var childrenObject = object[key];
 
     if (!childrenObject) {
-      childrenObject = object[key] = {};
+      childrenObject = object[key] = defaultVal;
     }
 
     return childrenObject;
@@ -663,41 +642,6 @@ if (!this._inheritsLoose) {
   function okeys(obj) {
     return Object.keys(obj);
   }
-  function flatObject(connectedState, alias, allowKeyDup) {
-    if (allowKeyDup === void 0) {
-      allowKeyDup = false;
-    }
-
-    var modules = okeys(connectedState);
-    var fObj = {};
-    modules.forEach(function (m) {
-      var subObj = connectedState[m];
-      var keys = okeys(subObj);
-      keys.forEach(function (k) {
-        var aliasKey = alias[m + "/" + k];
-
-        if (fObj[k] != undefined) {
-          //重复了，看看有没有别名
-          if (aliasKey) {
-            fObj[aliasKey] = subObj[k];
-          } else {
-            if (allowKeyDup === true) {
-              fObj[k] = subObj[k]; //重写
-            } else {
-              throw "key[" + k + "] duplicate in module " + m;
-            }
-          }
-        } else {
-          if (aliasKey) {
-            fObj[aliasKey] = subObj[k];
-          } else {
-            fObj[k] = subObj[k];
-          }
-        }
-      });
-    });
-    return fObj;
-  }
   function convertToStandardEvent(e) {
     var ret = null;
 
@@ -721,6 +665,22 @@ if (!this._inheritsLoose) {
         if (window) window[key] = obj;
       }, 3000);
     }
+  }
+  /**
+   * 浅比较两个对象
+   * come from : https://github.com/developit/preact-compat/blob/7c5de00e7c85e2ffd011bf3af02899b63f699d3a/src/index.js#L349
+   */
+
+  function shallowDiffers(a, b) {
+    for (var i in a) {
+      if (!(i in b)) return true;
+    }
+
+    for (var _i in b) {
+      if (a[_i] !== b[_i]) return true;
+    }
+
+    return false;
   }
   var util = {
     clearObject: clearObject,
@@ -770,510 +730,8 @@ if (!this._inheritsLoose) {
     return self;
   }
 
-  var me = util.makeError;
-  function buildCcClassContext (ccClassKey, moduleName, originalWatchedKeys, watchedKeys, stateToPropMapping, connectedModuleNames, forCcFragment) {
-    if (forCcFragment === void 0) {
-      forCcFragment = false;
-    }
-
-    var contextMap = ccContext.ccClassKey_ccClassContext_;
-    var _computedValue = ccContext.computed._computedValue;
-    var ccClassContext = contextMap[ccClassKey];
-
-    if (forCcFragment === true) {
-      //对于CcFragment的调用，ccClassContext可能是已存在的，
-      //因为cc根据CcFragment的connect参数计算ccClassKey
-      //多个CcFragment实例的connect一样的话，会计算出同一个ccClassKey
-      if (ccClassContext === undefined) {
-        ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
-      }
-    } else {
-      //对于register调用，ccClassContext一定是不存在的, 如果存在就报错
-      if (ccClassContext !== undefined) {
-        ccContext.throwCcHmrError(me(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:" + ccClassKey + " duplicate"));
-      }
-
-      ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
-    }
-
-    var connectedModule = {};
-    var connectedComputed = {};
-
-    if (stateToPropMapping) {
-      var _state = ccContext.store._state;
-      var connectedState = ccClassContext.connectedState; // const prefixedKeys = Object.keys(stateToPropMapping);
-      // const len = prefixedKeys.length;
-      // for (let i = 0; i < len; i++) {
-      //   const prefixedKey = prefixedKeys[i];
-      //   const [targetModule, targetStateKey] = prefixedKey.split('/');// prefixedKey : 'foo/f1'
-      //   connectedModule[targetModule] = 1;
-      //   const moduleState = _state[targetModule];
-      //   connectedState[targetModule] = moduleState;
-      //   // setConnectedState(connectedState, targetModule, targetStateKey, moduleState[targetStateKey]);
-      //   if(!connectedComputed[targetModule]){//绑定_computedValue的引用到connectedComputed上
-      //     connectedComputed[targetModule] = _computedValue[targetModule];
-      //   }
-      // }
-      //直接赋值引用
-
-      connectedModuleNames.forEach(function (m) {
-        connectedState[m] = _state[m];
-        connectedComputed[m] = _computedValue[m];
-        connectedModule[m] = 1; //记录连接的模块
-      });
-      ccClassContext.stateToPropMapping = stateToPropMapping;
-      ccClassContext.connectedModule = connectedModule;
-      ccClassContext.connectedComputed = connectedComputed;
-    }
-
-    contextMap[ccClassKey] = ccClassContext;
-  }
-
   var catchCcError = (function (err) {
     if (ccContext.errorHandler) ccContext.errorHandler(err);else throw err;
-  });
-
-  var me$1 = util.makeError,
-      vbi = util.verboseInfo;
-  function mapModuleAndCcClassKeys (moduleName, ccClassKey) {
-    var moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
-        moduleSingleClass = ccContext.moduleSingleClass;
-    var ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
-
-    if (ccClassKeys.includes(ccClassKey)) {
-      ccContext.throwCcHmrError(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:" + ccClassKey + " duplicate");
-    }
-
-    if (moduleSingleClass[moduleName] === true && ccClassKeys.length >= 1) {
-      throw me$1(ERR.CC_CLASS_IS_NOT_ALLOWED_REGISTER_TO_A_SINGLE_CLASS_MODULE, vbi("module " + moduleName + ", ccClassKey " + ccClassKey));
-    } // to avoid ccClassKeys include duplicate key in hmr mode
-
-
-    if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
-  }
-
-  var me$2 = util.makeError,
-      vbi$1 = util.verboseInfo,
-      ss = util.styleStr,
-      cl = util.color;
-  var ccKey_insCount = {};
-
-  function setCcInstanceRef(ccUniqueKey, ref, ccKeys, option, delayMs) {
-    function setRef() {
-      ccContext.ccKey_ref_[ccUniqueKey] = ref;
-      ccKeys.push(ccUniqueKey);
-      ccContext.ccKey_option_[ccUniqueKey] = option;
-    }
-
-    incCcKeyInsCount(ccUniqueKey);
-
-    if (delayMs) {
-      setTimeout(setRef, delayMs);
-    } else {
-      setRef();
-    }
-  }
-
-  function incCcKeyInsCount(ccUniqueKey) {
-    if (ccKey_insCount[ccUniqueKey] === undefined) ccKey_insCount[ccUniqueKey] = 1;else ccKey_insCount[ccUniqueKey] += 1;
-  }
-  function decCcKeyInsCount(ccUniqueKey) {
-    if (ccKey_insCount[ccUniqueKey] === undefined) ccKey_insCount[ccUniqueKey] = 0;else ccKey_insCount[ccUniqueKey] -= 1;
-  }
-  function getCcKeyInsCount(ccUniqueKey) {
-    if (ccKey_insCount[ccUniqueKey] === undefined) return 0;else return ccKey_insCount[ccUniqueKey];
-  }
-  function setRef (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption, forCcFragment) {
-    if (forCcFragment === void 0) {
-      forCcFragment = false;
-    }
-
-    var classContext = ccContext.ccClassKey_ccClassContext_[ccClassKey];
-    var ccKeys = classContext.ccKeys;
-
-    if (ccContext.isDebug) {
-      console.log(ss("register ccKey " + ccUniqueKey + " to CC_CONTEXT"), cl());
-    }
-
-    if (!util.isCcOptionValid(ccOption)) {
-      throw me$2(ERR.CC_CLASS_INSTANCE_OPTION_INVALID, vbi$1("a standard default ccOption may like: {\"storedKeys\": []}"));
-    }
-
-    var isHot = ccContext.isHotReloadMode();
-
-    if (forCcFragment === true) {
-      //因为CcFragment不强调类的概念，ccClassKey是自动生成的，所以对于标记了ccKey的CcFragment实例
-      //通过fragmentCcKeys来排除有没有重复，如果这里通过classContext去查就是不对的，因为不同的classContext可以包含相同的ccKey
-      var fragmentCcKeys = ccContext.fragmentCcKeys;
-
-      if (fragmentCcKeys.includes(ccUniqueKey)) {
-        //指定了ccKey的CcFragment，ccUniqueKey和ccKey是一样的
-        throw me$2(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$1("<CcFragment ccKey=\"" + ccKey + "\" />")); // if(isHot){
-        //   util.justWarning(`cc found you supply a duplicate ccKey:${ccKey} to CcFragment, but now cc is running in hot reload mode, so if this message is wrong, you can ignore it.`);
-        // }else{
-        //   throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`<CcFragment ccKey="${ccKey}" />`));
-        // }
-      } else {
-        fragmentCcKeys.push(ccUniqueKey);
-      }
-    }
-
-    if (ccKeys.includes(ccUniqueKey)) {
-      if (isHot) {
-        var insCount = getCcKeyInsCount(ccUniqueKey);
-        if (isSingle && insCount > 1) throw me$2(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi$1("ccClass:" + ccClassKey));
-
-        if (insCount > 2) {
-          // now cc can make sure the ccKey duplicate
-          throw me$2(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$1("ccClass:" + ccClassKey + ",ccKey:" + ccUniqueKey));
-        } // just warning
-
-
-        util.justWarning("\n        found ccKey " + ccKey + " may duplicate, but now is in hot reload mode, cc can't throw the error, please make sure your ccKey is unique manually,\n        " + vbi$1("ccClassKey:" + ccClassKey + " ccKey:" + ccKey + " ccUniqueKey:" + ccUniqueKey) + "\n      "); // in webpack hot reload mode, cc works not very well,
-        // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now, in unmount func, 
-        // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
-        // so cc set ref later
-
-        setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption, 600);
-      } else {
-        throw me$2(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$1("ccClass:" + ccClassKey + ",ccKey:" + ccUniqueKey));
-      }
-    } else {
-      setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption);
-    }
-
-    return classContext;
-  }
-
-  var ccKey_ref_ = ccContext.ccKey_ref_,
-      ccKey_option_ = ccContext.ccKey_option_,
-      ccUniqueKey_handlerKeys_ = ccContext.ccUniqueKey_handlerKeys_,
-      ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
-      handlerKey_handler_ = ccContext.handlerKey_handler_,
-      fragmentCcKeys = ccContext.fragmentCcKeys;
-  function unsetRef (ccClassKey, ccUniqueKey) {
-    if (ccContext.isDebug) {
-      console.log(styleStr(ccUniqueKey + " unset ref"), color('purple'));
-    }
-
-    var fIndex = fragmentCcKeys.indexOf(ccUniqueKey);
-
-    if (fIndex >= 0) {
-      fragmentCcKeys.splice(fIndex, 1);
-    } // ccContext.ccKey_ref_[ccUniqueKey] = null;
-
-
-    delete ccKey_ref_[ccUniqueKey];
-    delete ccKey_option_[ccUniqueKey];
-    var classContext = ccClassKey_ccClassContext_[ccClassKey];
-    var ccKeys = classContext.ccKeys;
-    var ccKeyIdx = ccKeys.indexOf(ccUniqueKey);
-    if (ccKeyIdx >= 0) ccKeys.splice(ccKeyIdx, 1);
-    decCcKeyInsCount(ccUniqueKey);
-    var handlerKeys = ccUniqueKey_handlerKeys_[ccUniqueKey];
-
-    if (handlerKeys) {
-      handlerKeys.forEach(function (hKey) {
-        delete handlerKey_handler_[hKey]; // ccUniqueKey maybe generated randomly, so delete the key instead of set null
-        // handlerKey_handler_[hKey] = null;
-      });
-    }
-  }
-
-  var _currentIndex = 0;
-  var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
-
-  function genNonceStr(length) {
-    if (length === void 0) {
-      length = 6;
-    }
-
-    var ret = '';
-
-    for (var i = 0; i < length; i++) {
-      ret += letters[randomNumber()];
-    }
-
-    return ret;
-  }
-
-  function uuid (forFragment, tag) {
-    if (forFragment === void 0) {
-      forFragment = false;
-    }
-
-    var prefix = forFragment === true ? 'CCF' : 'CC';
-    _currentIndex++;
-    var nonceStr = tag || genNonceStr(); // return `${prefix}_${Date.now()}_${nonceStr}_${_currentIndex}`;
-
-    return prefix + "_" + nonceStr + "_" + _currentIndex;
-  }
-
-  function computeCcUniqueKey (isClassSingle, ccClassKey, ccKey, forFragment, tag) {
-    if (forFragment === void 0) {
-      forFragment = false;
-    }
-
-    var ccUniqueKey;
-    var isCcUniqueKeyAutoGenerated = false;
-    var newCcKey = ccKey;
-
-    if (isClassSingle) {
-      if (ccKey) util.justWarning("now the ccClass is singleton, you needn't supply ccKey to instance props, cc will ignore the ccKey:" + ccKey);
-      ccUniqueKey = ccClassKey;
-      newCcKey = ccClassKey;
-    } else {
-      if (ccKey) {
-        ccUniqueKey = util.makeUniqueCcKey(ccClassKey, ccKey);
-      } else {
-        // const uuidStr = uuid().replace(/-/g, '_');
-        var uuidStr = uuid(forFragment, tag);
-        newCcKey = uuidStr;
-        ccUniqueKey = util.makeUniqueCcKey(ccClassKey, uuidStr);
-        isCcUniqueKeyAutoGenerated = true;
-      }
-    }
-
-    return {
-      ccKey: newCcKey,
-      ccUniqueKey: ccUniqueKey,
-      isCcUniqueKeyAutoGenerated: isCcUniqueKeyAutoGenerated
-    };
-  }
-
-  var buildMockEvent = (function (spec, e) {
-    var _ref;
-
-    var ccint = false,
-        ccsync = '',
-        ccidt = '',
-        value = '',
-        ccdelay = -1,
-        isToggleBool = false;
-    var specSyncKey = spec[CCSYNC_KEY];
-    var type = spec.type;
-
-    if (specSyncKey !== undefined) {
-      //来自生成的sync生成的setter函数调用
-      ccsync = specSyncKey;
-      ccdelay = spec.delay;
-      ccidt = spec.idt;
-
-      if (type === 'val' || type === 'int') {
-        //set value
-        ccint = type === 'int'; //convert to int
-        //优先从spec里取，取不到的话，从e里面分析并提取
-
-        var val = spec.val;
-
-        if (val === undefined) {
-          var se = convertToStandardEvent(e);
-
-          if (se) {
-            value = se.currentTarget.value;
-          } else {
-            value = e;
-          }
-        } else {
-          value = val;
-        }
-      } else if (type === 'bool') {
-        //toggle bool
-        isToggleBool = true;
-      } else return null;
-    } else {
-      //来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
-      var _se = convertToStandardEvent(e);
-
-      if (_se) {
-        // e is event
-        var currentTarget = _se.currentTarget;
-        value = currentTarget.value;
-        var dataset = currentTarget.dataset;
-        if (type === 'int') ccint = true;else ccint = dataset.ccint != undefined;
-        ccsync = dataset.ccsync;
-        if (!ccsync) return null;
-        ccidt = dataset.ccidt;
-        var dataSetDelay = dataset.ccdelay;
-
-        if (dataSetDelay) {
-          try {
-            ccdelay = parseInt(dataSetDelay);
-          } catch (err) {}
-        }
-      } else {
-        //<Input onChange={this.sync}/> is invalid
-        return null;
-      }
-    }
-
-    return _ref = {}, _ref[MOCKE_KEY] = 1, _ref.currentTarget = {
-      value: value,
-      dataset: {
-        ccsync: ccsync,
-        ccint: ccint,
-        ccdelay: ccdelay,
-        ccidt: ccidt
-      }
-    }, _ref.isToggleBool = isToggleBool, _ref;
-  });
-
-  var _state$1 = ccContext.store._state;
-  /**
-   * 根据connect参数算出ccClassKey值和stateToPropMapping值
-   */
-
-  function getFeatureStrAndStpMapping(connectSpec, fragmentModule, watchedKeys) {
-    if (!util.isPlainJsonObject(connectSpec)) {
-      throw new Error("CcFragment or CcClass's prop connect type error, it is not a plain json object");
-    }
-
-    var invalidConnect = "CcFragment or CcClass's prop connect is invalid,";
-
-    var invalidConnectItem = function invalidConnectItem(m) {
-      return invalidConnect + " module[" + m + "]'s value must be * or array of string";
-    };
-
-    var moduleNames = Object.keys(connectSpec);
-    moduleNames.sort();
-    var featureStrs = [];
-    var stateToPropMapping = {};
-    moduleNames.forEach(function (m) {
-      var moduleState = _state$1[m];
-      var feature = m + "/";
-
-      if (moduleState === undefined) {
-        throw new Error(invalidConnect + " module[" + m + "] not found in cc store ");
-      }
-
-      var val = connectSpec[m];
-
-      if (typeof val === 'string') {
-        if (val !== '*') throw new Error(invalidConnectItem(m));else {
-          featureStrs.push(feature + "*");
-          okeys(moduleState).forEach(function (sKey) {
-            return stateToPropMapping[m + "/" + sKey] = sKey;
-          });
-        }
-      } else if (!Array.isArray(val)) {
-        throw new Error(invalidConnectItem(m));
-      } else {
-        val.forEach(function (sKey) {
-          if (!moduleState.hasOwnProperty(sKey)) {
-            throw new Error(invalidConnect + " module[" + m + "]'s key[" + sKey + "] not declared in cc store ");
-          } else {
-            feature += sKey + ",";
-            stateToPropMapping[m + "/" + sKey] = sKey;
-          }
-        });
-        featureStrs.push(feature);
-      }
-    });
-
-    if (fragmentModule) {
-      if (watchedKeys === '*') featureStrs.unshift(fragmentModule + "/*");else {
-        watchedKeys.sort();
-        var tmpStr = fragmentModule + "/" + watchedKeys.join(',');
-        featureStrs.unshift(tmpStr);
-      }
-    }
-
-    return {
-      featureStr: featureStrs.join('|'),
-      stateToPropMapping: stateToPropMapping,
-      connectedModuleNames: moduleNames
-    };
-  }
-
-  function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool) {
-    if (isToggleBool === void 0) {
-      isToggleBool = false;
-    }
-
-    var key = keys[keyIndex];
-
-    if (lastKeyIndex === keyIndex) {
-      if (isToggleBool === true) {
-        var oriVal = obj[key];
-
-        if (typeof oriVal !== 'boolean') {
-          justWarning("key[" + key + "]'s value type is not boolean");
-        } else {
-          obj[key] = !oriVal;
-        }
-      } else {
-        obj[key] = value;
-      }
-    } else {
-      setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value, isToggleBool);
-    }
-  }
-
-  var extractStateByCcsync = (function (ccsync, value, ccint, oriState, isToggleBool) {
-    var _value = value;
-
-    if (ccint === true) {
-      _value = parseInt(value); //strict?
-
-      if (Number.isNaN(_value)) {
-        justWarning(value + " can not convert to int but you set ccint as true!\uFF01");
-        _value = value;
-      }
-    }
-
-    var module = null,
-        keys = [];
-
-    if (ccsync.includes('/')) {
-      var _ccsync$split = ccsync.split('/'),
-          _module = _ccsync$split[0],
-          restStr = _ccsync$split[1];
-
-      module = _module;
-
-      if (restStr.includes('.')) {
-        keys = restStr.split('.');
-      } else {
-        keys = [restStr];
-      }
-    } else if (ccsync.includes('.')) {
-      keys = ccsync.split('.');
-    } else {
-      keys = [ccsync];
-    }
-
-    if (keys.length === 1) {
-      var targetStateKey = keys[0];
-
-      if (isToggleBool === true) {
-        var _state;
-
-        return {
-          module: module,
-          state: (_state = {}, _state[targetStateKey] = !oriState[targetStateKey], _state)
-        };
-      } else {
-        var _state2;
-
-        return {
-          module: module,
-          state: (_state2 = {}, _state2[targetStateKey] = _value, _state2)
-        };
-      }
-    } else {
-      var _state3;
-
-      var _keys = keys,
-          key = _keys[0],
-          restKeys = _keys.slice(1);
-
-      var subState = oriState[key];
-      setValue(subState, restKeys, restKeys.length - 1, 0, _value, isToggleBool);
-      return {
-        module: module,
-        state: (_state3 = {}, _state3[key] = subState, _state3)
-      };
-    }
   });
 
   var id = 0;
@@ -1368,13 +826,13 @@ if (!this._inheritsLoose) {
 
   var isModuleNameCcLike$1 = isModuleNameCcLike,
       isModuleNameValid$1 = isModuleNameValid,
-      vbi$2 = verboseInfo,
+      vbi = verboseInfo,
       makeError$1 = makeError;
   /** 检查模块名，名字合法，就算检查通过 */
 
   function checkModuleNameBasically(moduleName) {
     if (!isModuleNameValid$1(moduleName)) {
-      throw makeError$1(ERR.CC_MODULE_NAME_INVALID, vbi$2(" module[" + moduleName + "] is invalid!"));
+      throw makeError$1(ERR.CC_MODULE_NAME_INVALID, vbi(" module[" + moduleName + "] is invalid!"));
     }
 
     if (isModuleNameCcLike$1(moduleName)) {
@@ -1387,7 +845,7 @@ if (!this._inheritsLoose) {
 
     if (moduleName !== MODULE_GLOBAL) {
       if (_reducer[moduleName]) {
-        throw makeError$1(ERR.CC_REDUCER_MODULE_NAME_DUPLICATE, vbi$2("module[" + moduleName + "]"));
+        throw makeError$1(ERR.CC_REDUCER_MODULE_NAME_DUPLICATE, vbi("module[" + moduleName + "]"));
       }
     }
   }
@@ -1417,20 +875,20 @@ if (!this._inheritsLoose) {
         //要求模块状态应该不存在
         if (isObjectNotNull(_state[moduleName])) {
           //但是却存在了
-          throw makeError$1(ERR.CC_MODULE_NAME_DUPLICATE, vbi$2(_vbiMsg));
+          throw makeError$1(ERR.CC_MODULE_NAME_DUPLICATE, vbi(_vbiMsg));
         }
       } else {
         //要求模块状态应该存在
         if (!_state[moduleName]) {
           //实际上却不存在
-          throw makeError$1(ERR.CC_MODULE_NAME_HAS_NO_STATE, vbi$2(_vbiMsg));
+          throw makeError$1(ERR.CC_MODULE_NAME_HAS_NO_STATE, vbi(_vbiMsg));
         }
       }
     }
   }
   function checkModuleState(moduleState, moduleName) {
     if (!isModuleStateValid(moduleState)) {
-      throw makeError(ERR.CC_STORE_STATE_INVALID, vbi$2("module[" + moduleName + "]'s state is invalid!"));
+      throw makeError(ERR.CC_STORE_STATE_INVALID, vbi("module[" + moduleName + "]'s state is invalid!"));
     }
   }
   function checkModuleNameAndState(moduleName, moduleState) {
@@ -1441,11 +899,1469 @@ if (!this._inheritsLoose) {
     checkModuleName(moduleName);
     checkModuleState(moduleState, moduleName);
   }
+  function checkStoredKeys(moduleStateKeys, storedKeys) {
+    var isSKeysArr = Array.isArray(storedKeys);
+
+    if (!isSKeysArr && storedKeys !== '*') {
+      throw new Error("storedKeys type err, it is must be an array or string *");
+    }
+
+    if (isSKeysArr) {
+      storedKeys.forEach(function (sKey) {
+        if (moduleStateKeys.includes(sKey)) {
+          throw new Error("storedKeys key err, the key[" + sKey + "] can not be a module state key!");
+        }
+      });
+    }
+  }
+
+  var feature_timerId = {};
+  var runLater = (function (cb, feature, delay) {
+    if (delay === void 0) {
+      delay = 1000;
+    }
+
+    var timerId = feature_timerId[feature];
+    if (timerId) clearTimeout(timerId);
+    feature_timerId[feature] = setTimeout(function () {
+      delete feature_timerId[feature];
+      cb();
+    }, delay);
+  });
+
+  function extractStateByKeys (state, stateKeys, returnNullIfEmpty) {
+    if (returnNullIfEmpty === void 0) {
+      returnNullIfEmpty = false;
+    }
+
+    var partialState = {};
+
+    if (!isStateValid(state) || !isObjectNotNull(state)) {
+      return {
+        partialState: returnNullIfEmpty ? null : partialState,
+        isStateEmpty: true
+      };
+    }
+
+    var isStateEmpty = true;
+    stateKeys.forEach(function (key) {
+      var value = state[key];
+
+      if (value !== undefined) {
+        partialState[key] = value;
+        isStateEmpty = false;
+      }
+    });
+    return {
+      partialState: partialState,
+      isStateEmpty: isStateEmpty
+    };
+  }
+
+  function shouldSkipKey (key, refModule, stateModule, connectSpecLike, moduleStateKeys) {
+    var skip = false;
+    var keyModule = '';
+    var stateKey = key;
+
+    if (key.includes('/')) {
+      // moduledKey : 'foo/f1'
+      var _key$split = key.split('/'),
+          tmpKeyModule = _key$split[0],
+          unmoduledKey = _key$split[1];
+
+      stateKey = unmoduledKey; // 'foo/f1': keyModule为foo  , /f1'：keyModule为${refModule}
+
+      keyModule = tmpKeyModule || refModule; // 状态所属模块和keyModule对不上，直接跳过
+
+      if (keyModule !== stateModule) {
+        return {
+          skip: true
+        };
+      }
+      /**
+       * defineWatch里定义的观察key和register里定义的观察key，是各自独立的，即
+       * foo模块刻意定义watchedKeys为空数组，但是defineWatch里定义了一个key观察函数，该函数依然会被触发
+      -    */
+
+
+      if (stateModule === refModule) {
+        if (!moduleStateKeys.includes(unmoduledKey)) {
+          return {
+            skip: true
+          };
+        }
+      } else {
+        //提交的状态非refModule，检查connectSpec
+        if (!connectSpecLike[stateModule]) {
+          return {
+            skip: true
+          };
+        }
+      }
+    } //不用写else 判断moduleStateKeys是否包含unmoduledKey，这个key可能是实例自己持有的key
+
+
+    return {
+      skip: skip,
+      stateKey: stateKey,
+      keyModule: keyModule
+    };
+  }
+
+  var getState = ccContext.store.getState;
+  var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
+  function watchKeyForRef (refCtx, stateModule, refEntireState, committedState) {
+    var watchSpec = refCtx.watchSpec,
+        connect = refCtx.connect,
+        refModule = refCtx.module;
+    if (watchSpec.hasFn !== true) return true;
+    var shouldCurrentRefUpdate = true;
+    var moduleStateKeys = moduleName_stateKeys_[refModule];
+    var watchFns = watchSpec.watchFns;
+    var watchStateKeys = okeys(watchFns);
+    var len = watchStateKeys.length;
+    var shouldNotUpdateLen = 0;
+    watchStateKeys.forEach(function (key) {
+      var _shouldSkipKey = shouldSkipKey(key, refModule, stateModule, connect, moduleStateKeys),
+          stateKey = _shouldSkipKey.stateKey,
+          skip = _shouldSkipKey.skip,
+          keyModule = _shouldSkipKey.keyModule;
+
+      if (skip) return;
+      var commitValue = committedState[stateKey];
+
+      if (commitValue !== undefined) {
+        var watchFn = watchFns[key];
+        var targetModule = keyModule || refModule;
+        var moduleState = getState(targetModule);
+        var fnCtx = {
+          key: stateKey,
+          module: targetModule,
+          moduleState: moduleState,
+          committedState: committedState
+        };
+        var ret = watchFn(commitValue, refEntireState[stateKey], fnCtx, refCtx); // watchFn(newValue, oldValue);
+
+        if (ret === false) shouldNotUpdateLen++;
+      }
+    }); //只有所有watch都返回false，才不触发当前实例更新
+
+    if (shouldNotUpdateLen === len) shouldCurrentRefUpdate = false;
+    return shouldCurrentRefUpdate;
+  }
+
+  var getState$1 = ccContext.store.getState;
+  var moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_; //CcFragment实例调用会提供callerCtx
+  // stateModule表示状态所属的模块
+
+  function computeValueForRef (refCtx, stateModule, oldState, committedState) {
+    var computedSpec = refCtx.computedSpec,
+        refModule = refCtx.module,
+        refComputed = refCtx.refComputed,
+        refConnectedComputed = refCtx.refConnectedComputed;
+    var computedFns = computedSpec.computedFns,
+        hasFn = computedSpec.hasFn;
+    if (hasFn !== true) return;
+    var moduleStateKeys = moduleName_stateKeys_$1[stateModule];
+    var toBeComputedKeys = okeys(computedFns);
+    toBeComputedKeys.forEach(function (key) {
+      var _shouldSkipKey = shouldSkipKey(key, refModule, stateModule, refConnectedComputed, moduleStateKeys),
+          stateKey = _shouldSkipKey.stateKey,
+          skip = _shouldSkipKey.skip,
+          keyModule = _shouldSkipKey.keyModule;
+
+      if (skip) return;
+      var newValue = committedState[stateKey];
+
+      if (newValue !== undefined) {
+        var fn = computedFns[key]; //用原始定义当然key去取fn
+
+        var moduleState = getState$1(keyModule);
+        var fnCtx = {
+          key: stateKey,
+          module: keyModule,
+          moduleState: moduleState,
+          committedState: committedState
+        };
+        var computedValue = fn(newValue, oldState[stateKey], fnCtx, refCtx);
+        var targetComputed = refConnectedComputed[keyModule]; //foo模块的实例，定义的watchKey是 foo/f1, 此时skip是false，但是结果不会向refConnectedComputed里放的
+        //因为refConnectedComputed放置的只是connect连接的模块的key结算结果
+
+        if (targetComputed) {
+          targetComputed[stateKey] = computedValue;
+        } //foo模块的实例，定义的watchKey是 foo/f1, /f1, f1 都会放置到refComputed里
+
+
+        if (!keyModule || keyModule === refModule) {
+          refComputed[stateKey] = computedValue;
+        }
+      }
+    });
+  }
+
+  var isPlainJsonObject$1 = isPlainJsonObject,
+      justWarning$1 = justWarning,
+      isObjectNotNull$1 = isObjectNotNull,
+      computeFeature$1 = computeFeature,
+      okeys$1 = okeys,
+      styleStr$1 = styleStr,
+      color$1 = color;
+  var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
+      STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1 = STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
+      FORCE_UPDATE$1 = FORCE_UPDATE;
+  var _ccContext$store = ccContext.store,
+      ccStoreSetState = _ccContext$store.setState,
+      getState$2 = _ccContext$store.getState,
+      middlewares = ccContext.middlewares,
+      moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
+      ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
+      connectedModuleName_ccClassKeys_ = ccContext.connectedModuleName_ccClassKeys_,
+      refStore = ccContext.refStore,
+      moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_,
+      ccUkey_ref_ = ccContext.ccUkey_ref_;
+
+  function getStateFor(inputModule, refModule) {
+    return inputModule === refModule ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 : STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1;
+  }
+
+  function changeRefState (state, _temp, targetRef) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        ccKey = _ref.ccKey,
+        ccUniqueKey = _ref.ccUniqueKey,
+        module = _ref.module,
+        _ref$skipMiddleware = _ref.skipMiddleware,
+        skipMiddleware = _ref$skipMiddleware === void 0 ? false : _ref$skipMiddleware,
+        __endCb = _ref.__endCb,
+        reactCallback = _ref.cb,
+        type = _ref.type,
+        reducerModule = _ref.reducerModule,
+        calledBy = _ref.calledBy,
+        fnName = _ref.fnName,
+        _ref$delay = _ref.delay,
+        delay = _ref$delay === void 0 ? -1 : _ref$delay,
+        identity = _ref.identity;
+
+    //executionContext
+    var stateFor = getStateFor(module, targetRef.ctx.module);
+    if (state === undefined) return; //do nothing
+    // const isControlledByConcent = targetRef.ctx.isControlledByConcent;
+
+    if (!isPlainJsonObject$1(state)) {
+      justWarning$1("cc found your commit state is not a plain json object!");
+      return;
+    }
+
+    var currentModule = targetRef.ctx.module;
+    var passToMiddleware = {};
+
+    if (skipMiddleware !== true) {
+      passToMiddleware = {
+        calledBy: calledBy,
+        type: type,
+        ccKey: ccKey,
+        ccUniqueKey: ccUniqueKey,
+        state: state,
+        stateFor: stateFor,
+        module: module,
+        reducerModule: reducerModule,
+        fnName: fnName
+      };
+    } //在prepareReactSetState之前把状态存储到store，
+    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+    //也防止prepareReactSetState里有异步的钩子函数，导致state同步到store有延迟而出现其他bug
+
+
+    var broadcastInfo = syncCommittedStateToStore(module, state);
+
+    if (module === currentModule) {
+      // who trigger $$changeState, who will change the whole received state 
+      prepareReactSetState(targetRef, identity, calledBy, state, stateFor, function () {
+        prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity, __endCb);
+      }, reactCallback);
+    } else {
+      if (reactCallback) justWarning$1("callback for react.setState will be ignore"); //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
+
+      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1, module, state, delay, identity, __endCb);
+    }
+  }
+
+  function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, next, reactCallback) {
+    var thisState = targetRef.state;
+    var refCtx = targetRef.ctx;
+    var stateModule = refCtx.module,
+        storedKeys = refCtx.storedKeys,
+        ccOption = refCtx.ccOption,
+        ccUniqueKey = refCtx.ccUniqueKey;
+
+    if (stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1) {
+      if (next) next();
+      return;
+    }
+
+    if (identity) {
+      //if user specify identity
+      if (refCtx.ccKey !== identity) {
+        // current instance would have been rendered only if current instance's ccKey equal identity
+        if (next) next();
+        return;
+      }
+    }
+
+    if (storedKeys.length > 0) {
+      var _extractStateByKeys = extractStateByKeys(state, storedKeys),
+          partialState = _extractStateByKeys.partialState,
+          isStateEmpty = _extractStateByKeys.isStateEmpty;
+
+      if (!isStateEmpty) {
+        if (ccOption.storeInLocalStorage === true) {
+          var _extractStateByKeys2 = extractStateByKeys(thisState, storedKeys),
+              entireStoredState = _extractStateByKeys2.partialState;
+
+          var currentStoredState = Object.assign({}, entireStoredState, partialState);
+          localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
+        }
+
+        refStore.setState(ccUniqueKey, partialState);
+      }
+    } //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
+
+
+    if (calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
+      if (next) next();
+      return;
+    }
+
+    computeValueForRef(refCtx, stateModule, thisState, state);
+    var shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, thisState, state);
+
+    if (shouldCurrentRefUpdate === false) {
+      if (next) next();
+    }
+
+    if (targetRef.__$$isUnmounted !== true) {
+      refCtx.__$$ccSetState(state, reactCallback);
+    }
+
+    if (next) next();
+  }
+
+  function syncCommittedStateToStore(moduleName, committedState) {
+    var stateKeys = moduleName_stateKeys_$2[moduleName];
+
+    var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys),
+        isPartialSharedStateEmpty = _extractStateByKeys3.isStateEmpty,
+        partialSharedState = _extractStateByKeys3.partialState;
+
+    var skipBroadcastRefState = false; //!!! save state to store
+
+    if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);else skipBroadcastRefState = true;
+    return {
+      partialSharedState: partialSharedState,
+      skipBroadcastRefState: skipBroadcastRefState
+    };
+  }
+
+  function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, moduleName, committedState, delay, identity, __endCb) {
+    var skipBroadcastRefState = broadcastInfo.skipBroadcastRefState,
+        partialSharedState = broadcastInfo.partialSharedState;
+
+    var startBroadcastState = function startBroadcastState() {
+      broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity, __endCb);
+    };
+
+    var willBroadcast = function willBroadcast() {
+      if (delay > 0) {
+        var feature = computeFeature$1(targetRef.ctx.ccUniqueKey, committedState);
+        runLater(startBroadcastState, feature, delay);
+      } else {
+        startBroadcastState();
+      }
+    };
+
+    if (skipMiddleware) {
+      willBroadcast();
+      return;
+    }
+
+    var middlewaresLen = middlewares.length;
+
+    if (middlewaresLen > 0) {
+      passToMiddleware.sharedState = partialSharedState; //这个记录到store的状态也传给中间件ctx
+
+      var index = 0;
+
+      var next = function next() {
+        if (index === middlewaresLen) {
+          // all middlewares been executed
+          willBroadcast();
+        } else {
+          var middlewareFn = middlewares[index];
+          index++;
+          middlewareFn(passToMiddleware, next);
+        }
+      };
+
+      next();
+    } else {
+      willBroadcast();
+    }
+  }
+
+  function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity, __endCb) {
+    if (skipBroadcastRefState === false) {
+      var currentCcKey = targetRef.ctx.ccUniqueKey; // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
+      // so flag ignoreCurrentCcKey as true;
+
+      var ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1;
+      var ccClassKeys = moduleName_ccClassKeys_[moduleName];
+
+      if (ccClassKeys) {
+        //  these ccClass are watching the same module's state
+        ccClassKeys.forEach(function (ccClassKey) {
+          var classContext = ccClassKey_ccClassContext_[ccClassKey];
+          var ccKeys = classContext.ccKeys,
+              watchedKeys = classContext.watchedKeys,
+              originalWatchedKeys = classContext.originalWatchedKeys;
+          if (ccKeys.length === 0) return;
+          if (watchedKeys.length === 0) return;
+          var sharedStateForCurrentCcClass;
+
+          if (originalWatchedKeys === '*') {
+            sharedStateForCurrentCcClass = partialSharedState;
+          } else {
+            var _extractStateByKeys4 = extractStateByKeys(partialSharedState, watchedKeys, true),
+                partialState = _extractStateByKeys4.partialState,
+                isStateEmpty = _extractStateByKeys4.isStateEmpty;
+
+            if (isStateEmpty) return;
+            sharedStateForCurrentCcClass = partialState;
+          }
+
+          ccKeys.forEach(function (ccKey) {
+            if (ccKey === currentCcKey && ignoreCurrentCcKey) return;
+            var ref = ccUkey_ref_[ccKey];
+
+            if (ref) {
+              if (ccContext.isDebug) {
+                console.log(styleStr$1("received state for ref[" + ccKey + "] is broadcasted from same module's other ref " + currentCcKey), color$1());
+              }
+
+              prepareReactSetState(ref, identity, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
+            }
+          });
+        });
+      }
+    }
+
+    broadcastConnectedState(moduleName, originalState);
+    if (__endCb) __endCb(targetRef);
+  }
+
+  function broadcastConnectedState(commitModule, commitState) {
+    var commitStateKeys = okeys$1(commitState); //提前把commitStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
+
+    var ccClassKeys = connectedModuleName_ccClassKeys_[commitModule] || [];
+    ccClassKeys.forEach(function (ccClassKey) {
+      var ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
+      updateConnectedState(ccClassContext, commitModule, commitState, commitStateKeys);
+    });
+  }
+
+  function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
+    var connectedModuleKeyMapping = targetClassContext.connectedModuleKeyMapping,
+        connectedModule = targetClassContext.connectedModule;
+
+    if (connectedModule[commitModule] === 1) {
+      var ccKeys = targetClassContext.ccKeys;
+      var isSetConnectedStateTriggered = false;
+      var len = commitStateKeys.length;
+
+      for (var i = 0; i < len; i++) {
+        var moduledStateKey = commitModule + "/" + commitStateKeys[i];
+
+        if (connectedModuleKeyMapping[moduledStateKey]) {
+          isSetConnectedStateTriggered = true;
+          break; //只要感知到有一个key发生变化，就可以跳出循环了，
+          //因为connectedState指向的是store里state的引用，更新动作在store里修改时就已完成
+        }
+      } //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
+
+
+      if (isSetConnectedStateTriggered === true) {
+        ccKeys.forEach(function (ccUniKey) {
+          var ref = ccUkey_ref_[ccUniKey];
+
+          if (ref && ref.__$$isUnmounted !== true) {
+            var refCtx = ref.ctx;
+            var shouldCurrentRefUpdate = watchKeyForRef(refCtx, commitModule, getState$2(commitModule), commitState);
+            computeValueForRef(refCtx, commitModule, ref.state, commitState);
+            if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
+          }
+        });
+      }
+    }
+  }
+
+  // import hoistNonReactStatic from 'hoist-non-react-statics';
+  var verboseInfo$1 = verboseInfo,
+      makeError$2 = makeError,
+      justWarning$2 = justWarning,
+      okeys$2 = okeys;
+  var getState$3 = ccContext.store.getState,
+      _reducer$1 = ccContext.reducer._reducer,
+      _computedValue$1 = ccContext.computed._computedValue,
+      ccClassKey_ccClassContext_$1 = ccContext.ccClassKey_ccClassContext_;
+  var me = makeError$2;
+  var vbi$1 = verboseInfo$1;
+
+  function handleError(err, throwError) {
+    if (throwError === void 0) {
+      throwError = true;
+    }
+
+    if (throwError) throw err;else {
+      handleCcFnError(err);
+    }
+  }
+
+  function checkStoreModule(module, throwError) {
+    if (throwError === void 0) {
+      throwError = true;
+    }
+
+    try {
+      checkModuleName(module, false, "module[" + module + "] is not configured in store");
+      return true;
+    } catch (err) {
+      handleError(err, throwError);
+      return false;
+    }
+  }
+
+  function paramCallBackShouldNotSupply(module, currentModule) {
+    return "if you pass param reactCallback, param module must equal current CCInstance's module, module: " + module + ", CCInstance's module:" + currentModule + ", now the cb will never been triggered! ";
+  }
+
+  function _promiseErrorHandler(resolve, reject) {
+    return function (err) {
+      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      return err ? reject(err) : resolve.apply(void 0, args);
+    };
+  } //忽略掉传递进来的chainId，chainDepth，重新生成它们，源头调用了lazyDispatch或者ctx里调用了lazyDispatch，就会触发此逻辑
+
+
+  function getNewChainData(isLazy, chainId, oriChainId, chainId_depth_) {
+    var _chainId;
+
+    if (isLazy === true) {
+      _chainId = getChainId();
+      setChainIdLazy(_chainId);
+      chainId_depth_[_chainId] = 1; //置为1
+    } else {
+      _chainId = chainId || getChainId();
+      if (!chainId_depth_[_chainId]) chainId_depth_[_chainId] = 1;
+    } //源头函数会触发创建oriChainId， 之后就一直传递下去了
+
+
+    var _oriChainId = oriChainId || _chainId;
+
+    return {
+      _chainId: _chainId,
+      _oriChainId: _oriChainId
+    };
+  } // any error in this function will not been throwed, cc just warning, 
+
+
+  function isStateModuleValid(inputModule, currentModule, reactCallback, cb) {
+    var targetCb = reactCallback;
+
+    if (checkStoreModule(inputModule, false)) {
+      if (inputModule !== currentModule) {
+        if (reactCallback) {
+          justWarning$2(me(ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID, vbi$1(paramCallBackShouldNotSupply(inputModule, currentModule))));
+          targetCb = null; //let user's reactCallback has no chance to be triggered
+        }
+      }
+
+      cb(null, targetCb);
+    } else {
+      cb(new Error("inputModule:" + inputModule + " invalid"), null);
+    }
+  }
+
+  function handleCcFnError(err, __innerCb) {
+    if (err) {
+      if (__innerCb) __innerCb(err);else {
+        justWarning$2(err);
+        if (ccContext.errorHandler) ccContext.errorHandler(err);
+      }
+    }
+  }
+
+  function _promisifyCcFn(ccFn, userLogicFn, executionContext, payload) {
+    return new Promise(function (resolve, reject) {
+      var _executionContext = Object.assign(executionContext, {
+        __innerCb: _promiseErrorHandler(resolve, reject)
+      });
+
+      ccFn(userLogicFn, _executionContext, payload);
+    })["catch"](catchCcError);
+  }
+
+  function __promisifiedInvokeWith(userLogicFn, executionContext, payload) {
+    return _promisifyCcFn(invokeWith, userLogicFn, executionContext, payload);
+  }
+
+  function __invoke(userLogicFn, option, payload) {
+    var targetRef = option.targetRef,
+        ccKey = option.ccKey,
+        ccUniqueKey = option.ccUniqueKey,
+        ccClassKey = option.ccClassKey,
+        delay = option.delay,
+        identity = option.identity,
+        calledBy = option.calledBy,
+        module = option.module,
+        chainId = option.chainId,
+        oriChainId = option.oriChainId,
+        chainId_depth_ = option.chainId_depth_;
+    return __promisifiedInvokeWith(userLogicFn, {
+      targetRef: targetRef,
+      ccKey: ccKey,
+      ccUniqueKey: ccUniqueKey,
+      context: true,
+      module: module,
+      ccClassKey: ccClassKey,
+      calledBy: calledBy,
+      fnName: userLogicFn.name,
+      delay: delay,
+      identity: identity,
+      chainId: chainId,
+      oriChainId: oriChainId,
+      chainId_depth_: chainId_depth_
+    }, payload);
+  }
+
+  function makeCcSetStateHandler(ref, containerRef) {
+    return function (state, cb) {
+      var refCtx = ref.ctx;
+      refCtx.renderCount += 1; //采用此种写法的话，dispatch.ctx不能暴露state了，只能暴露getState句柄，才能保证取到最新的state
+      // ref.state = Object.assign(ref.state, state);
+
+      var containerRefState = containerRef ? containerRef.state : null;
+      var refState = ref.state; //采用okeys写法，让dispatch.ctx里的refState总是指向同一个引用
+
+      okeys$2(state).forEach(function (k) {
+        var val = state[k];
+        refState[k] = val;
+        if (containerRefState) containerRefState[k] = val; //让代理模式下的容器组件state也总是保持最新的
+      });
+      refCtx.state = refState;
+      refCtx.reactSetState(state, cb);
+    };
+  }
+  function makeCcForceUpdateHandler(ref) {
+    return function (cb) {
+      var refCtx = ref.ctx;
+      refCtx.renderCount += 1;
+      refCtx.reactForceUpdate(cb);
+    };
+  } // last param: chainData
+
+  function makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, _temp) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        chainId = _ref.chainId,
+        oriChainId = _ref.oriChainId,
+        isLazy = _ref.isLazy,
+        _ref$chainId_depth_ = _ref.chainId_depth_,
+        chainId_depth_ = _ref$chainId_depth_ === void 0 ? {} : _ref$chainId_depth_;
+
+    return function (firstParam, payload, delay, identity) {
+      var _getNewChainData = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
+          _chainId = _getNewChainData._chainId,
+          _oriChainId = _getNewChainData._oriChainId;
+
+      var firstParamType = typeof firstParam;
+      var option = {
+        targetRef: targetRef,
+        ccKey: ccKey,
+        ccUniqueKey: ccUniqueKey,
+        ccClassKey: ccClassKey,
+        calledBy: INVOKE,
+        module: targetRef.ctx.module,
+        chainId: _chainId,
+        oriChainId: _oriChainId,
+        chainId_depth_: chainId_depth_,
+        delay: delay,
+        identity: identity
+      };
+      var err = new Error("param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:{fn:function, delay:number, identity:string}, ...args:any[])");
+
+      if (firstParamType === 'function') {
+        return __invoke(firstParam, option, payload);
+      } else if (firstParamType === 'object') {
+        //firstParam: {fn:function, delay:number, identity:string}
+        // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
+        var fn = firstParam.fn,
+            userInputModule = firstParam.module;
+        if (typeof fn != 'function') throw err;
+        if (userInputModule) option.module = userInputModule; //用某个模块的实例去修改另外模块的数据
+
+        return __invoke(fn, option, payload);
+      } else {
+        throw err;
+      } // return ()=>{}
+
+    };
+  }
+  function invokeWith(userLogicFn, executionContext, payload) {
+    //ccKey ccClassKey 表示调用源头组件的ccKey和ccClassKey
+    var targetRef = executionContext.targetRef;
+    var _curStateModule = targetRef.ctx.module;
+    var ccKey = executionContext.ccKey,
+        ccUniqueKey = executionContext.ccUniqueKey,
+        ccClassKey = executionContext.ccClassKey,
+        _executionContext$mod = executionContext.module,
+        targetModule = _executionContext$mod === void 0 ? _curStateModule : _executionContext$mod,
+        _executionContext$con = executionContext.context,
+        context = _executionContext$con === void 0 ? false : _executionContext$con,
+        cb = executionContext.cb,
+        __innerCb = executionContext.__innerCb,
+        type = executionContext.type,
+        reducerModule = executionContext.reducerModule,
+        calledBy = executionContext.calledBy,
+        fnName = executionContext.fnName,
+        _executionContext$del = executionContext.delay,
+        delay = _executionContext$del === void 0 ? -1 : _executionContext$del,
+        identity = executionContext.identity,
+        chainId = executionContext.chainId,
+        oriChainId = executionContext.oriChainId,
+        chainId_depth_ = executionContext.chainId_depth_;
+    isStateModuleValid(targetModule, _curStateModule, cb, function (err, newCb) {
+      if (err) return handleCcFnError(err, __innerCb);
+      var moduleState = getState$3(targetModule);
+      var executionContextForUser = {};
+      var isSourceCall = false;
+
+      if (context) {
+        isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1; //调用前先加1
+
+        chainId_depth_[chainId] = chainId_depth_[chainId] + 1; //暂时不考虑在ctx提供lazyDispatch功能
+
+        var _dispatch = makeDispatchHandler(targetRef, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
+
+        var lazyDispatch = makeDispatchHandler(targetRef, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
+        var sourceClassContext = ccClassKey_ccClassContext_$1[ccClassKey];
+        executionContextForUser = Object.assign(executionContext, {
+          // 将targetModule一直携带下去，让链式调用里所以句柄隐含的指向最初调用方的module
+          invoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, {
+            chainId: chainId,
+            oriChainId: oriChainId,
+            chainId_depth_: chainId_depth_
+          }),
+          //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
+          lazyInvoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, {
+            isLazy: true,
+            oriChainId: oriChainId,
+            chainId_depth_: chainId_depth_
+          }),
+          dispatch: _dispatch,
+          lazyDispatch: lazyDispatch,
+          rootState: getState$3(),
+          globalState: getState$3(MODULE_GLOBAL),
+          //指的是目标模块的state
+          moduleState: moduleState,
+          //指的是目标模块的的moduleComputed
+          moduleComputed: _computedValue$1[targetModule],
+          //!!!指的是调用源cc类的connectedState
+          connectedState: sourceClassContext.connectedState,
+          //!!!指的是调用源cc类的connectedComputed
+          connectedComputed: sourceClassContext.connectedComputed,
+          //!!!指的是调用源cc类实例的state
+          refState: targetRef.state //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
+
+        });
+      }
+
+      send(SIG_FN_START, {
+        isSourceCall: isSourceCall,
+        calledBy: calledBy,
+        module: targetModule,
+        chainId: chainId,
+        fn: userLogicFn
+      });
+      co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(function (partialState) {
+        chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
+
+        var curDepth = chainId_depth_[chainId];
+        var commitStateList = [];
+        send(SIG_FN_END, {
+          isSourceCall: isSourceCall,
+          calledBy: calledBy,
+          module: targetModule,
+          chainId: chainId,
+          fn: userLogicFn
+        }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
+
+        if (isChainIdLazy(chainId)) {
+          //来自于惰性派发的调用
+          if (curDepth > 1) {
+            //某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
+            setChainState(chainId, targetModule, partialState);
+          } else {
+            // chainDepth === 1, 合并状态一次性提交到store并派发到组件实例
+            if (isChainExited(chainId)) ; else {
+              commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
+              removeChainState(chainId);
+            }
+          }
+        } else {
+          commitStateList = [{
+            module: targetModule,
+            state: partialState
+          }];
+        }
+
+        commitStateList.forEach(function (v) {
+          changeRefState(v.state, {
+            identity: identity,
+            ccKey: ccKey,
+            ccUniqueKey: ccUniqueKey,
+            module: v.module,
+            cb: newCb,
+            type: type,
+            reducerModule: reducerModule,
+            calledBy: calledBy,
+            fnName: fnName,
+            delay: delay
+          }, targetRef);
+        });
+        if (__innerCb) __innerCb(null, partialState);
+      })["catch"](function (err) {
+        send(SIG_FN_ERR, {
+          isSourceCall: isSourceCall,
+          calledBy: calledBy,
+          module: targetModule,
+          chainId: chainId,
+          fn: userLogicFn
+        });
+        handleCcFnError(err, __innerCb);
+      });
+    });
+  }
+  function dispatch(_temp2) {
+    var _ref2 = _temp2 === void 0 ? {} : _temp2,
+        targetRef = _ref2.targetRef,
+        ccKey = _ref2.ccKey,
+        ccUniqueKey = _ref2.ccUniqueKey,
+        ccClassKey = _ref2.ccClassKey,
+        inputModule = _ref2.module,
+        inputReducerModule = _ref2.reducerModule,
+        identity = _ref2.identity,
+        type = _ref2.type,
+        payload = _ref2.payload,
+        reactCallback = _ref2.cb,
+        __innerCb = _ref2.__innerCb,
+        _ref2$delay = _ref2.delay,
+        delay = _ref2$delay === void 0 ? -1 : _ref2$delay,
+        chainId = _ref2.chainId,
+        oriChainId = _ref2.oriChainId,
+        chainId_depth_ = _ref2.chainId_depth_;
+
+    var targetReducerMap = _reducer$1[inputReducerModule];
+
+    if (!targetReducerMap) {
+      return __innerCb(new Error("no reducerMap found for reducer module:" + inputReducerModule));
+    }
+
+    var reducerFn = targetReducerMap[type];
+
+    if (!reducerFn) {
+      var fns = Object.keys(targetReducerMap);
+      return __innerCb(new Error("no reducer defined in ccContext for reducer module:" + inputReducerModule + " type:" + type + ", maybe you want to invoke one of them:" + fns));
+    } // const errMsg = util.isCcActionValid({ type, payload });
+    // if (errMsg) return justWarning(errMsg);
+
+
+    isStateModuleValid(inputModule, targetRef.ctx.module, reactCallback, function (err, newCb) {
+      if (err) return __innerCb(err);
+      var executionContext = {
+        targetRef: targetRef,
+        ccKey: ccKey,
+        ccClassKey: ccClassKey,
+        ccUniqueKey: ccUniqueKey,
+        module: inputModule,
+        reducerModule: inputReducerModule,
+        type: type,
+        cb: newCb,
+        context: true,
+        __innerCb: __innerCb,
+        calledBy: DISPATCH,
+        delay: delay,
+        identity: identity,
+        chainId: chainId,
+        oriChainId: oriChainId,
+        chainId_depth_: chainId_depth_
+      };
+      invokeWith(reducerFn, executionContext, payload);
+    });
+  }
+  function makeDispatchHandler(targetRef, isLazy, ccKey, ccUniqueKey, ccClassKey, targetModule, targetReducerModule, inputType, inputPayload, delay, defaultIdentity, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
+  ) {
+    if (delay === void 0) {
+      delay = -1;
+    }
+
+    if (defaultIdentity === void 0) {
+      defaultIdentity = '';
+    }
+
+    if (chainId_depth_ === void 0) {
+      chainId_depth_ = {};
+    }
+
+    return function (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
+      if (paramObj === void 0) {
+        paramObj = {};
+      }
+
+      var _getNewChainData2 = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
+          _chainId = _getNewChainData2._chainId,
+          _oriChainId = _getNewChainData2._oriChainId;
+
+      var paramObjType = typeof paramObj;
+
+      var _module = targetModule,
+          _reducerModule,
+          _type,
+          _payload = inputPayload,
+          _cb,
+          _delay = delay;
+
+      var _identity = defaultIdentity;
+
+      if (paramObjType === 'object') {
+        var _paramObj = paramObj,
+            _paramObj$module = _paramObj.module,
+            module = _paramObj$module === void 0 ? targetModule : _paramObj$module,
+            reducerModule = _paramObj.reducerModule,
+            _paramObj$type = _paramObj.type,
+            type = _paramObj$type === void 0 ? inputType : _paramObj$type,
+            _paramObj$payload = _paramObj.payload,
+            payload = _paramObj$payload === void 0 ? inputPayload : _paramObj$payload,
+            cb = _paramObj.cb,
+            _paramObj$delay = _paramObj.delay,
+            _delay2 = _paramObj$delay === void 0 ? -1 : _paramObj$delay,
+            identity = _paramObj.identity;
+
+        _module = module;
+        _reducerModule = reducerModule || module;
+        _type = type;
+        _payload = payload;
+        _cb = cb;
+        _delay = _delay2;
+        if (identity) _identity = identity;
+      } else if (paramObjType === 'string' || paramObjType === 'function') {
+        var targetFirstParam = paramObj;
+
+        if (paramObjType === 'function') {
+          var fnName = paramObj.__fnName;
+          if (!fnName) throw new Error('you are calling a unnamed function!!!');
+          targetFirstParam = fnName; // _module = paramObjType.stateModule || module;
+        }
+
+        var slashCount = targetFirstParam.split('').filter(function (v) {
+          return v === '/';
+        }).length;
+        _payload = payloadWhenFirstParamIsString;
+        if (userInputIdentity) _identity = userInputIdentity;
+        if (userInputDelay !== undefined) _delay = userInputDelay;
+
+        if (slashCount === 0) {
+          _type = targetFirstParam;
+        } else if (slashCount === 1) {
+          var _targetFirstParam$spl = targetFirstParam.split('/'),
+              _module2 = _targetFirstParam$spl[0],
+              _type2 = _targetFirstParam$spl[1];
+
+          _module = _module2;
+          _reducerModule = _module;
+          _type = _type2;
+        } else if (slashCount === 2) {
+          var _targetFirstParam$spl2 = targetFirstParam.split('/'),
+              _module3 = _targetFirstParam$spl2[0],
+              _reducerModule2 = _targetFirstParam$spl2[1],
+              _type3 = _targetFirstParam$spl2[2];
+
+          if (_module3 === '' || _module3 === ' ') _module = targetModule; //targetFirstParam may like: /foo/changeName
+          else _module = _module3;
+          _module = _module3;
+          _reducerModule = _reducerModule2;
+          _type = _type3;
+        } else {
+          return Promise.reject(me(ERR.CC_DISPATCH_STRING_INVALID, vbi$1(targetFirstParam)));
+        }
+      } else {
+        return Promise.reject(me(ERR.CC_DISPATCH_PARAM_INVALID));
+      }
+
+      if (_module === '*') {
+        return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
+      } // pick user input reducerModule firstly!
+
+
+      var nowReducerModule = _reducerModule || targetReducerModule || _module;
+      var p = new Promise(function (resolve, reject) {
+        dispatch({
+          targetRef: targetRef,
+          module: _module,
+          reducerModule: nowReducerModule,
+          type: _type,
+          payload: _payload,
+          cb: _cb,
+          __innerCb: _promiseErrorHandler(resolve, reject),
+          ccKey: ccKey,
+          ccUniqueKey: ccUniqueKey,
+          ccClassKey: ccClassKey,
+          delay: _delay,
+          identity: _identity,
+          chainId: _chainId,
+          oriChainId: _oriChainId,
+          chainId_depth_: chainId_depth_ // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
+
+        });
+      })["catch"](catchCcError);
+      return p;
+    };
+  }
+
+  var _state$1 = ccContext.store._state;
+  /**
+   * 根据connect参数算出ccClassKey值和connectedModuleKeyMapping值
+   */
+
+  function getFeatureStrAndCmkMapping (connectSpec, fragmentModule, fragmentPrefix, watchedKeys) {
+    if (!util.isPlainJsonObject(connectSpec)) {
+      throw new Error("CcFragment or CcClass's prop connect type error, it is not a plain json object");
+    }
+
+    var invalidConnect = "CcFragment or CcClass's prop connect is invalid,";
+
+    var invalidConnectItem = function invalidConnectItem(m) {
+      return invalidConnect + " module[" + m + "]'s value must be * or array of string";
+    };
+
+    var moduleNames = Object.keys(connectSpec);
+    moduleNames.sort();
+    var featureStrs = [];
+    var connectedModuleKeyMapping = {};
+    moduleNames.forEach(function (m) {
+      var moduleState = _state$1[m];
+      var feature = fragmentPrefix + "_" + m + "/";
+
+      if (moduleState === undefined) {
+        throw new Error(invalidConnect + " module[" + m + "] not found in cc store ");
+      }
+
+      var val = connectSpec[m];
+
+      if (typeof val === 'string') {
+        if (val !== '*') throw new Error(invalidConnectItem(m));else {
+          featureStrs.push(feature + "*");
+          okeys(moduleState).forEach(function (sKey) {
+            return connectedModuleKeyMapping[m + "/" + sKey] = sKey;
+          });
+        }
+      } else if (!Array.isArray(val)) {
+        throw new Error(invalidConnectItem(m));
+      } else {
+        val.forEach(function (sKey) {
+          if (!moduleState.hasOwnProperty(sKey)) {
+            throw new Error(invalidConnect + " module[" + m + "]'s key[" + sKey + "] not declared in cc store ");
+          } else {
+            feature += sKey + ",";
+            connectedModuleKeyMapping[m + "/" + sKey] = sKey;
+          }
+        });
+        featureStrs.push(feature);
+      }
+    });
+
+    if (fragmentModule) {
+      if (watchedKeys === '*') featureStrs.unshift(fragmentPrefix + "_$" + fragmentModule + "/*");else {
+        watchedKeys.sort();
+        var tmpStr = fragmentModule + "/" + watchedKeys.join(',');
+        featureStrs.unshift(tmpStr);
+      }
+    }
+
+    return {
+      featureStr: featureStrs.join('|'),
+      connectedModuleKeyMapping: connectedModuleKeyMapping,
+      connectedModuleNames: moduleNames
+    };
+  }
+
+  var isObjectNull$1 = isObjectNull,
+      me$1 = makeError;
+  var featureStr_classKey_ = ccContext.featureStr_classKey_,
+      userClassKey_featureStr_ = ccContext.userClassKey_featureStr_,
+      ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_;
+  var cursor = 0;
+  function getCcClassKey (allowNamingDispatcher, module, connect, prefix, featureStr, classKey) {
+    if (classKey === void 0) {
+      classKey = '';
+    }
+
+    // 未指定classKey
+    if (!classKey) {
+      // 未指定所属模块，也未连接到其他模块
+      if (module === MODULE_DEFAULT && isObjectNull$1(connect)) {
+        return prefix + "0";
+      }
+
+      var _classKey = featureStr_classKey_[featureStr];
+
+      if (_classKey) {
+        return _classKey;
+      }
+
+      cursor++;
+      _classKey = "" + prefix + cursor;
+      featureStr_classKey_[featureStr] = _classKey;
+      return _classKey;
+    } // verify user input classKey
+
+
+    if (classKey.startsWith(CC_PREFIX)) {
+      throw new Error("user can not specify a classKey[" + classKey + "] starts with $$Cc");
+    }
+
+    if (!allowNamingDispatcher) {
+      if (classKey.toLowerCase() === CC_DISPATCHER.toLowerCase()) {
+        throw new Error(CC_DISPATCHER + " is cc built-in ccClassKey name, if you want to customize your dispatcher, \n      you can set autoCreateDispatcher=false in StartupOption, and use createDispatcher then.");
+      }
+    }
+
+    var ctx = ccClassKey_ccClassContext_$2[classKey];
+
+    if (ctx) {
+      var fStr = userClassKey_featureStr_[classKey];
+
+      if (fStr !== featureStr) {
+        //不允许，特征值不一样的class指定相同的ccClassKey
+        throw me$1(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:[" + classKey + "] duplicate");
+      }
+    } else {
+      userClassKey_featureStr_[classKey] = featureStr;
+    }
+
+    return classKey;
+  }
+
+  var moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
+      moduleName_ccClassKeys_$1 = ccContext.moduleName_ccClassKeys_,
+      moduleSingleClass = ccContext.moduleSingleClass,
+      ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
+      connectedModuleName_ccClassKeys_$1 = ccContext.connectedModuleName_ccClassKeys_,
+      _computedValue$2 = ccContext.computed._computedValue;
+  var verifyKeys$1 = verifyKeys,
+      me$2 = makeError,
+      vbi$2 = verboseInfo;
+
+  function checkCcStartupOrNot() {
+    if (ccContext.isCcAlreadyStartup !== true || !window.cc) {
+      throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
+    }
+  }
+
+  function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
+    var watchedKeys = inputWatchedKeys;
+
+    if (inputWatchedKeys === '*') {
+      watchedKeys = moduleName_stateKeys_$3[module];
+    }
+
+    var _verifyKeys = verifyKeys$1(watchedKeys, []),
+        notArray = _verifyKeys.notArray,
+        keyElementNotString = _verifyKeys.keyElementNotString;
+
+    if (notArray) {
+      throw me$2(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi$2("ccClassKey:" + ccClassKey));
+    }
+
+    if (keyElementNotString) {
+      throw me$2(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi$2("ccClassKey:" + ccClassKey));
+    }
+
+    return watchedKeys;
+  }
+
+  function mapModuleToCcClassKeys(moduleName, ccClassKey) {
+    var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_$1, moduleName);
+
+    if (moduleSingleClass[moduleName] === true && ccClassKeys.length >= 1) {
+      throw new Error("module[" + moduleName + "] is declared as single, only on ccClassKey can been registered to it, and now a ccClassKey[" + ccClassKeys[0] + "] has been registered!");
+    }
+
+    if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
+  }
+
+  function mapCcClassKeyToCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
+    var ccClassContext = ccClassKey_ccClassContext_$3[ccClassKey];
+
+    if (!ccClassContext) {
+      ccClassContext = makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
+      var connectedModule = {};
+      var connectedComputed = {};
+
+      if (connectedModuleKeyMapping) {
+        var _state = ccContext.store._state;
+        var connectedState = ccClassContext.connectedState; //直接赋值引用
+
+        connectedModuleNames.forEach(function (m) {
+          connectedState[m] = _state[m];
+          connectedComputed[m] = _computedValue$2[m];
+          connectedModule[m] = 1; //记录连接的模块
+          //记录这个模块被某个ccClassKey连接
+
+          var ccClassKeys = safeGetArrayFromObject(connectedModuleName_ccClassKeys_$1, m);
+          ccClassKeys.push(ccClassKey);
+        });
+        ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
+        ccClassContext.connectedModule = connectedModule;
+        ccClassContext.connectedComputed = connectedComputed;
+      }
+
+      ccClassKey_ccClassContext_$3[ccClassKey] = ccClassContext;
+    }
+  }
+  /**
+   * map registration info to ccContext
+   */
+
+
+  function mapRegistrationInfo (module, ccClassKey, classKeyPrefix, inputWatchedKeys, inputStoredKeys, connect, reducerModule, __checkStartUp, __calledBy) {
+    if (inputStoredKeys === void 0) {
+      inputStoredKeys = [];
+    }
+
+    if (__checkStartUp === true) checkCcStartupOrNot();
+    var allowNamingDispatcher = __calledBy === 'cc';
+
+    var _reducerModule = reducerModule || module; //if reducerModule not defined, will be equal module;
+
+
+    checkModuleName(module, false, "module[" + module + "] is not configured in store");
+    checkStoredKeys(moduleName_stateKeys_$3[module], inputStoredKeys);
+    var _connect = connect;
+
+    if (Array.isArray(connect)) {
+      _connect = {};
+      connect.forEach(function (m) {
+        return _connect[m] = '*';
+      });
+    }
+
+    var _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);
+
+    var _getFeatureStrAndCmkM = getFeatureStrAndCmkMapping(_connect),
+        featureStr = _getFeatureStrAndCmkM.featureStr,
+        connectedModuleKeyMapping = _getFeatureStrAndCmkM.connectedModuleKeyMapping,
+        connectedModuleNames = _getFeatureStrAndCmkM.connectedModuleNames;
+
+    var _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, classKeyPrefix, featureStr, ccClassKey);
+
+    mapCcClassKeyToCcClassContext(_ccClassKey, module, inputWatchedKeys, _watchedKeys, connectedModuleKeyMapping, connectedModuleNames);
+    mapModuleToCcClassKeys(module, _ccClassKey);
+    var isSKeysArr = Array.isArray(inputStoredKeys);
+
+    if (!isSKeysArr && inputStoredKeys !== '*') {
+      throw new Error("storedKeys type err, it is must be an array or string *");
+    }
+
+    if (isSKeysArr) {
+      inputStoredKeys.forEach(function (v) {
+        if (_watchedKeys.includes(v)) {
+          throw new Error("storedKeys key err, the key[" + v + "] is already been declared in watchedKeys");
+        }
+      });
+    }
+
+    return {
+      _module: module,
+      _reducerModule: _reducerModule,
+      _connect: _connect,
+      _watchedKeys: _watchedKeys,
+      _ccClassKey: _ccClassKey
+    };
+  }
+
+  /****
+   * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
+   * pick one ccInstance ref randomly
+   */
+
+  function pickOneRef (module, mustBelongToModule) {
+    if (mustBelongToModule === void 0) {
+      mustBelongToModule = false;
+    }
+
+    var ccUkey_ref_ = ccContext.ccUkey_ref_,
+        moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
+        ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_;
+    var ccKeys = [];
+
+    if (module) {
+      if (ccContext.store._state[module]) {
+        var ccClassKeys = moduleName_ccClassKeys_[module];
+
+        if (ccClassKeys && ccClassKeys.length !== 0) {
+          var oneCcClassKey = ccClassKeys[0];
+          var ccClassContext = ccClassKey_ccClassContext_[oneCcClassKey];
+
+          if (!ccClassContext) {
+            throw new Error("no ccClassContext found for ccClassKey " + oneCcClassKey + "!");
+          }
+
+          ccKeys = ccClassContext.ccKeys;
+        }
+      } else {
+        throw new Error("module[" + module + "] is not declared in store");
+      }
+
+      if (module === MODULE_DEFAULT) {
+        ccKeys = ccKeys.filter(function (key) {
+          return !key.startsWith(CC_FRAGMENT_PREFIX);
+        });
+      }
+
+      if (ccKeys.length === 0) {
+        if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];else {
+          var ignoreIt = "if this message doesn't matter, you can ignore it";
+          throw new Error("[[pickOneRef]]: no ref found for module[" + module + "]!," + ignoreIt);
+        }
+      }
+    } else {
+      ccKeys = [CC_DISPATCHER];
+    }
+
+    var oneRef = ccUkey_ref_[ccKeys[0]];
+
+    if (!oneRef) {
+      throw new Error('cc found no ref!');
+    }
+
+    return oneRef;
+  }
+
+  var me$3 = util.makeError,
+      vbi$3 = util.verboseInfo,
+      ss = util.styleStr,
+      cl = util.color;
+  var ccUKey_insCount = {};
+
+  function setCcInstanceRef(ccUniqueKey, ref, ccKeys, option, delayMs) {
+    function setRef() {
+      ccContext.ccUkey_ref_[ccUniqueKey] = ref;
+      ccKeys.push(ccUniqueKey);
+      ccContext.ccUkey_option_[ccUniqueKey] = option;
+    }
+
+    incCcKeyInsCount(ccUniqueKey);
+
+    if (delayMs) {
+      setTimeout(setRef, delayMs);
+    } else {
+      setRef();
+    }
+  }
+
+  function incCcKeyInsCount(ccUniqueKey) {
+    if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 1;else ccUKey_insCount[ccUniqueKey] += 1;
+  }
+  function decCcKeyInsCount(ccUniqueKey) {
+    if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 0;else ccUKey_insCount[ccUniqueKey] -= 1;
+  }
+  function getCcKeyInsCount(ccUniqueKey) {
+    if (ccUKey_insCount[ccUniqueKey] === undefined) return 0;else return ccUKey_insCount[ccUniqueKey];
+  }
+  function setRef (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption) {
+    var classContext = ccContext.ccClassKey_ccClassContext_[ccClassKey];
+    var ccKeys = classContext.ccKeys;
+
+    if (ccContext.isDebug) {
+      console.log(ss("register ccKey " + ccUniqueKey + " to CC_CONTEXT"), cl());
+    }
+
+    if (!util.isCcOptionValid(ccOption)) {
+      throw me$3(ERR.CC_CLASS_INSTANCE_OPTION_INVALID, vbi$3("a standard default ccOption may like: {\"storedKeys\": []}"));
+    }
+
+    var isHot = ccContext.isHotReloadMode();
+
+    if (ccKeys.includes(ccUniqueKey)) {
+      if (isHot) {
+        // get existed ins count
+        var insCount = getCcKeyInsCount(ccUniqueKey);
+        if (isSingle && insCount > 0) throw me$3(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi$3("ccClass:" + ccClassKey));
+
+        if (insCount > 1) {
+          // now cc can make sure the ccKey duplicate
+          throw me$3(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$3("ccClass:" + ccClassKey + ",ccKey:" + ccUniqueKey));
+        } // just warning
+
+
+        util.justWarning("\n        found ccKey " + ccKey + " may duplicate, but now is in hot reload mode, cc can't throw the error, please make sure your ccKey is unique manually,\n        " + vbi$3("ccClassKey:" + ccClassKey + " ccKey:" + ccKey + " ccUniqueKey:" + ccUniqueKey) + "\n      "); // in webpack hot reload mode, cc works not very well,
+        // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now, in unmount func, 
+        // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
+        // so cc set ref later
+
+        setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption, 600);
+      } else {
+        throw me$3(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$3("ccClass:[" + ccClassKey + "],ccKey:[" + ccUniqueKey + "]"));
+      }
+    } else {
+      setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption);
+    }
+
+    return classContext;
+  }
+
+  var ccUkey_ref_$2 = ccContext.ccUkey_ref_,
+      ccUkey_option_ = ccContext.ccUkey_option_,
+      ccUKey_handlerKeys_ = ccContext.ccUKey_handlerKeys_,
+      ccClassKey_ccClassContext_$4 = ccContext.ccClassKey_ccClassContext_,
+      handlerKey_handler_ = ccContext.handlerKey_handler_;
+  function unsetRef (ccClassKey, ccUniqueKey) {
+    if (ccContext.isDebug) {
+      console.log(styleStr(ccUniqueKey + " unset ref"), color('purple'));
+    } // ccContext.ccUkey_ref_[ccUniqueKey] = null;
+
+
+    delete ccUkey_ref_$2[ccUniqueKey];
+    delete ccUkey_option_[ccUniqueKey];
+    var classContext = ccClassKey_ccClassContext_$4[ccClassKey];
+    var ccKeys = classContext.ccKeys;
+    var ccKeyIdx = ccKeys.indexOf(ccUniqueKey);
+    if (ccKeyIdx >= 0) ccKeys.splice(ccKeyIdx, 1);
+    decCcKeyInsCount(ccUniqueKey);
+    var handlerKeys = ccUKey_handlerKeys_[ccUniqueKey];
+
+    if (handlerKeys) {
+      handlerKeys.forEach(function (hKey) {
+        delete handlerKey_handler_[hKey]; // ccUniqueKey maybe generated randomly, so delete the key instead of set null
+        // handlerKey_handler_[hKey] = null;
+      });
+    }
+  }
 
   var event_handlers_ = ccContext.event_handlers_,
       handlerKey_handler_$1 = ccContext.handlerKey_handler_,
-      ccUniqueKey_handlerKeys_$1 = ccContext.ccUniqueKey_handlerKeys_,
-      ccKey_ref_$1 = ccContext.ccKey_ref_;
+      ccUKey_handlerKeys_$1 = ccContext.ccUKey_handlerKeys_,
+      ccUkey_ref_$3 = ccContext.ccUkey_ref_;
 
   function _findEventHandlers(event, module, ccClassKey, identity) {
     if (identity === void 0) {
@@ -1492,7 +2408,7 @@ if (!this._inheritsLoose) {
 
           if (toDeleteCcUniqueKeyMap[ccUniqueKey] === 1) {
             eHandlers[idx] = null;
-            delete ccUniqueKey_handlerKeys_$1[ccUniqueKey]; //delete mapping of ccUniqueKey_handlerKeys_;
+            delete ccUKey_handlerKeys_$1[ccUniqueKey]; //delete mapping of ccUKey_handlerKeys_;
           }
         });
         event_handlers_[event] = eHandlers.filter(function (v) {
@@ -1512,7 +2428,7 @@ if (!this._inheritsLoose) {
     var targetHandlerIndex = handlers.findIndex(function (v) {
       return v.ccUniqueKey === ccUniqueKey && v.identity === identity;
     });
-    var handlerKeys = util.safeGetArrayFromObject(ccUniqueKey_handlerKeys_$1, ccUniqueKey);
+    var handlerKeys = util.safeGetArrayFromObject(ccUKey_handlerKeys_$1, ccUniqueKey);
     var handlerKey = util.makeHandlerKey(ccUniqueKey, event, identity); //  that means the component of ccUniqueKey mounted again 
     //  or user call $$on for a same event in a same instance more than once
 
@@ -1536,39 +2452,49 @@ if (!this._inheritsLoose) {
 
     handlerKey_handler_$1[handlerKey] = handlerItem;
   }
-  function findEventHandlersToPerform(event, _ref) {
-    var module = _ref.module,
-        ccClassKey = _ref.ccClassKey,
-        identity = _ref.identity;
-
-    for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      args[_key - 2] = arguments[_key];
+  function findEventHandlersToPerform(event) {
+    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
     }
 
-    var handlers = _findEventHandlers(event, module, ccClassKey, identity);
+    var _event = '',
+        _identity = null,
+        _module = null,
+        _ccClassKey = null;
 
-    handlers.forEach(function (_ref2) {
-      var ccUniqueKey = _ref2.ccUniqueKey,
-          handlerKey = _ref2.handlerKey;
+    if (typeof event === 'string') {
+      _event = event;
+    } else {
+      _event = event.name;
+      _identity = event.identity;
+      _module = event.module;
+      _ccClassKey = event.ccClassKey;
+    }
 
-      if (ccKey_ref_$1[ccUniqueKey] && handlerKey) {
+    var handlers = _findEventHandlers(_event, _module, _ccClassKey, _identity);
+
+    handlers.forEach(function (_ref) {
+      var ccUniqueKey = _ref.ccUniqueKey,
+          handlerKey = _ref.handlerKey;
+
+      if (ccUkey_ref_$3[ccUniqueKey] && handlerKey) {
         //  confirm the instance is mounted and handler is not been offed
         var handler = handlerKey_handler_$1[handlerKey];
         if (handler) handler.fn.apply(handler, args);
       }
     });
   }
-  function findEventHandlersToOff(event, _ref3) {
-    var module = _ref3.module,
-        ccClassKey = _ref3.ccClassKey,
-        identity = _ref3.identity;
+  function findEventHandlersToOff(event, _ref2) {
+    var module = _ref2.module,
+        ccClassKey = _ref2.ccClassKey,
+        identity = _ref2.identity;
 
     var handlers = _findEventHandlers(event, module, ccClassKey, identity);
 
     _deleteEventHandlers(handlers);
   }
   function offEventHandlersByCcUniqueKey(ccUniqueKey) {
-    var handlerKeys = ccUniqueKey_handlerKeys_$1[ccUniqueKey];
+    var handlerKeys = ccUKey_handlerKeys_$1[ccUniqueKey];
 
     if (handlerKeys) {
       var toDeleteHandlers = [];
@@ -1579,721 +2505,1005 @@ if (!this._inheritsLoose) {
       _deleteEventHandlers(toDeleteHandlers);
     }
   }
+  function getEventItem(event, curStateModule, ccClassKey) {
+    //不检查array了... 要求用户需正确传递参数
+    if (typeof event === 'object') {
+      var _event = Object.assign(event);
+
+      if (event.ctx === true) {
+        _event.module = curStateModule;
+        _event.ccClassKey = ccClassKey;
+      } //否则就允许用户传如自己定义的module, ccClassKey
+
+
+      return _event;
+    } else {
+      return {
+        name: event
+      };
+    }
+  }
 
   var ev = /*#__PURE__*/Object.freeze({
     bindEventHandlerToCcContext: bindEventHandlerToCcContext,
     findEventHandlersToPerform: findEventHandlersToPerform,
     findEventHandlersToOff: findEventHandlersToOff,
-    offEventHandlersByCcUniqueKey: offEventHandlersByCcUniqueKey
+    offEventHandlersByCcUniqueKey: offEventHandlersByCcUniqueKey,
+    getEventItem: getEventItem
   });
 
-  function shouldSkipKey (specModule, key, stateModule, connectSpecLike, moduleStateKeys) {
-    var skip = false;
-    var keyModule = '';
-    var stateKey = key;
+  var _currentIndex = 0;
+  var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
 
-    if (key.includes('/')) {
-      // moduledKey : 'foo/f1'
-      var _key$split = key.split('/'),
-          tmpKeyModule = _key$split[0],
-          unmoduledKey = _key$split[1];
+  function genNonceStr(length) {
+    if (length === void 0) {
+      length = 6;
+    }
 
-      if (tmpKeyModule === '') {
-        // '/f1'，观察实例所属模块的key
-        tmpKeyModule = specModule;
-        stateKey = specModule + key;
-      }
+    var ret = '';
 
-      keyModule = tmpKeyModule; //这个key的模块不是提交state所属的模块， 对应的watch就需要排除掉
-      //因为setState只提交自己模块的数据，所以如果tmpKeyModule是其他模块，这里并不会被触发
-      //dispatch调用如果指定了其他模块，是会触发这里的逻辑的
+    for (var i = 0; i < length; i++) {
+      ret += letters[randomNumber()];
+    }
 
-      if (keyModule !== stateModule) {
-        skip = true;
+    return ret;
+  }
+
+  function uuid (tag) {
+    _currentIndex++;
+    var nonceStr = tag || genNonceStr();
+    return nonceStr + "_" + _currentIndex;
+  }
+
+  function computeCcUniqueKey (isClassSingle, ccClassKey, ccKey, tag) {
+    var ccUniqueKey;
+
+    if (isClassSingle) {
+      //??? need strict
+      if (ccKey) util.justWarning("now the ccClass is singleton, you needn't supply ccKey to instance props, cc will ignore the ccKey[" + ccKey + "]");
+      ccUniqueKey = ccClassKey;
+    } else {
+      if (ccKey) {
+        ccUniqueKey = util.makeUniqueCcKey(ccClassKey, ccKey);
       } else {
-        //支持定义属于foo模块的实例里定义的watchKey形如: 'foo/f1', '/f1', 'f1' 都能够被触发watch
-        if (moduleStateKeys.includes(unmoduledKey) || connectSpecLike[stateModule]) {
-          stateKey = unmoduledKey;
-        } else {
-          skip = true;
-        }
+        var uuidStr = uuid(tag);
+        ccUniqueKey = util.makeUniqueCcKey(ccClassKey, uuidStr);
       }
     }
 
-    return {
-      skip: skip,
-      stateKey: stateKey,
-      keyModule: keyModule
-    };
+    return ccUniqueKey;
   }
 
-  var getState = ccContext.store.getState;
-  var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_; //CcFragment实例调用会提供callerCtx
+  var getState$4 = ccContext.store.getState;
 
-  function computeValueForRef (stateModule, computedSpec, refComputed, refConnectedComputed, oldState, committedState, callerCtx) {
-    if (computedSpec) {
-      var moduleStateKeys = moduleName_stateKeys_[stateModule];
-      var computedFns = computedSpec.computedFns,
-          computedSpecModule = computedSpec.module;
-      var toBeComputedKeys = okeys(computedFns);
-      toBeComputedKeys.forEach(function (key) {
-        var _shouldSkipKey = shouldSkipKey(computedSpecModule, key, stateModule, refConnectedComputed, moduleStateKeys),
-            stateKey = _shouldSkipKey.stateKey,
-            skip = _shouldSkipKey.skip,
-            keyModule = _shouldSkipKey.keyModule;
+  function getValFromEvent(e) {
+    var se = convertToStandardEvent(e);
 
-        if (skip) return;
-        var newValue = committedState[stateKey];
+    if (se) {
+      return se.currentTarget.value;
+    } else {
+      return e;
+    }
+  }
 
-        if (newValue !== undefined) {
-          var fn = computedFns[key]; //用原始定义当然key去取fn
+  var buildMockEvent = (function (spec, e, refModule) {
+    var _ref;
 
-          var targetModule = keyModule || stateModule;
-          var moduleState = getState(targetModule);
-          var fnCtx = {
-            key: stateKey,
-            module: targetModule,
-            moduleState: moduleState,
-            committedState: committedState
-          };
-          var computedValue = fn(newValue, oldState[stateKey], fnCtx, callerCtx);
+    var ccint = false,
+        ccsync = '',
+        ccidt = '',
+        value = '',
+        extraState = undefined,
+        ccdelay = -1,
+        isToggleBool = false;
+    var syncKey = spec[CCSYNC_KEY];
+    var type = spec.type;
 
-          if (keyModule) {
-            var targetConnectedComputed = refConnectedComputed[keyModule]; //防止foo模块的实例，定义的watchKey是 foo/f1, 此时skip是false，但是结果不会向refConnectedComputed里放
+    if (syncKey !== undefined) {
+      //来自生成的sync生成的setter函数调用
+      ccsync = syncKey;
+      ccdelay = spec.delay;
+      ccidt = spec.idt;
 
-            if (targetConnectedComputed) {
-              targetConnectedComputed[stateKey] = computedValue;
-            } //计算的目标key的模块和实例所属模块值一样时，也向refComputed赋值
+      if (type === 'val' || type === 'int') {
+        //set value
+        ccint = type === 'int'; //convert to int
+        //优先从spec里取，取不到的话，从e里面分析并提取
 
+        var val = spec.val;
 
-            if (keyModule === computedSpecModule) {
-              refComputed[stateKey] = computedValue;
+        if (val === undefined) {
+          value = getValFromEvent(e);
+        } else {
+          if (typeof val === 'function') {
+            var keyPath, fullKeyPath, module;
+
+            if (ccsync.includes('/')) {
+              var _ccsync$split = ccsync.split('/'),
+                  _module = _ccsync$split[0],
+                  _keyPath = _ccsync$split[1];
+
+              keyPath = _keyPath;
+              fullKeyPath = ccsync;
+              module = _module;
+            } else {
+              keyPath = ccsync;
+              fullKeyPath = refModule + "/" + keyPath;
+              module = refModule;
             }
+
+            extraState = val(getValFromEvent(e), keyPath, {
+              moduleState: getState$4(module),
+              fullKeyPath: fullKeyPath
+            });
           } else {
-            refComputed[stateKey] = computedValue;
+            value = val;
           }
         }
-      });
+      } else if (type === 'bool') {
+        //toggle bool
+        isToggleBool = true;
+      } else return null;
+    } else {
+      //来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
+      var se = convertToStandardEvent(e);
+
+      if (se) {
+        // e is event
+        var currentTarget = se.currentTarget;
+        value = currentTarget.value;
+        var dataset = currentTarget.dataset;
+        if (type === 'int') ccint = true;else ccint = dataset.ccint !== undefined;
+        ccsync = dataset.ccsync;
+        if (!ccsync) return null;
+        ccidt = dataset.ccidt;
+        var dataSetDelay = dataset.ccdelay;
+
+        if (dataSetDelay) {
+          try {
+            ccdelay = parseInt(dataSetDelay);
+          } catch (err) {}
+        }
+      } else {
+        //<Input onChange={this.sync}/> is invalid
+        return null;
+      }
     }
-  }
 
-  function getWatchSpec (watch, ctx, module) {
-    var watchFns;
-    var watchType = typeof watch;
-    if (watchType === 'function') watchFns = watch(ctx);else if (watchType === 'object' && !Array.isArray(watch)) watchFns = watch;else throw new Error('watch type can only be a function or a plain json object');
-    return {
-      watchFns: watchFns,
-      module: module
-    };
-  }
-
-  function getComputedSpec (computed, ctx, module) {
-    var computedFns;
-    var computedType = typeof computed;
-    if (computedType === 'function') computedFns = computed(ctx);else if (computedType === 'object' && !Array.isArray(computed)) computedFns = computed;else throw new Error('computed type can only be a function or a plain json object');
-    return {
-      computedFns: computedFns,
-      module: module
-    };
-  }
-
-  var feature_timerId = {};
-  var runLater = (function (cb, feature, delay) {
-    if (delay === void 0) {
-      delay = 1000;
-    }
-
-    var timerId = feature_timerId[feature];
-    if (timerId) clearTimeout(timerId);
-    feature_timerId[feature] = setTimeout(function () {
-      delete feature_timerId[feature];
-      cb();
-    }, delay);
+    return _ref = {}, _ref[MOCKE_KEY] = 1, _ref.currentTarget = {
+      value: value,
+      extraState: extraState,
+      dataset: {
+        ccsync: ccsync,
+        ccint: ccint,
+        ccdelay: ccdelay,
+        ccidt: ccidt
+      }
+    }, _ref.isToggleBool = isToggleBool, _ref;
   });
 
-  function extractStateByKeys (state, stateKeys, returnNullIfEmpty) {
-    if (returnNullIfEmpty === void 0) {
-      returnNullIfEmpty = false;
+  function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool) {
+    if (isToggleBool === void 0) {
+      isToggleBool = false;
     }
 
-    var partialState = {};
+    var key = keys[keyIndex];
 
-    if (!isStateValid(state) || !isObjectNotNull(state)) {
+    if (lastKeyIndex === keyIndex) {
+      if (isToggleBool === true) {
+        var oriVal = obj[key];
+
+        if (typeof oriVal !== 'boolean') {
+          justWarning("key[" + key + "]'s value type is not boolean");
+        } else {
+          obj[key] = !oriVal;
+        }
+      } else {
+        obj[key] = value;
+      }
+    } else {
+      setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value, isToggleBool);
+    }
+  }
+
+  var extractStateByCcsync = (function (ccsync, value, ccint, oriState, isToggleBool) {
+    var _value = value;
+
+    if (ccint === true) {
+      _value = parseInt(value); //strict?
+
+      if (Number.isNaN(_value)) {
+        justWarning(value + " can not convert to int but you set ccint as true!\uFF01");
+        _value = value;
+      }
+    }
+
+    var module = null,
+        keys = [];
+
+    if (ccsync.includes('/')) {
+      var _ccsync$split = ccsync.split('/'),
+          _module = _ccsync$split[0],
+          restStr = _ccsync$split[1];
+
+      module = _module;
+
+      if (restStr.includes('.')) {
+        keys = restStr.split('.');
+      } else {
+        keys = [restStr];
+      }
+    } else if (ccsync.includes('.')) {
+      keys = ccsync.split('.');
+    } else {
+      keys = [ccsync];
+    }
+
+    if (keys.length === 1) {
+      var targetStateKey = keys[0];
+
+      if (isToggleBool === true) {
+        var _state;
+
+        return {
+          module: module,
+          state: (_state = {}, _state[targetStateKey] = !oriState[targetStateKey], _state)
+        };
+      } else {
+        var _state2;
+
+        return {
+          module: module,
+          state: (_state2 = {}, _state2[targetStateKey] = _value, _state2)
+        };
+      }
+    } else {
+      var _state3;
+
+      var _keys = keys,
+          key = _keys[0],
+          restKeys = _keys.slice(1);
+
+      var subState = oriState[key];
+      setValue(subState, restKeys, restKeys.length - 1, 0, _value, isToggleBool);
       return {
-        partialState: returnNullIfEmpty ? null : partialState,
-        isStateEmpty: true
+        module: module,
+        state: (_state3 = {}, _state3[key] = subState, _state3)
       };
     }
+  });
 
-    var isStateEmpty = true;
-    stateKeys.forEach(function (key) {
-      var value = state[key];
+  var getState$5 = ccContext.store.getState;
+  function __sync (spec, ref, e) {
+    var refCtx = ref.ctx;
+    var refModule = refCtx.module;
+    var mockE = null;
 
-      if (value !== undefined) {
-        partialState[key] = value;
-        isStateEmpty = false;
+    if (spec[MOCKE_KEY]) {
+      mockE = spec;
+    } else {
+      //可能是来自$$sync生成的setter调用
+      mockE = buildMockEvent(spec, e, refModule);
+    }
+
+    if (!mockE) return; //参数无效
+
+    var currentTarget = mockE.currentTarget;
+    var dataset = currentTarget.dataset,
+        value = currentTarget.value,
+        extraState = currentTarget.extraState;
+    if (e && e.stopPropagation) e.stopPropagation();
+    var ccsync = dataset.ccsync,
+        ccint = dataset.ccint,
+        ccdelay = dataset.ccdelay,
+        ccidt = dataset.ccidt;
+
+    if (ccsync.startsWith('/')) {
+      dataset.ccsync = "" + refModule + ccsync; //附加上默认模块值
+    }
+
+    if (ccsync.includes('/')) {
+      // syncModuleState 同步模块的state状态
+      var targetModule = ccsync.split('/')[0];
+      var ccKey = refCtx.ccKey,
+          ccUniqueKey = refCtx.ccUniqueKey;
+
+      if (extraState) {
+        return changeRefState(extraState, {
+          calledBy: SYNC,
+          ccKey: ccKey,
+          ccUniqueKey: ccUniqueKey,
+          module: targetModule,
+          delay: ccdelay,
+          identity: ccidt
+        }, ref);
       }
-    });
-    return {
-      partialState: partialState,
-      isStateEmpty: isStateEmpty
-    };
-  }
 
-  var getState$1 = ccContext.store.getState;
-  var moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_;
-  function watchKeyForRef (stateModule, watchSpec, connect, refEntireState, committedState, callerCtx) {
-    var shouldCurrentRefUpdate = true;
+      var fullState = targetModule !== refModule ? getState$5(targetModule) : ref.state;
 
-    if (watchSpec) {
-      var globalStateKeys = moduleName_stateKeys_$1[MODULE_GLOBAL];
-      var moduleStateKeys = moduleName_stateKeys_$1[stateModule];
-      var watchFns = watchSpec.watchFns,
-          watchSpecModule = watchSpec.module;
-      var watchStateKeys = okeys(watchFns);
-      var len = watchStateKeys.length;
-      var shouldNotUpdateLen = 0;
-      watchStateKeys.forEach(function (key) {
-        var _shouldSkipKey = shouldSkipKey(watchSpecModule, key, stateModule, connect, moduleStateKeys, globalStateKeys),
-            stateKey = _shouldSkipKey.stateKey,
-            skip = _shouldSkipKey.skip,
-            keyModule = _shouldSkipKey.keyModule;
+      var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool),
+          state = _extractStateByCcsync.state;
 
-        if (skip) return;
-        var commitValue = committedState[stateKey];
-
-        if (commitValue !== undefined) {
-          var watchFn = watchFns[key];
-          var targetModule = keyModule || stateModule;
-          var moduleState = getState$1(targetModule);
-          var fnCtx = {
-            key: stateKey,
-            module: targetModule,
-            moduleState: moduleState,
-            committedState: committedState
-          };
-          var ret = watchFn(commitValue, refEntireState[stateKey], fnCtx, callerCtx); // watchFn(newValue, oldValue);
-
-          if (ret === false) shouldNotUpdateLen++;
-        }
-      }); //只有所有watch都返回false，才不触发当前实例更新
-
-      if (shouldNotUpdateLen === len) shouldCurrentRefUpdate = false;
-    }
-
-    return shouldCurrentRefUpdate;
-  }
-
-  var isPlainJsonObject$1 = isPlainJsonObject,
-      justWarning$1 = justWarning,
-      isObjectNotNull$1 = isObjectNotNull,
-      computeFeature$1 = computeFeature,
-      okeys$1 = okeys,
-      safeGetArrayFromObject$1 = safeGetArrayFromObject,
-      styleStr$1 = styleStr,
-      color$1 = color;
-  var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
-      STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1 = STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
-      FORCE_UPDATE$1 = FORCE_UPDATE;
-  var _ccContext$store = ccContext.store,
-      ccStoreSetState = _ccContext$store.setState,
-      getState$2 = _ccContext$store.getState,
-      middlewares = ccContext.middlewares,
-      moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
-      ccClassKey_ccClassContext_$1 = ccContext.ccClassKey_ccClassContext_,
-      refStore = ccContext.refStore,
-      moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_,
-      ccKey_ref_$2 = ccContext.ccKey_ref_;
-
-  function getStateFor(inputModule, refModule) {
-    return inputModule === refModule ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 : STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1;
-  }
-
-  function changeRefState (state, _temp, targetRef) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        ccKey = _ref.ccKey,
-        ccUniqueKey = _ref.ccUniqueKey,
-        module = _ref.module,
-        _ref$skipMiddleware = _ref.skipMiddleware,
-        skipMiddleware = _ref$skipMiddleware === void 0 ? false : _ref$skipMiddleware,
-        reactCallback = _ref.cb,
-        type = _ref.type,
-        reducerModule = _ref.reducerModule,
-        calledBy = _ref.calledBy,
-        fnName = _ref.fnName,
-        _ref$delay = _ref.delay,
-        delay = _ref$delay === void 0 ? -1 : _ref$delay,
-        identity = _ref.identity;
-
-    //executionContext
-    var stateFor = getStateFor(module, targetRef.cc.ccState.module);
-    if (state === undefined) return; //do nothing
-    // const isControlledByConcent = targetRef.cc.ccState.isControlledByConcent;
-
-    if (!isPlainJsonObject$1(state)) {
-      justWarning$1("cc found your commit state is not a plain json object!");
-      return;
-    }
-
-    var refCc = targetRef.cc;
-    var ccState = refCc.ccState;
-    var currentModule = ccState.module;
-    var passToMiddleware = {};
-
-    if (skipMiddleware !== true) {
-      passToMiddleware = {
-        calledBy: calledBy,
-        type: type,
+      return changeRefState(state, {
+        calledBy: SYNC,
         ccKey: ccKey,
         ccUniqueKey: ccUniqueKey,
-        state: state,
-        stateFor: stateFor,
+        module: targetModule,
+        delay: ccdelay,
+        identity: ccidt
+      }, ref);
+    } else {
+      //调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
+      if (extraState) {
+        return ref.setState(extraState, null, ccdelay, ccidt);
+      }
+
+      var _extractStateByCcsync2 = extractStateByCcsync(ccsync, value, ccint, ref.state, mockE.isToggleBool),
+          _state = _extractStateByCcsync2.state;
+
+      return ref.setState(_state, null, ccdelay, ccidt);
+    }
+  }
+
+  function deh (item, handler, fns, immediateKeys) {
+    var itype = typeof item;
+
+    if (itype === 'object') {
+      okeys(item).forEach(function (key) {
+        return fns[key] = item[key];
+      });
+    } else if (itype === 'function') {
+      var ret = item(this);
+
+      if (typeof ret === 'object') {
+        okeys(ret).forEach(function (key) {
+          return fns[key] = ret[key];
+        });
+      }
+    } else if (itype === 'string') {
+      var key = item;
+      fns[key] = handler;
+      if (immediateKeys) immediateKeys.push(key);
+    }
+  }
+
+  function getDefineWatchHandler (watchFns, immediateWatchKeys) {
+    return function (watchItem, watchHandler, immediate) {
+      if (immediate) deh(watchItem, watchHandler, watchFns, immediateWatchKeys);else deh(watchItem, watchHandler, watchFns);
+    };
+  }
+
+  function getDefineComputedHandler (watchFns) {
+    return function (computedItem, computedHandler) {
+      deh(computedItem, computedHandler, watchFns);
+    };
+  }
+
+  function getOutProps (props) {
+    if (props) {
+      return props.props || props; //把最外层的props传递给用户
+    } else {
+      return {};
+    }
+  }
+
+  var refStore$1 = ccContext.refStore,
+      ccClassKey_ccClassContext_$5 = ccContext.ccClassKey_ccClassContext_,
+      getState$6 = ccContext.store.getState,
+      moduleName_ccClassKeys_$2 = ccContext.moduleName_ccClassKeys_,
+      _computedValue$3 = ccContext.computed._computedValue;
+  var okeys$3 = okeys,
+      me$4 = makeError,
+      vbi$4 = verboseInfo;
+  var idSeq = 0;
+
+  function getEId() {
+    idSeq++;
+    return Symbol("__autoGen_" + idSeq + "__");
+  } //调用buildFragmentRefCtx 之前，props参数已被处理过
+
+  /**
+   * 构建refCtx，附加到ref.cc上
+   * liteLevel 越小，绑定的方法越少
+   */
+
+
+  function buildRefCtx (ref, params, liteLevel) {
+    if (liteLevel === void 0) {
+      liteLevel = 1;
+    }
+
+    var reactSetState = ref.setState.bind(ref);
+    var reactForceUpdate = ref.forceUpdate.bind(ref);
+    var isSingle = params.isSingle,
+        ccClassKey = params.ccClassKey,
+        ccKey = params.ccKey,
+        module = params.module,
+        reducerModule = params.reducerModule,
+        _params$state = params.state,
+        state = _params$state === void 0 ? {} : _params$state,
+        storedKeys = params.storedKeys,
+        watchedKeys = params.watchedKeys,
+        connect = params.connect,
+        tag = params.tag;
+    reducerModule = reducerModule || module;
+    var stateModule = module; //用户使用ccKey属性的话，必需显示的指定ccClassKey
+
+    if (ccKey && !ccClassKey) {
+      throw new Error("missing ccClassKey while init a cc ins with ccKey[" + ccKey + "]");
+    }
+
+    var _storedKeys = [];
+
+    if (storedKeys !== undefined) {
+      if (!ccKey) throw me$4(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi$4("ccClassKey[" + ccClassKey + "]"));
+      _storedKeys = storedKeys;
+    }
+
+    var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
+    var classCtx = ccClassKey_ccClassContext_$5[ccClassKey];
+    var connectedComputed = classCtx.connectedComputed || {};
+    var connectedState = classCtx.connectedState || {};
+    var moduleState = getState$6(module);
+    var moduleComputed = _computedValue$3[module] || {};
+    var globalComputed = _computedValue$3[MODULE_GLOBAL] || {};
+    var globalState = getState$6(MODULE_GLOBAL);
+    var refConnectedComputed = {};
+    okeys$3(connect).forEach(function (moduleName) {
+      refConnectedComputed[moduleName] = {};
+    }); // recover ref state
+
+    var refStoredState = refStore$1._state[ccUniqueKey] || {};
+    var mergedState = Object.assign({}, state, refStoredState, moduleState);
+    ref.state = mergedState; // record ref
+
+    setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey, {}); // record ccClassKey
+
+    var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_$2, module);
+    if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // create cc api
+
+    var _setState = function _setState(module, state, calledBy, __endCb, delay, identity) {
+      changeRefState(state, {
+        calledBy: calledBy,
+        ccKey: ccKey,
+        ccUniqueKey: ccUniqueKey,
         module: module,
-        reducerModule: reducerModule,
-        fnName: fnName
+        delay: delay,
+        identity: identity,
+        __endCb: __endCb
+      }, ref);
+    };
+
+    var setState = function setState(state, __endCb, delay, identity) {
+      _setState(stateModule, state, SET_STATE, __endCb, delay, identity);
+    };
+
+    var setGlobalState = function setGlobalState(state, __endCb, delay, identity) {
+      _setState(MODULE_GLOBAL, state, SET_STATE, __endCb, delay, identity);
+    };
+
+    var setModuleState = function setModuleState(module, state, __endCb, delay, identity) {
+      _setState(module, state, SET_MODULE_STATE, __endCb, delay, identity);
+    };
+
+    var forceUpdate = function forceUpdate(__endCb, delay, identity) {
+      _setState(stateModule, ref.state, FORCE_UPDATE, __endCb, delay, identity);
+    };
+
+    var changeState = function changeState(state, option) {
+      changeRefState(state, option, ref);
+    };
+
+    var _dispatch = function _dispatch(isLazy, paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
+      var d = makeDispatchHandler(ref, isLazy, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1);
+      return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
+    };
+
+    var dispatch$$1 = function dispatch$$1() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      return _dispatch.apply(void 0, [false].concat(args));
+    };
+
+    var lazyDispatch = function lazyDispatch() {
+      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      return _dispatch.apply(void 0, [true].concat(args));
+    };
+
+    var invoke = makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
+    var lazyInvoke = makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, {
+      isLazy: true
+    });
+
+    var syncBool = function syncBool(e, delay, idt) {
+      var _sync$bind;
+
+      if (delay === void 0) {
+        delay = -1;
+      }
+
+      if (idt === void 0) {
+        idt = '';
+      }
+
+      if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.idt = idt, _sync$bind), ref);
+
+      __sync({
+        type: 'bool'
+      }, e, ref);
+    };
+
+    var sync = function sync(e, val, delay, idt) {
+      var _sync$bind2;
+
+      if (delay === void 0) {
+        delay = -1;
+      }
+
+      if (idt === void 0) {
+        idt = '';
+      }
+
+      if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2), ref);
+
+      __sync({
+        type: 'val'
+      }, ref, e); //allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
+
+    };
+
+    var set = function set(ccsync, val, delay, idt) {
+      var _sync;
+
+      __sync((_sync = {}, _sync[CCSYNC_KEY] = ccsync, _sync.type = 'val', _sync.val = val, _sync.delay = delay, _sync.idt = idt, _sync), ref);
+    };
+
+    var setBool = function setBool(ccsync, delay, idt) {
+      var _sync2;
+
+      if (delay === void 0) {
+        delay = -1;
+      }
+
+      if (idt === void 0) {
+        idt = '';
+      }
+
+      __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'bool', _sync2.delay = delay, _sync2.idt = idt, _sync2), ref);
+    };
+
+    var syncInt = function syncInt(e, delay, idt) {
+      var _sync$bind3;
+
+      if (delay === void 0) {
+        delay = -1;
+      }
+
+      if (idt === void 0) {
+        idt = '';
+      }
+
+      if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3), ref);
+
+      __sync({
+        type: 'int'
+      }, ref, e);
+    };
+
+    var emit = function emit(event) {
+      var _event = getEventItem(event, stateModule, ccClassKey);
+
+      for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+        args[_key3 - 1] = arguments[_key3];
+      }
+
+      findEventHandlersToPerform.apply(ev, [_event].concat(args));
+    };
+
+    var off = function off(event, _temp) {
+      var _ref = _temp === void 0 ? {} : _temp,
+          module = _ref.module,
+          ccClassKey = _ref.ccClassKey,
+          identity = _ref.identity;
+
+      findEventHandlersToOff(event, {
+        module: module,
+        ccClassKey: ccClassKey,
+        identity: identity
+      });
+    };
+
+    var on = function on(event, handler, identity) {
+      if (identity === void 0) {
+        identity = null;
+      }
+
+      bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+    };
+
+    var aux = {},
+        watchFns = {},
+        computedFns = {},
+        immediateWatchKeys = [];
+    var executer = {
+      fn: null
+    };
+    var defineWatch = getDefineWatchHandler(watchFns, immediateWatchKeys);
+    var defineComputed = getDefineComputedHandler(computedFns);
+
+    var defineAuxMethod = function defineAuxMethod(methodName, handler) {
+      return cc.aux[methodName] = handler;
+    };
+
+    var defineExecute = function defineExecute(handler) {
+      return executer.fn = handler;
+    };
+
+    var effectItems = []; // {fn:function, status:0, eId:'', immediate:true}
+
+    var eid_effectReturnCb_ = {}; // fn
+
+    var effectMeta = {
+      effectItems: effectItems,
+      eid_effectReturnCb_: eid_effectReturnCb_
+    };
+
+    var defineEffect = function defineEffect(fn, stateKeys, eId, immediate) {
+      if (immediate === void 0) {
+        immediate = true;
+      }
+
+      if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
+
+      if (stateKeys !== null && stateKeys !== undefined) {
+        if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+      }
+
+      var _eId = eId || getEId(); // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
+
+
+      var effectItem = {
+        fn: fn,
+        stateKeys: stateKeys,
+        eId: _eId,
+        immediate: immediate
       };
-    } //在prepareReactSetState之前把状态存储到store，
-    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-    //也防止prepareReactSetState里有异步的钩子函数，导致state同步到store有延迟而出现其他bug
-
-
-    var broadcastInfo = syncCommittedStateToStore(module, state);
-
-    if (module === currentModule) {
-      // who trigger $$changeState, who will change the whole received state 
-      prepareReactSetState(targetRef, identity, calledBy, state, stateFor, function () {
-        prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity);
-      }, reactCallback);
-    } else {
-      if (reactCallback) justWarning$1("callback for react.setState will be ignore"); //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
-
-      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1, module, state, delay, identity);
-    }
-  }
-
-  function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, next, reactCallback) {
-    // 通过规范来约束用户，只要是可能变化的数据，都不要在$$cache里存
-    // 要不然$$cache就没意义了
-    // if(targetRef.$$cache){
-    //   targetRef.$$refCache = targetRef.$$cache();
-    // }
-    var thisState = targetRef.state;
-    var thisCc = targetRef.cc;
-    var _thisCc$ccState = thisCc.ccState,
-        stateModule = _thisCc$ccState.module,
-        connect = _thisCc$ccState.connect,
-        storedKeys = _thisCc$ccState.storedKeys,
-        ccOption = _thisCc$ccState.ccOption;
-    var ccUniqueKey = thisCc.ccUniqueKey;
-
-    if (stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1) {
-      if (next) next();
-      return;
-    }
-
-    if (identity) {
-      //if user specify identity
-      if (thisCc.ccKey !== identity) {
-        // current instance would have been rendered only if current instance's ccKey equal identity
-        if (next) next();
-        return;
-      }
-    }
-
-    if (storedKeys.length > 0) {
-      var _extractStateByKeys = extractStateByKeys(state, storedKeys),
-          partialState = _extractStateByKeys.partialState,
-          isStateEmpty = _extractStateByKeys.isStateEmpty;
-
-      if (!isStateEmpty) {
-        if (ccOption.storeInLocalStorage === true) {
-          var _extractStateByKeys2 = extractStateByKeys(thisState, storedKeys),
-              entireStoredState = _extractStateByKeys2.partialState;
-
-          var currentStoredState = Object.assign({}, entireStoredState, partialState);
-          localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
-        }
-
-        refStore.setState(ccUniqueKey, partialState);
-      }
-    } //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
-
-
-    if (calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
-      if (next) next();
-      return;
-    }
-
-    computeValueForRef(stateModule, thisCc.computedSpec, thisCc.refComputed, thisCc.refConnectedComputed, thisState, state);
-    var ctx = targetRef.__fragmentParams || targetRef.cc;
-    var shouldCurrentRefUpdate = watchKeyForRef(stateModule, thisCc.watchSpec, connect, thisState, state, ctx);
-
-    if (shouldCurrentRefUpdate === false) {
-      if (next) next();
-    }
-
-    if (targetRef.__$$isUnmounted !== true) thisCc.reactSetState(state, reactCallback);
-    if (next) next();
-  }
-
-  function syncCommittedStateToStore(moduleName, committedState) {
-    var stateKeys = moduleName_stateKeys_$2[moduleName];
-
-    var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys),
-        isPartialSharedStateEmpty = _extractStateByKeys3.isStateEmpty,
-        partialSharedState = _extractStateByKeys3.partialState;
-
-    var skipBroadcastRefState = false; //!!! save state to store
-
-    if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);else skipBroadcastRefState = true;
-    return {
-      partialSharedState: partialSharedState,
-      skipBroadcastRefState: skipBroadcastRefState
-    };
-  }
-
-  function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, moduleName, committedState, delay, identity) {
-    var skipBroadcastRefState = broadcastInfo.skipBroadcastRefState,
-        partialSharedState = broadcastInfo.partialSharedState;
-
-    var startBroadcastState = function startBroadcastState() {
-      broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity);
+      effectItems.push(effectItem);
     };
 
-    var willBroadcast = function willBroadcast() {
-      if (delay > 0) {
-        var feature = computeFeature$1(targetRef.cc.ccUniqueKey, committedState);
-        runLater(startBroadcastState, feature, delay);
-      } else {
-        startBroadcastState();
-      }
+    var cc = {
+      // static params
+      module: module,
+      reducerModule: reducerModule,
+      ccClassKey: ccClassKey,
+      ccKey: ccKey,
+      ccUniqueKey: ccUniqueKey,
+      renderCount: 1,
+      initTime: Date.now(),
+      storedKeys: _storedKeys,
+      watchedKeys: watchedKeys,
+      connect: connect,
+      props: getOutProps(ref.props),
+      prevState: mergedState,
+      // state
+      state: mergedState,
+      moduleState: moduleState,
+      globalState: globalState,
+      connectedState: connectedState,
+      // computed
+      refComputed: {},
+      refConnectedComputed: refConnectedComputed,
+      moduleComputed: moduleComputed,
+      globalComputed: globalComputed,
+      connectedComputed: connectedComputed,
+      //for HookRef
+      mappedProps: {},
+      // api meta data
+      watchFns: watchFns,
+      computedFns: computedFns,
+      immediateWatchKeys: immediateWatchKeys,
+      watchSpec: {},
+      computedSpec: {},
+      execute: executer.fn,
+      reducer: {},
+      lazyReducer: {},
+      aux: aux,
+      // auxiliary method map
+      effectMeta: effectMeta,
+      ccOption: {},
+      // api
+      reactSetState: reactSetState,
+      reactForceUpdate: reactForceUpdate,
+      setState: setState,
+      setGlobalState: setGlobalState,
+      setModuleState: setModuleState,
+      forceUpdate: forceUpdate,
+      changeState: changeState,
+      dispatch: dispatch$$1,
+      lazyDispatch: lazyDispatch,
+      invoke: invoke,
+      lazyInvoke: lazyInvoke,
+      syncBool: syncBool,
+      sync: sync,
+      set: set,
+      setBool: setBool,
+      syncInt: syncInt,
+      emit: emit,
+      on: on,
+      off: off,
+      defineWatch: defineWatch,
+      defineComputed: defineComputed,
+      defineAuxMethod: defineAuxMethod,
+      defineExecute: defineExecute,
+      defineEffect: defineEffect,
+      __$$ccForceUpdate: makeCcForceUpdateHandler(ref),
+      __$$ccSetState: makeCcSetStateHandler(ref)
     };
-
-    if (skipMiddleware) {
-      willBroadcast();
-      return;
-    }
-
-    var middlewaresLen = middlewares.length;
-
-    if (middlewaresLen > 0) {
-      passToMiddleware.sharedState = partialSharedState; //这个记录到store的状态也传给中间件ctx
-
-      var index = 0;
-
-      var next = function next() {
-        if (index === middlewaresLen) {
-          // all middlewares been executed
-          willBroadcast();
-        } else {
-          var middlewareFn = middlewares[index];
-          index++;
-          middlewareFn(passToMiddleware, next);
-        }
-      };
-
-      next();
-    } else {
-      willBroadcast();
-    }
+    ref.ctx = cc;
+    ref.setState = setState;
+    ref.forceUpdate = forceUpdate;
   }
 
-  function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity) {
-    if (skipBroadcastRefState === false) {
-      var currentCcKey = targetRef.cc.ccState.ccUniqueKey; // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered reactSetState
-      // so flag ignoreCurrentCcKey as true;
+  var getState$7 = ccContext.store.getState;
+  /** 由首次render触发 */
 
-      var ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1;
-      var ccClassKeys = moduleName_ccClassKeys_[moduleName];
+  function triggerComputedAndWatch (ref) {
+    var ctx = ref.ctx;
+    var computedSpec = ctx.computedSpec,
+        watchSpec = ctx.watchSpec,
+        connect = ctx.connect,
+        refModule = ctx.module;
 
-      if (ccClassKeys) {
-        //  these ccClass are watching the same module's state
-        ccClassKeys.forEach(function (ccClassKey) {
-          var classContext = ccClassKey_ccClassContext_$1[ccClassKey];
-          var ccKeys = classContext.ccKeys,
-              watchedKeys = classContext.watchedKeys,
-              originalWatchedKeys = classContext.originalWatchedKeys;
-          if (ccKeys.length === 0) return;
-          if (watchedKeys.length === 0) return;
-          var sharedStateForCurrentCcClass;
+    if (computedSpec.hasFn) {
+      var refState = ref.state;
+      computeValueForRef(ctx, refModule, refState, refState);
+      okeys(connect).forEach(function (m) {
+        var mState = getState$7(m);
+        computeValueForRef(ctx, m, mState, mState);
+      });
+    }
 
-          if (originalWatchedKeys === '*') {
-            sharedStateForCurrentCcClass = partialSharedState;
+    if (watchSpec.hasFn) {
+      var immediateWatchKeys = watchSpec.immediateWatchKeys;
+
+      if (immediateWatchKeys.length > 0) {
+        var module_stateSpec_ = {};
+        immediateWatchKeys.forEach(function (key) {
+          var targetModule, targetStateKey;
+
+          if (key.includes('/')) {
+            var _key$split = key.split('/'),
+                module = _key$split[0],
+                stateKey = _key$split[1];
+
+            targetModule = module || refModule; // key: 'foo/f1' or '/f1'
+
+            targetStateKey = stateKey;
           } else {
-            var _extractStateByKeys4 = extractStateByKeys(partialSharedState, watchedKeys, true),
-                partialState = _extractStateByKeys4.partialState,
-                isStateEmpty = _extractStateByKeys4.isStateEmpty;
-
-            if (isStateEmpty) return;
-            sharedStateForCurrentCcClass = partialState;
+            targetModule = refModule;
+            targetStateKey = key;
           }
 
-          ccKeys.forEach(function (ccKey) {
-            if (ccKey === currentCcKey && ignoreCurrentCcKey) return;
-            var ref = ccKey_ref_$2[ccKey];
+          var stateSpec = safeGetObjectFromObject(module_stateSpec_, targetModule, {
+            state: {},
+            module: targetModule
+          });
+          stateSpec.state[targetStateKey] = getState$7(targetModule)[targetStateKey];
+        });
+        Object.values(module_stateSpec_).forEach(function (stateSpec) {
+          var module = stateSpec.module,
+              state = stateSpec.state;
+          watchKeyForRef(ctx, module, getState$7(module), state);
+        });
+      }
+    }
+  }
 
-            if (ref) {
-              if (ccContext.isDebug) {
-                console.log(styleStr$1("received state for ref " + ccKey + " is broadcasted from same module's other ref " + currentCcKey), color$1());
+  function getComputedSpec (computedFns, module) {
+    var hasFn = Object.keys(computedFns).length > 0;
+    return {
+      computedFns: computedFns,
+      module: module,
+      hasFn: hasFn
+    };
+  }
+
+  function getWatchSpec (watchFns, immediateWatchKeys) {
+    if (immediateWatchKeys === void 0) {
+      immediateWatchKeys = [];
+    }
+
+    var hasFn = Object.keys(watchFns).length > 0;
+    return {
+      watchFns: watchFns,
+      immediateWatchKeys: immediateWatchKeys,
+      hasFn: hasFn
+    };
+  }
+
+  var safeGetObjectFromObject$1 = safeGetObjectFromObject,
+      okeys$4 = okeys;
+  var _reducerModule_fnNames_ = ccContext.reducer._reducerModule_fnNames_;
+  function beforeMount (ref, setup, bindCtxToMethod) {
+    var ctx = ref.ctx;
+    var reducer = ctx.reducer,
+        lazyReducer = ctx.lazyReducer,
+        dispatch = ctx.dispatch,
+        lazyDispatch = ctx.lazyDispatch,
+        connect = ctx.connect,
+        module = ctx.module;
+    var connectedModules = okeys$4(connect);
+    var allModules = connectedModules.slice();
+    if (!allModules.includes(module)) allModules.push(module); //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
+    //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
+
+    allModules.forEach(function (m) {
+      var refReducerFnObj = safeGetObjectFromObject$1(reducer, m);
+      var refLazyReducerFnObj = safeGetObjectFromObject$1(lazyReducer, m);
+      var fnNames = _reducerModule_fnNames_[m] || [];
+      fnNames.forEach(function (fnName) {
+        refReducerFnObj[fnName] = function (payload, delay, idt) {
+          return dispatch(m + "/" + fnName, payload, delay, idt);
+        };
+
+        refLazyReducerFnObj[fnName] = function (payload, delay, idt) {
+          return lazyDispatch(m + "/" + fnName, payload, delay, idt);
+        };
+      });
+    }); //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后，分析computedSpec之前
+
+    if (setup) {
+      var watchFns = ctx.watchFns,
+          computedFns = ctx.computedFns,
+          immediateWatchKeys = ctx.immediateWatchKeys;
+      if (typeof setup !== 'function') throw new Error('type of setup must be function');
+      var settingsObj = setup(ctx) || {};
+      if (!isPlainJsonObject(settingsObj)) throw new Error('type of setup return result must be an plain json object');
+      var globalBindCtx = ccContext.bindCtxToMethod; //优先读自己的，再读全局的
+
+      if (bindCtxToMethod === true || globalBindCtx === true && bindCtxToMethod !== false) {
+        okeys$4(settingsObj).forEach(function (name) {
+          var settingValue = settingsObj[name];
+          if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
+        });
+      }
+
+      ctx.settings = settingsObj;
+      ctx.computedSpec = getComputedSpec(computedFns);
+      ctx.watchSpec = getWatchSpec(watchFns, immediateWatchKeys);
+    }
+
+    triggerComputedAndWatch(ref);
+  }
+
+  function beforeUnmount (ref) {
+    //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
+    //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
+    ref.__$$isUnmounted = true;
+    var ctx = ref.ctx;
+    var eid_effectReturnCb_ = ctx.effectMeta.eid_effectReturnCb_;
+    Object.getOwnPropertySymbols(eid_effectReturnCb_).forEach(function (symbolKey) {
+      var cb = eid_effectReturnCb_[symbolKey];
+      if (typeof cb === 'function') cb(ctx);
+    });
+    okeys(eid_effectReturnCb_).forEach(function (eId) {
+      var cb = eid_effectReturnCb_[eId];
+      if (typeof cb === 'function') cb(ctx);
+    });
+    var ccUniqueKey = ctx.ccUniqueKey,
+        ccClassKey = ctx.ccClassKey;
+    offEventHandlersByCcUniqueKey(ccUniqueKey);
+    unsetRef(ccClassKey, ccUniqueKey);
+  }
+
+  var moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_,
+      _ccContext$store$1 = ccContext.store,
+      getPrevState = _ccContext$store$1.getPrevState,
+      getState$8 = _ccContext$store$1.getState;
+  function triggerSetupEffect (ref, callByDidMount) {
+    var ctx = ref.ctx;
+    var _ctx$effectMeta = ctx.effectMeta,
+        effectItems = _ctx$effectMeta.effectItems,
+        eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_;
+
+    if (callByDidMount) {
+      effectItems.forEach(function (item) {
+        if (item.immediate === false) return;
+        var cb = item.fn(ctx);
+        if (cb) eid_effectReturnCb_[item.eId] = cb;
+      });
+    } else {
+      //callByDidUpdate
+      var prevState = ctx.prevState;
+      var curState = ref.state;
+      var toBeExecutedFns = [];
+      effectItems.forEach(function (item) {
+        // const { status, stateKeys, fn, eId } = item;
+        // if (status === EFFECT_STOPPED) return;
+        var stateKeys = item.stateKeys,
+            fn = item.fn,
+            eId = item.eId;
+
+        if (stateKeys) {
+          var keysLen = stateKeys.length;
+          if (keysLen === 0) return;
+          var shouldEffectExecute = false;
+
+          for (var i = 0; i < keysLen; i++) {
+            var key = stateKeys[i];
+            var targetCurState = void 0,
+                targetPrevState = void 0,
+                targetKey = void 0;
+
+            if (key.includes('/')) {
+              var _key$split = key.split('/'),
+                  module = _key$split[0],
+                  unmoduledKey = _key$split[1];
+
+              var _prevState = getPrevState(module);
+
+              if (!_prevState) {
+                justWarning("key[" + key + "] is invalid, its module[" + module + "] has not been declared in store!");
+                continue;
               }
 
-              prepareReactSetState(ref, identity, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
+              if (!moduleName_stateKeys_$4[module].includes(unmoduledKey)) {
+                justWarning("key[" + key + "] is invalid, its unmoduledKey[" + unmoduledKey + "] has not been declared in state!");
+                continue;
+              }
+
+              targetCurState = getState$8(module);
+              targetPrevState = _prevState;
+              targetKey = unmoduledKey;
+            } else {
+              targetCurState = curState;
+              targetPrevState = prevState;
+              targetKey = key;
             }
-          });
-        });
-      }
-    }
 
-    broadcastConnectedState(moduleName, originalState);
-  }
-
-  function broadcastConnectedState(commitModule, commitState) {
-    // if there is no any react class registered to module, here will get undefined, so use safeGetArrayFromObject
-    var commitStateKeys = okeys$1(commitState); //提前把commitStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
-
-    okeys$1(moduleName_ccClassKeys_).forEach(function (moduleName) {
-      var ccClassKeys = safeGetArrayFromObject$1(moduleName_ccClassKeys_, moduleName);
-      ccClassKeys.forEach(function (ccClassKey) {
-        var ccClassContext = ccClassKey_ccClassContext_$1[ccClassKey];
-        updateConnectedState(ccClassContext, commitModule, commitState, commitStateKeys);
-      });
-    });
-  }
-
-  function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
-    var stateToPropMapping = targetClassContext.stateToPropMapping,
-        connectedModule = targetClassContext.connectedModule;
-
-    if (connectedModule[commitModule] === 1) {
-      var ccKeys = targetClassContext.ccKeys;
-      var isSetConnectedStateTriggered = false;
-      var len = commitStateKeys.length;
-
-      for (var i = 0; i < len; i++) {
-        var moduledStateKey = commitModule + "/" + commitStateKeys[i];
-
-        if (stateToPropMapping[moduledStateKey]) {
-          isSetConnectedStateTriggered = true;
-          break; //只要感知到有一个key发生变化，就可以跳出循环了，
-          //因为connectedState指向的是store里state的引用，更新动作在store里修改时就已完成
-        }
-      } //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
-
-
-      if (isSetConnectedStateTriggered === true) {
-        ccKeys.forEach(function (ccUniKey) {
-          var ref = ccKey_ref_$2[ccUniKey];
-
-          if (ref) {
-            var refCc = ref.cc;
-            var watchSpec = refCc.watchSpec;
-            var computedSpec = refCc.computedSpec;
-            var shouldCurrentRefUpdate = watchKeyForRef(commitModule, watchSpec, refCc.ccState.connect, getState$2(commitModule), commitState, ref.__fragmentParams); //如果ref是CcFragment实例，将获得ctx
-
-            computeValueForRef(commitModule, computedSpec, refCc.refComputed, refCc.refConnectedComputed, ref.state, commitState, ref.__fragmentParams);
-            if (shouldCurrentRefUpdate) refCc.reactForceUpdate();
+            if (targetPrevState[targetKey] !== targetCurState[targetKey]) {
+              shouldEffectExecute = true;
+              break;
+            }
           }
-        });
-      }
+
+          if (shouldEffectExecute) {
+            toBeExecutedFns.push({
+              fn: fn,
+              eId: eId
+            });
+          }
+        } else {
+          toBeExecutedFns.push({
+            fn: fn,
+            eId: eId
+          });
+        }
+      });
+      toBeExecutedFns.forEach(function (item) {
+        var fn = item.fn,
+            eId = item.eId;
+        var cb = fn(ctx);
+        if (cb) eid_effectReturnCb_[eId] = cb;
+      });
     }
   }
 
-  var verifyKeys$1 = util.verifyKeys,
-      ccClassDisplayName$1 = util.ccClassDisplayName,
+  var ccClassDisplayName$1 = util.ccClassDisplayName,
       styleStr$2 = util.styleStr,
       color$2 = util.color,
-      verboseInfo$1 = util.verboseInfo,
-      makeError$2 = util.makeError,
-      justWarning$2 = util.justWarning;
-  var _ccContext$store$1 = ccContext.store,
-      _state$2 = _ccContext$store$1._state,
-      getState$3 = _ccContext$store$1.getState,
-      _reducer$1 = ccContext.reducer._reducer,
-      refStore$1 = ccContext.refStore,
-      _computedValue$1 = ccContext.computed._computedValue,
-      moduleName_watchedKeys_ = ccContext.moduleName_watchedKeys_,
-      ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_;
+      verboseInfo$2 = util.verboseInfo,
+      makeError$3 = util.makeError;
   var cl$1 = color$2;
   var ss$1 = styleStr$2;
-  var me$3 = makeError$2;
-  var vbi$3 = verboseInfo$1;
-
-  function paramCallBackShouldNotSupply(module, currentModule) {
-    return "if you pass param reactCallback, param module must equal current CCInstance's module, module: " + module + ", CCInstance's module:" + currentModule + ", now the cb will never been triggered! ";
-  }
-
-  function handleError(err, throwError) {
-    if (throwError === void 0) {
-      throwError = true;
-    }
-
-    if (throwError) throw err;else {
-      handleCcFnError(err);
-    }
-  }
-
-  function checkStoreModule(module, throwError) {
-    if (throwError === void 0) {
-      throwError = true;
-    }
-
-    try {
-      checkModuleName(module, false, "module[" + module + "] is not configured in store");
-      return true;
-    } catch (err) {
-      handleError(err, throwError);
-      return false;
-    }
-  } // any error in this function will not been throwed, cc just warning, 
-
-
-  function isStateModuleValid(inputModule, currentModule, reactCallback, cb) {
-    var targetCb = reactCallback;
-
-    if (checkStoreModule(inputModule, false)) {
-      if (inputModule != currentModule) {
-        if (reactCallback) {
-          justWarning$2(me$3(ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID, vbi$3(paramCallBackShouldNotSupply(inputModule, currentModule))));
-          targetCb = null; //let user's reactCallback has no chance to be triggered
-        }
-      }
-
-      cb(null, targetCb);
-    } else {
-      cb(new Error("inputModule:" + inputModule + " invalid"), null);
-    }
-  }
-
-  function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
-    var watchedKeys = inputWatchedKeys;
-
-    if (inputWatchedKeys === '*') {
-      watchedKeys = Object.keys(getState$3(module));
-    }
-
-    var _verifyKeys = verifyKeys$1(watchedKeys, []),
-        notArray = _verifyKeys.notArray,
-        keyElementNotString = _verifyKeys.keyElementNotString;
-
-    if (notArray) {
-      throw me$3(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi$3("ccClassKey:" + ccClassKey));
-    }
-
-    if (keyElementNotString) {
-      throw me$3(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi$3("ccClassKey:" + ccClassKey));
-    }
-
-    return watchedKeys;
-  }
-
-  function checkCcStartupOrNot() {
-    if (ccContext.isCcAlreadyStartup !== true || !window.cc) {
-      throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
-    }
-  } //to let cc know a specified module are watching what state keys
-
-
-  function mapModuleAndWatchedStateKeys(moduleName, partialWatchedKeys) {
-    var watchedKeysOfModule = util.safeGetArrayFromObject(moduleName_watchedKeys_, moduleName);
-    partialWatchedKeys.forEach(function (sKey) {
-      if (!watchedKeysOfModule.includes(sKey)) watchedKeysOfModule.push(sKey);
-    });
-  } //tell cc this ccClass is watching some keys of a module state
-
-
-  function mapCcClassKeyAndCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, connectSpec) {
-    var fragmentPrefixLen = CC_FRAGMENT_PREFIX.length;
-
-    if (ccClassKey.toLowerCase().substring(0, fragmentPrefixLen) === CC_FRAGMENT_PREFIX) {
-      throw me$3(ERR.CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED);
-    }
-
-    var _getFeatureStrAndStpM = getFeatureStrAndStpMapping(connectSpec),
-        stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping,
-        connectedModuleNames = _getFeatureStrAndStpM.connectedModuleNames;
-
-    var contextMap = ccContext.ccClassKey_ccClassContext_;
-    var ctx = contextMap[ccClassKey];
-
-    if (ctx !== undefined) {
-      // analyze is ccClassKey really duplicated
-      if (ccContext.isHotReloadMode()) {
-        var str1 = ctx.originalWatchedKeys.toString() + JSON.stringify(ctx.stateToPropMapping);
-        var str2 = originalWatchedKeys.toString() + JSON.stringify(stateToPropMapping);
-
-        if (str1 !== str2) {
-          throw me$3(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:" + ccClassKey + " duplicate");
-        } else {
-          ccContext.throwCcHmrError(me$3(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:" + ccClassKey + " duplicate"));
-        }
-      } else {
-        throw me$3(ERR.CC_CLASS_KEY_DUPLICATE, "ccClassKey:" + ccClassKey + " duplicate");
-      }
-    }
-
-    buildCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, stateToPropMapping, connectedModuleNames);
-  }
-
-  function mapModuleAssociateDataToCcContext(ccClassKey, stateModule, watchedKeys, connectSpec) {
-    var targetWatchedKeys = getWatchedStateKeys(stateModule, ccClassKey, watchedKeys);
-    mapCcClassKeyAndCcClassContext(ccClassKey, stateModule, watchedKeys, targetWatchedKeys, connectSpec);
-    mapModuleAndWatchedStateKeys(stateModule, targetWatchedKeys);
-    mapModuleAndCcClassKeys(stateModule, ccClassKey);
-    return targetWatchedKeys;
-  }
-
-  function _promiseErrorHandler(resolve, reject) {
-    return function (err) {
-      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        args[_key - 1] = arguments[_key];
-      }
-
-      return err ? reject(err) : resolve.apply(void 0, args);
-    };
-  }
-
-  function _promisifyCcFn(ccFn, userLogicFn, executionContext, payload) {
-    return new Promise(function (resolve, reject) {
-      var _executionContext = Object.assign(executionContext, {
-        __innerCb: _promiseErrorHandler(resolve, reject)
-      });
-
-      ccFn(userLogicFn, _executionContext, payload);
-    })["catch"](catchCcError);
-  }
-
-  function handleCcFnError(err, __innerCb) {
-    if (err) {
-      if (__innerCb) __innerCb(err);else {
-        justWarning$2(err);
-        if (ccContext.errorHandler) ccContext.errorHandler(err);
-      }
-    }
-  } //忽略掉传递进来的chainId，chainDepth，重新生成它们，源头调用了lazyDispatch或者ctx里调用了lazyDispatch，就会触发此逻辑
-
-
-  function getNewChainData(isLazy, chainId, oriChainId, chainId_depth_) {
-    var _chainId;
-
-    if (isLazy === true) {
-      _chainId = getChainId();
-      setChainIdLazy(_chainId);
-      chainId_depth_[_chainId] = 1; //置为1
-    } else {
-      _chainId = chainId || getChainId();
-      if (!chainId_depth_[_chainId]) chainId_depth_[_chainId] = 1;
-    } //源头函数会触发创建oriChainId， 之后就一直传递下去了
-
-
-    var _oriChainId = oriChainId || _chainId;
-
-    return {
-      _chainId: _chainId,
-      _oriChainId: _oriChainId
-    };
-  }
-
-  function register(ccClassKey, _temp) {
+  var me$5 = makeError$3;
+  var vbi$5 = verboseInfo$2;
+  function register(_temp, ccClassKey) {
     var _ref = _temp === void 0 ? {} : _temp,
         _ref$module = _ref.module,
         module = _ref$module === void 0 ? MODULE_DEFAULT : _ref$module,
@@ -2303,6 +3513,8 @@ if (!this._inheritsLoose) {
         inputStoredKeys = _ref$storedKeys === void 0 ? [] : _ref$storedKeys,
         _ref$connect = _ref.connect,
         connect = _ref$connect === void 0 ? {} : _ref$connect,
+        _ref$tag = _ref.tag,
+        tag = _ref$tag === void 0 ? '' : _ref$tag,
         reducerModule = _ref.reducerModule,
         _ref$isPropsProxy = _ref.isPropsProxy,
         isPropsProxy = _ref$isPropsProxy === void 0 ? false : _ref$isPropsProxy,
@@ -2312,46 +3524,27 @@ if (!this._inheritsLoose) {
         __checkStartUp = _ref$__checkStartUp === void 0 ? true : _ref$__checkStartUp,
         __calledBy = _ref.__calledBy;
 
+    if (ccClassKey === void 0) {
+      ccClassKey = '';
+    }
+
     try {
-      if (!ccClassKey) throw new Error("[[register]]: ccClassKey is undefined!");
-      if (__checkStartUp === true) checkCcStartupOrNot();
-
-      if (__calledBy !== 'cc') {
-        if (ccClassKey.toLowerCase() === CC_DISPATCHER.toLowerCase()) {
-          throw new Error(CC_DISPATCHER + " is cc built-in ccClassKey name, if you want to customize your dispatcher, \n        you can set autoCreateDispatcher=false in StartupOption, and use createDispatcher then.");
-        }
-      }
-
-      var _curStateModule = module;
-
-      var _reducerModule = reducerModule || _curStateModule; //if reducerModule not defined, will be equal module;
-
-
-      checkStoreModule(_curStateModule);
-      var sKeys = mapModuleAssociateDataToCcContext(ccClassKey, _curStateModule, inputWatchedKeys, connect);
-      var watchedKeys = sKeys;
-      var isIssArr = Array.isArray(inputStoredKeys);
-
-      if (!isIssArr && inputStoredKeys !== '*') {
-        throw new Error("register.option.storedKeys type err, it is must be an array or string *");
-      }
-
-      if (isIssArr) {
-        inputStoredKeys.forEach(function (v) {
-          if (sKeys.includes(v)) {
-            throw new Error("register.option.storedKeys key err, the key[" + v + "] is already been declared in watchedKeys");
-          }
-        });
-      }
+      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, CC_CLASS_PREFIX, inputWatchedKeys, inputStoredKeys, connect, reducerModule, __checkStartUp, __calledBy),
+          _module = _mapRegistrationInfo._module,
+          _reducerModule = _mapRegistrationInfo._reducerModule,
+          _watchedKeys = _mapRegistrationInfo._watchedKeys,
+          _ccClassKey = _mapRegistrationInfo._ccClassKey,
+          _connect = _mapRegistrationInfo._connect;
 
       return function (ReactClass) {
-        if (ReactClass.prototype.__$$mapCcToInstance) {
-          throw me$3(ERR.CC_REGISTER_A_CC_CLASS, vbi$3("if you want to register " + ccClassKey + " to cc successfully, the ReactClass can not be a CcClass!"));
-        }
+        if (ReactClass.prototype && ReactClass.prototype.$$attach) {
+          throw me$5(ERR.CC_REGISTER_A_CC_CLASS, vbi$5("CcClass can not been registered!"));
+        } // const isClsPureComponent = ReactClass.prototype.isPureReactComponent;
+
 
         var ToBeExtendedClass = isPropsProxy === false ? ReactClass : React.Component;
 
-        var CcClass =
+        var _CcClass =
         /*#__PURE__*/
         function (_ToBeExtendedClass) {
           _inheritsLoose(CcClass, _ToBeExtendedClass);
@@ -2361,66 +3554,24 @@ if (!this._inheritsLoose) {
 
             try {
               _this = _ToBeExtendedClass.call(this, props, context) || this;
-              if (!_this.state) _this.state = {};
-              var ccKey = props.ccKey,
-                  _props$ccOption = props.ccOption,
-                  ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
-              var originalCcKey = ccKey; //这些方法是cc自己注入的
+              _this.state = _this.state || {};
+              _this.$$attach = _this.$$attach.bind(_assertThisInitialized(_this));
 
-              util.bindThis(_assertThisInitialized(_this), ['__$$mapCcToInstance', '__$$recoverState', '$$domDispatch', '$$sync', '$$syncBool', '$$syncInt', '$$set', '__$$sync', '$$setBool', '__$$getInvokeHandler', '__$$makeInvokeHandler', '$$changeState', '__$$getChangeStateHandler', '__$$getDispatchHandler', '$$attach']);
+              var _tag = props.ccTag || tag;
 
-              var _computeCcUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey),
-                  newCcKey = _computeCcUniqueKey.ccKey,
-                  ccUniqueKey = _computeCcUniqueKey.ccUniqueKey,
-                  isCcUniqueKeyAutoGenerated = _computeCcUniqueKey.isCcUniqueKeyAutoGenerated;
-
-              var ccClassContext = ccClassKey_ccClassContext_$2[ccClassKey];
-              setRef(_assertThisInitialized(_this), isSingle, ccClassKey, newCcKey, ccUniqueKey, ccOption);
-
-              if (!ccOption.storedKeys) {
-                ccOption.storedKeys = inputStoredKeys;
-              }
-
-              if (ccOption.storedKeys === '*') {
-                var toExcludeKeys = moduleName_watchedKeys_[_curStateModule];
-                var allKeys = Object.keys(_this.state);
-                var storedKeys = allKeys.filter(function (k) {
-                  return !toExcludeKeys.includes(k);
-                });
-                ccOption.storedKeys = storedKeys;
-              }
-
-              _this.__$$mapCcToInstance(isSingle, ccClassKey, originalCcKey, newCcKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, ccOption.storedKeys, ccOption, ccClassContext, _curStateModule, _reducerModule, watchedKeys, connect);
-
-              _this.$$connectedState = _this.cc.connectedState;
-              _this.$$globalState = _this.cc.globalState;
-              _this.$$moduleState = _this.cc.moduleState;
-              _this.$$refComputed = _this.cc.refComputed;
-              _this.$$refConnectedComputed = _this.cc.refConnectedComputed; //这些方法是cc交给用户定义的，放置到cc下统一管理，因为多重装饰器模式下，这里属性是从this上取不到的
-              //放在__$$recoverState之前，优先设置this.cc.computed
-
-              if (_this.$$watch) {
-                _this.cc.watch = _this.$$watch.bind(_assertThisInitialized(_this)); //区别于CcFragment, 对于class组件，不把this当作上下文传进去了
-
-                _this.cc.watchSpec = getWatchSpec(_this.cc.watch, null, _curStateModule);
-              }
-
-              if (_this.$$computed) {
-                _this.cc.computed = _this.$$computed.bind(_assertThisInitialized(_this));
-                _this.cc.computedSpec = getComputedSpec(_this.cc.computed, null, _curStateModule);
-              }
-
-              if (_this.$$onUrlChanged) _this.cc.onUrlChanged = _this.$$onUrlChanged.bind(_assertThisInitialized(_this));
-              if (_this.$$execute) _this.cc.execute = _this.$$execute.bind(_assertThisInitialized(_this)); //$$cache要注意使用规范
-
-              if (_this.$$cache) {
-                _this.$$cache = _this.$$cache.bind(_assertThisInitialized(_this));
-                _this.$$refCache = _this.$$cache();
-              } else {
-                _this.$$refCache = {};
-              }
-
-              _this.__$$recoverState(_curStateModule, ccUniqueKey, connect);
+              var params = Object.assign({}, props, {
+                isSingle: isSingle,
+                module: _module,
+                reducerModule: _reducerModule,
+                tag: _tag,
+                state: _this.state,
+                watchedKeys: _watchedKeys,
+                ccClassKey: _ccClassKey,
+                connect: _connect
+              });
+              buildRefCtx(_assertThisInitialized(_this), params);
+              if (_this.$$setup) _this.$$setup = _this.$$setup.bind(_assertThisInitialized(_this));
+              beforeMount(_assertThisInitialized(_this), _this.$$setup, false);
             } catch (err) {
               catchCcError(err);
             }
@@ -2433,37 +3584,15 @@ if (!this._inheritsLoose) {
           var _proto = CcClass.prototype;
 
           _proto.shouldComponentUpdate = function shouldComponentUpdate(nextProps, nextState) {
-            var childRef = this.cc.childRef;
+            var childRef = this.ctx.childRef;
 
             if (childRef && childRef.shouldComponentUpdate) {
               return childRef.shouldComponentUpdate(nextProps, nextState);
             } else if (_ToBeExtendedClass.prototype.shouldComponentUpdate) {
               return _ToBeExtendedClass.prototype.shouldComponentUpdate.call(this, nextProps, nextState);
-            } // return this.props !== nextProps || this.state !== nextState;
-
-
-            var isStateChanged = this.state !== nextState;
-            return isStateChanged;
-          };
-
-          _proto.__$$recoverState = function __$$recoverState(currentModule, ccUniqueKey, connect) {
-            var refStoredState = refStore$1._state[ccUniqueKey] || {};
-            var moduleState = _state$2[currentModule];
-            var refState = this.state;
-            var entireState = Object.assign({}, refState, refStoredState, moduleState);
-            this.state = entireState;
-            var thisCc = this.cc;
-            var computedSpec = thisCc.computedSpec;
-
-            if (computedSpec) {
-              var refComputed = thisCc.refComputed,
-                  refConnectedComputed = thisCc.refConnectedComputed;
-              computeValueForRef(currentModule, computedSpec, refComputed, refConnectedComputed, entireState, entireState);
-              okeys(connect).forEach(function (m) {
-                var mState = getState$3(m);
-                computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState);
-              });
             }
+
+            return this.state !== nextState || shallowDiffers(this.props, nextProps);
           } //!!! 存在多重装饰器时, 或者用户想使用this.props.***来用concent类时
           //!!! 必需在类的【constructor】 里调用 this.props.$$attach(this),紧接着state定义之后
           ;
@@ -2471,891 +3600,76 @@ if (!this._inheritsLoose) {
           _proto.$$attach = function $$attach(childRef) {
             var _this2 = this;
 
-            var attachMethods = ['$$domDispatch', '$$dispatch', '$$lazyDispatch', '$$invoke', '$$lazyInvoke', '$$on', '$$onIdentity', '$$emit', '$$emitIdentity', '$$emitWith', '$$off', '$$sync', '$$syncBool', '$$syncInt', '$$set', '$$setBool', 'setState', 'setGlobalState', 'setModuleState', 'forceUpdate'];
-            attachMethods.forEach(function (m) {
+            this.ctx.reactSetState = childRef.setState.bind(childRef);
+            this.ctx.reactForceUpdate = childRef.forceUpdate.bind(childRef); // childRef.childRefRea
+
+            ['setState', 'forceUpdate'].forEach(function (m) {
               childRef[m] = _this2[m].bind(_this2);
-            }); //这些负责搜集结果的key，单独绑定
+            });
+            var ctx = this.ctx;
+            ctx.childRef = childRef;
+            childRef.ctx = ctx; //替换掉cc.__$$ccSetState cc.__$$ccForceUpdate, 让changeRefState正确的更新目标实例
 
-            childRef.$$refComputed = this.cc.refComputed;
-            childRef.$$refConnectedComputed = this.cc.refConnectedComputed;
-            childRef.$$connectedComputed = this.cc.connectedComputed;
-            childRef.$$moduleComputed = this.cc.moduleComputed;
-            childRef.$$globalComputed = this.cc.globalComputed;
-            childRef.$$connectedState = this.cc.connectedState;
-            childRef.$$globalState = this.cc.globalState;
-            childRef.$$moduleState = this.cc.moduleState;
-            var thisCc = this.cc;
-            var curModule = thisCc.ccState.module;
-            childRef.cc = thisCc;
+            ctx.__$$ccSetState = makeCcSetStateHandler(childRef, this);
+            ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(childRef);
+            var childRefState = childRef.state;
+            var thisState = this.state;
+            if (!childRefState) childRefState = childRef.state = {};
+            var newState = Object.assign({}, childRefState, thisState);
+            childRef.state = newState; //在childRef进入首次render流程前，提前赋值
 
-            var bindChildRefCcApi = function bindChildRefCcApi(cRef, method, ccMethod) {
-              if (cRef[method]) {
-                childRef[method] = childRef[method].bind(childRef);
-                thisCc[ccMethod] = childRef[method];
-                if (method === '$$watch') thisCc.watchSpec = getWatchSpec(thisCc.$$watch, null, curModule);else if (method === '$$computed') thisCc.computedSpec = getComputedSpec(thisCc.$$computed, null, curModule);
-              }
-            }; //这些方法绑定的this指向childRef
-
-
-            bindChildRefCcApi(childRef, '$$watch', 'watch');
-            bindChildRefCcApi(childRef, '$$computed', 'computed');
-            bindChildRefCcApi(childRef, '$$onUrlChanged', 'onUrlChanged');
-
-            if (childRef.$$cache) {
-              childRef.$$cache = childRef.$$cache.bind(childRef);
-              this.cc.cache = childRef.$$cache;
-              childRef.$$refCache = childRef.$$cache();
-            } else {
-              childRef.$$refCache = {};
-            }
-
-            var childRefState = childRef.state || {};
-            var newState = Object.assign({}, childRefState, this.state);
-            this.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
-            // childRef.state = newState;//在childRef进入首次render流程前，提前赋值
+            ctx.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
+            // this.state = newState; // bad writing
 
             okeys(newState).forEach(function (key) {
-              return childRefState[key] = newState[key];
+              return thisState[key] = newState[key];
             });
-            this.cc.childRef = childRef;
-          };
-
-          _proto.componentWillUpdate = function componentWillUpdate(nextProps, nextState) {
-            //注意这里，赋值最新的props
-            this.props = nextProps;
+            beforeMount(childRef, childRef.$$setup);
+            triggerComputedAndWatch(childRef);
           };
 
           _proto.componentDidMount = function componentDidMount() {
-            if (_ToBeExtendedClass.prototype.componentDidMount) _ToBeExtendedClass.prototype.componentDidMount.call(this);
+            if (_ToBeExtendedClass.prototype.componentDidMount) _ToBeExtendedClass.prototype.componentDidMount.call(this); // 代理模式不再强制检查$$attach是否给调用
+            // if (isPropsProxy === true && !this.ctx.childRef) {
+            //   throw new Error('you forgot to call this.props.$$attach(this) in constructor, you must call it after state assign expression next line!');
+            // }
 
-            if (isPropsProxy === true) {
-              if (!this.cc.childRef) {
-                throw new Error('you forgot to call this.props.$$attach(this) constructor, and you must call it after super() next line!');
-              } else {
-                //执行到父组件的componentDidMount，可以等同于认为孩子mounted了
-                this.cc.isChildRefMounted = true;
-              }
-            }
+            triggerSetupEffect(this, true);
           };
 
-          _proto.__$$mapCcToInstance = function __$$mapCcToInstance(isSingle, ccClassKey, originalCcKey, ccKey, ccUniqueKey, isCcUniqueKeyAutoGenerated, storedKeys, ccOption, ccClassContext, currentModule, currentReducerModule, watchedKeys, connect) {
-            var _this3 = this;
-
-            var reactSetStateRef = this.setState.bind(this);
-            var reactForceUpdateRef = this.forceUpdate.bind(this);
-            var isControlledByConcent = watchedKeys.length > 0 || util.isObjectNotNull(connect);
-            var ccState = {
-              renderCount: 1,
-              isSingle: isSingle,
-              ccClassKey: ccClassKey,
-              ccKey: ccKey,
-              originalCcKey: originalCcKey,
-              ccUniqueKey: ccUniqueKey,
-              isCcUniqueKeyAutoGenerated: isCcUniqueKeyAutoGenerated,
-              storedKeys: storedKeys,
-              ccOption: ccOption,
-              ccClassContext: ccClassContext,
-              module: currentModule,
-              reducerModule: currentReducerModule,
-              watchedKeys: watchedKeys,
-              initTime: Date.now(),
-              connect: connect,
-              isControlledByConcent: isControlledByConcent
-            };
-            var refConnectedComputed = {};
-            okeys(connect).forEach(function (moduleName) {
-              refConnectedComputed[moduleName] = {};
-            });
-
-            var _verifyKeys2 = verifyKeys$1(watchedKeys, storedKeys),
-                duplicate = _verifyKeys2.duplicate,
-                notArray = _verifyKeys2.notArray,
-                keyElementNotString = _verifyKeys2.keyElementNotString;
-
-            if (notArray) {
-              throw me$3(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi$3("ccClassKey:" + ccClassKey + " ccKey:" + ccKey));
-            }
-
-            if (keyElementNotString) {
-              throw me$3(ERR.CC_ARG_KEYS_INCLUDE_NON_STRING_ELEMENT, vbi$3("ccClassKey:" + ccClassKey + " ccKey:" + ccKey));
-            }
-
-            if (duplicate) {
-              throw me$3(ERR.CC_ARG_STORED_KEYS_DUPLICATE_WITH_WATCHED_KEYS, vbi$3("ccClassKey:" + ccClassKey + " ccKey:" + ccKey + " watchedKeys:" + watchedKeys + " storedKeys:" + storedKeys));
-            }
-
-            if (storedKeys.length > 0 && isCcUniqueKeyAutoGenerated) {
-              throw me$3(ERR.CC_CLASS_INSTANCE_NO_CC_KEY_SPECIFIED_WHEN_USE_STORED_KEYS, vbi$3("ccClassKey:" + ccClassKey));
-            }
-
-            var connectedState = ccClassContext.connectedState || {};
-            var globalState = getState$3(MODULE_GLOBAL);
-            var moduleState = getState$3(_curStateModule);
-            this.cc = {
-              isChildRefMounted: false,
-              onUrlChanged: null,
-              watch: null,
-              watchSpec: null,
-              computed: null,
-              computedSpec: null,
-              refComputed: {},
-              refConnectedComputed: refConnectedComputed,
-              //定义在类里的带模块名字的computedKey计算计算结果收集对象
-              connectedComputed: {},
-              globalComputed: {},
-              moduleComputed: {},
-              connectedState: connectedState,
-              globalState: globalState,
-              moduleState: moduleState,
-              execute: null,
-              ccState: ccState,
-              ccClassKey: ccClassKey,
-              originalCcKey: originalCcKey,
-              ccKey: ccKey,
-              ccUniqueKey: ccUniqueKey,
-              reactSetState: function reactSetState(state, cb) {
-                ccState.renderCount += 1; //采用此种写法的话，dispatch.ctx不能暴露state了，只能暴露getState句柄，才能保证取到最新的state
-                // this.state = Object.assign(this.state, state);
-                //采用okeys写法，让dispatch.ctx里的refState总是指向同一个引用
-
-                okeys(state).forEach(function (k) {
-                  return _this3.state[k] = state[k];
-                });
-                reactSetStateRef(state, cb);
-              },
-              reactForceUpdate: function reactForceUpdate(cb) {
-                ccState.renderCount += 1;
-                reactForceUpdateRef(cb);
-              },
-              setState: function setState(state, cb, delay, identity) {
-                if (delay === void 0) {
-                  delay = -1;
-                }
-
-                changeRefState(state, {
-                  ccKey: ccKey,
-                  identity: identity,
-                  module: currentModule,
-                  cb: cb,
-                  calledBy: SET_STATE,
-                  delay: delay
-                }, _this3);
-              },
-              setModuleState: function setModuleState(module, state, delay, identity) {
-                if (delay === void 0) {
-                  delay = -1;
-                }
-
-                changeRefState(state, {
-                  ccKey: ccKey,
-                  identity: identity,
-                  module: module,
-                  calledBy: SET_MODULE_STATE,
-                  delay: delay
-                }, _this3);
-              },
-              setGlobalState: function setGlobalState(partialGlobalState, delay, identity) {
-                if (delay === void 0) {
-                  delay = -1;
-                }
-
-                _this3.cc.setModuleState(MODULE_GLOBAL, partialGlobalState, delay, identity);
-              },
-              forceUpdate: function forceUpdate(cb, delay, identity) {
-                changeRefState(_this3.state, {
-                  ccKey: ccKey,
-                  identity: identity,
-                  module: currentModule,
-                  cb: cb,
-                  calledBy: FORCE_UPDATE,
-                  delay: delay
-                }, _this3);
-              },
-              __invoke: function __invoke(userLogicFn, option, payload) {
-                var targetRef = option.targetRef,
-                    ccKey = option.ccKey,
-                    ccUniqueKey = option.ccUniqueKey,
-                    ccClassKey = option.ccClassKey,
-                    delay = option.delay,
-                    identity = option.identity,
-                    calledBy = option.calledBy,
-                    module = option.module,
-                    chainId = option.chainId,
-                    oriChainId = option.oriChainId,
-                    chainId_depth_ = option.chainId_depth_;
-                return _this3.cc.__promisifiedInvokeWith(userLogicFn, {
-                  targetRef: targetRef,
-                  ccKey: ccKey,
-                  ccUniqueKey: ccUniqueKey,
-                  context: true,
-                  module: module,
-                  ccClassKey: ccClassKey,
-                  calledBy: calledBy,
-                  fnName: userLogicFn.name,
-                  delay: delay,
-                  identity: identity,
-                  chainId: chainId,
-                  oriChainId: oriChainId,
-                  chainId_depth_: chainId_depth_
-                }, payload);
-              },
-              __promisifiedInvokeWith: function __promisifiedInvokeWith(userLogicFn, executionContext, payload) {
-                return _promisifyCcFn(_this3.cc.__invokeWith, userLogicFn, executionContext, payload);
-              },
-              __invokeWith: function __invokeWith(userLogicFn, executionContext, payload) {
-                //ccKey ccClassKey 表示调用源头组件的ccKey和ccClassKey
-                var targetRef = executionContext.targetRef,
-                    ccKey = executionContext.ccKey,
-                    ccUniqueKey = executionContext.ccUniqueKey,
-                    ccClassKey = executionContext.ccClassKey,
-                    _executionContext$mod = executionContext.module,
-                    targetModule = _executionContext$mod === void 0 ? _curStateModule : _executionContext$mod,
-                    _executionContext$con = executionContext.context,
-                    context = _executionContext$con === void 0 ? false : _executionContext$con,
-                    cb = executionContext.cb,
-                    __innerCb = executionContext.__innerCb,
-                    type = executionContext.type,
-                    reducerModule = executionContext.reducerModule,
-                    calledBy = executionContext.calledBy,
-                    fnName = executionContext.fnName,
-                    _executionContext$del = executionContext.delay,
-                    delay = _executionContext$del === void 0 ? -1 : _executionContext$del,
-                    identity = executionContext.identity,
-                    refState = executionContext.refState,
-                    chainId = executionContext.chainId,
-                    oriChainId = executionContext.oriChainId,
-                    chainId_depth_ = executionContext.chainId_depth_;
-                isStateModuleValid(targetModule, _curStateModule, cb, function (err, newCb) {
-                  if (err) return handleCcFnError(err, __innerCb);
-                  var moduleState = getState$3(targetModule);
-                  var executionContextForUser = {};
-                  var isSourceCall = false;
-
-                  if (context) {
-                    isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1; //调用前先加1
-
-                    chainId_depth_[chainId] = chainId_depth_[chainId] + 1; //暂时不考虑在ctx提供lazyDispatch功能
-
-                    var dispatch = _this3.__$$getDispatchHandler(targetRef, refState, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
-
-                    var lazyDispatch = _this3.__$$getDispatchHandler(targetRef, refState, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule, null, null, -1, identity, chainId, oriChainId, chainId_depth_);
-
-                    var sourceClassContext = ccClassKey_ccClassContext_$2[ccClassKey]; //不能将state赋给executionContextForUser，给一个getState才能保证dispatch函数的state是最新的
-                    //目前先保留state
-
-                    var _refState = refState || _this3.state; //优先取透传的，再取自己的，因为有可能是Dispatcher调用
-
-
-                    executionContextForUser = Object.assign(executionContext, {
-                      // 将targetModule一直携带下去，让链式调用里所以句柄隐含的指向最初调用方的module
-                      invoke: _this3.__$$getInvokeHandler(targetRef, targetModule, ccKey, ccUniqueKey, ccClassKey, {
-                        chainId: chainId,
-                        oriChainId: oriChainId,
-                        chainId_depth_: chainId_depth_
-                      }),
-                      //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
-                      lazyInvoke: _this3.__$$getInvokeHandler(targetRef, targetModule, ccKey, ccUniqueKey, ccClassKey, {
-                        isLazy: true,
-                        oriChainId: oriChainId,
-                        chainId_depth_: chainId_depth_
-                      }),
-                      dispatch: dispatch,
-                      lazyDispatch: lazyDispatch,
-                      rootState: getState$3(),
-                      globalState: getState$3(MODULE_GLOBAL),
-                      //指的是目标模块的state
-                      moduleState: moduleState,
-                      //指的是目标模块的的moduleComputed
-                      moduleComputed: _computedValue$1[targetModule],
-                      //!!!指的是调用源cc类的connectedState
-                      connectedState: sourceClassContext.connectedState,
-                      //!!!指的是调用源cc类的connectedComputed
-                      connectedComputed: sourceClassContext.connectedComputed,
-                      //!!!指的是调用源cc类实例的state
-                      refState: _refState //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
-
-                    });
-                  }
-
-                  send(SIG_FN_START, {
-                    isSourceCall: isSourceCall,
-                    calledBy: calledBy,
-                    module: targetModule,
-                    chainId: chainId,
-                    fn: userLogicFn
-                  });
-                  co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(function (partialState) {
-                    chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
-
-                    var curDepth = chainId_depth_[chainId];
-                    var commitStateList = [];
-                    send(SIG_FN_END, {
-                      isSourceCall: isSourceCall,
-                      calledBy: calledBy,
-                      module: targetModule,
-                      chainId: chainId,
-                      fn: userLogicFn
-                    }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
-
-                    if (isChainIdLazy(chainId)) {
-                      //来自于惰性派发的调用
-                      if (curDepth > 1) {
-                        //某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
-                        setChainState(chainId, targetModule, partialState);
-                      } else {
-                        // chainDepth === 1, 合并状态一次性提交到store并派发到组件实例
-                        if (isChainExited(chainId)) ; else {
-                          commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
-                          removeChainState(chainId);
-                        }
-                      }
-                    } else {
-                      commitStateList = [{
-                        module: targetModule,
-                        state: partialState
-                      }];
-                    }
-
-                    commitStateList.forEach(function (v) {
-                      changeRefState(v.state, {
-                        identity: identity,
-                        ccKey: ccKey,
-                        ccUniqueKey: ccUniqueKey,
-                        module: v.module,
-                        cb: newCb,
-                        type: type,
-                        reducerModule: reducerModule,
-                        calledBy: calledBy,
-                        fnName: fnName,
-                        delay: delay
-                      }, targetRef);
-                    });
-                    if (__innerCb) __innerCb(null, partialState);
-                  })["catch"](function (err) {
-                    send(SIG_FN_ERR, {
-                      isSourceCall: isSourceCall,
-                      calledBy: calledBy,
-                      module: targetModule,
-                      chainId: chainId,
-                      fn: userLogicFn
-                    });
-                    handleCcFnError(err, __innerCb);
-                  });
-                });
-              },
-              dispatch: function dispatch(_temp2) {
-                var _ref2 = _temp2 === void 0 ? {} : _temp2,
-                    targetRef = _ref2.targetRef,
-                    refState = _ref2.refState,
-                    ccKey = _ref2.ccKey,
-                    ccUniqueKey = _ref2.ccUniqueKey,
-                    ccClassKey = _ref2.ccClassKey,
-                    inputModule = _ref2.module,
-                    inputReducerModule = _ref2.reducerModule,
-                    identity = _ref2.identity,
-                    type = _ref2.type,
-                    payload = _ref2.payload,
-                    reactCallback = _ref2.cb,
-                    __innerCb = _ref2.__innerCb,
-                    _ref2$delay = _ref2.delay,
-                    delay = _ref2$delay === void 0 ? -1 : _ref2$delay,
-                    chainId = _ref2.chainId,
-                    oriChainId = _ref2.oriChainId,
-                    chainId_depth_ = _ref2.chainId_depth_;
-
-                //if module not defined, targetStateModule will be currentModule
-                var targetStateModule = inputModule || currentModule; //if reducerModule not defined, cc will treat targetReducerModule as targetStateModule
-
-                var targetReducerModule = inputReducerModule || targetStateModule;
-                var targetReducerMap = _reducer$1[targetReducerModule];
-
-                if (!targetReducerMap) {
-                  return __innerCb(new Error("no reducerMap found for reducer module:" + targetReducerModule));
-                }
-
-                var reducerFn = targetReducerMap[type];
-
-                if (!reducerFn) {
-                  var fns = Object.keys(targetReducerMap);
-                  return __innerCb(new Error("no reducer defined in ccContext for reducer module:" + targetReducerModule + " type:" + type + ", maybe you want to invoke one of them:" + fns));
-                } // const errMsg = util.isCcActionValid({ type, payload });
-                // if (errMsg) return justWarning(errMsg);
-
-
-                isStateModuleValid(targetStateModule, currentModule, reactCallback, function (err, newCb) {
-                  if (err) return __innerCb(err);
-                  var executionContext = {
-                    targetRef: targetRef,
-                    ccKey: ccKey,
-                    ccClassKey: ccClassKey,
-                    ccUniqueKey: ccUniqueKey,
-                    ccOption: ccOption,
-                    module: targetStateModule,
-                    reducerModule: targetReducerModule,
-                    type: type,
-                    cb: newCb,
-                    context: true,
-                    __innerCb: __innerCb,
-                    calledBy: DISPATCH,
-                    delay: delay,
-                    identity: identity,
-                    refState: refState,
-                    chainId: chainId,
-                    oriChainId: oriChainId,
-                    chainId_depth_: chainId_depth_
-                  };
-
-                  _this3.cc.__invokeWith(reducerFn, executionContext, payload);
-                });
-              },
-              emit: function emit(event) {
-                for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                  args[_key2 - 1] = arguments[_key2];
-                }
-
-                findEventHandlersToPerform.apply(ev, [event, {
-                  identity: null
-                }].concat(args));
-              },
-              emitIdentity: function emitIdentity(event, identity) {
-                for (var _len3 = arguments.length, args = new Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
-                  args[_key3 - 2] = arguments[_key3];
-                }
-
-                findEventHandlersToPerform.apply(ev, [event, {
-                  identity: identity
-                }].concat(args));
-              },
-              emitWith: function emitWith(event, option) {
-                for (var _len4 = arguments.length, args = new Array(_len4 > 2 ? _len4 - 2 : 0), _key4 = 2; _key4 < _len4; _key4++) {
-                  args[_key4 - 2] = arguments[_key4];
-                }
-
-                findEventHandlersToPerform.apply(ev, [event, option].concat(args));
-              },
-              on: function on$$1(event, handler) {
-                bindEventHandlerToCcContext(currentModule, ccClassKey, ccUniqueKey, event, null, handler);
-              },
-              onIdentity: function onIdentity(event, identity, handler) {
-                bindEventHandlerToCcContext(currentModule, ccClassKey, ccUniqueKey, event, identity, handler);
-              },
-              off: function off(event, _temp3) {
-                var _ref3 = _temp3 === void 0 ? {} : _temp3,
-                    module = _ref3.module,
-                    ccClassKey = _ref3.ccClassKey,
-                    identity = _ref3.identity;
-
-                //  consider if module === currentModule, let off happened?
-                findEventHandlersToOff(event, {
-                  module: module,
-                  ccClassKey: ccClassKey,
-                  identity: identity
-                });
-              }
-            };
-            var thisCC = this.cc;
-            this.$$dispatch = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-            this.$$lazyDispatch = this.__$$getDispatchHandler(this, null, true, ccKey, ccUniqueKey, ccClassKey, currentModule, null, null, null, -1);
-            this.$$invoke = this.__$$getInvokeHandler(this, _curStateModule, ccKey, ccUniqueKey, ccClassKey);
-            this.$$lazyInvoke = this.__$$getInvokeHandler(this, _curStateModule, ccKey, ccUniqueKey, ccClassKey, {
-              isLazy: true
-            });
-            this.$$emit = thisCC.emit;
-            this.$$emitIdentity = thisCC.emitIdentity;
-            this.$$emitWith = thisCC.emitWith;
-            this.$$on = thisCC.on;
-            this.$$onIdentity = thisCC.onIdentity;
-            this.$$off = thisCC.off;
-            this.$$moduleComputed = thisCC.moduleComputed = _computedValue$1[currentModule] || {};
-            this.$$globalComputed = thisCC.globalComputed = _computedValue$1[MODULE_GLOBAL] || {};
-            this.$$connectedComputed = thisCC.connectedComputed = ccClassContext.connectedComputed;
-            this.setState = thisCC.setState; //let setState call cc.setState
-
-            this.setGlobalState = thisCC.setGlobalState; //let setGlobalState call cc.setGlobalState
-
-            this.setModuleState = thisCC.setModuleState; //let setModuleState call cc.setModuleState
-
-            this.forceUpdate = thisCC.forceUpdate; //let forceUpdate call cc.forceUpdate
-          };
-
-          _proto.__$$getChangeStateHandler = function __$$getChangeStateHandler(executionContext) {
-            var _this4 = this;
-
-            return function (state) {
-              return changeRefState(state, executionContext, _this4);
-            };
-          };
-
-          _proto.__$$getInvokeHandler = function __$$getInvokeHandler(targetRef, module, ccKey, ccUniqueKey, ccClassKey, chainData) {
-            return this.__$$makeInvokeHandler(targetRef, module, ccKey, ccUniqueKey, ccClassKey, chainData);
-          };
-
-          _proto.__$$makeInvokeHandler = function __$$makeInvokeHandler(targetRef, module, ccKey, ccUniqueKey, ccClassKey, _temp4) {
-            var _this5 = this;
-
-            var _ref4 = _temp4 === void 0 ? {} : _temp4,
-                chainId = _ref4.chainId,
-                oriChainId = _ref4.oriChainId,
-                isLazy = _ref4.isLazy,
-                _ref4$chainId_depth_ = _ref4.chainId_depth_,
-                chainId_depth_ = _ref4$chainId_depth_ === void 0 ? {} : _ref4$chainId_depth_;
-
-            return function (firstParam, payload, delay, identity) {
-              var _getNewChainData = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
-                  _chainId = _getNewChainData._chainId,
-                  _oriChainId = _getNewChainData._oriChainId;
-
-              var firstParamType = typeof firstParam;
-              var option = {
-                targetRef: targetRef,
-                ccKey: ccKey,
-                ccUniqueKey: ccUniqueKey,
-                ccClassKey: ccClassKey,
-                calledBy: INVOKE,
-                module: module,
-                chainId: _chainId,
-                oriChainId: _oriChainId,
-                chainId_depth_: chainId_depth_,
-                delay: delay,
-                identity: identity
-              };
-              var err = new Error("param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:{fn:function, delay:number, identity:string}, ...args:any[])");
-
-              if (firstParamType === 'function') {
-                return _this5.cc.__invoke(firstParam, option, payload);
-              } else if (firstParamType === 'object') {
-                //firstParam: {fn:function, delay:number, identity:string}
-                // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
-                var fn = firstParam.fn,
-                    userInputModule = firstParam.module;
-                if (typeof fn != 'function') throw err;
-                if (userInputModule) option.module = userInputModule; //用某个模块的实例去修改另外模块的数据
-
-                return _this5.cc.__invoke(fn, option, payload);
-              } else {
-                throw err;
-              } // return ()=>{}
-
-            };
-          };
-
-          _proto.__$$getDispatchHandler = function __$$getDispatchHandler(targetRef, refState, isLazy, ccKey, ccUniqueKey, ccClassKey, targetModule, targetReducerModule, inputType, inputPayload, delay, defaultIdentity, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
-          ) {
-            var _this6 = this;
-
-            if (delay === void 0) {
-              delay = -1;
-            }
-
-            if (defaultIdentity === void 0) {
-              defaultIdentity = '';
-            }
-
-            if (chainId_depth_ === void 0) {
-              chainId_depth_ = {};
-            }
-
-            return function (paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
-              if (paramObj === void 0) {
-                paramObj = {};
-              }
-
-              var _getNewChainData2 = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
-                  _chainId = _getNewChainData2._chainId,
-                  _oriChainId = _getNewChainData2._oriChainId;
-
-              var paramObjType = typeof paramObj;
-
-              var _module = targetModule,
-                  _reducerModule,
-                  _type,
-                  _payload = inputPayload,
-                  _cb,
-                  _delay = delay;
-
-              var _identity = defaultIdentity;
-
-              if (paramObjType === 'object') {
-                var _paramObj = paramObj,
-                    _paramObj$module = _paramObj.module,
-                    _module2 = _paramObj$module === void 0 ? targetModule : _paramObj$module,
-                    _reducerModule2 = _paramObj.reducerModule,
-                    _paramObj$type = _paramObj.type,
-                    type = _paramObj$type === void 0 ? inputType : _paramObj$type,
-                    _paramObj$payload = _paramObj.payload,
-                    payload = _paramObj$payload === void 0 ? inputPayload : _paramObj$payload,
-                    cb = _paramObj.cb,
-                    _paramObj$delay = _paramObj.delay,
-                    _delay2 = _paramObj$delay === void 0 ? -1 : _paramObj$delay,
-                    identity = _paramObj.identity;
-
-                _module = _module2;
-                _reducerModule = _reducerModule2 || _module2;
-                _type = type;
-                _payload = payload;
-                _cb = cb;
-                _delay = _delay2;
-                if (identity) _identity = identity;
-              } else if (paramObjType === 'string' || paramObjType === 'function') {
-                var targetFirstParam = paramObj;
-
-                if (paramObjType === 'function') {
-                  var fnName = paramObj.__fnName;
-                  if (!fnName) throw new Error('you are calling a unnamed function!!!');
-                  targetFirstParam = fnName; // _module = paramObjType.stateModule || module;
-                }
-
-                var slashCount = targetFirstParam.split('').filter(function (v) {
-                  return v === '/';
-                }).length;
-                _payload = payloadWhenFirstParamIsString;
-                if (userInputIdentity) _identity = userInputIdentity;
-                if (userInputDelay !== undefined) _delay = userInputDelay;
-
-                if (slashCount === 0) {
-                  _type = targetFirstParam;
-                } else if (slashCount === 1) {
-                  var _targetFirstParam$spl = targetFirstParam.split('/'),
-                      _module3 = _targetFirstParam$spl[0],
-                      _type2 = _targetFirstParam$spl[1];
-
-                  _module = _module3;
-                  _reducerModule = _module;
-                  _type = _type2;
-                } else if (slashCount === 2) {
-                  var _targetFirstParam$spl2 = targetFirstParam.split('/'),
-                      _module4 = _targetFirstParam$spl2[0],
-                      _reducerModule3 = _targetFirstParam$spl2[1],
-                      _type3 = _targetFirstParam$spl2[2];
-
-                  if (_module4 === '' || _module4 === ' ') _module = targetModule; //targetFirstParam may like: /foo/changeName
-                  else _module = _module4;
-                  _module = _module4;
-                  _reducerModule = _reducerModule3;
-                  _type = _type3;
-                } else {
-                  return Promise.reject(me$3(ERR.CC_DISPATCH_STRING_INVALID, vbi$3(targetFirstParam)));
-                }
-              } else {
-                return Promise.reject(me$3(ERR.CC_DISPATCH_PARAM_INVALID));
-              }
-
-              if (_module === '*') {
-                return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
-              } // pick user input reducerModule firstly!
-
-
-              var nowReducerModule = _reducerModule || targetReducerModule || _module;
-              var p = new Promise(function (resolve, reject) {
-                _this6.cc.dispatch({
-                  targetRef: targetRef,
-                  module: _module,
-                  reducerModule: nowReducerModule,
-                  type: _type,
-                  payload: _payload,
-                  cb: _cb,
-                  __innerCb: _promiseErrorHandler(resolve, reject),
-                  ccKey: ccKey,
-                  ccUniqueKey: ccUniqueKey,
-                  ccClassKey: ccClassKey,
-                  delay: _delay,
-                  identity: _identity,
-                  refState: refState,
-                  chainId: _chainId,
-                  oriChainId: _oriChainId,
-                  chainId_depth_: chainId_depth_ // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
-
-                });
-              })["catch"](catchCcError);
-              return p;
-            };
-          };
-
-          _proto.$$changeState = function $$changeState(state, option) {
-            changeRefState(state, option, this);
-          };
-
-          _proto.$$domDispatch = function $$domDispatch(event) {
-            var currentTarget = event.currentTarget;
-            var value = currentTarget.value,
-                dataset = currentTarget.dataset;
-            var type = dataset.cct,
-                module = dataset.ccm,
-                reducerModule = dataset.ccrm,
-                _dataset$ccdelay = dataset.ccdelay,
-                ccdelay = _dataset$ccdelay === void 0 ? -1 : _dataset$ccdelay,
-                _dataset$ccidt = dataset.ccidt,
-                ccidt = _dataset$ccidt === void 0 ? '' : _dataset$ccidt;
-            var payload = {
-              event: event,
-              dataset: dataset,
-              value: value
-            };
-            var _this$cc = this.cc,
-                ccKey = _this$cc.ccKey,
-                ccUniqueKey = _this$cc.ccUniqueKey;
-
-            var handler = this.__$$getDispatchHandler(this, null, false, ccKey, ccUniqueKey, ccClassKey, module, reducerModule, type, payload, ccdelay, ccidt);
-
-            handler()["catch"](handleCcFnError);
-          };
-
-          _proto.$$syncBool = function $$syncBool(e, delay, idt) {
-            var _this$__$$sync$bind;
-
-            if (delay === void 0) {
-              delay = -1;
-            }
-
-            if (idt === void 0) {
-              idt = '';
-            }
-
-            if (typeof e === 'string') return this.__$$sync.bind(this, (_this$__$$sync$bind = {}, _this$__$$sync$bind[CCSYNC_KEY] = e, _this$__$$sync$bind.type = 'bool', _this$__$$sync$bind.delay = delay, _this$__$$sync$bind.idt = idt, _this$__$$sync$bind));
-
-            this.__$$sync({
-              type: 'bool'
-            }, e);
-          };
-
-          _proto.$$syncInt = function $$syncInt(e, delay, idt) {
-            var _this$__$$sync$bind2;
-
-            if (delay === void 0) {
-              delay = -1;
-            }
-
-            if (idt === void 0) {
-              idt = '';
-            }
-
-            if (typeof e === 'string') return this.__$$sync.bind(this, (_this$__$$sync$bind2 = {}, _this$__$$sync$bind2[CCSYNC_KEY] = e, _this$__$$sync$bind2.type = 'int', _this$__$$sync$bind2.delay = delay, _this$__$$sync$bind2.idt = idt, _this$__$$sync$bind2));
-
-            this.__$$sync({
-              type: 'int'
-            }, e);
-          };
-
-          _proto.$$set = function $$set(ccsync, val, delay, idt) {
-            var _this$__$$sync;
-
-            this.__$$sync((_this$__$$sync = {}, _this$__$$sync[CCSYNC_KEY] = ccsync, _this$__$$sync.type = 'val', _this$__$$sync.val = val, _this$__$$sync.delay = delay, _this$__$$sync.idt = idt, _this$__$$sync));
-          } //对布尔值自动取反
-          ;
-
-          _proto.$$setBool = function $$setBool(ccsync, delay, idt) {
-            var _this$__$$sync2;
-
-            this.__$$sync((_this$__$$sync2 = {}, _this$__$$sync2[CCSYNC_KEY] = ccsync, _this$__$$sync2.type = 'bool', _this$__$$sync2.delay = delay, _this$__$$sync2.idt = idt, _this$__$$sync2));
-          };
-
-          _proto.$$sync = function $$sync(e, val, delay, idt) {
-            if (typeof e === 'string') {
-              var _this$__$$sync$bind3;
-
-              return this.__$$sync.bind(this, (_this$__$$sync$bind3 = {}, _this$__$$sync$bind3[CCSYNC_KEY] = e, _this$__$$sync$bind3.type = 'val', _this$__$$sync$bind3.val = val, _this$__$$sync$bind3.delay = delay, _this$__$$sync$bind3.idt = idt, _this$__$$sync$bind3));
-            } else if (e && e[MOCKE_KEY]) {
-              return this.__$$sync(e);
-            }
-
-            this.__$$sync({
-              type: 'val'
-            }, e); // for <input data-ccsync="foo/f1" onChange={this.$$sync} />
-
-          };
-
-          _proto.__$$sync = function __$$sync(spec, e) {
-            var mockE = null;
-
-            if (spec[MOCKE_KEY]) {
-              mockE = spec;
-            } else if (spec[CCSYNC_KEY] !== undefined) {
-              //来自$$sync生成的setter调用
-              mockE = buildMockEvent(spec, e);
-            } else {
-              mockE = convertToStandardEvent(e);
-            }
-
-            if (!mockE) return; //参数无效
-
-            if (e && e.stopPropagation) e.stopPropagation();
-            var currentTarget = mockE.currentTarget;
-            var dataset = currentTarget.dataset;
-            var ccsync = dataset.ccsync,
-                ccint = dataset.ccint,
-                ccdelay = dataset.ccdelay,
-                ccidt = dataset.ccidt;
-            var value = currentTarget.value;
-            var thisCc = this.cc;
-            var currentModule = thisCc.ccState.module;
-            var _module = currentModule;
-
-            if (ccsync.includes('/')) {
-              _module = ccsync.split('/')[0];
-            }
-
-            var fullState = _module !== currentModule ? getState$3(_module) : this.state;
-
-            var _extractStateByCcsync = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool),
-                state = _extractStateByCcsync.state;
-
-            changeRefState(state, {
-              calledBy: SYNC,
-              ccKey: thisCc.ccKey,
-              ccUniqueKey: thisCc.ccUniqueKey,
-              module: _module,
-              delay: ccdelay,
-              identity: ccidt
-            }, this);
+          _proto.componentDidUpdate = function componentDidUpdate() {
+            if (_ToBeExtendedClass.prototype.componentDidUpdate) _ToBeExtendedClass.prototype.componentDidUpdate.call(this);
+            triggerSetupEffect(this);
+            this.ctx.prevState = this.state;
           };
 
           _proto.componentWillUnmount = function componentWillUnmount() {
-            var _this$cc$ccState = this.cc.ccState,
-                ccUniqueKey = _this$cc$ccState.ccUniqueKey,
-                ccClassKey = _this$cc$ccState.ccClassKey;
-            offEventHandlersByCcUniqueKey(ccUniqueKey);
-            unsetRef(ccClassKey, ccUniqueKey); //if father component implement componentWillUnmount，call it again
-
-            if (_ToBeExtendedClass.prototype.componentWillUnmount) _ToBeExtendedClass.prototype.componentWillUnmount.call(this); //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
-            // Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
-
-            this.__$$isUnmounted = true;
+            if (_ToBeExtendedClass.prototype.componentWillUnmount) _ToBeExtendedClass.prototype.componentWillUnmount.call(this);
+            beforeUnmount(this);
           };
 
           _proto.render = function render() {
             if (ccContext.isDebug) {
-              console.log(ss$1("@@@ render " + ccClassDisplayName$1(ccClassKey)), cl$1());
+              console.log(ss$1("@@@ render " + ccClassDisplayName$1(_ccClassKey)), cl$1());
             }
 
             if (isPropsProxy === false) {
               //now cc class extends ReactClass, call super.render()
               return _ToBeExtendedClass.prototype.render.call(this);
             } else {
-              var thisCc = this.cc; //只将$$attach传递下去，让用户在构造器里紧接着super之后调this.props.$$attach()
-              // const props = Object.assign({}, this.props, { $$attach: this.$$attach });
-
-              var props = Object.assign({}, this, {
+              //将$$attach传递下去，让用户在构造器里紧接着super之后调this.props.$$attach()
+              return React.createElement(ReactClass, {
+                ctx: this.ctx,
                 $$attach: this.$$attach
               });
-
-              if (thisCc.isChildRefMounted) {
-                var childRefState = thisCc.childRef.state;
-                var thisState = this.state;
-                okeys(this.state).forEach(function (key) {
-                  childRefState[key] = thisState[key];
-                }); //不能采用直接赋值，这相当于隐式的替换了state，会造成更新失败
-                // thisCc.childRef.state = this.state;
-              }
-
-              return React.createElement(ReactClass, props);
             }
           };
 
           return CcClass;
         }(ToBeExtendedClass);
 
-        if (ccClassKey === CC_DISPATCHER) CcClass.displayName = 'CcDispatcher';else CcClass.displayName = ccClassDisplayName$1(ccClassKey);
-        return CcClass;
+        if (_ccClassKey === CC_DISPATCHER) _CcClass.displayName = 'CcDispatcher';else _CcClass.displayName = ccClassDisplayName$1(_ccClassKey);
+        return _CcClass;
       };
     } catch (err) {
       catchCcError(err);
@@ -3368,8 +3682,8 @@ if (!this._inheritsLoose) {
     function (_React$Component) {
       _inheritsLoose(DefaultComponent, _React$Component);
 
-      function DefaultComponent(props, context) {
-        return _React$Component.call(this, props, context) || this;
+      function DefaultComponent() {
+        return _React$Component.apply(this, arguments) || this;
       }
 
       var _proto = DefaultComponent.prototype;
@@ -3394,11 +3708,11 @@ if (!this._inheritsLoose) {
     }
 
     var TargetComponent = CustomizedComponent || DefaultComponent;
-    return register(CC_DISPATCHER, {
+    return register({
       isSingle: true,
       __checkStartUp: false,
       __calledBy: 'cc'
-    })(TargetComponent);
+    }, CC_DISPATCHER)(TargetComponent);
   }
 
   function initModuleState (module, state, rootStateCanNotContainInputModule) {
@@ -3423,64 +3737,6 @@ if (!this._inheritsLoose) {
     }
   }
 
-  /****
-   * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
-   * pick one ccInstance ref randomly
-   */
-
-  function pickOneRef (module, mustBelongToModule) {
-    if (mustBelongToModule === void 0) {
-      mustBelongToModule = false;
-    }
-
-    var ccKey_ref_ = ccContext.ccKey_ref_,
-        moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
-        ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_;
-    var ccKeys = [];
-
-    if (module) {
-      if (ccContext.store._state[module]) {
-        var ccClassKeys = moduleName_ccClassKeys_[module];
-
-        if (ccClassKeys && ccClassKeys.length !== 0) {
-          var oneCcClassKey = ccClassKeys[0];
-          var ccClassContext = ccClassKey_ccClassContext_[oneCcClassKey];
-
-          if (!ccClassContext) {
-            throw new Error("no ccClassContext found for ccClassKey " + oneCcClassKey + "!");
-          }
-
-          ccKeys = ccClassContext.ccKeys;
-        }
-      } else {
-        throw new Error("module[" + module + "] is not declared in store");
-      }
-
-      if (module === MODULE_DEFAULT) {
-        ccKeys = ccKeys.filter(function (key) {
-          return !key.startsWith(CC_FRAGMENT_PREFIX);
-        });
-      }
-
-      if (ccKeys.length === 0) {
-        if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];else {
-          var ignoreIt = "if this message doesn't matter, you can ignore it";
-          throw new Error("[[pickOneRef]]: no ref found for module[" + module + "]!," + ignoreIt);
-        }
-      }
-    } else {
-      ccKeys = [CC_DISPATCHER];
-    }
-
-    var oneRef = ccKey_ref_[ccKeys[0]];
-
-    if (!oneRef) {
-      throw new Error('cc found no ref!');
-    }
-
-    return oneRef;
-  }
-
   function setState (module, state, delay, identity, skipMiddleware) {
     if (delay === void 0) {
       delay = -1;
@@ -3495,14 +3751,7 @@ if (!this._inheritsLoose) {
         identity: identity,
         skipMiddleware: skipMiddleware
       };
-
-      if (!ref.$$changeState) {
-        ref.__fragmentParams.changeState(state, option);
-
-        return;
-      }
-
-      ref.$$changeState(state, option);
+      ref.ctx.changeState(state, option);
     } catch (err) {
       strictWarning(err);
     }
@@ -3573,7 +3822,7 @@ if (!this._inheritsLoose) {
     };
   }
 
-  function dispatch (isLazy, action, payLoadWhenActionIsString, delay, identity, _temp) {
+  function dispatch$1 (isLazy, action, payLoadWhenActionIsString, delay, identity, _temp) {
     if (identity === void 0) {
       identity = '';
     }
@@ -3597,7 +3846,7 @@ if (!this._inheritsLoose) {
         if (!targetRef) {
           throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
         } else {
-          dispatchFn = isLazy ? targetRef.$$lazyDispatch : targetRef.$$dispatch;
+          dispatchFn = isLazy ? targetRef.ctx.lazyDispatch : targetRef.ctx.dispatch;
         }
       } else {
         var module = '';
@@ -3614,16 +3863,13 @@ if (!this._inheritsLoose) {
           ref = pickOneRef();
         }
 
-        if (ref.cc.ccState.ccClassKey.startsWith(CC_FRAGMENT_PREFIX)) {
-          dispatchFn = isLazy ? ref.__fragmentParams.lazyDispatch : ref.__fragmentParams.dispatch;
-        } else {
-          dispatchFn = isLazy ? ref.$$lazyDispatch : ref.$$dispatch;
-        }
+        dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
       }
 
       if (typeof action === 'string' && action.startsWith('*')) {
         var reducerModName = action.split('/').pop();
         var fullFnNames = ccContext.reducer._reducerFnName_fullFnNames_[reducerModName];
+        if (!fullFnNames) return;
         var tasks = [];
         fullFnNames.forEach(function (fullFnName) {
           tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, delay, identity));
@@ -3637,12 +3883,12 @@ if (!this._inheritsLoose) {
     }
   }
 
-  function dispatch$1 (action, payLoadWhenActionIsString, delay, identity, option) {
-    return dispatch(false, action, payLoadWhenActionIsString, delay, identity, option);
+  function dispatch$2 (action, payLoadWhenActionIsString, delay, identity, option) {
+    return dispatch$1(false, action, payLoadWhenActionIsString, delay, identity, option);
   }
 
   function lazyDispatch (action, payLoadWhenActionIsString, delay, identity, option) {
-    dispatch(true, action, payLoadWhenActionIsString, delay, identity, option);
+    dispatch$1(true, action, payLoadWhenActionIsString, delay, identity, option);
   }
 
   function initModuleReducer (module, reducer, rootReducerCanNotContainInputModule) {
@@ -3665,13 +3911,14 @@ if (!this._inheritsLoose) {
     var reducerNames = okeys(reducer);
     reducerNames.forEach(function (name) {
       fnNames.push(name);
+      var fullFnName = module + "/" + name;
 
       subReducerCaller[name] = function (payload, delay, idt) {
-        return dispatch$1(module + "/" + name, payload, delay, idt);
+        return dispatch$2(fullFnName, payload, delay, idt);
       };
 
       subLazyReducerCaller[name] = function (payload, delay, idt) {
-        return lazyDispatch(module + "/" + name, payload, delay, idt);
+        return lazyDispatch(fullFnName, payload, delay, idt);
       };
 
       var reducerFn = reducer[name];
@@ -3686,11 +3933,11 @@ if (!this._inheritsLoose) {
 
 
       var list = safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
-      list.push(module + "/" + name);
+      list.push(fullFnName);
     });
   }
 
-  var safeGetObjectFromObject$1 = safeGetObjectFromObject,
+  var safeGetObjectFromObject$2 = safeGetObjectFromObject,
       isPlainJsonObject$2 = isPlainJsonObject,
       strictWarning$1 = strictWarning;
   /**
@@ -3717,7 +3964,7 @@ if (!this._inheritsLoose) {
           throw new Error("watch." + module + "." + key + "'s value is not a function");
         }
 
-        var ccModuleWatch = safeGetObjectFromObject$1(rootWatch, module);
+        var ccModuleWatch = safeGetObjectFromObject$2(rootWatch, module);
         ccModuleWatch[key] = fn;
       } else {
         strictWarning$1("watch." + module + "'s key[" + key + "] is not declared in store." + module + "!");
@@ -3725,7 +3972,7 @@ if (!this._inheritsLoose) {
     });
   }
 
-  var safeGetObjectFromObject$2 = safeGetObjectFromObject,
+  var safeGetObjectFromObject$3 = safeGetObjectFromObject,
       isPlainJsonObject$3 = isPlainJsonObject;
   function initModuleComputed (module, computed) {
     if (!isPlainJsonObject$3(computed)) {
@@ -3742,11 +3989,11 @@ if (!this._inheritsLoose) {
       var originalValue = moduleState[key];
 
       if (originalValue !== undefined) {
-        var moduleComputedFn = safeGetObjectFromObject$2(rootComputedFn, module);
+        var moduleComputedFn = safeGetObjectFromObject$3(rootComputedFn, module);
         var fn = computed[key];
         moduleComputedFn[key] = fn;
         var computedValue = fn(originalValue, originalValue, moduleState);
-        var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
+        var moduleComputedValue = safeGetObjectFromObject$3(rootComputedValue, module);
         moduleComputedValue[key] = computedValue;
       } else {
         //strict?
@@ -3756,7 +4003,7 @@ if (!this._inheritsLoose) {
   }
 
   var isPlainJsonObject$4 = isPlainJsonObject,
-      okeys$2 = okeys;
+      okeys$5 = okeys;
   /** 对已有的store.$$global状态追加新的state */
   // export function appendGlobalState(globalState) {
   //   // todo
@@ -3771,7 +4018,7 @@ if (!this._inheritsLoose) {
     store.initStateDangerously(MODULE_CC, {});
     if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
     if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$2(storeState);
+    var moduleNames = okeys$5(storeState);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -3788,7 +4035,7 @@ if (!this._inheritsLoose) {
   function configRootReducer(rootReducer) {
     if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
     if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-    var moduleNames = okeys$2(rootReducer);
+    var moduleNames = okeys$5(rootReducer);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -3801,7 +4048,7 @@ if (!this._inheritsLoose) {
       throw new Error("StartUpOption.computed is not a plain json object!");
     }
 
-    var moduleNames = okeys$2(computed);
+    var moduleNames = okeys$5(computed);
     moduleNames.forEach(function (m) {
       return initModuleComputed(m, computed[m]);
     });
@@ -3823,7 +4070,7 @@ if (!this._inheritsLoose) {
       throw new Error('StartupOption.init is valid, it must be a object like {[module:string]:Function}!');
     }
 
-    var moduleNames = okeys$2(init);
+    var moduleNames = okeys$5(init);
     moduleNames.forEach(function (moduleName) {
       checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
       var initFn = init[moduleName];
@@ -3883,17 +4130,16 @@ if (!this._inheritsLoose) {
 
   function _clearInsAssociation() {
     clearObject(ccContext.event_handlers_);
-    clearObject(ccContext.ccUniqueKey_handlerKeys_);
+    clearObject(ccContext.ccUKey_handlerKeys_);
     var cct = ccContext.ccClassKey_ccClassContext_;
     Object.keys(cct).forEach(function (ccClassKey) {
       var ctx = cct[ccClassKey];
       clearObject(ctx.ccKeys);
     });
     clearObject(ccContext.handlerKey_handler_);
-    clearObject(ccContext.ccKey_ref_, [CC_DISPATCHER]);
+    clearObject(ccContext.ccUkey_ref_, [CC_DISPATCHER]);
     clearObject(ccContext.refs, [CC_DISPATCHER]);
-    clearObject(ccContext.fragmentCcKeys);
-    clearObject(ccContext.ccKey_option_);
+    clearObject(ccContext.ccUkey_option_);
   }
 
   function _clearAll() {
@@ -3911,8 +4157,11 @@ if (!this._inheritsLoose) {
       if (ccContext.isHotReloadMode()) {
         cb();
       } else {
-        util.justWarning(new Error('clear operation failed, current runtime is not running under hot reload mode!'));
+        util.justWarning(new Error('clear failed because of not running under hot reload mode!'));
       }
+    } else {
+      //还没有启动过，泽只是标记justCalledByStartUp为true
+      justCalledByStartUp = true;
     }
   }
 
@@ -3930,7 +4179,7 @@ if (!this._inheritsLoose) {
         util.justWarning(warningErrForClearAll);
       } else {
         // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
-        // 在stackblitz的 hot reload 模式下，当用户将启动cc的命名单独放置在一个脚本里，
+        // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命名单独放置在一个脚本里，
         // 如果用户修改了启动相关文件, 则会触发 runConcent renderApp，
         // runConcent调用清理把justCalledByStartUp置为true，则renderApp就可以不用执行了
         // 随后只是改了某个component文件时，则只会触发 renderApp，
@@ -3940,7 +4189,7 @@ if (!this._inheritsLoose) {
           return;
         }
 
-        var err = new Error("attention: if you call this method, it must been invoked before your app rendered !!");
+        var err = new Error("attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!");
         util.justWarning(err);
 
         _clearInsAssociation();
@@ -4022,7 +4271,7 @@ if (!this._inheritsLoose) {
           util.justTip("[[startUp]]: CcDispatcher existed already");
         }
       } else {
-        throw 'customizing Dispatcher is not allowed in current version cc';
+        throw new Error('customizing Dispatcher is not allowed in current version cc');
       }
 
       bindToWindow('CC_CONTEXT', ccContext);
@@ -4106,8 +4355,7 @@ if (!this._inheritsLoose) {
         globalState = _option.globalState,
         globalWatch = _option.globalWatch,
         globalComputed = _option.globalComputed,
-        middlewares = _option.middlewares,
-        noOpPlugins = _option.noOpPlugins;
+        middlewares = _option.middlewares;
     initModuleState(module, state);
     initModuleReducer(module, reducer);
     var _state = ccContext.store._state;
@@ -4244,7 +4492,7 @@ if (!this._inheritsLoose) {
    * @param {{isStrict:boolean}} option
    */
 
-  function _load (store, option) {
+  function _run (store, option) {
     if (store === void 0) {
       store = {};
     }
@@ -4346,7 +4594,7 @@ if (!this._inheritsLoose) {
    * cc will find current cc class's reducerModule function named doStaff to execute 
    * and will change current cc class's moudle state,
    * so you don't have to write code like below if current cc class module is M1 
-   * and you always want to use R1 reducer function to generate new state
+   * and if you always want to use R1 reducer function to generate new state, you can write like below
    * ```
    *    this.$$dispatch({module:'M1', reducerModule:'R1', type:'doStaff', payload:{foo:1, bar:2}});
    *    // or 
@@ -4365,10 +4613,10 @@ if (!this._inheritsLoose) {
    * you can set isPropsProxy as true, then cc will use strategy of prop proxy to wrap your react class, in this situation, 
    * all the cc instance method and property you can get them from both `this.props` and `this.`, for example
    * ```
-   *    @cc.register('BasicForms',{
+   *    @cc.register({
    *      connect: {'form': ['regularFormSubmitting']},
    *      isPropsProxy: true 
-   *    })
+   *    },'BasicForms')
    *    @Form.create()
    *    export default class BasicForms extends PureComponent {
    *      componentDidMount()=>{
@@ -4386,60 +4634,239 @@ if (!this._inheritsLoose) {
    * you can define registerOption.isSingle as true, it just like singleton mode in java coding^_^
    */
 
-  function register$1 (ccClassKey, registerOption) {
+  function register$1 (registerOption, ccClassKey) {
     var _registerOption = registerOption;
 
-    if (registerOption) {
-      var optType = typeof registerOption;
+    if (_registerOption) {
+      var optType = typeof _registerOption;
 
       if (optType === 'object') {
-        delete registerOption.__checkStartUp;
-        delete registerOption.__calledBy;
+        delete _registerOption.__checkStartUp;
+        delete _registerOption.__calledBy;
       } else if (optType === 'string') {
         _registerOption = {
           module: registerOption
         };
       } else {
-        throw new Error('type of param registerOption is invalid!');
+        throw new Error('registerOption type error, must be array or string');
       }
+    } else {
+      _registerOption = {
+        module: MODULE_DEFAULT
+      };
     }
 
-    return register(ccClassKey, _registerOption);
+    return register(_registerOption, ccClassKey);
   }
 
-  /****
-   * short for register
-   * the option's definition is also been changed
-   * option.module is called m for short 
-   * option.watchedKeys is called s for short 
-   * option.connect is called pm for c 
-   * option.isSingle is called is for short 
-   * option.reducerModule is called re for short 
-   * option.isPropsProxy is called ip for short 
-   */
+  function _connect (connectSpec, ccClassKey) {
+    return register$1({
+      connect: connectSpec
+    }, ccClassKey);
+  }
 
-  function _r (ccClassKey, _temp) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        module = _ref.m,
-        watchedKeys = _ref.w,
-        storedKeys = _ref.st,
-        connect = _ref.c,
-        isSingle = _ref.is,
-        reducerModule = _ref.re,
-        isPropsProxy = _ref.ip;
+  var shallowDiffers$1 = shallowDiffers;
 
-    return register$1(ccClassKey, {
-      isPropsProxy: isPropsProxy,
+  var CcFragment =
+  /*#__PURE__*/
+  function (_React$Component) {
+    _inheritsLoose(CcFragment, _React$Component);
+
+    function CcFragment(props, context) {
+      var _this;
+
+      _this = _React$Component.call(this, props, context) || this; // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
+
+      if (props.__$$regDumb !== true) {
+        var _props$module = props.module,
+            module = _props$module === void 0 ? MODULE_DEFAULT : _props$module,
+            propsCcClassKey = props.ccClassKey,
+            ccKey = props.ccKey,
+            ccTag = props.ccTag,
+            _props$watchedKeys = props.watchedKeys,
+            watchedKeys = _props$watchedKeys === void 0 ? '*' : _props$watchedKeys,
+            storedKeys = props.storedKeys,
+            _props$connect = props.connect,
+            connect = _props$connect === void 0 ? {} : _props$connect,
+            reducerModule = props.reducerModule,
+            state = props.state,
+            isSingle = props.isSingle;
+
+        var _mapRegistrationInfo = mapRegistrationInfo(module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
+            _module = _mapRegistrationInfo._module,
+            _reducerModule = _mapRegistrationInfo._reducerModule,
+            _watchedKeys = _mapRegistrationInfo._watchedKeys,
+            _ccClassKey = _mapRegistrationInfo._ccClassKey,
+            _connect = _mapRegistrationInfo._connect;
+
+        buildRefCtx(_assertThisInitialized(_this), {
+          isSingle: isSingle,
+          ccKey: ccKey,
+          connect: _connect,
+          state: state,
+          module: _module,
+          reducerModule: _reducerModule,
+          storedKeys: storedKeys,
+          watchedKeys: _watchedKeys,
+          tag: ccTag,
+          ccClassKey: _ccClassKey
+        });
+      } else {
+        buildRefCtx(_assertThisInitialized(_this), props);
+      }
+
+      _this.setState = _this.ctx.setState;
+      _this.forceUpdate = _this.ctx.forceUpdate;
+      beforeMount(_assertThisInitialized(_this), props.setup, props.bindCtxToMethod);
+      return _this;
+    }
+
+    var _proto = CcFragment.prototype;
+
+    _proto.componentDidMount = function componentDidMount() {
+      triggerSetupEffect(this, true);
+    };
+
+    _proto.shouldComponentUpdate = function shouldComponentUpdate(nextProps, nextState) {
+      return this.state !== nextState || shallowDiffers$1(getOutProps(nextProps), getOutProps(this.props));
+    };
+
+    _proto.componentWillUpdate = function componentWillUpdate(nextProps, nextState) {
+      //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
+      this.ctx.props = getOutProps(nextProps);
+      this.ctx.state = nextState;
+    } // componentDidUpdate(prevProps, prevState) {
+    ;
+
+    _proto.componentDidUpdate = function componentDidUpdate() {
+      triggerSetupEffect(this); //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
+
+      this.ctx.prevState = this.state; // this.ctx.prevProps = this.ctx.props;
+    };
+
+    _proto.componentWillUnmount = function componentWillUnmount() {
+      beforeUnmount(this);
+      if (_React$Component.prototype.componentWillUnmount) _React$Component.prototype.componentWillUnmount.call(this);
+    };
+
+    _proto.render = function render() {
+      var _this$props = this.props,
+          children = _this$props.children,
+          render = _this$props.render;
+      var view = render || children;
+
+      if (typeof view === 'function') {
+        // return view(this.ctx) || React.createElement(Fragment);
+        return view(this.ctx) || React.createElement('span', {
+          style: {
+            display: 'none'
+          }
+        });
+      } else {
+        if (React.isValidElement(view)) {
+          justWarning("you are trying to specify a react dom to be CcFragment's children, it will never been rendered again no matter how your state changed!!!");
+        }
+
+        return view;
+      }
+    };
+
+    return CcFragment;
+  }(React.Component);
+
+  function _registerDumb(Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props) {
+    //对state做克隆,防止用同一个connectDumb结果包不同的fn组件,共享了同一份state
+    //const c = registerDumb({state:{info:{a:1}}});
+    // const UI1_ = c(UI1); const UI2_ = c(UI2);
+    // 让UI1_和UI2_各自拥有自己的localState
+    var stateType = typeof state;
+    var clonedState = null;
+    if (stateType === 'function') clonedState = state();else if (stateType !== 'object') {
+      throw new Error('state must be a plain json object');
+    } else {
+      clonedState = clone(state);
+    }
+
+    var render = function render(ctx) {
+      if (mapProps) {
+        var generatedProps = mapProps(ctx);
+        return React.createElement(Dumb, generatedProps);
+      } else {
+        return React.createElement(Dumb, ctx);
+      }
+    }; //优先读取实例化的时候传入的，再读connectDumb配置的
+
+
+    var ccTag = props.ccTag || tag; //ccKey由实例化的Dumb组件props上透传下来
+
+    return React.createElement(CcFragment, {
+      isSingle: isSingle,
+      ccClassKey: ccClassKey,
+      __$$regDumb: true,
+      tag: ccTag,
+      ccKey: props.ccKey,
+      props: props,
       module: module,
+      reducerModule: reducerModule,
       watchedKeys: watchedKeys,
       storedKeys: storedKeys,
       connect: connect,
-      isSingle: isSingle,
-      reducerModule: reducerModule
+      state: clonedState,
+      setup: setup,
+      bindCtxToMethod: bindCtxToMethod,
+      render: render
     });
   }
 
-  var vbi$4 = util.verboseInfo;
+  function registerDumb (registerOption, ccClassKey) {
+    var _registerOption = typeof registerOption === 'string' ? {
+      module: registerOption
+    } : registerOption;
+
+    if (!_registerOption) _registerOption = {
+      module: MODULE_DEFAULT
+    };
+    var _registerOption2 = _registerOption,
+        isSingle = _registerOption2.isSingle,
+        tag = _registerOption2.tag,
+        mapProps = _registerOption2.mapProps,
+        _registerOption2$modu = _registerOption2.module,
+        module = _registerOption2$modu === void 0 ? MODULE_DEFAULT : _registerOption2$modu,
+        reducerModule = _registerOption2.reducerModule,
+        _registerOption2$watc = _registerOption2.watchedKeys,
+        watchedKeys = _registerOption2$watc === void 0 ? '*' : _registerOption2$watc,
+        storedKeys = _registerOption2.storedKeys,
+        _registerOption2$conn = _registerOption2.connect,
+        connect = _registerOption2$conn === void 0 ? {} : _registerOption2$conn,
+        _registerOption2$stat = _registerOption2.state,
+        state = _registerOption2$stat === void 0 ? {} : _registerOption2$stat,
+        setup = _registerOption2.setup,
+        bindCtxToMethod = _registerOption2.bindCtxToMethod;
+
+    var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
+        _module = _mapRegistrationInfo._module,
+        _reducerModule = _mapRegistrationInfo._reducerModule,
+        _watchedKeys = _mapRegistrationInfo._watchedKeys,
+        _ccClassKey = _mapRegistrationInfo._ccClassKey,
+        _connect = _mapRegistrationInfo._connect;
+
+    return function (Dumb) {
+      //避免react dev tool显示的dom为Unknown
+      var ConnectedFragment = function ConnectedFragment(props) {
+        return _registerDumb(Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props);
+      };
+
+      return ConnectedFragment;
+    };
+  }
+
+  function _connectDumb (connectSpec, ccClassKey) {
+    return registerDumb({
+      connect: connectSpec
+    }, ccClassKey);
+  }
+
+  var vbi$6 = util.verboseInfo;
   /**
    * @description
    * @author zzk
@@ -4454,7 +4881,7 @@ if (!this._inheritsLoose) {
     var _ref$method;
 
     var ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
-        ccKey_ref_ = ccContext.ccKey_ref_;
+        ccUkey_ref_ = ccContext.ccUkey_ref_;
     var ccClassKey = '';
     var ccKey = '';
 
@@ -4472,7 +4899,7 @@ if (!this._inheritsLoose) {
     var classContext = ccClassKey_ccClassContext_[ccClassKey];
 
     if (!classContext) {
-      var err = util.makeError(ERR.CC_CLASS_NOT_FOUND, vbi$4(" ccClassKey:" + ccClassKey));
+      var err = util.makeError(ERR.CC_CLASS_NOT_FOUND, vbi$6("ccClassKey:" + ccClassKey));
       if (ccContext.isStrict) throw err;else return console.error(err);
     }
 
@@ -4480,14 +4907,14 @@ if (!this._inheritsLoose) {
 
     if (ccKey) {
       var ccUniKey = util.makeUniqueCcKey(ccClassKey, ccKey);
-      ref = ccKey_ref_[ccUniKey];
+      ref = ccUkey_ref_[ccUniKey];
     } else {
       var ccKeys = classContext.ccKeys;
-      ref = ccKey_ref_[ccKeys[0]]; // pick first one
+      ref = ccUkey_ref_[ccKeys[0]]; // pick first one
     }
 
     if (!ref) {
-      var _err = util.makeError(ERR.CC_CLASS_INSTANCE_NOT_FOUND, vbi$4(" ccClassKey:" + ccClassKey + " ccKey:" + ccKey)); // only error, the target instance may has been unmounted really!
+      var _err = util.makeError(ERR.CC_CLASS_INSTANCE_NOT_FOUND, vbi$6("ccClassKey:" + ccClassKey + " ccKey:" + ccKey)); // only error, the target instance may has been unmounted really!
 
 
       return console.error(_err.message);
@@ -4496,7 +4923,7 @@ if (!this._inheritsLoose) {
     var fn = ref[method];
 
     if (!fn) {
-      var _err2 = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi$4(" method:" + method)); // only error
+      var _err2 = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi$6("method:" + method)); // only error
 
 
       return console.error(_err2.message);
@@ -4557,1062 +4984,70 @@ if (!this._inheritsLoose) {
 
   function _set (moduledKeyPath, val, delay, idt) {
     var dispatcher = pickOneRef();
-    dispatcher.$$set(moduledKeyPath, val, delay, idt);
+    dispatcher.ctx.set(moduledKeyPath, val, delay, idt);
   }
 
-  var _getState$1 = (function (module) {
+  var getState$9 = (function (module) {
     return ccContext.store.getState(module);
   });
 
+  function _setValue (moduledKeyPath, val) {
+    if (!moduledKeyPath.includes('/')) {
+      throw new Error("keyPath must start with module");
+    }
+
+    var _moduledKeyPath$split = moduledKeyPath.split('/'),
+        targetModule = _moduledKeyPath$split[0];
+
+    var fullState = getState$9(targetModule);
+
+    var _extractStateByCcsync = extractStateByCcsync(moduledKeyPath, val, false, fullState, false),
+        state = _extractStateByCcsync.state;
+
+    return state;
+  }
+
   var getGlobalState = ccContext.store.getGlobalState;
 
-  var _computedValue$2 = ccContext.computed._computedValue;
+  var _computedValue$4 = ccContext.computed._computedValue;
   var _getComputed = (function (module) {
-    return _computedValue$2[module];
+    return _computedValue$4[module];
   });
 
   function _emit (event) {
     if (event === undefined) {
-      throw new Error("api doc: cc.emit(event:String, ...args)");
+      throw new Error("api doc: cc.emit(event:string|{name:string, identity?:string, ctx?:boolean}, ...args)");
     }
 
     try {
+      var _ref$ctx;
+
       var ref = pickOneRef();
 
       for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
         args[_key - 1] = arguments[_key];
       }
 
-      ref.$$emit.apply(ref, [event].concat(args));
+      (_ref$ctx = ref.ctx).emit.apply(_ref$ctx, [event].concat(args));
     } catch (err) {
       util.justWarning(err.message);
-    }
-  }
-
-  function _emitWith (event, option) {
-    if (event === undefined) {
-      throw new Error("api doc: cc.emitWith(event:string, option:{module?:string, ccClassKey?:string, identity?:string} ...args)");
-    }
-
-    try {
-      var ref = pickOneRef();
-
-      for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-        args[_key - 2] = arguments[_key];
-      }
-
-      ref.$$emitWith.apply(ref, [event, option].concat(args));
-    } catch (err) {
-      if (option.throwError) throw err;else util.justWarning(err.message);
     }
   }
 
   function _off (event, option) {
     try {
       var ref = pickOneRef();
-      ref.$$off(event, option);
+      ref.ctx.off(event, option);
     } catch (err) {
       if (option.throwError) throw err;else util.justWarning(err.message);
     }
   }
 
-  /**
-   * 
-   * @param {*} ccClassKey 
-   * @param {object} connectSpec { [module:string]: value: string[] | '*' }
-   * @param {object} option 
-   * @param {boolean} [option.isPropsProxy] default is false
-   * @param {boolean} [option.isSingle] default is false
-   * @param {string} [option.module]
-   * @param {Array<string>} [option.watchedKeys]
-   */
-
-  function _connect (ccClassKey, connectSpec, option) {
-    if (option === void 0) {
-      option = {};
-    }
-
-    var mergedOption = Object.assign({
-      connect: connectSpec
-    }, option);
-    return register$1(ccClassKey, mergedOption);
-  }
-
-  var ccKey_ref_$3 = ccContext.ccKey_ref_;
-  function getDispatcherRef () {
-    var ref = ccKey_ref_$3[CC_DISPATCHER];
-
-    if (!ref) {
-      if (ccContext.isHotReloadMode()) {
-        util.justTip('in hot reload mode, CC_DISPATCHER initialized more than one time');
-      } else {
-        throw util.makeError(ERR.CC_NO_DISPATCHER_FOUND);
-      }
-    }
-
-    return ref;
-  }
-
-  var ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
-      fragmentFeature_classKey_ = ccContext.fragmentFeature_classKey_,
-      _ccContext$store$2 = ccContext.store,
-      getState$4 = _ccContext$store$2.getState,
-      getPrevState = _ccContext$store$2.getPrevState,
-      moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
-      _reducerModule_fnNames_ = ccContext.reducer._reducerModule_fnNames_,
-      _computedValue$3 = ccContext.computed._computedValue;
-  var okeys$3 = okeys;
-  /**
-   * 根据connect参数动态的把CcFragment划为某个ccClassKey的实例，同时计算出stateToPropMapping值
-   * @param connectSpec 形如: {foo:'*', bar:['b1', 'b2']}
-   */
-
-  function getFragmentClassKeyAndStpMapping(connectSpec, fragmentModule, watchedKeys) {
-    //代表没有connect到store任何模块的CcFragment，也没有指定具体属于哪个模块
-    if (!isObjectNotNull(connectSpec) && fragmentModule == MODULE_DEFAULT) {
-      return {
-        ccClassKey: CC_FRAGMENT_PREFIX + "_0",
-        stateToPropMapping: null
-      };
-    }
-
-    var _getFeatureStrAndStpM = getFeatureStrAndStpMapping(connectSpec, fragmentModule, watchedKeys),
-        featureStr = _getFeatureStrAndStpM.featureStr,
-        stateToPropMapping = _getFeatureStrAndStpM.stateToPropMapping,
-        connectedModuleNames = _getFeatureStrAndStpM.connectedModuleNames;
-
-    var ccClassKey = fragmentFeature_classKey_[featureStr];
-
-    if (ccClassKey) {
-      return {
-        ccClassKey: ccClassKey,
-        stateToPropMapping: stateToPropMapping,
-        connectedModuleNames: connectedModuleNames
-      };
-    } else {
-      var oldFragmentNameCount = ccContext.fragmentNameCount;
-      var fragmentNameCount = oldFragmentNameCount + 1;
-      ccContext.fragmentNameCount = fragmentNameCount;
-      ccClassKey = CC_FRAGMENT_PREFIX + "_" + fragmentNameCount;
-      fragmentFeature_classKey_[featureStr] = ccClassKey;
-      return {
-        ccClassKey: ccClassKey,
-        stateToPropMapping: stateToPropMapping,
-        connectedModuleNames: connectedModuleNames
-      };
-    }
-  }
-
-  var idSeq = 0;
-
-  function getEId() {
-    idSeq++;
-    return Symbol("__autoGen_" + idSeq + "__");
-  }
-
-  function getOutProps(props) {
-    return props.props || props; //把最外层的props传递给用户
-  }
-
-  var CcFragment =
-  /*#__PURE__*/
-  function (_React$Component) {
-    _inheritsLoose(CcFragment, _React$Component);
-
-    function CcFragment(props, context) {
-      var _this;
-
-      _this = _React$Component.call(this, props, context) || this;
-      _this.__beforeMount = _this.__beforeMount.bind(_assertThisInitialized(_this));
-
-      var self = _assertThisInitialized(_this);
-
-      var ccKey = props.ccKey,
-          _props$connect = props.connect,
-          connectSpec = _props$connect === void 0 ? {} : _props$connect,
-          _props$state = props.state,
-          state = _props$state === void 0 ? {} : _props$state,
-          module = props.module,
-          storedKeys = props.storedKeys,
-          _props$watchedKeys = props.watchedKeys,
-          watchedKeys = _props$watchedKeys === void 0 ? '*' : _props$watchedKeys,
-          tag = props.tag; //计算fragment所属的模块
-
-      var fragmentModule = module || MODULE_DEFAULT;
-      var mergedState = Object.assign(state, getState$4(fragmentModule));
-      _this.state = mergedState;
-      var _storedKeys = [];
-
-      if (storedKeys !== undefined) {
-        if (!ccKey) throw new Error('you must supply ccKey explicitly to props if you specify storedKeys');
-        _storedKeys = storedKeys;
-      }
-
-      var _watchedKeys = watchedKeys;
-
-      if (watchedKeys === '*') {
-        _watchedKeys = moduleName_stateKeys_$3[fragmentModule];
-      }
-
-      var _getFragmentClassKeyA = getFragmentClassKeyAndStpMapping(connectSpec, fragmentModule, watchedKeys),
-          ccClassKey = _getFragmentClassKeyA.ccClassKey,
-          stateToPropMapping = _getFragmentClassKeyA.stateToPropMapping,
-          connectedModuleNames = _getFragmentClassKeyA.connectedModuleNames;
-
-      var ccUniqueKey = '',
-          isCcUniqueKeyAutoGenerated = false;
-
-      if (ccKey) {
-        // for CcFragment, if user supply ccKey to props, ccUniqueKey will equal ccKey
-        ccUniqueKey = ccKey;
-      } else {
-        var _base$computeCcUnique = computeCcUniqueKey(false, ccClassKey, ccKey, true, tag),
-            ck = _base$computeCcUnique.ccKey,
-            cuk = _base$computeCcUnique.ccUniqueKey,
-            ag = _base$computeCcUnique.isCcUniqueKeyAutoGenerated;
-
-        ccUniqueKey = cuk;
-        isCcUniqueKeyAutoGenerated = ag;
-        ccKey = ck;
-      }
-
-      var outProps = getOutProps(props);
-      buildCcClassContext(ccClassKey, fragmentModule, watchedKeys, _watchedKeys, stateToPropMapping, connectedModuleNames, true);
-      setRef(_assertThisInitialized(_this), false, ccClassKey, ccKey, ccUniqueKey, {}, true); // for CcFragment, just put ccClassKey to module's cc class keys
-
-      var moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
-      var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_, fragmentModule);
-      if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
-      var ctx = ccClassKey_ccClassContext_$3[ccClassKey];
-      var connectedComputed = ctx.connectedComputed || {};
-      var connectedState = ctx.connectedState || {};
-      var moduleState = getState$4(fragmentModule);
-      var moduleComputed = _computedValue$3[fragmentModule] || {};
-
-      var reactForceUpdateRef = _this.forceUpdate.bind(_assertThisInitialized(_this));
-
-      var reactSetStateRef = _this.setState.bind(_assertThisInitialized(_this));
-
-      var refConnectedComputed = {};
-      var refComputed = {};
-      okeys$3(connectSpec).forEach(function (moduleName) {
-        refConnectedComputed[moduleName] = {};
-      });
-      var ccState = {
-        storedKeys: _storedKeys,
-        watchedKeys: _watchedKeys,
-        module: fragmentModule,
-        ccClassKey: ccClassKey,
-        ccKey: ccKey,
-        ccUniqueKey: ccUniqueKey,
-        isCcUniqueKeyAutoGenerated: isCcUniqueKeyAutoGenerated,
-        stateToPropMapping: stateToPropMapping,
-        renderCount: 0,
-        initTime: Date.now(),
-        connect: connectSpec
-      };
-      _this.cc = {
-        ccKey: ccKey,
-        ccUniqueKey: ccUniqueKey,
-        ccClassKey: ccClassKey,
-        // onUrlChanged: null,
-        ccState: ccState,
-        refConnectedComputed: refConnectedComputed,
-        refComputed: refComputed,
-        watch: null,
-        watchSpec: null,
-        computed: null,
-        computedSpec: null,
-        reactForceUpdate: function reactForceUpdate(cb) {
-          ccState.renderCount += 1; //方便用户直接绑定forceUpdate
-
-          if (typeof cb !== 'function') reactForceUpdateRef();else reactForceUpdateRef(cb);
-        },
-        reactSetState: function reactSetState(state, cb) {
-          ccState.renderCount += 1;
-          reactSetStateRef(state, cb);
-        }
-      }; // hook implement fo CcFragment
-
-      var __hookMeta = {
-        isCcFragmentMounted: false,
-        useStateCount: 0,
-        useStateCursor: 0,
-        stateArr: [],
-        useEffectCount: 0,
-        useEffectCursor: 0,
-        effectCbArr: [],
-        effectSeeAoa: [],
-        // shouldEffectExecute array of array
-        effectSeeResult: [],
-        // collect every effect fn's shouldExecute result
-        effectCbReturnArr: []
-      };
-      _this.__hookMeta = __hookMeta;
-      var hook = {
-        useState: function useState(initialState) {
-          var cursor = __hookMeta.useStateCursor;
-          var stateArr = __hookMeta.stateArr;
-          __hookMeta.useStateCursor++;
-
-          if (__hookMeta.isCcFragmentMounted === false) {
-            //render CcFragment before componentDidMount
-            __hookMeta.useStateCount++;
-            stateArr[cursor] = initialState;
-          } else {
-            cursor = cursor % __hookMeta.useStateCount;
-          }
-
-          var setter = function setter(e) {
-            if (e.currentTarget && e.type) {
-              var _sync;
-
-              __sync((_sync = {}, _sync[CURSOR_KEY] = cursor, _sync), e);
-            } else {
-              stateArr[cursor] = e;
-
-              _this.cc.reactForceUpdate();
-            }
-          };
-
-          return [stateArr[cursor], setter];
-        },
-        useEffect: function useEffect(cb, shouldEffectExecute) {
-          var cursor = __hookMeta.useEffectCursor;
-          __hookMeta.useEffectCursor++;
-
-          if (__hookMeta.isCcFragmentMounted === false) {
-            __hookMeta.effectCbArr.push(cb);
-
-            __hookMeta.effectSeeAoa.push(shouldEffectExecute);
-
-            __hookMeta.useEffectCount++;
-          } else {
-            // if code running jump into this block, CcFragment already mounted, and now compute result for didUpdate
-            cursor = cursor % __hookMeta.useEffectCount;
-
-            if (Array.isArray(shouldEffectExecute)) {
-              var len = shouldEffectExecute.length;
-
-              if (len == 0) {
-                __hookMeta.effectSeeResult[cursor] = false; // effect fn will been executed only in didMount
-              } else {
-                // compare prevSee and curSee
-                var effectSeeResult = false;
-                var prevSeeArr = __hookMeta.effectSeeAoa[cursor];
-
-                if (!prevSeeArr) {
-                  effectSeeResult = true;
-                } else {
-                  for (var i = 0; i < len; i++) {
-                    if (shouldEffectExecute[i] !== prevSeeArr[i]) {
-                      effectSeeResult = true;
-                      break;
-                    }
-                  }
-                }
-
-                __hookMeta.effectSeeAoa[cursor] = shouldEffectExecute;
-                __hookMeta.effectSeeResult[cursor] = effectSeeResult;
-                if (effectSeeResult) __hookMeta.effectCbArr[cursor] = cb;
-              }
-            } else {
-              __hookMeta.effectSeeResult[cursor] = true; // effect fn will always been executed in didMount and didUpdate
-
-              __hookMeta.effectSeeAoa[cursor] = shouldEffectExecute;
-              __hookMeta.effectCbArr[cursor] = cb;
-            }
-          }
-        }
-      };
-      var dispatcher = getDispatcherRef();
-
-      var __sync = function __sync(spec, e) {
-        if (spec[CURSOR_KEY] !== undefined) {
-          //来自hook生成的setter调用
-          var _cursor = spec[CURSOR_KEY];
-          __hookMeta.stateArr[_cursor] = e.currentTarget.value;
-
-          _this.cc.reactForceUpdate();
-
-          return;
-        }
-
-        var mockE = buildMockEvent(spec, e);
-        if (!mockE) return; //参数无效
-
-        var currentTarget = mockE.currentTarget;
-        var dataset = currentTarget.dataset;
-        if (e && e.stopPropagation) e.stopPropagation();
-        var ccsync = dataset.ccsync;
-
-        if (ccsync.startsWith('/')) {
-          dataset.ccsync = "" + _this.cc.ccState.module + ccsync; //附加上默认模块值
-        }
-
-        if (ccsync.includes('/')) {
-          // syncModuleState 同步模块的state状态
-          dispatcher.$$sync(mockE);
-        } else {
-          // syncLocalState 同步本地的state状态
-          var _extractStateByCcsync = extractStateByCcsync(dataset.ccsync, currentTarget.value, dataset.ccint, _this.state, mockE.isToggleBool),
-              _state2 = _extractStateByCcsync.state;
-
-          __fragmentParams.setState(_state2);
-        }
-      };
-
-      var effectItems = []; // {fn:function, status:0, eId:'', immediate:true}
-
-      var eid_effectReturnCb_ = {}; // fn
-
-      _this.__staticEffectMeta = {
-        effectItems: effectItems,
-        eid_effectReturnCb_: eid_effectReturnCb_
-      };
-      var __fragmentParams = {
-        module: fragmentModule,
-        isCcFragment: true,
-        refComputed: refComputed,
-        refConnectedComputed: refConnectedComputed,
-        connectedComputed: connectedComputed,
-        moduleComputed: moduleComputed,
-        connectedState: connectedState,
-        moduleState: moduleState,
-        // 新增defineEffect相关的支持
-        defineEffect: function defineEffect(fn, stateKeys, eId, immediate) {
-          if (immediate === void 0) {
-            immediate = true;
-          }
-
-          if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
-
-          if (stateKeys !== null && stateKeys !== undefined) {
-            if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
-          }
-
-          var _fn = fn.bind(_assertThisInitialized(_this), _this.__fragmentParams);
-
-          var _eId = eId || getEId();
-
-          var effectItem = {
-            fn: _fn,
-            stateKeys: stateKeys,
-            status: EFFECT_AVAILABLE,
-            eId: _eId,
-            immediate: immediate
-          };
-          effectItems.push(effectItem);
-        },
-        stopEffect: function stopEffect(eId) {
-          var target = effectItems.find(function (v) {
-            return v.eId === eId;
-          });
-          if (target) target.status = EFFECT_STOPPED;
-        },
-        resumeEffect: function resumeEffect(eId) {
-          var target = effectItems.find(function (v) {
-            return v.eId === eId;
-          });
-          if (target) target.status = EFFECT_AVAILABLE;
-        },
-        removeEffect: function removeEffect(eId) {
-          var targetIdx = effectItems.findIndex(function (v) {
-            return v.eId === eId;
-          });
-          if (targetIdx >= 0) effectItems.splice(targetIdx, 1);
-        },
-        stopAllEffect: function stopAllEffect() {
-          effectItems.forEach(function (v) {
-            return v.status = EFFECT_STOPPED;
-          });
-        },
-        resumeAllEffect: function resumeAllEffect() {
-          effectItems.forEach(function (v) {
-            return v.status = EFFECT_AVAILABLE;
-          });
-        },
-        removeAllEffect: function removeAllEffect() {
-          effectItems.length = 0;
-        },
-        defineWatch: function defineWatch(watch, immediateOpt) {
-          var watchSpec = getWatchSpec(watch, _this.__fragmentParams, _this.cc.ccState.module);
-          _this.cc.watch = watch;
-          _this.cc.watchSpec = watchSpec;
-        },
-        defineComputed: function defineComputed(computed) {
-          var computedSpec = getComputedSpec(computed, _this.__fragmentParams, _this.cc.ccState.module);
-          _this.cc.computed = computed;
-          _this.cc.computedSpec = computedSpec;
-        },
-        settings: {},
-        reducer: {},
-        lazyReducer: {},
-        // ------ end ------
-        //对布尔值自动取反
-        syncBool: function syncBool(e, delay, idt) {
-          var _sync$bind;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.idt = idt, _sync$bind));
-
-          __sync({
-            type: 'bool'
-          }, e);
-        },
-        //if <Input onChange={(value:string, value2:string)=>void} />
-        // <Input onChange={ctx.sync} /> not work!!!
-        // <Input onChange={ctx.sync('foo/f1')} /> ok
-        // only <input data-ccsync="foo/f1" onChange={ctx.sync} /> ok
-        // only <input onChange={ctx.sync('foo/f1')} /> ok
-        sync: function sync(e, val, delay, idt) {
-          var _sync$bind2;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2));
-
-          __sync({
-            type: 'val'
-          }, e); //allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
-
-        },
-        //因为val可以是任意类型值，所以不再需要提供setInt
-        set: function set(ccsync, val, delay, idt) {
-          var _sync2;
-
-          __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'val', _sync2.val = val, _sync2.delay = delay, _sync2.idt = idt, _sync2));
-        },
-        //对布尔值自动取反
-        setBool: function setBool(ccsync, delay, idt) {
-          var _sync3;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          __sync((_sync3 = {}, _sync3[CCSYNC_KEY] = ccsync, _sync3.type = 'bool', _sync3.delay = delay, _sync3.idt = idt, _sync3));
-        },
-        // <Input onChange={ctx.syncInt} /> not work!!!
-        // <Input onChange={ctx.syncInt('foo/bar')} /> ok
-        // <input onChange={ctx.syncInt('foo/bar')} /> ok
-        // <input data-ccsync="foo/f1" onChange={ctx.syncInt('foo/fq')} /> ok
-        syncInt: function syncInt(e, delay, idt) {
-          var _sync$bind3;
-
-          if (delay === void 0) {
-            delay = -1;
-          }
-
-          if (idt === void 0) {
-            idt = '';
-          }
-
-          if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3));
-
-          __sync({
-            type: 'int'
-          }, e); //<input data-ccsync="foo/f1" onChange={ctx.syncInt} />
-
-        },
-        onUrlChanged: function onUrlChanged(cb) {
-          _this.cc.onUrlChanged = cb.bind(_assertThisInitialized(_this));
-        },
-        hook: hook,
-        emit: function emit(event) {
-          for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-            args[_key - 1] = arguments[_key];
-          }
-
-          findEventHandlersToPerform.apply(ev, [event, {
-            identity: null
-          }].concat(args));
-        },
-        emitIdentity: function emitIdentity(event, identity) {
-          for (var _len2 = arguments.length, args = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-            args[_key2 - 2] = arguments[_key2];
-          }
-
-          findEventHandlersToPerform.apply(ev, [event, {
-            identity: identity
-          }].concat(args));
-        },
-        on: function on(event, handler) {
-          bindEventHandlerToCcContext(_this.cc.ccState.module, ccClassKey, ccUniqueKey, event, null, handler);
-        },
-        onIdentity: function onIdentity(event, identity, handler) {
-          bindEventHandlerToCcContext(_this.cc.ccState.module, ccClassKey, ccUniqueKey, event, identity, handler);
-        },
-        dispatch: function dispatch(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
-          var stateModule = _this.cc.ccState.module;
-
-          var d = dispatcher.__$$getDispatchHandler(_assertThisInitialized(_this), _this.state, false, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1);
-
-          return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
-        },
-        lazyDispatch: function lazyDispatch(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) {
-          var stateModule = _this.cc.ccState.module;
-
-          var d = dispatcher.__$$getDispatchHandler(_assertThisInitialized(_this), _this.state, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1);
-
-          return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
-        },
-        invoke: dispatcher.__$$getInvokeHandler(_assertThisInitialized(_this), fragmentModule, ccKey, ccUniqueKey, ccClassKey),
-        lazyInvoke: dispatcher.__$$getInvokeHandler(_assertThisInitialized(_this), fragmentModule, ccKey, ccUniqueKey, ccClassKey, {
-          isLazy: true
-        }),
-        setModuleState: function setModuleState(module, state, delay, identity) {
-          var _module = module,
-              _state = state,
-              _delay = delay,
-              _identity = identity;
-
-          if (typeof module === 'object') {
-            _module = _this.cc.ccState.module;
-            _state = module;
-            _delay = state;
-            _identity = delay;
-          }
-
-          changeRefState(_state, {
-            calledBy: SET_MODULE_STATE,
-            ccKey: ccKey,
-            ccUniqueKey: ccUniqueKey,
-            module: _module,
-            delay: _delay,
-            identity: _identity
-          }, _assertThisInitialized(_this));
-        },
-        setGlobalState: function setGlobalState(state, delay, identity) {
-          _this.__fragmentParams.setModuleState(MODULE_GLOBAL, state, delay, identity);
-        },
-        state: mergedState,
-        prevState: mergedState,
-        props: outProps,
-        prevProps: outProps,
-        fragmentProps: props,
-        setState: function setState(state, cb, delay, identity) {
-          changeRefState(state, {
-            calledBy: SET_STATE,
-            ccKey: ccKey,
-            ccUniqueKey: ccUniqueKey,
-            module: fragmentModule,
-            cb: cb,
-            delay: delay,
-            identity: identity
-          }, _assertThisInitialized(_this));
-        },
-        forceUpdate: function forceUpdate(cb, delay, identity) {
-          changeRefState(_this.state, {
-            calledBy: FORCE_UPDATE,
-            ccKey: ccKey,
-            ccUniqueKey: ccUniqueKey,
-            module: fragmentModule,
-            cb: cb,
-            delay: delay,
-            identity: identity
-          }, _assertThisInitialized(_this));
-        },
-        changeState: function changeState(state, option) {
-          changeRefState(state, option, _assertThisInitialized(_this));
-        }
-      };
-      _this.__fragmentParams = __fragmentParams;
-
-      _this.__beforeMount();
-
-      return _this;
-    }
-
-    var _proto = CcFragment.prototype;
-
-    _proto.__beforeMount = function __beforeMount() {
-      var _this2 = this;
-
-      var _this$props = this.props,
-          setup = _this$props.setup,
-          bindCtxToMethod = _this$props.bindCtxToMethod;
-      var ctx = this.__fragmentParams;
-      var reducer = ctx.reducer;
-      var lazyReducer = ctx.lazyReducer;
-      var thisCc = this.cc;
-      var thisState = this.state;
-      var _thisCc$ccState = thisCc.ccState,
-          connect = _thisCc$ccState.connect,
-          module = _thisCc$ccState.module;
-      var dispatch = this.__fragmentParams.dispatch;
-      var lazyDispatch = this.__fragmentParams.lazyDispatch;
-      var connectModules = okeys$3(connect);
-      var allModules = connectModules.slice();
-      if (!allModules.includes(module)) allModules.push(module); //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
-      //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
-
-      allModules.forEach(function (m) {
-        var refReducerFnObj = safeGetObjectFromObject(reducer, m);
-        var refLazyReducerFnObj = safeGetObjectFromObject(lazyReducer, m);
-        var fnNames = _reducerModule_fnNames_[m] || [];
-        fnNames.forEach(function (fnName) {
-          refReducerFnObj[fnName] = function (payload, delay, idt) {
-            return dispatch(m + "/" + fnName, payload, delay, idt);
-          };
-
-          refLazyReducerFnObj[fnName] = function (payload, delay, idt) {
-            return lazyDispatch(m + "/" + fnName, payload, delay, idt);
-          };
-        });
-      }); //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后，分析computedSpec之前
-
-      if (setup) {
-        if (typeof setup !== 'function') throw new Error('type of setup must be function');
-        var settingsObj = setup(this.__fragmentParams) || {};
-        if (!isPlainJsonObject(settingsObj)) throw new Error('type of setup return result must be an plain json object');
-        var globalBindCtx = ccContext.bindCtxToMethod; //优先读自己的，再读全局的
-
-        if (bindCtxToMethod === true || globalBindCtx === true && bindCtxToMethod !== false) {
-          okeys$3(settingsObj).forEach(function (name) {
-            var settingValue = settingsObj[name];
-            if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(_this2, ctx);
-          });
-        }
-
-        ctx.settings = settingsObj;
-      }
-
-      var computedSpec = thisCc.computedSpec; //触发计算computed
-
-      if (computedSpec) {
-        var refComputed = thisCc.refComputed,
-            refConnectedComputed = thisCc.refConnectedComputed; //这里操作的是moduleState，最后一个参数置为true，让无模块的stateKey的计算值能写到refComputed里,
-
-        computeValueForRef(module, computedSpec, refComputed, refConnectedComputed, thisState, thisState, this.__fragmentParams);
-        connectModules.forEach(function (m) {
-          var mState = getState$4(m);
-          computeValueForRef(m, computedSpec, refComputed, refConnectedComputed, mState, mState, _this2.__fragmentParams);
-        });
-      }
-    };
-
-    _proto.executeHookEffect = function executeHookEffect(callByDidMount) {
-      var ctx = this.__fragmentParams;
-      var _this$__hookMeta = this.__hookMeta,
-          effectCbArr = _this$__hookMeta.effectCbArr,
-          effectCbReturnArr = _this$__hookMeta.effectCbReturnArr;
-
-      if (callByDidMount) {
-        this.__hookMeta.isCcFragmentMounted = true;
-        effectCbArr.forEach(function (cb) {
-          var cbReturn = cb(ctx);
-
-          if (typeof cbReturn === 'function') {
-            effectCbReturnArr.push(cbReturn);
-          } else {
-            effectCbReturnArr.push(null);
-          }
-        });
-      } else {
-        var effectSeeResult = this.__hookMeta.effectSeeResult;
-        effectCbArr.forEach(function (cb, idx) {
-          var shouldEffectExecute = effectSeeResult[idx];
-
-          if (shouldEffectExecute) {
-            var cbReturn = cb(ctx);
-
-            if (typeof cbReturn === 'function') {
-              effectCbReturnArr[idx] = cbReturn;
-            }
-          }
-        });
-      }
-    };
-
-    _proto.executeSetupEffect = function executeSetupEffect(callByDidMount) {
-      var _this$__staticEffectM = this.__staticEffectMeta,
-          effectItems = _this$__staticEffectM.effectItems,
-          eid_effectReturnCb_ = _this$__staticEffectM.eid_effectReturnCb_;
-      var ctx = this.__fragmentParams;
-
-      if (callByDidMount) {
-        effectItems.forEach(function (item) {
-          if (item.immediate === false) return;
-          var cb = item.fn(ctx);
-          if (cb) eid_effectReturnCb_[item.eId] = cb;
-        });
-      } else {
-        //callByDidUpdate
-        var prevState = ctx.prevState;
-        var curState = this.state;
-        var toBeExecutedFns = [];
-        effectItems.forEach(function (item) {
-          var status = item.status,
-              stateKeys = item.stateKeys,
-              fn = item.fn,
-              eId = item.eId;
-          if (status === EFFECT_STOPPED) return;
-
-          if (stateKeys) {
-            var keysLen = stateKeys.length;
-            if (keysLen === 0) return;
-            var shouldEffectExecute = false;
-
-            for (var i = 0; i < keysLen; i++) {
-              var key = stateKeys[i];
-              var targetCurState = void 0,
-                  targetPrevState = void 0,
-                  targetKey = void 0;
-
-              if (key.includes('/')) {
-                var _key$split = key.split('/'),
-                    module = _key$split[0],
-                    unmoduledKey = _key$split[1];
-
-                var _prevState = getPrevState(module);
-
-                if (!_prevState) {
-                  justWarning("key[" + key + "] is invalid, its module[" + module + "] has not been declared in store!");
-                  continue;
-                }
-
-                if (!moduleName_stateKeys_$3[module].includes(unmoduledKey)) {
-                  justWarning("key[" + key + "] is invalid, its unmoduledKey[" + unmoduledKey + "] has not been declared in state!");
-                  continue;
-                }
-
-                targetCurState = getState$4(module);
-                targetPrevState = _prevState;
-                targetKey = unmoduledKey;
-              } else {
-                targetCurState = curState;
-                targetPrevState = prevState;
-                targetKey = key;
-              }
-
-              if (targetPrevState[targetKey] !== targetCurState[targetKey]) {
-                shouldEffectExecute = true;
-                break;
-              }
-            }
-
-            if (shouldEffectExecute) {
-              toBeExecutedFns.push({
-                fn: fn,
-                eId: eId
-              });
-            }
-          } else {
-            toBeExecutedFns.push({
-              fn: fn,
-              eId: eId
-            });
-          }
-        });
-        toBeExecutedFns.forEach(function (item) {
-          var fn = item.fn,
-              eId = item.eId;
-          var cb = fn(ctx);
-          if (cb) eid_effectReturnCb_[eId] = cb;
-        });
-      }
-    };
-
-    _proto.componentDidMount = function componentDidMount() {
-      this.executeSetupEffect(true);
-      this.executeHookEffect(true);
-    };
-
-    _proto.shouldComponentUpdate = function shouldComponentUpdate(nextProps, nextState) {
-      return this.props !== nextProps || this.state !== nextState;
-    };
-
-    _proto.componentWillUpdate = function componentWillUpdate(nextProps, nextState) {
-      //注意这里，一定要每次都取最新的
-      this.__fragmentParams.props = getOutProps(nextProps);
-      this.__fragmentParams.state = nextState;
-    };
-
-    _proto.componentDidUpdate = function componentDidUpdate(prevProps, prevState) {
-      this.executeSetupEffect();
-      this.executeHookEffect(); //!!! 将最新的state，props记录为prevState，prevProps，方便下一轮渲染用
-
-      this.__fragmentParams.prevState = this.state;
-      this.__fragmentParams.prevProps = this.__fragmentParams.props;
-    };
-
-    _proto.componentWillUnmount = function componentWillUnmount() {
-      var ctx = this.__fragmentParams;
-
-      this.__hookMeta.effectCbReturnArr.forEach(function (cb) {
-        if (typeof cb === 'function') cb(ctx);
-      });
-
-      var eid_effectReturnCb_ = this.__staticEffectMeta.eid_effectReturnCb_;
-      Object.getOwnPropertySymbols(eid_effectReturnCb_).forEach(function (symbolKey) {
-        var cb = eid_effectReturnCb_[symbolKey];
-        if (typeof cb === 'function') cb(ctx);
-      });
-      okeys$3(eid_effectReturnCb_).forEach(function (eId) {
-        var cb = eid_effectReturnCb_[eId];
-        if (typeof cb === 'function') cb(ctx);
-      });
-      var _this$cc$ccState = this.cc.ccState,
-          ccUniqueKey = _this$cc$ccState.ccUniqueKey,
-          ccClassKey = _this$cc$ccState.ccClassKey;
-      offEventHandlersByCcUniqueKey(ccUniqueKey);
-      unsetRef(ccClassKey, ccUniqueKey);
-      if (_React$Component.prototype.componentWillUnmount) _React$Component.prototype.componentWillUnmount.call(this);
-      this.__$$isUnmounted = true;
-    };
-
-    _proto.render = function render() {
-      var _this$props2 = this.props,
-          children = _this$props2.children,
-          render = _this$props2.render;
-      var view = render || children;
-
-      if (typeof view === 'function') {
-        // return view(this.__fragmentParams) || React.createElement(Fragment);
-        return view(this.__fragmentParams) || React.createElement('span', {
-          style: {
-            display: 'none'
-          }
-        });
-      } else {
-        if (React.isValidElement(view)) {
-          justWarning("you are trying to specify a react dom to be CcFragment's children, it will never been rendered again no matter how your state changed!!!");
-        }
-
-        return view;
-      }
-    };
-
-    return CcFragment;
-  }(React.Component);
-
-  function _connectDumb(tag, mapProps, module, watchedKeys, connect, state, setup, bindCtxToMethod, mapState, alias, Dumb, props) {
-    var render = function render(ctx) {
-      var connectedState = ctx.connectedState;
-
-      if (mapProps) {
-        var generatedProps = mapProps(ctx);
-        if (mapState) throw new Error('mapState is not allowed when you specify mapProps in args');
-        return React.createElement(Dumb, generatedProps);
-      } else {
-        var mappedState = {};
-
-        if (mapState) {
-          if (mapState === true) {
-            mappedState = flatObject(connectedState, alias);
-          } else {
-            mappedState = mapState(ctx) || {};
-          }
-        }
-
-        ctx.mappedState = mappedState; //将mappedState绑在ctx上，方便其他地方使用
-
-        return React.createElement(Dumb, {
-          mappedState: mappedState,
-          ctx: ctx,
-          props: props
-        });
-      }
-    };
-
-    var fTag = props.tag || tag; //优先读取实例化传的，再读connectDumb配置的
-    //ccKey由实例化的Dumb组件props上透传下来
-
-    return React.createElement(CcFragment, {
-      tag: fTag,
-      key: props.key,
-      ccKey: props.ccKey,
-      props: props,
-      module: module,
-      watchedKeys: watchedKeys,
-      connect: connect,
-      state: state,
-      setup: setup,
-      bindCtxToMethod: bindCtxToMethod,
-      render: render
-    });
-  }
-
-  var connectDumb = (function (_ref) {
-    var tag = _ref.tag,
-        mapProps = _ref.mapProps,
-        mapState = _ref.mapState,
-        module = _ref.module,
-        watchedKeys = _ref.watchedKeys,
-        connect = _ref.connect,
-        _ref$state = _ref.state,
-        state = _ref$state === void 0 ? {} : _ref$state,
-        setup = _ref.setup,
-        bindCtxToMethod = _ref.bindCtxToMethod,
-        _ref$alias = _ref.alias,
-        alias = _ref$alias === void 0 ? {} : _ref$alias;
-    return function (Dumb) {
-      //对state做克隆,防止用同一个connectDumb结果包不同的fn组件,共享了同一份state
-      //const c = connectDumb({state:{info:{a:1}}});
-      // const UI1_ = c(UI1); const UI2_ = c(UI2);
-      // 让UI1_和UI2_各自拥有自己的localState
-      var stateType = typeof state;
-      var clonedState = null;
-      if (stateType === 'function') clonedState = state();else if (stateType !== 'object') {
-        throw new Error('state must be a plain json object');
-      } else {
-        clonedState = clone(state);
-      } //这样写可以避免react dev tool显示的dom为Unknown
-
-      var ConnectedFragment = function ConnectedFragment(props) {
-        return _connectDumb(tag, mapProps, module, watchedKeys, connect, clonedState, setup, bindCtxToMethod, mapState, alias, Dumb, props);
-      };
-
-      return ConnectedFragment;
-    };
-  });
-
-  var _connectPure = (function (_temp) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        module = _ref.module,
-        mapProps = _ref.mapProps,
-        mapState = _ref.mapState,
-        connect = _ref.connect,
-        state = _ref.state,
-        setup = _ref.setup,
-        bindCtxToMethod = _ref.bindCtxToMethod;
-
-    if (mapState) throw new Error('mapState is not allowed in connectPure method args');
-    var _mapProps = mapProps;
-    if (!mapProps) _mapProps = function _mapProps() {};
-    return connectDumb({
-      module: module,
-      mapProps: _mapProps,
-      connect: connect,
-      state: state,
-      setup: setup,
-      bindCtxToMethod: bindCtxToMethod
-    });
-  });
-
-  var ccKey_ref_$4 = ccContext.ccKey_ref_,
-      ccClassKey_ccClassContext_$4 = ccContext.ccClassKey_ccClassContext_;
+  var ccUkey_ref_$4 = ccContext.ccUkey_ref_,
+      ccClassKey_ccClassContext_$6 = ccContext.ccClassKey_ccClassContext_;
   function getRefsByClassKey (ccClassKey) {
     var refs = [];
-    var ccClassContext = ccClassKey_ccClassContext_$4[ccClassKey];
+    var ccClassContext = ccClassKey_ccClassContext_$6[ccClassKey];
 
     if (!ccClassContext) {
       return refs;
@@ -5620,7 +5055,7 @@ if (!this._inheritsLoose) {
 
     var ccKeys = ccClassContext.ccKeys;
     ccKeys.forEach(function (k) {
-      var ref = ccKey_ref_$4[k];
+      var ref = ccUkey_ref_$4[k];
       if (ref) refs.push(ref);
     });
     return refs;
@@ -5629,16 +5064,16 @@ if (!this._inheritsLoose) {
   var _execute = (function (ccClassKey) {
     var refs = getRefsByClassKey(ccClassKey);
     refs.forEach(function (ref) {
-      if (ref.$$execute) ref.$$execute();
+      if (ref.ctx.execute) ref.ctx.execute();
     });
   });
 
   function getRefs () {
     var refs = [];
-    var ccKey_ref_ = ccContext.ccKey_ref_;
-    var ccKeys = okeys(ccKey_ref_);
+    var ccUkey_ref_ = ccContext.ccUkey_ref_;
+    var ccKeys = okeys(ccUkey_ref_);
     ccKeys.forEach(function (k) {
-      var ref = ccKey_ref_[k];
+      var ref = ccUkey_ref_[k];
       if (ref) refs.push(ref);
     });
     return refs;
@@ -5647,13 +5082,13 @@ if (!this._inheritsLoose) {
   var _executeAll = (function () {
     var refs = getRefs();
     refs.forEach(function (ref) {
-      if (ref.$$execute) ref.$$execute();
+      if (ref.ctx.execute) ref.ctx.execute();
     });
   });
 
-  var ccClassKey_ccClassContext_$5 = ccContext.ccClassKey_ccClassContext_;
+  var ccClassKey_ccClassContext_$7 = ccContext.ccClassKey_ccClassContext_;
   var _getConnectedState = (function (ccClassKey) {
-    var ctx = ccClassKey_ccClassContext_$5[ccClassKey];
+    var ctx = ccClassKey_ccClassContext_$7[ccClassKey];
     return ctx.connectedState || {};
   });
 
@@ -5663,28 +5098,159 @@ if (!this._inheritsLoose) {
 
   var _lazyReducerCaller = ccContext.reducer._lazyReducerCaller;
 
+  var ccUkey_ref_$5 = ccContext.ccUkey_ref_;
+  var refCursor = 1;
+  var cursor_refKey_ = {};
+
+  function getUsableCursor() {
+    return refCursor;
+  }
+
+  function incCursor() {
+    refCursor = refCursor + 1;
+  }
+
+  var makeSetState = function makeSetState(ccHookState, hookSetState) {
+    return function (partialState) {
+      ccHookState.state = Object.assign({}, ccHookState.state, partialState);
+      var newHookState = Object.assign({}, ccHookState);
+      hookSetState(newHookState);
+    };
+  };
+
+  var makeForceUpdate = function makeForceUpdate(ccHookState, hookSetState) {
+    return function () {
+      var newHookState = Object.assign({}, ccHookState);
+      hookSetState(newHookState);
+    };
+  };
+
+  function HookRef(ccHookState, hookSetState, props) {
+    this.setState = makeSetState(ccHookState, hookSetState);
+    this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
+    this.__$$isUnmounted = false;
+    this.state = ccHookState.state;
+    this.isFirstRendered = true;
+    this.props = props;
+  }
+
+  var useConcent = (function (registerOption) {
+    var _registerOption = registerOption;
+
+    if (typeof registerOption === 'string') {
+      _registerOption = {
+        module: registerOption
+      };
+    }
+
+    var _registerOption2 = _registerOption,
+        module = _registerOption2.module,
+        reducerModule = _registerOption2.reducerModule,
+        _registerOption2$watc = _registerOption2.watchedKeys,
+        watchedKeys = _registerOption2$watc === void 0 ? '*' : _registerOption2$watc,
+        _registerOption2$stor = _registerOption2.storedKeys,
+        storedKeys = _registerOption2$stor === void 0 ? [] : _registerOption2$stor,
+        ccClassKey = _registerOption2.ccClassKey,
+        _registerOption2$conn = _registerOption2.connect,
+        connect = _registerOption2$conn === void 0 ? {} : _registerOption2$conn,
+        _registerOption2$stat = _registerOption2.state,
+        state = _registerOption2$stat === void 0 ? {} : _registerOption2$stat,
+        setup = _registerOption2.setup,
+        bindCtxToMethod = _registerOption2.bindCtxToMethod,
+        _registerOption2$prop = _registerOption2.props,
+        props = _registerOption2$prop === void 0 ? {} : _registerOption2$prop,
+        mapProps = _registerOption2.mapProps;
+    var reactUseState = React.useState;
+
+    if (!reactUseState) {
+      throw new Error('make sure your react version is larger than or equal 16.8');
+    }
+
+    var cursor = getUsableCursor();
+
+    var _reactUseState = reactUseState({
+      cursor: cursor,
+      state: state
+    }),
+        ccHookState = _reactUseState[0],
+        hookSetState = _reactUseState[1];
+
+    var nowCursor = ccHookState.cursor;
+    var isFirstRendered = nowCursor === cursor;
+    var hookRef;
+
+    if (isFirstRendered) {
+      incCursor();
+
+      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
+          _module = _mapRegistrationInfo._module,
+          _reducerModule = _mapRegistrationInfo._reducerModule,
+          _watchedKeys = _mapRegistrationInfo._watchedKeys,
+          _ccClassKey = _mapRegistrationInfo._ccClassKey,
+          _connect = _mapRegistrationInfo._connect;
+
+      hookRef = new HookRef(ccHookState, hookSetState, props);
+      var params = Object.assign({}, _registerOption, {
+        module: _module,
+        reducerModule: _reducerModule,
+        watchedKeys: _watchedKeys,
+        ccClassKey: _ccClassKey,
+        connect: _connect
+      });
+      buildRefCtx(hookRef, params);
+      beforeMount(hookRef, setup, bindCtxToMethod);
+      cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
+    } else {
+      var refKey = cursor_refKey_[nowCursor];
+      hookRef = ccUkey_ref_$5[refKey];
+      var _refCtx = hookRef.ctx; //existing period, replace reactSetState and reactForceUpdate
+
+      _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
+      _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+      _refCtx.props = props;
+    } //for every render
+
+
+    React.useEffect(function () {
+      if (!hookRef.isFirstRendered) {
+        // mock componentDidUpdate
+        triggerSetupEffect(hookRef, false);
+      }
+    }); //for first render
+
+    React.useEffect(function () {
+      // mock componentDidMount
+      hookRef.isFirstRendered = false;
+      triggerSetupEffect(hookRef, true);
+      return function () {
+        beforeUnmount(hookRef);
+      };
+    }, []);
+    var refCtx = hookRef.ctx;
+    if (mapProps) refCtx.mappedProps = mapProps(refCtx);
+    return refCtx;
+  });
+
   var startup$1 = startup;
   var cloneModule = _cloneModule;
-  var load = _load;
-  var run = _load;
+  var run = _run;
+  var connect = _connect;
+  var connectDumb = _connectDumb;
   var register$2 = register$1;
-  var r = _r;
+  var registerDumb$1 = registerDumb;
   var configure$1 = configure;
   var call = _call;
   var setGlobalState$1 = setGlobalState;
   var setState$1 = _setState;
   var set = _set;
-  var getState$5 = _getState$1;
+  var setValue$1 = _setValue;
+  var getState$a = getState$9;
   var getGlobalState$1 = getGlobalState;
   var getConnectedState = _getConnectedState;
   var getComputed = _getComputed;
   var emit = _emit;
-  var emitWith = _emitWith;
   var off = _off;
-  var connect = _connect;
-  var connectDumb$1 = connectDumb;
-  var connectPure = _connectPure;
-  var dispatch$2 = dispatch$1;
+  var dispatch$3 = dispatch$2;
   var lazyDispatch$1 = lazyDispatch;
   var ccContext$1 = ccContext;
   var createDispatcher$1 = createDispatcher;
@@ -5697,28 +5263,27 @@ if (!this._inheritsLoose) {
   var CcFragment$1 = CcFragment;
   var cst = _cst;
   var appendState$1 = appendState;
+  var useConcent$1 = useConcent;
   var defaultExport = {
     cloneModule: cloneModule,
     emit: emit,
-    emitWith: emitWith,
     off: off,
     connect: connect,
-    connectDumb: connectDumb$1,
-    connectPure: connectPure,
-    dispatch: dispatch$2,
+    connectDumb: connectDumb,
+    register: register$2,
+    registerDumb: registerDumb$1,
+    configure: configure$1,
+    dispatch: dispatch$3,
     lazyDispatch: lazyDispatch$1,
     startup: startup$1,
-    load: load,
     run: run,
-    register: register$2,
-    r: r,
-    configure: configure$1,
     call: call,
     setGlobalState: setGlobalState$1,
     setState: setState$1,
     set: set,
+    setValue: setValue$1,
     getGlobalState: getGlobalState$1,
-    getState: getState$5,
+    getState: getState$a,
     getComputed: getComputed,
     getConnectedState: getConnectedState,
     ccContext: ccContext$1,
@@ -5731,7 +5296,8 @@ if (!this._inheritsLoose) {
     clearContextIfUnderHotReloadMode: clearContextIfUnderHotReloadMode$1,
     CcFragment: CcFragment$1,
     cst: cst,
-    appendState: appendState$1
+    appendState: appendState$1,
+    useConcent: useConcent$1
   };
   var winCc = window.cc;
 
@@ -5752,26 +5318,24 @@ if (!this._inheritsLoose) {
 
   exports.startup = startup$1;
   exports.cloneModule = cloneModule;
-  exports.load = load;
   exports.run = run;
+  exports.connect = connect;
+  exports.connectDumb = connectDumb;
   exports.register = register$2;
-  exports.r = r;
+  exports.registerDumb = registerDumb$1;
   exports.configure = configure$1;
   exports.call = call;
   exports.setGlobalState = setGlobalState$1;
   exports.setState = setState$1;
   exports.set = set;
-  exports.getState = getState$5;
+  exports.setValue = setValue$1;
+  exports.getState = getState$a;
   exports.getGlobalState = getGlobalState$1;
   exports.getConnectedState = getConnectedState;
   exports.getComputed = getComputed;
   exports.emit = emit;
-  exports.emitWith = emitWith;
   exports.off = off;
-  exports.connect = connect;
-  exports.connectDumb = connectDumb$1;
-  exports.connectPure = connectPure;
-  exports.dispatch = dispatch$2;
+  exports.dispatch = dispatch$3;
   exports.lazyDispatch = lazyDispatch$1;
   exports.ccContext = ccContext$1;
   exports.createDispatcher = createDispatcher$1;
@@ -5784,6 +5348,7 @@ if (!this._inheritsLoose) {
   exports.CcFragment = CcFragment$1;
   exports.cst = cst;
   exports.appendState = appendState$1;
+  exports.useConcent = useConcent$1;
   exports.default = defaultExport;
 
   Object.defineProperty(exports, '__esModule', { value: true });

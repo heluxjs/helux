@@ -18,8 +18,10 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
   const reducerNames = util.okeys(reducer);
   reducerNames.forEach(name => {
     fnNames.push(name);
-    subReducerCaller[name] = (payload, delay, idt) => dispatch(`${module}/${name}`, payload, delay, idt);
-    subLazyReducerCaller[name] = (payload, delay, idt) => lazyDispatch(`${module}/${name}`, payload, delay, idt);
+    let fullFnName = `${module}/${name}`;
+
+    subReducerCaller[name] = (payload, delay, idt) => dispatch(fullFnName, payload, delay, idt);
+    subLazyReducerCaller[name] = (payload, delay, idt) => lazyDispatch(fullFnName, payload, delay, idt);
 
     const reducerFn = reducer[name];
     if(typeof reducerFn !== 'function'){
@@ -32,6 +34,6 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     // reducerFn.stateModule = module;
 
     const list = util.safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
-    list.push(`${module}/${name}`);
+    list.push(fullFnName);
   });
 }
