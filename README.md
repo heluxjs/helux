@@ -125,7 +125,7 @@ run({
 })
 ```
 - 基于react class注册成为cc类组件
-```
+```jsx
 class Counter extends Component {
   //setState 能够将数据将同步到store，广播到其他实例
   inc = () => {
