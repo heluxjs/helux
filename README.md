@@ -198,7 +198,7 @@ const mapProps = ctx=>{
   return {count:ctx.state.count, ...ctx.settings};
 }
 
-/将Counter类注册为CcFnCounter，属于counter模块
+//将Counter类注册为CcFnCounter，属于counter模块
 const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
 ```
 --- 基于hook注册为组件
