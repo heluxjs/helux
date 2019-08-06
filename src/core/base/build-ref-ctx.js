@@ -231,9 +231,14 @@ export default function (ref, params, liteLevel = 1) {
     off,
     defineWatch,
     defineComputed,
+    defineEffect,
     defineAuxMethod,
     defineExecute,
-    defineEffect,
+
+    // alias
+    watch: defineWatch,
+    computed: defineComputed,
+    effect: defineEffect,
 
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
