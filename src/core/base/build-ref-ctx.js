@@ -42,7 +42,7 @@ export default function (ref, params, liteLevel = 1) {
 
   let {
     isSingle, ccClassKey, ccKey, module, reducerModule,
-    state = {}, storedKeys, watchedKeys, connect, tag,
+    state = {}, storedKeys, watchedKeys, connect, tag, ccOption,
   } = params;
   reducerModule = reducerModule || module;
   const stateModule = module;
@@ -177,6 +177,7 @@ export default function (ref, params, liteLevel = 1) {
     storedKeys: _storedKeys,
     watchedKeys,
     connect,
+    ccOption,
 
     props: getOutProps(ref.props),
     prevState: mergedState,
@@ -207,7 +208,6 @@ export default function (ref, params, liteLevel = 1) {
     lazyReducer:{},
     aux,// auxiliary method map
     effectMeta,
-    ccOption:{},
 
     // api
     reactSetState,

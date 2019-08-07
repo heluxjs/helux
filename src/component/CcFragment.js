@@ -9,8 +9,11 @@ import beforeUnmount from '../core/base/before-unmount';
 import beforeMount from '../core/base/before-mount';
 import buildRefCtx from '../core/base/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
+import getStoredKeys from '../core/base/get-stored-keys';
+import ccContext from '../cc-context';
 
 const { shallowDiffers } = util;
+const { moduleName_stateKeys_ } = ccContext;
 
 export default class CcFragment extends React.Component {
   constructor(props, context) {
@@ -20,19 +23,23 @@ export default class CcFragment extends React.Component {
     if (props.__$$regDumb !== true) {
       const {
         module = MODULE_DEFAULT, ccClassKey: propsCcClassKey, ccKey, ccTag,
-        watchedKeys = '*', storedKeys, connect = {}, reducerModule, state, isSingle,
+        watchedKeys = '*', ccOption = {}, connect = {}, reducerModule, state = {}, isSingle,
       } = props;
-
       const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
+        module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, ccOption, connect, reducerModule, true
       );
 
+      const storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, []);
       buildRefCtx(this, {
         isSingle, ccKey, connect: _connect, state, module: _module, reducerModule: _reducerModule,
-        storedKeys, watchedKeys: _watchedKeys, tag: ccTag, ccClassKey: _ccClassKey
+        storedKeys, watchedKeys: _watchedKeys, tag: ccTag, ccClassKey: _ccClassKey, ccOption
       });
     } else {
-      buildRefCtx(this, props);
+      const outProps = getOutProps(props);
+      const ccOption = outProps.ccOption || props.ccOption;
+      const storedKeys = getStoredKeys(props.state, moduleName_stateKeys_[props.module], ccOption.storedKeys, props.storedKeys);
+      const params = Object.assign(props, { storedKeys, ccOption });
+      buildRefCtx(this, params);
     }
 
     this.setState = this.ctx.setState;

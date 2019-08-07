@@ -13,7 +13,10 @@ import beforeMount from './before-mount';
 import beforeUnMount from './before-unmount';
 import triggerSetupEffect from './trigger-setup-effect';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
+import getStoredKeys from './get-stored-keys';
 
+
+const { moduleName_stateKeys_ } = ccContext;
 const {  ccClassDisplayName, styleStr, color, verboseInfo, makeError } = util;
 const cl = color;
 const ss = styleStr;
@@ -24,6 +27,7 @@ export default function register({
   module = MODULE_DEFAULT,
   watchedKeys: inputWatchedKeys = '*',
   storedKeys: inputStoredKeys = [],
+  persistStoredKeys,
   connect = {},
   tag = '',
   reducerModule,
@@ -53,10 +57,13 @@ export default function register({
             this.state = this.state || {};
             this.$$attach = this.$$attach.bind(this);
             const _tag = props.ccTag || tag;
+            const ccOption = props.ccOption || { persistStoredKeys };
 
+            const declaredState = this.state;
+            const _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_[_module], ccOption.storedKeys, inputStoredKeys);
             const params = Object.assign({}, props, {
-              isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: this.state,
-              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect
+              isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: declaredState,
+              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys: _storedKeys, ccOption
             });
             buildRefCtx(this, params);
 

@@ -6,7 +6,7 @@ import * as util from '../support/util';
 import { CC_FRAGMENT_PREFIX, MODULE_DEFAULT } from '../support/constant';
 
 function _registerDumb(
-  Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys,
+  Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, persistStoredKeys,
   connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props
 ) {
 
@@ -35,10 +35,11 @@ function _registerDumb(
   //优先读取实例化的时候传入的，再读connectDumb配置的
   const ccTag = props.ccTag || tag;
 
+  const ccOption = { persistStoredKeys };
   //ccKey由实例化的Dumb组件props上透传下来
   return React.createElement(CcFragment, {
     isSingle, ccClassKey, __$$regDumb: true, tag: ccTag, ccKey: props.ccKey, props, module, reducerModule,
-    watchedKeys, storedKeys, connect, state: clonedState, setup, bindCtxToMethod, render
+    watchedKeys, storedKeys, ccOption, connect, state: clonedState, setup, bindCtxToMethod, render
   });
 }
 
@@ -47,7 +48,8 @@ export default function(registerOption, ccClassKey){
   if (!_registerOption) _registerOption = { module: MODULE_DEFAULT };
 
   const {
-    isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule, watchedKeys = '*', storedKeys,
+    isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule, 
+    watchedKeys = '*', storedKeys, persistStoredKeys, 
     connect = {}, state = {}, setup, bindCtxToMethod
   } = _registerOption;
 
@@ -58,8 +60,8 @@ export default function(registerOption, ccClassKey){
   return Dumb => {
     //避免react dev tool显示的dom为Unknown
     const ConnectedFragment = props => _registerDumb(
-      Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, _connect,
-      state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props
+      Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys, 
+      _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props
     );
     return ConnectedFragment;
   }
