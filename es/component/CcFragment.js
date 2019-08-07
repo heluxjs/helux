@@ -38,7 +38,7 @@ export default class CcFragment extends React.Component {
       const outProps = getOutProps(props);
       const ccOption = outProps.ccOption || props.ccOption;
       const storedKeys = getStoredKeys(props.state, moduleName_stateKeys_[props.module], ccOption.storedKeys, props.storedKeys);
-      const params = Object.assign(props, { storedKeys, ccOption });
+      const params = Object.assign({}, props, { storedKeys, ccOption });
       buildRefCtx(this, params);
     }
 

@@ -334,7 +334,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.5',
+      version: '1.5.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4754,7 +4754,7 @@
 
         var _storedKeys = getStoredKeys(props.state, moduleName_stateKeys_$6[props.module], _ccOption.storedKeys, props.storedKeys);
 
-        var params = Object.assign(props, {
+        var params = Object.assign({}, props, {
           storedKeys: _storedKeys,
           ccOption: _ccOption
         });
