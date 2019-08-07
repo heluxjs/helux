@@ -5,7 +5,7 @@ import shouldSkipKey from '../base/should-skip-key';
 const getState = ccContext.store.getState;
 const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 
-export default function (refCtx, stateModule, refEntireState, committedState) {
+export default function (refCtx, stateModule, oldState, committedState) {
   const { watchSpec, connect, module: refModule } = refCtx;
   if (watchSpec.hasFn !== true) return true;
 
@@ -28,7 +28,7 @@ export default function (refCtx, stateModule, refEntireState, committedState) {
       const moduleState = getState(targetModule);
       const fnCtx = { key: stateKey, module: targetModule, moduleState, committedState };
 
-      const ret = watchFn(commitValue, refEntireState[stateKey], fnCtx, refCtx);// watchFn(newValue, oldValue);
+      const ret = watchFn(commitValue, oldState[stateKey], fnCtx, refCtx);// watchFn(newValue, oldValue);
       if (ret === false) shouldNotUpdateLen++;
     }
   });

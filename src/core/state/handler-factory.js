@@ -114,12 +114,12 @@ export function makeCcSetStateHandler(ref, containerRef) {
   return (state, cb) => {
     const refCtx = ref.ctx;
     refCtx.renderCount += 1;
-    //采用此种写法的话，dispatch.ctx不能暴露state了，只能暴露getState句柄，才能保证取到最新的state
-    // ref.state = Object.assign(ref.state, state);
 
     let containerRefState = containerRef ? containerRef.state : null;
     const refState = ref.state;
 
+    //采用此种写法的话，dispatch.ctx不能暴露state了，只能暴露getState句柄，才能保证取到最新的state
+    // ref.state = Object.assign(ref.state, state);
     //采用okeys写法，让dispatch.ctx里的refState总是指向同一个引用
     okeys(state).forEach(k => {
       const val = state[k];

@@ -9,7 +9,7 @@ import computeValueForRef from '../computed/compute-value-for-ref';
 const { isPlainJsonObject, justWarning, isObjectNotNull, computeFeature, okeys, styleStr, color } = util;
 const { STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, FORCE_UPDATE } = cst;
 const {
-  store: { setState: ccStoreSetState, getState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
+  store: { setState, getState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
   connectedModuleName_ccClassKeys_, refStore, moduleName_stateKeys_, ccUkey_ref_
 } = ccContext;
 
@@ -107,7 +107,7 @@ function syncCommittedStateToStore(moduleName, committedState) {
 
   let skipBroadcastRefState = false;
   //!!! save state to store
-  if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);
+  if (!isPartialSharedStateEmpty) setState(moduleName, partialSharedState);
   else skipBroadcastRefState = true;
 
   return { partialSharedState, skipBroadcastRefState };
@@ -214,15 +214,15 @@ function broadcastConnectedState(commitModule, commitState) {
   });
 }
 
-function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
+function updateConnectedState(targetClassContext, commitModule, committedState, committedStateKeys) {
   const { connectedModuleKeyMapping, connectedModule } = targetClassContext;
   if (connectedModule[commitModule] === 1) {
 
     const { ccKeys } = targetClassContext;
     let isSetConnectedStateTriggered = false;
-    const len = commitStateKeys.length;
+    const len = committedStateKeys.length;
     for (let i = 0; i < len; i++) {
-      const moduledStateKey = `${commitModule}/${commitStateKeys[i]}`;
+      const moduledStateKey = `${commitModule}/${committedStateKeys[i]}`;
       if (connectedModuleKeyMapping[moduledStateKey]) {
         isSetConnectedStateTriggered = true;
         break;
@@ -233,12 +233,13 @@ function updateConnectedState(targetClassContext, commitModule, commitState, com
 
     //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
     if (isSetConnectedStateTriggered === true) {
+      const prevModuleState = getPrevState(commitModule);
       ccKeys.forEach(ccUniKey => {
         const ref = ccUkey_ref_[ccUniKey];
         if (ref && ref.__$$isUnmounted !== true) {
           const refCtx = ref.ctx;
-          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, commitModule, getState(commitModule), commitState);
-          computeValueForRef(refCtx, commitModule, ref.state, commitState);
+          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, commitModule, prevModuleState, committedState);
+          computeValueForRef(refCtx, commitModule, ref.state, committedState);
           if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
         }
       });
