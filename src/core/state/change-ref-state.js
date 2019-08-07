@@ -93,6 +93,7 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
 
   if (shouldCurrentRefUpdate === false) {
     if (next) next();
+    return;
   }
 
   if (targetRef.__$$isUnmounted !== true) {
