@@ -2104,38 +2104,39 @@
 
     if (moduleSingleClass[moduleName] === true && ccClassKeys.length >= 1) {
       throw new Error("module[" + moduleName + "] is declared as single, only on ccClassKey can been registered to it, and now a ccClassKey[" + ccClassKeys[0] + "] has been registered!");
-    }
+    } // 做一个判断，防止热加载时，传入重复的ccClassKey
+
 
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
   }
 
   function mapCcClassKeyToCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
-    var ccClassContext = ccClassKey_ccClassContext_$3[ccClassKey];
+    var ccClassContext = ccClassKey_ccClassContext_$3[ccClassKey]; //做一个判断，有可能是热加载调用
 
     if (!ccClassContext) {
       ccClassContext = makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
-      var connectedModule = {};
-      var connectedComputed = {};
-
-      if (connectedModuleKeyMapping) {
-        var _state = ccContext.store._state;
-        var connectedState = ccClassContext.connectedState; //直接赋值引用
-
-        connectedModuleNames.forEach(function (m) {
-          connectedState[m] = _state[m];
-          connectedComputed[m] = _computedValue$2[m];
-          connectedModule[m] = 1; //记录连接的模块
-          //记录这个模块被某个ccClassKey连接
-
-          var ccClassKeys = safeGetArrayFromObject(connectedModuleName_ccClassKeys_$1, m);
-          ccClassKeys.push(ccClassKey);
-        });
-        ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
-        ccClassContext.connectedModule = connectedModule;
-        ccClassContext.connectedComputed = connectedComputed;
-      }
-
       ccClassKey_ccClassContext_$3[ccClassKey] = ccClassContext;
+    }
+
+    var connectedModule = {};
+    var connectedComputed = {};
+
+    if (connectedModuleKeyMapping) {
+      var _state = ccContext.store._state;
+      var connectedState = ccClassContext.connectedState; //直接赋值引用
+
+      connectedModuleNames.forEach(function (m) {
+        connectedState[m] = _state[m];
+        connectedComputed[m] = _computedValue$2[m];
+        connectedModule[m] = 1; //记录连接的模块
+        //记录这个模块被某个ccClassKey连接
+
+        var ccClassKeys = safeGetArrayFromObject(connectedModuleName_ccClassKeys_$1, m);
+        ccClassKeys.push(ccClassKey);
+      });
+      ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
+      ccClassContext.connectedModule = connectedModule;
+      ccClassContext.connectedComputed = connectedComputed;
     }
   }
   /**
@@ -4161,7 +4162,7 @@
       if (ccContext.isHotReloadMode()) {
         cb();
       } else {
-        util.justWarning(new Error('clear failed because of not running under hot reload mode!'));
+        console.warn("clear failed because of not running under hot reload mode!");
       }
     } else {
       //还没有启动过，泽只是标记justCalledByStartUp为true
@@ -4193,8 +4194,7 @@
           return;
         }
 
-        var err = new Error("attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!");
-        util.justWarning(err);
+        console.warn("attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!");
 
         _clearInsAssociation();
       }
