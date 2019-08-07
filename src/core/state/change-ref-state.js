@@ -18,8 +18,8 @@ function getStateFor(inputModule, refModule) {
 }
 
 export default function (state, {
-  ccKey, ccUniqueKey, module, skipMiddleware = false, __endCb,
-  cb: reactCallback, type, reducerModule, calledBy, fnName, delay = -1, identity } = {}, targetRef
+  ccKey, ccUniqueKey, module, skipMiddleware = false,
+  reactCallback, type, reducerModule, calledBy, fnName, delay = -1, identity } = {}, targetRef
 ) {//executionContext
   const stateFor = getStateFor(module, targetRef.ctx.module);
 
@@ -45,12 +45,12 @@ export default function (state, {
   if (module === currentModule) {
     // who trigger $$changeState, who will change the whole received state 
     prepareReactSetState(targetRef, identity, calledBy, state, stateFor, () => {
-      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity, __endCb);
+      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity, reactCallback);
     }, reactCallback);
   } else {
     if (reactCallback) justWarning(`callback for react.setState will be ignore`);
     //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
-    prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, delay, identity, __endCb);
+    prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, delay, identity, reactCallback);
   }
 }
 
@@ -114,11 +114,11 @@ function syncCommittedStateToStore(moduleName, committedState) {
 }
 
 function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor,
-  moduleName, committedState, delay, identity, __endCb
+  moduleName, committedState, delay, identity, reactCallback
 ) {
   const { skipBroadcastRefState, partialSharedState } = broadcastInfo;
   const startBroadcastState = () => {
-    broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity, __endCb);
+    broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity, reactCallback);
   };
 
   const willBroadcast = () => {
@@ -154,7 +154,7 @@ function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broa
   }
 }
 
-function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity, __endCb) {
+function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity, reactCallback) {
   if (skipBroadcastRefState === false) {
     const { ccUniqueKey: currentCcKey } = targetRef.ctx;
 
@@ -197,7 +197,11 @@ function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFo
   }
 
   broadcastConnectedState(moduleName, originalState);
-  if (__endCb) __endCb(targetRef);
+
+  //hook的setter本来是没有回调的，官方是推荐用useEffect代替，concent放在这里执行，以达到hook 和 class 的setState达到一样的效果
+  if (reactCallback && targetRef.ctx.type === cst.CC_HOOK_PREFIX) {
+    reactCallback(targetRef.state);
+  }
 }
 
 function broadcastConnectedState(commitModule, commitState) {

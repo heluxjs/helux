@@ -85,23 +85,23 @@ export default function (ref, params, liteLevel = 1) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
-  const _setState = (module, state, calledBy, __endCb, delay, identity) => {
+  const _setState = (module, state, calledBy, reactCallback, delay, identity) => {
     changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, delay, identity, __endCb
+      calledBy, ccKey, ccUniqueKey, module, delay, identity, reactCallback
     }, ref);
   };
-  // const setState = (state, __endCb, delay, identity) => {
+  // const setState = (state, reactCallback, delay, identity) => {
   const setState = (p1, p2, p3, identity) => {
-    _setState(stateModule, state, SET_STATE, __endCb, delay, identity);
+    _setState(stateModule, state, SET_STATE, reactCallback, delay, identity);
   };
-  const setGlobalState = (state, __endCb, delay, identity) => {
-    _setState(MODULE_GLOBAL, state, SET_STATE, __endCb, delay, identity);
+  const setGlobalState = (state, reactCallback, delay, identity) => {
+    _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, identity);
   };
-  const setModuleState = (module, state, __endCb, delay, identity) => {
-    _setState(module, state, SET_MODULE_STATE, __endCb, delay, identity);
+  const setModuleState = (module, state, reactCallback, delay, identity) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, identity);
   };
-  const forceUpdate = (__endCb, delay, identity) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, __endCb, delay, identity);
+  const forceUpdate = (reactCallback, delay, identity) => {
+    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, identity);
   };
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
