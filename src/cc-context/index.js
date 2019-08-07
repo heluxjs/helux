@@ -15,7 +15,7 @@ const setStateByModule = (module, committedState) => {
 
     const oldValue = moduleState[key];
     prevModuleState[key] = oldValue;
-  
+
     const fnCtx = { key, module, moduleState, committedState };
     if (moduleComputedFns) {
       const fn = moduleComputedFns[key];
@@ -24,7 +24,7 @@ const setStateByModule = (module, committedState) => {
         moduleComputedValue[key] = computedValue;
       }
     }
-  
+
     if (watchFns) {
       const fn = watchFns[key];
       if (fn) fn(value, oldValue, fnCtx);//fn(newValue, oldValue)
@@ -66,7 +66,7 @@ const watch = {
   getModuleWatch: module => _watch[module],
 };
 
-function hotReloadWarning(err){
+function hotReloadWarning(err) {
   const message = err.message || err;
   const st = 'color:green;border:1px solid green';
   console.log(`%c error detected ${message}, cc found app is maybe running in hot reload mode, so cc will silent this error...`, st);
@@ -77,26 +77,26 @@ function hotReloadWarning(err){
 const _state = {};
 const _prevState = {};
 const ccContext = {
-  isHotReloadMode: function() {
+  isHotReloadMode: function () {
     if (ccContext.isHot) return true;
-    
+
     let result = false;
     if (window) {
       console.log(`%c[[isHotReloadMode]] window.name:${window.name}`, 'color:green;border:1px solid green');
-      if (window.webpackHotUpdate 
+      if (window.webpackHotUpdate
         || window.name === 'previewFrame' //for stackblitz
         || window.__SANDBOX_DATA__ // for codesandbox
-        ) {
+      ) {
         result = true;
       }
     }
     console.log('result is ', result);
     return result;
   },
-  throwCcHmrError: function(err){
-    if(ccContext.isHotReloadMode()){
+  throwCcHmrError: function (err) {
+    if (ccContext.isHotReloadMode()) {
       hotReloadWarning(err);
-    }else throw err;
+    } else throw err;
   },
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
@@ -170,7 +170,7 @@ const ccContext = {
       return _state[MODULE_GLOBAL];
     },
     //对state直接赋值，cc启动的时候某些场景需要调用此函数
-    initStateDangerously: (module, state)=>{
+    initStateDangerously: (module, state) => {
       _state[module] = state;
     },
   },
@@ -224,7 +224,7 @@ const ccContext = {
   userClassKey_featureStr_: {},
   errorHandler: null,
   middlewares: [],
-  plugins:[],
+  plugins: [],
 }
 
 export function getCcContext() {
