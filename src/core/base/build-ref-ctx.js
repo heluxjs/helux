@@ -53,7 +53,7 @@ export default function (ref, params, liteLevel = 1) {
   }
 
   let _storedKeys = [];
-  if (storedKeys !== undefined) {
+  if (storedKeys !== undefined && storedKeys.length > 0) {
     if (!ccKey) throw me(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi(`ccClassKey[${ccClassKey}]`));
     _storedKeys = storedKeys;
   }
