@@ -334,7 +334,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.4',
+      version: '1.5.5',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2937,7 +2937,7 @@
 
     var _storedKeys = [];
 
-    if (storedKeys !== undefined) {
+    if (storedKeys !== undefined && storedKeys.length > 0) {
       if (!ccKey) throw me$4(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi$4("ccClassKey[" + ccClassKey + "]"));
       _storedKeys = storedKeys;
     }
