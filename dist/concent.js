@@ -334,7 +334,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.7',
+      version: '1.5.8',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4698,6 +4698,11 @@
 
   var shallowDiffers$1 = shallowDiffers;
   var moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_;
+  var nullSpan = React.createElement('span', {
+    style: {
+      display: 'none'
+    }
+  });
 
   var CcFragment =
   /*#__PURE__*/
@@ -4802,15 +4807,21 @@
       var view = render || children;
 
       if (typeof view === 'function') {
-        // return view(this.ctx) || React.createElement(Fragment);
-        return view(this.ctx) || React.createElement('span', {
-          style: {
-            display: 'none'
-          }
-        });
+        var _this$props2 = this.props,
+            __$$regDumb = _this$props2.__$$regDumb,
+            mapProps = _this$props2.mapProps;
+        var ctx = this.ctx;
+
+        if (__$$regDumb !== true && mapProps) {
+          //直接使用<CcFragment />实例化
+          return view(mapProps(ctx)) || nullSpan;
+        } else {
+          return view(ctx) || nullSpan;
+        }
       } else {
         if (React.isValidElement(view)) {
-          justWarning("you are trying to specify a react dom to be CcFragment's children, it will never been rendered again no matter how your state changed!!!");
+          //直接传递dom，无论state怎么改变都不会再次触发渲染
+          throw new Error("CcFragment's children can not b a react dom ");
         }
 
         return view;
