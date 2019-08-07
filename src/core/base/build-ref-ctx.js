@@ -91,8 +91,14 @@ export default function (ref, params, liteLevel = 1) {
     }, ref);
   };
   // const setState = (state, reactCallback, delay, identity) => {
-  const setState = (p1, p2, p3, identity) => {
-    _setState(stateModule, state, SET_STATE, reactCallback, delay, identity);
+  const setState = (p1, p2, p3, p4, p5) => {
+    if(typeof p1 === 'string'){
+      //p1 module, p2 state, p3 cb, p4 delay, p5 idt
+      _setState(p1, p2, SET_STATE, p3, p4, p5);
+    }else{
+      //p1 state, p2 cb, p3 delay, p4 idt
+      _setState(stateModule, p1, SET_STATE, p2, p3, p4);
+    }
   };
   const setGlobalState = (state, reactCallback, delay, identity) => {
     _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, identity);
