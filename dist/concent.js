@@ -334,7 +334,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.6',
+      version: '1.5.7',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4724,9 +4724,9 @@
             reducerModule = props.reducerModule,
             _props$state = props.state,
             state = _props$state === void 0 ? {} : _props$state,
-            isSingle = props.isSingle;
+            isSingle = props.isSingle; //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
 
-        var _mapRegistrationInfo = mapRegistrationInfo(module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, ccOption, connect, reducerModule, true),
+        var _mapRegistrationInfo = mapRegistrationInfo(module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true),
             _module = _mapRegistrationInfo._module,
             _reducerModule = _mapRegistrationInfo._reducerModule,
             _watchedKeys = _mapRegistrationInfo._watchedKeys,
@@ -4835,7 +4835,8 @@
 
     var render = function render(ctx) {
       if (mapProps) {
-        var generatedProps = mapProps(ctx);
+        var generatedProps = mapProps(ctx); // if (generatedProps.ctx === undefined) generatedProps.ctx = ctx;
+
         return React.createElement(Dumb, generatedProps);
       } else {
         return React.createElement(Dumb, ctx);

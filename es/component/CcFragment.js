@@ -25,8 +25,9 @@ export default class CcFragment extends React.Component {
         module = MODULE_DEFAULT, ccClassKey: propsCcClassKey, ccKey, ccTag,
         watchedKeys = '*', ccOption = {}, connect = {}, reducerModule, state = {}, isSingle,
       } = props;
+      //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
       const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, ccOption, connect, reducerModule, true
+        module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true
       );
 
       const storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, []);
