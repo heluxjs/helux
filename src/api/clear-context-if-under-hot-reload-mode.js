@@ -32,7 +32,7 @@ function _prepareClear(cb) {
     if (ccContext.isHotReloadMode()) {
       cb();
     } else {
-      util.justWarning(new Error('clear failed because of not running under hot reload mode!'));
+      console.warn(`clear failed because of not running under hot reload mode!`);
     }
   }else{
     //还没有启动过，泽只是标记justCalledByStartUp为true
@@ -57,8 +57,7 @@ export default function (clearAll = false, warningErrForClearAll) {
         justCalledByStartUp = false;
         return;
       }
-      const err = new Error(`attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!`);
-      util.justWarning(err);
+      console.warn(`attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!`);
       _clearInsAssociation();
     }
   });

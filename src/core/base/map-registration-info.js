@@ -41,38 +41,39 @@ function mapModuleToCcClassKeys(moduleName, ccClassKey) {
     throw new Error(`module[${moduleName}] is declared as single, only on ccClassKey can been registered to it, and now a ccClassKey[${ccClassKeys[0]}] has been registered!`);
   }
 
+  // 做一个判断，防止热加载时，传入重复的ccClassKey
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 }
 
 function mapCcClassKeyToCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
   let ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
 
+  //做一个判断，有可能是热加载调用
   if (!ccClassContext) {
     ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
-
-    const connectedModule = {};
-    const connectedComputed = {};
-    if (connectedModuleKeyMapping) {
-      const _state = ccContext.store._state;
-      const connectedState = ccClassContext.connectedState;
-
-      //直接赋值引用
-      connectedModuleNames.forEach(m => {
-        connectedState[m] = _state[m];
-        connectedComputed[m] = _computedValue[m];
-        connectedModule[m] = 1;//记录连接的模块
-
-        //记录这个模块被某个ccClassKey连接
-        const ccClassKeys = util.safeGetArrayFromObject(connectedModuleName_ccClassKeys_, m);
-        ccClassKeys.push(ccClassKey);
-      });
-
-      ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
-      ccClassContext.connectedModule = connectedModule;
-      ccClassContext.connectedComputed = connectedComputed;
-    }
-
     ccClassKey_ccClassContext_[ccClassKey] = ccClassContext;
+  }
+
+  const connectedModule = {};
+  const connectedComputed = {};
+  if (connectedModuleKeyMapping) {
+    const _state = ccContext.store._state;
+    const connectedState = ccClassContext.connectedState;
+
+    //直接赋值引用
+    connectedModuleNames.forEach(m => {
+      connectedState[m] = _state[m];
+      connectedComputed[m] = _computedValue[m];
+      connectedModule[m] = 1;//记录连接的模块
+
+      //记录这个模块被某个ccClassKey连接
+      const ccClassKeys = util.safeGetArrayFromObject(connectedModuleName_ccClassKeys_, m);
+      ccClassKeys.push(ccClassKey);
+    });
+
+    ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
+    ccClassContext.connectedModule = connectedModule;
+    ccClassContext.connectedComputed = connectedComputed;
   }
 }
 
