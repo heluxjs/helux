@@ -15,7 +15,6 @@ export default function (refCtx, stateModule, oldState, committedState) {
   const { watchFns } = watchSpec;
   const watchStateKeys = util.okeys(watchFns);
   const len = watchStateKeys.length;
-  let shouldNotUpdateLen = 0;
 
   watchStateKeys.forEach(key => {
     const { stateKey, skip, keyModule } = shouldSkipKey(key, refModule, stateModule, connect, moduleStateKeys);
@@ -29,12 +28,11 @@ export default function (refCtx, stateModule, oldState, committedState) {
       const fnCtx = { key: stateKey, module: targetModule, moduleState, committedState };
 
       const ret = watchFn(commitValue, oldState[stateKey], fnCtx, refCtx);// watchFn(newValue, oldValue);
-      if (ret === false) shouldNotUpdateLen++;
+
+      //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
+      if (ret === false) shouldCurrentRefUpdate = false;
     }
   });
-
-  //只有所有watch都返回false，才不触发当前实例更新
-  if (shouldNotUpdateLen === len) shouldCurrentRefUpdate = false;
 
   return shouldCurrentRefUpdate;
 }

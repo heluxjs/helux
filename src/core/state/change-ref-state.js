@@ -91,13 +91,8 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
   computeValueForRef(refCtx, stateModule, thisState, state);
   const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, thisState, state);
 
-  if (shouldCurrentRefUpdate === false) {
-    if (next) next();
-    return;
-  }
-
   if (targetRef.__$$isUnmounted !== true) {
-    refCtx.__$$ccSetState(state, reactCallback);
+    refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
   }
   if (next) next();
 }
