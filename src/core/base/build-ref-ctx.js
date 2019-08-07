@@ -148,7 +148,6 @@ export default function (ref, params, liteLevel = 1) {
   const defineWatch = getDefineWatchHandler(watchFns, immediateWatchKeys);
   const defineComputed = getDefineComputedHandler(computedFns);
   const defineAuxMethod = (methodName, handler) => cc.aux[methodName] = handler;
-  const defineExecute = handler => executer.fn = handler;
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
@@ -233,7 +232,6 @@ export default function (ref, params, liteLevel = 1) {
     defineComputed,
     defineEffect,
     defineAuxMethod,
-    defineExecute,
 
     // alias
     watch: defineWatch,
@@ -244,6 +242,8 @@ export default function (ref, params, liteLevel = 1) {
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
 
   };
+
+  cc.defineExecute = handler => cc.execute = handler;
 
   ref.ctx = cc;
   ref.setState = setState;
