@@ -334,7 +334,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.2',
+      version: '1.5.4',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1213,7 +1213,7 @@
           isStateEmpty = _extractStateByKeys.isStateEmpty;
 
       if (!isStateEmpty) {
-        if (ccOption.storeInLocalStorage === true) {
+        if (ccOption.persistStoredKeys === true) {
           var _extractStateByKeys2 = extractStateByKeys(thisState, storedKeys),
               entireStoredState = _extractStateByKeys2.partialState;
 
@@ -2926,7 +2926,8 @@
         storedKeys = params.storedKeys,
         watchedKeys = params.watchedKeys,
         connect = params.connect,
-        tag = params.tag;
+        tag = params.tag,
+        ccOption = params.ccOption;
     reducerModule = reducerModule || module;
     var stateModule = module; //用户使用ccKey属性的话，必需显示的指定ccClassKey
 
@@ -3189,6 +3190,7 @@
       storedKeys: _storedKeys,
       watchedKeys: watchedKeys,
       connect: connect,
+      ccOption: ccOption,
       props: getOutProps(ref.props),
       prevState: mergedState,
       // state
@@ -3216,7 +3218,6 @@
       aux: aux,
       // auxiliary method map
       effectMeta: effectMeta,
-      ccOption: {},
       // api
       reactSetState: reactSetState,
       reactForceUpdate: reactForceUpdate,
@@ -3499,6 +3500,22 @@
     }
   }
 
+  function getStoredKeys (refDeclaredState, moduleStateKeys, ccOptionStoredKeys, registerStoredKeys) {
+    if (!ccOptionStoredKeys) {
+      return registerStoredKeys;
+    }
+
+    if (ccOptionStoredKeys === '*') {
+      return Object.keys(refDeclaredState).filter(function (k) {
+        return !moduleStateKeys.includes(k);
+      });
+    } else {
+      checkStoredKeys(moduleStateKeys, ccOptionStoredKeys);
+      return ccOptionStoredKeys;
+    }
+  }
+
+  var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_;
   var ccClassDisplayName$1 = util.ccClassDisplayName,
       styleStr$2 = util.styleStr,
       color$2 = util.color,
@@ -3516,6 +3533,7 @@
         inputWatchedKeys = _ref$watchedKeys === void 0 ? '*' : _ref$watchedKeys,
         _ref$storedKeys = _ref.storedKeys,
         inputStoredKeys = _ref$storedKeys === void 0 ? [] : _ref$storedKeys,
+        persistStoredKeys = _ref.persistStoredKeys,
         _ref$connect = _ref.connect,
         connect = _ref$connect === void 0 ? {} : _ref$connect,
         _ref$tag = _ref.tag,
@@ -3564,15 +3582,24 @@
 
               var _tag = props.ccTag || tag;
 
+              var ccOption = props.ccOption || {
+                persistStoredKeys: persistStoredKeys
+              };
+              var declaredState = _this.state;
+
+              var _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_$5[_module], ccOption.storedKeys, inputStoredKeys);
+
               var params = Object.assign({}, props, {
                 isSingle: isSingle,
                 module: _module,
                 reducerModule: _reducerModule,
                 tag: _tag,
-                state: _this.state,
+                state: declaredState,
                 watchedKeys: _watchedKeys,
                 ccClassKey: _ccClassKey,
-                connect: _connect
+                connect: _connect,
+                storedKeys: _storedKeys,
+                ccOption: ccOption
               });
               buildRefCtx(_assertThisInitialized(_this), params);
               if (_this.$$setup) _this.$$setup = _this.$$setup.bind(_assertThisInitialized(_this));
@@ -4181,7 +4208,7 @@
 
         _clearAll();
 
-        util.justWarning(warningErrForClearAll);
+        console.warn(warningErrForClearAll);
       } else {
         // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
         // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命名单独放置在一个脚本里，
@@ -4670,6 +4697,7 @@
   }
 
   var shallowDiffers$1 = shallowDiffers;
+  var moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_;
 
   var CcFragment =
   /*#__PURE__*/
@@ -4689,20 +4717,23 @@
             ccTag = props.ccTag,
             _props$watchedKeys = props.watchedKeys,
             watchedKeys = _props$watchedKeys === void 0 ? '*' : _props$watchedKeys,
-            storedKeys = props.storedKeys,
+            _props$ccOption = props.ccOption,
+            ccOption = _props$ccOption === void 0 ? {} : _props$ccOption,
             _props$connect = props.connect,
             connect = _props$connect === void 0 ? {} : _props$connect,
             reducerModule = props.reducerModule,
-            state = props.state,
+            _props$state = props.state,
+            state = _props$state === void 0 ? {} : _props$state,
             isSingle = props.isSingle;
 
-        var _mapRegistrationInfo = mapRegistrationInfo(module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
+        var _mapRegistrationInfo = mapRegistrationInfo(module, propsCcClassKey, CC_FRAGMENT_PREFIX, watchedKeys, ccOption, connect, reducerModule, true),
             _module = _mapRegistrationInfo._module,
             _reducerModule = _mapRegistrationInfo._reducerModule,
             _watchedKeys = _mapRegistrationInfo._watchedKeys,
             _ccClassKey = _mapRegistrationInfo._ccClassKey,
             _connect = _mapRegistrationInfo._connect;
 
+        var storedKeys = getStoredKeys(state, moduleName_stateKeys_$6[_module], ccOption.storedKeys, []);
         buildRefCtx(_assertThisInitialized(_this), {
           isSingle: isSingle,
           ccKey: ccKey,
@@ -4713,10 +4744,21 @@
           storedKeys: storedKeys,
           watchedKeys: _watchedKeys,
           tag: ccTag,
-          ccClassKey: _ccClassKey
+          ccClassKey: _ccClassKey,
+          ccOption: ccOption
         });
       } else {
-        buildRefCtx(_assertThisInitialized(_this), props);
+        var outProps = getOutProps(props);
+
+        var _ccOption = outProps.ccOption || props.ccOption;
+
+        var _storedKeys = getStoredKeys(props.state, moduleName_stateKeys_$6[props.module], _ccOption.storedKeys, props.storedKeys);
+
+        var params = Object.assign(props, {
+          storedKeys: _storedKeys,
+          ccOption: _ccOption
+        });
+        buildRefCtx(_assertThisInitialized(_this), params);
       }
 
       _this.setState = _this.ctx.setState;
@@ -4778,7 +4820,7 @@
     return CcFragment;
   }(React.Component);
 
-  function _registerDumb(Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props) {
+  function _registerDumb(Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, persistStoredKeys, connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props) {
     //对state做克隆,防止用同一个connectDumb结果包不同的fn组件,共享了同一份state
     //const c = registerDumb({state:{info:{a:1}}});
     // const UI1_ = c(UI1); const UI2_ = c(UI2);
@@ -4801,7 +4843,10 @@
     }; //优先读取实例化的时候传入的，再读connectDumb配置的
 
 
-    var ccTag = props.ccTag || tag; //ccKey由实例化的Dumb组件props上透传下来
+    var ccTag = props.ccTag || tag;
+    var ccOption = {
+      persistStoredKeys: persistStoredKeys
+    }; //ccKey由实例化的Dumb组件props上透传下来
 
     return React.createElement(CcFragment, {
       isSingle: isSingle,
@@ -4814,6 +4859,7 @@
       reducerModule: reducerModule,
       watchedKeys: watchedKeys,
       storedKeys: storedKeys,
+      ccOption: ccOption,
       connect: connect,
       state: clonedState,
       setup: setup,
@@ -4840,6 +4886,7 @@
         _registerOption2$watc = _registerOption2.watchedKeys,
         watchedKeys = _registerOption2$watc === void 0 ? '*' : _registerOption2$watc,
         storedKeys = _registerOption2.storedKeys,
+        persistStoredKeys = _registerOption2.persistStoredKeys,
         _registerOption2$conn = _registerOption2.connect,
         connect = _registerOption2$conn === void 0 ? {} : _registerOption2$conn,
         _registerOption2$stat = _registerOption2.state,
@@ -4857,7 +4904,7 @@
     return function (Dumb) {
       //避免react dev tool显示的dom为Unknown
       var ConnectedFragment = function ConnectedFragment(props) {
-        return _registerDumb(Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props);
+        return _registerDumb(Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys, _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props);
       };
 
       return ConnectedFragment;
@@ -5102,7 +5149,8 @@
 
   var _lazyReducerCaller = ccContext.reducer._lazyReducerCaller;
 
-  var ccUkey_ref_$5 = ccContext.ccUkey_ref_;
+  var ccUkey_ref_$5 = ccContext.ccUkey_ref_,
+      moduleName_stateKeys_$7 = ccContext.moduleName_stateKeys_;
   var refCursor = 1;
   var cursor_refKey_ = {};
 
@@ -5154,6 +5202,7 @@
         watchedKeys = _registerOption2$watc === void 0 ? '*' : _registerOption2$watc,
         _registerOption2$stor = _registerOption2.storedKeys,
         storedKeys = _registerOption2$stor === void 0 ? [] : _registerOption2$stor,
+        persistStoredKeys = _registerOption2.persistStoredKeys,
         ccClassKey = _registerOption2.ccClassKey,
         _registerOption2$conn = _registerOption2.connect,
         connect = _registerOption2$conn === void 0 ? {} : _registerOption2$conn,
@@ -5194,12 +5243,20 @@
           _connect = _mapRegistrationInfo._connect;
 
       hookRef = new HookRef(ccHookState, hookSetState, props);
+      var ccOption = props.ccOption || {
+        persistStoredKeys: persistStoredKeys
+      };
+
+      var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$7[_module], ccOption.storedKeys, storedKeys);
+
       var params = Object.assign({}, _registerOption, {
         module: _module,
         reducerModule: _reducerModule,
         watchedKeys: _watchedKeys,
         ccClassKey: _ccClassKey,
-        connect: _connect
+        connect: _connect,
+        ccOption: ccOption,
+        storedKeys: _storedKeys
       });
       buildRefCtx(hookRef, params);
       beforeMount(hookRef, setup, bindCtxToMethod);

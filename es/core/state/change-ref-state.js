@@ -73,7 +73,7 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
   if (storedKeys.length > 0) {
     const { partialState, isStateEmpty } = extractStateByKeys(state, storedKeys);
     if (!isStateEmpty) {
-      if (ccOption.storeInLocalStorage === true) {
+      if (ccOption.persistStoredKeys === true) {
         const { partialState: entireStoredState } = extractStateByKeys(thisState, storedKeys);
         const currentStoredState = Object.assign({}, entireStoredState, partialState);
         localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));

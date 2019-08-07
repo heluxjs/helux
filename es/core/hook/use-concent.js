@@ -6,8 +6,9 @@ import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
 import beforeUnmount from '../base/before-unmount';
 import triggerSetupEffect from '../base/trigger-setup-effect';
+import getStoredKeys from '../base/get-stored-keys';
 
-const { ccUkey_ref_ } = ccContext;
+const { ccUkey_ref_, moduleName_stateKeys_ } = ccContext;
 
 let refCursor = 1;
 const cursor_refKey_ = {};
@@ -45,8 +46,8 @@ export default (registerOption) => {
   }
 
   const {
-    module, reducerModule, watchedKeys = '*', storedKeys = [], ccClassKey,
-    connect = {}, state = {}, setup, bindCtxToMethod, props = {}, mapProps
+    module, reducerModule, watchedKeys = '*', storedKeys = [], persistStoredKeys, ccClassKey,
+    connect = {}, state = {}, setup, bindCtxToMethod, props = {}, mapProps,
   } = _registerOption;
   const reactUseState = React.useState;
   if (!reactUseState) {
@@ -65,9 +66,12 @@ export default (registerOption) => {
       module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
     );
     hookRef = new HookRef(ccHookState, hookSetState, props);
+    
+    const ccOption = props.ccOption || { persistStoredKeys };
+    const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
       module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys,
-      ccClassKey: _ccClassKey, connect: _connect
+      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
     });
 
     buildRefCtx(hookRef, params);

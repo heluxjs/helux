@@ -45,7 +45,7 @@ export default function (clearAll = false, warningErrForClearAll) {
     if (clearAll) {
       justCalledByStartUp = true;
       _clearAll();
-      util.justWarning(warningErrForClearAll);
+      console.warn(warningErrForClearAll);
     } else {
       // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
       // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命名单独放置在一个脚本里，
