@@ -1,15 +1,12 @@
-
 import * as checker from '../checker';
 
 export default function (refDeclaredState, moduleStateKeys, ccOptionStoredKeys, registerStoredKeys) {
-  if (!ccOptionStoredKeys) {
-    return registerStoredKeys;
-  }
+  const targetStoredKeys = ccOptionStoredKeys || registerStoredKeys;
 
-  if (ccOptionStoredKeys === '*') {
+  if (targetStoredKeys === '*') {
     return Object.keys(refDeclaredState).filter(k => !moduleStateKeys.includes(k));
   } else {
-    checker.checkStoredKeys(moduleStateKeys, ccOptionStoredKeys);
-    return ccOptionStoredKeys
+    checker.checkStoredKeys(moduleStateKeys, targetStoredKeys);
+    return targetStoredKeys
   }
 }

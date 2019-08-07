@@ -334,7 +334,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.8',
+      version: '1.5.9',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3501,17 +3501,15 @@
   }
 
   function getStoredKeys (refDeclaredState, moduleStateKeys, ccOptionStoredKeys, registerStoredKeys) {
-    if (!ccOptionStoredKeys) {
-      return registerStoredKeys;
-    }
+    var targetStoredKeys = ccOptionStoredKeys || registerStoredKeys;
 
-    if (ccOptionStoredKeys === '*') {
+    if (targetStoredKeys === '*') {
       return Object.keys(refDeclaredState).filter(function (k) {
         return !moduleStateKeys.includes(k);
       });
     } else {
-      checkStoredKeys(moduleStateKeys, ccOptionStoredKeys);
-      return ccOptionStoredKeys;
+      checkStoredKeys(moduleStateKeys, targetStoredKeys);
+      return targetStoredKeys;
     }
   }
 
