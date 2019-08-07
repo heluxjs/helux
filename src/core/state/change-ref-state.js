@@ -9,7 +9,7 @@ import computeValueForRef from '../computed/compute-value-for-ref';
 const { isPlainJsonObject, justWarning, isObjectNotNull, computeFeature, okeys, styleStr, color } = util;
 const { STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, FORCE_UPDATE } = cst;
 const {
-  store: { setState, getState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
+  store: { setState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
   connectedModuleName_ccClassKeys_, refStore, moduleName_stateKeys_, ccUkey_ref_
 } = ccContext;
 
@@ -20,7 +20,7 @@ function getStateFor(inputModule, refModule) {
 export default function (state, {
   ccKey, ccUniqueKey, module, skipMiddleware = false,
   reactCallback, type, reducerModule, calledBy, fnName, delay = -1, identity } = {}, targetRef
-) {//executionContext
+) {
   const stateFor = getStateFor(module, targetRef.ctx.module);
 
   if (state === undefined) return;//do nothing
@@ -135,12 +135,12 @@ function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broa
     return;
   }
 
-  const middlewaresLen = middlewares.length;
-  if (middlewaresLen > 0) {
+  const len = middlewares.length;
+  if (len > 0) {
     passToMiddleware.sharedState = partialSharedState; //这个记录到store的状态也传给中间件ctx
     let index = 0;
     const next = () => {
-      if (index === middlewaresLen) {// all middlewares been executed
+      if (index === len) {// all middlewares been executed
         willBroadcast();
       } else {
         const middlewareFn = middlewares[index];
