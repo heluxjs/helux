@@ -62,7 +62,7 @@ export default function register({
             const declaredState = this.state;
             const _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_[_module], ccOption.storedKeys, inputStoredKeys);
             const params = Object.assign({}, props, {
-              isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: declaredState,
+              isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: declaredState, type: CC_CLASS_PREFIX,
               watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys: _storedKeys, ccOption
             });
             buildRefCtx(this, params);

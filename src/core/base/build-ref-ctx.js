@@ -41,7 +41,7 @@ export default function (ref, params, liteLevel = 1) {
   const reactForceUpdate = ref.forceUpdate.bind(ref);
 
   let {
-    isSingle, ccClassKey, ccKey, module, reducerModule,
+    isSingle, ccClassKey, ccKey, module, reducerModule, type,
     state = {}, storedKeys, watchedKeys, connect, tag, ccOption,
   } = params;
   reducerModule = reducerModule || module;
@@ -90,7 +90,8 @@ export default function (ref, params, liteLevel = 1) {
       calledBy, ccKey, ccUniqueKey, module, delay, identity, __endCb
     }, ref);
   };
-  const setState = (state, __endCb, delay, identity) => {
+  // const setState = (state, __endCb, delay, identity) => {
+  const setState = (p1, p2, p3, identity) => {
     _setState(stateModule, state, SET_STATE, __endCb, delay, identity);
   };
   const setGlobalState = (state, __endCb, delay, identity) => {
@@ -166,6 +167,7 @@ export default function (ref, params, liteLevel = 1) {
 
   const cc = {
     // static params
+    type,
     module,
     reducerModule,
     ccClassKey,

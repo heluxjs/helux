@@ -70,7 +70,7 @@ export default (registerOption) => {
     const ccOption = props.ccOption || { persistStoredKeys };
     const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
-      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys,
+      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, type: CC_HOOK_PREFIX,
       ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
     });
 

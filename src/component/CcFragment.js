@@ -34,13 +34,13 @@ export default class CcFragment extends React.Component {
       const storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, []);
       buildRefCtx(this, {
         isSingle, ccKey, connect: _connect, state, module: _module, reducerModule: _reducerModule,
-        storedKeys, watchedKeys: _watchedKeys, tag: ccTag, ccClassKey: _ccClassKey, ccOption
+        storedKeys, watchedKeys: _watchedKeys, tag: ccTag, ccClassKey: _ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
       });
     } else {
       const outProps = getOutProps(props);
       const ccOption = outProps.ccOption || props.ccOption;
       const storedKeys = getStoredKeys(props.state, moduleName_stateKeys_[props.module], ccOption.storedKeys, props.storedKeys);
-      const params = Object.assign({}, props, { storedKeys, ccOption });
+      const params = Object.assign({}, props, { storedKeys, ccOption, type: CC_FRAGMENT_PREFIX });
       buildRefCtx(this, params);
     }
 
