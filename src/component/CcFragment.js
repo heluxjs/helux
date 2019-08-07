@@ -14,6 +14,7 @@ import ccContext from '../cc-context';
 
 const { shallowDiffers } = util;
 const { moduleName_stateKeys_ } = ccContext;
+const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
 export default class CcFragment extends React.Component {
   constructor(props, context) {
@@ -78,13 +79,19 @@ export default class CcFragment extends React.Component {
   render() {
     const { children, render } = this.props
     const view = render || children;
-    
+
     if (typeof view === 'function') {
-      // return view(this.ctx) || React.createElement(Fragment);
-      return view(this.ctx) || React.createElement('span', { style: { display: 'none' } });
+      const { __$$regDumb, mapProps } = this.props;
+      const ctx = this.ctx;
+      if (__$$regDumb !== true && mapProps) {//直接使用<CcFragment />实例化
+        return view(mapProps(ctx)) || nullSpan;
+      } else {
+        return view(ctx) || nullSpan;
+      }
     } else {
       if (React.isValidElement(view)) {
-        util.justWarning(`you are trying to specify a react dom to be CcFragment's children, it will never been rendered again no matter how your state changed!!!`);
+        //直接传递dom，无论state怎么改变都不会再次触发渲染
+        throw new Error(`CcFragment's children can not b a react dom `);
       }
       return view;
     }
