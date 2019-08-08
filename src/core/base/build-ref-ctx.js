@@ -234,7 +234,6 @@ export default function (ref, params, liteLevel = 3) {
     on,
     off,
     defineEffect,
-    defineAuxMethod,
 
     // alias
     effect: defineEffect,
