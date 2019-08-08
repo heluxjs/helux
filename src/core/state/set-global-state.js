@@ -8,7 +8,7 @@ import pickOneRef from '../ref/pick-one-ref';
 export default function (state, delayMs = -1, throwError = false) {
   try {
     const ref = pickOneRef();
-    ref.setGlobalState(state, delayMs);
+    ref.ctx.setGlobalState(state, delayMs);
   } catch (err) {
     if (throwError) throw err;
     else util.justWarning(err.message);
