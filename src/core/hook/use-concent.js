@@ -30,7 +30,7 @@ const makeForceUpdate = (ccHookState, hookSetState) => () => {
   hookSetState(newHookState);
 }
 
-function HookRef(ccHookState, hookSetState, props) {
+function CcHook(ccHookState, hookSetState, props) {
   this.setState = makeSetState(ccHookState, hookSetState);
   this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
   this.__$$isUnmounted = false;
@@ -65,7 +65,7 @@ export default (registerOption) => {
     const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
       module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
     );
-    hookRef = new HookRef(ccHookState, hookSetState, props);
+    hookRef = new CcHook(ccHookState, hookSetState, props);
     
     const ccOption = props.ccOption || { persistStoredKeys };
     const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
@@ -106,7 +106,7 @@ export default (registerOption) => {
   }, []);
 
   const refCtx = hookRef.ctx;
-  if (mapProps) refCtx.mappedProps = mapProps(refCtx);
+  if (mapProps) refCtx.mapped = mapProps(refCtx);
 
   return refCtx;
 }

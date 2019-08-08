@@ -194,8 +194,8 @@ export default function (ref, params, liteLevel = 3) {
     globalComputed,
     connectedComputed,
 
-    //for HookRef
-    mappedProps: {},
+    //collect CcHook mapProps result
+    mapped: {},
 
     // api meta data
     watchFns,
