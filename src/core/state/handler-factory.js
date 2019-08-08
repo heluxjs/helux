@@ -195,21 +195,19 @@ export function invokeWith(userLogicFn, executionContext, payload){
       //调用前先加1
       chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
-      //暂时不考虑在ctx提供lazyDispatch功能
       const dispatch = makeDispatchHandler(
         targetRef, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
-        null, null, -1, identity, chainId, oriChainId, chainId_depth_
+        -1, identity, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
         targetRef, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
-        null, null, -1, identity, chainId, oriChainId, chainId_depth_
+        -1, identity, chainId, oriChainId, chainId_depth_
       );
 
       const sourceClassContext = ccClassKey_ccClassContext_[ccClassKey];
 
       executionContextForUser = Object.assign(
         executionContext, {
-          // 将targetModule一直携带下去，让链式调用里所以句柄隐含的指向最初调用方的module
           invoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, chainId_depth_ }),
 
           //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
@@ -302,7 +300,7 @@ export function dispatch({
 }
 
 export function makeDispatchHandler(
-  targetRef, isLazy, ccKey, ccUniqueKey, ccClassKey, targetModule, targetReducerModule, inputType, inputPayload,
+  targetRef, isLazy, ccKey, ccUniqueKey, ccClassKey, defaultModule, defaultReducerModule,
   delay = -1, defaultIdentity = '', chainId, oriChainId, chainId_depth_ = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
@@ -310,11 +308,11 @@ export function makeDispatchHandler(
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
     const paramObjType = typeof paramObj;
-    let _module = targetModule, _reducerModule, _type, _payload = inputPayload, _cb, _delay = delay;
+    let _module = defaultModule, _reducerModule, _type, _payload, _cb, _delay = delay;
     let _identity = defaultIdentity;
     if (paramObjType === 'object') {
-      const { module = targetModule, reducerModule,
-        type = inputType, payload = inputPayload, cb, delay = -1, identity
+      const { 
+        module = defaultModule, reducerModule, type, payload, cb, delay = -1, identity
       } = paramObj;
       _module = module;
       _reducerModule = reducerModule || module;
@@ -348,7 +346,7 @@ export function makeDispatchHandler(
         _type = type;
       } else if (slashCount === 2) {
         const [module, reducerModule, type] = targetFirstParam.split('/');
-        if (module === '' || module === ' ') _module = targetModule;//targetFirstParam may like: /foo/changeName
+        if (module === '' || module === ' ') _module = defaultModule;//targetFirstParam may like: /foo/changeName
         else _module = module;
         _module = module;
         _reducerModule = reducerModule;
@@ -365,10 +363,10 @@ export function makeDispatchHandler(
     }
 
     // pick user input reducerModule firstly!
-    let nowReducerModule = _reducerModule || (targetReducerModule || _module);
+    let targetReducerModule = _reducerModule || (defaultReducerModule || _module);
     const p = new Promise((resolve, reject) => {
       dispatch({
-        targetRef, module: _module, reducerModule: nowReducerModule, type: _type, payload: _payload,
+        targetRef, module: _module, reducerModule: targetReducerModule, type: _type, payload: _payload,
         cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject),
         ccKey, ccUniqueKey, ccClassKey, delay: _delay, identity: _identity,
         chainId: _chainId, oriChainId: _oriChainId, chainId_depth_

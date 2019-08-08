@@ -112,12 +112,8 @@ export default function (ref, params, liteLevel = 3) {
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
   }
-  const _dispatch = (isLazy, paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
-    const d = hf.makeDispatchHandler(ref, isLazy, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1)
-    return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
-  };
-  const dispatch = (...args) => _dispatch(false, ...args);
-  const lazyDispatch = (...args) => _dispatch(true, ...args);
+  const dispatch = hf.makeDispatchHandler(ref, false, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
+  const lazyDispatch = hf.makeDispatchHandler(ref, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
   const invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
   const lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
 
@@ -150,7 +146,7 @@ export default function (ref, params, liteLevel = 3) {
     ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
   };
 
-  
+
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
@@ -159,13 +155,13 @@ export default function (ref, params, liteLevel = 3) {
     if (stateKeys !== null && stateKeys !== undefined) {
       if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
     }
-    
+
     const _eId = eId || getEId();
     // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
     const effectItem = { fn, stateKeys, eId: _eId, immediate };
     effectItems.push(effectItem);
   };
-  
+
   const aux = {}, watchFns = {}, computedFns = {};
   const immediateWatchKeys = [];
   const ctx = {
@@ -253,7 +249,7 @@ export default function (ref, params, liteLevel = 3) {
   ctx.defineComputed = defineComputed;
   ctx.defineAuxMethod = defineAuxMethod;
 
-   // alias
+  // alias
   ctx.watch = defineWatch;
   ctx.computed = defineComputed;
 
@@ -261,3 +257,4 @@ export default function (ref, params, liteLevel = 3) {
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
 }
+
