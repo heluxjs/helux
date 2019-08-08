@@ -1,7 +1,7 @@
 import deh from '../base/define-handler-to-fns';
 
-export default function (watchFns) {
+export default function (refCtx, watchFns) {
   return (computedItem, computedHandler) => {
-    deh(computedItem, computedHandler, watchFns);
+    deh(refCtx, computedItem, computedHandler, watchFns);
   };
 } 

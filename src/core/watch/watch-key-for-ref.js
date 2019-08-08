@@ -14,7 +14,6 @@ export default function (refCtx, stateModule, oldState, committedState) {
 
   const { watchFns } = watchSpec;
   const watchStateKeys = util.okeys(watchFns);
-  const len = watchStateKeys.length;
 
   watchStateKeys.forEach(key => {
     const { stateKey, skip, keyModule } = shouldSkipKey(key, refModule, stateModule, connect, moduleStateKeys);

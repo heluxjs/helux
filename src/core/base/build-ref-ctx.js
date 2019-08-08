@@ -150,11 +150,7 @@ export default function (ref, params, liteLevel = 1) {
     ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
   };
 
-  const aux = {}, watchFns = {}, computedFns = {}, immediateWatchKeys = [];
-  const defineWatch = getDefineWatchHandler(watchFns, immediateWatchKeys);
-  const defineComputed = getDefineComputedHandler(computedFns);
-  const defineAuxMethod = (methodName, handler) => cc.aux[methodName] = handler;
-
+  
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
@@ -163,14 +159,16 @@ export default function (ref, params, liteLevel = 1) {
     if (stateKeys !== null && stateKeys !== undefined) {
       if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
     }
-
+    
     const _eId = eId || getEId();
     // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
     const effectItem = { fn, stateKeys, eId: _eId, immediate };
     effectItems.push(effectItem);
   };
-
-  const cc = {
+  
+  const aux = {}, watchFns = {}, computedFns = {};
+  const immediateWatchKeys = [];
+  const ctx = {
     // static params
     type,
     module,
@@ -205,6 +203,7 @@ export default function (ref, params, liteLevel = 1) {
 
     // api meta data
     watchFns,
+    watchMultiKeyFns, // {key_fns_}
     computedFns,
     immediateWatchKeys,
     watchSpec: {},
@@ -235,14 +234,10 @@ export default function (ref, params, liteLevel = 1) {
     emit,
     on,
     off,
-    defineWatch,
-    defineComputed,
     defineEffect,
     defineAuxMethod,
 
     // alias
-    watch: defineWatch,
-    computed: defineComputed,
     effect: defineEffect,
 
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
@@ -250,9 +245,21 @@ export default function (ref, params, liteLevel = 1) {
 
   };
 
-  cc.defineExecute = handler => cc.execute = handler;
+  ctx.defineExecute = handler => ctx.execute = handler;
+  const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys);
+  const defineComputed = getDefineComputedHandler(ctx, computedFns);
+  const defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
 
-  ref.ctx = cc;
+  // api
+  ctx.defineWatch = defineWatch;
+  ctx.defineComputed = defineComputed;
+  ctx.defineAuxMethod = defineAuxMethod;
+
+   // alias
+  ctx.watch = defineWatch;
+  ctx.computed = defineComputed;
+
+  ref.ctx = ctx;
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
 }
