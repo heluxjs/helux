@@ -36,7 +36,7 @@ function getEId() {
  * 构建refCtx，附加到ref.cc上
  * liteLevel 越小，绑定的方法越少
  */
-export default function (ref, params, liteLevel = 1) {
+export default function (ref, params, liteLevel = 3) {
   const reactSetState = ref.setState.bind(ref);
   const reactForceUpdate = ref.forceUpdate.bind(ref);
 
@@ -203,7 +203,6 @@ export default function (ref, params, liteLevel = 1) {
 
     // api meta data
     watchFns,
-    watchMultiKeyFns, // {key_fns_}
     computedFns,
     immediateWatchKeys,
     watchSpec: {},
