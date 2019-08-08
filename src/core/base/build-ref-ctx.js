@@ -151,7 +151,6 @@ export default function (ref, params, liteLevel = 1) {
   };
 
   const aux = {}, watchFns = {}, computedFns = {}, immediateWatchKeys = [];
-  const executer = { fn: null };
   const defineWatch = getDefineWatchHandler(watchFns, immediateWatchKeys);
   const defineComputed = getDefineComputedHandler(computedFns);
   const defineAuxMethod = (methodName, handler) => cc.aux[methodName] = handler;
@@ -210,7 +209,7 @@ export default function (ref, params, liteLevel = 1) {
     immediateWatchKeys,
     watchSpec: {},
     computedSpec: {},
-    execute: executer.fn,
+    execute: null,
     reducer: {},
     lazyReducer: {},
     aux,// auxiliary method map
