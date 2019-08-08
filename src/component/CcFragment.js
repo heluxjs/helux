@@ -47,6 +47,8 @@ export default class CcFragment extends React.Component {
     this.setState = this.ctx.setState;
     this.forceUpdate = this.ctx.forceUpdate;
     beforeMount(this, props.setup, props.bindCtxToMethod);
+
+    this.__$$compareProps = props.compareProps || true;
   }
 
   componentDidMount() {
@@ -54,7 +56,8 @@ export default class CcFragment extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.state !== nextState || shallowDiffers(getOutProps(nextProps), getOutProps(this.props));
+    const isPropsChanged = this.__$$compareProps ? shallowDiffers(getOutProps(nextProps), getOutProps(this.props)) : false;
+    return this.state !== nextState || isPropsChanged;
   }
 
   componentWillUpdate(nextProps, nextState) {

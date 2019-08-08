@@ -34,6 +34,7 @@ export default function register({
   isPropsProxy = false,
   isSingle = false,
   __checkStartUp = true,
+  compareProps = true,
   __calledBy,
 } = {}, ccClassKey = '') {
   try {
@@ -83,7 +84,8 @@ export default function register({
           } else if (super.shouldComponentUpdate) {
             return super.shouldComponentUpdate(nextProps, nextState);
           }
-          return this.state !== nextState || shallowDiffers(this.props, nextProps);
+          const isPropsChanged = compareProps ? shallowDiffers(this.props, nextProps) : false;
+          return this.state !== nextState || isPropsChanged;
         }
 
         //!!! 存在多重装饰器时, 或者用户想使用this.props.***来用concent类时
