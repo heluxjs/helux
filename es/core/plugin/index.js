@@ -3,10 +3,18 @@ import {
   SIG_FN_END,
   SIG_FN_QUIT,
   SIG_FN_ERR,
-  SIG_MODULE_CONFIGURED
+  SIG_MODULE_CONFIGURED,
+  SIG_STATE_CHANGED
 } from '../../support/constant';
 
-const sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED];
+const sigs = [
+  SIG_FN_START, 
+  SIG_FN_END, 
+  SIG_FN_QUIT, 
+  SIG_FN_ERR, 
+  SIG_MODULE_CONFIGURED,
+  SIG_STATE_CHANGED,
+];
 
 const sig_cbs_ = {};
 sigs.forEach(sig => sig_cbs_[sig] = []);

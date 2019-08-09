@@ -34,6 +34,7 @@ export default function register({
   isPropsProxy = false,
   isSingle = false,
   __checkStartUp = true,
+  compareProps = true,
   __calledBy,
 } = {}, ccClassKey = '') {
   try {
@@ -62,7 +63,7 @@ export default function register({
             const declaredState = this.state;
             const _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_[_module], ccOption.storedKeys, inputStoredKeys);
             const params = Object.assign({}, props, {
-              isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: declaredState,
+              isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: declaredState, type: CC_CLASS_PREFIX,
               watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys: _storedKeys, ccOption
             });
             buildRefCtx(this, params);
@@ -83,7 +84,8 @@ export default function register({
           } else if (super.shouldComponentUpdate) {
             return super.shouldComponentUpdate(nextProps, nextState);
           }
-          return this.state !== nextState || shallowDiffers(this.props, nextProps);
+          const isPropsChanged = compareProps ? shallowDiffers(this.props, nextProps) : false;
+          return this.state !== nextState || isPropsChanged;
         }
 
         //!!! 存在多重装饰器时, 或者用户想使用this.props.***来用concent类时
@@ -131,7 +133,7 @@ export default function register({
         componentDidUpdate() {
           if (super.componentDidUpdate) super.componentDidUpdate();
           triggerSetupEffect(this);
-          this.ctx.prevState = this.state;
+          this.ctx.prevState = Object.assign({}, this.state);
         }
 
         componentWillUnmount() {

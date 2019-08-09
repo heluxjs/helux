@@ -5,7 +5,7 @@ import shouldSkipKey from '../base/should-skip-key';
 const getState = ccContext.store.getState;
 const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 
-export default function (refCtx, stateModule, refEntireState, committedState) {
+export default function (refCtx, stateModule, oldState, committedState) {
   const { watchSpec, connect, module: refModule } = refCtx;
   if (watchSpec.hasFn !== true) return true;
 
@@ -14,8 +14,6 @@ export default function (refCtx, stateModule, refEntireState, committedState) {
 
   const { watchFns } = watchSpec;
   const watchStateKeys = util.okeys(watchFns);
-  const len = watchStateKeys.length;
-  let shouldNotUpdateLen = 0;
 
   watchStateKeys.forEach(key => {
     const { stateKey, skip, keyModule } = shouldSkipKey(key, refModule, stateModule, connect, moduleStateKeys);
@@ -28,13 +26,12 @@ export default function (refCtx, stateModule, refEntireState, committedState) {
       const moduleState = getState(targetModule);
       const fnCtx = { key: stateKey, module: targetModule, moduleState, committedState };
 
-      const ret = watchFn(commitValue, refEntireState[stateKey], fnCtx, refCtx);// watchFn(newValue, oldValue);
-      if (ret === false) shouldNotUpdateLen++;
+      const ret = watchFn(commitValue, oldState[stateKey], fnCtx, refCtx);// watchFn(newValue, oldValue);
+
+      //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
+      if (ret === false) shouldCurrentRefUpdate = false;
     }
   });
-
-  //只有所有watch都返回false，才不触发当前实例更新
-  if (shouldNotUpdateLen === len) shouldCurrentRefUpdate = false;
 
   return shouldCurrentRefUpdate;
 }

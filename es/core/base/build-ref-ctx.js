@@ -22,7 +22,7 @@ const {
   computed: { _computedValue },
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo:vbi } = util;
+const { okeys, makeError: me, verboseInfo: vbi } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -36,12 +36,12 @@ function getEId() {
  * 构建refCtx，附加到ref.cc上
  * liteLevel 越小，绑定的方法越少
  */
-export default function (ref, params, liteLevel = 1) {
+export default function (ref, params, liteLevel = 3) {
   const reactSetState = ref.setState.bind(ref);
   const reactForceUpdate = ref.forceUpdate.bind(ref);
 
   let {
-    isSingle, ccClassKey, ccKey, module, reducerModule,
+    isSingle, ccClassKey, ccKey, module, reducerModule, type,
     state = {}, storedKeys, watchedKeys, connect, tag, ccOption,
   } = params;
   reducerModule = reducerModule || module;
@@ -85,34 +85,37 @@ export default function (ref, params, liteLevel = 1) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
-  const _setState = (module, state, calledBy, __endCb, delay, identity) => {
+  const _setState = (module, state, calledBy, reactCallback, delay, identity) => {
     changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, delay, identity, __endCb
+      calledBy, ccKey, ccUniqueKey, module, delay, identity, reactCallback
     }, ref);
   };
-  const setState = (state, __endCb, delay, identity) => {
-    _setState(stateModule, state, SET_STATE, __endCb, delay, identity);
+  const setGlobalState = (state, reactCallback, delay, identity) => {
+    _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, identity);
   };
-  const setGlobalState = (state, __endCb, delay, identity) => {
-    _setState(MODULE_GLOBAL, state, SET_STATE, __endCb, delay, identity);
+  const setModuleState = (module, state, reactCallback, delay, identity) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, identity);
   };
-  const setModuleState = (module, state, __endCb, delay, identity) => {
-    _setState(module, state, SET_MODULE_STATE, __endCb, delay, identity);
+  // const setState = (state, reactCallback, delay, identity) => {
+  const setState = (p1, p2, p3, p4, p5) => {
+    if (typeof p1 === 'string') {
+      //p1 module, p2 state, p3 cb, p4 delay, p5 idt
+      setModuleState(p1, p2, p3, p4, p5);
+    } else {
+      //p1 state, p2 cb, p3 delay, p4 idt
+      _setState(stateModule, p1, SET_STATE, p2, p3, p4);
+    }
   };
-  const forceUpdate = (__endCb, delay, identity) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, __endCb, delay, identity);
+  const forceUpdate = (reactCallback, delay, identity) => {
+    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, identity);
   };
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
   }
-  const _dispatch = (isLazy, paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity) => {
-    const d = hf.makeDispatchHandler(ref, isLazy, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule, null, null, -1)
-    return d(paramObj, payloadWhenFirstParamIsString, userInputDelay, userInputIdentity);
-  };
-  const dispatch = (...args) => _dispatch(false, ...args);
-  const lazyDispatch = (...args) => _dispatch(true, ...args);
+  const dispatch = hf.makeDispatchHandler(ref, false, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
+  const lazyDispatch = hf.makeDispatchHandler(ref, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
   const invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
-  const lazyInvoke =  hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
+  const lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
 
   const syncBool = (e, delay = -1, idt = '') => {
     if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, idt }, ref);
@@ -125,7 +128,7 @@ export default function (ref, params, liteLevel = 1) {
   const set = (ccsync, val, delay, idt) => {
     __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, idt }, ref);
   };
-  const  setBool = (ccsync, delay = -1, idt = '') => {
+  const setBool = (ccsync, delay = -1, idt = '') => {
     __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, idt }, ref);
   };
   const syncInt = (e, delay = -1, idt = '') => {
@@ -141,14 +144,8 @@ export default function (ref, params, liteLevel = 1) {
   }
   const on = (event, handler, identity = null) => {
     ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
-  }; 
+  };
 
-  const aux = {}, watchFns = {}, computedFns = {}, immediateWatchKeys = [];
-  const executer = { fn: null };
-  const defineWatch = getDefineWatchHandler(watchFns, immediateWatchKeys);
-  const defineComputed = getDefineComputedHandler(computedFns);
-  const defineAuxMethod = (methodName, handler) => cc.aux[methodName] = handler;
-  const defineExecute = handler => executer.fn = handler;
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
@@ -165,8 +162,11 @@ export default function (ref, params, liteLevel = 1) {
     effectItems.push(effectItem);
   };
 
-  const cc = {
+  const aux = {}, watchFns = {}, computedFns = {};
+  const immediateWatchKeys = [];
+  const ctx = {
     // static params
+    type,
     module,
     reducerModule,
     ccClassKey,
@@ -180,7 +180,7 @@ export default function (ref, params, liteLevel = 1) {
     ccOption,
 
     props: getOutProps(ref.props),
-    prevState: mergedState,
+    prevState: Object.assign({}, mergedState),
     // state
     state: mergedState,
     moduleState,
@@ -194,18 +194,18 @@ export default function (ref, params, liteLevel = 1) {
     globalComputed,
     connectedComputed,
 
-    //for HookRef
-    mappedProps: {},
-    
+    //collect CcHook mapProps result
+    mapped: {},
+
     // api meta data
     watchFns,
     computedFns,
     immediateWatchKeys,
     watchSpec: {},
     computedSpec: {},
-    execute: executer.fn,
-    reducer:{},
-    lazyReducer:{},
+    execute: null,
+    reducer: {},
+    lazyReducer: {},
     aux,// auxiliary method map
     effectMeta,
 
@@ -229,15 +229,9 @@ export default function (ref, params, liteLevel = 1) {
     emit,
     on,
     off,
-    defineWatch,
-    defineComputed,
     defineEffect,
-    defineAuxMethod,
-    defineExecute,
 
     // alias
-    watch: defineWatch,
-    computed: defineComputed,
     effect: defineEffect,
 
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
@@ -245,7 +239,22 @@ export default function (ref, params, liteLevel = 1) {
 
   };
 
-  ref.ctx = cc;
+  ctx.defineExecute = handler => ctx.execute = handler;
+  const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys);
+  const defineComputed = getDefineComputedHandler(ctx, computedFns);
+  const defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
+
+  // api
+  ctx.defineWatch = defineWatch;
+  ctx.defineComputed = defineComputed;
+  ctx.defineAuxMethod = defineAuxMethod;
+
+  // alias
+  ctx.watch = defineWatch;
+  ctx.computed = defineComputed;
+
+  ref.ctx = ctx;
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
 }
+

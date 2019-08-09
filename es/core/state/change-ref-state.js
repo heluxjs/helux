@@ -5,11 +5,16 @@ import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import watchKeyForRef from '../watch/watch-key-for-ref';
 import computeValueForRef from '../computed/compute-value-for-ref';
+import { send } from '../plugin';
 
 const { isPlainJsonObject, justWarning, isObjectNotNull, computeFeature, okeys, styleStr, color } = util;
-const { STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, FORCE_UPDATE } = cst;
 const {
-  store: { setState: ccStoreSetState, getState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
+  STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
+  FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC,
+  SIG_STATE_CHANGED
+} = cst;
+const {
+  store: { setState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
   connectedModuleName_ccClassKeys_, refStore, moduleName_stateKeys_, ccUkey_ref_
 } = ccContext;
 
@@ -17,10 +22,18 @@ function getStateFor(inputModule, refModule) {
   return inputModule === refModule ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY : STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE;
 }
 
+function getActionType(calledBy, type) {
+  if ([FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC].includes(calledBy)) {
+    return `ccApi/${calledBy}`;
+  }else{
+    return `dispatch/${type}`;
+  }
+}
+
 export default function (state, {
-  ccKey, ccUniqueKey, module, skipMiddleware = false, __endCb,
-  cb: reactCallback, type, reducerModule, calledBy, fnName, delay = -1, identity } = {}, targetRef
-) {//executionContext
+  ccKey, ccUniqueKey, module, skipMiddleware = false,
+  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, delay = -1, identity } = {}, targetRef
+) {
   const stateFor = getStateFor(module, targetRef.ctx.module);
 
   if (state === undefined) return;//do nothing
@@ -42,15 +55,21 @@ export default function (state, {
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
   //也防止prepareReactSetState里有异步的钩子函数，导致state同步到store有延迟而出现其他bug
   const broadcastInfo = syncCommittedStateToStore(module, state);
+
+  send(SIG_STATE_CHANGED, {
+    committedState: state, sharedState: broadcastInfo.partialSharedState,
+    module, type: getActionType(calledBy, type), ccUniqueKey
+  });
+
   if (module === currentModule) {
     // who trigger $$changeState, who will change the whole received state 
     prepareReactSetState(targetRef, identity, calledBy, state, stateFor, () => {
-      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity, __endCb);
+      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity, reactCallback);
     }, reactCallback);
   } else {
     if (reactCallback) justWarning(`callback for react.setState will be ignore`);
     //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
-    prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, delay, identity, __endCb);
+    prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, delay, identity, reactCallback);
   }
 }
 
@@ -91,12 +110,8 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
   computeValueForRef(refCtx, stateModule, thisState, state);
   const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, thisState, state);
 
-  if (shouldCurrentRefUpdate === false) {
-    if (next) next();
-  }
-
   if (targetRef.__$$isUnmounted !== true) {
-    refCtx.__$$ccSetState(state, reactCallback);
+    refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
   }
   if (next) next();
 }
@@ -107,18 +122,18 @@ function syncCommittedStateToStore(moduleName, committedState) {
 
   let skipBroadcastRefState = false;
   //!!! save state to store
-  if (!isPartialSharedStateEmpty) ccStoreSetState(moduleName, partialSharedState);
+  if (!isPartialSharedStateEmpty) setState(moduleName, partialSharedState);
   else skipBroadcastRefState = true;
 
   return { partialSharedState, skipBroadcastRefState };
 }
 
 function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor,
-  moduleName, committedState, delay, identity, __endCb
+  moduleName, committedState, delay, identity, reactCallback
 ) {
   const { skipBroadcastRefState, partialSharedState } = broadcastInfo;
   const startBroadcastState = () => {
-    broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity, __endCb);
+    broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity, reactCallback);
   };
 
   const willBroadcast = () => {
@@ -135,12 +150,12 @@ function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broa
     return;
   }
 
-  const middlewaresLen = middlewares.length;
-  if (middlewaresLen > 0) {
+  const len = middlewares.length;
+  if (len > 0) {
     passToMiddleware.sharedState = partialSharedState; //这个记录到store的状态也传给中间件ctx
     let index = 0;
     const next = () => {
-      if (index === middlewaresLen) {// all middlewares been executed
+      if (index === len) {// all middlewares been executed
         willBroadcast();
       } else {
         const middlewareFn = middlewares[index];
@@ -154,7 +169,7 @@ function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broa
   }
 }
 
-function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity, __endCb) {
+function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity, reactCallback) {
   if (skipBroadcastRefState === false) {
     const { ccUniqueKey: currentCcKey } = targetRef.ctx;
 
@@ -197,7 +212,11 @@ function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFo
   }
 
   broadcastConnectedState(moduleName, originalState);
-  if (__endCb) __endCb(targetRef);
+
+  //hook的setter本来是没有回调的，官方是推荐用useEffect代替，concent放在这里执行，以达到hook 和 class 的setState达到一样的效果
+  if (reactCallback && targetRef.ctx.type === cst.CC_HOOK_PREFIX) {
+    reactCallback(targetRef.state);
+  }
 }
 
 function broadcastConnectedState(commitModule, commitState) {
@@ -210,15 +229,15 @@ function broadcastConnectedState(commitModule, commitState) {
   });
 }
 
-function updateConnectedState(targetClassContext, commitModule, commitState, commitStateKeys) {
+function updateConnectedState(targetClassContext, commitModule, committedState, committedStateKeys) {
   const { connectedModuleKeyMapping, connectedModule } = targetClassContext;
   if (connectedModule[commitModule] === 1) {
 
     const { ccKeys } = targetClassContext;
     let isSetConnectedStateTriggered = false;
-    const len = commitStateKeys.length;
+    const len = committedStateKeys.length;
     for (let i = 0; i < len; i++) {
-      const moduledStateKey = `${commitModule}/${commitStateKeys[i]}`;
+      const moduledStateKey = `${commitModule}/${committedStateKeys[i]}`;
       if (connectedModuleKeyMapping[moduledStateKey]) {
         isSetConnectedStateTriggered = true;
         break;
@@ -229,12 +248,13 @@ function updateConnectedState(targetClassContext, commitModule, commitState, com
 
     //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
     if (isSetConnectedStateTriggered === true) {
+      const prevModuleState = getPrevState(commitModule);
       ccKeys.forEach(ccUniKey => {
         const ref = ccUkey_ref_[ccUniKey];
         if (ref && ref.__$$isUnmounted !== true) {
           const refCtx = ref.ctx;
-          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, commitModule, getState(commitModule), commitState);
-          computeValueForRef(refCtx, commitModule, ref.state, commitState);
+          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, commitModule, prevModuleState, committedState);
+          computeValueForRef(refCtx, commitModule, ref.state, committedState);
           if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
         }
       });

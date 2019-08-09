@@ -30,7 +30,7 @@ const makeForceUpdate = (ccHookState, hookSetState) => () => {
   hookSetState(newHookState);
 }
 
-function HookRef(ccHookState, hookSetState, props) {
+function CcHook(ccHookState, hookSetState, props) {
   this.setState = makeSetState(ccHookState, hookSetState);
   this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
   this.__$$isUnmounted = false;
@@ -45,10 +45,7 @@ export default (registerOption) => {
     _registerOption = { module: registerOption };
   }
 
-  const {
-    module, reducerModule, watchedKeys = '*', storedKeys = [], persistStoredKeys, ccClassKey,
-    connect = {}, state = {}, setup, bindCtxToMethod, props = {}, mapProps,
-  } = _registerOption;
+  const { state = {}, props = {}, mapProps } = _registerOption;
   const reactUseState = React.useState;
   if (!reactUseState) {
     throw new Error('make sure your react version is larger than or equal 16.8');
@@ -61,22 +58,26 @@ export default (registerOption) => {
   const isFirstRendered = nowCursor === cursor;
   let hookRef;
   if (isFirstRendered) {
+    const {
+      ccClassKey, module, reducerModule, watchedKeys = '*', storedKeys = [],
+      persistStoredKeys, connect = {}, setup, bindCtxToMethod,
+    } = _registerOption;
+
     incCursor();
     const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
       module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
     );
-    hookRef = new HookRef(ccHookState, hookSetState, props);
-    
+    hookRef = new CcHook(ccHookState, hookSetState, props);
+
     const ccOption = props.ccOption || { persistStoredKeys };
     const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
-      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys,
+      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, type: CC_HOOK_PREFIX,
       ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
     });
 
     buildRefCtx(hookRef, params);
     beforeMount(hookRef, setup, bindCtxToMethod);
-
     cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
   } else {
     const refKey = cursor_refKey_[nowCursor];
@@ -93,6 +94,7 @@ export default (registerOption) => {
   React.useEffect(() => {
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       triggerSetupEffect(hookRef, false);
+      hookRef.ctx.prevState = Object.assign({}, hookRef.state);//方便下一轮渲染比较用
     }
   });
 
@@ -106,7 +108,8 @@ export default (registerOption) => {
   }, []);
 
   const refCtx = hookRef.ctx;
-  if (mapProps) refCtx.mappedProps = mapProps(refCtx);
+  // before every render
+  if (mapProps) refCtx.mapped = mapProps(refCtx);
 
   return refCtx;
 }
