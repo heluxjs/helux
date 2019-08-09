@@ -94,6 +94,7 @@ export default (registerOption) => {
   React.useEffect(() => {
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       triggerSetupEffect(hookRef, false);
+      ctx.prevState = hookRef.state;//方便下一轮渲染比较用
     }
   });
 
