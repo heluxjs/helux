@@ -180,7 +180,7 @@ export default function (ref, params, liteLevel = 3) {
     ccOption,
 
     props: getOutProps(ref.props),
-    prevState: mergedState,
+    prevState: Object.assign({}, mergedState),
     // state
     state: mergedState,
     moduleState,

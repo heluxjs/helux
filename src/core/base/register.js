@@ -133,7 +133,7 @@ export default function register({
         componentDidUpdate() {
           if (super.componentDidUpdate) super.componentDidUpdate();
           triggerSetupEffect(this);
-          this.ctx.prevState = Object.assign(this.state);
+          this.ctx.prevState = Object.assign({}, this.state);
         }
 
         componentWillUnmount() {
