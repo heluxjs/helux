@@ -70,7 +70,7 @@ export default class CcFragment extends React.Component {
   componentDidUpdate() {
     triggerSetupEffect(this);
     //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
-    this.ctx.prevState = this.state;
+    this.ctx.prevState = Object.assign(this.state);
     // this.ctx.prevProps = this.ctx.props;
   }
 
