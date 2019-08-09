@@ -58,7 +58,7 @@ export default function (state, {
 
   send(SIG_STATE_CHANGED, {
     committedState: state, sharedState: broadcastInfo.partialSharedState,
-    module, actionType: getActionType(calledBy, type), ccUniqueKey
+    module, type: getActionType(calledBy, type), ccUniqueKey
   });
 
   if (module === currentModule) {
