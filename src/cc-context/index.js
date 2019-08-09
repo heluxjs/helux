@@ -90,7 +90,6 @@ const ccContext = {
         result = true;
       }
     }
-    console.log('result is ', result);
     return result;
   },
   throwCcHmrError: function (err) {
