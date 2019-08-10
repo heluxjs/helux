@@ -1419,12 +1419,129 @@
     }
   }
 
+  /****
+   * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
+   * pick one ccInstance ref randomly
+   */
+
+  function pickOneRef (module, mustBelongToModule) {
+    if (mustBelongToModule === void 0) {
+      mustBelongToModule = false;
+    }
+
+    var ccUkey_ref_ = ccContext.ccUkey_ref_,
+        moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
+        ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_;
+    var ccKeys = [];
+
+    if (module) {
+      if (ccContext.store._state[module]) {
+        var ccClassKeys = moduleName_ccClassKeys_[module];
+
+        if (ccClassKeys && ccClassKeys.length !== 0) {
+          var oneCcClassKey = ccClassKeys[0];
+          var ccClassContext = ccClassKey_ccClassContext_[oneCcClassKey];
+
+          if (!ccClassContext) {
+            throw new Error("no ccClassContext found for ccClassKey " + oneCcClassKey + "!");
+          }
+
+          ccKeys = ccClassContext.ccKeys;
+        }
+      } else {
+        throw new Error("module[" + module + "] is not declared in store");
+      }
+
+      if (module === MODULE_DEFAULT) {
+        ccKeys = ccKeys.filter(function (key) {
+          return !key.startsWith(CC_FRAGMENT_PREFIX);
+        });
+      }
+
+      if (ccKeys.length === 0) {
+        if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];else {
+          var ignoreIt = "if this message doesn't matter, you can ignore it";
+          throw new Error("[[pickOneRef]]: no ref found for module[" + module + "]!," + ignoreIt);
+        }
+      }
+    } else {
+      ccKeys = [CC_DISPATCHER];
+    }
+
+    var oneRef = ccUkey_ref_[ccKeys[0]];
+
+    if (!oneRef) {
+      throw new Error('cc found no ref!');
+    }
+
+    return oneRef;
+  }
+
+  function setState$1 (module, state, delay, identity, skipMiddleware) {
+    if (delay === void 0) {
+      delay = -1;
+    }
+
+    try {
+      var ref = pickOneRef(module);
+      var option = {
+        ccKey: '[[top api:cc.setState]]',
+        module: module,
+        delay: delay,
+        identity: identity,
+        skipMiddleware: skipMiddleware
+      };
+      ref.ctx.changeState(state, option);
+    } catch (err) {
+      strictWarning(err);
+    }
+  }
+
+  var ccStoreSetState = ccContext.store.setState;
+  var ccGlobalStateKeys = ccContext.globalStateKeys;
+  var tip = "note! you are trying set state for global module, but the state you commit include some invalid keys which is not declared in cc's global state, \ncc will ignore them, but if this result is not as you expected, please check your committed global state!";
+  function getAndStoreValidGlobalState (globalState, tipModule, tipCcClassKey) {
+    if (tipModule === void 0) {
+      tipModule = '';
+    }
+
+    if (tipCcClassKey === void 0) {
+      tipCcClassKey = '';
+    }
+
+    var _extractStateByKeys = extractStateByKeys(globalState, ccGlobalStateKeys),
+        validGlobalState = _extractStateByKeys.partialState,
+        isStateEmpty = _extractStateByKeys.isStateEmpty;
+
+    var vKeys = okeys(validGlobalState);
+    var allKeys = okeys(globalState);
+
+    if (vKeys.length < allKeys.length) {
+      //??? need strict?
+      var invalidKeys = allKeys.filter(function (k) {
+        return !vKeys.includes(k);
+      });
+      justWarning(tip + ',invalid keys: ' + invalidKeys.join(',') + ', make sure the keys is invalid and their values are not undefined');
+      console.log(globalState);
+      if (tipModule) justWarning('module is ' + tipModule);
+      if (tipCcClassKey) justWarning('ccClassKey is ' + tipCcClassKey);
+    }
+
+    ccStoreSetState(MODULE_GLOBAL, validGlobalState);
+    return {
+      partialState: validGlobalState,
+      isStateEmpty: isStateEmpty
+    };
+  }
+
   // import hoistNonReactStatic from 'hoist-non-react-statics';
   var verboseInfo$1 = verboseInfo,
       makeError$2 = makeError,
       justWarning$2 = justWarning,
       okeys$2 = okeys;
-  var getState$2 = ccContext.store.getState,
+  var _ccContext$store$1 = ccContext.store,
+      getState$2 = _ccContext$store$1.getState,
+      storeSetState = _ccContext$store$1.setState,
       _reducer$1 = ccContext.reducer._reducer,
       _computedValue$1 = ccContext.computed._computedValue,
       ccClassKey_ccClassContext_$1 = ccContext.ccClassKey_ccClassContext_;
@@ -1955,6 +2072,34 @@
       })["catch"](catchCcError);
       return p;
     };
+  } // for module/init method
+
+  function makeSetStateHandler(module) {
+    return function (state) {
+      try {
+        setState$1(module, state, 0);
+      } catch (err) {
+        if (module === MODULE_GLOBAL) {
+          getAndStoreValidGlobalState(state, module);
+        } else {
+          var moduleState = getState$2(module);
+
+          if (!moduleState) {
+            return justWarning("invalid module " + module);
+          }
+
+          var keys = okeys(moduleState);
+
+          var _extractStateByKeys = extractStateByKeys(state, keys),
+              partialState = _extractStateByKeys.partialState,
+              isStateEmpty = _extractStateByKeys.isStateEmpty;
+
+          if (!isStateEmpty) storeSetState(module, partialState); //store this valid state;
+        }
+
+        justTip("no ccInstance found for module[" + module + "] currently, cc will just store it, lately ccInstance will pick this state to render");
+      }
+    };
   }
 
   var _state$1 = ccContext.store._state;
@@ -2042,7 +2187,8 @@
         return prefix + "0";
       }
 
-      var _classKey = featureStr_classKey_[featureStr];
+      var prefixedFeatureStr = prefix + ":" + featureStr;
+      var _classKey = featureStr_classKey_[prefixedFeatureStr];
 
       if (_classKey) {
         return _classKey;
@@ -2050,7 +2196,7 @@
 
       cursor++;
       _classKey = "" + prefix + cursor;
-      featureStr_classKey_[featureStr] = _classKey;
+      featureStr_classKey_[prefixedFeatureStr] = _classKey;
       return _classKey;
     } // verify user input classKey
 
@@ -2218,64 +2364,6 @@
       _watchedKeys: _watchedKeys,
       _ccClassKey: _ccClassKey
     };
-  }
-
-  /****
-   * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
-   * pick one ccInstance ref randomly
-   */
-
-  function pickOneRef (module, mustBelongToModule) {
-    if (mustBelongToModule === void 0) {
-      mustBelongToModule = false;
-    }
-
-    var ccUkey_ref_ = ccContext.ccUkey_ref_,
-        moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
-        ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_;
-    var ccKeys = [];
-
-    if (module) {
-      if (ccContext.store._state[module]) {
-        var ccClassKeys = moduleName_ccClassKeys_[module];
-
-        if (ccClassKeys && ccClassKeys.length !== 0) {
-          var oneCcClassKey = ccClassKeys[0];
-          var ccClassContext = ccClassKey_ccClassContext_[oneCcClassKey];
-
-          if (!ccClassContext) {
-            throw new Error("no ccClassContext found for ccClassKey " + oneCcClassKey + "!");
-          }
-
-          ccKeys = ccClassContext.ccKeys;
-        }
-      } else {
-        throw new Error("module[" + module + "] is not declared in store");
-      }
-
-      if (module === MODULE_DEFAULT) {
-        ccKeys = ccKeys.filter(function (key) {
-          return !key.startsWith(CC_FRAGMENT_PREFIX);
-        });
-      }
-
-      if (ccKeys.length === 0) {
-        if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];else {
-          var ignoreIt = "if this message doesn't matter, you can ignore it";
-          throw new Error("[[pickOneRef]]: no ref found for module[" + module + "]!," + ignoreIt);
-        }
-      }
-    } else {
-      ccKeys = [CC_DISPATCHER];
-    }
-
-    var oneRef = ccUkey_ref_[ccKeys[0]];
-
-    if (!oneRef) {
-      throw new Error('cc found no ref!');
-    }
-
-    return oneRef;
   }
 
   var me$3 = util.makeError,
@@ -3422,9 +3510,9 @@
   }
 
   var moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_,
-      _ccContext$store$1 = ccContext.store,
-      getPrevState$1 = _ccContext$store$1.getPrevState,
-      getState$7 = _ccContext$store$1.getState;
+      _ccContext$store$2 = ccContext.store,
+      getPrevState$1 = _ccContext$store$2.getPrevState,
+      getState$7 = _ccContext$store$2.getState;
   function triggerSetupEffect (ref, callByDidMount) {
     var ctx = ref.ctx;
     var _ctx$effectMeta = ctx.effectMeta,
@@ -3787,91 +3875,6 @@
         return globalStateKeys.push(key);
       });
     }
-  }
-
-  function setState$1 (module, state, delay, identity, skipMiddleware) {
-    if (delay === void 0) {
-      delay = -1;
-    }
-
-    try {
-      var ref = pickOneRef(module);
-      var option = {
-        ccKey: '[[top api:cc.setState]]',
-        module: module,
-        delay: delay,
-        identity: identity,
-        skipMiddleware: skipMiddleware
-      };
-      ref.ctx.changeState(state, option);
-    } catch (err) {
-      strictWarning(err);
-    }
-  }
-
-  var ccStoreSetState = ccContext.store.setState;
-  var ccGlobalStateKeys = ccContext.globalStateKeys;
-  var tip = "note! you are trying set state for global module, but the state you commit include some invalid keys which is not declared in cc's global state, \ncc will ignore them, but if this result is not as you expected, please check your committed global state!";
-  function getAndStoreValidGlobalState (globalState, tipModule, tipCcClassKey) {
-    if (tipModule === void 0) {
-      tipModule = '';
-    }
-
-    if (tipCcClassKey === void 0) {
-      tipCcClassKey = '';
-    }
-
-    var _extractStateByKeys = extractStateByKeys(globalState, ccGlobalStateKeys),
-        validGlobalState = _extractStateByKeys.partialState,
-        isStateEmpty = _extractStateByKeys.isStateEmpty;
-
-    var vKeys = okeys(validGlobalState);
-    var allKeys = okeys(globalState);
-
-    if (vKeys.length < allKeys.length) {
-      //??? need strict?
-      var invalidKeys = allKeys.filter(function (k) {
-        return !vKeys.includes(k);
-      });
-      justWarning(tip + ',invalid keys: ' + invalidKeys.join(',') + ', make sure the keys is invalid and their values are not undefined');
-      console.log(globalState);
-      if (tipModule) justWarning('module is ' + tipModule);
-      if (tipCcClassKey) justWarning('ccClassKey is ' + tipCcClassKey);
-    }
-
-    ccStoreSetState(MODULE_GLOBAL, validGlobalState);
-    return {
-      partialState: validGlobalState,
-      isStateEmpty: isStateEmpty
-    };
-  }
-
-  function makeSetStateHandler (module) {
-    return function (state) {
-      try {
-        setState$1(module, state, 0);
-      } catch (err) {
-        if (module === MODULE_GLOBAL) {
-          getAndStoreValidGlobalState(state, module);
-        } else {
-          var moduleState = ccContext.store.getState(module);
-
-          if (!moduleState) {
-            return util.justWarning("invalid module " + module);
-          }
-
-          var keys = Object.keys(moduleState);
-
-          var _extractStateByKeys = extractStateByKeys(state, keys),
-              validModuleState = _extractStateByKeys.partialState,
-              isStateEmpty = _extractStateByKeys.isStateEmpty;
-
-          if (!isStateEmpty) ccContext.store.setState(module, validModuleState); //store this state;
-        }
-
-        util.justTip("no ccInstance found for module " + module + " currently, cc will just store it, lately ccInstance will pick this state to render");
-      }
-    };
   }
 
   function dispatch$1 (isLazy, action, payLoadWhenActionIsString, delay, identity, _temp) {

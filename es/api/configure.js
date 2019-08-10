@@ -7,7 +7,7 @@ import initModuleComputed from '../core/computed/init-module-computed';
 import initModuleWatch from '../core/watch/init-module-watch';
 import * as checker from '../core/checker';
 import { send } from '../core/plugin';
-import makeSetStateHandler from '../core/state/make-set-state-handler';
+import { makeSetStateHandler } from '../core/state/handler-factory';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CC_HOOK_PREFIX } from '../../support/constant';
-import buildRefCtx from '../base/build-ref-ctx';
+import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';

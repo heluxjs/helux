@@ -7,7 +7,7 @@ import mapRegistrationInfo from '../core/base/map-registration-info';
 import triggerSetupEffect from '../core/base/trigger-setup-effect';
 import beforeUnmount from '../core/base/before-unmount';
 import beforeMount from '../core/base/before-mount';
-import buildRefCtx from '../core/base/build-ref-ctx';
+import buildRefCtx from '../core/ref/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
 import getStoredKeys from '../core/base/get-stored-keys';
 import ccContext from '../cc-context';

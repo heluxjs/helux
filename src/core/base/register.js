@@ -8,7 +8,7 @@ import util, { okeys, shallowDiffers } from '../../support/util';
 import catchCcError from './catch-cc-error';
 import * as hf from '../state/handler-factory';
 import mapRegistrationInfo from './map-registration-info';
-import buildRefCtx from './build-ref-ctx';
+import buildRefCtx from '../ref/build-ref-ctx';
 import beforeMount from './before-mount';
 import beforeUnMount from './before-unmount';
 import triggerSetupEffect from './trigger-setup-effect';
