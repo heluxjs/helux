@@ -15,14 +15,15 @@ export default function (allowNamingDispatcher, module, connect, prefix, feature
       return `${prefix}0`;
     }
 
-    let _classKey = featureStr_classKey_[featureStr];
+    const prefixedFeatureStr = `${prefix}:${featureStr}`;
+    let _classKey = featureStr_classKey_[prefixedFeatureStr];
     if (_classKey) {
       return _classKey;
     }
 
     cursor++;
     _classKey = `${prefix}${cursor}`;
-    featureStr_classKey_[featureStr] = _classKey;
+    featureStr_classKey_[prefixedFeatureStr] = _classKey;
     return _classKey;
   }
 

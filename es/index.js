@@ -5,6 +5,7 @@ import _connect from './api/connect';
 import _connectDumb from './api/connect-dumb';
 import _register from './api/register';
 import _registerDumb from './api/register-dumb';
+import _registerHookComp from './api/register-hook-comp';
 import _configure from './api/configure';
 import _call from './api/call';
 import _setGlobalState from './api/set-global-state';
@@ -40,6 +41,7 @@ export const connect = _connect;
 export const connectDumb = _connectDumb;
 export const register = _register;
 export const registerDumb = _registerDumb;
+export const registerHookComp = _registerHookComp;
 export const configure = _configure;
 export const call = _call;
 export const setGlobalState = _setGlobalState;
@@ -75,6 +77,7 @@ const defaultExport = {
   connectDumb,
   register,
   registerDumb,
+  registerHookComp,
   configure,
   dispatch,
   lazyDispatch,

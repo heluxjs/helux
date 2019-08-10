@@ -98,8 +98,6 @@ export default (registerOption) => {
   React.useEffect(() => {
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       triggerSetupEffect(hookRef, false);
-
-      // if (_registerOption.updated) _registerOption.updated(refCtx);
       hookRef.ctx.prevState = Object.assign({}, hookRef.state);//方便下一轮渲染比较用
     }
   });
@@ -108,20 +106,10 @@ export default (registerOption) => {
   React.useEffect(() => {// mock componentDidMount
     hookRef.isFirstRendered = false;
     triggerSetupEffect(hookRef, true);
-
-    // if (_registerOption.mounted) _registerOption.mounted(refCtx);
     return () => {// mock componentWillUnmount
-      // if (_registerOption.beforeUnmount) _registerOption.beforeUnmount(refCtx);
-
       beforeUnmount(hookRef);
     }
   }, []);
-
-  // if (isFirstRendered) {
-  //   if (_registerOption.beforeMount) _registerOption.beforeMount(refCtx);
-  // }else{
-  //   if (_registerOption.beforeUpdate)_registerOption.beforeUpdate(refCtx)
-  // }
 
   // before every render
   if (mapProps) {

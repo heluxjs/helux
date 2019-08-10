@@ -7,7 +7,7 @@ import { CC_FRAGMENT_PREFIX, MODULE_DEFAULT } from '../support/constant';
 
 function _registerDumb(
   Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, persistStoredKeys,
-  connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props, compareProps
+  connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props, compareProps,
 ) {
 
   //对state做克隆,防止用同一个connectDumb结果包不同的fn组件,共享了同一份state
@@ -40,30 +40,36 @@ function _registerDumb(
   //ccKey由实例化的Dumb组件props上透传下来
   return React.createElement(CcFragment, {
     isSingle, ccClassKey, __$$regDumb: true, tag: ccTag, ccKey: props.ccKey, props, module, reducerModule,
-    watchedKeys, storedKeys, ccOption, connect, state: clonedState, setup, bindCtxToMethod, render, compareProps
+    watchedKeys, storedKeys, ccOption, connect, state: clonedState, setup, bindCtxToMethod, render, compareProps,
   });
 }
 
-export default function(registerOption, ccClassKey){
+export default function (registerOption, ccClassKey) {
   let _registerOption = typeof registerOption === 'string' ? { module: registerOption } : registerOption;
   if (!_registerOption) _registerOption = { module: MODULE_DEFAULT };
 
   const {
-    isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule, 
-    watchedKeys = '*', storedKeys, persistStoredKeys, 
-    connect = {}, state = {}, setup, bindCtxToMethod, compareProps
+    isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule,
+    watchedKeys = '*', storedKeys, persistStoredKeys, render: Dumb,
+    connect = {}, state = {}, setup, bindCtxToMethod, compareProps,
   } = _registerOption;
 
   const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
     module, ccClassKey, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
   );
 
-  return Dumb => {
+  function buildCcFragComp(Dumb) {
     //避免react dev tool显示的dom为Unknown
     const ConnectedFragment = props => _registerDumb(
-      Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys, 
-      _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props, compareProps
+      Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys,
+      _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props, compareProps,
     );
     return ConnectedFragment;
+  }
+
+  if (Dumb) {
+    return buildCcFragComp(Dumb);
+  } else {
+    return Dumb => buildCcFragComp(Dumb);
   }
 }

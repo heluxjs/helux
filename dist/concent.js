@@ -4790,8 +4790,11 @@
 
       _this.setState = _this.ctx.setState;
       _this.forceUpdate = _this.ctx.forceUpdate;
-      beforeMount(_assertThisInitialized(_this), props.setup, props.bindCtxToMethod);
-      _this.__$$compareProps = props.compareProps || true;
+      _this.__$$compareProps = props.compareProps || true; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
+      //无需在将要给废弃的componentWillMount里调用beforeMount
+
+      beforeMount(_assertThisInitialized(_this), props.setup, props.bindCtxToMethod); // if (props.beforeMount) props.beforeMount(this.ctx);
+
       return _this;
     }
 
@@ -4924,6 +4927,7 @@
         watchedKeys = _registerOption2$watc === void 0 ? '*' : _registerOption2$watc,
         storedKeys = _registerOption2.storedKeys,
         persistStoredKeys = _registerOption2.persistStoredKeys,
+        Dumb = _registerOption2.render,
         _registerOption2$conn = _registerOption2.connect,
         connect = _registerOption2$conn === void 0 ? {} : _registerOption2$conn,
         _registerOption2$stat = _registerOption2.state,
@@ -4939,20 +4943,205 @@
         _ccClassKey = _mapRegistrationInfo._ccClassKey,
         _connect = _mapRegistrationInfo._connect;
 
-    return function (Dumb) {
+    function buildCcFragComp(Dumb) {
       //避免react dev tool显示的dom为Unknown
       var ConnectedFragment = function ConnectedFragment(props) {
         return _registerDumb(Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys, _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props, compareProps);
       };
 
       return ConnectedFragment;
-    };
+    }
+
+    if (Dumb) {
+      return buildCcFragComp(Dumb);
+    } else {
+      return function (Dumb) {
+        return buildCcFragComp(Dumb);
+      };
+    }
   }
 
   function _connectDumb (connectSpec, ccClassKey) {
     return registerDumb({
       connect: connectSpec
     }, ccClassKey);
+  }
+
+  var ccUkey_ref_$4 = ccContext.ccUkey_ref_,
+      moduleName_stateKeys_$7 = ccContext.moduleName_stateKeys_;
+  var refCursor = 1;
+  var cursor_refKey_ = {};
+
+  function getUsableCursor() {
+    return refCursor;
+  }
+
+  function incCursor() {
+    refCursor = refCursor + 1;
+  }
+
+  var makeSetState = function makeSetState(ccHookState, hookSetState) {
+    return function (partialState) {
+      ccHookState.state = Object.assign({}, ccHookState.state, partialState);
+      var newHookState = Object.assign({}, ccHookState);
+      hookSetState(newHookState);
+    };
+  };
+
+  var makeForceUpdate = function makeForceUpdate(ccHookState, hookSetState) {
+    return function () {
+      var newHookState = Object.assign({}, ccHookState);
+      hookSetState(newHookState);
+    };
+  };
+
+  function CcHook(ccHookState, hookSetState, props) {
+    this.setState = makeSetState(ccHookState, hookSetState);
+    this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
+    this.__$$isUnmounted = false;
+    this.state = ccHookState.state;
+    this.isFirstRendered = true;
+    this.props = props;
+  }
+
+  var useConcent = (function (registerOption) {
+    var _registerOption = registerOption;
+
+    if (typeof registerOption === 'string') {
+      _registerOption = {
+        module: registerOption
+      };
+    }
+
+    var _registerOption2 = _registerOption,
+        _registerOption2$stat = _registerOption2.state,
+        state = _registerOption2$stat === void 0 ? {} : _registerOption2$stat,
+        _registerOption2$prop = _registerOption2.props,
+        props = _registerOption2$prop === void 0 ? {} : _registerOption2$prop,
+        mapProps = _registerOption2.mapProps;
+    var reactUseState = React.useState;
+
+    if (!reactUseState) {
+      throw new Error('make sure your react version is LTE 16.8');
+    }
+
+    var cursor = getUsableCursor();
+
+    var _reactUseState = reactUseState({
+      cursor: cursor,
+      state: state
+    }),
+        ccHookState = _reactUseState[0],
+        hookSetState = _reactUseState[1];
+
+    var nowCursor = ccHookState.cursor;
+    var isFirstRendered = nowCursor === cursor;
+    var hookRef;
+
+    if (isFirstRendered) {
+      var _registerOption3 = _registerOption,
+          ccClassKey = _registerOption3.ccClassKey,
+          module = _registerOption3.module,
+          reducerModule = _registerOption3.reducerModule,
+          _registerOption3$watc = _registerOption3.watchedKeys,
+          watchedKeys = _registerOption3$watc === void 0 ? '*' : _registerOption3$watc,
+          _registerOption3$stor = _registerOption3.storedKeys,
+          storedKeys = _registerOption3$stor === void 0 ? [] : _registerOption3$stor,
+          persistStoredKeys = _registerOption3.persistStoredKeys,
+          _registerOption3$conn = _registerOption3.connect,
+          connect = _registerOption3$conn === void 0 ? {} : _registerOption3$conn,
+          setup = _registerOption3.setup,
+          bindCtxToMethod = _registerOption3.bindCtxToMethod;
+      incCursor();
+
+      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
+          _module = _mapRegistrationInfo._module,
+          _reducerModule = _mapRegistrationInfo._reducerModule,
+          _watchedKeys = _mapRegistrationInfo._watchedKeys,
+          _ccClassKey = _mapRegistrationInfo._ccClassKey,
+          _connect = _mapRegistrationInfo._connect;
+
+      hookRef = new CcHook(ccHookState, hookSetState, props);
+      var ccOption = props.ccOption || {
+        persistStoredKeys: persistStoredKeys
+      };
+
+      var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$7[_module], ccOption.storedKeys, storedKeys);
+
+      var params = Object.assign({}, _registerOption, {
+        module: _module,
+        reducerModule: _reducerModule,
+        watchedKeys: _watchedKeys,
+        type: CC_HOOK_PREFIX,
+        ccClassKey: _ccClassKey,
+        connect: _connect,
+        ccOption: ccOption,
+        storedKeys: _storedKeys
+      });
+      buildRefCtx(hookRef, params);
+      beforeMount(hookRef, setup, bindCtxToMethod);
+      cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
+    } else {
+      var refKey = cursor_refKey_[nowCursor];
+      hookRef = ccUkey_ref_$4[refKey];
+      var _refCtx = hookRef.ctx; //existing period, replace reactSetState and reactForceUpdate
+
+      _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
+      _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+      _refCtx.props = props;
+    }
+
+    var refCtx = hookRef.ctx; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount???
+    //for every render
+
+    React.useEffect(function () {
+      if (!hookRef.isFirstRendered) {
+        // mock componentDidUpdate
+        triggerSetupEffect(hookRef, false);
+        hookRef.ctx.prevState = Object.assign({}, hookRef.state); //方便下一轮渲染比较用
+      }
+    }); //for first render
+
+    React.useEffect(function () {
+      // mock componentDidMount
+      hookRef.isFirstRendered = false;
+      triggerSetupEffect(hookRef, true);
+      return function () {
+        // mock componentWillUnmount
+        beforeUnmount(hookRef);
+      };
+    }, []); // before every render
+
+    if (mapProps) {
+      refCtx.mapped = mapProps(refCtx);
+    }
+
+    return refCtx;
+  });
+
+  function registerHookComp(options) {
+    function buildCcHookComp(Dumb) {
+      return function CcHookComp(props) {
+        var ctx = useConcent(options);
+        ctx.props = props; // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
+
+        if (options.mapProps) {
+          return React.createElement(Dumb, ctx.mapped);
+        } else {
+          return React.createElement(Dumb, ctx);
+        }
+      };
+    }
+
+    var Dumb = options.render;
+
+    if (Dumb) {
+      return buildCcHookComp(Dumb);
+    } else {
+      return function (Dumb) {
+        return buildCcHookComp(Dumb);
+      };
+    }
   }
 
   var vbi$6 = util.verboseInfo;
@@ -5128,7 +5317,7 @@
     }
   }
 
-  var ccUkey_ref_$4 = ccContext.ccUkey_ref_,
+  var ccUkey_ref_$5 = ccContext.ccUkey_ref_,
       ccClassKey_ccClassContext_$6 = ccContext.ccClassKey_ccClassContext_;
   function getRefsByClassKey (ccClassKey) {
     var refs = [];
@@ -5140,7 +5329,7 @@
 
     var ccKeys = ccClassContext.ccKeys;
     ccKeys.forEach(function (k) {
-      var ref = ccUkey_ref_$4[k];
+      var ref = ccUkey_ref_$5[k];
       if (ref) refs.push(ref);
     });
     return refs;
@@ -5183,153 +5372,6 @@
 
   var _lazyReducerCaller = ccContext.reducer._lazyReducerCaller;
 
-  var ccUkey_ref_$5 = ccContext.ccUkey_ref_,
-      moduleName_stateKeys_$7 = ccContext.moduleName_stateKeys_;
-  var refCursor = 1;
-  var cursor_refKey_ = {};
-
-  function getUsableCursor() {
-    return refCursor;
-  }
-
-  function incCursor() {
-    refCursor = refCursor + 1;
-  }
-
-  var makeSetState = function makeSetState(ccHookState, hookSetState) {
-    return function (partialState) {
-      ccHookState.state = Object.assign({}, ccHookState.state, partialState);
-      var newHookState = Object.assign({}, ccHookState);
-      hookSetState(newHookState);
-    };
-  };
-
-  var makeForceUpdate = function makeForceUpdate(ccHookState, hookSetState) {
-    return function () {
-      var newHookState = Object.assign({}, ccHookState);
-      hookSetState(newHookState);
-    };
-  };
-
-  function CcHook(ccHookState, hookSetState, props) {
-    this.setState = makeSetState(ccHookState, hookSetState);
-    this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
-    this.__$$isUnmounted = false;
-    this.state = ccHookState.state;
-    this.isFirstRendered = true;
-    this.props = props;
-  }
-
-  var useConcent = (function (registerOption) {
-    var _registerOption = registerOption;
-
-    if (typeof registerOption === 'string') {
-      _registerOption = {
-        module: registerOption
-      };
-    }
-
-    var _registerOption2 = _registerOption,
-        _registerOption2$stat = _registerOption2.state,
-        state = _registerOption2$stat === void 0 ? {} : _registerOption2$stat,
-        _registerOption2$prop = _registerOption2.props,
-        props = _registerOption2$prop === void 0 ? {} : _registerOption2$prop,
-        mapProps = _registerOption2.mapProps;
-    var reactUseState = React.useState;
-
-    if (!reactUseState) {
-      throw new Error('make sure your react version is larger than or equal 16.8');
-    }
-
-    var cursor = getUsableCursor();
-
-    var _reactUseState = reactUseState({
-      cursor: cursor,
-      state: state
-    }),
-        ccHookState = _reactUseState[0],
-        hookSetState = _reactUseState[1];
-
-    var nowCursor = ccHookState.cursor;
-    var isFirstRendered = nowCursor === cursor;
-    var hookRef;
-
-    if (isFirstRendered) {
-      var _registerOption3 = _registerOption,
-          ccClassKey = _registerOption3.ccClassKey,
-          module = _registerOption3.module,
-          reducerModule = _registerOption3.reducerModule,
-          _registerOption3$watc = _registerOption3.watchedKeys,
-          watchedKeys = _registerOption3$watc === void 0 ? '*' : _registerOption3$watc,
-          _registerOption3$stor = _registerOption3.storedKeys,
-          storedKeys = _registerOption3$stor === void 0 ? [] : _registerOption3$stor,
-          persistStoredKeys = _registerOption3.persistStoredKeys,
-          _registerOption3$conn = _registerOption3.connect,
-          connect = _registerOption3$conn === void 0 ? {} : _registerOption3$conn,
-          setup = _registerOption3.setup,
-          bindCtxToMethod = _registerOption3.bindCtxToMethod;
-      incCursor();
-
-      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
-          _module = _mapRegistrationInfo._module,
-          _reducerModule = _mapRegistrationInfo._reducerModule,
-          _watchedKeys = _mapRegistrationInfo._watchedKeys,
-          _ccClassKey = _mapRegistrationInfo._ccClassKey,
-          _connect = _mapRegistrationInfo._connect;
-
-      hookRef = new CcHook(ccHookState, hookSetState, props);
-      var ccOption = props.ccOption || {
-        persistStoredKeys: persistStoredKeys
-      };
-
-      var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$7[_module], ccOption.storedKeys, storedKeys);
-
-      var params = Object.assign({}, _registerOption, {
-        module: _module,
-        reducerModule: _reducerModule,
-        watchedKeys: _watchedKeys,
-        type: CC_HOOK_PREFIX,
-        ccClassKey: _ccClassKey,
-        connect: _connect,
-        ccOption: ccOption,
-        storedKeys: _storedKeys
-      });
-      buildRefCtx(hookRef, params);
-      beforeMount(hookRef, setup, bindCtxToMethod);
-      cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
-    } else {
-      var refKey = cursor_refKey_[nowCursor];
-      hookRef = ccUkey_ref_$5[refKey];
-      var _refCtx = hookRef.ctx; //existing period, replace reactSetState and reactForceUpdate
-
-      _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
-      _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
-      _refCtx.props = props;
-    } //for every render
-
-
-    React.useEffect(function () {
-      if (!hookRef.isFirstRendered) {
-        // mock componentDidUpdate
-        triggerSetupEffect(hookRef, false);
-        hookRef.ctx.prevState = Object.assign({}, hookRef.state); //方便下一轮渲染比较用
-      }
-    }); //for first render
-
-    React.useEffect(function () {
-      // mock componentDidMount
-      hookRef.isFirstRendered = false;
-      triggerSetupEffect(hookRef, true);
-      return function () {
-        beforeUnmount(hookRef);
-      };
-    }, []);
-    var refCtx = hookRef.ctx; // before every render
-
-    if (mapProps) refCtx.mapped = mapProps(refCtx);
-    return refCtx;
-  });
-
   var startup$1 = startup;
   var cloneModule = _cloneModule;
   var run = _run;
@@ -5337,6 +5379,7 @@
   var connectDumb = _connectDumb;
   var register$2 = register$1;
   var registerDumb$1 = registerDumb;
+  var registerHookComp$1 = registerHookComp;
   var configure$1 = configure;
   var call = _call;
   var setGlobalState$1 = setGlobalState;
@@ -5371,6 +5414,7 @@
     connectDumb: connectDumb,
     register: register$2,
     registerDumb: registerDumb$1,
+    registerHookComp: registerHookComp$1,
     configure: configure$1,
     dispatch: dispatch$3,
     lazyDispatch: lazyDispatch$1,
@@ -5422,6 +5466,7 @@
   exports.connectDumb = connectDumb;
   exports.register = register$2;
   exports.registerDumb = registerDumb$1;
+  exports.registerHookComp = registerHookComp$1;
   exports.configure = configure$1;
   exports.call = call;
   exports.setGlobalState = setGlobalState$1;
