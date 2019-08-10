@@ -335,7 +335,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.10',
+      version: '1.5.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1683,17 +1683,16 @@
       var refCtx = ref.ctx;
       var containerRefState = containerRef ? containerRef.state : null;
       var refState = ref.state;
+      var refCtxState = refCtx.state;
       /** start update state */
-      //采用此种写法的话，dispatch.ctx不能暴露state了，只能暴露getState句柄，才能保证取到最新的state
-      // ref.state = Object.assign(ref.state, state);
-      //采用okeys写法，让dispatch.ctx里的refState总是指向同一个引用
+      //采用okeys写法，让用户结构出来的state总是指向同一个引用
 
       okeys$2(state).forEach(function (k) {
         var val = state[k];
         refState[k] = val;
+        refCtxState[k] = val;
         if (containerRefState) containerRefState[k] = val; //让代理模式下的容器组件state也总是保持最新的
       });
-      refCtx.state = refState;
       /** start update ui */
 
       if (shouldCurrentRefUpdate) {
@@ -2439,38 +2438,10 @@
     return classContext;
   }
 
-  var ccUkey_ref_$2 = ccContext.ccUkey_ref_,
-      ccUkey_option_ = ccContext.ccUkey_option_,
-      ccUKey_handlerKeys_ = ccContext.ccUKey_handlerKeys_,
-      ccClassKey_ccClassContext_$4 = ccContext.ccClassKey_ccClassContext_,
-      handlerKey_handler_ = ccContext.handlerKey_handler_;
-  function unsetRef (ccClassKey, ccUniqueKey) {
-    if (ccContext.isDebug) {
-      console.log(styleStr(ccUniqueKey + " unset ref"), color('purple'));
-    } // ccContext.ccUkey_ref_[ccUniqueKey] = null;
-
-
-    delete ccUkey_ref_$2[ccUniqueKey];
-    delete ccUkey_option_[ccUniqueKey];
-    var classContext = ccClassKey_ccClassContext_$4[ccClassKey];
-    var ccKeys = classContext.ccKeys;
-    var ccKeyIdx = ccKeys.indexOf(ccUniqueKey);
-    if (ccKeyIdx >= 0) ccKeys.splice(ccKeyIdx, 1);
-    decCcKeyInsCount(ccUniqueKey);
-    var handlerKeys = ccUKey_handlerKeys_[ccUniqueKey];
-
-    if (handlerKeys) {
-      handlerKeys.forEach(function (hKey) {
-        delete handlerKey_handler_[hKey]; // ccUniqueKey maybe generated randomly, so delete the key instead of set null
-        // handlerKey_handler_[hKey] = null;
-      });
-    }
-  }
-
   var event_handlers_ = ccContext.event_handlers_,
-      handlerKey_handler_$1 = ccContext.handlerKey_handler_,
-      ccUKey_handlerKeys_$1 = ccContext.ccUKey_handlerKeys_,
-      ccUkey_ref_$3 = ccContext.ccUkey_ref_;
+      handlerKey_handler_ = ccContext.handlerKey_handler_,
+      ccUKey_handlerKeys_ = ccContext.ccUKey_handlerKeys_,
+      ccUkey_ref_$1 = ccContext.ccUkey_ref_;
 
   function _findEventHandlers(event, module, ccClassKey, identity) {
     if (identity === void 0) {
@@ -2504,7 +2475,7 @@
       var handlerKey = item.handlerKey,
           ccUniqueKey = item.ccUniqueKey,
           event = item.event;
-      delete handlerKey_handler_$1[handlerKey]; //delete mapping of handlerKey_handler_;
+      delete handlerKey_handler_[handlerKey]; //delete mapping of handlerKey_handler_;
       toDeleteCcUniqueKeyMap[ccUniqueKey] = 1;
       if (!toDeleteEventNames.includes(event)) toDeleteEventNames.push(event);
     });
@@ -2517,7 +2488,7 @@
 
           if (toDeleteCcUniqueKeyMap[ccUniqueKey] === 1) {
             eHandlers[idx] = null;
-            delete ccUKey_handlerKeys_$1[ccUniqueKey]; //delete mapping of ccUKey_handlerKeys_;
+            delete ccUKey_handlerKeys_[ccUniqueKey]; //delete mapping of ccUKey_handlerKeys_;
           }
         });
         event_handlers_[event] = eHandlers.filter(function (v) {
@@ -2537,7 +2508,7 @@
     var targetHandlerIndex = handlers.findIndex(function (v) {
       return v.ccUniqueKey === ccUniqueKey && v.identity === identity;
     });
-    var handlerKeys = util.safeGetArrayFromObject(ccUKey_handlerKeys_$1, ccUniqueKey);
+    var handlerKeys = util.safeGetArrayFromObject(ccUKey_handlerKeys_, ccUniqueKey);
     var handlerKey = util.makeHandlerKey(ccUniqueKey, event, identity); //  that means the component of ccUniqueKey mounted again 
     //  or user call $$on for a same event in a same instance more than once
 
@@ -2559,7 +2530,7 @@
       handlerKeys.push(handlerKey);
     }
 
-    handlerKey_handler_$1[handlerKey] = handlerItem;
+    handlerKey_handler_[handlerKey] = handlerItem;
   }
   function findEventHandlersToPerform(event) {
     for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -2586,9 +2557,9 @@
       var ccUniqueKey = _ref.ccUniqueKey,
           handlerKey = _ref.handlerKey;
 
-      if (ccUkey_ref_$3[ccUniqueKey] && handlerKey) {
+      if (ccUkey_ref_$1[ccUniqueKey] && handlerKey) {
         //  confirm the instance is mounted and handler is not been offed
-        var handler = handlerKey_handler_$1[handlerKey];
+        var handler = handlerKey_handler_[handlerKey];
         if (handler) handler.fn.apply(handler, args);
       }
     });
@@ -2603,12 +2574,12 @@
     _deleteEventHandlers(handlers);
   }
   function offEventHandlersByCcUniqueKey(ccUniqueKey) {
-    var handlerKeys = ccUKey_handlerKeys_$1[ccUniqueKey];
+    var handlerKeys = ccUKey_handlerKeys_[ccUniqueKey];
 
     if (handlerKeys) {
       var toDeleteHandlers = [];
       handlerKeys.forEach(function (k) {
-        return toDeleteHandlers.push(handlerKey_handler_$1[k]);
+        return toDeleteHandlers.push(handlerKey_handler_[k]);
       });
 
       _deleteEventHandlers(toDeleteHandlers);
@@ -2640,6 +2611,45 @@
     offEventHandlersByCcUniqueKey: offEventHandlersByCcUniqueKey,
     getEventItem: getEventItem
   });
+
+  function deh (refCtx, item, handler, fns, immediateKeys) {
+    var itype = typeof item;
+
+    if (itype === 'object') {
+      if (Array.isArray(item)) {
+        // handler._fnName = getFnName();//给函数标记一个名词，方便后面触发trigger时使用
+        throw new Error('not support multi keys currently');
+      } else {
+        okeys(item).forEach(function (key) {
+          return fns[key] = item[key];
+        });
+      }
+    } else if (itype === 'function') {
+      var ret = item(refCtx);
+
+      if (typeof ret === 'object') {
+        okeys(ret).forEach(function (key) {
+          return fns[key] = ret[key];
+        });
+      }
+    } else if (itype === 'string') {
+      var key = item;
+      fns[key] = handler;
+      if (immediateKeys) immediateKeys.push(key);
+    }
+  }
+
+  function getDefineWatchHandler (refCtx, watchFns, immediateWatchKeys) {
+    return function (watchItem, watchHandler, immediate) {
+      if (immediate) deh(refCtx, watchItem, watchHandler, watchFns, immediateWatchKeys);else deh(refCtx, watchItem, watchHandler, watchFns);
+    };
+  }
+
+  function getDefineComputedHandler (refCtx, watchFns) {
+    return function (computedItem, computedHandler) {
+      deh(refCtx, computedItem, computedHandler, watchFns);
+    };
+  }
 
   var _currentIndex = 0;
   var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
@@ -2681,6 +2691,14 @@
     }
 
     return ccUniqueKey;
+  }
+
+  function getOutProps (props) {
+    if (props) {
+      return props.props || props; //把最外层的props传递给用户
+    } else {
+      return {};
+    }
   }
 
   var getState$3 = ccContext.store.getState;
@@ -2954,55 +2972,8 @@
     }
   }
 
-  function deh (refCtx, item, handler, fns, immediateKeys) {
-    var itype = typeof item;
-
-    if (itype === 'object') {
-      if (Array.isArray(item)) {
-        // handler._fnName = getFnName();//给函数标记一个名词，方便后面触发trigger时使用
-        throw new Error('not support multi keys currently');
-      } else {
-        okeys(item).forEach(function (key) {
-          return fns[key] = item[key];
-        });
-      }
-    } else if (itype === 'function') {
-      var ret = item(refCtx);
-
-      if (typeof ret === 'object') {
-        okeys(ret).forEach(function (key) {
-          return fns[key] = ret[key];
-        });
-      }
-    } else if (itype === 'string') {
-      var key = item;
-      fns[key] = handler;
-      if (immediateKeys) immediateKeys.push(key);
-    }
-  }
-
-  function getDefineWatchHandler (refCtx, watchFns, immediateWatchKeys) {
-    return function (watchItem, watchHandler, immediate) {
-      if (immediate) deh(refCtx, watchItem, watchHandler, watchFns, immediateWatchKeys);else deh(refCtx, watchItem, watchHandler, watchFns);
-    };
-  }
-
-  function getDefineComputedHandler (refCtx, watchFns) {
-    return function (computedItem, computedHandler) {
-      deh(refCtx, computedItem, computedHandler, watchFns);
-    };
-  }
-
-  function getOutProps (props) {
-    if (props) {
-      return props.props || props; //把最外层的props传递给用户
-    } else {
-      return {};
-    }
-  }
-
   var refStore$1 = ccContext.refStore,
-      ccClassKey_ccClassContext_$5 = ccContext.ccClassKey_ccClassContext_,
+      ccClassKey_ccClassContext_$4 = ccContext.ccClassKey_ccClassContext_,
       getState$5 = ccContext.store.getState,
       moduleName_ccClassKeys_$2 = ccContext.moduleName_ccClassKeys_,
       _computedValue$3 = ccContext.computed._computedValue;
@@ -3057,7 +3028,7 @@
     }
 
     var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
-    var classCtx = ccClassKey_ccClassContext_$5[ccClassKey];
+    var classCtx = ccClassKey_ccClassContext_$4[ccClassKey];
     var connectedComputed = classCtx.connectedComputed || {};
     var connectedState = classCtx.connectedState || {};
     var moduleState = getState$5(module);
@@ -3487,6 +3458,35 @@
     }
 
     triggerComputedAndWatch(ref);
+    ref.__$$isUnmounted = false;
+  }
+
+  var ccUkey_ref_$2 = ccContext.ccUkey_ref_,
+      ccUkey_option_ = ccContext.ccUkey_option_,
+      ccUKey_handlerKeys_$1 = ccContext.ccUKey_handlerKeys_,
+      ccClassKey_ccClassContext_$5 = ccContext.ccClassKey_ccClassContext_,
+      handlerKey_handler_$1 = ccContext.handlerKey_handler_;
+  function unsetRef (ccClassKey, ccUniqueKey) {
+    if (ccContext.isDebug) {
+      console.log(styleStr(ccUniqueKey + " unset ref"), color('purple'));
+    } // ccContext.ccUkey_ref_[ccUniqueKey] = null;
+
+
+    delete ccUkey_ref_$2[ccUniqueKey];
+    delete ccUkey_option_[ccUniqueKey];
+    var classContext = ccClassKey_ccClassContext_$5[ccClassKey];
+    var ccKeys = classContext.ccKeys;
+    var ccKeyIdx = ccKeys.indexOf(ccUniqueKey);
+    if (ccKeyIdx >= 0) ccKeys.splice(ccKeyIdx, 1);
+    decCcKeyInsCount(ccUniqueKey);
+    var handlerKeys = ccUKey_handlerKeys_$1[ccUniqueKey];
+
+    if (handlerKeys) {
+      handlerKeys.forEach(function (hKey) {
+        delete handlerKey_handler_$1[hKey]; // ccUniqueKey maybe generated randomly, so delete the key instead of set null
+        // handlerKey_handler_[hKey] = null;
+      });
+    }
   }
 
   function beforeUnmount (ref) {
@@ -3765,7 +3765,6 @@
               return thisState[key] = newState[key];
             });
             beforeMount(childRef, childRef.$$setup);
-            triggerComputedAndWatch(childRef);
           };
 
           _proto.componentDidMount = function componentDidMount() {
@@ -3779,7 +3778,8 @@
 
           _proto.componentDidUpdate = function componentDidUpdate() {
             if (_ToBeExtendedClass.prototype.componentDidUpdate) _ToBeExtendedClass.prototype.componentDidUpdate.call(this);
-            triggerSetupEffect(this);
+            triggerSetupEffect(this); //这里刻意用assign，让prevState指向一个新引用
+
             this.ctx.prevState = Object.assign({}, this.state);
           };
 
@@ -4812,17 +4812,17 @@
       return this.state !== nextState || isPropsChanged;
     };
 
-    _proto.componentWillUpdate = function componentWillUpdate(nextProps, nextState) {
+    _proto.componentWillUpdate = function componentWillUpdate(nextProps) {
       //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
       this.ctx.props = getOutProps(nextProps);
-      this.ctx.state = nextState;
     } // componentDidUpdate(prevProps, prevState) {
     ;
 
     _proto.componentDidUpdate = function componentDidUpdate() {
       triggerSetupEffect(this); //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
+      //这里刻意用assign，让prevState指向一个新引用
 
-      this.ctx.prevState = Object.assign({}, this.state); // this.ctx.prevProps = this.ctx.props;
+      this.ctx.prevState = Object.assign({}, this.state);
     };
 
     _proto.componentWillUnmount = function componentWillUnmount() {
@@ -4970,7 +4970,7 @@
     }, ccClassKey);
   }
 
-  var ccUkey_ref_$4 = ccContext.ccUkey_ref_,
+  var ccUkey_ref_$3 = ccContext.ccUkey_ref_,
       moduleName_stateKeys_$7 = ccContext.moduleName_stateKeys_;
   var refCursor = 1;
   var cursor_refKey_ = {};
@@ -5001,13 +5001,13 @@
   function CcHook(ccHookState, hookSetState, props) {
     this.setState = makeSetState(ccHookState, hookSetState);
     this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
-    this.__$$isUnmounted = false;
     this.state = ccHookState.state;
     this.isFirstRendered = true;
     this.props = props;
-  }
+  } //写为具名函数，防止react devtoo里显示.default
 
-  var useConcent = (function (registerOption) {
+
+  function useConcent(registerOption) {
     var _registerOption = registerOption;
 
     if (typeof registerOption === 'string') {
@@ -5086,7 +5086,7 @@
       cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
     } else {
       var refKey = cursor_refKey_[nowCursor];
-      hookRef = ccUkey_ref_$4[refKey];
+      hookRef = ccUkey_ref_$3[refKey];
       var _refCtx = hookRef.ctx; //existing period, replace reactSetState and reactForceUpdate
 
       _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
@@ -5120,7 +5120,7 @@
     }
 
     return refCtx;
-  });
+  }
 
   function registerHookComp(options) {
     function buildCcHookComp(Dumb) {
@@ -5236,7 +5236,7 @@
   }
 
   function throwApiCallError() {
-    throw new Error("api doc: cc.setState(module:string, state:object, delayMs?:number, skipMiddleware?:boolean, throwError?:boolean)");
+    throw new Error("api doc: cc.setState(module:string, state:object, delayMs?:number, identity:string, skipMiddleware?:boolean, throwError?:boolean)");
   }
 
   function _setState (module, state, delayMs, identity, skipMiddleware, throwError) {
@@ -5320,7 +5320,7 @@
     }
   }
 
-  var ccUkey_ref_$5 = ccContext.ccUkey_ref_,
+  var ccUkey_ref_$4 = ccContext.ccUkey_ref_,
       ccClassKey_ccClassContext_$6 = ccContext.ccClassKey_ccClassContext_;
   function getRefsByClassKey (ccClassKey) {
     var refs = [];
@@ -5332,7 +5332,7 @@
 
     var ccKeys = ccClassContext.ccKeys;
     ccKeys.forEach(function (k) {
-      var ref = ccUkey_ref_$5[k];
+      var ref = ccUkey_ref_$4[k];
       if (ref) refs.push(ref);
     });
     return refs;

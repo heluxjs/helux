@@ -1,6 +1,6 @@
 import React from 'react';
 import { CC_HOOK_PREFIX } from '../../support/constant';
-import buildRefCtx from '../state/build-ref-ctx';
+import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
@@ -33,13 +33,13 @@ const makeForceUpdate = (ccHookState, hookSetState) => () => {
 function CcHook(ccHookState, hookSetState, props) {
   this.setState = makeSetState(ccHookState, hookSetState);
   this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
-  this.__$$isUnmounted = false;
   this.state = ccHookState.state;
   this.isFirstRendered = true;
   this.props = props;
 }
 
-export default (registerOption) => {
+//写为具名函数，防止react devtoo里显示.default
+export default function useConcent(registerOption){
   let _registerOption = registerOption;
   if (typeof registerOption === 'string') {
     _registerOption = { module: registerOption };

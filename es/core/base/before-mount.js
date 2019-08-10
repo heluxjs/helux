@@ -50,4 +50,6 @@ export default function (ref, setup, bindCtxToMethod) {
   }
 
   triggerComputedAndWatch(ref);
+
+  ref.__$$isUnmounted = false;
 }

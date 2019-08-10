@@ -8,7 +8,7 @@ import util, { okeys, shallowDiffers } from '../../support/util';
 import catchCcError from './catch-cc-error';
 import * as hf from '../state/handler-factory';
 import mapRegistrationInfo from './map-registration-info';
-import buildRefCtx from '../state/build-ref-ctx';
+import buildRefCtx from '../ref/build-ref-ctx';
 import beforeMount from './before-mount';
 import beforeUnMount from './before-unmount';
 import triggerSetupEffect from './trigger-setup-effect';
@@ -117,7 +117,6 @@ export default function register({
           // this.state = newState; // bad writing
           okeys(newState).forEach(key => thisState[key] = newState[key]);
           beforeMount(childRef, childRef.$$setup);
-          triggerComputedAndWatch(childRef);
         }
 
         componentDidMount() {
@@ -133,6 +132,7 @@ export default function register({
         componentDidUpdate() {
           if (super.componentDidUpdate) super.componentDidUpdate();
           triggerSetupEffect(this);
+          //这里刻意用assign，让prevState指向一个新引用
           this.ctx.prevState = Object.assign({}, this.state);
         }
 

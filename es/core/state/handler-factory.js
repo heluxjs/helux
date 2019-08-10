@@ -118,18 +118,18 @@ export function makeCcSetStateHandler(ref, containerRef) {
     const refCtx = ref.ctx;
     let containerRefState = containerRef ? containerRef.state : null;
     const refState = ref.state;
+    const refCtxState = refCtx.state;
 
     /** start update state */
 
-    //采用此种写法的话，dispatch.ctx不能暴露state了，只能暴露getState句柄，才能保证取到最新的state
-    // ref.state = Object.assign(ref.state, state);
-    //采用okeys写法，让dispatch.ctx里的refState总是指向同一个引用
+    //采用okeys写法，让用户结构出来的state总是指向同一个引用
     okeys(state).forEach(k => {
       const val = state[k];
+
       refState[k] = val;
+      refCtxState[k] = val;
       if (containerRefState) containerRefState[k] = val;//让代理模式下的容器组件state也总是保持最新的
     });
-    refCtx.state = refState;
 
     /** start update ui */
     if (shouldCurrentRefUpdate) {

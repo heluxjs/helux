@@ -1,6 +1,6 @@
 import * as util from '../../support/util';
 import * as ev from '../event';
-import * as ccRef from '../ref';
+import unsetRef from '../ref/unset-ref';
 
 export default function (ref) {
   //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
@@ -20,5 +20,5 @@ export default function (ref) {
 
   const { ccUniqueKey, ccClassKey } = ctx;
   ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
-  ccRef.unsetRef(ccClassKey, ccUniqueKey);
+  unsetRef(ccClassKey, ccUniqueKey);
 }
