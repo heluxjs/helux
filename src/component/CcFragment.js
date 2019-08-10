@@ -63,18 +63,17 @@ export default class CcFragment extends React.Component {
     return this.state !== nextState || isPropsChanged;
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  componentWillUpdate(nextProps) {
     //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
     this.ctx.props = getOutProps(nextProps);
-    this.ctx.state = nextState;
   }
 
   // componentDidUpdate(prevProps, prevState) {
   componentDidUpdate() {
     triggerSetupEffect(this);
     //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
+    //这里刻意用assign，让prevState指向一个新引用
     this.ctx.prevState = Object.assign({}, this.state);
-    // this.ctx.prevProps = this.ctx.props;
   }
 
   componentWillUnmount() {
