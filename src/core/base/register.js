@@ -117,7 +117,6 @@ export default function register({
           // this.state = newState; // bad writing
           okeys(newState).forEach(key => thisState[key] = newState[key]);
           beforeMount(childRef, childRef.$$setup);
-          triggerComputedAndWatch(childRef);
         }
 
         componentDidMount() {
