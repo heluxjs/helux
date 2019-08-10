@@ -1,5 +1,6 @@
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
 import * as util from '../support/util';
+import useConcent from '../core/hook/use-concent';
 
 const refs = {};
 const setStateByModule = (module, committedState) => {

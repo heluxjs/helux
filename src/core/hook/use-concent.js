@@ -48,7 +48,7 @@ export default (registerOption) => {
   const { state = {}, props = {}, mapProps } = _registerOption;
   const reactUseState = React.useState;
   if (!reactUseState) {
-    throw new Error('make sure your react version is larger than or equal 16.8');
+    throw new Error('make sure your react version is LTE 16.8');
   }
 
   const cursor = getUsableCursor();
@@ -90,10 +90,16 @@ export default (registerOption) => {
     refCtx.props = props;
   }
 
+  const refCtx = hookRef.ctx;
+
+  // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount???
+
   //for every render
   React.useEffect(() => {
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       triggerSetupEffect(hookRef, false);
+
+      // if (_registerOption.updated) _registerOption.updated(refCtx);
       hookRef.ctx.prevState = Object.assign({}, hookRef.state);//方便下一轮渲染比较用
     }
   });
@@ -102,14 +108,25 @@ export default (registerOption) => {
   React.useEffect(() => {// mock componentDidMount
     hookRef.isFirstRendered = false;
     triggerSetupEffect(hookRef, true);
-    return () => {
+
+    // if (_registerOption.mounted) _registerOption.mounted(refCtx);
+    return () => {// mock componentWillUnmount
+      // if (_registerOption.beforeUnmount) _registerOption.beforeUnmount(refCtx);
+
       beforeUnmount(hookRef);
     }
   }, []);
 
-  const refCtx = hookRef.ctx;
+  // if (isFirstRendered) {
+  //   if (_registerOption.beforeMount) _registerOption.beforeMount(refCtx);
+  // }else{
+  //   if (_registerOption.beforeUpdate)_registerOption.beforeUpdate(refCtx)
+  // }
+
   // before every render
-  if (mapProps) refCtx.mapped = mapProps(refCtx);
+  if (mapProps) {
+    refCtx.mapped = mapProps(refCtx);
+  }
 
   return refCtx;
 }

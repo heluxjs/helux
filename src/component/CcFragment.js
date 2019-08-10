@@ -46,9 +46,12 @@ export default class CcFragment extends React.Component {
 
     this.setState = this.ctx.setState;
     this.forceUpdate = this.ctx.forceUpdate;
-    beforeMount(this, props.setup, props.bindCtxToMethod);
-
     this.__$$compareProps = props.compareProps || true;
+
+    //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
+    //无需在将要给废弃的componentWillMount里调用beforeMount
+    beforeMount(this, props.setup, props.bindCtxToMethod);
+    // if (props.beforeMount) props.beforeMount(this.ctx);
   }
 
   componentDidMount() {
