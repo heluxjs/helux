@@ -132,6 +132,7 @@ export default function register({
         componentDidUpdate() {
           if (super.componentDidUpdate) super.componentDidUpdate();
           triggerSetupEffect(this);
+          //这里刻意用assign，让prevState指向一个新引用
           this.ctx.prevState = Object.assign({}, this.state);
         }
 

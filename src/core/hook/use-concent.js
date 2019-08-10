@@ -33,7 +33,6 @@ const makeForceUpdate = (ccHookState, hookSetState) => () => {
 function CcHook(ccHookState, hookSetState, props) {
   this.setState = makeSetState(ccHookState, hookSetState);
   this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
-  this.__$$isUnmounted = false;
   this.state = ccHookState.state;
   this.isFirstRendered = true;
   this.props = props;
