@@ -39,7 +39,8 @@ function CcHook(ccHookState, hookSetState, props) {
   this.props = props;
 }
 
-export default (registerOption) => {
+//写为具名函数，防止react devtoo里显示.default
+export default function useConcent(registerOption){
   let _registerOption = registerOption;
   if (typeof registerOption === 'string') {
     _registerOption = { module: registerOption };
