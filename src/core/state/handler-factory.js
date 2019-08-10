@@ -12,10 +12,13 @@ import { getChainId, setChainState, setAndGetChainStateList, exitChain, removeCh
 import { send } from '../plugin';
 import * as checker from '../checker';
 import changeRefState from '../state/change-ref-state';
+import setState from './set-state';
+import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
+import extractStateByKeys from './extract-state-by-keys';
 
 const { verboseInfo, makeError, justWarning, okeys } = util;
 const {
-  store: { getState },
+  store: { getState, setState: storeSetState },
   reducer: { _reducer }, 
   computed: { _computedValue },
   ccClassKey_ccClassContext_,
@@ -374,5 +377,29 @@ export function makeDispatchHandler(
       });
     }).catch(catchCcError);
     return p;
+  }
+}
+
+// for module/init method
+export function makeSetStateHandler(module) {
+  return state => {
+    try {
+      setState(module, state, 0);
+    } catch (err) {
+      if (module === MODULE_GLOBAL) {
+        getAndStoreValidGlobalState(state, module);
+      } else {
+        const moduleState = getState(module);
+        if (!moduleState) {
+          return util.justWarning(`invalid module ${module}`);
+        }
+
+        const keys = util.okeys(moduleState);
+        const { partialState, isStateEmpty } = extractStateByKeys(state, keys);
+        if (!isStateEmpty) storeSetState(module, partialState);//store this valid state;
+      }
+
+      util.justTip(`no ccInstance found for module[${module}] currently, cc will just store it, lately ccInstance will pick this state to render`);
+    }
   }
 }

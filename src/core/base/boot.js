@@ -4,7 +4,7 @@ import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC } from '../../support/constant
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import initModuleState from '../state/init-module-state';
-import makeSetStateHandler from '../state/make-set-state-handler';
+import { makeSetStateHandler } from '../state/handler-factory';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
