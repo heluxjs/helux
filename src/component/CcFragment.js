@@ -44,10 +44,7 @@ export default class CcFragment extends React.Component {
       buildRefCtx(this, params);
     }
 
-    this.setState = this.ctx.setState;
-    this.forceUpdate = this.ctx.forceUpdate;
     this.__$$compareProps = props.compareProps || true;
-
     //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
     //无需在将要给废弃的componentWillMount里调用beforeMount
     beforeMount(this, props.setup, props.bindCtxToMethod);
@@ -72,7 +69,7 @@ export default class CcFragment extends React.Component {
   componentDidUpdate() {
     triggerSetupEffect(this);
     //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
-    
+
     //这里刻意用assign，让prevState指向一个新引用
     // this.ctx.prevState = Object.assign({}, this.state);
 
