@@ -116,20 +116,25 @@ function __invoke(userLogicFn, option, payload){
 export function makeCcSetStateHandler(ref, containerRef) {
   return (state, cb, shouldCurrentRefUpdate) => {
     const refCtx = ref.ctx;
-    let containerRefState = containerRef ? containerRef.state : null;
-    const refState = ref.state;
-    const refCtxState = refCtx.state;
+    
+    /** start update state */
+    // let containerRefState = containerRef ? containerRef.state : null;
+    // const refState = ref.state;
+    // const refCtxState = refCtx.state;
+    // //采用okeys写法，让用户结构出来的state总是指向同一个引用
+    // okeys(state).forEach(k => {
+    //   const val = state[k];
+    //   refState[k] = val;
+    //   refCtxState[k] = val;
+    //   if (containerRefState) containerRefState[k] = val;//让代理模式下的容器组件state也总是保持最新的
+    // });
 
     /** start update state */
-
-    //采用okeys写法，让用户结构出来的state总是指向同一个引用
-    okeys(state).forEach(k => {
-      const val = state[k];
-
-      refState[k] = val;
-      refCtxState[k] = val;
-      if (containerRefState) containerRefState[k] = val;//让代理模式下的容器组件state也总是保持最新的
-    });
+    // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state
+    const newFullState = Object.assign({}, ref.state, state);
+    ref.state = newFullState;
+    refCtx.state = newFullState;
+    if (containerRef) containerRef.state = newFullState;
 
     /** start update ui */
     if (shouldCurrentRefUpdate) {

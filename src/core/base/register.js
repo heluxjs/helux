@@ -91,18 +91,18 @@ export default function register({
         //!!! 存在多重装饰器时, 或者用户想使用this.props.***来用concent类时
         //!!! 必需在类的【constructor】 里调用 this.props.$$attach(this),紧接着state定义之后
         $$attach(childRef) {
-          this.ctx.reactSetState = childRef.setState.bind(childRef);;
-          this.ctx.reactForceUpdate = childRef.forceUpdate.bind(childRef);
-
-          // childRef.childRefRea
-          ['setState', 'forceUpdate'].forEach(m => {
-            childRef[m] = this[m].bind(this);
-          });
-          
           const ctx = this.ctx;
           ctx.childRef = childRef;
           childRef.ctx = ctx;
-          //替换掉cc.__$$ccSetState cc.__$$ccForceUpdate, 让changeRefState正确的更新目标实例
+
+          ctx.reactSetState = childRef.setState.bind(childRef);;
+          ctx.reactForceUpdate = childRef.forceUpdate.bind(childRef);
+
+          // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
+          childRef.setState = ctx.setState;
+          childRef.forceUpdate = ctx.forceUpdate;
+          
+          //替换掉ctx.__$$ccSetState ctx.__$$ccForceUpdate, 让changeRefState正确的更新目标实例
           ctx.__$$ccSetState = hf.makeCcSetStateHandler(childRef, this);
           ctx.__$$ccForceUpdate = hf.makeCcForceUpdateHandler(childRef);
 
@@ -132,8 +132,12 @@ export default function register({
         componentDidUpdate() {
           if (super.componentDidUpdate) super.componentDidUpdate();
           triggerSetupEffect(this);
+
           //这里刻意用assign，让prevState指向一个新引用
-          this.ctx.prevState = Object.assign({}, this.state);
+          // this.ctx.prevState = Object.assign({}, this.state);
+
+          //不采用上面的写法了，因为makeCcSetStateHandler里放弃了okeys写法，总是直接赋值最新的state引用
+          this.ctx.prevState = this.state;
         }
 
         componentWillUnmount() {
