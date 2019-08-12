@@ -196,7 +196,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
     if (err) return handleCcFnError(err, __innerCb);
     const moduleState = getState(targetModule);
 
-    let executionContextForUser = {};
+    let reducerContext = {};
     let isSourceCall = false;
     if (context) {
       isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
@@ -214,34 +214,36 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
       const sourceClassContext = ccClassKey_ccClassContext_[ccClassKey];
 
-      executionContextForUser = Object.assign(
-        executionContext, {
-          invoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, chainId_depth_ }),
+      reducerContext = {
+        targetModule,
 
-          //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
-          lazyInvoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { isLazy: true, oriChainId, chainId_depth_ }),
-          dispatch, lazyDispatch,
+        invoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, chainId_depth_ }),
 
-          rootState: getState(),
-          globalState: getState(MODULE_GLOBAL),
-          //指的是目标模块的state
-          moduleState,
-          //指的是目标模块的的moduleComputed
-          moduleComputed: _computedValue[targetModule],
+        //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
+        lazyInvoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { isLazy: true, oriChainId, chainId_depth_ }),
+        dispatch, lazyDispatch,
 
-          //!!!指的是调用源cc类的connectedState
-          connectedState: sourceClassContext.connectedState,
-          //!!!指的是调用源cc类的connectedComputed
-          connectedComputed: sourceClassContext.connectedComputed,
+        rootState: getState(),
+        globalState: getState(MODULE_GLOBAL),
+        //指的是目标模块的state
+        moduleState,
+        //指的是目标模块的的moduleComputed
+        moduleComputed: _computedValue[targetModule],
 
-          //!!!指的是调用源cc类实例的state
-          refState: targetRef.state,
-          //其他ref相关的属性，不再传递给上下文，concent不鼓励用户在reducer使用ref相关数据，因为不同调用方传递不同的ref值，会引起用户不注意的bug
-        });
+        //!!!指的是调用源cc类的connectedState
+        connectedState: sourceClassContext.connectedState,
+        //!!!指的是调用源cc类的connectedComputed
+        connectedComputed: sourceClassContext.connectedComputed,
+
+        //!!!指的是调用源cc类实例的ctx
+        refCtx: targetRef.ctx,
+        // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
+        // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
+      };
     }
 
     send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
-    co.wrap(userLogicFn)(payload, moduleState, executionContextForUser).then(partialState => {
+    co.wrap(userLogicFn)(payload, moduleState, reducerContext).then(partialState => {
 
       chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1
       const curDepth = chainId_depth_[chainId];
