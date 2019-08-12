@@ -201,6 +201,7 @@ export default function (ref, params, liteLevel = 3) {
     mapped: {},
 
     // api meta data
+    onEvents,
     watchFns,
     computedFns,
     immediateWatchKeys,
