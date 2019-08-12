@@ -144,14 +144,13 @@ export default function (ref, params, liteLevel = 3) {
   const off = (event, { module, ccClassKey, identity } = {}) => {
     ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
   }
-  const on = (event, handler, identity = null, delayToDidMount = true) => {
-    //cache to onEvents firstly, cc will bind them in didMount life cycle
-    if (delayToDidMount) {
-      onEvents.push({ event, handler, identity });
-    } else {
-      ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
-    }
+  const on = (event, handler, identity = null) => {
+    ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
   };
+  // //cache to onEvents firstly, cc will bind them in didMount life cycle
+  const onInDidMount = (event, handler, identity = null) => {
+    onEvents.push({ event, handler, identity });
+  }
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
@@ -235,6 +234,7 @@ export default function (ref, params, liteLevel = 3) {
     syncInt,
     emit,
     on,
+    onInDidMount,//in setup, call onInDidMount 
     off,
     defineEffect,
 
