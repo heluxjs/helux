@@ -144,10 +144,13 @@ export default function (ref, params, liteLevel = 3) {
   const off = (event, { module, ccClassKey, identity } = {}) => {
     ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
   }
-  const on = (event, handler, identity = null) => {
+  const on = (event, handler, identity = null, delayToDidMount = true) => {
     //cache to onEvents firstly, cc will bind them in didMount life cycle
-    onEvents.push({ event, handler, identity });
-    // ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+    if (delayToDidMount) {
+      onEvents.push({ event, handler, identity });
+    } else {
+      ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+    }
   };
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}

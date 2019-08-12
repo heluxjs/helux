@@ -130,11 +130,14 @@ export function makeCcSetStateHandler(ref, containerRef) {
     // });
 
     /** start update state */
-    // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state
-    const newFullState = Object.assign({}, ref.state, state);
-    ref.state = newFullState;
+    // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state,
+    // 注意这里赋值也是取refCtx.state取做合并，因为频繁进入此函数时，ref.state可能还不是最新的
+    const newFullState = Object.assign({}, refCtx.state, state);
     refCtx.state = newFullState;
     if (containerRef) containerRef.state = newFullState;
+    
+    // 这里不直接赋值，交给reactSetState去更新ref.state
+    // ref.state = newFullState;
 
     /** start update ui */
     if (shouldCurrentRefUpdate) {
