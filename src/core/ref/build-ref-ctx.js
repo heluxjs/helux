@@ -144,12 +144,16 @@ export default function (ref, params, liteLevel = 3) {
   const off = (event, { module, ccClassKey, identity } = {}) => {
     ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
   }
-  const on = (event, handler, identity = null) => {
+  const on = (event, handler, identity = null, delayToDidMount = true) => {
+    if (delayToDidMount) {
+      //cache to onEvents firstly, cc will bind them in didMount life cycle
+      onEvents.push({ event, handler, identity });
+      return;
+    }
     ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
   };
-  // //cache to onEvents firstly, cc will bind them in didMount life cycle
-  const onInDidMount = (event, handler, identity = null) => {
-    onEvents.push({ event, handler, identity });
+  const onDirectly = (event, handler, identity = null) => {
+    on(event, handler, identity, false);
   }
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
@@ -234,7 +238,10 @@ export default function (ref, params, liteLevel = 3) {
     syncInt,
     emit,
     on,
-    onInDidMount,//in setup, call onInDidMount 
+    // on handler been effective in didMount by default, so user can call it in setup safely
+    //but if user want on been effective immediately, user can call onDirectly
+    // or on(ev, fn, idt, false)
+    onDirectly,
     off,
     defineEffect,
 
