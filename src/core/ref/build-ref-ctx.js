@@ -135,6 +135,8 @@ export default function (ref, params, liteLevel = 3) {
     if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, idt }, ref);
     __sync({ type: 'int' }, ref, e);
   };
+
+  const onEvents = [];
   const emit = (event, ...args) => {
     const _event = ev.getEventItem(event, stateModule, ccClassKey);
     ev.findEventHandlersToPerform(_event, ...args);
@@ -143,9 +145,10 @@ export default function (ref, params, liteLevel = 3) {
     ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
   }
   const on = (event, handler, identity = null) => {
-    ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+    //cache to onEvents firstly, cc will bind them in didMount life cycle
+    onEvents.push({ event, handler, identity });
+    // ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
   };
-
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
@@ -180,7 +183,7 @@ export default function (ref, params, liteLevel = 3) {
     ccOption,
 
     props: getOutProps(ref.props),
-    prevState: Object.assign({}, mergedState),
+    prevState: mergedState,
     // state
     state: mergedState,
     moduleState,

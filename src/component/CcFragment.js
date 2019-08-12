@@ -4,9 +4,10 @@ import {
 } from '../support/constant';
 import * as util from '../support/util';
 import mapRegistrationInfo from '../core/base/map-registration-info';
-import triggerSetupEffect from '../core/base/trigger-setup-effect';
 import beforeUnmount from '../core/base/before-unmount';
 import beforeMount from '../core/base/before-mount';
+import didMount from '../core/base/did-mount';
+import didUpdate from '../core/base/did-update';
 import buildRefCtx from '../core/ref/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
 import getStoredKeys from '../core/base/get-stored-keys';
@@ -48,11 +49,10 @@ export default class CcFragment extends React.Component {
     //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
     //无需在将要给废弃的componentWillMount里调用beforeMount
     beforeMount(this, props.setup, props.bindCtxToMethod);
-    // if (props.beforeMount) props.beforeMount(this.ctx);
   }
 
   componentDidMount() {
-    triggerSetupEffect(this, true);
+    didMount(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -67,19 +67,12 @@ export default class CcFragment extends React.Component {
 
   // componentDidUpdate(prevProps, prevState) {
   componentDidUpdate() {
-    triggerSetupEffect(this);
-    //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
-
-    //这里刻意用assign，让prevState指向一个新引用
-    // this.ctx.prevState = Object.assign({}, this.state);
-
-    //不采用上面的写法了，因为makeCcSetStateHandler里放弃了okeys写法，总是直接赋值最新的state引用
-    this.ctx.prevState = this.state;
+    didUpdate(this);
   }
 
   componentWillUnmount() {
-    beforeUnmount(this);
     if (super.componentWillUnmount) super.componentWillUnmount();
+    beforeUnmount(this);
   }
 
   render() {

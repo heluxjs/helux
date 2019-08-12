@@ -10,9 +10,9 @@ import * as hf from '../state/handler-factory';
 import mapRegistrationInfo from './map-registration-info';
 import buildRefCtx from '../ref/build-ref-ctx';
 import beforeMount from './before-mount';
+import didMount from './did-mount';
+import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
-import triggerSetupEffect from './trigger-setup-effect';
-import triggerComputedAndWatch from './trigger-computed-and-watch';
 import getStoredKeys from './get-stored-keys';
 
 
@@ -121,23 +121,16 @@ export default function register({
 
         componentDidMount() {
           if (super.componentDidMount) super.componentDidMount();
-          
+          didMount(this);
           // 代理模式不再强制检查$$attach是否给调用
           // if (isPropsProxy === true && !this.ctx.childRef) {
           //   throw new Error('you forgot to call this.props.$$attach(this) in constructor, you must call it after state assign expression next line!');
           // }
-          triggerSetupEffect(this, true);
         }
 
         componentDidUpdate() {
           if (super.componentDidUpdate) super.componentDidUpdate();
-          triggerSetupEffect(this);
-
-          //这里刻意用assign，让prevState指向一个新引用
-          // this.ctx.prevState = Object.assign({}, this.state);
-
-          //不采用上面的写法了，因为makeCcSetStateHandler里放弃了okeys写法，总是直接赋值最新的state引用
-          this.ctx.prevState = this.state;
+          didUpdate(this);
         }
 
         componentWillUnmount() {
