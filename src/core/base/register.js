@@ -30,6 +30,7 @@ export default function register({
   persistStoredKeys,
   connect = {},
   tag = '',
+  lite,
   reducerModule,
   isPropsProxy = false,
   isSingle = false,
@@ -66,7 +67,7 @@ export default function register({
               isSingle, module: _module, reducerModule: _reducerModule, tag: _tag, state: declaredState, type: CC_CLASS_PREFIX,
               watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys: _storedKeys, ccOption
             });
-            buildRefCtx(this, params);
+            buildRefCtx(this, params, lite);
 
             if (this.$$setup) this.$$setup = this.$$setup.bind(this);
             beforeMount(this, this.$$setup, false);

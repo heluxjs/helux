@@ -61,7 +61,7 @@ export default function useConcent(registerOption){
   if (isFirstRendered) {
     const {
       ccClassKey, module, reducerModule, watchedKeys = '*', storedKeys = [],
-      persistStoredKeys, connect = {}, setup, bindCtxToMethod,
+      persistStoredKeys, connect = {}, setup, bindCtxToMethod, lite
     } = _registerOption;
 
     incCursor();
@@ -74,7 +74,7 @@ export default function useConcent(registerOption){
     const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
       module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, type: CC_HOOK_PREFIX,
-      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
+      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys, lite
     });
 
     buildRefCtx(hookRef, params);

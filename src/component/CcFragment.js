@@ -24,7 +24,7 @@ export default class CcFragment extends React.Component {
     // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
     if (props.__$$regDumb !== true) {
       const {
-        module = MODULE_DEFAULT, ccClassKey: propsCcClassKey, ccKey, ccTag,
+        module = MODULE_DEFAULT, ccClassKey: propsCcClassKey, ccKey, ccTag, lite,
         watchedKeys = '*', ccOption = {}, connect = {}, reducerModule, state = {}, isSingle,
       } = props;
       //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
@@ -36,13 +36,13 @@ export default class CcFragment extends React.Component {
       buildRefCtx(this, {
         isSingle, ccKey, connect: _connect, state, module: _module, reducerModule: _reducerModule,
         storedKeys, watchedKeys: _watchedKeys, tag: ccTag, ccClassKey: _ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
-      });
+      }, lite);
     } else {
       const outProps = getOutProps(props);
       const ccOption = outProps.ccOption || props.ccOption;
       const storedKeys = getStoredKeys(props.state, moduleName_stateKeys_[props.module], ccOption.storedKeys, props.storedKeys);
       const params = Object.assign({}, props, { storedKeys, ccOption, type: CC_FRAGMENT_PREFIX });
-      buildRefCtx(this, params);
+      buildRefCtx(this, params, props.lite);
     }
 
     this.__$$compareProps = props.compareProps || true;
