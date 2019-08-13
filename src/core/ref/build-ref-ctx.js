@@ -240,7 +240,7 @@ export default function (ref, params, liteLevel = 5) {
     ctx.defineExecute = handler => ctx.execute = handler;
     ctx.defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
 
-    const defineEffect = (fn, stateKeys, eId, immediate = true) => {
+    const defineEffect = (fn, stateKeys, immediate = true, eId) => {
       if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
       if (stateKeys !== null && stateKeys !== undefined) {
         if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
