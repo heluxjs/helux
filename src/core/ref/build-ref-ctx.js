@@ -91,6 +91,9 @@ export default function (ref, params, liteLevel = 5) {
       calledBy, ccKey, ccUniqueKey, module, delay, renderKey, reactCallback
     }, ref);
   };
+  const setModuleState = (module, state, reactCallback, delay, renderKey) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, renderKey);
+  };
   // const setState = (state, reactCallback, delay, renderKey) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
@@ -167,6 +170,7 @@ export default function (ref, params, liteLevel = 5) {
     reactSetState,
     reactForceUpdate,
     setState,
+    setModuleState,
     forceUpdate,
     changeState,
     dispatch,
@@ -183,9 +187,6 @@ export default function (ref, params, liteLevel = 5) {
 
     ctx.setGlobalState = (state, reactCallback, delay, renderKey) => {
       _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, renderKey);
-    };
-    ctx.setModuleState = (module, state, reactCallback, delay, renderKey) => {
-      _setState(module, state, SET_MODULE_STATE, reactCallback, delay, renderKey);
     };
   }
 
