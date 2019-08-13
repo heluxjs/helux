@@ -277,23 +277,12 @@ function HookCounter(){
 ___
 ## 🔨更多精彩示例
 ### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
-### [cc版本的ant-design-pro](https://github.com/fantasticsoul/rcc-antd-pro)
+### [concent版本的ant-design-pro](https://github.com/concentjs/antd-pro-concent)
 ### [一个相对完整的示例](https://stackblitz.com/edit/cc-awesome)
 ### [有趣的counter](https://stackblitz.com/edit/funny-counter)
-### [增强的counter](https://stackblitz.com/edit/dva-example-count-1saxx8)
-### [Jsrun playground](http://jsrun.net/fLXKp/play) 
-### [Jsrun video](http://jsrun.net/vLXKp/play)
-### [示例集合](https://github.com/fantasticsoul/rcc-simple-demo)
 ___
 ## 图文介绍
 ### cc渲染流程
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
 ### cc组件工作流程
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-process.png)
-
-### [concent是什么](https://concentjs.github.io/concent-site/docs/doc-intro-what-is-concent)
-### [在cc里用class和function实现counter](https://juejin.im/post/5c8f77bdf265da60ec2812f7)
-### [聊一聊cc的变化侦测和hook实现](https://juejin.im/post/5c8d99f4e51d4555816d6335)
-### [在cc里玩转无状态组件](https://juejin.im/post/5c838107f265da2dca389593)
-### [对话 redux(家族)，后生何以挑战前辈？](https://juejin.im/post/5c8479316fb9a049ba42635c)
-### [为什么不用redux](https://www.zhihu.com/question/263928256/answer/274963347)
