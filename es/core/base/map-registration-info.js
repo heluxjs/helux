@@ -3,7 +3,7 @@ import getFeatureStrAndCmkMapping from './get-feature-str-and-cmkmapping';
 import getCcClassKey from './get-cc-classkey';
 import * as checker from '../checker';
 import * as util from '../../support/util';
-import { ERR } from '../../support/constant';
+import { ERR, MODULE_DEFAULT } from '../../support/constant';
 
 const {
   moduleName_stateKeys_, moduleName_ccClassKeys_,
@@ -80,7 +80,7 @@ function mapCcClassKeyToCcClassContext(ccClassKey, moduleName, originalWatchedKe
 /**
  * map registration info to ccContext
  */
-export default function (module, ccClassKey, classKeyPrefix, inputWatchedKeys, inputStoredKeys = [], connect, reducerModule, __checkStartUp, __calledBy) {
+export default function (module = MODULE_DEFAULT, ccClassKey, classKeyPrefix, inputWatchedKeys, inputStoredKeys = [], connect, reducerModule, __checkStartUp, __calledBy) {
   if (__checkStartUp === true) checkCcStartupOrNot();
   const allowNamingDispatcher = __calledBy === 'cc';
   const _reducerModule = reducerModule || module;//if reducerModule not defined, will be equal module;

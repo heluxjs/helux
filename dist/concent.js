@@ -221,6 +221,7 @@
 
         if (window.webpackHotUpdate || window.name === 'previewFrame' //for stackblitz
         || window.__SANDBOX_DATA__ // for codesandbox
+        || window.BrowserFS // for codesandbox
         ) {
             result = true;
           }
@@ -335,7 +336,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.12',
+      version: '1.5.13',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1699,10 +1700,13 @@
 
       var newFullState = Object.assign({}, refCtx.state, state);
       refCtx.state = newFullState;
-      if (containerRef) containerRef.state = newFullState; // 这里不直接赋值，交给reactSetState去更新ref.state
-      // ref.state = newFullState;
+      if (containerRef) containerRef.state = newFullState; // 除了Hook实例，这里都不直接赋值，交给reactSetState去更新ref.state
 
+      if (refCtx.type === CC_HOOK_PREFIX) {
+        ref.state = newFullState;
+      }
       /** start update ui */
+
 
       if (shouldCurrentRefUpdate) {
         refCtx.renderCount += 1;
@@ -2321,6 +2325,10 @@
 
 
   function mapRegistrationInfo (module, ccClassKey, classKeyPrefix, inputWatchedKeys, inputStoredKeys, connect, reducerModule, __checkStartUp, __calledBy) {
+    if (module === void 0) {
+      module = MODULE_DEFAULT;
+    }
+
     if (inputStoredKeys === void 0) {
       inputStoredKeys = [];
     }

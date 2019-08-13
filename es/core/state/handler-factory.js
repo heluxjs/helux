@@ -2,7 +2,7 @@
 import {
   MODULE_GLOBAL, ERR, 
   SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR,
-  DISPATCH,  INVOKE,
+  DISPATCH,  INVOKE, CC_HOOK_PREFIX,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -136,8 +136,10 @@ export function makeCcSetStateHandler(ref, containerRef) {
     refCtx.state = newFullState;
     if (containerRef) containerRef.state = newFullState;
     
-    // 这里不直接赋值，交给reactSetState去更新ref.state
-    // ref.state = newFullState;
+    // 除了Hook实例，这里都不直接赋值，交给reactSetState去更新ref.state
+    if (refCtx.type === CC_HOOK_PREFIX) {
+      ref.state = newFullState;
+    }
 
     /** start update ui */
     if (shouldCurrentRefUpdate) {

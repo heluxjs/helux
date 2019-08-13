@@ -86,6 +86,7 @@ const ccContext = {
       if (window.webpackHotUpdate
         || window.name === 'previewFrame' //for stackblitz
         || window.__SANDBOX_DATA__ // for codesandbox
+        || window.BrowserFS // for codesandbox
       ) {
         result = true;
       }
@@ -211,7 +212,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.12',
+    version: '1.5.13',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',
