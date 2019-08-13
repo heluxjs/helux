@@ -259,7 +259,7 @@ export default function (ref, params, liteLevel = 5) {
     // alias
     ctx.watch = defineWatch;
     ctx.computed = defineComputed;
-    ctx.effect = defineWatch;
+    ctx.effect = defineEffect;
   }
 
   ref.ctx = ctx;
