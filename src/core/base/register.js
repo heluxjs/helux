@@ -15,7 +15,6 @@ import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
 import getStoredKeys from './get-stored-keys';
 
-
 const { moduleName_stateKeys_ } = ccContext;
 const {  ccClassDisplayName, styleStr, color, verboseInfo, makeError } = util;
 const cl = color;
@@ -140,6 +139,7 @@ export default function register({
         }
 
         render() {
+          this.ctx.props = this.props;
           if (ccContext.isDebug) {
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }

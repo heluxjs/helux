@@ -60,11 +60,6 @@ export default class CcFragment extends React.Component {
     return this.state !== nextState || isPropsChanged;
   }
 
-  componentWillUpdate(nextProps) {
-    //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
-    this.ctx.props = getOutProps(nextProps);
-  }
-
   // componentDidUpdate(prevProps, prevState) {
   componentDidUpdate() {
     didUpdate(this);
@@ -76,6 +71,9 @@ export default class CcFragment extends React.Component {
   }
 
   render() {
+    //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
+    this.ctx.props = getOutProps(this.props);
+
     const { children, render } = this.props
     const view = render || children;
 
