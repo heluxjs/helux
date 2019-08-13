@@ -36,7 +36,7 @@ function getEId() {
  * 构建refCtx，附加到ref.cc上
  * liteLevel 越小，绑定的方法越少
  */
-export default function (ref, params, liteLevel = 3) {
+export default function (ref, params, liteLevel = 5) {
   const reactSetState = ref.setState.bind(ref);
   const reactForceUpdate = ref.forceUpdate.bind(ref);
 
@@ -59,6 +59,7 @@ export default function (ref, params, liteLevel = 3) {
   }
 
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
+  if (!ccOption.renderKey) ccOption.renderKey = ccUniqueKey;
 
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
   const connectedComputed = classCtx.connectedComputed || {};
@@ -85,18 +86,15 @@ export default function (ref, params, liteLevel = 3) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
-  const _setState = (module, state, calledBy, reactCallback, delay, identity) => {
+  const _setState = (module, state, calledBy, reactCallback, delay, renderKey) => {
     changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, delay, identity, reactCallback
+      calledBy, ccKey, ccUniqueKey, module, delay, renderKey, reactCallback
     }, ref);
   };
-  const setGlobalState = (state, reactCallback, delay, identity) => {
-    _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, identity);
+  const setModuleState = (module, state, reactCallback, delay, renderKey) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, renderKey);
   };
-  const setModuleState = (module, state, reactCallback, delay, identity) => {
-    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, identity);
-  };
-  // const setState = (state, reactCallback, delay, identity) => {
+  // const setState = (state, reactCallback, delay, renderKey) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
       //p1 module, p2 state, p3 cb, p4 delay, p5 idt
@@ -106,61 +104,19 @@ export default function (ref, params, liteLevel = 3) {
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
-  const forceUpdate = (reactCallback, delay, identity) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, identity);
+  const forceUpdate = (reactCallback, delay, renderKey) => {
+    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, renderKey);
   };
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
   }
   const dispatch = hf.makeDispatchHandler(ref, false, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
-  const lazyDispatch = hf.makeDispatchHandler(ref, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
-  const invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
-  const lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
 
-  const syncBool = (e, delay = -1, idt = '') => {
-    if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, idt }, ref);
-    __sync({ type: 'bool' }, e, ref);
-  };
-  const sync = (e, val, delay = -1, idt = '') => {
-    if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, idt }, ref);
-    __sync({ type: 'val' }, ref, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
-  };
-  const set = (ccsync, val, delay, idt) => {
-    __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, idt }, ref);
-  };
-  const setBool = (ccsync, delay = -1, idt = '') => {
-    __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, idt }, ref);
-  };
-  const syncInt = (e, delay = -1, idt = '') => {
-    if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, idt }, ref);
-    __sync({ type: 'int' }, ref, e);
-  };
-  const emit = (event, ...args) => {
-    const _event = ev.getEventItem(event, stateModule, ccClassKey);
-    ev.findEventHandlersToPerform(_event, ...args);
-  };
-  const off = (event, { module, ccClassKey, identity } = {}) => {
-    ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
-  }
-  const on = (event, handler, identity = null) => {
-    ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
-  };
-
+  const onEvents = [];
 
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
-  const defineEffect = (fn, stateKeys, eId, immediate = true) => {
-    if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
-    if (stateKeys !== null && stateKeys !== undefined) {
-      if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
-    }
-
-    const _eId = eId || getEId();
-    // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
-    const effectItem = { fn, stateKeys, eId: _eId, immediate };
-    effectItems.push(effectItem);
-  };
 
   const aux = {}, watchFns = {}, computedFns = {};
   const immediateWatchKeys = [];
@@ -180,7 +136,7 @@ export default function (ref, params, liteLevel = 3) {
     ccOption,
 
     props: getOutProps(ref.props),
-    prevState: Object.assign({}, mergedState),
+    prevState: mergedState,
     // state
     state: mergedState,
     moduleState,
@@ -198,6 +154,7 @@ export default function (ref, params, liteLevel = 3) {
     mapped: {},
 
     // api meta data
+    onEvents,
     watchFns,
     computedFns,
     immediateWatchKeys,
@@ -213,45 +170,97 @@ export default function (ref, params, liteLevel = 3) {
     reactSetState,
     reactForceUpdate,
     setState,
-    setGlobalState,
     setModuleState,
     forceUpdate,
     changeState,
     dispatch,
-    lazyDispatch,
-    invoke,
-    lazyInvoke,
-    syncBool,
-    sync,
-    set,
-    setBool,
-    syncInt,
-    emit,
-    on,
-    off,
-    defineEffect,
-
-    // alias
-    effect: defineEffect,
 
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
 
   };
 
-  ctx.defineExecute = handler => ctx.execute = handler;
-  const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys);
-  const defineComputed = getDefineComputedHandler(ctx, computedFns);
-  const defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
+  if (liteLevel > 1) {// level 2, assign these mod data api
+    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
+    ctx.invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
+    ctx.lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
 
-  // api
-  ctx.defineWatch = defineWatch;
-  ctx.defineComputed = defineComputed;
-  ctx.defineAuxMethod = defineAuxMethod;
+    ctx.setGlobalState = (state, reactCallback, delay, renderKey) => {
+      _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, renderKey);
+    };
+  }
 
-  // alias
-  ctx.watch = defineWatch;
-  ctx.computed = defineComputed;
+  if (liteLevel > 2) {// level 3, assign async api
+    ctx.syncBool = (e, delay = -1, idt = '') => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, idt }, ref);
+      __sync({ type: 'bool' }, e, ref);
+    };
+    ctx.sync = (e, val, delay = -1, idt = '') => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, idt }, ref);
+      __sync({ type: 'val' }, ref, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
+    };
+    ctx.set = (ccsync, val, delay, idt) => {
+      __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, idt }, ref);
+    };
+    ctx.setBool = (ccsync, delay = -1, idt = '') => {
+      __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, idt }, ref);
+    };
+    ctx.syncInt = (e, delay = -1, idt = '') => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, idt }, ref);
+      __sync({ type: 'int' }, ref, e);
+    };
+  }
+
+  if (liteLevel > 3) {// level 4, assign event api
+    ctx.emit = (event, ...args) => {
+      const _event = ev.getEventItem(event, stateModule, ccClassKey);
+      ev.findEventHandlersToPerform(_event, ...args);
+    };
+    ctx.off = (event, { module, ccClassKey, identity } = {}) => {
+      ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
+    }
+    const on = (event, handler, identity = null, delayToDidMount = true) => {
+      if (delayToDidMount) {
+        //cache to onEvents firstly, cc will bind them in didMount life cycle
+        onEvents.push({ event, handler, identity });
+        return;
+      }
+      ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+    };
+    ctx.on = on;
+    // on handler been effective in didMount by default, so user can call it in setup safely
+    // but if user want on been effective immediately, user can call onDirectly
+    // or on(ev, fn, idt, false)
+    ctx.onDirectly = (event, handler, identity = null) => {
+      on(event, handler, identity, false);
+    }
+  }
+
+  if(liteLevel > 4){// level 5, assign enhance api
+    ctx.defineExecute = handler => ctx.execute = handler;
+    ctx.defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
+
+    const defineEffect = (fn, stateKeys, immediate = true, eId) => {
+      if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
+      if (stateKeys !== null && stateKeys !== undefined) {
+        if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+      }
+      const _eId = eId || getEId();
+      // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
+      const effectItem = { fn, stateKeys, eId: _eId, immediate };
+      effectItems.push(effectItem);
+    };
+    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys);
+    const defineComputed = getDefineComputedHandler(ctx, computedFns);
+
+    ctx.defineWatch = defineWatch;
+    ctx.defineComputed = defineComputed;
+    ctx.defineEffect = defineEffect;
+    // alias
+    ctx.watch = defineWatch;
+    ctx.computed = defineComputed;
+    ctx.effect = defineEffect;
+  }
 
   ref.ctx = ctx;
   ref.setState = setState;

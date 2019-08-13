@@ -4,16 +4,21 @@ import ccContext from '../../cc-context';
 import getComputedSpec from '../computed/get-computed-spec';
 import getWatchSpec from '../watch/get-watch-spec';
 
-const { safeGetObjectFromObject, okeys } = util;
+const { safeGetObjectFromObject, okeys, justWarning } = util;
 const { reducer: { _reducerModule_fnNames_ } } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
+  ref.__$$isUnmounted = false;
+
   const ctx = ref.ctx;
   const { reducer, lazyReducer, dispatch, lazyDispatch, connect, module } = ctx;
   const connectedModules = okeys(connect);
 
   const allModules = connectedModules.slice();
   if (!allModules.includes(module)) allModules.push(module);
+  else{
+    justWarning(`module[${module}] are in belongTo and connect both, it will cause redundant render.`);
+  }
 
   //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
   //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
@@ -50,6 +55,4 @@ export default function (ref, setup, bindCtxToMethod) {
   }
 
   triggerComputedAndWatch(ref);
-
-  ref.__$$isUnmounted = false;
 }

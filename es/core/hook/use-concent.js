@@ -4,8 +4,9 @@ import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
+import didMount from '../base/did-mount';
+import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
-import triggerSetupEffect from '../base/trigger-setup-effect';
 import getStoredKeys from '../base/get-stored-keys';
 
 const { ccUkey_ref_, moduleName_stateKeys_ } = ccContext;
@@ -60,7 +61,7 @@ export default function useConcent(registerOption){
   if (isFirstRendered) {
     const {
       ccClassKey, module, reducerModule, watchedKeys = '*', storedKeys = [],
-      persistStoredKeys, connect = {}, setup, bindCtxToMethod,
+      persistStoredKeys, connect = {}, setup, bindCtxToMethod, lite
     } = _registerOption;
 
     incCursor();
@@ -73,7 +74,7 @@ export default function useConcent(registerOption){
     const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
       module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, type: CC_HOOK_PREFIX,
-      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
+      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys, lite
     });
 
     buildRefCtx(hookRef, params);
@@ -92,20 +93,20 @@ export default function useConcent(registerOption){
 
   const refCtx = hookRef.ctx;
 
-  // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount???
+  // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
-  //for every render
+  //after every render
   React.useEffect(() => {
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
-      triggerSetupEffect(hookRef, false);
-      hookRef.ctx.prevState = Object.assign({}, hookRef.state);//方便下一轮渲染比较用
+      didUpdate(hookRef);
     }
   });
 
-  //for first render
+  //after first render
   React.useEffect(() => {// mock componentDidMount
     hookRef.isFirstRendered = false;
-    triggerSetupEffect(hookRef, true);
+    didMount(hookRef);
+
     return () => {// mock componentWillUnmount
       beforeUnmount(hookRef);
     }

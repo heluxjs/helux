@@ -107,11 +107,21 @@ export function offEventHandlersByCcUniqueKey(ccUniqueKey) {
 export function getEventItem(event, curStateModule, ccClassKey) {
   //不检查array了... 要求用户需正确传递参数
   if (typeof event === 'object') {
-    const _event = Object.assign(event);
-    if (event.ctx === true) {
+    let _event, _ctx;
+    if (Array.isArray(event)) {
+      const [name, identity, ctx] = event;
+      _event = { name, identity };
+      _ctx = ctx;
+    } else {
+      _event = Object.assign({}, event);
+      _ctx = event.ctx;
+    }
+    if (_ctx === true) {
       _event.module = curStateModule;
       _event.ccClassKey = ccClassKey;
-    }//否则就允许用户传如自己定义的module, ccClassKey
+    }
+
+    //否则就允许用户传如自己定义的module, ccClassKey
     return _event;
   } else {
     return { name: event };
