@@ -86,6 +86,7 @@ const ccContext = {
       if (window.webpackHotUpdate
         || window.name === 'previewFrame' //for stackblitz
         || window.__SANDBOX_DATA__ // for codesandbox
+        || window.BrowserFS // for codesandbox
       ) {
         result = true;
       }
