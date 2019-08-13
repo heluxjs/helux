@@ -32,7 +32,7 @@ function getActionType(calledBy, type) {
 
 export default function (state, {
   ccKey, ccUniqueKey, module, skipMiddleware = false,
-  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, delay = -1, identity } = {}, targetRef
+  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, delay = -1, renderKey } = {}, targetRef
 ) {
   const stateFor = getStateFor(module, targetRef.ctx.module);
 
@@ -63,17 +63,17 @@ export default function (state, {
 
   if (module === currentModule) {
     // who trigger $$changeState, who will change the whole received state 
-    prepareReactSetState(targetRef, identity, calledBy, state, stateFor, () => {
-      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, identity, reactCallback);
+    prepareReactSetState(targetRef, renderKey, calledBy, state, stateFor, () => {
+      prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, state, delay, renderKey, reactCallback);
     }, reactCallback);
   } else {
     if (reactCallback) justWarning(`callback for react.setState will be ignore`);
     //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
-    prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, delay, identity, reactCallback);
+    prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, state, delay, renderKey, reactCallback);
   }
 }
 
-function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, next, reactCallback) {
+function prepareReactSetState(targetRef, renderKey, calledBy, state, stateFor, next, reactCallback) {
   const thisState = targetRef.state;
   const refCtx = targetRef.ctx;
   const { module: stateModule, storedKeys, ccOption, ccUniqueKey } = refCtx;
@@ -82,8 +82,8 @@ function prepareReactSetState(targetRef, identity, calledBy, state, stateFor, ne
     if (next) next();
     return;
   }
-  if (identity) {//if user specify identity
-    if (refCtx.ccKey !== identity) {// current instance would have been rendered only if current instance's ccKey equal identity
+  if (renderKey) {//if user specify renderKey
+    if (ccOption.renderKey !== renderKey) {// current instance can been rendered only if current instance's ccKey equal renderKey
       if (next) next();
       return;
     }
@@ -129,11 +129,11 @@ function syncCommittedStateToStore(moduleName, committedState) {
 }
 
 function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor,
-  moduleName, committedState, delay, identity, reactCallback
+  moduleName, committedState, delay, renderKey, reactCallback
 ) {
   const { skipBroadcastRefState, partialSharedState } = broadcastInfo;
   const startBroadcastState = () => {
-    broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, identity, reactCallback);
+    broadcastState(targetRef, skipBroadcastRefState, committedState, stateFor, moduleName, partialSharedState, renderKey, reactCallback);
   };
 
   const willBroadcast = () => {
@@ -169,7 +169,7 @@ function prepareBroadcastState(targetRef, skipMiddleware, passToMiddleware, broa
   }
 }
 
-function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, identity, reactCallback) {
+function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFor, moduleName, partialSharedState, renderKey, reactCallback) {
   if (skipBroadcastRefState === false) {
     const { ccUniqueKey: currentCcKey } = targetRef.ctx;
 
@@ -203,7 +203,8 @@ function broadcastState(targetRef, skipBroadcastRefState, originalState, stateFo
             if (ccContext.isDebug) {
               console.log(styleStr(`received state for ref[${ccKey}] is broadcasted from same module's other ref ${currentCcKey}`), color());
             }
-            prepareReactSetState(ref, identity, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY)
+            // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这里也不会发送信号给插件
+            prepareReactSetState(ref, renderKey, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY)
           }
         });
 

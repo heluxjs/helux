@@ -25,7 +25,7 @@ export default function (spec, ref, e) {
 
   if (e && e.stopPropagation) e.stopPropagation();
 
-  const { ccsync, ccint, ccdelay, ccidt } = dataset;
+  const { ccsync, ccint, ccdelay, ccrkey } = dataset;
 
   if (ccsync.startsWith('/')) {
     dataset.ccsync = `${refModule}${ccsync}`;//附加上默认模块值
@@ -35,19 +35,19 @@ export default function (spec, ref, e) {
     const targetModule = ccsync.split('/')[0];
     const { ccKey, ccUniqueKey } = refCtx;
     if (extraState) {
-      return changeRefState(extraState, { calledBy: SYNC, ccKey, ccUniqueKey, module: targetModule, delay: ccdelay, identity: ccidt }, ref);
+      return changeRefState(extraState, { calledBy: SYNC, ccKey, ccUniqueKey, module: targetModule, delay: ccdelay, renderKey: ccrkey }, ref);
     }
 
     const fullState = targetModule !== refModule ? getState(targetModule) : ref.state;
 
     const { state } = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool);
-    return changeRefState(state, { calledBy: SYNC, ccKey, ccUniqueKey: ccUniqueKey, module: targetModule, delay: ccdelay, identity: ccidt }, ref);
+    return changeRefState(state, { calledBy: SYNC, ccKey, ccUniqueKey: ccUniqueKey, module: targetModule, delay: ccdelay, renderKey: ccrkey }, ref);
   } else {//调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
     if (extraState) {
-      return ref.setState(extraState, null, ccdelay, ccidt);
+      return ref.setState(extraState, null, ccdelay, ccrkey);
     }
 
     const { state } = extractStateByCcsync(ccsync, value, ccint, ref.state, mockE.isToggleBool);
-    return ref.setState(state, null, ccdelay, ccidt);
+    return ref.setState(state, null, ccdelay, ccrkey);
   }
 };

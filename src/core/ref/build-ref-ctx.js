@@ -85,18 +85,18 @@ export default function (ref, params, liteLevel = 3) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
-  const _setState = (module, state, calledBy, reactCallback, delay, identity) => {
+  const _setState = (module, state, calledBy, reactCallback, delay, renderKey) => {
     changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, delay, identity, reactCallback
+      calledBy, ccKey, ccUniqueKey, module, delay, renderKey, reactCallback
     }, ref);
   };
-  const setGlobalState = (state, reactCallback, delay, identity) => {
-    _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, identity);
+  const setGlobalState = (state, reactCallback, delay, renderKey) => {
+    _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, renderKey);
   };
-  const setModuleState = (module, state, reactCallback, delay, identity) => {
-    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, identity);
+  const setModuleState = (module, state, reactCallback, delay, renderKey) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, renderKey);
   };
-  // const setState = (state, reactCallback, delay, identity) => {
+  // const setState = (state, reactCallback, delay, renderKey) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
       //p1 module, p2 state, p3 cb, p4 delay, p5 idt
@@ -106,8 +106,8 @@ export default function (ref, params, liteLevel = 3) {
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
-  const forceUpdate = (reactCallback, delay, identity) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, identity);
+  const forceUpdate = (reactCallback, delay, renderKey) => {
+    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, renderKey);
   };
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
