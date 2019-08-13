@@ -219,7 +219,7 @@ export default function (ref, params, liteLevel = 5) {
     ctx.off = (event, { module, ccClassKey, identity } = {}) => {
       ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
     }
-    ctx.on = (event, handler, identity = null, delayToDidMount = true) => {
+    const on = (event, handler, identity = null, delayToDidMount = true) => {
       if (delayToDidMount) {
         //cache to onEvents firstly, cc will bind them in didMount life cycle
         onEvents.push({ event, handler, identity });
@@ -227,6 +227,7 @@ export default function (ref, params, liteLevel = 5) {
       }
       ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
     };
+    ctx.on = on;
     // on handler been effective in didMount by default, so user can call it in setup safely
     // but if user want on been effective immediately, user can call onDirectly
     // or on(ev, fn, idt, false)
