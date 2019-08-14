@@ -212,7 +212,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.13',
+    version: '1.5.14',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',
