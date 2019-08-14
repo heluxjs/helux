@@ -336,7 +336,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.13',
+      version: '1.5.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2461,8 +2461,11 @@
       handlerKey_handler_ = ccContext.handlerKey_handler_,
       ccUKey_handlerKeys_ = ccContext.ccUKey_handlerKeys_,
       ccUkey_ref_$1 = ccContext.ccUkey_ref_;
+  var makeHandlerKey$1 = makeHandlerKey,
+      safeGetArrayFromObject$1 = safeGetArrayFromObject,
+      justWarning$3 = justWarning;
 
-  function _findEventHandlers(event, module, ccClassKey, identity) {
+  function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
     if (identity === void 0) {
       identity = null;
     }
@@ -2470,21 +2473,26 @@
     var handlers = event_handlers_[event];
 
     if (handlers) {
-      var filteredHandlers;
-      if (ccClassKey) filteredHandlers = handlers.filter(function (v) {
+      var filteredHandlers = handlers;
+      if (ccUniqueKey) filteredHandlers = handlers.filter(function (v) {
+        return v.ccUniqueKey === ccUniqueKey;
+      });else if (ccClassKey) filteredHandlers = handlers.filter(function (v) {
         return v.ccClassKey === ccClassKey;
       });else if (module) filteredHandlers = handlers.filter(function (v) {
         return v.module === module;
-      });else filteredHandlers = handlers; // identity is null means user call emit or emitIdentity which set identity as null
-      // identity is not null means user call emitIdentity
+      }); // identity is null means user call emit like emit('eventName')
+      // identity is not null means user call emit like emit(['eventName', 'idtName'])
 
-      filteredHandlers = filteredHandlers.filter(function (v) {
-        return v.identity === identity;
-      });
+      if (identity !== undefined) {
+        filteredHandlers = filteredHandlers.filter(function (v) {
+          return v.identity === identity;
+        });
+      }
+
       return filteredHandlers;
-    } else {
-      return [];
     }
+
+    return [];
   }
 
   function _deleteEventHandlers(handlers) {
@@ -2512,24 +2520,23 @@
         });
         event_handlers_[event] = eHandlers.filter(function (v) {
           return v !== null;
-        }); //delete event_handlers_
+        }); //delete eHandlers null element
       }
     });
   }
 
   function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler) {
-    var handlers = util.safeGetArrayFromObject(event_handlers_, event);
+    var handlers = safeGetArrayFromObject$1(event_handlers_, event);
 
     if (typeof handler !== 'function') {
-      return util.justWarning("event " + event + "'s handler is not a function!");
+      return justWarning$3("event " + event + "'s handler is not a function!");
     }
 
+    var handlerKey = makeHandlerKey$1(ccUniqueKey, event, identity);
+    var handlerKeys = safeGetArrayFromObject$1(ccUKey_handlerKeys_, ccUniqueKey);
     var targetHandlerIndex = handlers.findIndex(function (v) {
-      return v.ccUniqueKey === ccUniqueKey && v.identity === identity;
-    });
-    var handlerKeys = util.safeGetArrayFromObject(ccUKey_handlerKeys_, ccUniqueKey);
-    var handlerKey = util.makeHandlerKey(ccUniqueKey, event, identity); //  that means the component of ccUniqueKey mounted again 
-    //  or user call $$on for a same event in a same instance more than once
+      return v.handlerKey === handlerKey;
+    }); // user call ctx.on for a same event in a same instance more than once
 
     var handlerItem = {
       event: event,
@@ -2542,7 +2549,7 @@
     };
 
     if (targetHandlerIndex > -1) {
-      //  cc will alway use the latest handler
+      // will alway use the latest handler
       handlers[targetHandlerIndex] = handlerItem;
     } else {
       handlers.push(handlerItem);
@@ -2556,10 +2563,11 @@
       args[_key - 1] = arguments[_key];
     }
 
-    var _event = '',
+    var _event,
         _identity = null,
-        _module = null,
-        _ccClassKey = null;
+        _module,
+        _ccClassKey,
+        _ccUniqueKey;
 
     if (typeof event === 'string') {
       _event = event;
@@ -2568,9 +2576,10 @@
       _identity = event.identity;
       _module = event.module;
       _ccClassKey = event.ccClassKey;
+      _ccUniqueKey = event.ccUniqueKey;
     }
 
-    var handlers = _findEventHandlers(_event, _module, _ccClassKey, _identity);
+    var handlers = _findEventHandlers(_event, _module, _ccClassKey, _ccUniqueKey, _identity);
 
     handlers.forEach(function (_ref) {
       var ccUniqueKey = _ref.ccUniqueKey,
@@ -2586,9 +2595,10 @@
   function findEventHandlersToOff(event, _ref2) {
     var module = _ref2.module,
         ccClassKey = _ref2.ccClassKey,
+        ccUniqueKey = _ref2.ccUniqueKey,
         identity = _ref2.identity;
 
-    var handlers = _findEventHandlers(event, module, ccClassKey, identity);
+    var handlers = _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity);
 
     _deleteEventHandlers(handlers);
   }
@@ -2604,28 +2614,19 @@
       _deleteEventHandlers(toDeleteHandlers);
     }
   }
-  function getEventItem(event, curStateModule, ccClassKey) {
-    //不检查array了... 要求用户需正确传递参数
+  function getEventItem(event) {
     if (typeof event === 'object') {
-      var _event, _ctx;
+      var _event;
 
       if (Array.isArray(event)) {
         var name = event[0],
-            identity = event[1],
-            ctx = event[2];
+            identity = event[1];
         _event = {
           name: name,
           identity: identity
         };
-        _ctx = ctx;
       } else {
         _event = Object.assign({}, event);
-        _ctx = event.ctx;
-      }
-
-      if (_ctx === true) {
-        _event.module = curStateModule;
-        _event.ccClassKey = ccClassKey;
       } //否则就允许用户传如自己定义的module, ccClassKey
 
 
@@ -3280,36 +3281,44 @@
     if (liteLevel > 3) {
       // level 4, assign event api
       ctx.emit = function (event) {
-        var _event = getEventItem(event, stateModule, ccClassKey);
-
         for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
           args[_key - 1] = arguments[_key];
         }
 
-        findEventHandlersToPerform.apply(ev, [_event].concat(args));
-      };
+        findEventHandlersToPerform.apply(ev, [getEventItem(event)].concat(args));
+      }; // 默认off掉当前实例对某个事件名的所有监听
+
 
       ctx.off = function (event, _temp) {
         var _ref = _temp === void 0 ? {} : _temp,
             module = _ref.module,
             ccClassKey = _ref.ccClassKey,
-            identity = _ref.identity;
+            _ref$ccUniqueKey = _ref.ccUniqueKey,
+            inputCcUkey = _ref$ccUniqueKey === void 0 ? ccUniqueKey : _ref$ccUniqueKey;
 
-        findEventHandlersToOff(event, {
+        //这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
+        var _ev$getEventItem = getEventItem(event),
+            name = _ev$getEventItem.name,
+            identity = _ev$getEventItem.identity;
+
+        findEventHandlersToOff(name, {
           module: module,
           ccClassKey: ccClassKey,
+          ccUniqueKey: inputCcUkey,
           identity: identity
         });
       };
 
-      var on = function on(event, handler, identity, delayToDidMount) {
-        if (identity === void 0) {
-          identity = null;
-        }
-
+      var on = function on(inputEvent, handler, delayToDidMount) {
         if (delayToDidMount === void 0) {
           delayToDidMount = true;
         }
+
+        //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
+        var _ev$getEventItem2 = getEventItem(inputEvent),
+            event = _ev$getEventItem2.name,
+            _ev$getEventItem2$ide = _ev$getEventItem2.identity,
+            identity = _ev$getEventItem2$ide === void 0 ? null : _ev$getEventItem2$ide;
 
         if (delayToDidMount) {
           //cache to onEvents firstly, cc will bind them in didMount life cycle
@@ -3328,12 +3337,8 @@
       // but if user want on been effective immediately, user can call onDirectly
       // or on(ev, fn, idt, false)
 
-      ctx.onDirectly = function (event, handler, identity) {
-        if (identity === void 0) {
-          identity = null;
-        }
-
-        on(event, handler, identity, false);
+      ctx.onDirectly = function (event, handler) {
+        on(event, handler, false);
       };
     }
 
@@ -3465,7 +3470,7 @@
 
   var safeGetObjectFromObject$1 = safeGetObjectFromObject,
       okeys$4 = okeys,
-      justWarning$3 = justWarning;
+      justWarning$4 = justWarning;
   var _reducerModule_fnNames_ = ccContext.reducer._reducerModule_fnNames_;
   function beforeMount (ref, setup, bindCtxToMethod) {
     ref.__$$isUnmounted = false;
@@ -3479,7 +3484,7 @@
     var connectedModules = okeys$4(connect);
     var allModules = connectedModules.slice();
     if (!allModules.includes(module)) allModules.push(module);else {
-      justWarning$3("module[" + module + "] are in belongTo and connect both, it will cause redundant render.");
+      justWarning$4("module[" + module + "] are in belongTo and connect both, it will cause redundant render.");
     } //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
     //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
 
@@ -3488,12 +3493,12 @@
       var refLazyReducerFnObj = safeGetObjectFromObject$1(lazyReducer, m);
       var fnNames = _reducerModule_fnNames_[m] || [];
       fnNames.forEach(function (fnName) {
-        refReducerFnObj[fnName] = function (payload, delay, idt) {
-          return dispatch(m + "/" + fnName, payload, delay, idt);
+        refReducerFnObj[fnName] = function (payload, delay, rkey) {
+          return dispatch(m + "/" + fnName, payload, delay, rkey);
         };
 
-        refLazyReducerFnObj[fnName] = function (payload, delay, idt) {
-          return lazyDispatch(m + "/" + fnName, payload, delay, idt);
+        refLazyReducerFnObj[fnName] = function (payload, delay, rkey) {
+          return lazyDispatch(m + "/" + fnName, payload, delay, rkey);
         };
       });
     }); //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后，分析computedSpec之前

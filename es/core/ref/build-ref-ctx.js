@@ -213,13 +213,17 @@ export default function (ref, params, liteLevel = 5) {
 
   if (liteLevel > 3) {// level 4, assign event api
     ctx.emit = (event, ...args) => {
-      const _event = ev.getEventItem(event, stateModule, ccClassKey);
-      ev.findEventHandlersToPerform(_event, ...args);
+      ev.findEventHandlersToPerform(ev.getEventItem(event), ...args);
     };
-    ctx.off = (event, { module, ccClassKey, identity } = {}) => {
-      ev.findEventHandlersToOff(event, { module, ccClassKey, identity });
+    // 默认off掉当前实例对某个事件名的所有监听
+    ctx.off = (event, { module, ccClassKey, ccUniqueKey: inputCcUkey = ccUniqueKey } = {}) => {
+      //这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
+      const { name, identity } = ev.getEventItem(event);
+      ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
     }
-    const on = (event, handler, identity = null, delayToDidMount = true) => {
+    const on = (inputEvent, handler, delayToDidMount = true) => {
+      //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
+      const { name: event, identity = null } = ev.getEventItem(inputEvent);
       if (delayToDidMount) {
         //cache to onEvents firstly, cc will bind them in didMount life cycle
         onEvents.push({ event, handler, identity });
@@ -231,8 +235,8 @@ export default function (ref, params, liteLevel = 5) {
     // on handler been effective in didMount by default, so user can call it in setup safely
     // but if user want on been effective immediately, user can call onDirectly
     // or on(ev, fn, idt, false)
-    ctx.onDirectly = (event, handler, identity = null) => {
-      on(event, handler, identity, false);
+    ctx.onDirectly = (event, handler) => {
+      on(event, handler, false);
     }
   }
 
