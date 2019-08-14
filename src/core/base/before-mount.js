@@ -27,8 +27,8 @@ export default function (ref, setup, bindCtxToMethod) {
     const refLazyReducerFnObj = safeGetObjectFromObject(lazyReducer, m);
     const fnNames = _reducerModule_fnNames_[m] || [];
     fnNames.forEach(fnName => {
-      refReducerFnObj[fnName] = (payload, delay, idt) => dispatch(`${m}/${fnName}`, payload, delay, idt);
-      refLazyReducerFnObj[fnName] = (payload, delay, idt) => lazyDispatch(`${m}/${fnName}`, payload, delay, idt);
+      refReducerFnObj[fnName] = (payload, delay, rkey) => dispatch(`${m}/${fnName}`, payload, delay, rkey);
+      refLazyReducerFnObj[fnName] = (payload, delay, rkey) => lazyDispatch(`${m}/${fnName}`, payload, delay, rkey);
     });
   });
 
