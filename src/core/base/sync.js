@@ -44,10 +44,10 @@ export default function (spec, ref, e) {
     return changeRefState(state, { calledBy: SYNC, ccKey, ccUniqueKey: ccUniqueKey, module: targetModule, renderKey: ccrkey, delay: ccdelay }, ref);
   } else {//调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
     if (extraState) {
-      return ref.setState(extraState, null, ccdelay, ccrkey);
+      return ref.setState(extraState, null, ccrkey, ccdelay);
     }
 
     const { state } = extractStateByCcsync(ccsync, value, ccint, ref.state, mockE.isToggleBool);
-    return ref.setState(state, null, ccdelay, ccrkey);
+    return ref.setState(state, null, ccrkey, ccdelay);
   }
 };
