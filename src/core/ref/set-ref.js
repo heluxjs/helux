@@ -5,11 +5,10 @@ import util from '../../support/util'
 const { makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
 const ccUKey_insCount = {};
 
-function setCcInstanceRef(ccUniqueKey, ref, ccKeys, option, delayMs) {
+function setCcInstanceRef(ccUniqueKey, ref, ccKeys, delayMs) {
   function setRef() {
     ccContext.ccUkey_ref_[ccUniqueKey] = ref;
     ccKeys.push(ccUniqueKey);
-    ccContext.ccUkey_option_[ccUniqueKey] = option;
   }
   incCcKeyInsCount(ccUniqueKey);
   if (delayMs) {
@@ -33,14 +32,11 @@ export function getCcKeyInsCount(ccUniqueKey) {
 }
 
 
-export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption) {
+export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
   const classContext = ccContext.ccClassKey_ccClassContext_[ccClassKey];
   const ccKeys = classContext.ccKeys;
   if (ccContext.isDebug) {
     console.log(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
-  }
-  if (!util.isCcOptionValid(ccOption)) {
-    throw me(ERR.CC_CLASS_INSTANCE_OPTION_INVALID, vbi(`a standard default ccOption may like: {"storedKeys": []}`));
   }
 
   const isHot = ccContext.isHotReloadMode();
@@ -62,12 +58,12 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey, ccOption
       // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now, in unmount func, 
       // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
       // so cc set ref later
-      setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption, 600);
+      setCcInstanceRef(ccUniqueKey, ref, ccKeys, 600);
     } else {
       throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:[${ccClassKey}],ccKey:[${ccUniqueKey}]`));
     }
   } else {
-    setCcInstanceRef(ccUniqueKey, ref, ccKeys, ccOption);
+    setCcInstanceRef(ccUniqueKey, ref, ccKeys);
   }
 
   return classContext;

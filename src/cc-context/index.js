@@ -208,7 +208,7 @@ const ccContext = {
   // it is a ref that towards ccUniqueKeyEvent_handler_'s key
   // when component unmounted, it's handler will been removed
   handlerKey_handler_: {},
-  ccUkey_option_: {},
+  renderKey_ccUkeys_: {},
   refs,
   info: {
     startupTime: Date.now(),

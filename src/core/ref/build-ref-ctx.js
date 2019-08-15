@@ -20,9 +20,10 @@ const {
   store: { getState },
   moduleName_ccClassKeys_,
   computed: { _computedValue },
+  renderKey_ccUkeys_,
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -59,7 +60,12 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
-  if (!ccOption.renderKey) ccOption.renderKey = ccUniqueKey;
+
+  // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
+  const renderKey = ccOption.renderKey;
+  if (!renderKey) renderKey = ccOption.renderKey = ccUniqueKey;
+  const ccUkeys = safeGetArrayFromObject(renderKey_ccUkeys_, renderKey);
+  ccUkeys.push(ccUniqueKey);
 
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
   const connectedComputed = classCtx.connectedComputed || {};
@@ -79,7 +85,7 @@ export default function (ref, params, liteLevel = 5) {
   ref.state = mergedState;
 
   // record ref
-  setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey, {});
+  setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
 
   // record ccClassKey
   const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, module);
