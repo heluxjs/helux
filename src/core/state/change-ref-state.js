@@ -76,7 +76,7 @@ export default function (state, {
   } else {
     if (reactCallback) justWarning(`callback for react.setState will be ignore`);
     //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
-    triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, renderKey, delay, reactCallback);
+    triggerBroadcastState(RENDER_NO_OP, targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, renderKey, delay, reactCallback);
   }
 }
 
@@ -193,6 +193,7 @@ function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, modu
       const refs = ccUkeys.map(ukey => ccUkey_ref_[ukey]);
       refs.forEach(ref => {
         if(ref.ctx.module === moduleName){
+          //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，renderKey优先级高于watchedKeys
           triggerReactSetState(ref, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
         }else{
           // consider this is a redundant render behavior .....

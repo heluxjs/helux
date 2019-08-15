@@ -62,7 +62,7 @@ export default function (ref, params, liteLevel = 5) {
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
 
   // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
-  const renderKey = ccOption.renderKey;
+  let renderKey = ccOption.renderKey;
   if (!renderKey) renderKey = ccOption.renderKey = ccUniqueKey;
   const ccUkeys = safeGetArrayFromObject(renderKey_ccUkeys_, renderKey);
   ccUkeys.push(ccUniqueKey);
