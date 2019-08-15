@@ -32,7 +32,7 @@ function getActionType(calledBy, type) {
 
 export default function (state, {
   ccKey, ccUniqueKey, module, skipMiddleware = false,
-  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, delay = -1, renderKey } = {}, targetRef
+  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, renderKey, delay = -1 } = {}, targetRef
 ) {
   const stateFor = getStateFor(module, targetRef.ctx.module);
 

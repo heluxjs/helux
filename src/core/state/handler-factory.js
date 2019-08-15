@@ -159,7 +159,7 @@ export function makeCcForceUpdateHandler(ref) {
 
 // last param: chainData
 export function  makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, isLazy, chainId_depth_ = {} } = {}) {
-  return (firstParam, payload, delay, renderKey) => {
+  return (firstParam, payload, renderKey, delay) => {
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
     const firstParamType = typeof firstParam;
@@ -210,11 +210,11 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
       const dispatch = makeDispatchHandler(
         targetRef, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
-        -1, renderKey, chainId, oriChainId, chainId_depth_
+        renderKey, -1, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
         targetRef, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
-        -1, renderKey, chainId, oriChainId, chainId_depth_
+        renderKey, -1, chainId, oriChainId, chainId_depth_
       );
 
       const sourceClassContext = ccClassKey_ccClassContext_[ccClassKey];
@@ -316,10 +316,10 @@ export function dispatch({
 
 export function makeDispatchHandler(
   targetRef, isLazy, ccKey, ccUniqueKey, ccClassKey, defaultModule, defaultReducerModule,
-  delay = -1, defaultRenderKey = '', chainId, oriChainId, chainId_depth_ = {}
+  defaultRenderKey = '', delay = -1, chainId, oriChainId, chainId_depth_ = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
-  return (paramObj = {}, payloadWhenFirstParamIsString, userInputDelay, userInputRKey) => {
+  return (paramObj = {}, payloadWhenFirstParamIsString, userInputRKey, userInputDelay) => {
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
     const paramObjType = typeof paramObj;
@@ -327,7 +327,7 @@ export function makeDispatchHandler(
     let _renderKey = defaultRenderKey;
     if (paramObjType === 'object') {
       const { 
-        module = defaultModule, reducerModule, type, payload, cb, delay = -1, renderKey
+        module = defaultModule, reducerModule, type, payload, cb, renderKey, delay = -1
       } = paramObj;
       _module = module;
       _reducerModule = reducerModule || module;

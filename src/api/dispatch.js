@@ -1,5 +1,5 @@
 import dispatch from '../core/base/dispatch';
 
-export default function (action, payLoadWhenActionIsString, delay, renderKey, option) {
-  return dispatch(false, action, payLoadWhenActionIsString, delay, renderKey, option);
+export default function (action, payLoadWhenActionIsString, renderKey, delay, option) {
+  return dispatch(false, action, payLoadWhenActionIsString, renderKey, delay, option);
 }

@@ -86,15 +86,15 @@ export default function (ref, params, liteLevel = 5) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
-  const _setState = (module, state, calledBy, reactCallback, delay, renderKey) => {
+  const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
     changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, delay, renderKey, reactCallback
+      calledBy, ccKey, ccUniqueKey, module, renderKey, delay, reactCallback
     }, ref);
   };
-  const setModuleState = (module, state, reactCallback, delay, renderKey) => {
-    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, renderKey);
+  const setModuleState = (module, state, reactCallback, renderKey, delay) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
   };
-  // const setState = (state, reactCallback, delay, renderKey) => {
+  // const setState = (state, reactCallback, renderKey, delay) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
       //p1 module, p2 state, p3 cb, p4 delay, p5 idt
@@ -104,8 +104,8 @@ export default function (ref, params, liteLevel = 5) {
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
-  const forceUpdate = (reactCallback, delay, renderKey) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, renderKey);
+  const forceUpdate = (reactCallback, renderKey, delay) => {
+    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
   };
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
@@ -185,8 +185,8 @@ export default function (ref, params, liteLevel = 5) {
     ctx.invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
     ctx.lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
 
-    ctx.setGlobalState = (state, reactCallback, delay, renderKey) => {
-      _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, renderKey);
+    ctx.setGlobalState = (state, reactCallback, renderKey, delay) => {
+      _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
     };
   }
 
