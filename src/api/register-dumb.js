@@ -25,9 +25,9 @@ function _registerDumb(
 
   const render = (ctx) => {
     if (mapProps) {
-      const generatedProps = mapProps(ctx);
+      ctx.mapped = mapProps(ctx);
       // if (generatedProps.ctx === undefined) generatedProps.ctx = ctx;
-      return React.createElement(Dumb, generatedProps);
+      return React.createElement(Dumb, ctx.mapped);
     } else {
       return React.createElement(Dumb, ctx);
     }

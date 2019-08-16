@@ -21,14 +21,18 @@ function incCursor() {
   refCursor = refCursor + 1;
 }
 
-const makeSetState = (ccHookState, hookSetState) => partialState => {
+const makeSetState = (ccHookState, hookSetState) => (partialState, cb) => {
   ccHookState.state = Object.assign({}, ccHookState.state, partialState);
   const newHookState = Object.assign({}, ccHookState);
   hookSetState(newHookState);
+
+  // 和class setState(partialState, cb); 保持一致
+  if (cb) cb(newHookState);
 }
-const makeForceUpdate = (ccHookState, hookSetState) => () => {
+const makeForceUpdate = (ccHookState, hookSetState) => cb => {
   const newHookState = Object.assign({}, ccHookState);
   hookSetState(newHookState);
+  if (cb) cb(newHookState);
 }
 
 function CcHook(ccHookState, hookSetState, props) {

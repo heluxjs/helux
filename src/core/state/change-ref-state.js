@@ -15,45 +15,33 @@ const {
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
 const {
-  store: { setState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_, 
+  store: { setState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_,
   connectedModuleName_ccClassKeys_, refStore, moduleName_stateKeys_, ccUkey_ref_, renderKey_ccUkeys_,
 } = ccContext;
 
-function getStateFor(inputModule, refModule) {
-  return inputModule === refModule ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY : STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE;
+//触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE
+function getStateFor(targetModule, refModule) {
+  return targetModule === refModule ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY : STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE;
 }
 
 function getActionType(calledBy, type) {
   if ([FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC].includes(calledBy)) {
     return `ccApi/${calledBy}`;
-  }else{
+  } else {
     return `dispatch/${type}`;
-  }
-}
-
-//hook的setter本来是没有回调的，官方是推荐用useEffect代替，concent放在这里执行，以达到hook 和 class 的setState达到一样的效果
-function triggerHookCb(reactCallback, targetRef) {
-  if (reactCallback && targetRef.ctx.type === cst.CC_HOOK_PREFIX) {
-    reactCallback(targetRef.state);
   }
 }
 
 export default function (state, {
   ccKey, ccUniqueKey, module, skipMiddleware = false,
-  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, renderKey, delay = -1 } = {}, targetRef
+  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, renderKey = '', delay = -1 } = {}, targetRef
 ) {
-  const stateFor = getStateFor(module, targetRef.ctx.module);
-
-  if (state === undefined) return;//do nothing
-  // const isControlledByConcent = targetRef.ctx.isControlledByConcent;
-
   if (!isPlainJsonObject(state)) {
-    justWarning(`cc found your commit state is not a plain json object!`);
+    justWarning(`your committed state is not a plain json object!`);
     return;
   }
-
-  const currentModule = targetRef.ctx.module;
-
+  
+  const stateFor = getStateFor(module, targetRef.ctx.module);
   let passToMiddleware = {};
   if (skipMiddleware !== true) {
     passToMiddleware = { calledBy, type, ccKey, ccUniqueKey, state, stateFor, module, reducerModule, fnName };
@@ -65,19 +53,12 @@ export default function (state, {
 
   send(SIG_STATE_CHANGED, {
     committedState: state, sharedState: broadcastInfo.partialSharedState,
-    module, type: getActionType(calledBy, type), ccUniqueKey
+    module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
   });
 
-  if (module === currentModule) {
-    // who trigger changeRefState, who will receive the whole committed state 
-    const renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
-
-    triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, renderKey, delay,  reactCallback);
-  } else {
-    if (reactCallback) justWarning(`callback for react.setState will be ignore`);
-    //触发修改状态的实例所属模块和目标模块不一致的时候，这里的stateFor必须是OF_ONE_MODULE
-    triggerBroadcastState(RENDER_NO_OP, targetRef, skipMiddleware, passToMiddleware, broadcastInfo, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE, module, renderKey, delay, reactCallback);
-  }
+  // source ref will receive the whole committed state 
+  const renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
+  triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor, module, renderKey, delay);
 }
 
 function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback) {
@@ -116,7 +97,6 @@ function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, r
 
   computeValueForRef(refCtx, stateModule, thisState, state);
   const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, thisState, state);
-
   refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
   return renderType;
 }
@@ -134,11 +114,11 @@ function syncCommittedStateToStore(moduleName, committedState) {
 }
 
 function triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, broadcastInfo, stateFor,
-  moduleName, renderKey, delay, reactCallback
+  moduleName, renderKey, delay
 ) {
   const { isSharedStateNull, partialSharedState } = broadcastInfo;
   const startBroadcastState = () => {
-    broadcastState(renderType, targetRef, isSharedStateNull, stateFor, moduleName, partialSharedState, renderKey, reactCallback);
+    broadcastState(renderType, targetRef, isSharedStateNull, stateFor, moduleName, partialSharedState, renderKey);
   };
 
   const willBroadcast = () => {
@@ -174,15 +154,10 @@ function triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMidd
   }
 }
 
-function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, moduleName, partialSharedState, renderKey, reactCallback) {
+function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, moduleName, partialSharedState, renderKey) {
   if (isSharedStateNull) {
     return;
   }
-
-  // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
-  // so flag ignoreCurrentCcKey as true;
-  const ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
-  const { ccUniqueKey: currentCcKey } = targetRef.ctx;
 
   if (renderKey) {
     //如果是基于renderKey触发的渲染，且传入的renderKey是ccUniqueKey, 组件刚刚被触发过渲染
@@ -192,16 +167,21 @@ function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, modu
       const ccUkeys = renderKey_ccUkeys_[renderKey];
       const refs = ccUkeys.map(ukey => ccUkey_ref_[ukey]);
       refs.forEach(ref => {
-        if(ref.ctx.module === moduleName){
-          //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，renderKey优先级高于watchedKeys
+        if (ref.ctx.module === moduleName) {
+          //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
           triggerReactSetState(ref, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
-        }else{
+        } else {
           // consider this is a redundant render behavior .....
-          ref.__$$ccForceUpdate(reactCallback);
+          ref.__$$ccForceUpdate();
         }
       });
     }
   } else {
+    // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
+    // so flag ignoreCurrentCcKey as true;
+    const ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
+    const { ccUniqueKey: currentCcKey } = targetRef.ctx;
+
     // these ccClass are watching the same module's state
     const ccClassKeys = moduleName_ccClassKeys_[moduleName];
     if (ccClassKeys) {
@@ -222,7 +202,7 @@ function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, modu
           if (isStateEmpty) continue;
           sharedStateForCurrentCcClass = partialState;
         }
-        
+
         ccKeys.forEach(ccKey => {
           if (ccKey === currentCcKey && ignoreCurrentCcKey) return;
           const ref = ccUkey_ref_[ccKey];
@@ -232,12 +212,10 @@ function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, modu
           }
         });
       }
-
     }
   }
-  
+
   broadcastConnectedState(moduleName, partialSharedState);
-  triggerHookCb(reactCallback, targetRef);
 }
 
 function broadcastConnectedState(commitModule, sharedState) {

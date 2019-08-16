@@ -142,6 +142,8 @@ export default function (ref, params, liteLevel = 5) {
     ccOption,
 
     props: getOutProps(ref.props),
+    mapped:{},
+
     prevState: mergedState,
     // state
     state: mergedState,
@@ -156,7 +158,7 @@ export default function (ref, params, liteLevel = 5) {
     globalComputed,
     connectedComputed,
 
-    //collect CcHook mapProps result
+    //collect mapProps result
     mapped: {},
 
     // api meta data

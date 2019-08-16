@@ -136,7 +136,7 @@ export function makeCcSetStateHandler(ref, containerRef) {
     refCtx.state = newFullState;
     if (containerRef) containerRef.state = newFullState;
     
-    // 除了Hook实例，这里都不直接赋值，交给reactSetState去更新ref.state
+    // 只有Hook实例，才能直接更新ref.state
     if (refCtx.type === CC_HOOK_PREFIX) {
       ref.state = newFullState;
     }

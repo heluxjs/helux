@@ -81,7 +81,8 @@ export default class CcFragment extends React.Component {
       const { __$$regDumb, mapProps } = this.props;
       const ctx = this.ctx;
       if (__$$regDumb !== true && mapProps) {//直接使用<CcFragment />实例化
-        return view(mapProps(ctx)) || nullSpan;
+        ctx.mapped = mapProps(ctx);
+        return view(ctx.mapped) || nullSpan;
       } else {
         return view(ctx) || nullSpan;
       }
