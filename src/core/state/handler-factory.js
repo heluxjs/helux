@@ -273,10 +273,12 @@ export function invokeWith(userLogicFn, executionContext, payload){
       }
 
       commitStateList.forEach(v => {
-        changeRefState(v.state, {
-          renderKey, ccKey, ccUniqueKey, module: v.module, cb: newCb, type,
-          reducerModule, calledBy, fnName, delay
-        }, targetRef);
+        if (v.state) {
+          changeRefState(v.state, {
+            renderKey, ccKey, ccUniqueKey, module: v.module, cb: newCb, type,
+            reducerModule, calledBy, fnName, delay
+          }, targetRef);
+        }
       });
 
       if (__innerCb) __innerCb(null, partialState);

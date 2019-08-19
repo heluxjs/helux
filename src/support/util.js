@@ -2,6 +2,8 @@
 import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC } from './constant';
 import ccContext from '../cc-context';
 
+
+
 export function bindThis(_this, methods) {
   methods.forEach(method => _this[method] = _this[method].bind(_this));
 }
@@ -24,7 +26,10 @@ export function isObjectNull(object) {
   return !isObjectNotNull(object);
 }
 
+// const _toString = Object.prototype.toString;
+//_toString.call(obj) === '[object Object]'; //judge plain json object
 export function isPlainJsonObject(obj, canBeArray = false) {
+  if (obj === null) return false;
   if (typeof obj === 'object') {
     if (Array.isArray(obj)) {
       if (canBeArray) return true;

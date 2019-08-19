@@ -278,4 +278,3 @@ export default function (ref, params, liteLevel = 5) {
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
 }
-
