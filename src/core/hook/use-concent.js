@@ -64,13 +64,13 @@ export default function useConcent(registerOption){
   let hookRef;
   if (isFirstRendered) {
     const {
-      ccClassKey, module, reducerModule, watchedKeys = '*', storedKeys = [],
+      ccClassKey, renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys = [],
       persistStoredKeys, connect = {}, setup, bindCtxToMethod, lite
     } = _registerOption;
 
     incCursor();
     const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
+      module, ccClassKey, renderKeyClasses, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
     );
     hookRef = new CcHook(ccHookState, hookSetState, props);
 

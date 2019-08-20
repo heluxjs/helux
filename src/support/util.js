@@ -73,10 +73,11 @@ export function makeError(code, extraMessage) {
 }
 
 /** make ccClassContext */
-export function makeCcClassContext(module, ccClassKey, watchedKeys, originalWatchedKeys) {
+export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys) {
   return {
     module,
     ccClassKey,
+    renderKeyClasses,
     originalWatchedKeys,
     watchedKeys,
     ccKeys: [],

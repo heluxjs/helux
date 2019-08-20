@@ -40,7 +40,7 @@ export default function (state, {
     justWarning(`your committed state is not a plain json object!`);
     return;
   }
-  
+
   const stateFor = getStateFor(module, targetRef.ctx.module);
   let passToMiddleware = {};
   if (skipMiddleware !== true) {
@@ -154,33 +154,49 @@ function triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMidd
   }
 }
 
+function updateRefs(ccUkeys, moduleName, partialSharedState) {
+  ccUkeys.forEach(ukey => {
+    const ref = ccUkey_ref_[ukey];
+    if (ref.ctx.module === moduleName) {
+      //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
+      triggerReactSetState(ref, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+    } else {
+      // consider this is a redundant render behavior .....
+      // ref.__$$ccForceUpdate();
+    }
+  });
+}
+
 function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, moduleName, partialSharedState, renderKey) {
   if (isSharedStateNull) {
     return;
   }
 
+  const targetUkey = targetRef.ctx.ccUniqueKey;
+  const targetClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+  const renderKeyClasses = targetClassContext.renderKeyClasses;
+
   if (renderKey) {
-    //如果是基于renderKey触发的渲染，且传入的renderKey是ccUniqueKey, 组件刚刚被触发过渲染
-    if (renderType === RENDER_BY_KEY && ccUkey_ref_[renderKey]) {
-      //do nothing
-    } else if (renderType === RENDER_NO_OP) {
-      const ccUkeys = renderKey_ccUkeys_[renderKey];
-      const refs = ccUkeys.map(ukey => ccUkey_ref_[ukey]);
-      refs.forEach(ref => {
-        if (ref.ctx.module === moduleName) {
-          //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
-          triggerReactSetState(ref, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
-        } else {
-          // consider this is a redundant render behavior .....
-          ref.__$$ccForceUpdate();
-        }
-      });
+    // 如果renderKey是ukey（此时renderType是RENDER_BY_KEY）, 则不会进入updateRefs逻辑
+    if (
+      (renderType === RENDER_BY_KEY && !ccUkey_ref_[renderKey]) ||
+      renderType === RENDER_NO_OP
+    ) {
+
+      // targetRef刚刚已被触发过渲染，这里排除掉targetUkey
+      const ccUkeys = renderKey_ccUkeys_[renderKey].slice();
+      const ukeyIndex = ccUkeys.indexOf(targetUkey);
+      if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
+
+      updateRefs(ccUkeys, moduleName, partialSharedState);
     }
-  } else {
+  }
+
+  if (renderKeyClasses !== '*') {
     // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
-    // so flag ignoreCurrentCcKey as true;
-    const ignoreCurrentCcKey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
-    const { ccUniqueKey: currentCcKey } = targetRef.ctx;
+    // so flag ignoreCurrentCcUkey as true;
+    const ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
+    const { ccUniqueKey: currentCcUkey } = targetRef.ctx;
 
     // these ccClass are watching the same module's state
     const ccClassKeys = moduleName_ccClassKeys_[moduleName];
@@ -188,6 +204,8 @@ function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, modu
       const keysLen = ccClassKeys.length;
       for (let i = 0; i < keysLen; i++) {
         const ccClassKey = ccClassKeys[i];
+        // ccClassKey在renderKeyClasses范围内，交给renderKey匹配规则去触发渲染了，这里直接跳出
+        if (renderKeyClasses.includes(ccClassKey)) continue;
 
         const classContext = ccClassKey_ccClassContext_[ccClassKey];
         const { ccKeys, watchedKeys, originalWatchedKeys } = classContext;
@@ -204,10 +222,10 @@ function broadcastState(renderType, targetRef, isSharedStateNull, stateFor, modu
         }
 
         ccKeys.forEach(ccKey => {
-          if (ccKey === currentCcKey && ignoreCurrentCcKey) return;
+          if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
           const ref = ccUkey_ref_[ccKey];
           if (ref) {
-            // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这里也不会发送信号给插件
+            // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
             triggerReactSetState(ref, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
           }
         });

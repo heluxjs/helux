@@ -49,13 +49,13 @@ export default function (registerOption, ccClassKey) {
   if (!_registerOption) _registerOption = { module: MODULE_DEFAULT };
 
   const {
-    isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule,
+    renderKeyClasses, isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule,
     watchedKeys = '*', storedKeys, persistStoredKeys, render: Dumb,
     connect = {}, state = {}, setup, bindCtxToMethod, compareProps,
   } = _registerOption;
 
   const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-    module, ccClassKey, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
+    module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
   );
 
   function buildCcFragComp(Dumb) {
