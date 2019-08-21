@@ -252,14 +252,6 @@ export function safeAssignObjectValue(assignTo, assignFrom) {
   });
 }
 
-export function isStateValid(state) {
-  if (!state || !isPlainJsonObject(state)) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
 export function computeFeature(ccUniqueKey, state) {
   const stateKeys = Object.keys(state);
   const stateKeysStr = stateKeys.sort().join('|');
@@ -366,7 +358,6 @@ export default {
   isPlainJsonObject,
   isObjectNotNull,
   isValueNotNull,
-  isStateValid,
   disassembleActionType,
   verboseInfo,
   bindThis,

@@ -106,10 +106,10 @@ function __promisifiedInvokeWith(userLogicFn, executionContext, payload){
 }
 
 function __invoke(userLogicFn, option, payload){
-  const { targetRef, ccKey, ccUniqueKey, ccClassKey, delay, renderKey, calledBy, module, chainId, oriChainId, chainId_depth_ } = option;
+  const { targetRef, delay, renderKey, calledBy, module, chainId, oriChainId, chainId_depth_ } = option;
   return __promisifiedInvokeWith(userLogicFn, {
-    targetRef, ccKey, ccUniqueKey, context: true, module, ccClassKey,
-    calledBy, fnName: userLogicFn.name, delay, renderKey, chainId, oriChainId, chainId_depth_,
+    targetRef, context: true, module, calledBy, fnName: userLogicFn.name, 
+    delay, renderKey, chainId, oriChainId, chainId_depth_,
   }, payload);
 }
 
@@ -158,13 +158,13 @@ export function makeCcForceUpdateHandler(ref) {
 }
 
 // last param: chainData
-export function makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, isLazy, chainId_depth_ = {} } = {}) {
+export function makeInvokeHandler(targetRef, { chainId, oriChainId, isLazy, chainId_depth_ = {} } = {}) {
   return (firstParam, payload, renderKey, delay) => {
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
     const firstParamType = typeof firstParam;
     const option = {
-      targetRef, ccKey, ccUniqueKey, ccClassKey, calledBy: INVOKE, module: targetRef.ctx.module,
+      targetRef, calledBy: INVOKE, module: targetRef.ctx.module,
       chainId: _chainId, oriChainId: _oriChainId, chainId_depth_, delay, renderKey,
     };
 
@@ -194,11 +194,10 @@ export function makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { c
 }
 
 export function invokeWith(userLogicFn, executionContext, payload){
-  //ccKey ccClassKey 表示调用源头组件的ccKey和ccClassKey
   const targetRef = executionContext.targetRef;
   const _curStateModule = targetRef.ctx.module; 
   const {
-    ccKey, ccUniqueKey, ccClassKey, module: targetModule = _curStateModule, context = false,
+    module: targetModule = _curStateModule, context = false,
     cb, __innerCb, type, reducerModule, calledBy, fnName, delay = -1, renderKey,
     chainId, oriChainId, chainId_depth_
     // sourceModule
@@ -215,11 +214,11 @@ export function invokeWith(userLogicFn, executionContext, payload){
       chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
       const dispatch = makeDispatchHandler(
-        targetRef, false, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
+        targetRef, false, targetModule, reducerModule,
         renderKey, -1, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
-        targetRef, true, ccKey, ccUniqueKey, ccClassKey, targetModule, reducerModule,
+        targetRef, true, targetModule, reducerModule,
         renderKey, -1, chainId, oriChainId, chainId_depth_
       );
 
@@ -228,10 +227,10 @@ export function invokeWith(userLogicFn, executionContext, payload){
       reducerContext = {
         targetModule,
 
-        invoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, chainId_depth_ }),
+        invoke: makeInvokeHandler(targetRef, { chainId, oriChainId, chainId_depth_ }),
 
         //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
-        lazyInvoke: makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { isLazy: true, oriChainId, chainId_depth_ }),
+        lazyInvoke: makeInvokeHandler(targetRef, { isLazy: true, oriChainId, chainId_depth_ }),
         dispatch, lazyDispatch,
 
         rootState: getState(),
@@ -281,7 +280,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
       commitStateList.forEach(v => {
         if (v.state) {
           changeRefState(v.state, {
-            renderKey, ccKey, ccUniqueKey, module: v.module, cb: newCb, type,
+            renderKey, module: v.module, cb: newCb, type,
             reducerModule, calledBy, fnName, delay
           }, targetRef);
         }
@@ -296,7 +295,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
 }
 
 export function dispatch({
-  targetRef, ccKey, ccUniqueKey, ccClassKey, module: inputModule, reducerModule: inputReducerModule, renderKey,
+  targetRef, module: inputModule, reducerModule: inputReducerModule, renderKey,
   type, payload, cb: reactCallback, __innerCb, delay = -1, chainId, oriChainId, chainId_depth_ } = {}
 ){
   const targetReducerMap = _reducer[inputReducerModule];
@@ -314,7 +313,7 @@ export function dispatch({
   isStateModuleValid(inputModule, targetRef.ctx.module, reactCallback, (err, newCb) => {
     if (err) return __innerCb(err);
     const executionContext = {
-      targetRef, ccKey, ccClassKey, ccUniqueKey, module: inputModule, reducerModule: inputReducerModule, type,
+      targetRef, module: inputModule, reducerModule: inputReducerModule, type,
       cb: newCb, context: true, __innerCb, calledBy: DISPATCH, delay, renderKey,
       chainId, oriChainId, chainId_depth_
     };
@@ -323,7 +322,7 @@ export function dispatch({
 }
 
 export function makeDispatchHandler(
-  targetRef, isLazy, ccKey, ccUniqueKey, ccClassKey, defaultModule, defaultReducerModule,
+  targetRef, isLazy, defaultModule, defaultReducerModule,
   defaultRenderKey = '', delay = -1, chainId, oriChainId, chainId_depth_ = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
@@ -394,7 +393,7 @@ export function makeDispatchHandler(
       dispatch({
         targetRef, module: _module, reducerModule: targetReducerModule, type: _type, payload: _payload,
         cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject),
-        ccKey, ccUniqueKey, ccClassKey, delay: _delay, renderKey: _renderKey,
+        delay: _delay, renderKey: _renderKey,
         chainId: _chainId, oriChainId: _oriChainId, chainId_depth_
         // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
       });

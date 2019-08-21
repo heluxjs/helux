@@ -116,10 +116,8 @@ export default function (ref, params, liteLevel = 5) {
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
   }
-  const dispatch = hf.makeDispatchHandler(ref, false, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
 
   const onEvents = [];
-
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
@@ -181,17 +179,23 @@ export default function (ref, params, liteLevel = 5) {
     setModuleState,
     forceUpdate,
     changeState,
-    dispatch,
 
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
-
   };
+  ref.ctx = ctx;
+  ref.setState = setState;
+  ref.forceUpdate = forceUpdate;
+
+  // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
+  const dispatch = hf.makeDispatchHandler(ref, false, stateModule, stateModule);
+  ctx.dispatch = dispatch;
+
 
   if (liteLevel > 1) {// level 2, assign these mod data api
-    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
-    ctx.invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
-    ctx.lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
+    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, stateModule, stateModule);
+    ctx.invoke = hf.makeInvokeHandler(ref);
+    ctx.lazyInvoke = hf.makeInvokeHandler(ref, { isLazy: true });
 
     ctx.setGlobalState = (state, reactCallback, renderKey, delay) => {
       _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
@@ -273,8 +277,4 @@ export default function (ref, params, liteLevel = 5) {
     ctx.computed = defineComputed;
     ctx.effect = defineEffect;
   }
-
-  ref.ctx = ctx;
-  ref.setState = setState;
-  ref.forceUpdate = forceUpdate;
 }
