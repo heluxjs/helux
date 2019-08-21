@@ -22,6 +22,10 @@ export const SIG_FN_ERR = 13;
 export const SIG_MODULE_CONFIGURED = 14;
 export const SIG_STATE_CHANGED = 15;
 
+export const RENDER_NO_OP = 1;
+export const RENDER_BY_KEY = 2;
+export const RENDER_BY_STATE = 3;
+
 export const STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;
 export const STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;
 
@@ -60,7 +64,6 @@ export const ERR = {
   CC_CLASS_KEY_FRAGMENT_NOT_ALLOWED:1104,
 
   CC_CLASS_INSTANCE_KEY_DUPLICATE: 1200,
-  CC_CLASS_INSTANCE_OPTION_INVALID: 1201,
   CC_CLASS_INSTANCE_NOT_FOUND: 1202,
   CC_CLASS_INSTANCE_METHOD_NOT_FOUND: 1203,
   CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID: 1204,
@@ -112,7 +115,6 @@ export const ERR_MESSAGE = {
   [ERR.CC_MODULE_NAME_HAS_NO_STATE]:`there is no module state in the store for your input module name`,
 
   [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `ccKey duplicate while new a CcComponent, try rename it or delete the ccKey prop, cc will generate one automatically for the CcComponent! if you are sure the key is different, maybe the CcComponent's father Component is also a CcComponent, then you can prefix your ccKey with the father Component's ccKey!   `,
-  [ERR.CC_CLASS_INSTANCE_OPTION_INVALID]: 'ccOption must be a plain json object! ',
   [ERR.CC_CLASS_INSTANCE_NOT_FOUND]: 'ccClass instance not found, it may has been unmounted or the ccKey is incorrect! ',
   [ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND]: 'ccClass instance method not found, make sure the instance include the method! ',
   [ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID]: 'ccClass instance invoke callWith method with invalid args! ',

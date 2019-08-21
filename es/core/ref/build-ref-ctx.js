@@ -20,9 +20,10 @@ const {
   store: { getState },
   moduleName_ccClassKeys_,
   computed: { _computedValue },
+  renderKey_ccUkeys_,
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -59,7 +60,12 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
-  if (!ccOption.renderKey) ccOption.renderKey = ccUniqueKey;
+
+  // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
+  let renderKey = ccOption.renderKey;
+  if (!renderKey) renderKey = ccOption.renderKey = ccUniqueKey;
+  const ccUkeys = safeGetArrayFromObject(renderKey_ccUkeys_, renderKey);
+  ccUkeys.push(ccUniqueKey);
 
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
   const connectedComputed = classCtx.connectedComputed || {};
@@ -79,22 +85,22 @@ export default function (ref, params, liteLevel = 5) {
   ref.state = mergedState;
 
   // record ref
-  setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey, {});
+  setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
 
   // record ccClassKey
   const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, module);
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
-  const _setState = (module, state, calledBy, reactCallback, delay, renderKey) => {
+  const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
     changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, delay, renderKey, reactCallback
+      calledBy, ccKey, ccUniqueKey, module, renderKey, delay, reactCallback
     }, ref);
   };
-  const setModuleState = (module, state, reactCallback, delay, renderKey) => {
-    _setState(module, state, SET_MODULE_STATE, reactCallback, delay, renderKey);
+  const setModuleState = (module, state, reactCallback, renderKey, delay) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
   };
-  // const setState = (state, reactCallback, delay, renderKey) => {
+  // const setState = (state, reactCallback, renderKey, delay) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
       //p1 module, p2 state, p3 cb, p4 delay, p5 idt
@@ -104,16 +110,14 @@ export default function (ref, params, liteLevel = 5) {
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
-  const forceUpdate = (reactCallback, delay, renderKey) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, delay, renderKey);
+  const forceUpdate = (reactCallback, renderKey, delay) => {
+    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
   };
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
   }
-  const dispatch = hf.makeDispatchHandler(ref, false, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
 
   const onEvents = [];
-
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
@@ -136,6 +140,8 @@ export default function (ref, params, liteLevel = 5) {
     ccOption,
 
     props: getOutProps(ref.props),
+    mapped:{},
+
     prevState: mergedState,
     // state
     state: mergedState,
@@ -150,7 +156,7 @@ export default function (ref, params, liteLevel = 5) {
     globalComputed,
     connectedComputed,
 
-    //collect CcHook mapProps result
+    //collect mapProps result
     mapped: {},
 
     // api meta data
@@ -173,20 +179,26 @@ export default function (ref, params, liteLevel = 5) {
     setModuleState,
     forceUpdate,
     changeState,
-    dispatch,
 
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
-
   };
+  ref.ctx = ctx;
+  ref.setState = setState;
+  ref.forceUpdate = forceUpdate;
+
+  // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
+  const dispatch = hf.makeDispatchHandler(ref, false, stateModule, stateModule);
+  ctx.dispatch = dispatch;
+
 
   if (liteLevel > 1) {// level 2, assign these mod data api
-    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, ccKey, ccUniqueKey, ccClassKey, stateModule, stateModule);
-    ctx.invoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey);
-    ctx.lazyInvoke = hf.makeInvokeHandler(ref, ccKey, ccUniqueKey, ccClassKey, { isLazy: true });
+    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, stateModule, stateModule);
+    ctx.invoke = hf.makeInvokeHandler(ref);
+    ctx.lazyInvoke = hf.makeInvokeHandler(ref, { isLazy: true });
 
-    ctx.setGlobalState = (state, reactCallback, delay, renderKey) => {
-      _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, delay, renderKey);
+    ctx.setGlobalState = (state, reactCallback, renderKey, delay) => {
+      _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
     };
   }
 
@@ -265,9 +277,4 @@ export default function (ref, params, liteLevel = 5) {
     ctx.computed = defineComputed;
     ctx.effect = defineEffect;
   }
-
-  ref.ctx = ctx;
-  ref.setState = setState;
-  ref.forceUpdate = forceUpdate;
 }
-

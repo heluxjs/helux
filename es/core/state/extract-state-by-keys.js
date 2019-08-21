@@ -1,8 +1,8 @@
-import { isStateValid, isObjectNotNull } from '../../support/util';
+import { isPlainJsonObject } from '../../support/util';
 
 export default function (state, stateKeys, returnNullIfEmpty = false) {
   const partialState = {};
-  if (!isStateValid(state) || !isObjectNotNull(state)) {
+  if (!isPlainJsonObject(state)) {
     return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true };
   }
   let isStateEmpty = true;

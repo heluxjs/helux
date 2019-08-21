@@ -45,12 +45,12 @@ function mapModuleToCcClassKeys(moduleName, ccClassKey) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 }
 
-function mapCcClassKeyToCcClassContext(ccClassKey, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
+function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
   let ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
 
   //做一个判断，有可能是热加载调用
   if (!ccClassContext) {
-    ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, watchedKeys, originalWatchedKeys);
+    ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys);
     ccClassKey_ccClassContext_[ccClassKey] = ccClassContext;
   }
 
@@ -80,7 +80,10 @@ function mapCcClassKeyToCcClassContext(ccClassKey, moduleName, originalWatchedKe
 /**
  * map registration info to ccContext
  */
-export default function (module = MODULE_DEFAULT, ccClassKey, classKeyPrefix, inputWatchedKeys, inputStoredKeys = [], connect, reducerModule, __checkStartUp, __calledBy) {
+export default function (
+  module = MODULE_DEFAULT, ccClassKey, renderKeyClasses, classKeyPrefix, inputWatchedKeys,
+  inputStoredKeys = [], connect, reducerModule, __checkStartUp, __calledBy
+) {
   if (__checkStartUp === true) checkCcStartupOrNot();
   const allowNamingDispatcher = __calledBy === 'cc';
   const _reducerModule = reducerModule || module;//if reducerModule not defined, will be equal module;
@@ -98,7 +101,17 @@ export default function (module = MODULE_DEFAULT, ccClassKey, classKeyPrefix, in
   const { featureStr, connectedModuleKeyMapping, connectedModuleNames } = getFeatureStrAndCmkMapping(_connect);
   const _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, classKeyPrefix, featureStr, ccClassKey);
 
-  mapCcClassKeyToCcClassContext(_ccClassKey, module, inputWatchedKeys, _watchedKeys, connectedModuleKeyMapping, connectedModuleNames);
+  let _renderKeyClasses;
+  if (!renderKeyClasses) {
+    _renderKeyClasses = [_ccClassKey];
+  } else {
+    if (!Array.isArray(renderKeyClasses) && renderKeyClasses !== '*') {
+      throw new Error(`renderKeyClasses type err, it is must be an array or string *`);
+    }
+    _renderKeyClasses = renderKeyClasses;
+  }
+
+  mapCcClassKeyToCcClassContext(_ccClassKey, _renderKeyClasses, module, inputWatchedKeys, _watchedKeys, connectedModuleKeyMapping, connectedModuleNames);
   mapModuleToCcClassKeys(module, _ccClassKey);
 
   const isSKeysArr = Array.isArray(inputStoredKeys);

@@ -33,6 +33,7 @@ export default function register({
   reducerModule,
   isPropsProxy = false,
   isSingle = false,
+  renderKeyClasses,
   __checkStartUp = true,
   compareProps = true,
   __calledBy,
@@ -40,7 +41,7 @@ export default function register({
   try {
 
     const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, CC_CLASS_PREFIX, inputWatchedKeys, inputStoredKeys, connect, reducerModule, __checkStartUp, __calledBy
+      module, ccClassKey, renderKeyClasses, CC_CLASS_PREFIX, inputWatchedKeys, inputStoredKeys, connect, reducerModule, __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {

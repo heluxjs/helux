@@ -14,14 +14,14 @@ function getValFromEvent(e) {
 }
 
 export default (spec, e, refModule) => {
-  let ccint = false, ccsync = '', ccidt = '', value = '', extraState = undefined, ccdelay = -1, isToggleBool = false;
+  let ccint = false, ccsync = '', ccrkey = '', value = '', extraState = undefined, ccdelay = -1, isToggleBool = false;
   const syncKey = spec[CCSYNC_KEY];
   const type = spec.type;
   
   if (syncKey !== undefined) {//来自生成的sync生成的setter函数调用
     ccsync = syncKey;
     ccdelay = spec.delay;
-    ccidt = spec.idt
+    ccrkey = spec.rkey
     if (type === 'val' || type === 'int') {//set value
       ccint = type === 'int';//convert to int
 
@@ -64,7 +64,7 @@ export default (spec, e, refModule) => {
       ccsync = dataset.ccsync;
       if (!ccsync) return null;
 
-      ccidt = dataset.ccidt;
+      ccrkey = dataset.ccrkey;
 
       const dataSetDelay = dataset.ccdelay;
       if (dataSetDelay) {
@@ -77,5 +77,5 @@ export default (spec, e, refModule) => {
     }
   }
 
-  return { [MOCKE_KEY]: 1, currentTarget: { value, extraState, dataset: { ccsync, ccint, ccdelay, ccidt } }, isToggleBool };
+  return { [MOCKE_KEY]: 1, currentTarget: { value, extraState, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
 }

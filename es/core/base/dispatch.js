@@ -2,7 +2,7 @@ import util from '../../support/util';
 import ccContext from '../../cc-context';
 import pickOneRef from '../../core/ref/pick-one-ref';
 
-export default function (isLazy, action, payLoadWhenActionIsString, delay, renderKey = '', { ccClassKey, ccKey, throwError } = {}) {
+export default function (isLazy, action, payLoadWhenActionIsString, renderKey = '', delay, { ccClassKey, ccKey, throwError } = {}) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {
     throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload`);
   }
@@ -39,11 +39,11 @@ export default function (isLazy, action, payLoadWhenActionIsString, delay, rende
       if(!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {
-        tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, delay, renderKey));
+        tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, renderKey, delay));
       });
       return Promise.all(tasks);
     } else {
-      return dispatchFn(action, payLoadWhenActionIsString, delay, renderKey);
+      return dispatchFn(action, payLoadWhenActionIsString, renderKey, delay);
     }
   } catch (err) {
     if (throwError) throw err;

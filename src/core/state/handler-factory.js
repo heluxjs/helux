@@ -222,7 +222,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         renderKey, -1, chainId, oriChainId, chainId_depth_
       );
 
-      const sourceClassContext = ccClassKey_ccClassContext_[ccClassKey];
+      const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
 
       reducerContext = {
         targetModule,

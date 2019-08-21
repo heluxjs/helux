@@ -7,6 +7,7 @@ let justCalledByStartUp = false;
 function _clearInsAssociation() {
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
+  clearObject(ccContext.renderKey_ccUkeys_);
   const cct = ccContext.ccClassKey_ccClassContext_;
   Object.keys(cct).forEach(ccClassKey => {
     const ctx = cct[ccClassKey];
@@ -15,7 +16,6 @@ function _clearInsAssociation() {
   clearObject(ccContext.handlerKey_handler_);
   clearObject(ccContext.ccUkey_ref_, [CC_DISPATCHER]);
   clearObject(ccContext.refs, [CC_DISPATCHER]);
-  clearObject(ccContext.ccUkey_option_);
 }
 
 function _clearAll() {
