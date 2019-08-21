@@ -158,7 +158,7 @@ export function makeCcForceUpdateHandler(ref) {
 }
 
 // last param: chainData
-export function  makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, isLazy, chainId_depth_ = {} } = {}) {
+export function makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { chainId, oriChainId, isLazy, chainId_depth_ = {} } = {}) {
   return (firstParam, payload, renderKey, delay) => {
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
@@ -168,22 +168,28 @@ export function  makeInvokeHandler(targetRef, ccKey, ccUniqueKey, ccClassKey, { 
       chainId: _chainId, oriChainId: _oriChainId, chainId_depth_, delay, renderKey,
     };
 
-    const err = new Error(`param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:{fn:function, delay:number, renderKey:string}, ...args:any[])`);
+    const err = new Error(`param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:[module:string, fn:function], ...args:any[])`);
     if (firstParamType === 'function') {
       return __invoke(firstParam, option, payload);
     } else if (firstParamType === 'object') {
-      //firstParam: {fn:function, delay:number, renderKey:string}
+      let _fn, _module;
+      if (Array.isArray(firstParam)) {
+        const [module, fn] = firstParam;
+        _fn = fn;
+        _module = module;
+      } else {
+        const { module, fn } = firstParam;
+        _fn = fn;
+        _module = module;
+      }
 
-      // const { fn, ...option } = firstParam;//防止某些版本的create-react-app运行瓷出错，这里不采用对象延展符的写法
-      const { fn, module: userInputModule } = firstParam;
-      if (typeof fn != 'function') throw err;
-      if (userInputModule) option.module = userInputModule;//用某个模块的实例去修改另外模块的数据
+      if (typeof _fn != 'function') throw err;
+      if (_module) option.module = _module;//某个模块的实例修改了另外模块的数据
 
-      return __invoke(fn, option, payload)
+      return __invoke(_fn, option, payload)
     } else {
       throw err;
     }
-    // return ()=>{}
   }
 }
 
@@ -344,7 +350,10 @@ export function makeDispatchHandler(
       let targetFirstParam = paramObj;
       if (paramObjType === 'function') {
         const fnName = paramObj.__fnName;
-        if (!fnName) throw new Error('you are calling a unnamed function!!!');
+        if (!fnName) {
+          // invokeWith();
+          throw new Error('you are calling a unnamed function!!!');
+        }
         targetFirstParam = fnName;
         // _module = paramObjType.stateModule || module;
       }
