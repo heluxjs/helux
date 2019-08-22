@@ -214,15 +214,13 @@ export function invokeWith(userLogicFn, executionContext, payload){
       chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
       const dispatch = makeDispatchHandler(
-        targetRef, false, targetModule, reducerModule,
-        renderKey, -1, chainId, oriChainId, chainId_depth_
+        targetRef, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
-        targetRef, true, targetModule, reducerModule,
-        renderKey, -1, chainId, oriChainId, chainId_depth_
+        targetRef, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
       );
 
-      const sourceClassContext = ccClassKey_ccClassContext_[ccClassKey];
+      const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
 
       reducerContext = {
         targetModule,
@@ -326,41 +324,45 @@ export function makeDispatchHandler(
   defaultRenderKey = '', delay = -1, chainId, oriChainId, chainId_depth_ = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
-  return (paramObj = {}, payloadWhenFirstParamIsString, userInputRKey, userInputDelay) => {
+  return (paramObj = {}, payload, userInputRKey, userInputDelay) => {
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
     const paramObjType = typeof paramObj;
-    let _module = defaultModule, _reducerModule, _type, _payload, _cb, _delay = delay;
-    let _renderKey = defaultRenderKey;
-    if (paramObjType === 'object') {
-      const { 
-        module = defaultModule, reducerModule, type, payload, cb, renderKey, delay = -1
-      } = paramObj;
-      _module = module;
-      _reducerModule = reducerModule || module;
-      _type = type;
-      _payload = payload;
-      _cb = cb;
-      _delay = delay;
+    let _type, _cb;
 
-      if (renderKey) _renderKey = renderKey;
+    let _module = defaultModule;
+    let _reducerModule = defaultReducerModule;
+    const _delay = userInputDelay || delay;
+    const _renderKey = userInputRKey || defaultRenderKey;
+
+    const callInvoke = ()=>{
+      const iHandler = makeInvokeHandler(targetRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, chainId_depth_ });
+      return iHandler(paramObj, payload, _renderKey, _delay);
+    }
+
+    if (paramObjType === 'object') {
+      if (Array.isArray(paramObjType)) {
+        return callInvoke();
+      }
+      const { module, reducerModule, type, cb } = paramObj;
+      if (module) _module = module;
+      _reducerModule = reducerModule || (module || defaultReducerModule);
+      _type = type;
+      _cb = cb;
 
     } else if (paramObjType === 'string' || paramObjType === 'function') {
       let targetFirstParam = paramObj;
       if (paramObjType === 'function') {
         const fnName = paramObj.__fnName;
         if (!fnName) {
-          // invokeWith();
-          throw new Error('you are calling a unnamed function!!!');
+          return callInvoke();
+          // throw new Error('you are calling a unnamed function!!!');
         }
         targetFirstParam = fnName;
         // _module = paramObjType.stateModule || module;
       }
 
       const slashCount = targetFirstParam.split('').filter(v => v === '/').length;
-      _payload = payloadWhenFirstParamIsString;
-      if (userInputRKey) _renderKey = userInputRKey;
-      if (userInputDelay !== undefined) _delay = userInputDelay;
 
       if (slashCount === 0) {
         _type = targetFirstParam;
@@ -371,9 +373,7 @@ export function makeDispatchHandler(
         _type = type;
       } else if (slashCount === 2) {
         const [module, reducerModule, type] = targetFirstParam.split('/');
-        if (module === '' || module === ' ') _module = defaultModule;//targetFirstParam may like: /foo/changeName
-        else _module = module;
-        _module = module;
+        if (module) _module = module;//targetFirstParam may like: /foo/changeName
         _reducerModule = reducerModule;
         _type = type;
       } else {
@@ -387,11 +387,9 @@ export function makeDispatchHandler(
       return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
     }
 
-    // pick user input reducerModule firstly!
-    let targetReducerModule = _reducerModule || (defaultReducerModule || _module);
     const p = new Promise((resolve, reject) => {
       dispatch({
-        targetRef, module: _module, reducerModule: targetReducerModule, type: _type, payload: _payload,
+        targetRef, module: _module, reducerModule: _reducerModule, type: _type, payload,
         cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject),
         delay: _delay, renderKey: _renderKey,
         chainId: _chainId, oriChainId: _oriChainId, chainId_depth_

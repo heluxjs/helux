@@ -1,8 +1,7 @@
 import deh from '../base/define-handler-to-fns';
 
-export default function (refCtx, watchFns, immediateWatchKeys) {
-  return (watchItem, watchHandler, immediate) => {
-    if (immediate) deh(refCtx, watchItem, watchHandler, watchFns, immediateWatchKeys);
-    else deh(refCtx, watchItem, watchHandler, watchFns);
+export default function (refCtx) {
+  return (watchItem, watchHandler, immediate, depStateKeys) => {
+    deh(refCtx, watchItem, watchHandler, refCtx.watchFns, refCtx.immediateWatchKeys, immediate, depStateKeys, refCtx.watchDep);
   };
 } 

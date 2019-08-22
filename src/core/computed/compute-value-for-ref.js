@@ -1,6 +1,7 @@
 import ccContext from '../../cc-context';
-import * as util from '../../support/util';
+import { okeys } from '../../support/util';
 import shouldSkipKey from '../base/should-skip-key';
+import pickDepFns from '../base/pick-dep-fns';
 
 const getState = ccContext.store.getState;
 const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
@@ -8,14 +9,12 @@ const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 //CcFragment实例调用会提供callerCtx
 // stateModule表示状态所属的模块
 export default function (refCtx, stateModule, oldState, committedState) {
-  const {computedSpec, module:refModule, refComputed, refConnectedComputed } = refCtx;
+  const { computedFns, computedDep, hasComputedFn, module: refModule, refComputed, refConnectedComputed } = refCtx;
+  if (!hasComputedFn) return;
+  const moduleStateKeys = moduleName_stateKeys_[refModule];
 
-  const { computedFns, hasFn } = computedSpec;
-  if (hasFn !== true) return;
-  const moduleStateKeys = moduleName_stateKeys_[stateModule];
-
-  const toBeComputedKeys = util.okeys(computedFns);
-  toBeComputedKeys.forEach(key => {
+  // 触发直接对stateKey定义的相管computed函数
+  okeys(computedFns).forEach(key => {// key: 'foo/a' 'a' '/a'
     const { stateKey, skip, keyModule } = shouldSkipKey(key, refModule, stateModule, refConnectedComputed, moduleStateKeys);
     if (skip) return;
 
@@ -39,5 +38,22 @@ export default function (refCtx, stateModule, oldState, committedState) {
         refComputed[stateKey] = computedValue;
       }
     }
-  })
+  });
+
+  // 触发依赖stateKeys相关的computed函数
+  const pickedFns = pickDepFns(computedDep, stateModule, committedState);
+  pickedFns.forEach(({ fn, retKey }) => {
+    const computedValue = fn(committedState, oldState, refCtx);
+
+    if (refModule === stateModule) {
+      refComputed[retKey] = computedValue;
+    }
+
+    // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
+    const targetComputed = refConnectedComputed[stateModule];
+    if (targetComputed) {
+      targetComputed[retKey] = computedValue;
+    }
+  });
+
 }

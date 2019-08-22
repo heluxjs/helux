@@ -23,6 +23,7 @@ export default function(module, computed){
       const fn = computed[key];
       moduleComputedFn[key] = fn;
 
+      // 计算modelComputed
       const computedValue = fn(originalValue, originalValue, moduleState);
       const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
       moduleComputedValue[key] = computedValue;

@@ -122,8 +122,12 @@ export default function (ref, params, liteLevel = 5) {
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
 
-  const aux = {}, watchFns = {}, computedFns = {};
-  const immediateWatchKeys = [];
+  const aux = {}, computedFns = {}, watchFns = {}, immediateWatchKeys = [];
+
+  // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
+  
+  // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
+  const computedDep = {}, watchDep = {};
   const ctx = {
     // static params
     type,
@@ -161,11 +165,11 @@ export default function (ref, params, liteLevel = 5) {
 
     // api meta data
     onEvents,
-    watchFns,
     computedFns,
+    computedDep,
+    watchFns,
+    watchDep,
     immediateWatchKeys,
-    watchSpec: {},
-    computedSpec: {},
     execute: null,
     reducer: {},
     lazyReducer: {},
@@ -266,8 +270,8 @@ export default function (ref, params, liteLevel = 5) {
       const effectItem = { fn, stateKeys, eId: _eId, immediate };
       effectItems.push(effectItem);
     };
-    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys);
-    const defineComputed = getDefineComputedHandler(ctx, computedFns);
+    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys, watchDep);
+    const defineComputed = getDefineComputedHandler(ctx, computedFns, computedDep);
 
     ctx.defineWatch = defineWatch;
     ctx.defineComputed = defineComputed;

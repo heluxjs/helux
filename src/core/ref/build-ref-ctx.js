@@ -83,6 +83,7 @@ export default function (ref, params, liteLevel = 5) {
   let refStoredState = refStore._state[ccUniqueKey] || {};
   const mergedState = Object.assign({}, state, refStoredState, moduleState);
   ref.state = mergedState;
+  const stateKeys = okeys(mergedState);
 
   // record ref
   setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
@@ -122,8 +123,13 @@ export default function (ref, params, liteLevel = 5) {
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
 
-  const aux = {}, watchFns = {}, computedFns = {};
-  const immediateWatchKeys = [];
+  // immediateWatchKeys记录所有的watchKey，不管是对stateKey做watch，还是对depStateKeys做watch
+  const aux = {}, computedFns = {}, watchFns = {}, immediateWatchKeys = [];
+
+  // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
+  
+  // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
+  const computedDep = {}, watchDep = {};
   const ctx = {
     // static params
     type,
@@ -160,12 +166,13 @@ export default function (ref, params, liteLevel = 5) {
     mapped: {},
 
     // api meta data
+    stateKeys,
     onEvents,
-    watchFns,
     computedFns,
+    computedDep,
+    watchFns,
+    watchDep,
     immediateWatchKeys,
-    watchSpec: {},
-    computedSpec: {},
     execute: null,
     reducer: {},
     lazyReducer: {},
@@ -266,8 +273,8 @@ export default function (ref, params, liteLevel = 5) {
       const effectItem = { fn, stateKeys, eId: _eId, immediate };
       effectItems.push(effectItem);
     };
-    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys);
-    const defineComputed = getDefineComputedHandler(ctx, computedFns);
+    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys, watchDep);
+    const defineComputed = getDefineComputedHandler(ctx, computedFns, computedDep);
 
     ctx.defineWatch = defineWatch;
     ctx.defineComputed = defineComputed;

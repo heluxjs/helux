@@ -1,8 +1,6 @@
 import * as util from '../../support/util';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
-import getComputedSpec from '../computed/get-computed-spec';
-import getWatchSpec from '../watch/get-watch-spec';
 
 const { safeGetObjectFromObject, okeys, justWarning } = util;
 const { reducer: { _reducerModule_fnNames_ } } = ccContext;
@@ -32,7 +30,7 @@ export default function (ref, setup, bindCtxToMethod) {
     });
   });
 
-  //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后，分析computedSpec之前
+  //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
     const { watchFns, computedFns, immediateWatchKeys } = ctx;
     if (typeof setup !== 'function') throw new Error('type of setup must be function');
@@ -49,9 +47,6 @@ export default function (ref, setup, bindCtxToMethod) {
       });
     }
     ctx.settings = settingsObj;
-
-    ctx.computedSpec = getComputedSpec(computedFns);
-    ctx.watchSpec = getWatchSpec(watchFns, immediateWatchKeys);
   }
 
   triggerComputedAndWatch(ref);

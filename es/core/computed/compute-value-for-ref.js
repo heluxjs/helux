@@ -8,13 +8,13 @@ const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 //CcFragment实例调用会提供callerCtx
 // stateModule表示状态所属的模块
 export default function (refCtx, stateModule, oldState, committedState) {
-  const {computedSpec, module:refModule, refComputed, refConnectedComputed } = refCtx;
+  const { computedFns, computedDep, hasComputedFn, module: refModule, refComputed, refConnectedComputed } = refCtx;
+  if (!hasComputedFn) return;
 
-  const { computedFns, hasFn } = computedSpec;
-  if (hasFn !== true) return;
   const moduleStateKeys = moduleName_stateKeys_[stateModule];
-
   const toBeComputedKeys = util.okeys(computedFns);
+
+  // 对于computedFns, 采用先遍历toBeComputedKeys的方式
   toBeComputedKeys.forEach(key => {
     const { stateKey, skip, keyModule } = shouldSkipKey(key, refModule, stateModule, refConnectedComputed, moduleStateKeys);
     if (skip) return;
@@ -39,5 +39,44 @@ export default function (refCtx, stateModule, oldState, committedState) {
         refComputed[stateKey] = computedValue;
       }
     }
-  })
+  });
+
+  // { stateKey_retKeys_: {}, retKey_fn_: {} }
+  const moduleComputedDep = computedDep[stateModule];
+  if (moduleComputedDep) {
+    const { stateKey_retKeys_, retKey_fn_ } = moduleComputedDep;
+    const pickedFns = [];
+    const retKey_picked_ = {};
+
+    okeys(stateKey_retKeys_).forEach(stateKey => {
+      const newValue = committedState[stateKey];
+
+      if (newValue !== undefined || sKey === '*') {
+        const retKeys = stateKey_retKeys_[stateKey];
+        retKeys.forEach(retKey => {
+          //没有挑过的方法才挑出来
+          if (!retKey_picked_[retKey]) {
+            retKey_picked_[retKey] = true;
+            pickedFns.push({ retKey, fn: retKey_fn_[k] });
+          }
+        });
+      }
+    });
+
+    pickedFns.forEach(({ fn, retKey }) => {
+      const computedValue = fn(committedState, oldState, refCtx);
+
+      if (refModule === stateModule) {
+        refComputed[retKey] = computedValue;
+      }
+
+      // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
+      const targetComputed = refConnectedComputed[keyModule];
+      if (targetComputed) {
+        targetComputed[retKey] = computedValue;
+      }
+    });
+
+  }
+  
 }

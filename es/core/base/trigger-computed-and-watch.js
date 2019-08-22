@@ -8,9 +8,9 @@ const { store: { getState } } = ccContext;
 /** 由首次render触发 */
 export default function (ref) {
   const  ctx = ref.ctx;
-  const { computedSpec, watchSpec, connect, module: refModule } = ctx;
+  const { hasComputedFn, hasWatchFn, watchSpec, connect, module: refModule } = ctx;
 
-  if (computedSpec.hasFn) {
+  if (hasComputedFn) {
     const refState = ref.state;
     computeValueForRef(ctx, refModule, refState, refState);
     okeys(connect).forEach(m => {
@@ -19,7 +19,7 @@ export default function (ref) {
     });
   }
 
-  if (watchSpec.hasFn) {
+  if (hasWatchFn) {
     const { immediateWatchKeys } = watchSpec;
     if (immediateWatchKeys.length > 0) {
       const module_stateSpec_ = {};
@@ -43,4 +43,5 @@ export default function (ref) {
       });
     }
   }
+  
 }
