@@ -404,7 +404,7 @@ export function makeDispatchHandler(
 export function makeSetStateHandler(module) {
   return state => {
     try {
-      setState(module, state, 0);
+      setState(module, state);
     } catch (err) {
       if (module === MODULE_GLOBAL) {
         getAndStoreValidGlobalState(state, module);
