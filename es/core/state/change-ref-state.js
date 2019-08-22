@@ -202,8 +202,8 @@ function broadcastState(renderType, targetRef, partialSharedState, stateFor, mod
       const keysLen = ccClassKeys.length;
       for (let i = 0; i < keysLen; i++) {
         const ccClassKey = ccClassKeys[i];
-        // ccClassKey在renderKeyClasses范围内，交给renderKey匹配规则去触发渲染了，这里直接跳出
-        if (renderKeyClasses.includes(ccClassKey)) continue;
+        // 如ref渲染由RENDER_BY_KEY触犯，当前ccClassKey在renderKeyClasses范围内，它已经交给renderKey匹配规则去触发渲染了，这里直接跳出
+        if (renderType === RENDER_BY_KEY && renderKeyClasses.includes(ccClassKey)) continue;
 
         const classContext = ccClassKey_ccClassContext_[ccClassKey];
         const { ccKeys, watchedKeys, originalWatchedKeys } = classContext;

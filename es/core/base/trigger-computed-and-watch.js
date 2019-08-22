@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import { safeGetObjectFromObject, okeys } from '../../support/util';
+import { okeys } from '../../support/util';
 import computeValueForRef from '../computed/compute-value-for-ref';
 import watchKeyForRef from '../watch/watch-key-for-ref';
 
@@ -8,10 +8,10 @@ const { store: { getState } } = ccContext;
 /** 由首次render触发 */
 export default function (ref) {
   const  ctx = ref.ctx;
-  const { hasComputedFn, hasWatchFn, watchSpec, connect, module: refModule } = ctx;
+  const { hasComputedFn, hasWatchFn, immediateWatchKeys, connect, module: refModule } = ctx;
 
+  const refState = ctx.state;
   if (hasComputedFn) {
-    const refState = ref.state;
     computeValueForRef(ctx, refModule, refState, refState);
     okeys(connect).forEach(m => {
       const mState = getState(m);
@@ -20,26 +20,24 @@ export default function (ref) {
   }
 
   if (hasWatchFn) {
-    const { immediateWatchKeys } = watchSpec;
     if (immediateWatchKeys.length > 0) {
-      const module_stateSpec_ = {};
+      const module_state_ = {};
       immediateWatchKeys.forEach(key => {
-        let targetModule, targetStateKey;
+        let targetModule;
         if (key.includes('/')) {
-          const [module, stateKey] = key.split('/');
+          const [module] = key.split('/');
           targetModule = module || refModule;// key: 'foo/f1' or '/f1'
-          targetStateKey = stateKey;
         } else {
           targetModule = refModule;
-          targetStateKey = key;
         }
-        const stateSpec = safeGetObjectFromObject(module_stateSpec_, targetModule, { state: {}, module: targetModule });
-        stateSpec.state[targetStateKey] = getState(targetModule)[targetStateKey];
+
+        const state = targetModule === refModule ? refState : getState(targetModule);
+        module_state_[targetModule] = state;
       });
 
-      Object.values(module_stateSpec_).forEach(stateSpec => {
-        const { module, state } = stateSpec;
-        watchKeyForRef(ctx, module, getState(module), state);
+      okeys(module_state_).forEach(m => {
+        const state = module_state_[m];
+        watchKeyForRef(ctx, m, state, state, true);
       });
     }
   }

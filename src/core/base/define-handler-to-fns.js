@@ -123,7 +123,7 @@ function parseDescObj(refCtx, descObj, fns, depFn, type) {
 function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   const { module, retKey } = getModuleAndRetKey(refCtx, key, false);
 
-  const moduleDepDesc = safeGetObjectFromObject(depFn, module, { stateKey_retKeys_: {}, retKey_fn_: {} });
+  const moduleDepDesc = safeGetObjectFromObject(depFn, module, { stateKey_retKeys_: {}, retKey_fn_: {}, fnCount:0 });
   const { stateKey_retKeys_, retKey_fn_ } = moduleDepDesc;
 
   if(retKey_fn_[retKey]){
@@ -143,6 +143,7 @@ function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   }
 
   retKey_fn_[retKey] = fn;
+  moduleDepDesc.fnCount++;
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
     const retKeys = safeGetArrayFromObject(stateKey_retKeys_, sKey);

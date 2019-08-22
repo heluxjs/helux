@@ -1,5 +1,6 @@
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
 import * as util from '../support/util';
+import pickDepFns from '../core/base/pick-dep-fns';
 
 const refs = {};
 const setStateByModule = (module, committedState) => {
@@ -8,6 +9,20 @@ const setStateByModule = (module, committedState) => {
   const moduleComputedFns = _computedFn[module];
   const moduleComputedValue = _computedValue[module];
   const watchFns = _watch[module];
+
+  const rootComputedDep = computed.getRootComputedDep();
+  const depFns = pickDepFns(rootComputedDep, module, committedState);
+  depFns.forEach(({ retKey, fn }) => {
+    const computedValue = fn(moduleState, committedState);
+    moduleComputedValue[retKey] = computedValue;
+  });
+
+  const rootWatchDep = watch.getRootWatchDep();
+  const depFnsW = pickDepFns(rootWatchDep, module, committedState);
+  depFnsW.forEach(({ fn }) => {
+    fn(moduleState, committedState);
+  });
+
 
   Object.keys(committedState).forEach(key => {
     /** setStateByModuleAndKey */
@@ -29,6 +44,7 @@ const setStateByModule = (module, committedState) => {
       const fn = watchFns[key];
       if (fn) fn(value, oldValue, fnCtx);//fn(newValue, oldValue)
     }
+
     moduleState[key] = value;
   });
 }
@@ -51,18 +67,24 @@ const _computedFn = {
   [MODULE_DEFAULT]: {},
   [MODULE_CC]: {},
 };
+const _computedDep = {
+};
 const computed = {
   _computedValue,
   _computedFn,
+  _computedDep,
   getRootComputedValue: () => _computedValue,
   getRootComputedFn: () => _computedFn,
+  getRootComputedDep: () => _computedDep,
 };
 
 /** watch section */
 const _watch = {};
+const _watchDep = {};
 const watch = {
   _watch,
   getRootWatch: () => _watch,
+  getRootWatchDep: () => _watchDep,
   getModuleWatch: module => _watch[module],
 };
 

@@ -5,6 +5,7 @@ export default function (key, refModule, stateModule, connectSpecLike, moduleSta
   let keyModule = '';
   let stateKey = key;
 
+  // !!! 只有带/的key，才会进入此逻辑
   if (key.includes('/')) {// moduledKey : 'foo/f1'
     let [tmpKeyModule, unmoduledKey] = key.split('/');
     stateKey = unmoduledKey;
@@ -22,6 +23,7 @@ export default function (key, refModule, stateModule, connectSpecLike, moduleSta
 -    */
 
     if (stateModule === refModule) {
+      //这里只是做个保护，其实在调用computed or watch的时候，已对unmoduledKey做了校验
       if (!moduleStateKeys.includes(unmoduledKey)) {
         return { skip: true };
       }

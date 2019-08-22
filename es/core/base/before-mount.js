@@ -32,7 +32,6 @@ export default function (ref, setup, bindCtxToMethod) {
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
-    const { watchFns, computedFns, immediateWatchKeys } = ctx;
     if (typeof setup !== 'function') throw new Error('type of setup must be function');
 
     const settingsObj = setup(ctx) || {};

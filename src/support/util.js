@@ -1,8 +1,5 @@
 
 import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC } from './constant';
-import ccContext from '../cc-context';
-
-
 
 export function bindThis(_this, methods) {
   methods.forEach(method => _this[method] = _this[method].bind(_this));
@@ -221,13 +218,6 @@ export function justWarning(err) {
 export function justTip(msg) {
   console.log(' ------------ CC TIP ------------');
   console.log(`%c${msg}`, 'color:green;border:1px solid green;');
-}
-
-export function strictWarning(err) {
-  if (ccContext.isStrict) {
-    throw err;
-  }
-  justWarning(err)
 }
 
 export function safeGetObjectFromObject(object, key, defaultVal = {}) {

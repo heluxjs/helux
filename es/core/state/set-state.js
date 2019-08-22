@@ -1,4 +1,4 @@
-import { strictWarning } from '../../support/util';
+import { strictWarning } from '../../support/share';
 import pickOneRef from '../ref/pick-one-ref';
 
 export default function (module, state, renderKey, delay = -1, skipMiddleware) {

@@ -83,6 +83,7 @@ export default function (ref, params, liteLevel = 5) {
   let refStoredState = refStore._state[ccUniqueKey] || {};
   const mergedState = Object.assign({}, state, refStoredState, moduleState);
   ref.state = mergedState;
+  const stateKeys = okeys(mergedState);
 
   // record ref
   setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
@@ -122,6 +123,7 @@ export default function (ref, params, liteLevel = 5) {
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
 
+  // immediateWatchKeys记录所有的watchKey，不管是对stateKey做watch，还是对depStateKeys做watch
   const aux = {}, computedFns = {}, watchFns = {}, immediateWatchKeys = [];
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
@@ -164,6 +166,7 @@ export default function (ref, params, liteLevel = 5) {
     mapped: {},
 
     // api meta data
+    stateKeys,
     onEvents,
     computedFns,
     computedDep,

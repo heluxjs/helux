@@ -40,13 +40,13 @@ watch('foo/whatever', ()=>{}, true, ['firstName', 'lastName']);
 */
 
 
-export default function (refCtx, item, handler, fns, immediateKeys, immediate, depStateKeys, depFn, type) {
+export default function (refCtx, item, handler, fns, immediate, depStateKeys, depFn, type) {
   if (!item) return;
 
   const itype = typeof item;
 
   if (itype === 'object') {
-    parseDescObj(refCtx, item, fns, depFn, immediateKeys, type);
+    parseDescObj(refCtx, item, fns, depFn, type);
     return;
   }
 
@@ -55,7 +55,7 @@ export default function (refCtx, item, handler, fns, immediateKeys, immediate, d
     if (!ret) return;
 
     if (typeof ret === 'object') {
-      parseDescObj(refCtx, ret, fns, depFn, immediateKeys, type);
+      parseDescObj(refCtx, ret, fns, depFn, type);
       return;
     }
     throw new Error(`type of computed or watch callback result must be an object.`);
@@ -64,25 +64,33 @@ export default function (refCtx, item, handler, fns, immediateKeys, immediate, d
   if (itype === 'string') {
     const key = item;
     if (depStateKeys) {
-      mapDepDesc(refCtx, key, depFn, depStateKeys, immediate);
+      mapDepDesc(refCtx, key, handler, depFn, depStateKeys, immediate, type);
       flagHasFn(refCtx, type);
       return;
     }
 
-    getModuleAndRetKey(refCtx, key);
-    fns[key] = handler;
-    if (immediate) immediateKeys.push(key);
-    flagHasFn(refCtx, type);
-    return;
+    mapNormalDesc(refCtx, fns, key, handler, immediate, type);
   }
 };
+
+function mapNormalDesc(refCtx, fns, key, handler, immediate, type) {
+  getModuleAndRetKey(refCtx, key);
+  if(fns[key]){
+    throw new Error(`key[${key}] already declared!`);
+  }
+  fns[key] = handler;
+  if (type === 2 && immediate) {
+    refCtx.immediateWatchKeys.push(key);
+  }
+  flagHasFn(refCtx, type);
+}
 
 function flagHasFn(refCtx, type) {
   if (type === 1) refCtx.hasComputedFn = true;
   else refCtx.hasWatchFn = true;
 }
 
-function parseDescObj(refCtx, descObj, fns, depFn, immediateKeys, type) {
+function parseDescObj(refCtx, descObj, fns, depFn, type) {
   const keys = okeys(descObj);
 
   if (keys.length > 0) {
@@ -99,24 +107,28 @@ function parseDescObj(refCtx, descObj, fns, depFn, immediateKeys, type) {
       if (vType === 'object') {
         const { fn, depKeys, immediate } = val;
         if (!depKeys) {
-          fns[key] = fn;
-          if (immediate && immediateKeys) {
-            immediateKeys.push(key);
-          }
+          //当普通的computed来映射
+          mapNormalDesc(refCtx, fns, key, fn, immediate, type);
           return;
         }
 
-        mapDepDesc(refCtx, key, depFn, depKeys, immediate);
+        //当依赖型的computed来映射
+        mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type);
       }
     });
   }
 }
 
-function mapDepDesc(refCtx, key, depFn, depKeys, immediate) {
+// 映射依赖描述对象
+function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   const { module, retKey } = getModuleAndRetKey(refCtx, key, false);
 
-  const moduleDepDesc = safeGetObjectFromObject(depFn, module, { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] });
+  const moduleDepDesc = safeGetObjectFromObject(depFn, module, { stateKey_retKeys_: {}, retKey_fn_: {}, fnCount:0 });
   const { stateKey_retKeys_, retKey_fn_ } = moduleDepDesc;
+
+  if(retKey_fn_[retKey]){
+    throw new Error(`key[${retKey}] already declared!`);
+  }
 
   let _depKeys = depKeys
   if (depKeys === '*') {
@@ -126,8 +138,12 @@ function mapDepDesc(refCtx, key, depFn, depKeys, immediate) {
     throw new Error(`depKeys can only be an Array<string> or string *`);
   }
 
-  if (immediate) immediateRetKeys.push(immediate);
+  if (type === 2 && immediate) {
+    refCtx.immediateWatchKeys.push(key);
+  }
+
   retKey_fn_[retKey] = fn;
+  moduleDepDesc.fnCount++;
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
     const retKeys = safeGetArrayFromObject(stateKey_retKeys_, sKey);
@@ -137,27 +153,32 @@ function mapDepDesc(refCtx, key, depFn, depKeys, immediate) {
 
 // retKey作为将计算结果映射到refComputed | refConnectedComputed | moduleComputed 里的key
 function getModuleAndRetKey(refCtx, key, mustInclude = true) {
-  let _module = refCtx.module, _retKey = key;
+  let _module = refCtx.module, _retKey = key, _stateKeys;
   if (key.includes('/')) {
     const [module, retKey] = key.split('/');
     _module = module;
     _retKey = retKey;
   }
 
-  const moduleStateKeys = moduleName_stateKeys_[_module];
-  if (!moduleStateKeys) {
-    throw makeError(ERR.CC_MODULE_NOT_FOUND, verboseInfo(`module[${_module}]`));
+  if (_module === refCtx.module) {
+    // 此时computed & watch可能观察的私有的stateKey
+    _stateKeys = okeys(refCtx.state);
+  } else {
+    _stateKeys = moduleName_stateKeys_[_module];
+    if (!_stateKeys) {
+      throw makeError(ERR.CC_MODULE_NOT_FOUND, verboseInfo(`module[${_module}]`));
+    }
   }
 
-  const includeKey = moduleStateKeys.includes(_retKey);
+  const includeKey = _stateKeys.includes(_retKey);
   if (mustInclude) {
     if (!includeKey) {
-      throw new Error(`key[${_retKey}] is not declared in module[${_module}]`);
+      throw new Error(`key[${_retKey}] is not declared in module[${_module}] or selfState`);
     }
   } else {
     //传递了depKeys，_retKey不能再是stateKey
     if (includeKey) {
-      throw new Error(`retKey[${_retKey}] can not be stateKey of module[${_module}] if you declare depKeys`);
+      throw new Error(`retKey[${_retKey}] can not be stateKey of module[${_module}] or selfState if you declare depKeys`);
     }
   }
 
