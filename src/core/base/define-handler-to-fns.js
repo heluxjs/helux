@@ -75,6 +75,9 @@ export default function (refCtx, item, handler, fns, immediate, depStateKeys, de
 
 function mapNormalDesc(refCtx, fns, key, handler, immediate, type) {
   getModuleAndRetKey(refCtx, key);
+  if(fns[key]){
+    throw new Error(`key[${key}] already declared!`);
+  }
   fns[key] = handler;
   if (type === 2 && immediate) {
     refCtx.immediateWatchKeys.push(key);
@@ -122,6 +125,10 @@ function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   const moduleDepDesc = safeGetObjectFromObject(depFn, module, { stateKey_retKeys_: {}, retKey_fn_: {} });
   const { stateKey_retKeys_, retKey_fn_ } = moduleDepDesc;
 
+  if(retKey_fn_[retKey]){
+    throw new Error(`key[${retKey}] already declared!`);
+  }
+
   let _depKeys = depKeys
   if (depKeys === '*') {
     _depKeys = ['*'];
@@ -133,7 +140,7 @@ function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   if (type === 2 && immediate) {
     refCtx.immediateWatchKeys.push(key);
   }
-  
+
   retKey_fn_[retKey] = fn;
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
