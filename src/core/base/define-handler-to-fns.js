@@ -119,6 +119,7 @@ function parseDescObj(refCtx, descObj, fns, depFn, type) {
   }
 }
 
+// 映射依赖描述对象
 function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   const { module, retKey } = getModuleAndRetKey(refCtx, key, false);
 
