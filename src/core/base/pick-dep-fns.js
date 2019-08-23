@@ -3,11 +3,12 @@ import { differStateKeys, safeGetArrayFromObject, safeGetObjectFromObject } from
 const cacheArea_pickedRetKeys_ = {
   module:{
     computed:{ },
-    watch:{ }
+    watch:{ },
   },
   ref:{
     computed:{ },
-    watch:{ }
+    watch:{ },
+    effect:{ },
   },
 };
 

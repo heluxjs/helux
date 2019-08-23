@@ -13,6 +13,7 @@ import getDefineComputedHandler from '../computed/get-define-computed-handler';
 import computeCcUniqueKey from '../base/compute-cc-unique-key';
 import getOutProps from '../base/get-out-props';
 import __sync from '../base/sync';
+import deh from '../base/define-handler-to-fns';
 
 const {
   refStore,
@@ -263,14 +264,14 @@ export default function (ref, params, liteLevel = 5) {
     ctx.defineExecute = handler => ctx.execute = handler;
     ctx.defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
 
-    const defineEffect = (fn, stateKeys, immediate = true, eId) => {
+    const defineEffect = (fn, depKeys, immediate = true, eId) => {
       if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
-      if (stateKeys !== null && stateKeys !== undefined) {
-        if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+      if (depKeys !== null && depKeys !== undefined) {
+        if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
       }
       const _eId = eId || getEId();
-      // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
-      const effectItem = { fn, stateKeys, eId: _eId, immediate };
+      // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
+      const effectItem = { fn, depKeys, eId: _eId, depKeys, immediate };
       effectItems.push(effectItem);
     };
     const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys, watchDep);
