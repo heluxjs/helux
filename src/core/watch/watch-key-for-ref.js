@@ -38,7 +38,7 @@ export default function (refCtx, stateModule, oldState, committedState, checkImm
   });
 
   // 触发有stateKey依赖列表相关的watch函数
-  const pickedFns = pickDepFns(ccUniqueKey, watchDep, stateModule, oldState, committedState);
+  const pickedFns = pickDepFns('ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
   pickedFns.forEach(({ fn }) => {
     const ret = fn(committedState, oldState, refCtx);
     if (ret === false) shouldCurrentRefUpdate = false;

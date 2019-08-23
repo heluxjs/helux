@@ -12,14 +12,14 @@ const setStateByModule = (module, committedState) => {
   const watchFns = _watch[module];
 
   const rootComputedDep = computed.getRootComputedDep();
-  const depFns = pickDepFns('rootCom', rootComputedDep, module, moduleState, committedState);
+  const depFns = pickDepFns('module', 'computed', rootComputedDep, module, moduleState, committedState);
   depFns.forEach(({ retKey, fn }) => {
     const computedValue = fn(moduleState, committedState);
     moduleComputedValue[retKey] = computedValue;
   });
 
   const rootWatchDep = watch.getRootWatchDep();
-  const depFnsW = pickDepFns('rootWat', rootWatchDep, module, moduleState, committedState);
+  const depFnsW = pickDepFns('module', 'watch', rootWatchDep, module, moduleState, committedState);
   depFnsW.forEach(({ fn }) => {
     fn(moduleState, committedState);
   });

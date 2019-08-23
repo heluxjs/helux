@@ -45,7 +45,7 @@ export default function (refCtx, stateModule, oldState, committedState) {
   });
 
   // 触发依赖stateKeys相关的computed函数
-  const pickedFns = pickDepFns(ccUniqueKey, computedDep, stateModule, oldState, committedState);
+  const pickedFns = pickDepFns('ref', 'computed', computedDep, stateModule, oldState, committedState, ccUniqueKey);
   pickedFns.forEach(({ fn, retKey }) => {
     const computedValue = fn(committedState, oldState, refCtx);
 

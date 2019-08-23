@@ -1,8 +1,19 @@
-import { differStateKeys } from '../../support/util';
+import { differStateKeys, safeGetArrayFromObject, safeGetObjectFromObject } from '../../support/util';
 
-const cacheKey_pickedRetKeys_ = {};
+const cacheArea_pickedRetKeys_ = {
+  module:{
+    computed:{ },
+    watch:{ }
+  },
+  ref:{
+    computed:{ },
+    watch:{ }
+  },
+};
 
-export default function (tag, depDesc, stateModule, oldState, committedState) {
+// cate module | ref
+// type computed | watch
+export default function (cate, type, depDesc, stateModule, oldState, committedState, cUkey) {
   const moduleDep = depDesc[stateModule];
   const pickedFns = [];
   
@@ -15,10 +26,12 @@ export default function (tag, depDesc, stateModule, oldState, committedState) {
 
     const { stateKey_retKeys_, retKey_fn_, fnCount } = moduleDep;
     //用targetStateKeys + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
-    const cacheKey = targetStateKeys.join(',') + '|' + stateModule + '|' + tag;
+    const cacheKey = targetStateKeys.join(',') + '|' + stateModule;
 
     // 要求用户必须在setup里静态的定义完computed & watch
-    const cachedPickedRetKeys = cacheKey_pickedRetKeys_[cacheKey];
+    const tmpNode = cacheArea_pickedRetKeys_[cate][type];
+    const cachePool = cUkey ? safeGetObjectFromObject(tmpNode, cUkey) : tmpNode;
+    const cachedPickedRetKeys = safeGetArrayFromObject(cachePool, cacheKey);
 
     if (cachedPickedRetKeys) {
       return cachedPickedRetKeys.map(retKey=>({ retKey, fn: retKey_fn_[retKey] }));
@@ -38,6 +51,9 @@ export default function (tag, depDesc, stateModule, oldState, committedState) {
           const stateKey = targetStateKeys[i];
           const retKeys = stateKey_retKeys_[stateKey];
 
+          //发生变化了的stateKey不一定在依赖列表里
+          if (!retKeys) continue;
+
           retKeys.forEach(retKey => {
             //没有挑过的方法才挑出来
             if (!retKey_picked_[retKey]) {
@@ -50,7 +66,7 @@ export default function (tag, depDesc, stateModule, oldState, committedState) {
         }
       }
 
-      cacheKey_pickedRetKeys_[cacheKey] = pickedFns.map(v => v.retKey);
+      cachePool[cacheKey] = pickedFns.map(v => v.retKey);
     }
   }
 
