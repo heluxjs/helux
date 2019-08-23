@@ -13,6 +13,9 @@ export default function (refCtx, stateModule, oldState, committedState, checkImm
   let shouldCurrentRefUpdate = true;
   const moduleStateKeys = moduleName_stateKeys_[refModule];
 
+  //todo 优化computedFns {m:{[moduleA]: {} }, self: {} }
+  // 调用differStateKeys, 然后直接取命中这些函数
+
   // 触发直接对stateKey定义的相关watch函数
   okeys(watchFns).forEach(key => {
     if (checkImmediate) {
@@ -25,7 +28,7 @@ export default function (refCtx, stateModule, oldState, committedState, checkImm
     const commitValue = committedState[stateKey];
     const oldValue = oldState[stateKey];
 
-    if (commitValue !== oldValue) {
+    if (commitValue !== undefined && commitValue !== oldValue) {
       const watchFn = watchFns[key];
       const moduleState = getState(keyModule);
       const fnCtx = { key: stateKey, module: keyModule, moduleState, committedState };

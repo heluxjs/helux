@@ -23,7 +23,7 @@ export default function (refCtx, stateModule, oldState, committedState) {
 
     const newValue = committedState[stateKey];
     const oldValue = oldState[stateKey];
-    if (newValue !== oldValue) {
+    if (newValue !== undefined && newValue !== oldValue) {
       const fn = computedFns[key];//用原始定义当然key去取fn
       const moduleState = getState(keyModule);
       const fnCtx = { key: stateKey, module: keyModule, moduleState, committedState };
