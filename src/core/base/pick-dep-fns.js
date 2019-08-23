@@ -1,49 +1,56 @@
-import { okeys } from '../../support/util';
+import { differStateKeys } from '../../support/util';
 
-const cacheKey_retKeys_ = {};
+const cacheKey_pickedRetKeys_ = {};
 
-export default function (depDesc, stateModule, committedState) {
+export default function (tag, depDesc, stateModule, oldState, committedState) {
   const moduleDep = depDesc[stateModule];
-
-  //用committedState 的keys + module 作为键，缓存对应的retKeys，这样相同形状的committedState再次进入此函数时，方便快速直接命中retKeys
-  const cacheKey = okeys(committedState).join(',') + '|' + stateModule;
-  
   const pickedFns = [];
+  
   if (moduleDep) {
-    
-    const { stateKey_retKeys_, retKey_fn_, fnCount } = moduleDep;
+    // 这些目标stateKey的值发生了变化
+    const targetStateKeys = differStateKeys(oldState, committedState);
+    if (targetStateKeys.length === 0) {
+      return [];
+    }
 
-    const cachedRetKeys = cacheKey_retKeys_[cacheKey];
-    if (cachedRetKeys) {
-      cachedRetKeys.forEach(retKey => {
-        pickedFns.push({ retKey, fn: retKey_fn_[retKey] });
-      });
+    const { stateKey_retKeys_, retKey_fn_, fnCount } = moduleDep;
+    //用targetStateKeys + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
+    const cacheKey = targetStateKeys.join(',') + '|' + stateModule + '|' + tag;
+
+    // 要求用户必须在setup里静态的定义完computed & watch
+    const cachedPickedRetKeys = cacheKey_pickedRetKeys_[cacheKey];
+
+    if (cachedPickedRetKeys) {
+      return cachedPickedRetKeys.map(retKey=>({ retKey, fn: retKey_fn_[retKey] }));
     } else {
       const retKey_picked_ = {};
-      const pickedRetKeys = [];
 
-      //从stateKey_retKeys_入手开始遍历
-      const stateKeys = okeys(stateKey_retKeys_);
-      const len = stateKeys.length;
-      for (let i = 0; i < len; i++) {
-        const stateKey = stateKeys[i];
-        const newValue = committedState[stateKey];
-        if (newValue !== undefined || stateKey === '*') {
+      // 把*的函数先全部挑出来
+      const starRetKeys = stateKey_retKeys_['*'];
+      if (starRetKeys) {
+        starRetKeys.forEach(retKey => pickedFns.push({ retKey, fn: retKey_fn_[retKey] }));
+      }
+
+      // 还没有挑完，再遍历targetStateKeys, 挑选出剩余的目标fn
+      if (pickedFns.length < fnCount) {
+        const len = targetStateKeys.length;
+        for (let i = 0; i < len; i++) {
+          const stateKey = targetStateKeys[i];
           const retKeys = stateKey_retKeys_[stateKey];
+
           retKeys.forEach(retKey => {
             //没有挑过的方法才挑出来
             if (!retKey_picked_[retKey]) {
-              pickedRetKeys.push(retKey);
               retKey_picked_[retKey] = true;
               pickedFns.push({ retKey, fn: retKey_fn_[retKey] });
             }
           });
-        }
 
-        if (pickedFns.length === fnCount) break;
+          if (pickedFns.length === fnCount) break;
+        }
       }
 
-      cacheKey_retKeys_[cacheKey] = pickedRetKeys;
+      cacheKey_pickedRetKeys_[cacheKey] = pickedFns.map(v => v.retKey);
     }
   }
 

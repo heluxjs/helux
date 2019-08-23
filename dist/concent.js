@@ -440,6 +440,13 @@
 
     return false;
   }
+  function differStateKeys(oldState, newState) {
+    var ret = [];
+    okeys(newState).forEach(function (k) {
+      if (newState[k] !== oldState[k]) ret.push(k);
+    });
+    return ret;
+  }
   var util = {
     clearObject: clearObject,
     makeError: makeError,
@@ -473,45 +480,59 @@
     randomNumber: randomNumber
   };
 
-  var cacheKey_retKeys_ = {};
-  function pickDepFns (depDesc, stateModule, committedState) {
-    var moduleDep = depDesc[stateModule]; //用committedState 的keys + module 作为键，缓存对应的retKeys，这样相同形状的committedState再次进入此函数时，方便快速直接命中retKeys
-
-    var cacheKey = okeys(committedState).join(',') + '|' + stateModule;
+  var cacheKey_pickedFns_ = {};
+  function pickDepFns (depDesc, stateModule, oldState, committedState) {
+    var moduleDep = depDesc[stateModule];
     var pickedFns = [];
 
     if (moduleDep) {
-      (function () {
+      var _ret = function () {
+        // 这些目标stateKey的值发生了变化
+        var targetStateKeys = differStateKeys(oldState, committedState);
+
+        if (targetStateKeys.length === 0) {
+          return {
+            v: []
+          };
+        }
+
         var stateKey_retKeys_ = moduleDep.stateKey_retKeys_,
             retKey_fn_ = moduleDep.retKey_fn_,
-            fnCount = moduleDep.fnCount;
-        var cachedRetKeys = cacheKey_retKeys_[cacheKey];
+            fnCount = moduleDep.fnCount; //用targetStateKeys + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
+
+        var cacheKey = targetStateKeys.join(',') + '|' + stateModule; // 要求用户必须在setup里静态的定义完computed & watch
+
+        var cachedPickedFns = cacheKey_pickedFns_[cacheKey];
 
         if (cachedRetKeys) {
-          cachedRetKeys.forEach(function (retKey) {
-            pickedFns.push({
-              retKey: retKey,
-              fn: retKey_fn_[retKey]
-            });
-          });
+          return {
+            v: cachedPickedFns
+          };
         } else {
           (function () {
-            var retKey_picked_ = {};
-            var pickedRetKeys = []; //从stateKey_retKeys_入手开始遍历
+            var retKey_picked_ = {}; // 把*的函数先全部挑出来
 
-            var stateKeys = okeys(stateKey_retKeys_);
-            var len = stateKeys.length;
+            var starRetKeys = stateKey_retKeys_['*'];
 
-            for (var i = 0; i < len; i++) {
-              var stateKey = stateKeys[i];
-              var newValue = committedState[stateKey];
+            if (starRetKeys) {
+              starRetKeys.forEach(function (retKey) {
+                return pickedFns.push({
+                  retKey: retKey,
+                  fn: retKey_fn_[retKey]
+                });
+              });
+            } // 还没有挑完，再遍历targetStateKeys, 挑选出剩余的目标fn
 
-              if (newValue !== undefined || stateKey === '*') {
+
+            if (pickedFns.length < fnCount) {
+              var len = targetStateKeys.length;
+
+              for (var i = 0; i < len; i++) {
+                var stateKey = targetStateKeys[i];
                 var retKeys = stateKey_retKeys_[stateKey];
                 retKeys.forEach(function (retKey) {
                   //没有挑过的方法才挑出来
                   if (!retKey_picked_[retKey]) {
-                    pickedRetKeys.push(retKey);
                     retKey_picked_[retKey] = true;
                     pickedFns.push({
                       retKey: retKey,
@@ -519,15 +540,16 @@
                     });
                   }
                 });
+                if (pickedFns.length === fnCount) break;
               }
-
-              if (pickedFns.length === fnCount) break;
             }
 
-            cacheKey_retKeys_[cacheKey] = pickedRetKeys;
+            cacheKey_pickedFns_[cacheKey] = pickedFns;
           })();
         }
-      })();
+      }();
+
+      if (typeof _ret === "object") return _ret.v;
     }
 
     return pickedFns;
@@ -545,7 +567,7 @@
     var moduleComputedValue = _computedValue[module];
     var watchFns = _watch[module];
     var rootComputedDep = computed.getRootComputedDep();
-    var depFns = pickDepFns(rootComputedDep, module, committedState);
+    var depFns = pickDepFns(rootComputedDep, module, moduleState, committedState);
     depFns.forEach(function (_ref) {
       var retKey = _ref.retKey,
           fn = _ref.fn;
@@ -553,7 +575,7 @@
       moduleComputedValue[retKey] = computedValue;
     });
     var rootWatchDep = watch.getRootWatchDep();
-    var depFnsW = pickDepFns(rootWatchDep, module, committedState);
+    var depFnsW = pickDepFns(rootWatchDep, module, moduleState, committedState);
     depFnsW.forEach(function (_ref2) {
       var fn = _ref2.fn;
       fn(moduleState, committedState);
@@ -1081,8 +1103,7 @@
           };
         }
       }
-    } //不用写else 判断moduleStateKeys是否包含unmoduledKey，这个key可能是实例自己持有的key
-
+    }
 
     return {
       skip: skip,
@@ -1116,25 +1137,25 @@
 
       if (skip) return;
       var commitValue = committedState[stateKey];
+      var oldValue = oldState[stateKey];
 
-      if (commitValue !== undefined) {
+      if (commitValue !== oldValue) {
         var watchFn = watchFns[key];
-        var targetModule = keyModule || refModule;
-        var moduleState = getState(targetModule);
+        var moduleState = getState(keyModule);
         var fnCtx = {
           key: stateKey,
-          module: targetModule,
+          module: keyModule,
           moduleState: moduleState,
           committedState: committedState
         };
-        var ret = watchFn(commitValue, oldState[stateKey], fnCtx, refCtx); // watchFn(newValue, oldValue);
+        var ret = watchFn(commitValue, oldValue, fnCtx, refCtx); // watchFn(newValue, oldValue);
         //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
 
         if (ret === false) shouldCurrentRefUpdate = false;
       }
     }); // 触发有stateKey依赖列表相关的watch函数
 
-    var pickedFns = pickDepFns(watchDep, stateModule, committedState);
+    var pickedFns = pickDepFns(watchDep, stateModule, oldState, committedState);
     pickedFns.forEach(function (_ref) {
       var fn = _ref.fn;
       var ret = fn(committedState, oldState, refCtx);
@@ -1155,7 +1176,9 @@
         refComputed = refCtx.refComputed,
         refConnectedComputed = refCtx.refConnectedComputed;
     if (!hasComputedFn) return;
-    var moduleStateKeys = moduleName_stateKeys_$1[refModule]; // 触发直接对stateKey定义的相管computed函数
+    var moduleStateKeys = moduleName_stateKeys_$1[refModule]; //todo 优化computedFns {m:{[moduleA]: {} }, self: {} }
+    // 调用differStateKeys, 然后直接取命中这些函数
+    // 触发直接对stateKey定义的相管computed函数
 
     okeys(computedFns).forEach(function (key) {
       // key: 'foo/a' 'a' '/a'
@@ -1166,8 +1189,9 @@
 
       if (skip) return;
       var newValue = committedState[stateKey];
+      var oldValue = oldState[stateKey];
 
-      if (newValue !== undefined) {
+      if (newValue !== oldValue) {
         var fn = computedFns[key]; //用原始定义当然key去取fn
 
         var moduleState = getState$1(keyModule);
@@ -1177,7 +1201,7 @@
           moduleState: moduleState,
           committedState: committedState
         };
-        var computedValue = fn(newValue, oldState[stateKey], fnCtx, refCtx);
+        var computedValue = fn(newValue, oldValue, fnCtx, refCtx);
         var targetComputed = refConnectedComputed[keyModule]; //foo模块的实例，定义的watchKey是 foo/f1, 此时skip是false，但是结果不会向refConnectedComputed里放的
         //因为refConnectedComputed放置的只是connect连接的模块的key结算结果
 
@@ -1192,7 +1216,7 @@
       }
     }); // 触发依赖stateKeys相关的computed函数
 
-    var pickedFns = pickDepFns(computedDep, stateModule, committedState);
+    var pickedFns = pickDepFns(computedDep, stateModule, oldState, committedState);
     pickedFns.forEach(function (_ref) {
       var fn = _ref.fn,
           retKey = _ref.retKey;
@@ -1545,8 +1569,8 @@
 
           if (ref && ref.__$$isUnmounted !== true) {
             var refCtx = ref.ctx;
+            computeValueForRef(refCtx, targetModule, prevModuleState, sharedState);
             var shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState);
-            computeValueForRef(refCtx, targetModule, ref.state, sharedState);
             if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
           }
         });
@@ -4405,10 +4429,10 @@
 
         if (typeof desc !== 'function') {
           if (typeof desc !== 'object') throw new Error(tipFn(key));
-          var _fn2 = desc.fn,
+          var fn = desc.fn,
               immediate = desc.immediate;
-          if (typeof _fn2 !== 'function') throw new Error(tipFn(key));
-          _fn = _fn2;
+          if (typeof fn !== 'function') throw new Error(tipFn(key));
+          _fn = fn;
           _immediate = immediate;
         } else {
           _fn = desc;
@@ -4420,7 +4444,7 @@
         if (_immediate) {
           var val = moduleState[key]; // 和 ccContext里setStateByModule保持统一的fnCtx
 
-          fn(val, val, {
+          _fn(val, val, {
             key: key,
             module: module,
             moduleState: moduleState,
@@ -4430,10 +4454,10 @@
       } else {
         // customized key for depKeys
         if (typeof desc !== 'object') throw new Error(tipDep(key));
-        var _fn3 = desc.fn,
+        var _fn2 = desc.fn,
             depKeys = desc.depKeys,
             _immediate2 = desc.immediate;
-        if (typeof _fn3 !== 'function') throw new Error(tipDep(key));
+        if (typeof _fn2 !== 'function') throw new Error(tipDep(key));
 
         var _depKeys;
 
@@ -4441,6 +4465,7 @@
           _depKeys = ['*'];
         } else {
           if (!Array.isArray(depKeys)) throw new Error(tipDep(key));
+          if (depKeys.includes('*')) throw new Error('depKeys can not include *');
           _depKeys = depKeys;
         }
 
@@ -4451,7 +4476,7 @@
         };
         var stateKey_retKeys_ = moduleWatchDep.stateKey_retKeys_,
             retKey_fn_ = moduleWatchDep.retKey_fn_;
-        retKey_fn_[key] = _fn3;
+        retKey_fn_[key] = _fn2;
         moduleWatchDep.fnCount++;
 
         _depKeys.forEach(function (sKey) {
@@ -4460,7 +4485,7 @@
         });
 
         if (_immediate2) {
-          _fn3(moduleState, moduleState);
+          _fn2(moduleState, moduleState);
         }
       }
     });
@@ -4539,6 +4564,7 @@
           _depKeys = ['*'];
         } else {
           if (!Array.isArray(depKeys)) throw new Error(FN_MSG2);
+          if (depKeys.includes('*')) throw new Error('depKeys can not include *');
           _depKeys = depKeys;
         }
 
@@ -4556,7 +4582,7 @@
 
         var _moduleComputedValue = safeGetObjectFromObject$3(rootComputedValue, module);
 
-        _moduleComputedValue[retKey] = _computedValue;
+        _moduleComputedValue[key] = _computedValue;
       }
     });
   }

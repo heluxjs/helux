@@ -80,7 +80,7 @@ export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watched
     ccKeys: [],
     connectedState: {},
     connectedModuleKeyMapping: null,
-    connectedModule:{},//记录当前cc类连接到了其他哪些模块
+    connectedModule: {},//记录当前cc类连接到了其他哪些模块
   }
 }
 
@@ -158,7 +158,7 @@ export function disassembleActionType(namespacedActionType) {
     const [moduleName, actionType] = namespacedActionType.split('/');
     return { moduleName, actionType };
   } else {
-    return { moduleName: MODULE_GLOBAL, actionType: namespacedActionType}
+    return { moduleName: MODULE_GLOBAL, actionType: namespacedActionType }
   }
 }
 
@@ -263,7 +263,7 @@ export function clearObject(object, excludeKeys = [], reset) {
   });
 }
 
-export function okeys(obj){
+export function okeys(obj) {
   return Object.keys(obj);
 }
 
@@ -275,20 +275,20 @@ export function flatObject(connectedState, alias, allowKeyDup = false) {
     const keys = okeys(subObj);
     keys.forEach(k => {
       const aliasKey = alias[`${m}/${k}`];
-      if (fObj[k]!=undefined) {//重复了，看看有没有别名
-        if(aliasKey){
+      if (fObj[k] != undefined) {//重复了，看看有没有别名
+        if (aliasKey) {
           fObj[aliasKey] = subObj[k];
-        }else{
-          if(allowKeyDup === true){
+        } else {
+          if (allowKeyDup === true) {
             fObj[k] = subObj[k];//重写
-          }else{
+          } else {
             throw `key[${k}] duplicate in module ${m}`;
           }
         }
-      }else{
-        if(aliasKey){
+      } else {
+        if (aliasKey) {
           fObj[aliasKey] = subObj[k];
-        }else{
+        } else {
           fObj[k] = subObj[k];
         }
       }
@@ -330,6 +330,14 @@ export function shallowDiffers(a, b) {
   for (let i in a) if (!(i in b)) return true;
   for (let i in b) if (a[i] !== b[i]) return true;
   return false;
+}
+
+export function differStateKeys(oldState, newState) {
+  const ret = [];
+  okeys(newState).forEach(k => {
+    if (newState[k] !== oldState[k]) ret.push(k);
+  });
+  return ret;
 }
 
 export default {

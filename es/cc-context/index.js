@@ -6,19 +6,20 @@ const refs = {};
 const setStateByModule = (module, committedState) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
+
   const moduleComputedFns = _computedFn[module];
   const moduleComputedValue = _computedValue[module];
   const watchFns = _watch[module];
 
   const rootComputedDep = computed.getRootComputedDep();
-  const depFns = pickDepFns(rootComputedDep, module, committedState);
+  const depFns = pickDepFns(rootComputedDep, module, moduleState, committedState);
   depFns.forEach(({ retKey, fn }) => {
     const computedValue = fn(moduleState, committedState);
     moduleComputedValue[retKey] = computedValue;
   });
 
   const rootWatchDep = watch.getRootWatchDep();
-  const depFnsW = pickDepFns(rootWatchDep, module, committedState);
+  const depFnsW = pickDepFns(rootWatchDep, module, moduleState, committedState);
   depFnsW.forEach(({ fn }) => {
     fn(moduleState, committedState);
   });

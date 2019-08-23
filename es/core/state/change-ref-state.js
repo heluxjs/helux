@@ -268,8 +268,8 @@ function updateConnectedState(targetClassContext, targetModule, sharedState, sha
         const ref = ccUkey_ref_[ccUniKey];
         if (ref && ref.__$$isUnmounted !== true) {
           const refCtx = ref.ctx;
+          computeValueForRef(refCtx, targetModule, prevModuleState, sharedState);
           const shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState);
-          computeValueForRef(refCtx, targetModule, ref.state, sharedState);
           if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
         }
       });

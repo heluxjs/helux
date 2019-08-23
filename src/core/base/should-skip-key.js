@@ -34,6 +34,5 @@ export default function (key, refModule, stateModule, connectSpecLike, moduleSta
     }
   }
 
-  //不用写else 判断moduleStateKeys是否包含unmoduledKey，这个key可能是实例自己持有的key
   return { skip, stateKey, keyModule };
 } 

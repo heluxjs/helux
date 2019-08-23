@@ -23,6 +23,9 @@ export default function (ref, callByDidMount) {
     effectItems.forEach(item => {
       // const { status, stateKeys, fn, eId } = item;
       // if (status === EFFECT_STOPPED) return;
+
+      // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
+
       const { stateKeys, fn, eId } = item;
       if (stateKeys) {
         const keysLen = stateKeys.length;

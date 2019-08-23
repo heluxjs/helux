@@ -46,7 +46,7 @@ export default function(module, moduleWatch){
       if(_immediate){
         const val = moduleState[key];
         // 和 ccContext里setStateByModule保持统一的fnCtx
-        fn(val, val, { key, module, moduleState, committedState: moduleState });
+        _fn(val, val, { key, module, moduleState, committedState: moduleState });
       }
     } else {// customized key for depKeys
       if (typeof desc !== 'object') throw new Error(tipDep(key));
@@ -58,6 +58,7 @@ export default function(module, moduleWatch){
         _depKeys = ['*'];
       } else {
         if (!Array.isArray(depKeys)) throw new Error(tipDep(key));
+        if (depKeys.includes('*')) throw new Error('depKeys can not include *');
         _depKeys = depKeys;
       }
 

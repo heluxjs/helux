@@ -1,7 +1,6 @@
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
-import pickDepFns from '../base/pick-dep-fns';
 
 const { safeGetObjectFromObject, isPlainJsonObject, safeGetArrayFromObject } = util;
 const FN_MSG = `type of computed fn must be a function or object {fn:function}`
@@ -66,6 +65,7 @@ export default function(module, computed){
         _depKeys = ['*'];
       } else {
         if (!Array.isArray(depKeys)) throw new Error(FN_MSG2);
+        if(depKeys.includes('*')) throw new Error('depKeys can not include *');
         _depKeys = depKeys;
       }
 
@@ -79,7 +79,7 @@ export default function(module, computed){
 
       const computedValue = fn(moduleState, moduleState);
       const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
-      moduleComputedValue[retKey] = computedValue;
+      moduleComputedValue[key] = computedValue;
     }
 
   });

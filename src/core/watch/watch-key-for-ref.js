@@ -7,7 +7,7 @@ const getState = ccContext.store.getState;
 const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 
 export default function (refCtx, stateModule, oldState, committedState, checkImmediate) {
-  const { watchFns, watchDep, hasWatchFn, connect, module: refModule, immediateWatchKeys } = refCtx;
+  const { watchFns, watchDep, hasWatchFn, connect, module: refModule, immediateWatchKeys, ccUniqueKey } = refCtx;
   if (!hasWatchFn) return true;
 
   let shouldCurrentRefUpdate = true;
@@ -23,13 +23,14 @@ export default function (refCtx, stateModule, oldState, committedState, checkImm
     if (skip) return;
 
     const commitValue = committedState[stateKey];
-    if (commitValue !== undefined) {
-      const watchFn = watchFns[key];
-      const targetModule = keyModule || refModule;
-      const moduleState = getState(targetModule);
-      const fnCtx = { key: stateKey, module: targetModule, moduleState, committedState };
+    const oldValue = oldState[stateKey];
 
-      const ret = watchFn(commitValue, oldState[stateKey], fnCtx, refCtx);// watchFn(newValue, oldValue);
+    if (commitValue !== oldValue) {
+      const watchFn = watchFns[key];
+      const moduleState = getState(keyModule);
+      const fnCtx = { key: stateKey, module: keyModule, moduleState, committedState };
+
+      const ret = watchFn(commitValue, oldValue, fnCtx, refCtx);// watchFn(newValue, oldValue);
 
       //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
       if (ret === false) shouldCurrentRefUpdate = false;
@@ -37,7 +38,7 @@ export default function (refCtx, stateModule, oldState, committedState, checkImm
   });
 
   // 触发有stateKey依赖列表相关的watch函数
-  const pickedFns = pickDepFns(watchDep, stateModule, committedState);
+  const pickedFns = pickDepFns(ccUniqueKey, watchDep, stateModule, oldState, committedState);
   pickedFns.forEach(({ fn }) => {
     const ret = fn(committedState, oldState, refCtx);
     if (ret === false) shouldCurrentRefUpdate = false;
