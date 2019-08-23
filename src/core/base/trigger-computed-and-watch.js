@@ -12,10 +12,10 @@ export default function (ref) {
 
   const refState = ctx.state;
   if (hasComputedFn) {
-    computeValueForRef(ctx, refModule, refState, refState);
+    computeValueForRef(ctx, refModule, refState, refState, false);//设置false，不比较值变化，直接重触发computed fn
     okeys(connect).forEach(m => {
       const mState = getState(m);
-      computeValueForRef(ctx, m, mState, mState);
+      computeValueForRef(ctx, m, mState, mState, false);
     });
   }
 

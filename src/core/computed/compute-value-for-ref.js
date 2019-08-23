@@ -8,7 +8,7 @@ const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
 
 //CcFragment实例调用会提供callerCtx
 // stateModule表示状态所属的模块
-export default function (refCtx, stateModule, oldState, committedState) {
+export default function (refCtx, stateModule, oldState, committedState, compareVal = true) {
   const { computedFns, computedDep, hasComputedFn, module: refModule, refComputed, refConnectedComputed, ccUniqueKey } = refCtx;
   if (!hasComputedFn) return;
   const moduleStateKeys = moduleName_stateKeys_[refModule];
@@ -23,7 +23,13 @@ export default function (refCtx, stateModule, oldState, committedState) {
 
     const newValue = committedState[stateKey];
     const oldValue = oldState[stateKey];
-    if (newValue !== undefined && newValue !== oldValue) {
+
+    let callFn = true;
+    if(compareVal){
+      callFn = newValue !== undefined && newValue !== oldValue;
+    }
+
+    if (callFn) {
       const fn = computedFns[key];//用原始定义当然key去取fn
       const moduleState = getState(keyModule);
       const fnCtx = { key: stateKey, module: keyModule, moduleState, committedState };

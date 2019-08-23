@@ -211,7 +211,10 @@ export function styleStr(str) {
 
 export function justWarning(err) {
   console.error(' ------------ CC WARNING ------------');
-  if (err instanceof Error) console.error(err.message);
+  if (err instanceof Error) {
+    console.error(err.message);
+    console.error(err.stack);
+  }
   else console.error(err);
 }
 
