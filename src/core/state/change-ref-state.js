@@ -46,7 +46,8 @@ export default function (state, {
 
   //在triggerReactSetState之前把状态存储到store，
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-  const sharedState = syncCommittedStateToStore(module, state);
+  const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
+  const sharedState = syncCommittedStateToStore(module, state, passedCtx);
 
   let passToMiddleware = {};
   if (skipMiddleware !== true) {
@@ -102,13 +103,13 @@ function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, r
   return renderType;
 }
 
-function syncCommittedStateToStore(moduleName, committedState) {
+function syncCommittedStateToStore(moduleName, committedState, refCtx) {
   const stateKeys = moduleName_stateKeys_[moduleName]
   const { isStateEmpty: isPartialSharedStateEmpty, partialState } = extractStateByKeys(committedState, stateKeys);
 
   //!!! save state to store
   if (!isPartialSharedStateEmpty) {
-    setState(moduleName, partialState);
+    setState(moduleName, partialState, refCtx);
     return partialState;
   }
   return null;

@@ -16,16 +16,16 @@ export default (newModule, existingModule, { state, reducer, computed, watch, in
 
   const mState = ccContext.store.getState(existingModule);
   let stateCopy = clone(mState);
-  if (state) stateCopy = Object.assign(stateCopy, state);
+  if (state) Object.assign(stateCopy, state);
 
   let reducerEx = ccContext.reducer._reducer[existingModule] || {};
-  if (reducer) reducerEx = Object.assign(reducerEx, reducer);
+  if (reducer) Object.assign(reducerEx, reducer);
 
-  let computedEx = ccContext.computed._computedFn[existingModule] || {};
-  if (computed) computedEx = Object.assign(computedEx, computed);
+  let computedEx = ccContext.computed._computedRaw[existingModule] || {};
+  if (computed) Object.assign(computedEx, computed);
 
-  let watchEx = ccContext.watch._watch[existingModule] || {};
-  if (watch) watchEx = Object.assign(watchEx, watch);
+  let watchEx = ccContext.watch._watchRaw[existingModule] || {};
+  if (watch) Object.assign(watchEx, watch);
 
   let initEx = ccContext.init._init[existingModule];
   if (init) initEx = init;

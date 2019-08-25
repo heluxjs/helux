@@ -39,6 +39,9 @@ export const FORCE_UPDATE = 'forceUpdate';
 export const INVOKE = 'invoke';
 export const SYNC = 'sync';
 
+export const CATE_MODULE = 'module';
+export const CATE_REF = 'ref';
+
 export const ERR = {
   CC_ALREADY_STARTUP: 1000,
   CC_REGISTER_A_MODULE_CLASS_IN_NONE_MODULE_MODE: 1001,

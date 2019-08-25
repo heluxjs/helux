@@ -6,6 +6,8 @@ const {
   store: { getPrevState, getState }
 } = ccContext;
 
+const frag1 = 'has not been declared in';
+
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
   const { effectItems, eid_effectReturnCb_ } = ctx.effectMeta;
@@ -21,25 +23,28 @@ export default function (ref, callByDidMount) {
     const curState = ref.state;
     const toBeExecutedFns = [];
     effectItems.forEach(item => {
-      // const { status, stateKeys, fn, eId } = item;
+      // const { status, depKeys, fn, eId } = item;
       // if (status === EFFECT_STOPPED) return;
-      const { stateKeys, fn, eId } = item;
-      if (stateKeys) {
-        const keysLen = stateKeys.length;
+
+      // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
+
+      const { depKeys, fn, eId } = item;
+      if (depKeys) {
+        const keysLen = depKeys.length;
         if (keysLen === 0) return;
         let shouldEffectExecute = false;
         for (let i = 0; i < keysLen; i++) {
-          const key = stateKeys[i];
+          const key = depKeys[i];
           let targetCurState, targetPrevState, targetKey;
           if (key.includes('/')) {
             const [module, unmoduledKey] = key.split('/');
             const prevState = getPrevState(module);
             if (!prevState) {
-              util.justWarning(`key[${key}] is invalid, its module[${module}] has not been declared in store!`);
+              util.justWarning(`effect: key[${key}] is invalid, its module[${module}] ${frag1} store!`);
               continue;
             }
             if (!moduleName_stateKeys_[module].includes(unmoduledKey)) {
-              util.justWarning(`key[${key}] is invalid, its unmoduledKey[${unmoduledKey}] has not been declared in state!`);
+              util.justWarning(`effect: key[${key}] is invalid, its unmoduledKey[${unmoduledKey}] ${frag1} state!`);
               continue;
             }
             targetCurState = getState(module);

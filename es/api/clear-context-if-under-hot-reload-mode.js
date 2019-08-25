@@ -1,5 +1,6 @@
-import util, { clearObject } from '../support/util';
+import { clearObject } from '../support/util';
 import ccContext from '../cc-context';
+import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
 
 let justCalledByStartUp = false;
@@ -22,8 +23,10 @@ function _clearAll() {
   clearObject(ccContext.globalStateKeys);
   clearObject(ccContext.reducer._reducer);
   clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
-  clearObject(ccContext.computed._computedFn);
+  clearObject(ccContext.computed._computedDep);
   clearObject(ccContext.computed._computedValue);
+  clearObject(ccContext.watch._watchDep);
+  clearCachedData();
   _clearInsAssociation();
 }
 

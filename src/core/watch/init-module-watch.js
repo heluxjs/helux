@@ -1,79 +1,48 @@
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
+import { CATE_MODULE } from '../../support/constant';
+import configureDepFns from '../base/configure-dep-fns';
+import pickDepFns from '../base/pick-dep-fns';
 
-const { safeGetObjectFromObject, isPlainJsonObject, safeGetArrayFromObject, okeys } = util;
-
-const tipFn = watchKey => `watchKey[${watchKey}] is a stateKey, watchDesc must like: function | {fn:Function, immediate?:boolean}`;
-const tipDep = watchKey => `watchKey[${watchKey}] is not a stateKey, watchDesc must like: {fn:Function, depKeys:string[] | *, immediate?:boolean}`;
+const { isPlainJsonObject } = util;
 
 
 /**
  * 设置watch值，过滤掉一些无效的key
  */
-export default function(module, moduleWatch){
+export default function (module, moduleWatch, append = false) {
   if (!isPlainJsonObject(moduleWatch)) {
     throw new Error(`StartUpOption.watch.${module}'s value is not a plain json object!`);
   }
   checker.checkModuleName(module, false, `watch.${module} is invalid`);
 
-  const rootWatch = ccContext.watch.getRootWatch();
   const rootWatchDep = ccContext.watch.getRootWatchDep();
+  const rootWatchRaw = ccContext.watch.getRootWatchRaw();
+
+  if (append) {
+    const ori = rootWatchRaw[module];
+    if (ori) Object.assign(ori, moduleWatch);
+    else rootWatchRaw[module] = moduleWatch;
+  } else {
+    rootWatchRaw[module] = moduleWatch;
+  }
+
   const getState = ccContext.store.getState;
   const moduleState = getState(module);
 
-  okeys(moduleWatch).forEach(key => {
-    const desc = moduleWatch[key];
+  configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootWatchDep }, moduleWatch);
 
-    if (moduleState.hasOwnProperty(key)) {
-      if (!desc) throw new Error(tipFn(key));
+  const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
+  pickedFns.forEach(({ retKey, fn, depKeys }) => {
+    const fnCtx = { retKey, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+    const fistDepKey = depKeys[0];
 
-      let _fn, _immediate = false;
-      if (typeof desc !== 'function') {
-        if (typeof desc !== 'object') throw new Error(tipFn(key));
-
-        const { fn, immediate } = desc;
-        if (typeof fn !== 'function') throw new Error(tipFn(key));
-        _fn = fn;
-        _immediate = immediate;
-      } else {
-        _fn = desc;
-      }
-
-      const ccModuleWatch = safeGetObjectFromObject(rootWatch, module);
-      ccModuleWatch[key] = _fn;
-
-      if(_immediate){
-        const val = moduleState[key];
-        // 和 ccContext里setStateByModule保持统一的fnCtx
-        _fn(val, val, { key, module, moduleState, committedState: moduleState });
-      }
-    } else {// customized key for depKeys
-      if (typeof desc !== 'object') throw new Error(tipDep(key));
-      const { fn, depKeys, immediate } = desc;
-      if (typeof fn !== 'function') throw new Error(tipDep(key));
-
-      let _depKeys;
-      if (depKeys === '*') {
-        _depKeys = ['*'];
-      } else {
-        if (!Array.isArray(depKeys)) throw new Error(tipDep(key));
-        if (depKeys.includes('*')) throw new Error('depKeys can not include *');
-        _depKeys = depKeys;
-      }
-
-      const moduleWatchDep = rootWatchDep[module] = { stateKey_retKeys_: {}, retKey_fn_: {}, fnCount: 0 };
-      const { stateKey_retKeys_, retKey_fn_ } = moduleWatchDep;
-      retKey_fn_[key] = fn;
-      moduleWatchDep.fnCount++;
-      _depKeys.forEach(sKey => {
-        const retKeys = safeGetArrayFromObject(stateKey_retKeys_, sKey);
-        retKeys.push(key);
-      });
-
-      if(immediate){
-        fn(moduleState, moduleState);
-      }
+    if (depKeys.length === 1 && fistDepKey !== '*') {
+      fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
+    }else{
+      fn(moduleState, moduleState, fnCtx);
     }
   });
+
 }

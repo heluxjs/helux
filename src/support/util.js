@@ -336,12 +336,16 @@ export function shallowDiffers(a, b) {
 }
 
 export function differStateKeys(oldState, newState) {
-  const ret = [];
+  const changed = [], unchanged=[], setted = [];
   okeys(newState).forEach(k => {
     const newVal = newState[k];
-    if (newVal !== undefined && newVal !== oldState[k]) ret.push(k);
+    if (newVal !== undefined) {
+      setted.push(k);
+      if (newVal !== oldState[k]) changed.push(k);
+      else unchanged.push(k);
+    }
   });
-  return ret;
+  return { changed, unchanged, setted };
 }
 
 export default {

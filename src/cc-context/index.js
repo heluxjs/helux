@@ -1,52 +1,48 @@
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 
 const refs = {};
-const setStateByModule = (module, committedState) => {
+const setStateByModule = (module, committedState, refCtx) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
-
-  const moduleComputedFns = _computedFn[module];
   const moduleComputedValue = _computedValue[module];
-  const watchFns = _watch[module];
 
   const rootComputedDep = computed.getRootComputedDep();
-  const depFns = pickDepFns('module', 'computed', rootComputedDep, module, moduleState, committedState);
-  depFns.forEach(({ retKey, fn }) => {
-    const computedValue = fn(moduleState, committedState);
+  const { pickedFns: cFns, setted, changed } = pickDepFns(false, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
+  const refModule = refCtx ? refCtx.module : null;
+  cFns.forEach(({ retKey, fn, depKeys }) => {
+    const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx:null };
+    const fistDepKey = depKeys[0];
+    let computedValue;
+
+    if (depKeys.length === 1 && fistDepKey !== '*') {
+      computedValue = fn(committedState[fistDepKey], moduleState[fistDepKey], fnCtx);
+    } else {
+      computedValue = fn(committedState, moduleState, fnCtx);
+    }
     moduleComputedValue[retKey] = computedValue;
   });
 
   const rootWatchDep = watch.getRootWatchDep();
-  const depFnsW = pickDepFns('module', 'watch', rootWatchDep, module, moduleState, committedState);
-  depFnsW.forEach(({ fn }) => {
-    fn(moduleState, committedState);
+  const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  wFns.forEach(({ retKey, fn, depKeys }) => {
+    const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx: null };
+    const firstDepKey = depKeys[0];
+
+    if (depKeys.length === 1 && firstDepKey !== '*') {
+      fn(committedState[firstDepKey], moduleState[firstDepKey], fnCtx);
+    } else {
+      fn(committedState, moduleState, fnCtx);
+    }
   });
 
 
   Object.keys(committedState).forEach(key => {
     /** setStateByModuleAndKey */
-    const value = committedState[key];
-
-    const oldValue = moduleState[key];
-    prevModuleState[key] = oldValue;
-
-    const fnCtx = { key, module, moduleState, committedState };
-    if (moduleComputedFns) {
-      const fn = moduleComputedFns[key];
-      if (fn) {
-        const computedValue = fn(value, oldValue, fnCtx);
-        moduleComputedValue[key] = computedValue;
-      }
-    }
-
-    if (watchFns) {
-      const fn = watchFns[key];
-      if (fn) fn(value, oldValue, fnCtx);//fn(newValue, oldValue)
-    }
-
-    moduleState[key] = value;
+    prevModuleState[key] = moduleState[key];
+    // const fnCtx = { key, module, moduleState, committedState };
+    moduleState[key] = committedState[key];
   });
 }
 
@@ -63,30 +59,25 @@ const _computedValue = {
   [MODULE_DEFAULT]: {},
   [MODULE_CC]: {},
 };
-const _computedFn = {
-  [MODULE_GLOBAL]: {},
-  [MODULE_DEFAULT]: {},
-  [MODULE_CC]: {},
-};
-const _computedDep = {
-};
+const _computedDep = {};
+const _computedRaw = {};
 const computed = {
   _computedValue,
-  _computedFn,
+  _computedRaw,
   _computedDep,
   getRootComputedValue: () => _computedValue,
-  getRootComputedFn: () => _computedFn,
   getRootComputedDep: () => _computedDep,
+  getRootComputedRaw: () => _computedRaw,
 };
 
 /** watch section */
-const _watch = {};
 const _watchDep = {};
+const _watchRaw = {};
 const watch = {
-  _watch,
-  getRootWatch: () => _watch,
+  _watchRaw,
+  _watchDep,
   getRootWatchDep: () => _watchDep,
-  getModuleWatch: module => _watch[module],
+  getRootWatchRaw: () => _watchRaw,
 };
 
 function hotReloadWarning(err) {
@@ -185,8 +176,8 @@ const ccContext = {
       if (module) return getPrevState(module);
       else return _prevState;
     },
-    setState: function (module, partialSharedState) {
-      setStateByModule(module, partialSharedState);
+    setState: function (module, partialSharedState, refCtx) {
+      setStateByModule(module, partialSharedState, refCtx);
     },
     setGlobalState: function (partialGlobalState) {
       setStateByModule(MODULE_GLOBAL, partialGlobalState);

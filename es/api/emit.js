@@ -10,6 +10,6 @@ export default function (event, ...args) {
     const ref = pickOneRef();
     ref.ctx.emit(event, ...args);
   } catch (err) {
-    util.justWarning(err.message)
+    util.justWarning(err);
   }
 }

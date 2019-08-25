@@ -6,6 +6,8 @@ const {
   store: { getPrevState, getState }
 } = ccContext;
 
+const frag1 = 'has not been declared in';
+
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
   const { effectItems, eid_effectReturnCb_ } = ctx.effectMeta;
@@ -38,11 +40,11 @@ export default function (ref, callByDidMount) {
             const [module, unmoduledKey] = key.split('/');
             const prevState = getPrevState(module);
             if (!prevState) {
-              util.justWarning(`key[${key}] is invalid, its module[${module}] has not been declared in store!`);
+              util.justWarning(`effect: key[${key}] is invalid, its module[${module}] ${frag1} store!`);
               continue;
             }
             if (!moduleName_stateKeys_[module].includes(unmoduledKey)) {
-              util.justWarning(`key[${key}] is invalid, its unmoduledKey[${unmoduledKey}] has not been declared in state!`);
+              util.justWarning(`effect: key[${key}] is invalid, its unmoduledKey[${unmoduledKey}] ${frag1} state!`);
               continue;
             }
             targetCurState = getState(module);

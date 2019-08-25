@@ -1,6 +1,6 @@
 import ccContext from '../cc-context';
 import { ERR, MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
-import util, { makeError, verboseInfo, isPlainJsonObject } from '../support/util';
+import util, { makeError, verboseInfo, isPlainJsonObject, okeys } from '../support/util';
 import initModuleState from '../core/state/init-module-state';
 import initModuleReducer from '../core/reducer/init-module-reducer';
 import initModuleComputed from '../core/computed/init-module-computed';
@@ -11,26 +11,19 @@ import { makeSetStateHandler } from '../core/state/handler-factory';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
 
-function setGlobalConfig(storedGlobalConf, inputGlobalConf, label) {
-  const globalState = ccContext.store.getGlobalState();
-  if (inputGlobalConf) {
-    if (!util.isPlainJsonObject(inputGlobalConf)) {
-      throw new Error(`option.global${label} is not a plain json object`);
+function setGlobalState(storedGlobalState, inputGlobalState) {
+  if (inputGlobalState) {
+    if (!util.isPlainJsonObject(inputGlobalState)) {
+      throw new Error(`option.globalState is not a plain json object`);
     }
 
-    const globalConfKeys = Object.keys(inputGlobalConf);
-    globalConfKeys.forEach(gKey => {
-      if (storedGlobalConf.hasOwnProperty(gKey)) {
-        throw new Error(`key[${gKey}] duplicated in global.${label.toLowerCase()}`);
+    const gKeys = okeys(inputGlobalState);
+    gKeys.forEach(gKey => {
+      if (storedGlobalState.hasOwnProperty(gKey)) {
+        throw new Error(`key[${gKey}] duplicated in globalState`);
       }
-      const confValue = inputGlobalConf[gKey];
-      storedGlobalConf[gKey] = confValue;
-      if (label === 'State') ccGlobalStateKeys.push(gKey);
-      else if (label === 'Computed') {
-        const val = globalState[gKey];
-        const computedVal = confValue(val, val, globalState);
-        ccContext.computed._computedValue[MODULE_GLOBAL][gKey] = computedVal;
-      }
+      ccGlobalStateKeys.push(gKey);
+      storedGlobalState[gKey] = inputGlobalState[gKey];
     });
   }
 }
@@ -119,12 +112,10 @@ export default function(module, config, option = {}) {
   }
 
   const storedGlobalState = _state[MODULE_GLOBAL];
-  const storedGlobalComputedFn = ccContext.computed._computedFn[MODULE_GLOBAL];
-  const storedGlobalWatch = ccContext.watch[MODULE_GLOBAL];
   //这里的设置顺序很重要，一定是先设置State，再设置Computed，因为Computed会触发计算
-  setGlobalConfig(storedGlobalState, globalState, 'State');
-  setGlobalConfig(storedGlobalComputedFn, globalComputed, 'Computed');
-  setGlobalConfig(storedGlobalWatch, globalWatch, 'Watch');
+  setGlobalState(storedGlobalState, globalState, 'State');
+  if (globalComputed) initModuleComputed(MODULE_GLOBAL, globalComputed, true);
+  if (globalWatch) initModuleWatch(MODULE_GLOBAL, globalWatch, true);
 
   if (init) {
     if (typeof init !== 'function') {
@@ -132,7 +123,6 @@ export default function(module, config, option = {}) {
     }
     init(makeSetStateHandler(module));
   }
-
 
   if (middlewares && middlewares.length > 0) {
     const ccMiddlewares = ccContext.middlewares;

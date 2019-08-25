@@ -13,7 +13,6 @@ import getDefineComputedHandler from '../computed/get-define-computed-handler';
 import computeCcUniqueKey from '../base/compute-cc-unique-key';
 import getOutProps from '../base/get-out-props';
 import __sync from '../base/sync';
-import deh from '../base/define-handler-to-fns';
 
 const {
   refStore,
@@ -123,12 +122,9 @@ export default function (ref, params, liteLevel = 5) {
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
-
-  // immediateWatchKeys记录所有的watchKey，不管是对stateKey做watch，还是对depStateKeys做watch
-  const aux = {}, computedFns = {}, watchFns = {}, immediateWatchKeys = [];
+  const aux = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
-  
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
   const ctx = {
@@ -169,11 +165,8 @@ export default function (ref, params, liteLevel = 5) {
     // api meta data
     stateKeys,
     onEvents,
-    computedFns,
     computedDep,
-    watchFns,
     watchDep,
-    immediateWatchKeys,
     execute: null,
     reducer: {},
     lazyReducer: {},
@@ -274,8 +267,8 @@ export default function (ref, params, liteLevel = 5) {
       const effectItem = { fn, depKeys, eId: _eId, depKeys, immediate };
       effectItems.push(effectItem);
     };
-    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys, watchDep);
-    const defineComputed = getDefineComputedHandler(ctx, computedFns, computedDep);
+    const defineWatch = getDefineWatchHandler(ctx);
+    const defineComputed = getDefineComputedHandler(ctx);
 
     ctx.defineWatch = defineWatch;
     ctx.defineComputed = defineComputed;

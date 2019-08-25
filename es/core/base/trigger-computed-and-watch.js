@@ -7,39 +7,25 @@ const { store: { getState } } = ccContext;
 
 /** 由首次render触发 */
 export default function (ref) {
-  const  ctx = ref.ctx;
-  const { hasComputedFn, hasWatchFn, immediateWatchKeys, connect, module: refModule } = ctx;
+  const ctx = ref.ctx;
+  const { hasComputedFn, hasWatchFn, connect, module: refModule } = ctx;
 
+  const connectedModules = okeys(connect);
   const refState = ctx.state;
   if (hasComputedFn) {
-    computeValueForRef(ctx, refModule, refState, refState);
-    okeys(connect).forEach(m => {
+    computeValueForRef(ctx, refModule, refState, refState, true);
+    connectedModules.forEach(m => {
       const mState = getState(m);
-      computeValueForRef(ctx, m, mState, mState);
+      computeValueForRef(ctx, m, mState, mState, true);
     });
   }
 
   if (hasWatchFn) {
-    if (immediateWatchKeys.length > 0) {
-      const module_state_ = {};
-      immediateWatchKeys.forEach(key => {
-        let targetModule;
-        if (key.includes('/')) {
-          const [module] = key.split('/');
-          targetModule = module || refModule;// key: 'foo/f1' or '/f1'
-        } else {
-          targetModule = refModule;
-        }
-
-        const state = targetModule === refModule ? refState : getState(targetModule);
-        module_state_[targetModule] = state;
-      });
-
-      okeys(module_state_).forEach(m => {
-        const state = module_state_[m];
-        watchKeyForRef(ctx, m, state, state, true);
-      });
-    }
+    watchKeyForRef(ctx, refModule, refState, refState, true);
+    connectedModules.forEach(m => {
+      const mState = getState(m);
+      watchKeyForRef(ctx, m, mState, mState, true);
+    });
   }
-  
+
 }

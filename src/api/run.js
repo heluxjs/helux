@@ -2,17 +2,17 @@ import startup from './startup';
 import util from '../support/util';
 
 /**
- * load will call startup
+ * run will call startup
  * @param {{ [moduleName:string]: config:{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean} }} store
  * @param {{isStrict:boolean}} option
  */
 
 export default function (store = {}, option = {}) {
   if (!util.isPlainJsonObject(store)) {
-    throw new Error('[[load]]: param error, store is not a plain json object');
+    throw new Error('[[run]]: param error, store is not a plain json object');
   }
   if (!util.isPlainJsonObject(option)) {
-    throw new Error('[[load]]: param error, option is not a plain json object');
+    throw new Error('[[run]]: param error, option is not a plain json object');
   }
 
   const _store = {};

@@ -122,12 +122,9 @@ export default function (ref, params, liteLevel = 5) {
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
-
-  // immediateWatchKeys记录所有的watchKey，不管是对stateKey做watch，还是对depStateKeys做watch
-  const aux = {}, computedFns = {}, watchFns = {}, immediateWatchKeys = [];
+  const aux = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
-  
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
   const ctx = {
@@ -168,11 +165,8 @@ export default function (ref, params, liteLevel = 5) {
     // api meta data
     stateKeys,
     onEvents,
-    computedFns,
     computedDep,
-    watchFns,
     watchDep,
-    immediateWatchKeys,
     execute: null,
     reducer: {},
     lazyReducer: {},
@@ -263,18 +257,18 @@ export default function (ref, params, liteLevel = 5) {
     ctx.defineExecute = handler => ctx.execute = handler;
     ctx.defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
 
-    const defineEffect = (fn, stateKeys, immediate = true, eId) => {
+    const defineEffect = (fn, depKeys, immediate = true, eId) => {
       if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
-      if (stateKeys !== null && stateKeys !== undefined) {
-        if (!Array.isArray(stateKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+      if (depKeys !== null && depKeys !== undefined) {
+        if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
       }
       const _eId = eId || getEId();
-      // const effectItem = { fn: _fn, stateKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
-      const effectItem = { fn, stateKeys, eId: _eId, immediate };
+      // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
+      const effectItem = { fn, depKeys, eId: _eId, depKeys, immediate };
       effectItems.push(effectItem);
     };
-    const defineWatch = getDefineWatchHandler(ctx, watchFns, immediateWatchKeys, watchDep);
-    const defineComputed = getDefineComputedHandler(ctx, computedFns, computedDep);
+    const defineWatch = getDefineWatchHandler(ctx);
+    const defineComputed = getDefineComputedHandler(ctx);
 
     ctx.defineWatch = defineWatch;
     ctx.defineComputed = defineComputed;

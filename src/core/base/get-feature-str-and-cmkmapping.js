@@ -14,7 +14,7 @@ export default function(connectSpec, fragmentModule, fragmentPrefix, watchedKeys
   const invalidConnect = `CcFragment or CcClass's prop connect is invalid,`;
   const invalidConnectItem = m => `${invalidConnect} module[${m}]'s value must be * or array of string`;
 
-  const moduleNames = Object.keys(connectSpec);
+  const moduleNames = okeys(connectSpec);
   moduleNames.sort();
   const featureStrs = [];
   const connectedModuleKeyMapping = {};

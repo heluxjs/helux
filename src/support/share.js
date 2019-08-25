@@ -5,6 +5,5 @@ export function strictWarning(err) {
     throw err;
   }
   console.error(' ------------ CC WARNING ------------');
-  if (err instanceof Error) console.error(err.message);
-  else console.error(err)
+  console.error(err);
 }
