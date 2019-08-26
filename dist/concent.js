@@ -608,6 +608,7 @@
         changed = _pickDepFns.changed;
 
     var refModule = refCtx ? refCtx.module : null;
+    var newState = Object.assign({}, moduleState, committedState);
     cFns.forEach(function (_ref) {
       var retKey = _ref.retKey,
           fn = _ref.fn,
@@ -628,7 +629,7 @@
       if (depKeys.length === 1 && fistDepKey !== '*') {
         computedValue = fn(committedState[fistDepKey], moduleState[fistDepKey], fnCtx);
       } else {
-        computedValue = fn(committedState, moduleState, fnCtx);
+        computedValue = fn(newState, moduleState, fnCtx);
       }
 
       moduleComputedValue[retKey] = computedValue;
@@ -659,7 +660,7 @@
       if (depKeys.length === 1 && firstDepKey !== '*') {
         fn(committedState[firstDepKey], moduleState[firstDepKey], fnCtx);
       } else {
-        fn(committedState, moduleState, fnCtx);
+        fn(newState, moduleState, fnCtx);
       }
     });
     Object.keys(committedState).forEach(function (key) {
@@ -852,7 +853,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.16',
+      version: '1.5.17',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1134,32 +1135,36 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    pickedFns.forEach(function (_ref) {
-      var fn = _ref.fn,
-          retKey = _ref.retKey,
-          depKeys = _ref.depKeys;
-      var fnCtx = {
-        retKey: retKey,
-        setted: setted,
-        changed: changed,
-        stateModule: stateModule,
-        refModule: refModule,
-        oldState: oldState,
-        committedState: committedState,
-        refCtx: refCtx
-      };
-      var fistDepKey = depKeys[0];
-      var ret;
+    if (pickedFns.length) {
+      var newState = Object.assign({}, oldState, committedState);
+      pickedFns.forEach(function (_ref) {
+        var fn = _ref.fn,
+            retKey = _ref.retKey,
+            depKeys = _ref.depKeys;
+        var fnCtx = {
+          retKey: retKey,
+          setted: setted,
+          changed: changed,
+          stateModule: stateModule,
+          refModule: refModule,
+          oldState: oldState,
+          committedState: committedState,
+          refCtx: refCtx
+        };
+        var fistDepKey = depKeys[0];
+        var ret;
 
-      if (depKeys.length === 1 && fistDepKey !== '*') {
-        ret = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
-      } else {
-        ret = fn(committedState, oldState, fnCtx);
-      } //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
+        if (depKeys.length === 1 && fistDepKey !== '*') {
+          ret = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
+        } else {
+          ret = fn(newState, oldState, fnCtx);
+        } //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
 
 
-      if (ret === false) shouldCurrentRefUpdate = false;
-    });
+        if (ret === false) shouldCurrentRefUpdate = false;
+      });
+    }
+
     return shouldCurrentRefUpdate;
   }
 
@@ -1182,40 +1187,43 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    pickedFns.forEach(function (_ref) {
-      var fn = _ref.fn,
-          retKey = _ref.retKey,
-          depKeys = _ref.depKeys;
-      var fnCtx = {
-        retKey: retKey,
-        setted: setted,
-        changed: changed,
-        stateModule: stateModule,
-        refModule: refModule,
-        oldState: oldState,
-        committedState: committedState,
-        refCtx: refCtx
-      };
-      var fistDepKey = depKeys[0];
-      var computedValue;
+    if (pickedFns.length) {
+      var newState = Object.assign({}, oldState, committedState);
+      pickedFns.forEach(function (_ref) {
+        var fn = _ref.fn,
+            retKey = _ref.retKey,
+            depKeys = _ref.depKeys;
+        var fnCtx = {
+          retKey: retKey,
+          setted: setted,
+          changed: changed,
+          stateModule: stateModule,
+          refModule: refModule,
+          oldState: oldState,
+          committedState: committedState,
+          refCtx: refCtx
+        };
+        var fistDepKey = depKeys[0];
+        var computedValue;
 
-      if (depKeys.length === 1 && fistDepKey !== '*') {
-        computedValue = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
-      } else {
-        computedValue = fn(committedState, oldState, fnCtx);
-      }
+        if (depKeys.length === 1 && fistDepKey !== '*') {
+          computedValue = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
+        } else {
+          computedValue = fn(newState, oldState, fnCtx);
+        }
 
-      if (refModule === stateModule) {
-        refComputed[retKey] = computedValue;
-      } // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
+        if (refModule === stateModule) {
+          refComputed[retKey] = computedValue;
+        } // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
 
 
-      var targetComputed = refConnectedComputed[stateModule];
+        var targetComputed = refConnectedComputed[stateModule];
 
-      if (targetComputed) {
-        targetComputed[retKey] = computedValue;
-      }
-    });
+        if (targetComputed) {
+          targetComputed[retKey] = computedValue;
+        }
+      });
+    }
   }
 
   var isPlainJsonObject$1 = isPlainJsonObject,

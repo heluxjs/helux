@@ -11,6 +11,8 @@ const setStateByModule = (module, committedState, refCtx) => {
   const rootComputedDep = computed.getRootComputedDep();
   const { pickedFns: cFns, setted, changed } = pickDepFns(false, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
   const refModule = refCtx ? refCtx.module : null;
+  const newState = Object.assign({}, moduleState, committedState);
+
   cFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx:null };
     const fistDepKey = depKeys[0];
@@ -19,7 +21,7 @@ const setStateByModule = (module, committedState, refCtx) => {
     if (depKeys.length === 1 && fistDepKey !== '*') {
       computedValue = fn(committedState[fistDepKey], moduleState[fistDepKey], fnCtx);
     } else {
-      computedValue = fn(committedState, moduleState, fnCtx);
+      computedValue = fn(newState, moduleState, fnCtx);
     }
     moduleComputedValue[retKey] = computedValue;
   });
@@ -33,7 +35,7 @@ const setStateByModule = (module, committedState, refCtx) => {
     if (depKeys.length === 1 && firstDepKey !== '*') {
       fn(committedState[firstDepKey], moduleState[firstDepKey], fnCtx);
     } else {
-      fn(committedState, moduleState, fnCtx);
+      fn(newState, moduleState, fnCtx);
     }
   });
 
@@ -231,7 +233,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.16',
+    version: '1.5.17',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',
