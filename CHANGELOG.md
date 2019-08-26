@@ -1,3 +1,7 @@
+#### 2019-08-26
+1.5.16 发布
+* 重构computed&watch，支持`dependencyStateKeys`机制
+
 #### 2019-07-03
 1.4.9 发布
 * 重命名sharedStateKeys to watchedKeys, storedStateKeys to storedKeys, 使其更符合上下文语境
