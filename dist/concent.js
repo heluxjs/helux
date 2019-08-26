@@ -852,7 +852,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.15',
+      version: '1.5.16',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4833,7 +4833,7 @@
       throw new Error('cc is not startup yet, you can not call cc.configure!');
     }
 
-    if (isPlainJsonObject$6(config)) {
+    if (!isPlainJsonObject$6(config)) {
       throw new Error('[[configure]] param type error, config is not plain json object!');
     }
 

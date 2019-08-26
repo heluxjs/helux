@@ -46,7 +46,7 @@ export default function(module, config, option = {}) {
   if (!ccContext.isCcAlreadyStartup) {
     throw new Error('cc is not startup yet, you can not call cc.configure!');
   }
-  if (isPlainJsonObject(config)) {
+  if (!isPlainJsonObject(config)) {
     throw new Error('[[configure]] param type error, config is not plain json object!');
   }
   if (module === MODULE_GLOBAL) {
