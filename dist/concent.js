@@ -2845,14 +2845,14 @@
     var _descObj;
 
     if (itype === 'string') {
-      var _descObj2;
+      var _descObj2, _descObj3;
 
-      _descObj = (_descObj2 = {}, _descObj2[item] = {
+      if (typeof handler === 'object') _descObj = (_descObj2 = {}, _descObj2[item] = handler, _descObj2);else _descObj = (_descObj3 = {}, _descObj3[item] = {
         fn: handler,
         depKeys: depKeys,
         compare: compare,
         immediate: immediate
-      }, _descObj2);
+      }, _descObj3);
     } else if (itype === 'object') {
       _descObj = item;
     } else if (itype === 'function') {
