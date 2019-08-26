@@ -2,7 +2,7 @@ import register from '../core/base/register';
 import React from 'react';
 import { CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
-import util from '../support/util';
+import * as util from '../support/util';
 
 export default function (CustomizedComponent) {
   class DefaultComponent extends React.Component {

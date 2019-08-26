@@ -112,6 +112,9 @@ const ccContext = {
       hotReloadWarning(err);
     } else throw err;
   },
+  computedCompare: true,
+  watchCompare: true,
+  watchImmediate: false,
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,

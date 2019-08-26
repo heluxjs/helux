@@ -1,6 +1,6 @@
 import { CC_DISPATCHER, ERR } from '../../support/constant';
 import ccContext from '../../cc-context';
-import util from '../../support/util';
+import * as util from '../../support/util';
 
 const { ccUkey_ref_ } = ccContext;
 export default function(){

@@ -1,6 +1,8 @@
-import util from '../../support/util';
+import * as util from '../../support/util';
 import ccContext from '../../cc-context';
 import pickOneRef from '../../core/ref/pick-one-ref';
+
+const { makeUniqueCcKey, justWarning } = util;
 
 export default function (isLazy, action, payLoadWhenActionIsString, renderKey = '', delay, { ccClassKey, ccKey, throwError } = {}) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {
@@ -10,7 +12,7 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
   let dispatchFn;
   try {
     if (ccClassKey && ccKey) {
-      const uKey = util.makeUniqueCcKey(ccClassKey, ccKey);
+      const uKey = makeUniqueCcKey(ccClassKey, ccKey);
       const targetRef = ccContext.refs[uKey];
       if (!targetRef) {
         throw new Error(`no ref found for uniqueCcKey:${uKey}!`);
@@ -36,7 +38,7 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
     if (typeof action === 'string' && action.startsWith('*')) {
       const reducerModName = action.split('/').pop();
       const fullFnNames = ccContext.reducer._reducerFnName_fullFnNames_[reducerModName];
-      if(!fullFnNames) return;
+      if (!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {
         tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, renderKey, delay));
@@ -47,6 +49,6 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
     }
   } catch (err) {
     if (throwError) throw err;
-    else util.justWarning(err.message);
+    else justWarning(err.message);
   }
 }

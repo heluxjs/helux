@@ -1,6 +1,6 @@
 import ccContext from '../cc-context';
 import { ERR, MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
-import util, { makeError, verboseInfo, isPlainJsonObject, okeys } from '../support/util';
+import * as util from '../support/util';
 import initModuleState from '../core/state/init-module-state';
 import initModuleReducer from '../core/reducer/init-module-reducer';
 import initModuleComputed from '../core/computed/init-module-computed';
@@ -10,10 +10,11 @@ import { send } from '../core/plugin';
 import { makeSetStateHandler } from '../core/state/handler-factory';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
+const { makeError, verboseInfo, isPlainJsonObject, okeys } = util;
 
 function setGlobalState(storedGlobalState, inputGlobalState) {
   if (inputGlobalState) {
-    if (!util.isPlainJsonObject(inputGlobalState)) {
+    if (!isPlainJsonObject(inputGlobalState)) {
       throw new Error(`option.globalState is not a plain json object`);
     }
 
@@ -45,7 +46,7 @@ export default function(module, config, option = {}) {
   if (!ccContext.isCcAlreadyStartup) {
     throw new Error('cc is not startup yet, you can not call cc.configure!');
   }
-  if (!util.isPlainJsonObject(config)) {
+  if (isPlainJsonObject(config)) {
     throw new Error('[[configure]] param type error, config is not plain json object!');
   }
   if (module === MODULE_GLOBAL) {
@@ -62,41 +63,34 @@ export default function(module, config, option = {}) {
   const _reducer = ccContext.reducer._reducer;
   _state[module] = state;
 
-  if (computed) {
-    initModuleComputed(module, computed);
-  }
-  if (watch) {
-    initModuleWatch(module, watch);
-  }
-
-  if (isClassSingle === true) {
-    ccContext.moduleSingleClass[module] = true;
-  }
+  computed && initModuleComputed(module, computed);
+  watch && initModuleWatch(module, watch);
+  ccContext.moduleSingleClass[module] = isClassSingle === true;
 
   if (optionReducer) {
     if (!isPlainJsonObject(optionReducer)) {
-      throw makeError(ERR.CC_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] 's moduleReducer is invalid`));
+      throw makeError(ERR.CC_OPTION_REDUCER_INVALID, verboseInfo(`configure module[${module}]`));
     }
     const reducerModuleNames = Object.keys(optionReducer);
     reducerModuleNames.forEach(rmName => {
       checker.checkModuleName(rmName);
       const moduleReducer = optionReducer[rmName];
       if (!isPlainJsonObject(moduleReducer)) {
-        throw makeError(ERR.CC_REDUCER_VALUE_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`module[${module}] reducer 's value is invalid`));
+        throw makeError(ERR.CC_OPTION_REDUCER_FVALUE_INVALID, verboseInfo(`configure module[${module}], option.reducer.${rmName}`));
       }
 
       if (rmName === MODULE_GLOBAL) {//merge input globalReducer to existed globalReducer
-        const typesOfGlobal = Object.keys(moduleReducer);
+        const fnNames = Object.keys(moduleReducer);
         const globalReducer = _reducer[MODULE_GLOBAL];
-        typesOfGlobal.forEach(type => {
-          if (globalReducer[type]) {
-            throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo(`type ${type}`));
+        fnNames.forEach(fnName => {
+          if (globalReducer[fnName]) {
+            throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo(`type ${fnName}`));
           }
-          var reducerFn = moduleReducer[type];
+          var reducerFn = moduleReducer[fnName];
           if (typeof reducerFn !== 'function') {
             throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
           }
-          globalReducer[type] = reducerFn;
+          globalReducer[fnName] = reducerFn;
         });
       } else {
         _reducer[rmName] = moduleReducer;

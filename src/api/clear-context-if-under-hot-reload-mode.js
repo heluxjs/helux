@@ -26,6 +26,7 @@ function _clearAll() {
   clearObject(ccContext.computed._computedDep);
   clearObject(ccContext.computed._computedValue);
   clearObject(ccContext.watch._watchDep);
+  clearObject(ccContext.middlewares);
   clearCachedData();
   _clearInsAssociation();
 }

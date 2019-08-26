@@ -4,7 +4,7 @@ import {
   MODULE_DEFAULT, ERR, CC_DISPATCHER, CC_CLASS_PREFIX
 } from '../../support/constant';
 import ccContext from '../../cc-context';
-import util, { okeys, shallowDiffers } from '../../support/util';
+import * as util from '../../support/util';
 import catchCcError from './catch-cc-error';
 import * as hf from '../state/handler-factory';
 import mapRegistrationInfo from './map-registration-info';
@@ -16,7 +16,7 @@ import beforeUnMount from './before-unmount';
 import getStoredKeys from './get-stored-keys';
 
 const { moduleName_stateKeys_ } = ccContext;
-const {  ccClassDisplayName, styleStr, color, verboseInfo, makeError } = util;
+const {  ccClassDisplayName, styleStr, color, verboseInfo, makeError, okeys, shallowDiffers } = util;
 const cl = color;
 const ss = styleStr;
 const me = makeError;

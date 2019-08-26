@@ -1,13 +1,14 @@
 import ccContext from '../../cc-context';
-import util, { okeys } from '../../support/util';
+import * as util from '../../support/util';
 
+const { okeys, isPlainJsonObject } = util;
 const { store: { _state } } = ccContext;
 
 /**
  * 根据connect参数算出ccClassKey值和connectedModuleKeyMapping值
  */
 export default function(connectSpec, fragmentModule, fragmentPrefix, watchedKeys) {
-  if (!util.isPlainJsonObject(connectSpec)) {
+  if (!isPlainJsonObject(connectSpec)) {
     throw new Error(`CcFragment or CcClass's prop connect type error, it is not a plain json object`);
   }
 

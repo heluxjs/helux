@@ -1,8 +1,8 @@
 import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
-import util from '../../support/util'
+import * as util from '../../support/util'
 
-const { makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
+const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
 const ccUKey_insCount = {};
 
 function setCcInstanceRef(ccUniqueKey, ref, ccKeys, delayMs) {
@@ -49,7 +49,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
         throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
       }
       // just warning
-      util.justWarning(`
+      justWarning(`
         found ccKey ${ccKey} may duplicate, but now is in hot reload mode, cc can't throw the error, please make sure your ccKey is unique manually,
         ${vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey} ccUniqueKey:${ccUniqueKey}`)}
       `);

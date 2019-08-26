@@ -75,7 +75,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
     };
   }
 
-  _pickFn(pickedFns, setted, changed, retKey_fn_, stateKey_retKeys_, fnCount)
+  _pickFn(pickedFns, setted, changed, retKey_fn_, stateKey_retKeys_, fnCount);
   cachePool[cacheKey] = pickedFns.map(v => v.retKey);
 
   return { pickedFns, setted, changed };

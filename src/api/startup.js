@@ -1,11 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import util, { bindToWindow } from '../support/util';
+import * as util from '../support/util';
 import { ERR, CC_DISPATCHER_BOX, CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
 import clearContextIfUnderHotReloadMode from './clear-context-if-under-hot-reload-mode';
+
+const { justTip, bindToWindow, makeError } = util;
 
 export default function ({
   store = {},
@@ -21,19 +23,23 @@ export default function ({
   errorHandler = null,
   isHot = false,
   autoCreateDispatcher = true,
-  isReducerArgsOldMode = false,
   bindCtxToMethod = false,
+  computedCompare = true, 
+  watchCompare = true, 
+  watchImmediate = false,
 } = {}) {
   try {
-    util.justTip(`cc version ${ccContext.info.version}`);
+    justTip(`cc version ${ccContext.info.version}`);
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
     ccContext.isStrict = isStrict;
     ccContext.isDebug = isDebug;
-    ccContext.isReducerArgsOldMode = isReducerArgsOldMode;
     ccContext.bindCtxToMethod = bindCtxToMethod;
+    ccContext.computedCompare = computedCompare;
+    ccContext.watchCompare = watchCompare;
+    ccContext.watchImmediate = watchImmediate;
 
-    const err = util.makeError(ERR.CC_ALREADY_STARTUP);
+    const err = makeError(ERR.CC_ALREADY_STARTUP);
     clearContextIfUnderHotReloadMode(true, err);
 
     boot.configModuleSingleClass(moduleSingleClass);
@@ -60,9 +66,9 @@ export default function ({
           document.body.append(box);
         }
         ReactDOM.render(React.createElement(Dispatcher), box);
-        util.justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
+        justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
       } else {
-        util.justTip(`[[startUp]]: CcDispatcher existed already`);
+        justTip(`[[startUp]]: CcDispatcher existed already`);
       }
     } else {
       throw new Error('customizing Dispatcher is not allowed in current version cc');

@@ -1,5 +1,5 @@
 import ccContext from '../cc-context';
-import util from '../support/util';
+import * as util from '../support/util';
 import { ERR } from '../support/constant';
 
 const vbi = util.verboseInfo;

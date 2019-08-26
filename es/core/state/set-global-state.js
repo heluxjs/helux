@@ -1,4 +1,4 @@
-import util from '../../support/util';
+import * as util from '../../support/util';
 import pickOneRef from '../ref/pick-one-ref';
 
 /****

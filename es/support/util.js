@@ -347,36 +347,3 @@ export function differStateKeys(oldState, newState) {
   });
   return { changed, unchanged, setted };
 }
-
-export default {
-  clearObject,
-  makeError,
-  makeCcClassContext,
-  makeUniqueCcKey,
-  makeHandlerKey,
-  isActionTypeValid,
-  isModuleNameValid,
-  isModuleNameCcLike,
-  isModuleStateValid,
-  isCcOptionValid,
-  isCcActionValid,
-  isPrefixedKeyValid,
-  isPlainJsonObject,
-  isObjectNotNull,
-  isValueNotNull,
-  disassembleActionType,
-  verboseInfo,
-  bindThis,
-  ccClassDisplayName,
-  clone,
-  verifyKeys,
-  color,
-  styleStr,
-  justWarning,
-  justTip,
-  safeGetObjectFromObject,
-  safeGetArrayFromObject,
-  safeAssignObjectValue,
-  computeFeature,
-  randomNumber,
-}

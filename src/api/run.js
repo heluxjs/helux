@@ -1,5 +1,10 @@
 import startup from './startup';
-import util from '../support/util';
+import * as util from '../support/util';
+
+const { isPlainJsonObject, okeys, isObjectNotNull } = util;
+const pError = label => {
+  throw new Error(`[[run]]: param error, ${label} is not a plain json object`);
+}
 
 /**
  * run will call startup
@@ -8,12 +13,8 @@ import util from '../support/util';
  */
 
 export default function (store = {}, option = {}) {
-  if (!util.isPlainJsonObject(store)) {
-    throw new Error('[[run]]: param error, store is not a plain json object');
-  }
-  if (!util.isPlainJsonObject(option)) {
-    throw new Error('[[run]]: param error, option is not a plain json object');
-  }
+  if (!isPlainJsonObject(store)) pError('store');
+  if (!isPlainJsonObject(option)) pError('option');
 
   const _store = {};
   const _reducer = {};
@@ -21,8 +22,9 @@ export default function (store = {}, option = {}) {
   const _computed = {};
   let _init = {};
   const _moduleSingleClass = {};
-  const moduleNames = Object.keys(store);
-  moduleNames.forEach(m => {
+
+  // traversal moduleNames
+  okeys(store).forEach(m => {
     const config = store[m];
     const { state, reducer, watch, computed, init, isClassSingle } = config;
     if (state) _store[m] = state;
@@ -30,10 +32,10 @@ export default function (store = {}, option = {}) {
     if (watch) _watch[m] = watch;
     if (computed) _computed[m] = computed;
     if (init) _init[m] = init;
-    if (typeof isClassSingle === 'boolean') _moduleSingleClass[m] = isClassSingle;
+    _moduleSingleClass[m] = isClassSingle === true;
   });
 
-  if (!util.isObjectNotNull(_init)) _init = null;
+  if (!isObjectNotNull(_init)) _init = null;
   const startupOption = {
     store: _store,
     reducer: _reducer,
@@ -43,19 +45,24 @@ export default function (store = {}, option = {}) {
     moduleSingleClass: _moduleSingleClass,
   }
 
-  const { middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, reducer, isReducerArgsOldMode, bindCtxToMethod } = option;
+  const {
+    middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
+    autoCreateDispatcher, reducer, bindCtxToMethod,
+    computedCompare, watchCompare, watchImmediate,
+  } = option;
   if (reducer) {
-    if (!util.isPlainJsonObject(reducer)) {
-      throw new Error('[[load]]: param option.reducer error, it is not a plain json object');
-    }
-    Object.keys(reducer).forEach(reducerModule => {
+    if (!isPlainJsonObject(reducer)) pError('option.reducer');
+    okeys(reducer).forEach(reducerModule => {
+      if (_reducer[reducerModule]) throw new Error(`reducerModule[${reducerModule}] has been declared in store`);
       _reducer[reducerModule] = reducer[reducerModule];
     });
   }
 
-  const mergedOption = Object.assign(startupOption, {
-    middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, isReducerArgsOldMode, bindCtxToMethod
+  // merge startupOption
+  Object.assign(startupOption, {
+    middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, bindCtxToMethod,
+    computedCompare, watchCompare, watchImmediate,
   });
 
-  startup(mergedOption);
+  startup(startupOption);
 }
