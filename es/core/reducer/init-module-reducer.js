@@ -15,6 +15,9 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
   const subLazyReducerCaller = util.safeGetObjectFromObject(_lazyReducerCaller, module);
   const fnNames = util.safeGetArrayFromObject(_reducerModule_fnNames_, module);
 
+  // 自动附加一个setState在reducer里
+  if (!reducer.setState) reducer.setState = payload => payload;
+
   const reducerNames = util.okeys(reducer);
   reducerNames.forEach(name => {
     fnNames.push(name);

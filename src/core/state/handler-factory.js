@@ -249,6 +249,8 @@ export function invokeWith(userLogicFn, executionContext, payload){
         //!!!指的是调用源cc类的connectedComputed
         connectedComputed: sourceClassContext.connectedComputed,
 
+        //利用dispatch调用自动生成的setState
+        setState: state => dispatch('setState', state),
         //!!!指的是调用源cc类实例的ctx
         refCtx: targetRef.ctx,
         // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，

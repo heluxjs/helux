@@ -621,7 +621,7 @@
         refModule: refModule,
         oldState: moduleState,
         committedState: committedState,
-        refCtx: null
+        refCtx: refCtx
       };
       var fistDepKey = depKeys[0];
       var computedValue;
@@ -653,7 +653,7 @@
         refModule: refModule,
         oldState: moduleState,
         committedState: committedState,
-        refCtx: null
+        refCtx: refCtx
       };
       var firstDepKey = depKeys[0];
 
@@ -853,7 +853,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.17',
+      version: '1.5.18',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1266,6 +1266,33 @@
     }
   }
 
+  function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
+    if (skipMiddleware !== true) {
+      var len = middlewares.length;
+
+      if (len > 0) {
+        var index = 0;
+
+        var next = function next() {
+          if (index === len) {
+            // all middlewares been executed
+            cb();
+          } else {
+            var middlewareFn = middlewares[index];
+            index++;
+            middlewareFn(passToMiddleware, next);
+          }
+        };
+
+        next();
+      } else {
+        cb();
+      }
+    } else {
+      cb();
+    }
+  }
+
   function changeRefState (state, _temp, targetRef) {
     var _ref = _temp === void 0 ? {} : _temp,
         module = _ref.module,
@@ -1276,7 +1303,8 @@
         reducerModule = _ref.reducerModule,
         _ref$calledBy = _ref.calledBy,
         calledBy = _ref$calledBy === void 0 ? SET_STATE$1 : _ref$calledBy,
-        fnName = _ref.fnName,
+        _ref$fnName = _ref.fnName,
+        fnName = _ref$fnName === void 0 ? '' : _ref$fnName,
         _ref$renderKey = _ref.renderKey,
         renderKey = _ref$renderKey === void 0 ? '' : _ref$renderKey,
         _ref$delay = _ref.delay,
@@ -1291,39 +1319,35 @@
         refModule = _targetRef$ctx.module,
         ccUniqueKey = _targetRef$ctx.ccUniqueKey,
         ccKey = _targetRef$ctx.ccKey;
-    var stateFor = getStateFor(module, refModule); //在triggerReactSetState之前把状态存储到store，
-    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-
-    var passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 ? targetRef.ctx : null;
-    var sharedState = syncCommittedStateToStore(module, state, passedCtx);
-    var passToMiddleware = {};
-
-    if (skipMiddleware !== true) {
-      passToMiddleware = {
-        calledBy: calledBy,
-        type: type,
-        ccKey: ccKey,
-        ccUniqueKey: ccUniqueKey,
-        state: state,
-        sharedState: sharedState,
-        stateFor: stateFor,
-        module: module,
-        reducerModule: reducerModule,
-        fnName: fnName
-      };
-    }
-
-    send(SIG_STATE_CHANGED$1, {
-      committedState: state,
-      sharedState: sharedState,
-      module: module,
-      type: getActionType(calledBy, type),
+    var stateFor = getStateFor(module, refModule);
+    var passToMiddleware = {
+      calledBy: calledBy,
+      type: type,
+      ccKey: ccKey,
       ccUniqueKey: ccUniqueKey,
-      renderKey: renderKey
-    }); // source ref will receive the whole committed state 
+      state: state,
+      refModule: refModule,
+      module: module,
+      reducerModule: reducerModule,
+      fnName: fnName
+    };
+    callMiddlewares(skipMiddleware, passToMiddleware, function () {
+      //在triggerReactSetState之前把状态存储到store，
+      //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+      var passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 ? targetRef.ctx : null;
+      var sharedState = syncCommittedStateToStore(module, state, passedCtx);
+      send(SIG_STATE_CHANGED$1, {
+        committedState: state,
+        sharedState: sharedState,
+        module: module,
+        type: getActionType(calledBy, type),
+        ccUniqueKey: ccUniqueKey,
+        renderKey: renderKey
+      }); // source ref will receive the whole committed state 
 
-    var renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
-    triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, sharedState, stateFor, module, renderKey, delay);
+      var renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
+      triggerBroadcastState(renderType, targetRef, sharedState, stateFor, module, renderKey, delay);
+    });
   }
 
   function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback) {
@@ -1392,44 +1416,16 @@
     return null;
   }
 
-  function triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, sharedState, stateFor, moduleName, renderKey, delay) {
+  function triggerBroadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
     var startBroadcastState = function startBroadcastState() {
       broadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey);
     };
 
-    var willBroadcast = function willBroadcast() {
-      if (delay > 0) {
-        var feature = computeFeature$1(targetRef.ctx.ccUniqueKey, sharedState);
-        runLater(startBroadcastState, feature, delay);
-      } else {
-        startBroadcastState();
-      }
-    };
-
-    if (skipMiddleware) {
-      willBroadcast();
-      return;
-    }
-
-    var len = middlewares.length;
-
-    if (len > 0) {
-      var index = 0;
-
-      var next = function next() {
-        if (index === len) {
-          // all middlewares been executed
-          willBroadcast();
-        } else {
-          var middlewareFn = middlewares[index];
-          index++;
-          middlewareFn(passToMiddleware, next);
-        }
-      };
-
-      next();
+    if (delay > 0) {
+      var feature = computeFeature$1(targetRef.ctx.ccUniqueKey, sharedState);
+      runLater(startBroadcastState, feature, delay);
     } else {
-      willBroadcast();
+      startBroadcastState();
     }
   }
 
@@ -1991,6 +1987,10 @@
           connectedState: sourceClassContext.connectedState,
           //!!!指的是调用源cc类的connectedComputed
           connectedComputed: sourceClassContext.connectedComputed,
+          //利用dispatch调用自动生成的setState
+          setState: function setState(state) {
+            return _dispatch('setState', state);
+          },
           //!!!指的是调用源cc类实例的ctx
           refCtx: targetRef.ctx // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
           // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
@@ -3384,7 +3384,8 @@
     var reactForceUpdate = ref.forceUpdate.bind(ref);
     var isSingle = params.isSingle,
         ccClassKey = params.ccClassKey,
-        ccKey = params.ccKey,
+        _params$ccKey = params.ccKey,
+        ccKey = _params$ccKey === void 0 ? '' : _params$ccKey,
         module = params.module,
         reducerModule = params.reducerModule,
         type = params.type,
@@ -4342,7 +4343,11 @@
     _reducer[module] = reducer;
     var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module);
     var subLazyReducerCaller = safeGetObjectFromObject(_lazyReducerCaller, module);
-    var fnNames = safeGetArrayFromObject(_reducerModule_fnNames_, module);
+    var fnNames = safeGetArrayFromObject(_reducerModule_fnNames_, module); // 自动附加一个setState在reducer里
+
+    if (!reducer.setState) reducer.setState = function (payload) {
+      return payload;
+    };
     var reducerNames = okeys(reducer);
     reducerNames.forEach(function (name) {
       fnNames.push(name);

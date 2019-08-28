@@ -14,7 +14,7 @@ const setStateByModule = (module, committedState, refCtx) => {
   const newState = Object.assign({}, moduleState, committedState);
 
   cFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx:null };
+    const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
     const fistDepKey = depKeys[0];
     let computedValue;
 
@@ -29,7 +29,7 @@ const setStateByModule = (module, committedState, refCtx) => {
   const rootWatchDep = watch.getRootWatchDep();
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
   wFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx: null };
+    const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
     const firstDepKey = depKeys[0];
 
     if (depKeys.length === 1 && firstDepKey !== '*') {
@@ -233,7 +233,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.17',
+    version: '1.5.18',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

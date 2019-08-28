@@ -32,9 +32,32 @@ function getActionType(calledBy, type) {
   }
 }
 
+function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
+  if (skipMiddleware !== true) {
+    const len = middlewares.length;
+    if (len > 0) {
+      let index = 0;
+      const next = () => {
+        if (index === len) {// all middlewares been executed
+          cb();
+        } else {
+          const middlewareFn = middlewares[index];
+          index++;
+          middlewareFn(passToMiddleware, next);
+        }
+      }
+      next();
+    } else {
+      cb();
+    }
+  } else {
+    cb();
+  }
+}
+
 export default function (state, {
   module, skipMiddleware = false,
-  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName, renderKey = '', delay = -1 } = {}, targetRef
+  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
 ) {
   if (!isPlainJsonObject(state)) {
     justWarning(`your committed state is not a plain json object!`);
@@ -43,25 +66,23 @@ export default function (state, {
 
   const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
   const stateFor = getStateFor(module, refModule);
+  const passToMiddleware = { calledBy, type, ccKey, ccUniqueKey, state, refModule, module, reducerModule, fnName };
 
-  //在triggerReactSetState之前把状态存储到store，
-  //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-  const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
-  const sharedState = syncCommittedStateToStore(module, state, passedCtx);
+  callMiddlewares(skipMiddleware, passToMiddleware, () => {
+    //在triggerReactSetState之前把状态存储到store，
+    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+    const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
+    const sharedState = syncCommittedStateToStore(module, state, passedCtx);
 
-  let passToMiddleware = {};
-  if (skipMiddleware !== true) {
-    passToMiddleware = { calledBy, type, ccKey, ccUniqueKey, state, sharedState, stateFor, module, reducerModule, fnName };
-  }
+    send(SIG_STATE_CHANGED, {
+      committedState: state, sharedState,
+      module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
+    });
 
-  send(SIG_STATE_CHANGED, {
-    committedState: state, sharedState,
-    module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
+    // source ref will receive the whole committed state 
+    const renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
+    triggerBroadcastState(renderType, targetRef, sharedState, stateFor, module, renderKey, delay);
   });
-
-  // source ref will receive the whole committed state 
-  const renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
-  triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, sharedState, stateFor, module, renderKey, delay);
 }
 
 function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback) {
@@ -115,42 +136,16 @@ function syncCommittedStateToStore(moduleName, committedState, refCtx) {
   return null;
 }
 
-function triggerBroadcastState(renderType, targetRef, skipMiddleware, passToMiddleware, sharedState, stateFor,
-  moduleName, renderKey, delay
-) {
+function triggerBroadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
   const startBroadcastState = () => {
     broadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey);
   };
 
-  const willBroadcast = () => {
-    if (delay > 0) {
-      const feature = computeFeature(targetRef.ctx.ccUniqueKey, sharedState);
-      runLater(startBroadcastState, feature, delay);
-    } else {
-      startBroadcastState();
-    }
-  }
-
-  if (skipMiddleware) {
-    willBroadcast();
-    return;
-  }
-
-  const len = middlewares.length;
-  if (len > 0) {
-    let index = 0;
-    const next = () => {
-      if (index === len) {// all middlewares been executed
-        willBroadcast();
-      } else {
-        const middlewareFn = middlewares[index];
-        index++;
-        middlewareFn(passToMiddleware, next);
-      }
-    }
-    next();
+  if (delay > 0) {
+    const feature = computeFeature(targetRef.ctx.ccUniqueKey, sharedState);
+    runLater(startBroadcastState, feature, delay);
   } else {
-    willBroadcast();
+    startBroadcastState();
   }
 }
 

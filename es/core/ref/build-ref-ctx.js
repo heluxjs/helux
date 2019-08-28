@@ -42,7 +42,7 @@ export default function (ref, params, liteLevel = 5) {
   const reactForceUpdate = ref.forceUpdate.bind(ref);
 
   let {
-    isSingle, ccClassKey, ccKey, module, reducerModule, type,
+    isSingle, ccClassKey, ccKey = '', module, reducerModule, type,
     state = {}, storedKeys, watchedKeys, connect, tag, ccOption,
   } = params;
   reducerModule = reducerModule || module;
