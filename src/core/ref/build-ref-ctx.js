@@ -122,7 +122,7 @@ export default function (ref, params, liteLevel = 5) {
   const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_ };
-  const aux = {};
+  const auxMap = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
@@ -170,7 +170,7 @@ export default function (ref, params, liteLevel = 5) {
     execute: null,
     reducer: {},
     lazyReducer: {},
-    aux,// auxiliary method map
+    auxMap,// auxiliary method map
     effectMeta,
 
     // api
@@ -253,11 +253,15 @@ export default function (ref, params, liteLevel = 5) {
     }
   }
 
-  if(liteLevel > 4){// level 5, assign enhance api
-    ctx.defineExecute = handler => ctx.execute = handler;
-    ctx.defineAuxMethod = (methodName, handler) => ctx.aux[methodName] = handler;
-
-    const defineEffect = (fn, depKeys, immediate = true, eId) => {
+  if (liteLevel > 4) {// level 5, assign enhance api
+    ctx.execute = handler => ctx.execute = handler;
+    ctx.aux = (methodName, handler) => {
+      if (auxMap[methodName]) throw new Error(`auxMethod[${methodName}] already defined!`);
+      auxMap[methodName] = handler;
+    }
+    ctx.watch = getDefineWatchHandler(ctx);
+    ctx.computed = getDefineComputedHandler(ctx);
+    ctx.effect = (fn, depKeys, immediate = true, eId) => {
       if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
       if (depKeys !== null && depKeys !== undefined) {
         if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
@@ -267,15 +271,6 @@ export default function (ref, params, liteLevel = 5) {
       const effectItem = { fn, depKeys, eId: _eId, depKeys, immediate };
       effectItems.push(effectItem);
     };
-    const defineWatch = getDefineWatchHandler(ctx);
-    const defineComputed = getDefineComputedHandler(ctx);
-
-    ctx.defineWatch = defineWatch;
-    ctx.defineComputed = defineComputed;
-    ctx.defineEffect = defineEffect;
-    // alias
-    ctx.watch = defineWatch;
-    ctx.computed = defineComputed;
-    ctx.effect = defineEffect;
   }
+
 }
