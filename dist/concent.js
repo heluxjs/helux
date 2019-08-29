@@ -853,7 +853,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.18',
+      version: '1.5.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3482,7 +3482,7 @@
       effectItems: effectItems,
       eid_effectReturnCb_: eid_effectReturnCb_
     };
-    var aux = {}; // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
+    var auxMap = {}; // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
     // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
 
     var computedDep = {},
@@ -3515,7 +3515,7 @@
       moduleComputed: moduleComputed,
       globalComputed: globalComputed,
       connectedComputed: connectedComputed
-    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.reducer = {}, _ctx.lazyReducer = {}, _ctx.aux = aux, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
+    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.reducer = {}, _ctx.lazyReducer = {}, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
     ref.ctx = ctx;
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
@@ -3680,15 +3680,19 @@
 
     if (liteLevel > 4) {
       // level 5, assign enhance api
-      ctx.defineExecute = function (handler) {
+      ctx.execute = function (handler) {
         return ctx.execute = handler;
       };
 
-      ctx.defineAuxMethod = function (methodName, handler) {
-        return ctx.aux[methodName] = handler;
+      ctx.aux = function (methodName, handler) {
+        if (auxMap[methodName]) throw new Error("auxMethod[" + methodName + "] already defined!");
+        auxMap[methodName] = handler;
       };
 
-      var defineEffect = function defineEffect(fn, depKeys, immediate, eId) {
+      ctx.watch = getDefineWatchHandler(ctx);
+      ctx.computed = getDefineComputedHandler(ctx);
+
+      ctx.effect = function (fn, depKeys, immediate, eId) {
         var _effectItem;
 
         if (immediate === void 0) {
@@ -3711,16 +3715,6 @@
         }, _effectItem["depKeys"] = depKeys, _effectItem.immediate = immediate, _effectItem);
         effectItems.push(effectItem);
       };
-
-      var defineWatch = getDefineWatchHandler(ctx);
-      var defineComputed = getDefineComputedHandler(ctx);
-      ctx.defineWatch = defineWatch;
-      ctx.defineComputed = defineComputed;
-      ctx.defineEffect = defineEffect; // alias
-
-      ctx.watch = defineWatch;
-      ctx.computed = defineComputed;
-      ctx.effect = defineEffect;
     }
   }
 
@@ -5532,7 +5526,7 @@
         storedKeys: _storedKeys,
         lite: lite
       });
-      buildRefCtx(hookRef, params);
+      buildRefCtx(hookRef, params, lite);
       beforeMount(hookRef, setup, bindCtxToMethod);
       cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
     } else {
@@ -5542,10 +5536,10 @@
 
       _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
       _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
-      _refCtx.props = props;
     }
 
-    var refCtx = hookRef.ctx; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
+    var refCtx = hookRef.ctx;
+    refCtx.props = props; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
     //after every render
 
     React.useEffect(function () {
@@ -5575,8 +5569,8 @@
   function registerHookComp(options) {
     function buildCcHookComp(Dumb) {
       return function CcHookComp(props) {
-        var ctx = useConcent(options);
-        ctx.props = props; // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
+        options.props = props;
+        var ctx = useConcent(options); // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
 
         if (options.mapProps) {
           return React.createElement(Dumb, ctx.mapped);
@@ -5789,9 +5783,16 @@
   }
 
   var _execute = (function (ccClassKey) {
+    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
     var refs = getRefsByClassKey(ccClassKey);
     refs.forEach(function (ref) {
-      if (ref.ctx.execute) ref.ctx.execute();
+      var _ref$ctx;
+
+      if (ref.__$$isUnmounted) return;
+      if (ref.ctx.execute) (_ref$ctx = ref.ctx).execute.apply(_ref$ctx, args);
     });
   });
 
@@ -5807,9 +5808,16 @@
   }
 
   var _executeAll = (function () {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     var refs = getRefs();
     refs.forEach(function (ref) {
-      if (ref.ctx.execute) ref.ctx.execute();
+      var _ref$ctx;
+
+      if (ref.__$$isUnmounted) return;
+      if (ref.ctx.execute) (_ref$ctx = ref.ctx).execute.apply(_ref$ctx, args);
     });
   });
 

@@ -5,8 +5,8 @@ export default function registerHookComp(options) {
 
   function buildCcHookComp(Dumb) {
     return function CcHookComp(props) {
+      options.props = props;
       const ctx = useConcent(options);
-      ctx.props = props;
 
       // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
       if (options.mapProps) {
