@@ -5,7 +5,7 @@ import { ERR, CC_DISPATCHER_BOX, CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
-import clearContextIfUnderHotReloadMode from './clear-context-if-under-hot-reload-mode';
+import clearContextIfHot from './clear-context-if-hot';
 
 const { justTip, bindToWindow, makeError } = util;
 
@@ -40,7 +40,7 @@ export default function ({
     ccContext.watchImmediate = watchImmediate;
 
     const err = makeError(ERR.CC_ALREADY_STARTUP);
-    clearContextIfUnderHotReloadMode(true, err);
+    clearContextIfHot(true, err);
 
     boot.configModuleSingleClass(moduleSingleClass);
     boot.configStoreState(store);

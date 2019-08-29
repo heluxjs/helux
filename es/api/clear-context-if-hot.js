@@ -61,7 +61,7 @@ export default function (clearAll = false, warningErrForClearAll) {
         justCalledByStartUp = false;
         return;
       }
-      console.warn(`attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!`);
+      console.warn(`attention: method[clearContextIfHot] need been invoked before your app rendered!`);
       _clearInsAssociation();
     }
   });

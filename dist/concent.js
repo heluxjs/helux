@@ -4664,7 +4664,7 @@
     }
   }
 
-  function clearContextIfUnderHotReloadMode (clearAll, warningErrForClearAll) {
+  function clearContextIfHot (clearAll, warningErrForClearAll) {
     if (clearAll === void 0) {
       clearAll = false;
     }
@@ -4688,7 +4688,7 @@
           return;
         }
 
-        console.warn("attention: method[clearContextIfUnderHotReloadMode] need been invoked before your app rendered!");
+        console.warn("attention: method[clearContextIfHot] need been invoked before your app rendered!");
 
         _clearInsAssociation();
       }
@@ -4746,7 +4746,7 @@
       ccContext.watchCompare = watchCompare;
       ccContext.watchImmediate = watchImmediate;
       var err = makeError$4(ERR.CC_ALREADY_STARTUP);
-      clearContextIfUnderHotReloadMode(true, err);
+      clearContextIfHot(true, err);
       configModuleSingleClass(moduleSingleClass);
       configStoreState(store);
       configRootReducer(reducer);
@@ -5862,7 +5862,7 @@
   var getRefs$1 = getRefs;
   var reducer = _reducerCaller;
   var lazyReducer = _lazyReducerCaller;
-  var clearContextIfUnderHotReloadMode$1 = clearContextIfUnderHotReloadMode;
+  var clearContextIfHot$1 = clearContextIfHot;
   var CcFragment$1 = CcFragment;
   var cst = _cst;
   var appendState$1 = appendState;
@@ -5897,7 +5897,7 @@
     getRefs: getRefs$1,
     reducer: reducer,
     lazyReducer: lazyReducer,
-    clearContextIfUnderHotReloadMode: clearContextIfUnderHotReloadMode$1,
+    clearContextIfHot: clearContextIfHot$1,
     CcFragment: CcFragment$1,
     cst: cst,
     appendState: appendState$1,
@@ -5949,7 +5949,7 @@
   exports.getRefs = getRefs$1;
   exports.reducer = reducer;
   exports.lazyReducer = lazyReducer;
-  exports.clearContextIfUnderHotReloadMode = clearContextIfUnderHotReloadMode$1;
+  exports.clearContextIfHot = clearContextIfHot$1;
   exports.CcFragment = CcFragment$1;
   exports.cst = cst;
   exports.appendState = appendState$1;
