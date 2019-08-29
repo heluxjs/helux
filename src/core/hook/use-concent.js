@@ -81,7 +81,7 @@ export default function useConcent(registerOption){
       ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys, lite
     });
 
-    buildRefCtx(hookRef, params);
+    buildRefCtx(hookRef, params, lite);
     beforeMount(hookRef, setup, bindCtxToMethod);
     cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
   } else {
@@ -92,10 +92,10 @@ export default function useConcent(registerOption){
     //existing period, replace reactSetState and reactForceUpdate
     refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
     refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
-    refCtx.props = props;
   }
-
+  
   const refCtx = hookRef.ctx;
+  refCtx.props = props;
 
   // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
