@@ -31,7 +31,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   const moduleDep = depDesc[stateModule];
   const pickedFns = [];
 
-  if (!moduleDep) return { pickedFns };
+  if (!moduleDep) return { pickedFns, setted:[], changed:[] };
 
   // NC noCompare
   const { retKey_fn_, stateKey_retKeys_, fnCount } = moduleDep;
@@ -39,17 +39,20 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   /** 在首次渲染前调用 */
   if (isBeforeMount) {
     const retKeys = okeys(retKey_fn_);
+    const setted = okeys(committedState);
+    const changed = setted;
     if (type === 'computed') {
       return {
-        pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_))
+        pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_)), setted, changed
       };
-    } else {
-      retKeys.forEach(retKey => {
-        const { fn, immediate, depKeys } = retKey_fn_[retKey];
-        if (immediate) pickedFns.push({ retKey, fn, depKeys });
-      });
-      return { pickedFns };
     }
+    
+    retKeys.forEach(retKey => {
+      const { fn, immediate, depKeys } = retKey_fn_[retKey];
+      if (immediate) pickedFns.push({ retKey, fn, depKeys });
+    });
+    return { pickedFns, setted, changed };
+
   }
 
   // 这些目标stateKey的值发生了变化
