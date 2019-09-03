@@ -86,16 +86,17 @@ export default function (state, {
 }
 
 function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback) {
+  const { state: refState, ctx: refCtx } = targetRef;
   if (
     targetRef.__$$isUnmounted === true ||
     stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ||
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE && !isObjectNotNull(state)
   ) {
+    if (reactCallback) reactCallback(refState);
     return RENDER_NO_OP;
   }
 
-  const { state: refState, ctx: refCtx } = targetRef;
   const { module: stateModule, storedKeys, ccOption, ccUniqueKey } = refCtx;
   let renderType = RENDER_BY_STATE;
 
