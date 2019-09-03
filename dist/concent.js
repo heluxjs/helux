@@ -334,7 +334,9 @@
     }
 
     if (Array.isArray(object)) object.length = 0;else Object.keys(object).forEach(function (key) {
-      if (!excludeKeys.includes(key)) delete object[key];else {
+      if (!excludeKeys.includes(key)) {
+        delete object[key];
+      } else {
         if (reset) object[key] = reset;
       }
     });
@@ -437,7 +439,9 @@
     var moduleDep = depDesc[stateModule];
     var pickedFns = [];
     if (!moduleDep) return {
-      pickedFns: pickedFns
+      pickedFns: pickedFns,
+      setted: [],
+      changed: []
     }; // NC noCompare
 
     var retKey_fn_ = moduleDep.retKey_fn_,
@@ -448,28 +452,36 @@
     if (isBeforeMount) {
       var retKeys = okeys(retKey_fn_);
 
+      var _setted = okeys(committedState);
+
+      var _changed = _setted;
+
       if (type === 'computed') {
         return {
           pickedFns: retKeys.map(function (retKey) {
             return _wrapFn(retKey, retKey_fn_);
-          })
-        };
-      } else {
-        retKeys.forEach(function (retKey) {
-          var _retKey_fn_$retKey2 = retKey_fn_[retKey],
-              fn = _retKey_fn_$retKey2.fn,
-              immediate = _retKey_fn_$retKey2.immediate,
-              depKeys = _retKey_fn_$retKey2.depKeys;
-          if (immediate) pickedFns.push({
-            retKey: retKey,
-            fn: fn,
-            depKeys: depKeys
-          });
-        });
-        return {
-          pickedFns: pickedFns
+          }),
+          setted: _setted,
+          changed: _changed
         };
       }
+
+      retKeys.forEach(function (retKey) {
+        var _retKey_fn_$retKey2 = retKey_fn_[retKey],
+            fn = _retKey_fn_$retKey2.fn,
+            immediate = _retKey_fn_$retKey2.immediate,
+            depKeys = _retKey_fn_$retKey2.depKeys;
+        if (immediate) pickedFns.push({
+          retKey: retKey,
+          fn: fn,
+          depKeys: depKeys
+        });
+      });
+      return {
+        pickedFns: pickedFns,
+        setted: _setted,
+        changed: _changed
+      };
     } // 这些目标stateKey的值发生了变化
 
 
@@ -853,7 +865,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.19',
+      version: '1.5.21',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1351,13 +1363,15 @@
   }
 
   function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback) {
+    var refState = targetRef.state,
+        refCtx = targetRef.ctx;
+
     if (targetRef.__$$isUnmounted === true || stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
+      if (reactCallback) reactCallback(refState);
       return RENDER_NO_OP$1;
     }
 
-    var refState = targetRef.state,
-        refCtx = targetRef.ctx;
     var stateModule = refCtx.module,
         storedKeys = refCtx.storedKeys,
         ccOption = refCtx.ccOption,
