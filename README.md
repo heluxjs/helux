@@ -63,24 +63,31 @@
 
 
 
-## concent是什么，（注：以下有的地方简称为cc）
-concent是一个专为`react`提供状态管理服务的框架，重新定义`state`和`component`之间的关系，同时也为你的`react`组件提供更多有趣且强大的特性，保持渲染性能最优化，让你专注于业务代码编写😎，让你的`react`工程代码变得更加简约、优雅，并容易维护与扩展。
+## concent
+一个可预测、0入侵、渐进式、高性能的增强型状态管理方案，基于**依赖标记**、**引用收集**和**状态分发**原理，power you react!
 
-## ✨concent的特点
-* 核心api少且简单，功能强大，上手容易，入侵小，容易调试；
-* 提供全局模块化的单一数据源；
-* 共享数据可直接注入到state，也可注入props，[点我查看](https://stackblitz.com/edit/concent-state-inject-way?file=index.js)。
-* 修改共享数据的方式灵活多样且简单直接，[点我查看](https://stackblitz.com/edit/concent-state-modify-way)；
-* 对组件扩展了事件总线、computed、watch、双向绑定等特性，[点我查看](https://stackblitz.com/edit/concent-vue-like-programming)；
-* 内置与react16一样的使用方式但却更有趣的hook，[点我查看](https://stackblitz.com/edit/concent-hook?file=index.js)；
-* 默认采用反向继承包裹你的组件，让react dom tree层级更少，保持干净和清爽；
-* 基于引用定位和状态广播，支持细粒度的状态订阅，渲染效率出众，[点我查看](https://stackblitz.com/edit/concent-why-it-is-high-performance?file=index.js)；
-* 支持中间件，可以扩展你的个性化插件处理数据变更，[点我查看](https://stackblitz.com/edit/concent-middleware?file=index.js)；
-* 支持react 0.10+任意版本；
+## ✨特性
+* **极简的核心api**,`register`&`run`；
+* **0入侵成本接入**,不改造代码的情况下直接接入；
+* **贴心的模块配置**,除了`state`，还提供`reducer`、`computed`、`watch`和`init`四项可选定义。
+* **灵活的数据消费粒度**,支持跨多个模块场景，以及模块内stateKey级别的细粒度控制。
+* **渐进式构建react应用**,除了`setState`,支持`dispatch`、`invoke`调用来让ui视图与业务逻辑彻底解耦；
+* **组件能力增强**,支持实例级别`computed`、`watch`定义,支持`emit&on`,以及支持`setup`特性，让函数组件拥有定义静态api的能力。
+* **高度一致的编程体验**,`hoc`、`render props`和`hook`3种方式定义的组件均享有一致的api调用体验，相互切换代价为0。
+* **渲染性能出众**,内置renderKey、lazyDispatch、delayBroadcast等特性，保证极速的渲染效率。
+* **干净的dom层级**,对于class组件，默认采用反向继承策略，让react dom树的层级结构保持简洁与干净。
+* **扩展中间件与插件**,允许用户定义中间件拦截所有的数据变更提交记录，做额外处理，也可以自定义插件，接收运行时的发出的各种信号，按需增强concent自身的能力。
+* **去中心化配置模块**,除了`run`接口一次性配置模块，还提供`configure`接口在任意地方动态配置模块
+* **模块克隆**,支持对已定义模块进行克隆,满足你高维度抽象的需要。
 
 ## 搭配react-router使用
-请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，搭配使用非常的简单和容易。
+请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，暴露`history`对象，可以全局任意地方使用，享受编程式的导航跳转。
 
+## 搭配redux-dev-tool使用
+请移步阅读和了解[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，全流程追溯你的状态变更过程。
+
+## 搭配loading插件使用
+请移步阅读和了解[concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，轻松控制concent应用里所有reducer函数的loading状态。
 ___
 ## 📦 快速开始
 确保你本地机器上安装有[nodejs](http://nodejs.cn/download/)。
