@@ -35,10 +35,6 @@
   </a>
 
   <a href='#' style='margin: 0 0.5rem;'>
-  <img src='https://img.shields.io/david/dev/concentjs/concent.svg' alt='dev dependencies' height='18'>
-  </a>
-
-  <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/bundlephobia/minzip/concent/1.4.1.svg' alt='mini bundle size' height='18'>
   </a>
 
