@@ -56,7 +56,7 @@
 
 
 ## ✨特性
-* **极简的核心api**，`run`载入模块配置启动concent，`register`注册组件，无需包一层`Provider`在根组件！。
+* **极简的核心api**，`run`载入模块配置启动concent，`register`注册组件，无需包一层`Provider`在根组件。
 * **0入侵成本接入**，不改造代码的情况下直接接入；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
 * **贴心的模块配置**，除了`state`，还提供`reducer`、`computed`、`watch`和`init`四项可选定义。
 * **灵活的数据消费粒度**，支持跨多个模块场景，以及模块内stateKey级别的细粒度控制。
