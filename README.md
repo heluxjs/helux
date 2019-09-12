@@ -197,7 +197,7 @@ const mapProps = ctx=>{
 //将Counter类注册为CcFnCounter，属于counter模块
 const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
 ```
---- 基于hook注册为组件
+- 基于hook注册为组件
 ```jsx
 import { useConcent } from 'concent';
 
@@ -228,7 +228,7 @@ function HookCounter(){
 }
 
 ```
---- 更优的hook写法，将函数提升为静态api
+- 更优的hook写法，将函数提升为静态api
 ```jsx
 import { useConcent } from 'concent';
 
