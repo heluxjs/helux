@@ -278,7 +278,7 @@ ___
 ### [有趣的counter](https://stackblitz.com/edit/funny-counter)
 ___
 ## 图文介绍
-### cc渲染流程
+### cc状态分发流程
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
-### cc组件工作流程
+### cc组件渲染流程
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-process.png)
