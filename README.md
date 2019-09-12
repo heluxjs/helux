@@ -1,4 +1,6 @@
-# [concent, 点击了解更多](https://concentjs.github.io/concent-site/)
+## concent
+一个可预测、0入侵、渐进式、高性能的增强型状态管理方案，基于**依赖标记**、**引用收集**和**状态分发**原理，power you react!
+
 <p align="center">
   <a href="#">
     <img width="500" src="https://raw.githubusercontent.com/concentjs/concent-site/master/img/banner.png">
@@ -52,11 +54,6 @@
 
 </div>
 
-
-
-
-## concent
-一个可预测、0入侵、渐进式、高性能的增强型状态管理方案，基于**依赖标记**、**引用收集**和**状态分发**原理，power you react!
 
 ## ✨特性
 * **极简的核心api**，`register`&`run`；
