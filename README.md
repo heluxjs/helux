@@ -31,10 +31,6 @@
   </a>
 
   <a href='#' style='margin: 0 0.5rem;'>
-    <img src='https://raw.githubusercontent.com/fantasticsoul/static/master/img/cc-svg/build.png' alt='build:passing' height='18'>
-  </a>
-
-  <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/npm/l/concent.svg' alt='license:MIT' height='18'>
   </a>
 
