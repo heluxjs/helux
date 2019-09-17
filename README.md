@@ -1,4 +1,4 @@
-## concent
+## [concent](https://concentjs.github.io/concent-doc)
 一个可预测、0入侵、渐进式、高性能的增强型状态管理方案，基于**依赖标记**、**引用收集**和**状态分发**原理，power you react!
 
 <p align="center">
