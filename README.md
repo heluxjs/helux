@@ -63,7 +63,7 @@
 * **渐进式构建react应用**，除了`setState`,支持`dispatch`、`invoke`调用来让ui视图与业务逻辑彻底解耦。[从class到function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
 * **组件能力增强**，支持实例级别`computed`、`watch`定义,支持`emit&on`,以及支持`setup`特性，让函数组件拥有定义静态api的能力。
 * **高度一致的编程体验**，`hoc`、`render props`和`hook`3种方式定义的组件均享有一致的api调用体验，相互切换代价为0。[多种方式定义组件](https://stackblitz.com/edit/cc-4-render-mode)
-* **渲染性能出众**，内置`renderKey`、`lazyDispatch`、`delayBroadcast`等特性，保证极速的渲染效率。[长列表精准渲染](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[批处理状态提交](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)
+* **渲染性能出众**，内置`renderKey`、`lazyDispatch`、`delayBroadcast`等特性，保证极速的渲染效率。[长列表精准渲染](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[批处理状态提交](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[高频输入场景状态延迟分发](https://stackblitz.com/edit/concent-delay-broadcast)
 * **干净的dom层级**，对于class组件，默认采用反向继承策略，让react dom树的层级结构保持简洁与干净。
 * **扩展中间件与插件**，允许用户定义中间件拦截所有的数据变更提交记录，做额外处理，也可以自定义插件，接收运行时的发出的各种信号，按需增强concent自身的能力。
 * **去中心化配置模块**，除了`run`接口一次性配置模块，还提供`configure`接口在任意地方动态配置模块。
