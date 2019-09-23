@@ -12,11 +12,11 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
     const newState = Object.assign({}, oldState, committedState);
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
       const fnCtx = { retKey, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
-      const fistDepKey = depKeys[0];
+      const firstDepKey = depKeys[0];
 
       let ret;
-      if (depKeys.length === 1 && fistDepKey !== '*') {
-        ret = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
+      if (depKeys.length === 1 && firstDepKey !== '*') {
+        ret = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
       } else {
         ret = fn(newState, oldState, fnCtx);
       }
