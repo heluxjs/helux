@@ -1163,11 +1163,11 @@
           committedState: committedState,
           refCtx: refCtx
         };
-        var fistDepKey = depKeys[0];
+        var firstDepKey = depKeys[0];
         var ret;
 
-        if (depKeys.length === 1 && fistDepKey !== '*') {
-          ret = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
+        if (depKeys.length === 1 && firstDepKey !== '*') {
+          ret = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
         } else {
           ret = fn(newState, oldState, fnCtx);
         } //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
@@ -1215,11 +1215,11 @@
           committedState: committedState,
           refCtx: refCtx
         };
-        var fistDepKey = depKeys[0];
+        var firstDepKey = depKeys[0];
         var computedValue;
 
-        if (depKeys.length === 1 && fistDepKey !== '*') {
-          computedValue = fn(committedState[fistDepKey], oldState[fistDepKey], fnCtx, refCtx);
+        if (depKeys.length === 1 && firstDepKey !== '*') {
+          computedValue = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
         } else {
           computedValue = fn(newState, oldState, fnCtx);
         }

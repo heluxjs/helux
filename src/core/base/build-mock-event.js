@@ -18,7 +18,7 @@ export default (spec, e, refModule) => {
   const syncKey = spec[CCSYNC_KEY];
   const type = spec.type;
   
-  if (syncKey !== undefined) {//来自生成的sync生成的setter函数调用
+  if (syncKey !== undefined) {//来自sync生成的setter函数调用
     ccsync = syncKey;
     ccdelay = spec.delay;
     ccrkey = spec.rkey

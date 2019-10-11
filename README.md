@@ -281,4 +281,4 @@ ___
 ### cc状态分发流程
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
 ### cc组件渲染流程
-![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-process.png)
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)
