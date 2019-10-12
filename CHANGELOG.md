@@ -1,3 +1,8 @@
+#### 2019-10-12
+1.5.22 发布
+* optimize: registerHookComp自动使用memo包裹
+* optimize: 优化broadcastState renderKey 匹配class写法
+
 #### 2019-08-26
 1.5.16 发布
 * 重构computed&watch，支持`dependencyStateKeys`机制

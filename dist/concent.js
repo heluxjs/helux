@@ -5594,16 +5594,28 @@
 
   function registerHookComp(options) {
     function buildCcHookComp(Dumb) {
-      return function CcHookComp(props) {
-        options.props = props;
-        var ctx = useConcent(options); // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
+      var _options$memo = options.memo,
+          memo = _options$memo === void 0 ? true : _options$memo;
+      delete options.memo;
 
-        if (options.mapProps) {
-          return React.createElement(Dumb, ctx.mapped);
-        } else {
-          return React.createElement(Dumb, ctx);
-        }
+      var getComp = function getComp() {
+        return function CcHookComp(props) {
+          options.props = props;
+          var ctx = useConcent(options); // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
+
+          if (options.mapProps) {
+            return React.createElement(Dumb, ctx.mapped);
+          } else {
+            return React.createElement(Dumb, ctx);
+          }
+        };
       };
+
+      if (memo && React.memo) {
+        return React.memo(getComp());
+      } else {
+        return getComp();
+      }
     }
 
     var Dumb = options.render;

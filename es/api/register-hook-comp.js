@@ -4,16 +4,27 @@ import useConcent from './use-concent';
 export default function registerHookComp(options) {
 
   function buildCcHookComp(Dumb) {
-    return function CcHookComp(props) {
-      options.props = props;
-      const ctx = useConcent(options);
+    const { memo = true } = options;
+    delete options.memo;
 
-      // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
-      if (options.mapProps) {
-        return React.createElement(Dumb, ctx.mapped);
-      } else {
-        return React.createElement(Dumb, ctx);
+    const getComp = () => {
+      return function CcHookComp(props) {
+        options.props = props;
+        const ctx = useConcent(options);
+
+        // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
+        if (options.mapProps) {
+          return React.createElement(Dumb, ctx.mapped);
+        } else {
+          return React.createElement(Dumb, ctx);
+        }
       }
+    }
+
+    if (memo && React.memo) {
+      return React.memo(getComp());
+    } else {
+      return getComp();
     }
   }
 
