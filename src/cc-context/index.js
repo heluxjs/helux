@@ -142,7 +142,9 @@ const ccContext = {
     ccClassContext:{
       module,
       ccClassKey,
-      renderKeyClasses,
+      // renderKey机制影响的类范围，默认只影响调用者所属的类，如果有别的类观察了同一个模块的某个key，这个类的实例是否触发渲染不受renderKey影响
+      // 为 * 表示影响所有的类，即其他类实例都受renderKey机制影响。
+      renderKeyClasses, 
       originalWatchedKeys,
       watchedKeys,
       ccKeys: [],

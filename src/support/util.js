@@ -348,3 +348,11 @@ export function differStateKeys(oldState, newState) {
   });
   return { changed, unchanged, setted };
 }
+
+export function removeArrElements(arr, toRemoveArr) {
+  const newArr = [];
+  arr.forEach((item) => {
+    if (!toRemoveArr.includes(item)) newArr.push(item);
+  });
+  return newArr;
+}
