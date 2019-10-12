@@ -402,6 +402,13 @@
       setted: setted
     };
   }
+  function removeArrElements(arr, toRemoveArr) {
+    var newArr = [];
+    arr.forEach(function (item) {
+      if (!toRemoveArr.includes(item)) newArr.push(item);
+    });
+    return newArr;
+  }
 
   function getCacheDataContainer() {
     return {
@@ -782,7 +789,9 @@
       ccClassContext:{
         module,
         ccClassKey,
-        renderKeyClasses,
+        // renderKey机制影响的类范围，默认只影响调用者所属的类，如果有别的类观察了同一个模块的某个key，这个类的实例是否触发渲染不受renderKey影响
+        // 为 * 表示影响所有的类，即其他类实例都受renderKey机制影响。
+        renderKeyClasses, 
         originalWatchedKeys,
         watchedKeys,
         ccKeys: [],
@@ -865,7 +874,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.21',
+      version: '1.5.22',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1242,7 +1251,8 @@
       justWarning$1 = justWarning,
       isObjectNotNull$1 = isObjectNotNull,
       computeFeature$1 = computeFeature,
-      okeys$1 = okeys;
+      okeys$1 = okeys,
+      removeArrElements$1 = removeArrElements;
   var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
       STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1 = STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
       FORCE_UPDATE$1 = FORCE_UPDATE,
@@ -1475,60 +1485,62 @@
         if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
         updateRefs(ccUkeys, moduleName, partialSharedState);
       }
+    } // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
+    // so flag ignoreCurrentCcUkey as true;
+
+
+    var ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1; // these ccClass are watching the same module's state
+
+    var ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
+
+    if (renderType === RENDER_BY_KEY$1) {
+      //基于renderKey触发渲染
+      if (renderKeyClasses === '*') {
+        //要影响所属模块的所有类
+        ccClassKeys = []; //这里设置为空数据
+      } else {
+        ccClassKeys = removeArrElements$1(ccClassKeys, renderKeyClasses); //移除掉指定的类
+      }
     }
 
-    if (renderKeyClasses !== '*') {
-      (function () {
-        // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
-        // so flag ignoreCurrentCcUkey as true;
-        var ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1; // these ccClass are watching the same module's state
+    var keysLen = ccClassKeys.length;
 
-        var ccClassKeys = moduleName_ccClassKeys_[moduleName];
+    var _loop = function _loop(i) {
+      var ccClassKey = ccClassKeys[i];
+      var classContext = ccClassKey_ccClassContext_[ccClassKey];
+      var ccKeys = classContext.ccKeys,
+          watchedKeys = classContext.watchedKeys,
+          originalWatchedKeys = classContext.originalWatchedKeys;
+      if (ccKeys.length === 0) return "continue";
+      if (watchedKeys.length === 0) return "continue";
+      var sharedStateForCurrentCcClass = void 0;
 
-        if (ccClassKeys) {
-          var keysLen = ccClassKeys.length;
+      if (originalWatchedKeys === '*') {
+        sharedStateForCurrentCcClass = partialSharedState;
+      } else {
+        var _extractStateByKeys4 = extractStateByKeys(partialSharedState, watchedKeys, true),
+            partialState = _extractStateByKeys4.partialState,
+            isStateEmpty = _extractStateByKeys4.isStateEmpty;
 
-          var _loop = function _loop(i) {
-            var ccClassKey = ccClassKeys[i]; // 如ref渲染由RENDER_BY_KEY触犯，当前ccClassKey在renderKeyClasses范围内，它已经交给renderKey匹配规则去触发渲染了，这里直接跳出
+        if (isStateEmpty) return "continue";
+        sharedStateForCurrentCcClass = partialState;
+      }
 
-            if (renderType === RENDER_BY_KEY$1 && renderKeyClasses.includes(ccClassKey)) return "continue";
-            var classContext = ccClassKey_ccClassContext_[ccClassKey];
-            var ccKeys = classContext.ccKeys,
-                watchedKeys = classContext.watchedKeys,
-                originalWatchedKeys = classContext.originalWatchedKeys;
-            if (ccKeys.length === 0) return "continue";
-            if (watchedKeys.length === 0) return "continue";
-            var sharedStateForCurrentCcClass = void 0;
+      ccKeys.forEach(function (ccKey) {
+        if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
+        var ref = ccUkey_ref_[ccKey];
 
-            if (originalWatchedKeys === '*') {
-              sharedStateForCurrentCcClass = partialSharedState;
-            } else {
-              var _extractStateByKeys4 = extractStateByKeys(partialSharedState, watchedKeys, true),
-                  partialState = _extractStateByKeys4.partialState,
-                  isStateEmpty = _extractStateByKeys4.isStateEmpty;
-
-              if (isStateEmpty) return "continue";
-              sharedStateForCurrentCcClass = partialState;
-            }
-
-            ccKeys.forEach(function (ccKey) {
-              if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
-              var ref = ccUkey_ref_[ccKey];
-
-              if (ref) {
-                // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-                triggerReactSetState(ref, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
-              }
-            });
-          };
-
-          for (var i = 0; i < keysLen; i++) {
-            var _ret = _loop(i);
-
-            if (_ret === "continue") continue;
-          }
+        if (ref) {
+          // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
+          triggerReactSetState(ref, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
         }
-      })();
+      });
+    };
+
+    for (var i = 0; i < keysLen; i++) {
+      var _ret = _loop(i);
+
+      if (_ret === "continue") continue;
     }
 
     broadcastConnectedState(moduleName, partialSharedState);
@@ -3119,7 +3131,7 @@
     var type = spec.type;
 
     if (syncKey !== undefined) {
-      //来自生成的sync生成的setter函数调用
+      //来自sync生成的setter函数调用
       ccsync = syncKey;
       ccdelay = spec.delay;
       ccrkey = spec.rkey;
@@ -4008,14 +4020,14 @@
 
   var moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_;
   var ccClassDisplayName$1 = ccClassDisplayName,
-      styleStr$2 = styleStr,
-      color$2 = color,
+      styleStr$1 = styleStr,
+      color$1 = color,
       verboseInfo$2 = verboseInfo,
       makeError$3 = makeError,
       okeys$6 = okeys,
       shallowDiffers$1 = shallowDiffers;
-  var cl$1 = color$2;
-  var ss$1 = styleStr$2;
+  var cl$1 = color$1;
+  var ss$1 = styleStr$1;
   var me$5 = makeError$3;
   var vbi$5 = verboseInfo$2;
   function register(_temp, ccClassKey) {

@@ -7,7 +7,7 @@ import watchKeyForRef from '../watch/watch-key-for-ref';
 import computeValueForRef from '../computed/compute-value-for-ref';
 import { send } from '../plugin';
 
-const { isPlainJsonObject, justWarning, isObjectNotNull, computeFeature, okeys, styleStr, color } = util;
+const { isPlainJsonObject, justWarning, isObjectNotNull, computeFeature, okeys, removeArrElements } = util;
 const {
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
   FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC,
@@ -188,44 +188,47 @@ function broadcastState(renderType, targetRef, partialSharedState, stateFor, mod
     }
   }
 
-  if (renderKeyClasses !== '*') {
-    // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
-    // so flag ignoreCurrentCcUkey as true;
-    const ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
+  // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
+  // so flag ignoreCurrentCcUkey as true;
+  const ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
 
-    // these ccClass are watching the same module's state
-    const ccClassKeys = moduleName_ccClassKeys_[moduleName];
-    if (ccClassKeys) {
-      const keysLen = ccClassKeys.length;
-      for (let i = 0; i < keysLen; i++) {
-        const ccClassKey = ccClassKeys[i];
-        // 如ref渲染由RENDER_BY_KEY触犯，当前ccClassKey在renderKeyClasses范围内，它已经交给renderKey匹配规则去触发渲染了，这里直接跳出
-        if (renderType === RENDER_BY_KEY && renderKeyClasses.includes(ccClassKey)) continue;
+  // these ccClass are watching the same module's state
+  let ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
 
-        const classContext = ccClassKey_ccClassContext_[ccClassKey];
-        const { ccKeys, watchedKeys, originalWatchedKeys } = classContext;
-        if (ccKeys.length === 0) continue;
-        if (watchedKeys.length === 0) continue;
-
-        let sharedStateForCurrentCcClass;
-        if (originalWatchedKeys === '*') {
-          sharedStateForCurrentCcClass = partialSharedState;
-        } else {
-          const { partialState, isStateEmpty } = extractStateByKeys(partialSharedState, watchedKeys, true);
-          if (isStateEmpty) continue;
-          sharedStateForCurrentCcClass = partialState;
-        }
-
-        ccKeys.forEach(ccKey => {
-          if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
-          const ref = ccUkey_ref_[ccKey];
-          if (ref) {
-            // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-            triggerReactSetState(ref, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
-          }
-        });
-      }
+  if (renderType === RENDER_BY_KEY) {//基于renderKey触发渲染
+    if (renderKeyClasses === '*') {//要影响所属模块的所有类
+      ccClassKeys = [];//这里设置为空数据
+    } else {
+      ccClassKeys = removeArrElements(ccClassKeys, renderKeyClasses);//移除掉指定的类
     }
+  }
+
+  const keysLen = ccClassKeys.length;
+  for (let i = 0; i < keysLen; i++) {
+    const ccClassKey = ccClassKeys[i];
+
+    const classContext = ccClassKey_ccClassContext_[ccClassKey];
+    const { ccKeys, watchedKeys, originalWatchedKeys } = classContext;
+    if (ccKeys.length === 0) continue;
+    if (watchedKeys.length === 0) continue;
+
+    let sharedStateForCurrentCcClass;
+    if (originalWatchedKeys === '*') {
+      sharedStateForCurrentCcClass = partialSharedState;
+    } else {
+      const { partialState, isStateEmpty } = extractStateByKeys(partialSharedState, watchedKeys, true);
+      if (isStateEmpty) continue;
+      sharedStateForCurrentCcClass = partialState;
+    }
+
+    ccKeys.forEach(ccKey => {
+      if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
+      const ref = ccUkey_ref_[ccKey];
+      if (ref) {
+        // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
+        triggerReactSetState(ref, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+      }
+    });
   }
 
   broadcastConnectedState(moduleName, partialSharedState);
