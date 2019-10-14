@@ -874,7 +874,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.22',
+      version: '1.5.23',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3117,7 +3117,7 @@
     }
   }
 
-  var buildMockEvent = (function (spec, e, refModule) {
+  var buildMockEvent = (function (spec, e, refModule, refState) {
     var _ref;
 
     var ccint = false,
@@ -3165,7 +3165,8 @@
 
             extraState = val(getValFromEvent(e), keyPath, {
               moduleState: getState$1(module),
-              fullKeyPath: fullKeyPath
+              fullKeyPath: fullKeyPath,
+              state: refState
             });
           } else {
             value = val;
@@ -3314,7 +3315,7 @@
       mockE = spec;
     } else {
       //可能是来自$$sync生成的setter调用
-      mockE = buildMockEvent(spec, e, refModule);
+      mockE = buildMockEvent(spec, e, refModule, refCtx.state);
     }
 
     if (!mockE) return; //参数无效
@@ -5475,7 +5476,7 @@
   } //写为具名函数，防止react devtoo里显示.default
 
 
-  function useConcent(registerOption) {
+  function useConcent(registerOption, ccClassKey) {
     var _registerOption = registerOption;
 
     if (typeof registerOption === 'string') {
@@ -5511,7 +5512,6 @@
 
     if (isFirstRendered) {
       var _registerOption3 = _registerOption,
-          ccClassKey = _registerOption3.ccClassKey,
           renderKeyClasses = _registerOption3.renderKeyClasses,
           module = _registerOption3.module,
           reducerModule = _registerOption3.reducerModule,
@@ -5592,18 +5592,29 @@
     return refCtx;
   }
 
-  function registerHookComp(options) {
+  function registerHookComp(options, ccClassKey) {
+    var _options;
+
+    if (typeof options === 'string') {
+      _options = {
+        module: options
+      };
+    } else {
+      _options = Object.assign({}, options);
+    }
+
     function buildCcHookComp(Dumb) {
-      var _options$memo = options.memo,
-          memo = _options$memo === void 0 ? true : _options$memo;
-      delete options.memo;
+      var _options2 = _options,
+          _options2$memo = _options2.memo,
+          memo = _options2$memo === void 0 ? true : _options2$memo;
+      delete _options.memo;
 
       var getComp = function getComp() {
         return function CcHookComp(props) {
-          options.props = props;
-          var ctx = useConcent(options); // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
+          _options.props = props;
+          var ctx = useConcent(_options, ccClassKey); // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
 
-          if (options.mapProps) {
+          if (_options.mapProps) {
             return React.createElement(Dumb, ctx.mapped);
           } else {
             return React.createElement(Dumb, ctx);
@@ -5618,7 +5629,7 @@
       }
     }
 
-    var Dumb = options.render;
+    var Dumb = _options.render;
 
     if (Dumb) {
       return buildCcHookComp(Dumb);

@@ -15,7 +15,7 @@ export default function (spec, ref, e) {
   if (spec[MOCKE_KEY]) {
     mockE = spec;
   } else {//可能是来自$$sync生成的setter调用
-    mockE = buildMockEvent(spec, e, refModule);
+    mockE = buildMockEvent(spec, e, refModule, refCtx.state);
   }
 
   if (!mockE) return;//参数无效
