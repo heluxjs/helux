@@ -44,7 +44,7 @@ function CcHook(ccHookState, hookSetState, props) {
 }
 
 //写为具名函数，防止react devtoo里显示.default
-export default function useConcent(registerOption){
+export default function useConcent(registerOption, ccClassKey){
   let _registerOption = registerOption;
   if (typeof registerOption === 'string') {
     _registerOption = { module: registerOption };
@@ -64,7 +64,7 @@ export default function useConcent(registerOption){
   let hookRef;
   if (isFirstRendered) {
     const {
-      ccClassKey, renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys = [],
+      renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys = [],
       persistStoredKeys, connect = {}, setup, bindCtxToMethod, lite
     } = _registerOption;
 
