@@ -24,6 +24,7 @@ function _clearInsAssociation(recomputed) {
     const computedValue = ccContext.computed._computedValue;
     const modules = okeys(rootState);
     modules.forEach(m => {
+      if (m === MODULE_CC) return;
       if (computedValue[m]) initModuleComputed(m, computedValue[m]);
     });
   }

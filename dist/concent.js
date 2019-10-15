@@ -874,7 +874,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.24',
+      version: '1.5.25',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4671,6 +4671,7 @@
       var computedValue = ccContext.computed._computedValue;
       var modules = okeys(rootState);
       modules.forEach(function (m) {
+        if (m === MODULE_CC) return;
         if (computedValue[m]) initModuleComputed(m, computedValue[m]);
       });
     }

@@ -25,7 +25,8 @@ function _clearInsAssociation(recomputed) {
     const modules = okeys(rootState);
     modules.forEach(m => {
       if (m === MODULE_CC) return;
-      if (computedValue[m]) initModuleComputed(m, computedValue[m]);
+      //进入recomputed逻辑，不需要配置dep依赖了
+      if (computedValue[m]) initModuleComputed(m, computedValue[m], false, false);
     });
   }
 }

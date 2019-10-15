@@ -7,7 +7,7 @@ import pickDepFns from '../base/pick-dep-fns';
 
 const { safeGetObjectFromObject, isPlainJsonObject } = util;
 
-export default function (module, computed, append = false) {
+export default function (module, computed, append = false, configureDep = true) {
   if (!isPlainJsonObject(computed)) {
     throw new Error(`StartUpOption.computed.${module}'s value is not a plain json object!`);
   }
@@ -28,7 +28,9 @@ export default function (module, computed, append = false) {
 
   const moduleState = rootState[module];
 
-  configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootComputedDep }, computed);
+  if(configureDep === true){
+    configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootComputedDep }, computed);
+  }
 
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, moduleState);
   pickedFns.forEach(({ retKey, fn, depKeys }) => {
