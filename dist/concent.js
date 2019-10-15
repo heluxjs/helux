@@ -874,7 +874,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.23',
+      version: '1.5.24',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1189,6 +1189,7 @@
     return shouldCurrentRefUpdate;
   }
 
+  //CcFragment实例调用会提供callerCtx
   // stateModule表示状态所属的模块
 
   function computeValueForRef (refCtx, stateModule, oldState, committedState, isBeforeMount) {
@@ -1201,7 +1202,8 @@
         refModule = refCtx.module,
         refComputed = refCtx.refComputed,
         refConnectedComputed = refCtx.refConnectedComputed,
-        ccUniqueKey = refCtx.ccUniqueKey; // 触发依赖stateKeys相关的computed函数
+        ccUniqueKey = refCtx.ccUniqueKey; // const moduleState = ccContext.store.getState(stateModule);
+    // 触发依赖stateKeys相关的computed函数
 
     var _pickDepFns = pickDepFns(isBeforeMount, 'ref', 'computed', computedDep, stateModule, oldState, committedState, ccUniqueKey),
         pickedFns = _pickDepFns.pickedFns,
@@ -4651,7 +4653,7 @@
 
   var justCalledByStartUp = false;
 
-  function _clearInsAssociation() {
+  function _clearInsAssociation(recomputed) {
     clearObject(ccContext.event_handlers_);
     clearObject(ccContext.ccUKey_handlerKeys_);
     clearObject(ccContext.renderKey_ccUkeys_);
@@ -4663,9 +4665,22 @@
     clearObject(ccContext.handlerKey_handler_);
     clearObject(ccContext.ccUkey_ref_, [CC_DISPATCHER]);
     clearObject(ccContext.refs, [CC_DISPATCHER]);
+
+    if (recomputed) {
+      var rootState = ccContext.store._state;
+      var computedValue = ccContext.computed._computedValue;
+      var modules = okeys(rootState);
+      modules.forEach(function (m) {
+        if (computedValue[m]) initModuleComputed(m, computedValue[m]);
+      });
+    }
   }
 
-  function _clearAll() {
+  function _clearAll(recomputed) {
+    if (recomputed === void 0) {
+      recomputed = false;
+    }
+
     clearObject(ccContext.globalStateKeys);
     clearObject(ccContext.reducer._reducer);
     clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
@@ -4675,7 +4690,7 @@
     clearObject(ccContext.middlewares);
     clearCachedData();
 
-    _clearInsAssociation();
+    _clearInsAssociation(recomputed);
   }
 
   function _prepareClear(cb) {
@@ -4715,9 +4730,9 @@
           return;
         }
 
-        console.warn("attention: method[clearContextIfHot] need been invoked before your app rendered!");
+        console.warn("attention: method[clearContextIfHot] need been invoked before your app rendered!"); // !!!重计算各个模块的computed结果
 
-        _clearInsAssociation();
+        _clearInsAssociation(true);
       }
     });
   }
