@@ -1,11 +1,12 @@
-import { clearObject } from '../support/util';
+import { clearObject, okeys } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
+import initModuleComputed from '../core/computed/init-module-computed';
 
 let justCalledByStartUp = false;
 
-function _clearInsAssociation() {
+function _clearInsAssociation(recomputed) {
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
   clearObject(ccContext.renderKey_ccUkeys_);
@@ -17,9 +18,18 @@ function _clearInsAssociation() {
   clearObject(ccContext.handlerKey_handler_);
   clearObject(ccContext.ccUkey_ref_, [CC_DISPATCHER]);
   clearObject(ccContext.refs, [CC_DISPATCHER]);
+
+  if (recomputed) {
+    const rootState = ccContext.store._state;
+    const computedValue = ccContext.computed._computedValue;
+    const modules = okeys(rootState);
+    modules.forEach(m => {
+      if (computedValue[m]) initModuleComputed(m, computedValue[m]);
+    });
+  }
 }
 
-function _clearAll() {
+function _clearAll(recomputed = false) {
   clearObject(ccContext.globalStateKeys);
   clearObject(ccContext.reducer._reducer);
   clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
@@ -28,7 +38,7 @@ function _clearAll() {
   clearObject(ccContext.watch._watchDep);
   clearObject(ccContext.middlewares);
   clearCachedData();
-  _clearInsAssociation();
+  _clearInsAssociation(recomputed);
 }
 
 function _prepareClear(cb) {
@@ -61,8 +71,11 @@ export default function (clearAll = false, warningErrForClearAll) {
         justCalledByStartUp = false;
         return;
       }
+
       console.warn(`attention: method[clearContextIfHot] need been invoked before your app rendered!`);
-      _clearInsAssociation();
+
+      // !!!重计算各个模块的computed结果
+      _clearInsAssociation(true);
     }
   });
 }

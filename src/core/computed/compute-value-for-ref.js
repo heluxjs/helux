@@ -1,4 +1,5 @@
 import pickDepFns from '../base/pick-dep-fns';
+// import ccContext from '../../cc-context';
 
 //CcFragment实例调用会提供callerCtx
 // stateModule表示状态所属的模块
@@ -6,6 +7,7 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
   if (!refCtx.hasComputedFn) return;
 
   const { computedDep, module: refModule, refComputed, refConnectedComputed, ccUniqueKey } = refCtx;
+  // const moduleState = ccContext.store.getState(stateModule);
 
   // 触发依赖stateKeys相关的computed函数
   const { pickedFns, setted, changed } = pickDepFns(isBeforeMount, 'ref', 'computed', computedDep, stateModule, oldState, committedState, ccUniqueKey);
