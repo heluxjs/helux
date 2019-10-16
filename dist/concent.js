@@ -874,7 +874,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.27',
+      version: '1.5.28',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3842,7 +3842,8 @@
     if (callByDidMount) {
       effectItems.forEach(function (item) {
         if (item.immediate === false) return;
-        var cb = item.fn(ctx);
+        var cb = item.fn(ctx, true); // set true flag isDidMount = true
+
         if (cb) eid_effectReturnCb_[item.eId] = cb;
       });
     } else {
@@ -3917,7 +3918,8 @@
       toBeExecutedFns.forEach(function (item) {
         var fn = item.fn,
             eId = item.eId;
-        var cb = fn(ctx);
+        var cb = fn(ctx, false); // set false flag isDidMount = false, means effect triggered in didUpdate period
+
         if (cb) eid_effectReturnCb_[eId] = cb;
       });
     }
