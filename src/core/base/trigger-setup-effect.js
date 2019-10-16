@@ -15,7 +15,7 @@ export default function (ref, callByDidMount) {
   if (callByDidMount) {
     effectItems.forEach(item => {
       if (item.immediate === false) return;
-      const cb = item.fn(ctx);
+      const cb = item.fn(ctx, true);// set true flag isDidMount = true
       if (cb) eid_effectReturnCb_[item.eId] = cb;
     });
   } else {//callByDidUpdate
@@ -71,7 +71,7 @@ export default function (ref, callByDidMount) {
 
     toBeExecutedFns.forEach(item => {
       const { fn, eId } = item;
-      const cb = fn(ctx);
+      const cb = fn(ctx, false);// set false flag isDidMount = false, means effect triggered in didUpdate period
       if (cb) eid_effectReturnCb_[eId] = cb;
     });
   }
