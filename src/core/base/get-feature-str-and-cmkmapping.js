@@ -5,9 +5,9 @@ const { okeys, isPlainJsonObject } = util;
 const { store: { _state } } = ccContext;
 
 /**
- * 根据connect参数算出ccClassKey值和connectedModuleKeyMapping值
+ * 根据connect,watchedKeys算出ccClassKey值和connectedModuleKeyMapping值
  */
-export default function(connectSpec, fragmentModule, fragmentPrefix, watchedKeys) {
+export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) {
   if (!isPlainJsonObject(connectSpec)) {
     throw new Error(`CcFragment or CcClass's prop connect type error, it is not a plain json object`);
   }
@@ -22,7 +22,7 @@ export default function(connectSpec, fragmentModule, fragmentPrefix, watchedKeys
 
   moduleNames.forEach(m => {
     const moduleState = _state[m];
-    let feature = `${fragmentPrefix}_${m}/`;
+    let feature = `${compTypePrefix}_${m}/`;
 
     if (moduleState === undefined) {
       throw new Error(`${invalidConnect} module[${m}] not found in cc store `);
@@ -50,14 +50,13 @@ export default function(connectSpec, fragmentModule, fragmentPrefix, watchedKeys
     }
   });
 
-  if (fragmentModule) {
-    if (watchedKeys === '*') featureStrs.unshift(`${fragmentPrefix}_$${fragmentModule}/*`);
-    else {
-      watchedKeys.sort();
-      const tmpStr = `${fragmentModule}/` + watchedKeys.join(',');
-      featureStrs.unshift(tmpStr);
-    }
+  featureStrs.push('|');// 之后是watchKeys相关的特征值参数
+  if (watchedKeys === '*') featureStrs.push(`${compTypePrefix}_$${belongModule}/*`);
+  else {
+    watchedKeys.sort();
+    const tmpStr = `${belongModule}/` + watchedKeys.join(',');
+    featureStrs.push(tmpStr);
   }
 
-  return { featureStr: featureStrs.join('|'), connectedModuleKeyMapping, connectedModuleNames: moduleNames };
+  return { featureStr: featureStrs.join('@'), connectedModuleKeyMapping, connectedModuleNames: moduleNames };
 }

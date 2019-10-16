@@ -7,11 +7,11 @@ const { featureStr_classKey_, userClassKey_featureStr_, ccClassKey_ccClassContex
 
 let cursor = 0;
 
-export default function (allowNamingDispatcher, module, connect, prefix, featureStr, classKey = '') {
+export default function (allowNamingDispatcher, module, connect, watchedKeys, prefix, featureStr, classKey = '') {
   // 未指定classKey
   if (!classKey) {
-    // 未指定所属模块，也未连接到其他模块
-    if (module === MODULE_DEFAULT && isObjectNull(connect)) {
+    // 未指定所属模块，也未连接到其他模块，且无watchedKeys
+    if (module === MODULE_DEFAULT && isObjectNull(connect) && watchedKeys.length === 0) {
       return `${prefix}0`;
     }
 

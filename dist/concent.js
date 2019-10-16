@@ -4464,9 +4464,13 @@
 
   var safeGetObjectFromObject$2 = safeGetObjectFromObject,
       isPlainJsonObject$4 = isPlainJsonObject;
-  function initModuleComputed (module, computed, append) {
+  function initModuleComputed (module, computed, append, configureDep) {
     if (append === void 0) {
       append = false;
+    }
+
+    if (configureDep === void 0) {
+      configureDep = true;
     }
 
     if (!isPlainJsonObject$4(computed)) {
@@ -4488,11 +4492,14 @@
     }
 
     var moduleState = rootState[module];
-    configureDepFns(CATE_MODULE, {
-      module: module,
-      state: moduleState,
-      dep: rootComputedDep
-    }, computed);
+
+    if (configureDep === true) {
+      configureDepFns(CATE_MODULE, {
+        module: module,
+        state: moduleState,
+        dep: rootComputedDep
+      }, computed);
+    }
 
     var _pickDepFns = pickDepFns(true, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, moduleState),
         pickedFns = _pickDepFns.pickedFns,
@@ -4671,8 +4678,9 @@
       var computedValue = ccContext.computed._computedValue;
       var modules = okeys(rootState);
       modules.forEach(function (m) {
-        if (m === MODULE_CC) return;
-        if (computedValue[m]) initModuleComputed(m, computedValue[m]);
+        if (m === MODULE_CC) return; //进入recomputed逻辑，不需要配置dep依赖了
+
+        if (computedValue[m]) initModuleComputed(m, computedValue[m], false, false);
       });
     }
   }
