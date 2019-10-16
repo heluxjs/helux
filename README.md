@@ -54,6 +54,7 @@
 
 </div>
 
+![hello-concent](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/hello.gif)
 
 ## ✨特性
 * **极简的核心api**，`run`载入模块配置启动concent，`register`注册组件，无需包一层`Provider`在根组件。
