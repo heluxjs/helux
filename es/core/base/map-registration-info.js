@@ -31,7 +31,7 @@ function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
   if (keyElementNotString) {
     throw me(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi(`ccClassKey:${ccClassKey}`));
   }
-  return watchedKeys;
+  return watchedKeys || [];
 }
 
 function mapModuleToCcClassKeys(moduleName, ccClassKey) {
@@ -98,8 +98,8 @@ export default function (
   }
 
   const _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);
-  const { featureStr, connectedModuleKeyMapping, connectedModuleNames } = getFeatureStrAndCmkMapping(_connect);
-  const _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, classKeyPrefix, featureStr, ccClassKey);
+  const { featureStr, connectedModuleKeyMapping, connectedModuleNames } = getFeatureStrAndCmkMapping(_connect, _watchedKeys);
+  const _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, _watchedKeys, classKeyPrefix, featureStr, ccClassKey);
 
   let _renderKeyClasses;
   if (!renderKeyClasses) {

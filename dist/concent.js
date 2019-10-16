@@ -874,7 +874,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.25',
+      version: '1.5.27',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2302,10 +2302,10 @@
       isPlainJsonObject$2 = isPlainJsonObject;
   var _state$1 = ccContext.store._state;
   /**
-   * 根据connect参数算出ccClassKey值和connectedModuleKeyMapping值
+   * 根据connect,watchedKeys算出ccClassKey值和connectedModuleKeyMapping值
    */
 
-  function getFeatureStrAndCmkMapping (connectSpec, fragmentModule, fragmentPrefix, watchedKeys) {
+  function getFeatureStrAndCmkMapping (connectSpec, watchedKeys, belongModule, compTypePrefix) {
     if (!isPlainJsonObject$2(connectSpec)) {
       throw new Error("CcFragment or CcClass's prop connect type error, it is not a plain json object");
     }
@@ -2322,7 +2322,7 @@
     var connectedModuleKeyMapping = {};
     moduleNames.forEach(function (m) {
       var moduleState = _state$1[m];
-      var feature = fragmentPrefix + "_" + m + "/";
+      var feature = compTypePrefix + "_" + m + "/";
 
       if (moduleState === undefined) {
         throw new Error(invalidConnect + " module[" + m + "] not found in cc store ");
@@ -2351,17 +2351,15 @@
         featureStrs.push(feature);
       }
     });
+    featureStrs.push('|'); // 之后是watchKeys相关的特征值参数
 
-    if (fragmentModule) {
-      if (watchedKeys === '*') featureStrs.unshift(fragmentPrefix + "_$" + fragmentModule + "/*");else {
-        watchedKeys.sort();
-        var tmpStr = fragmentModule + "/" + watchedKeys.join(',');
-        featureStrs.unshift(tmpStr);
-      }
+    if (watchedKeys === '*') featureStrs.push(compTypePrefix + "_$" + belongModule + "/*");else {
+      watchedKeys.sort();
+      var tmpStr = belongModule + "/" + watchedKeys.join(',');
+      featureStrs.push(tmpStr);
     }
-
     return {
-      featureStr: featureStrs.join('|'),
+      featureStr: featureStrs.join('@'),
       connectedModuleKeyMapping: connectedModuleKeyMapping,
       connectedModuleNames: moduleNames
     };
@@ -2373,15 +2371,15 @@
       userClassKey_featureStr_ = ccContext.userClassKey_featureStr_,
       ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_;
   var cursor = 0;
-  function getCcClassKey (allowNamingDispatcher, module, connect, prefix, featureStr, classKey) {
+  function getCcClassKey (allowNamingDispatcher, module, connect, watchedKeys, prefix, featureStr, classKey) {
     if (classKey === void 0) {
       classKey = '';
     }
 
     // 未指定classKey
     if (!classKey) {
-      // 未指定所属模块，也未连接到其他模块
-      if (module === MODULE_DEFAULT && isObjectNull$1(connect)) {
+      // 未指定所属模块，也未连接到其他模块，且无watchedKeys
+      if (module === MODULE_DEFAULT && isObjectNull$1(connect) && watchedKeys.length === 0) {
         return prefix + "0";
       }
 
@@ -2460,7 +2458,7 @@
       throw me$2(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi$2("ccClassKey:" + ccClassKey));
     }
 
-    return watchedKeys;
+    return watchedKeys || [];
   }
 
   function mapModuleToCcClassKeys(moduleName, ccClassKey) {
@@ -2536,12 +2534,12 @@
 
     var _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);
 
-    var _getFeatureStrAndCmkM = getFeatureStrAndCmkMapping(_connect),
+    var _getFeatureStrAndCmkM = getFeatureStrAndCmkMapping(_connect, _watchedKeys),
         featureStr = _getFeatureStrAndCmkM.featureStr,
         connectedModuleKeyMapping = _getFeatureStrAndCmkM.connectedModuleKeyMapping,
         connectedModuleNames = _getFeatureStrAndCmkM.connectedModuleNames;
 
-    var _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, classKeyPrefix, featureStr, ccClassKey);
+    var _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, _watchedKeys, classKeyPrefix, featureStr, ccClassKey);
 
     var _renderKeyClasses;
 
