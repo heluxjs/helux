@@ -75,7 +75,7 @@ export default function useConcent(registerOption, ccClassKey){
     const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
       module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, type: CC_HOOK_PREFIX,
-      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys, tag,
+      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
     });
 
     buildRefCtx(hookRef, params, lite);
