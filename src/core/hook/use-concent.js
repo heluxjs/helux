@@ -8,7 +8,7 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import getStoredKeys from '../base/get-stored-keys';
-import { isPlainJsonObject } from '../../support/util';
+import { isPlainJsonObject, getRegisterOptions } from '../../support/util';
 
 const { ccUkey_ref_, moduleName_stateKeys_ } = ccContext;
 
@@ -46,11 +46,7 @@ function CcHook(ccHookState, hookSetState, props) {
 
 //写为具名函数，防止react devtoo里显示.default
 export default function useConcent(registerOption, ccClassKey){
-  let _registerOption = registerOption;
-  if (typeof registerOption === 'string') {
-    _registerOption = { module: registerOption };
-  }
-
+  const _registerOption = getRegisterOptions(registerOption);
   const { state = {}, props = {}, mapProps } = _registerOption;
   const reactUseState = React.useState;
   if (!reactUseState) {

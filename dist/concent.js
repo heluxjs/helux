@@ -5610,7 +5610,13 @@
     }, []); // before every render
 
     if (mapProps) {
-      refCtx.mapped = mapProps(refCtx);
+      var mapped = mapProps(refCtx);
+
+      if (!isPlainJsonObject(mapped)) {
+        throw new Error('mapProps must return an plain json object');
+      }
+
+      refCtx.mapped = mapped;
     }
 
     return refCtx;

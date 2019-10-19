@@ -1,5 +1,5 @@
 import register from '../core/base/register';
-import { MODULE_DEFAULT } from '../support/constant';
+import { getRegisterOptions } from '../support/util';
 
 /****
  * @param {string} ccClassKey a cc class's name, you can register a same react class to cc with different ccClassKey,
@@ -59,21 +59,9 @@ import { MODULE_DEFAULT } from '../support/constant';
  * you can define registerOption.isSingle as true, it just like singleton mode in java coding^_^
  */
 export default function (registerOption, ccClassKey) {
-  let _registerOption = registerOption;
-  
-  if (_registerOption) {
-    const optType = typeof _registerOption;
-    if (optType === 'object') {
-      delete _registerOption.__checkStartUp;
-      delete _registerOption.__calledBy;
-    } else if (optType === 'string') {
-      _registerOption = { module: registerOption };
-    } else {
-      throw new Error('registerOption type error, must be array or string');
-    }
-  }else{
-    _registerOption = { module: MODULE_DEFAULT };
-  }
+  let _registerOption = getRegisterOptions(registerOption);
+  delete _registerOption.__checkStartUp;
+  delete _registerOption.__calledBy;
 
   return register(_registerOption, ccClassKey);
 }

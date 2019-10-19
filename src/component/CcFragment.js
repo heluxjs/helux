@@ -1,7 +1,5 @@
 import React from 'react';
-import {
-  CC_FRAGMENT_PREFIX, MODULE_DEFAULT,
-} from '../support/constant';
+import { CC_FRAGMENT_PREFIX } from '../support/constant';
 import * as util from '../support/util';
 import mapRegistrationInfo from '../core/base/map-registration-info';
 import beforeUnmount from '../core/base/before-unmount';
@@ -13,23 +11,26 @@ import getOutProps from '../core/base/get-out-props';
 import getStoredKeys from '../core/base/get-stored-keys';
 import ccContext from '../cc-context';
 
-const { shallowDiffers } = util;
+const { shallowDiffers, getRegisterOptions } = util;
 const { moduleName_stateKeys_ } = ccContext;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
 export default class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
+    const registerOptions = getRegisterOptions(props.register);
 
     // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
     if (props.__$$regDumb !== true) {
       const {
-        module = MODULE_DEFAULT, ccClassKey: propsCcClassKey, renderKeyClasses, ccKey, ccTag, lite,
-        watchedKeys = '*', ccOption = {}, connect = {}, reducerModule, state = {}, isSingle,
-      } = props;
+        module, renderKeyClasses, ccTag, lite,
+        watchedKeys = '*', connect = {}, reducerModule, state = {}, isSingle,
+      } = registerOptions;
+      const { ccClassKey, ccKey, ccOption = {} } = props;
+
       //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
       const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, propsCcClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true
+        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true
       );
 
       const storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, []);
@@ -39,7 +40,7 @@ export default class CcFragment extends React.Component {
       }, lite);
     } else {
       const outProps = getOutProps(props);
-      const ccOption = outProps.ccOption || props.ccOption;
+      const ccOption = outProps.ccOption;
       const storedKeys = getStoredKeys(props.state, moduleName_stateKeys_[props.module], ccOption.storedKeys, props.storedKeys);
       const params = Object.assign({}, props, { storedKeys, ccOption, type: CC_FRAGMENT_PREFIX });
       buildRefCtx(this, params, props.lite);

@@ -8,6 +8,7 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import getStoredKeys from '../base/get-stored-keys';
+import { isPlainJsonObject } from '../../support/util';
 
 const { ccUkey_ref_, moduleName_stateKeys_ } = ccContext;
 
@@ -118,7 +119,11 @@ export default function useConcent(registerOption, ccClassKey){
 
   // before every render
   if (mapProps) {
-    refCtx.mapped = mapProps(refCtx);
+    const mapped = mapProps(refCtx);
+    if (!isPlainJsonObject(mapped)) {
+      throw new Error('mapProps must return an plain json object')
+    }
+    refCtx.mapped = mapped;
   }
 
   return refCtx;

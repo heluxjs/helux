@@ -1,5 +1,5 @@
 
-import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC } from './constant';
+import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from './constant';
 
 export function bindThis(_this, methods) {
   methods.forEach(method => _this[method] = _this[method].bind(_this));
@@ -355,4 +355,12 @@ export function removeArrElements(arr, toRemoveArr) {
     if (!toRemoveArr.includes(item)) newArr.push(item);
   });
   return newArr;
+}
+
+export function getRegisterOptions(inputOptions = {}) {
+  if (typeof options === 'string') {
+    return { module: options };
+  } else {
+    return Object.assign({ module: MODULE_DEFAULT }, inputOptions);
+  }
 }

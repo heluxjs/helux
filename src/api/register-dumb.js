@@ -35,18 +35,21 @@ function _registerDumb(
 
   //优先读取实例化的时候传入的，再读connectDumb配置的
   const ccTag = props.ccTag || tag;
+  const ccOption = props.ccOption || { persistStoredKeys };
 
-  const ccOption = { persistStoredKeys };
+  const passProps = {
+    __$$regDumb: true, props, ccOption, ccClassKey, render, ccKey: props.ccKey,
+    register: {
+      isSingle, tag: ccTag, module, reducerModule,
+      watchedKeys, storedKeys, connect, state: clonedState, setup, bindCtxToMethod, compareProps,
+    },
+  };
   //ccKey由实例化的Dumb组件props上透传下来
-  return React.createElement(CcFragment, {
-    isSingle, ccClassKey, __$$regDumb: true, tag: ccTag, ccKey: props.ccKey, props, module, reducerModule,
-    watchedKeys, storedKeys, ccOption, connect, state: clonedState, setup, bindCtxToMethod, render, compareProps,
-  });
+  return React.createElement(CcFragment, passProps);
 }
 
 export default function (registerOption, ccClassKey) {
-  let _registerOption = typeof registerOption === 'string' ? { module: registerOption } : registerOption;
-  if (!_registerOption) _registerOption = { module: MODULE_DEFAULT };
+  const _registerOption = util.getRegisterOptions(registerOption);
 
   const {
     renderKeyClasses, isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule,
