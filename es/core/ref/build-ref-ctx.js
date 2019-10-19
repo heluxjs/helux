@@ -59,7 +59,8 @@ export default function (ref, params, liteLevel = 5) {
     _storedKeys = storedKeys;
   }
 
-  const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag);
+  // pic ref defined tag first, register tag second
+  const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, ccOption.tag || tag);
 
   // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
   let renderKey = ccOption.renderKey;

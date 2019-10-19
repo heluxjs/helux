@@ -50,11 +50,16 @@ export default function (store = {}, option = {}) {
     autoCreateDispatcher, reducer, bindCtxToMethod,
     computedCompare, watchCompare, watchImmediate,
   } = option;
+
   if (reducer) {
     if (!isPlainJsonObject(reducer)) pError('option.reducer');
     okeys(reducer).forEach(reducerModule => {
       if (_reducer[reducerModule]) throw new Error(`reducerModule[${reducerModule}] has been declared in store`);
-      _reducer[reducerModule] = reducer[reducerModule];
+      const reducerFns = reducer[reducerModule];
+      Object.keys(k => {
+        reducerFns[k].__reducerModule = reducerModule;// tag reducer fn
+      });
+      _reducer[reducerModule] = reducerFns;
     });
   }
 

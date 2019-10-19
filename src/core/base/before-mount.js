@@ -30,6 +30,9 @@ export default function (ref, setup, bindCtxToMethod) {
     });
   });
 
+  // ctx.reducer = ccContext.reducer._reducerRefCaller;
+  // ctx.lazyReducer = ccContext.reducer._lazyReducerRefCaller;
+
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
     if (typeof setup !== 'function') throw new Error('type of setup must be function');

@@ -206,6 +206,8 @@ const ccContext = {
     },
     _reducerCaller: {},
     _lazyReducerCaller: {},
+    // _reducerRefCaller: {},//为实例准备的reducer caller
+    // _lazyReducerRefCaller: {},//为实例准备的lazy reducer caller
     _reducerFnName_fullFnNames_: {},
     _reducerModule_fnNames_: {}
   },
@@ -235,7 +237,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.28',
+    version: '1.5.29',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

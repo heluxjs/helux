@@ -9,10 +9,16 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
   if (rootReducerCanNotContainInputModule) checker.checkReducerModuleName(module);
   else checker.checkModuleNameBasically(module);
 
-  const { _reducer, _reducerCaller, _lazyReducerCaller, _reducerFnName_fullFnNames_, _reducerModule_fnNames_ } = ccContext.reducer;
+  const {
+    _reducer, _reducerCaller, _lazyReducerCaller, _reducerFnName_fullFnNames_, _reducerModule_fnNames_,
+    // _reducerRefCaller, _lazyReducerRefCaller,
+  } = ccContext.reducer;
   _reducer[module] = reducer;
   const subReducerCaller = util.safeGetObjectFromObject(_reducerCaller, module);
   const subLazyReducerCaller = util.safeGetObjectFromObject(_lazyReducerCaller, module);
+  // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
+  // const subLazyReducerRefCaller = util.safeGetObjectFromObject(_lazyReducerRefCaller, module);
+
   const fnNames = util.safeGetArrayFromObject(_reducerModule_fnNames_, module);
 
   // 自动附加一个setState在reducer里
@@ -25,6 +31,13 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
 
     subReducerCaller[name] = (payload, delay, idt) => dispatch(fullFnName, payload, delay, idt);
     subLazyReducerCaller[name] = (payload, delay, idt) => lazyDispatch(fullFnName, payload, delay, idt);
+
+    // function wrappedReducerFn(payload, delay, idt){
+    // }
+    // subReducerRefCaller[name] = wrappedReducerFn;
+    // function wrappedLazyReducerFn(payload, delay, idt) {
+    // }
+    // subLazyReducerRefCaller[name] = wrappedLazyReducerFn;
 
     const reducerFn = reducer[name];
     if(typeof reducerFn !== 'function'){

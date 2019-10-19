@@ -1,3 +1,9 @@
+#### 2019-10-19
+1.5.29 发布
+* optimize: 允许ctx.dispatch直接传递reducer里的函数（reducer函数被打上tag: __stateModule, __reducerModule）
+* optimize: cc.set 检查模块存在已否
+* optimize: CcFragment使用register传递相关注册信息，和register接口对其
+
 #### 2019-10-12
 1.5.22 发布
 * optimize: registerHookComp自动使用memo包裹

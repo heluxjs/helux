@@ -409,9 +409,9 @@
     });
     return newArr;
   }
-  function getRegisterOptions(inputOptions) {
-    if (inputOptions === void 0) {
-      inputOptions = {};
+  function getRegisterOptions(options) {
+    if (options === void 0) {
+      options = {};
     }
 
     if (typeof options === 'string') {
@@ -421,7 +421,7 @@
     } else {
       return Object.assign({
         module: MODULE_DEFAULT
-      }, inputOptions);
+      }, options);
     }
   }
 
@@ -860,6 +860,8 @@
       _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer),
       _reducerCaller: {},
       _lazyReducerCaller: {},
+      // _reducerRefCaller: {},//为实例准备的reducer caller
+      // _lazyReducerRefCaller: {},//为实例准备的lazy reducer caller
       _reducerFnName_fullFnNames_: {},
       _reducerModule_fnNames_: {}
     },
@@ -889,7 +891,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.28',
+      version: '1.5.29',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2226,7 +2228,10 @@
             return callInvoke(); // throw new Error('you are calling a unnamed function!!!');
           }
 
-          targetFirstParam = fnName; // _module = paramObjType.stateModule || module;
+          targetFirstParam = fnName; //let dispatch can apply reducer function directly!!!
+
+          _module = paramObj.__stateModule;
+          _reducerModule = paramObj.__reducerModule;
         }
 
         var slashCount = targetFirstParam.split('').filter(function (v) {
@@ -3352,6 +3357,7 @@
     if (ccsync.includes('/')) {
       // syncModuleState 同步模块的state状态
       var targetModule = ccsync.split('/')[0];
+      checkModuleName(targetModule, false);
       var ccKey = refCtx.ccKey,
           ccUniqueKey = refCtx.ccUniqueKey;
 
@@ -3450,9 +3456,10 @@
     if (storedKeys !== undefined && storedKeys.length > 0) {
       if (!ccKey) throw me$4(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi$4("ccClassKey[" + ccClassKey + "]"));
       _storedKeys = storedKeys;
-    }
+    } // pic ref defined tag first, register tag second
 
-    var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, tag); // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
+
+    var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, ccOption.tag || tag); // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
 
     var renderKey = ccOption.renderKey;
     if (!renderKey) renderKey = ccOption.renderKey = ccUniqueKey;
@@ -3822,7 +3829,9 @@
           return lazyDispatch(m + "/" + fnName, payload, delay, rkey);
         };
       });
-    }); //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
+    }); // ctx.reducer = ccContext.reducer._reducerRefCaller;
+    // ctx.lazyReducer = ccContext.reducer._lazyReducerRefCaller;
+    //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
 
     if (setup) {
       if (typeof setup !== 'function') throw new Error('type of setup must be function');
@@ -4106,9 +4115,6 @@
               _this = _ToBeExtendedClass.call(this, props, context) || this;
               _this.state = _this.state || {};
               _this.$$attach = _this.$$attach.bind(_assertThisInitialized(_this));
-
-              var _tag = props.ccTag || tag;
-
               var ccOption = props.ccOption || {
                 persistStoredKeys: persistStoredKeys
               };
@@ -4120,7 +4126,7 @@
                 isSingle: isSingle,
                 module: _module,
                 reducerModule: _reducerModule,
-                tag: _tag,
+                tag: tag,
                 state: declaredState,
                 type: CC_CLASS_PREFIX,
                 watchedKeys: _watchedKeys,
@@ -4380,7 +4386,9 @@
         _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_;
     _reducer[module] = reducer;
     var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module);
-    var subLazyReducerCaller = safeGetObjectFromObject(_lazyReducerCaller, module);
+    var subLazyReducerCaller = safeGetObjectFromObject(_lazyReducerCaller, module); // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
+    // const subLazyReducerRefCaller = util.safeGetObjectFromObject(_lazyReducerRefCaller, module);
+
     var fnNames = safeGetArrayFromObject(_reducerModule_fnNames_, module); // 自动附加一个setState在reducer里
 
     if (!reducer.setState) reducer.setState = function (payload) {
@@ -4397,7 +4405,13 @@
 
       subLazyReducerCaller[name] = function (payload, delay, idt) {
         return lazyDispatch(fullFnName, payload, delay, idt);
-      };
+      }; // function wrappedReducerFn(payload, delay, idt){
+      // }
+      // subReducerRefCaller[name] = wrappedReducerFn;
+      // function wrappedLazyReducerFn(payload, delay, idt) {
+      // }
+      // subLazyReducerRefCaller[name] = wrappedLazyReducerFn;
+
 
       var reducerFn = reducer[name];
 
@@ -4405,6 +4419,9 @@
         throw new Error("reducer key[" + name + "] 's value is not a function");
       } else {
         reducerFn.__fnName = name; //!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
+
+        reducerFn.__stateModule = module;
+        reducerFn.__reducerModule = module;
       } // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
       // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
       // reducerFn.stateModule = module;
@@ -5119,7 +5136,8 @@
       if (!isPlainJsonObject$7(reducer)) pError('option.reducer');
       okeys$9(reducer).forEach(function (reducerModule) {
         if (_reducer[reducerModule]) throw new Error("reducerModule[" + reducerModule + "] has been declared in store");
-        _reducer[reducerModule] = reducer[reducerModule];
+        var reducerFns = reducer[reducerModule];
+        _reducer[reducerModule] = reducerFns;
       });
     } // merge startupOption
 
@@ -5235,7 +5253,7 @@
       if (props.__$$regDumb !== true) {
         var module = registerOptions.module,
             renderKeyClasses = registerOptions.renderKeyClasses,
-            ccTag = registerOptions.ccTag,
+            tag = registerOptions.tag,
             lite = registerOptions.lite,
             _registerOptions$watc = registerOptions.watchedKeys,
             watchedKeys = _registerOptions$watc === void 0 ? '*' : _registerOptions$watc,
@@ -5267,7 +5285,7 @@
           reducerModule: _reducerModule,
           storedKeys: storedKeys,
           watchedKeys: _watchedKeys,
-          tag: ccTag,
+          tag: tag,
           ccClassKey: _ccClassKey,
           ccOption: ccOption,
           type: CC_FRAGMENT_PREFIX
@@ -5372,7 +5390,6 @@
     }; //优先读取实例化的时候传入的，再读connectDumb配置的
 
 
-    var ccTag = props.ccTag || tag;
     var ccOption = props.ccOption || {
       persistStoredKeys: persistStoredKeys
     };
@@ -5385,7 +5402,7 @@
       ccKey: props.ccKey,
       register: {
         isSingle: isSingle,
-        tag: ccTag,
+        tag: tag,
         module: module,
         reducerModule: reducerModule,
         watchedKeys: watchedKeys,
@@ -5560,8 +5577,7 @@
         ccClassKey: _ccClassKey,
         connect: _connect,
         ccOption: ccOption,
-        storedKeys: _storedKeys,
-        lite: lite
+        storedKeys: _storedKeys
       });
       buildRefCtx(hookRef, params, lite);
       beforeMount(hookRef, setup, bindCtxToMethod);
