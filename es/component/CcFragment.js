@@ -19,37 +19,44 @@ export default class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
     const registerOptions = getRegisterOptions(props.register);
+    const {
+      module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
+      watchedKeys = '*', connect = {}, reducerModule, state = {}, isSingle, storedKeys
+    } = registerOptions;
 
-    // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
+    const { ccClassKey, ccKey, ccOption = {} } = props;
+
+    let target_storedKeys = storedKeys;
+    let target_reducerModule = reducerModule;
+    let target_watchedKeys = watchedKeys;
+    let target_ccClassKey = ccClassKey;
+    let target_connect = connect;
+
+    //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb已在外部注册过）
     if (props.__$$regDumb !== true) {
-      const {
-        module, renderKeyClasses, tag, lite,
-        watchedKeys = '*', connect = {}, reducerModule, state = {}, isSingle,
-      } = registerOptions;
-      const { ccClassKey, ccKey, ccOption = {} } = props;
+      const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[module], ccOption.storedKeys, registerOptions.storedKeys);
 
-      //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
-      const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true
+      const { _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
+        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, _storedKeys, connect, reducerModule, true
       );
-
-      const storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, []);
-      buildRefCtx(this, {
-        isSingle, ccKey, connect: _connect, state, module: _module, reducerModule: _reducerModule,
-        storedKeys, watchedKeys: _watchedKeys, tag, ccClassKey: _ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
-      }, lite);
-    } else {
-      const outProps = getOutProps(props);
-      const ccOption = outProps.ccOption || {};
-      const storedKeys = getStoredKeys(props.state, moduleName_stateKeys_[props.module], ccOption.storedKeys, props.storedKeys);
-      const params = Object.assign({}, props, { storedKeys, ccOption, type: CC_FRAGMENT_PREFIX });
-      buildRefCtx(this, params, props.lite);
+      target_storedKeys = _storedKeys;
+      target_reducerModule = _reducerModule;
+      target_watchedKeys = _watchedKeys;
+      target_ccClassKey = _ccClassKey;
+      target_connect = _connect;
     }
+    //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
 
-    this.__$$compareProps = props.compareProps || true;
+
+    buildRefCtx(this, {
+      isSingle, ccKey, connect: target_connect, state, module, reducerModule: target_reducerModule,
+      storedKeys: target_storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
+    }, lite);
+
+    this.__$$compareProps = compareProps;
     //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
     //无需在将要给废弃的componentWillMount里调用beforeMount
-    beforeMount(this, props.setup, props.bindCtxToMethod);
+    beforeMount(this, setup, bindCtxToMethod);
   }
 
   componentDidMount() {
@@ -73,20 +80,22 @@ export default class CcFragment extends React.Component {
 
   render() {
     //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
-    this.ctx.props = getOutProps(this.props);
+    const thisProps = this.props;
+    this.ctx.props = getOutProps(thisProps);
 
-    const { children, render } = this.props
+    const { children, render } = thisProps;
     const view = render || children;
 
     if (typeof view === 'function') {
-      const { __$$regDumb, mapProps } = this.props;
+      const { __$$regDumb, register = {} } = thisProps;
       const ctx = this.ctx;
-      if (__$$regDumb !== true && mapProps) {//直接使用<CcFragment />实例化
-        ctx.mapped = mapProps(ctx);
+
+      if (__$$regDumb !== true && register.mapProps) {//直接使用<CcFragment />实例化
+        ctx.mapped = register.mapProps(ctx) || {};
         return view(ctx.mapped) || nullSpan;
-      } else {
-        return view(ctx) || nullSpan;
       }
+
+      return view(ctx) || nullSpan;
     } else {
       if (React.isValidElement(view)) {
         //直接传递dom，无论state怎么改变都不会再次触发渲染

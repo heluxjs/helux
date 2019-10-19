@@ -891,7 +891,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.30',
+      version: '1.5.34',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3441,7 +3441,8 @@
         state = _params$state === void 0 ? {} : _params$state,
         storedKeys = params.storedKeys,
         watchedKeys = params.watchedKeys,
-        connect = params.connect,
+        _params$connect = params.connect,
+        connect = _params$connect === void 0 ? {} : _params$connect,
         tag = params.tag,
         ccOption = params.ccOption;
     reducerModule = reducerModule || module;
@@ -5248,67 +5249,69 @@
       var _this;
 
       _this = _React$Component.call(this, props, context) || this;
-      var registerOptions = getRegisterOptions$1(props.register); // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
+      var registerOptions = getRegisterOptions$1(props.register);
+      var module = registerOptions.module,
+          renderKeyClasses = registerOptions.renderKeyClasses,
+          tag = registerOptions.tag,
+          lite = registerOptions.lite,
+          _registerOptions$comp = registerOptions.compareProps,
+          compareProps = _registerOptions$comp === void 0 ? true : _registerOptions$comp,
+          setup = registerOptions.setup,
+          bindCtxToMethod = registerOptions.bindCtxToMethod,
+          _registerOptions$watc = registerOptions.watchedKeys,
+          watchedKeys = _registerOptions$watc === void 0 ? '*' : _registerOptions$watc,
+          _registerOptions$conn = registerOptions.connect,
+          connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
+          reducerModule = registerOptions.reducerModule,
+          _registerOptions$stat = registerOptions.state,
+          state = _registerOptions$stat === void 0 ? {} : _registerOptions$stat,
+          isSingle = registerOptions.isSingle,
+          storedKeys = registerOptions.storedKeys;
+      var ccClassKey = props.ccClassKey,
+          ccKey = props.ccKey,
+          _props$ccOption = props.ccOption,
+          ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
+      var target_storedKeys = storedKeys;
+      var target_reducerModule = reducerModule;
+      var target_watchedKeys = watchedKeys;
+      var target_ccClassKey = ccClassKey;
+      var target_connect = connect; //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb已在外部注册过）
 
       if (props.__$$regDumb !== true) {
-        var module = registerOptions.module,
-            renderKeyClasses = registerOptions.renderKeyClasses,
-            tag = registerOptions.tag,
-            lite = registerOptions.lite,
-            _registerOptions$watc = registerOptions.watchedKeys,
-            watchedKeys = _registerOptions$watc === void 0 ? '*' : _registerOptions$watc,
-            _registerOptions$conn = registerOptions.connect,
-            connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
-            reducerModule = registerOptions.reducerModule,
-            _registerOptions$stat = registerOptions.state,
-            state = _registerOptions$stat === void 0 ? {} : _registerOptions$stat,
-            isSingle = registerOptions.isSingle;
-        var ccClassKey = props.ccClassKey,
-            ccKey = props.ccKey,
-            _props$ccOption = props.ccOption,
-            ccOption = _props$ccOption === void 0 ? {} : _props$ccOption; //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
+        var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$5[module], ccOption.storedKeys, registerOptions.storedKeys);
 
-        var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true),
-            _module = _mapRegistrationInfo._module,
+        var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, _storedKeys, connect, reducerModule, true),
             _reducerModule = _mapRegistrationInfo._reducerModule,
             _watchedKeys = _mapRegistrationInfo._watchedKeys,
             _ccClassKey = _mapRegistrationInfo._ccClassKey,
             _connect = _mapRegistrationInfo._connect;
 
-        var storedKeys = getStoredKeys(state, moduleName_stateKeys_$5[_module], ccOption.storedKeys, []);
-        buildRefCtx(_assertThisInitialized(_this), {
-          isSingle: isSingle,
-          ccKey: ccKey,
-          connect: _connect,
-          state: state,
-          module: _module,
-          reducerModule: _reducerModule,
-          storedKeys: storedKeys,
-          watchedKeys: _watchedKeys,
-          tag: tag,
-          ccClassKey: _ccClassKey,
-          ccOption: ccOption,
-          type: CC_FRAGMENT_PREFIX
-        }, lite);
-      } else {
-        var outProps = getOutProps(props);
+        target_storedKeys = _storedKeys;
+        target_reducerModule = _reducerModule;
+        target_watchedKeys = _watchedKeys;
+        target_ccClassKey = _ccClassKey;
+        target_connect = _connect;
+      } //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
 
-        var _ccOption = outProps.ccOption || {};
 
-        var _storedKeys = getStoredKeys(props.state, moduleName_stateKeys_$5[props.module], _ccOption.storedKeys, props.storedKeys);
-
-        var params = Object.assign({}, props, {
-          storedKeys: _storedKeys,
-          ccOption: _ccOption,
-          type: CC_FRAGMENT_PREFIX
-        });
-        buildRefCtx(_assertThisInitialized(_this), params, props.lite);
-      }
-
-      _this.__$$compareProps = props.compareProps || true; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
+      buildRefCtx(_assertThisInitialized(_this), {
+        isSingle: isSingle,
+        ccKey: ccKey,
+        connect: target_connect,
+        state: state,
+        module: module,
+        reducerModule: target_reducerModule,
+        storedKeys: target_storedKeys,
+        watchedKeys: target_watchedKeys,
+        tag: tag,
+        ccClassKey: target_ccClassKey,
+        ccOption: ccOption,
+        type: CC_FRAGMENT_PREFIX
+      }, lite);
+      _this.__$$compareProps = compareProps; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
       //无需在将要给废弃的componentWillMount里调用beforeMount
 
-      beforeMount(_assertThisInitialized(_this), props.setup, props.bindCtxToMethod);
+      beforeMount(_assertThisInitialized(_this), setup, bindCtxToMethod);
       return _this;
     }
 
@@ -5335,25 +5338,25 @@
 
     _proto.render = function render() {
       //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
-      this.ctx.props = getOutProps(this.props);
-      var _this$props = this.props,
-          children = _this$props.children,
-          render = _this$props.render;
+      var thisProps = this.props;
+      this.ctx.props = getOutProps(thisProps);
+      var children = thisProps.children,
+          render = thisProps.render;
       var view = render || children;
 
       if (typeof view === 'function') {
-        var _this$props2 = this.props,
-            __$$regDumb = _this$props2.__$$regDumb,
-            mapProps = _this$props2.mapProps;
+        var __$$regDumb = thisProps.__$$regDumb,
+            _thisProps$register = thisProps.register,
+            register = _thisProps$register === void 0 ? {} : _thisProps$register;
         var ctx = this.ctx;
 
-        if (__$$regDumb !== true && mapProps) {
+        if (__$$regDumb !== true && register.mapProps) {
           //直接使用<CcFragment />实例化
-          ctx.mapped = mapProps(ctx);
+          ctx.mapped = register.mapProps(ctx) || {};
           return view(ctx.mapped) || nullSpan;
-        } else {
-          return view(ctx) || nullSpan;
         }
+
+        return view(ctx) || nullSpan;
       } else {
         if (React.isValidElement(view)) {
           //直接传递dom，无论state怎么改变都不会再次触发渲染
@@ -5367,7 +5370,7 @@
     return CcFragment;
   }(React.Component);
 
-  function _registerDumb(Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, persistStoredKeys, connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props, compareProps) {
+  function _registerDumb(Dumb, isSingle, module, reducerModule, watchedKeys, storedKeys, persistStoredKeys, connect, state, setup, bindCtxToMethod, ccClassKey, tag, mapProps, props, compareProps, lite) {
     //对state做克隆,防止用同一个connectDumb结果包不同的fn组件,共享了同一份state
     //const c = registerDumb({state:{info:{a:1}}});
     // const UI1_ = c(UI1); const UI2_ = c(UI2);
@@ -5382,8 +5385,7 @@
 
     var render = function render(ctx) {
       if (mapProps) {
-        ctx.mapped = mapProps(ctx); // if (generatedProps.ctx === undefined) generatedProps.ctx = ctx;
-
+        ctx.mapped = mapProps(ctx);
         return React.createElement(Dumb, ctx.mapped);
       } else {
         return React.createElement(Dumb, ctx);
@@ -5406,6 +5408,7 @@
         tag: tag,
         module: module,
         reducerModule: reducerModule,
+        lite: lite,
         watchedKeys: watchedKeys,
         storedKeys: storedKeys,
         connect: connect,
@@ -5440,7 +5443,8 @@
         state = _registerOption$state === void 0 ? {} : _registerOption$state,
         setup = _registerOption.setup,
         bindCtxToMethod = _registerOption.bindCtxToMethod,
-        compareProps = _registerOption.compareProps;
+        compareProps = _registerOption.compareProps,
+        lite = _registerOption.lite;
 
     var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
         _module = _mapRegistrationInfo._module,
@@ -5452,7 +5456,7 @@
     function buildCcFragComp(Dumb) {
       //避免react dev tool显示的dom为Unknown
       var ConnectedFragment = function ConnectedFragment(props) {
-        return _registerDumb(Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys, _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props, compareProps);
+        return _registerDumb(Dumb, isSingle, _module, _reducerModule, _watchedKeys, storedKeys, persistStoredKeys, _connect, state, setup, bindCtxToMethod, _ccClassKey, tag, mapProps, props, compareProps, lite);
       };
 
       return ConnectedFragment;

@@ -43,7 +43,7 @@ export default function (ref, params, liteLevel = 5) {
 
   let {
     isSingle, ccClassKey, ccKey = '', module, reducerModule, type,
-    state = {}, storedKeys, watchedKeys, connect, tag, ccOption,
+    state = {}, storedKeys, watchedKeys, connect = {}, tag, ccOption,
   } = params;
   reducerModule = reducerModule || module;
   const stateModule = module;
