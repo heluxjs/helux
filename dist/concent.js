@@ -891,7 +891,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.29',
+      version: '1.5.30',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -5292,7 +5292,8 @@
         }, lite);
       } else {
         var outProps = getOutProps(props);
-        var _ccOption = outProps.ccOption;
+
+        var _ccOption = outProps.ccOption || {};
 
         var _storedKeys = getStoredKeys(props.state, moduleName_stateKeys_$5[props.module], _ccOption.storedKeys, props.storedKeys);
 
