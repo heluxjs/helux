@@ -34,13 +34,12 @@ function _registerDumb(
   };
 
   //优先读取实例化的时候传入的，再读connectDumb配置的
-  const ccTag = props.ccTag || tag;
   const ccOption = props.ccOption || { persistStoredKeys };
 
   const passProps = {
     __$$regDumb: true, props, ccOption, ccClassKey, render, ccKey: props.ccKey,
     register: {
-      isSingle, tag: ccTag, module, reducerModule,
+      isSingle, tag, module, reducerModule,
       watchedKeys, storedKeys, connect, state: clonedState, setup, bindCtxToMethod, compareProps,
     },
   };
