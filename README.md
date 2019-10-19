@@ -37,7 +37,9 @@
   </a>
 
   <a href='#' style='margin: 0 0.5rem;'>
-  <img src='https://img.shields.io/bundlephobia/minzip/concent/1.4.1.svg' alt='mini bundle size' height='18'>
+  <!--   i don't konw why this badge message is wrong -->
+  <!--   <img src='https://img.shields.io/bundlephobia/minzip/concent/1.4.1.svg' alt='mini bundle size' height='18'> -->
+  <img src='https://img.shields.io/badge/minzipped-18kb-brightgreen' alt='mini bundle size' height='18'>
   </a>
 
   <a href='#' style='margin: 0 0.5rem;'>
