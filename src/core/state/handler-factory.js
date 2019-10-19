@@ -367,7 +367,10 @@ export function makeDispatchHandler(
           // throw new Error('you are calling a unnamed function!!!');
         }
         targetFirstParam = fnName;
-        // _module = paramObjType.stateModule || module;
+
+        //let dispatch can apply reducer function directly!!!
+        _module = paramObj.__stateModule;
+        _reducerModule = paramObj.__reducerModule;
       }
 
       const slashCount = targetFirstParam.split('').filter(v => v === '/').length;
