@@ -4,6 +4,7 @@ import { MOCKE_KEY, SYNC } from '../../support/constant';
 import buildMockEvent from './build-mock-event';
 import extractStateByCcsync from '../state/extract-state-by-ccsync';
 import changeRefState from '../state/change-ref-state';
+import * as checker from '../checker';
 
 const { store: { getState } } = ccContext;
 
@@ -33,6 +34,8 @@ export default function (spec, ref, e) {
 
   if (ccsync.includes('/')) {// syncModuleState 同步模块的state状态
     const targetModule = ccsync.split('/')[0];
+    checker.checkModuleName(targetModule, false);
+
     const { ccKey, ccUniqueKey } = refCtx;
     if (extraState) {
       return changeRefState(extraState, { calledBy: SYNC, ccKey, ccUniqueKey, module: targetModule, renderKey: ccrkey, delay: ccdelay }, ref);
