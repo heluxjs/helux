@@ -1,13 +1,9 @@
 import React from 'react';
 import useConcent from './use-concent';
+import { getRegisterOptions } from '../support/util';
 
 export default function registerHookComp(options, ccClassKey) {
-  let _options;
-  if (typeof options === 'string') {
-    _options = { module: options };
-  } else {
-    _options = Object.assign({}, options);
-  }
+  let _options = getRegisterOptions(options);
 
   function buildCcHookComp(Dumb) {
     const { memo = true } = _options;

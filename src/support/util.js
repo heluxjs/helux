@@ -357,10 +357,10 @@ export function removeArrElements(arr, toRemoveArr) {
   return newArr;
 }
 
-export function getRegisterOptions(inputOptions = {}) {
+export function getRegisterOptions(options = {}) {
   if (typeof options === 'string') {
     return { module: options };
   } else {
-    return Object.assign({ module: MODULE_DEFAULT }, inputOptions);
+    return Object.assign({ module: MODULE_DEFAULT }, options);
   }
 }

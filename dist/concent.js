@@ -409,6 +409,21 @@
     });
     return newArr;
   }
+  function getRegisterOptions(inputOptions) {
+    if (inputOptions === void 0) {
+      inputOptions = {};
+    }
+
+    if (typeof options === 'string') {
+      return {
+        module: options
+      };
+    } else {
+      return Object.assign({
+        module: MODULE_DEFAULT
+      }, inputOptions);
+    }
+  }
 
   function getCacheDataContainer() {
     return {
@@ -5184,27 +5199,10 @@
    */
 
   function register$1 (registerOption, ccClassKey) {
-    var _registerOption = registerOption;
+    var _registerOption = getRegisterOptions(registerOption);
 
-    if (_registerOption) {
-      var optType = typeof _registerOption;
-
-      if (optType === 'object') {
-        delete _registerOption.__checkStartUp;
-        delete _registerOption.__calledBy;
-      } else if (optType === 'string') {
-        _registerOption = {
-          module: registerOption
-        };
-      } else {
-        throw new Error('registerOption type error, must be array or string');
-      }
-    } else {
-      _registerOption = {
-        module: MODULE_DEFAULT
-      };
-    }
-
+    delete _registerOption.__checkStartUp;
+    delete _registerOption.__calledBy;
     return register(_registerOption, ccClassKey);
   }
 
@@ -5214,7 +5212,8 @@
     }, ccClassKey);
   }
 
-  var shallowDiffers$2 = shallowDiffers;
+  var shallowDiffers$2 = shallowDiffers,
+      getRegisterOptions$1 = getRegisterOptions;
   var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_;
   var nullSpan = React.createElement('span', {
     style: {
@@ -5230,28 +5229,28 @@
     function CcFragment(props, context) {
       var _this;
 
-      _this = _React$Component.call(this, props, context) || this; // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
+      _this = _React$Component.call(this, props, context) || this;
+      var registerOptions = getRegisterOptions$1(props.register); // 非registerDumb调用，即直接使用<CcFragment />做初始化， 把组件的注册信息映射到ccContext
 
       if (props.__$$regDumb !== true) {
-        var _props$module = props.module,
-            module = _props$module === void 0 ? MODULE_DEFAULT : _props$module,
-            propsCcClassKey = props.ccClassKey,
-            renderKeyClasses = props.renderKeyClasses,
+        var module = registerOptions.module,
+            renderKeyClasses = registerOptions.renderKeyClasses,
+            ccTag = registerOptions.ccTag,
+            lite = registerOptions.lite,
+            _registerOptions$watc = registerOptions.watchedKeys,
+            watchedKeys = _registerOptions$watc === void 0 ? '*' : _registerOptions$watc,
+            _registerOptions$conn = registerOptions.connect,
+            connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
+            reducerModule = registerOptions.reducerModule,
+            _registerOptions$stat = registerOptions.state,
+            state = _registerOptions$stat === void 0 ? {} : _registerOptions$stat,
+            isSingle = registerOptions.isSingle;
+        var ccClassKey = props.ccClassKey,
             ccKey = props.ccKey,
-            ccTag = props.ccTag,
-            lite = props.lite,
-            _props$watchedKeys = props.watchedKeys,
-            watchedKeys = _props$watchedKeys === void 0 ? '*' : _props$watchedKeys,
             _props$ccOption = props.ccOption,
-            ccOption = _props$ccOption === void 0 ? {} : _props$ccOption,
-            _props$connect = props.connect,
-            connect = _props$connect === void 0 ? {} : _props$connect,
-            reducerModule = props.reducerModule,
-            _props$state = props.state,
-            state = _props$state === void 0 ? {} : _props$state,
-            isSingle = props.isSingle; //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
+            ccOption = _props$ccOption === void 0 ? {} : _props$ccOption; //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
 
-        var _mapRegistrationInfo = mapRegistrationInfo(module, propsCcClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true),
+        var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, ccOption.storedKeys, connect, reducerModule, true),
             _module = _mapRegistrationInfo._module,
             _reducerModule = _mapRegistrationInfo._reducerModule,
             _watchedKeys = _mapRegistrationInfo._watchedKeys,
@@ -5275,8 +5274,7 @@
         }, lite);
       } else {
         var outProps = getOutProps(props);
-
-        var _ccOption = outProps.ccOption || props.ccOption;
+        var _ccOption = outProps.ccOption;
 
         var _storedKeys = getStoredKeys(props.state, moduleName_stateKeys_$5[props.module], _ccOption.storedKeys, props.storedKeys);
 
@@ -5375,59 +5373,56 @@
 
 
     var ccTag = props.ccTag || tag;
-    var ccOption = {
+    var ccOption = props.ccOption || {
       persistStoredKeys: persistStoredKeys
+    };
+    var passProps = {
+      __$$regDumb: true,
+      props: props,
+      ccOption: ccOption,
+      ccClassKey: ccClassKey,
+      render: render,
+      ccKey: props.ccKey,
+      register: {
+        isSingle: isSingle,
+        tag: ccTag,
+        module: module,
+        reducerModule: reducerModule,
+        watchedKeys: watchedKeys,
+        storedKeys: storedKeys,
+        connect: connect,
+        state: clonedState,
+        setup: setup,
+        bindCtxToMethod: bindCtxToMethod,
+        compareProps: compareProps
+      }
     }; //ccKey由实例化的Dumb组件props上透传下来
 
-    return React.createElement(CcFragment, {
-      isSingle: isSingle,
-      ccClassKey: ccClassKey,
-      __$$regDumb: true,
-      tag: ccTag,
-      ccKey: props.ccKey,
-      props: props,
-      module: module,
-      reducerModule: reducerModule,
-      watchedKeys: watchedKeys,
-      storedKeys: storedKeys,
-      ccOption: ccOption,
-      connect: connect,
-      state: clonedState,
-      setup: setup,
-      bindCtxToMethod: bindCtxToMethod,
-      render: render,
-      compareProps: compareProps
-    });
+    return React.createElement(CcFragment, passProps);
   }
 
   function registerDumb (registerOption, ccClassKey) {
-    var _registerOption = typeof registerOption === 'string' ? {
-      module: registerOption
-    } : registerOption;
+    var _registerOption = getRegisterOptions(registerOption);
 
-    if (!_registerOption) _registerOption = {
-      module: MODULE_DEFAULT
-    };
-    var _registerOption2 = _registerOption,
-        renderKeyClasses = _registerOption2.renderKeyClasses,
-        isSingle = _registerOption2.isSingle,
-        tag = _registerOption2.tag,
-        mapProps = _registerOption2.mapProps,
-        _registerOption2$modu = _registerOption2.module,
-        module = _registerOption2$modu === void 0 ? MODULE_DEFAULT : _registerOption2$modu,
-        reducerModule = _registerOption2.reducerModule,
-        _registerOption2$watc = _registerOption2.watchedKeys,
-        watchedKeys = _registerOption2$watc === void 0 ? '*' : _registerOption2$watc,
-        storedKeys = _registerOption2.storedKeys,
-        persistStoredKeys = _registerOption2.persistStoredKeys,
-        Dumb = _registerOption2.render,
-        _registerOption2$conn = _registerOption2.connect,
-        connect = _registerOption2$conn === void 0 ? {} : _registerOption2$conn,
-        _registerOption2$stat = _registerOption2.state,
-        state = _registerOption2$stat === void 0 ? {} : _registerOption2$stat,
-        setup = _registerOption2.setup,
-        bindCtxToMethod = _registerOption2.bindCtxToMethod,
-        compareProps = _registerOption2.compareProps;
+    var renderKeyClasses = _registerOption.renderKeyClasses,
+        isSingle = _registerOption.isSingle,
+        tag = _registerOption.tag,
+        mapProps = _registerOption.mapProps,
+        _registerOption$modul = _registerOption.module,
+        module = _registerOption$modul === void 0 ? MODULE_DEFAULT : _registerOption$modul,
+        reducerModule = _registerOption.reducerModule,
+        _registerOption$watch = _registerOption.watchedKeys,
+        watchedKeys = _registerOption$watch === void 0 ? '*' : _registerOption$watch,
+        storedKeys = _registerOption.storedKeys,
+        persistStoredKeys = _registerOption.persistStoredKeys,
+        Dumb = _registerOption.render,
+        _registerOption$conne = _registerOption.connect,
+        connect = _registerOption$conne === void 0 ? {} : _registerOption$conne,
+        _registerOption$state = _registerOption.state,
+        state = _registerOption$state === void 0 ? {} : _registerOption$state,
+        setup = _registerOption.setup,
+        bindCtxToMethod = _registerOption.bindCtxToMethod,
+        compareProps = _registerOption.compareProps;
 
     var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
         _module = _mapRegistrationInfo._module,
@@ -5501,20 +5496,13 @@
 
 
   function useConcent(registerOption, ccClassKey) {
-    var _registerOption = registerOption;
+    var _registerOption = getRegisterOptions(registerOption);
 
-    if (typeof registerOption === 'string') {
-      _registerOption = {
-        module: registerOption
-      };
-    }
-
-    var _registerOption2 = _registerOption,
-        _registerOption2$stat = _registerOption2.state,
-        state = _registerOption2$stat === void 0 ? {} : _registerOption2$stat,
-        _registerOption2$prop = _registerOption2.props,
-        props = _registerOption2$prop === void 0 ? {} : _registerOption2$prop,
-        mapProps = _registerOption2.mapProps;
+    var _registerOption$state = _registerOption.state,
+        state = _registerOption$state === void 0 ? {} : _registerOption$state,
+        _registerOption$props = _registerOption.props,
+        props = _registerOption$props === void 0 ? {} : _registerOption$props,
+        mapProps = _registerOption.mapProps;
     var reactUseState = React.useState;
 
     if (!reactUseState) {
@@ -5535,20 +5523,19 @@
     var hookRef;
 
     if (isFirstRendered) {
-      var _registerOption3 = _registerOption,
-          renderKeyClasses = _registerOption3.renderKeyClasses,
-          module = _registerOption3.module,
-          reducerModule = _registerOption3.reducerModule,
-          _registerOption3$watc = _registerOption3.watchedKeys,
-          watchedKeys = _registerOption3$watc === void 0 ? '*' : _registerOption3$watc,
-          _registerOption3$stor = _registerOption3.storedKeys,
-          storedKeys = _registerOption3$stor === void 0 ? [] : _registerOption3$stor,
-          persistStoredKeys = _registerOption3.persistStoredKeys,
-          _registerOption3$conn = _registerOption3.connect,
-          connect = _registerOption3$conn === void 0 ? {} : _registerOption3$conn,
-          setup = _registerOption3.setup,
-          bindCtxToMethod = _registerOption3.bindCtxToMethod,
-          lite = _registerOption3.lite;
+      var renderKeyClasses = _registerOption.renderKeyClasses,
+          module = _registerOption.module,
+          reducerModule = _registerOption.reducerModule,
+          _registerOption$watch = _registerOption.watchedKeys,
+          watchedKeys = _registerOption$watch === void 0 ? '*' : _registerOption$watch,
+          _registerOption$store = _registerOption.storedKeys,
+          storedKeys = _registerOption$store === void 0 ? [] : _registerOption$store,
+          persistStoredKeys = _registerOption.persistStoredKeys,
+          _registerOption$conne = _registerOption.connect,
+          connect = _registerOption$conne === void 0 ? {} : _registerOption$conne,
+          setup = _registerOption.setup,
+          bindCtxToMethod = _registerOption.bindCtxToMethod,
+          lite = _registerOption.lite;
       incCursor();
 
       var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true),
@@ -5623,20 +5610,11 @@
   }
 
   function registerHookComp(options, ccClassKey) {
-    var _options;
-
-    if (typeof options === 'string') {
-      _options = {
-        module: options
-      };
-    } else {
-      _options = Object.assign({}, options);
-    }
+    var _options = getRegisterOptions(options);
 
     function buildCcHookComp(Dumb) {
-      var _options2 = _options,
-          _options2$memo = _options2.memo,
-          memo = _options2$memo === void 0 ? true : _options2$memo;
+      var _options$memo = _options.memo,
+          memo = _options$memo === void 0 ? true : _options$memo;
       delete _options.memo;
 
       var getComp = function getComp() {
