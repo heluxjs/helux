@@ -104,6 +104,7 @@
   "license": "MIT",
   "main": "src/index.js",
   "module": "es/index.js",
+  "typings": "./index.d.ts",
   "name": "concent",
   "npmFileMap": [
     {

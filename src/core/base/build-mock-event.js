@@ -21,7 +21,7 @@ export default (spec, e, refModule, refState) => {
   if (syncKey !== undefined) {//来自sync生成的setter函数调用
     ccsync = syncKey;
     ccdelay = spec.delay;
-    ccrkey = spec.rkey
+    ccrkey = spec.rkey;
     if (type === 'val' || type === 'int') {//set value
       ccint = type === 'int';//convert to int
 
