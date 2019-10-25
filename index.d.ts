@@ -1,10 +1,14 @@
 import { Component, ReactNode } from 'react';
-import { toASCII } from 'punycode';
 
-export type TAnyObj = { [key: string]: any };
+export type ArrItemsType<T extends any[]> = T extends Array<infer E>  ? E : never;
+
+export interface TAnyObj { [key: string]: any }
+
 export type TStar = '*';
 
 type AnyFn = (...args: any[]) => any;
+type ReducerFn = (payload: any, moduleState: any, actionCtx: IActionCtx) => any;
+
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 type RefComputedFn<FnCtx extends IFnCtxBase, FnReturnType> = (
   oldVal: string,
@@ -40,6 +44,11 @@ interface DefaultCu extends DefaultBase {
 }
 
 
+// export function dodo<TA, TB, keyof TA extends keyof TB>(a: TA, b: TB): void; 
+type MyPick<RootState extends DefaultState, ConnectedModules extends keyof DefaultState> = Pick<RootState, ConnectedModules>;
+
+type Super<T> = T extends infer U ? U : object;
+
 /**
  * 
  * @param eventName 
@@ -70,25 +79,24 @@ declare function refCtxOff(eventDesc: { name: string, identity?: string }): void
  * @param payload 
  * @param renderKey 
  * @param delay 
- *  user should mannually make sure fnName an fn is mapped correctly, if you don not want to do so, you can write code like below
+ *  if first arg type is string, user should mannually make sure fnName an fn is mapped correctly, if you don not want to do so, you can write code like below
  * 
  *  function aaa(){}; function bbb(){};
-    type ReducerFnType<FnName> =
+    type reducerFnType<FnName> =
       FnName extends 'aaa' ? typeof aaa :
       FnName extends 'bbb' ? typeof bbb :
       null;
 
-    type PayloadType<FnName extends string> = (Parameters<ReducerFnType<FnName>>)[0];
-    type ReducerFnResultType<FnName extends string> = ReturnType<ReducerFnType<FnName>>;
+    type PayloadType<FnName extends string> = (Parameters<reducerFnType<FnName>>)[0];
+    type reducerFnResultType<FnName extends string> = ReturnType<reducerFnType<FnName>>;
  */
-declare function refCtxDispatch<Fn extends AnyFn>(type: string, payload: (Parameters<Fn>)[0] | never, renderKey?: string, delay?: string): Promise<ReturnType<Fn>>;
-declare function refCtxDispatch<TypeAsFn extends AnyFn>(type: TypeAsFn, payload: (Parameters<TypeAsFn>)[0] | never, renderKey?: string, delay?: string): Promise<ReturnType<TypeAsFn>>;
-declare function refCtxDispatch<TypeAsFn extends AnyFn>(type: { module: string, fn: TypeAsFn }, payload: (Parameters<TypeAsFn>)[0] | never, renderKey?: string, delay?: string): Promise<ReturnType<TypeAsFn>>;
+declare function refCtxDispatch<Fn extends ReducerFn>(type: string, payload: (Parameters<Fn>)[0], renderKey?: string, delay?: number): Promise<ReturnType<Fn>>;
+declare function refCtxDispatch<TypeAsFn extends ReducerFn>(type: TypeAsFn, payload: (Parameters<TypeAsFn>)[0], renderKey?: string, delay?: number): Promise<ReturnType<TypeAsFn>>;
+declare function refCtxDispatch<TypeAsFn extends ReducerFn>(type: { module: string, fn: TypeAsFn }, payload: (Parameters<TypeAsFn>)[0], renderKey?: string, delay?: number): Promise<ReturnType<TypeAsFn>>;
 
-declare function refCtxLazyDispatch<Fn extends AnyFn>(type: string, payload?: (Parameters<Fn>)[0], renderKey?: string, delay?: string): Promise<ReturnType<Fn>>;
-declare function refCtxLazyDispatch<TypeAsFn extends AnyFn>(type: TypeAsFn, payload?: (Parameters<TypeAsFn>)[0], renderKey?: string, delay?: string): Promise<ReturnType<TypeAsFn>>;
-declare function refCtxLazyDispatch<TypeAsFn extends AnyFn>(type: { module: string, fn: TypeAsFn }, payload?: (Parameters<TypeAsFn>)[0], renderKey?: string, delay?: string): Promise<ReturnType<TypeAsFn>>;
-
+declare function refCtxInvoke<UserFn extends ReducerFn>(fn: UserFn, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<ReturnType<UserFn>>;
+declare function refCtxInvoke<UserFn extends ReducerFn>(fn: UserFn, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<ReturnType<UserFn>>;
+declare function refCtxInvoke<UserFn extends ReducerFn>(fn: { module: string, fn: UserFn }, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<ReturnType<UserFn>>;
 
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>): void;
 
@@ -103,7 +111,9 @@ declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey:
  * for class get get like this: this.ctx
  * for function get get like this: const ctx = useConcent('foo');
  */
-export interface IRefCtx<RootState extends DefaultState, ModuleState, RefState, Rccu extends TAnyObj> {
+interface IRefCtxBase{
+}
+export interface IRefCtx<RootState extends DefaultState, ModuleState, RefState, Rccu extends TAnyObj> extends IRefCtxBase{
   state: RefState;
   moduleState: ModuleState;
   globalState: RootState['$$global'];
@@ -117,7 +127,9 @@ export interface IRefCtx<RootState extends DefaultState, ModuleState, RefState, 
   emit: typeof refCtxEmit;
   off: typeof refCtxOff;
   dispatch: typeof refCtxDispatch;
-  lazyDispatch: typeof refCtxLazyDispatch;
+  lazyDispatch: typeof refCtxDispatch;
+  invoke: typeof refCtxInvoke;
+  lazyInvoke: typeof refCtxInvoke;
   computed: typeof refCtxComputed;
 }
 /**
@@ -146,19 +158,11 @@ export interface IRefCtxMcuRcu
   extends IRefCtx<RootState, ModuleState, RefState, Rccu> {
   moduleComputed: ModuleCu;
 }
-
-// export function dodo<TA, TB, keyof TA extends keyof TB>(a: TA, b: TB): void; 
-
-
-type MyPick<RootState extends DefaultState, ConnectedModules extends keyof DefaultState> = Pick<RootState, ConnectedModules>;
-
-type Super<T> = T extends infer U ? U : object;
-
 /**
  * match ctx type: use belonged module computed, connect other modules, define ref computed in setup
  */
 export interface IRefCtxMcuConRcu
-  <RootState extends DefaultBase, ModuleState, RefState, ModuleCu, RootCu extends DefaultState, ConnectedModules extends keyof DefaultBase, RefCu, Rccu extends TAnyObj>
+  <RootState extends DefaultBase, ModuleState, RefState, ModuleCu, RootCu extends DefaultBase, ConnectedModules extends keyof DefaultBase, RefCu, Rccu extends TAnyObj>
   extends IRefCtx<RootState, ModuleState, RefState, Rccu> {
   moduleComputed: ModuleCu;
   connectedState: MyPick<RootState, ConnectedModules>;
@@ -196,7 +200,7 @@ export interface IRefCtxRcu
 
 export interface IFnCtxBase {
 }
-export interface IFnCtx<RootState extends DefaultState, ModuleState, RefState, RefCtx extends IRefCtx<RootState, ModuleState, RefState, TAnyObj>> extends IFnCtxBase{
+export interface IFnCtx<RefCtx extends IRefCtxBase> extends IFnCtxBase{
   retKey: string;
   setted: string[];
   changed: string[];
@@ -228,10 +232,24 @@ interface RegisterOptions<RootState, ModuleState, RefState> {
   compareProps?: Boolean;//default true
 }
 
-type ReducerFn = <ModuleState> (
-  payload: any,
-  moduleState: ModuleState,
-) => Promise<Pick<ModuleState, keyof ModuleState>>;
+// interface reducerFn {
+//   <ModuleState>(
+//     payload: any,
+//   ): Promise<Pick<ModuleState, keyof ModuleState>>
+// }
+// interface reducerFn {
+//   <ModuleState>(
+//     payload: any,
+//     moduleState: ModuleState,
+//   ): Promise<Pick<ModuleState, keyof ModuleState>>
+// }
+// interface reducerFn {
+//   <ModuleState>(
+//     payload: any,
+//     moduleState: ModuleState,
+//     actionCtx?: IActionCtx,
+//   ): Promise<Pick<ModuleState, keyof ModuleState>>
+// }
 
 type WatchFn = <RootState, ModuleState>(
   oldVal: any,
@@ -283,12 +301,21 @@ interface RunOptions {
   plugins: Plugin[];
 }
 
-export interface IActionCtx {
+interface IActionCtxBase {
+  targetModule: string;
+  invoke: typeof refCtxInvoke;
+  lazyInvoke: typeof refCtxInvoke;
   dispatch: typeof refCtxDispatch;
-  lazyDispatch: typeof refCtxLazyDispatch;
+  lazyDispatch: typeof refCtxDispatch;
   setState: (obj: TAnyObj) => Promise<TAnyObj>;
 }
-
+export interface IActionCtx extends IActionCtxBase {
+  refCtx: {};
+}
+// constraint RefCtx must be an implement of IRefCtxBase
+export interface IActionCtxRef<RefCtx extends IRefCtxBase> extends IActionCtxBase {
+  refCtx: RefCtx;
+}
 
 //////////////////////////////////////////
 // exposed top api
@@ -301,7 +328,7 @@ export interface IActionCtx {
  */
 export function clearContextIfHot(clearAll: boolean, warningErrForClearAll?: string): void;
 
-export function run(storeConfig?: StoreConfig | undefined, runOptions?: RunOptions | undefined): void;
+export function run(storeConfig?: StoreConfig | null, runOptions?: RunOptions): void;
 
 export function register<RootState, ModuleState, RefState>(
   registerOptions: String | RegisterOptions<RootState, ModuleState, RefState>,
@@ -330,7 +357,7 @@ export function setGlobalState<GlobalState>(state: Partial<GlobalState>): void;
 
 export function getState<RootState>(moduleName?: keyof RootState): object;
 
-export function getGlobalState<GlobalState>(): Partial<GlobalState>;
+export function getGlobalState<RootState extends DefaultBase>(): RootState['$$global'];
 
 export function getConnectedState<RootState>(ccClassKey: string): Partial<RootState>;
 
