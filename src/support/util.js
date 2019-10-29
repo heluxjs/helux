@@ -315,12 +315,17 @@ export function convertToStandardEvent(e) {
 }
 
 //防止有些在线IDE，绑定失败
-export function bindToWindow(key, obj) {
+export function bindToWindow(key, toBindObj, targetObj) {
+  const attachToTarget = targetObj => {
+    if (targetObj) targetObj[key] = toBindObj;
+    else window[key] = toBindObj;
+  }
+
   if (window) {
-    window[key] = obj;
+    attachToTarget(targetObj);
   } else {
     setTimeout(() => {
-      if (window) window[key] = obj;
+      attachToTarget(targetObj);
     }, 3000);
   }
 }
