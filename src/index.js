@@ -152,5 +152,4 @@ if (multiCcContainer) {
   util.bindToWindow('cc', defaultExport);
 }
 
-
 export default defaultExport;
