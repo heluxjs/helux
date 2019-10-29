@@ -359,12 +359,16 @@
     return ret;
   } //防止有些在线IDE，绑定失败
 
-  function bindToWindow(key, obj) {
+  function bindToWindow(key, toBindObj, targetObj) {
+    var attachToTarget = function attachToTarget(targetObj) {
+      if (targetObj) targetObj[key] = toBindObj;else window[key] = toBindObj;
+    };
+
     if (window) {
-      window[key] = obj;
+      attachToTarget(targetObj);
     } else {
       setTimeout(function () {
-        if (window) window[key] = obj;
+        attachToTarget(targetObj);
       }, 3000);
     }
   }
@@ -2470,7 +2474,7 @@
       vbi$2 = verboseInfo;
 
   function checkCcStartupOrNot() {
-    if (ccContext.isCcAlreadyStartup !== true || !getWinCc()) {
+    if (ccContext.isCcAlreadyStartup !== true) {
       throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
     }
   }

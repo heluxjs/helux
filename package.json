@@ -1,6 +1,6 @@
 {
   "_from": "concent",
-  "_id": "concent@1.5.35",
+  "_id": "concent@1.5.36",
   "_inBundle": false,
   "_integrity": "sha512-YuakaB+lTidx3v4cMrObLoKISm+26UVRqtD6qXscHQ3gWR6SQTVBnKxv+JdiJ+06GMmgIY6e8816TqLkcSw1Pg==",
   "_location": "/concent",
@@ -129,5 +129,5 @@
     "test": "jest"
   },
   "unpkg": "dist/concent.js",
-  "version": "1.5.35"
+  "version": "1.5.36"
 }
