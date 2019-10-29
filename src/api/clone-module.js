@@ -1,7 +1,20 @@
 import configure from './configure';
 import ccContext from '../cc-context';
-import { clone } from '../support/util';
+import { clone, okeys } from '../support/util';
 import * as checker from '../core/checker';
+
+function tagReducerFn(reducerFns, moduleName) {
+  const taggedReducer = {};
+  okeys(reducerFns).forEach(fnName => {
+    const oldFn = reducerFns[fnName];
+    const fn = (...args) => oldFn(...args);
+    fn.__fnName = fnName;
+    fn.__stateModule = moduleName;
+    fn.__reducerModule = moduleName;
+    taggedReducer[fnName] = fn;
+  });
+  return taggedReducer;
+}
 
 /**
  * @param {string} newModule
@@ -18,8 +31,10 @@ export default (newModule, existingModule, { state, reducer, computed, watch, in
   let stateCopy = clone(mState);
   if (state) Object.assign(stateCopy, state);
 
-  let reducerEx = ccContext.reducer._reducer[existingModule] || {};
-  if (reducer) Object.assign(reducerEx, reducer);
+  let reducerOriginal = ccContext.reducer._reducer[existingModule] || {};
+  // attach  __fnName  __stateModule __reducerModule, 不能污染原函数的dispatch逻辑里需要的__stateModule __reducerModule
+  const taggedReducerOriginal = tagReducerFn(reducerOriginal, newModule);
+  if (reducer) Object.assign(taggedReducerOriginal, tagReducerFn(reducer, newModule));
 
   let computedEx = ccContext.computed._computedRaw[existingModule] || {};
   if (computed) Object.assign(computedEx, computed);
@@ -32,7 +47,7 @@ export default (newModule, existingModule, { state, reducer, computed, watch, in
 
   const confObj = {
     state: stateCopy,
-    reducer: reducerEx,
+    reducer: taggedReducerOriginal,
     computed: computedEx,
     watch: watchEx,
   };

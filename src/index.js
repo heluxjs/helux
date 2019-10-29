@@ -104,22 +104,53 @@ const defaultExport = {
   cst,
   appendState,
   useConcent,
+  bindCcToMcc,
 }
 
-const winCc = window.cc;
-if (winCc) {
-  if (winCc.ccContext && winCc.ccContext.info) {
-    const existedVersion = winCc.ccContext.info.version;
-    const nowVersion = ccContext.info.version;
-    //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
-    //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
-    //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
-    if (existedVersion !== nowVersion) {
-      throw new Error(`a existed version concent ${existedVersion} is different with current about to import concent ${nowVersion}, 
-      it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)`);
+export function bindCcToMcc(name) {
+  if (!multiCcContainer) {
+    throw new Error('current env is not multi concent ins mode');
+  }
+  if (multiCcContainer[name]) {
+    throw new Error(`ccNamespace[${name}] already existed in window.mcc`);
+  }
+  util.setCcNamespace(name);
+  util.bindToWindow(name, defaultExport, multiCcContainer);
+}
+
+function avoidMultiCcInSameScope() {
+  const winCc = util.getWinCc();
+  if (winCc) {
+    if (winCc.ccContext && winCc.ccContext.info) {
+      const existedVersion = winCc.ccContext.info.version;
+      const nowVersion = ccContext.info.version;
+      //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
+      //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
+      //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
+      if (existedVersion !== nowVersion) {
+        throw new Error(`a existed version concent ${existedVersion} is different with current about to import concent ${nowVersion}, 
+        it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)`);
+      }
     }
   }
 }
-util.bindToWindow('cc', defaultExport);
+
+// 微前端机构里，每个子应用都有自己的cc实例，需要绑定到mcc下，防止相互覆盖
+const multiCcContainer = window.mcc;
+if (multiCcContainer) {
+  // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
+  setTimeout(() => {
+    const ccns = util.getCcNamespace();
+    if (!ccns) {
+      throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
+    } else {
+      avoidMultiCcInSameScope();
+    }
+  }, 1000);
+} else {
+  avoidMultiCcInSameScope();
+  util.bindToWindow('cc', defaultExport);
+}
+
 
 export default defaultExport;
