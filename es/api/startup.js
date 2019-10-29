@@ -74,10 +74,19 @@ export default function ({
       throw new Error('customizing Dispatcher is not allowed in current version cc');
     }
 
-    bindToWindow('CC_CONTEXT', ccContext);
-    bindToWindow('ccc', ccContext);
-    bindToWindow('cccc', ccContext.computed._computedValue);
-    bindToWindow('sss',ccContext.store._state );
+    const bindOthers = (bindTarget) => {
+      bindToWindow('CC_CONTEXT', ccContext, bindTarget);
+      bindToWindow('ccc', ccContext, bindTarget);
+      bindToWindow('cccc', ccContext.computed._computedValue, bindTarget);
+      bindToWindow('sss', ccContext.store._state, bindTarget);
+    }
+    if (window.mcc) {
+      setTimeout(() => {//延迟绑定，等待ccns的输入
+        bindOthers(window.mcc[util.getCcNamespace()]);
+      }, 1200);
+    } else {
+      bindOthers();
+    }
 
     ccContext.isCcAlreadyStartup = true;
     //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册

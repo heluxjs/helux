@@ -424,6 +424,17 @@
       }, options);
     }
   }
+  var ccns = '';
+  function setCcNamespace(name) {
+    ccns = name;
+  }
+  function getCcNamespace() {
+    return ccns;
+  }
+  function getWinCc() {
+    if (ccns) return window.mcc[ccns];
+    return window.cc;
+  }
 
   function getCacheDataContainer() {
     return {
@@ -891,7 +902,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.34',
+      version: '1.5.35',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2228,10 +2239,15 @@
             return callInvoke(); // throw new Error('you are calling a unnamed function!!!');
           }
 
-          targetFirstParam = fnName; //let dispatch can apply reducer function directly!!!
+          targetFirstParam = fnName; // 这里非常重要，只有处于第一层的调用时，才获取函数对象上的__stateModule __reducerModule参数
+          // 防止克隆自模块a的模块b在reducer文件里基于函数引用直接调用时，取的是a的模块相关参数了，但是源头由b发起，应该是b才对
 
-          _module = paramObj.__stateModule;
-          _reducerModule = paramObj.__reducerModule;
+          if (chainId_depth_[oriChainId] == 1) {
+            // let dispatch can apply reducer function directly!!!
+            // !!! 如果用户在b模块的组件里dispatch直接调用a模块的函数，千万要注意，写为{module:'b', fn:xxxFoo}的模式
+            _module = paramObj.__stateModule;
+            _reducerModule = paramObj.__reducerModule;
+          }
         }
 
         var slashCount = targetFirstParam.split('').filter(function (v) {
@@ -2454,7 +2470,7 @@
       vbi$2 = verboseInfo;
 
   function checkCcStartupOrNot() {
-    if (ccContext.isCcAlreadyStartup !== true || !window.cc) {
+    if (ccContext.isCcAlreadyStartup !== true || !getWinCc()) {
       throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
     }
   }
@@ -3507,10 +3523,10 @@
 
     var setState = function setState(p1, p2, p3, p4, p5) {
       if (typeof p1 === 'string') {
-        //p1 module, p2 state, p3 cb, p4 delay, p5 idt
+        //p1 module, p2 state, p3 cb, p4 rkey, p5 delay
         setModuleState(p1, p2, p3, p4, p5);
       } else {
-        //p1 state, p2 cb, p3 delay, p4 idt
+        //p1 state, p2 cb, p3 rkey, p4 delay
         _setState(stateModule, p1, SET_STATE, p2, p3, p4);
       }
     };
@@ -3588,36 +3604,36 @@
 
     if (liteLevel > 2) {
       // level 3, assign async api
-      ctx.syncBool = function (e, delay, idt) {
+      ctx.syncBool = function (e, rkey, delay) {
         var _sync$bind;
+
+        if (rkey === void 0) {
+          rkey = '';
+        }
 
         if (delay === void 0) {
           delay = -1;
         }
 
-        if (idt === void 0) {
-          idt = '';
-        }
-
-        if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.idt = idt, _sync$bind), ref);
+        if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.rkey = rkey, _sync$bind), ref);
 
         __sync({
           type: 'bool'
         }, e, ref);
       };
 
-      ctx.sync = function (e, val, delay, idt) {
+      ctx.sync = function (e, val, rkey, delay) {
         var _sync$bind2;
+
+        if (rkey === void 0) {
+          rkey = '';
+        }
 
         if (delay === void 0) {
           delay = -1;
         }
 
-        if (idt === void 0) {
-          idt = '';
-        }
-
-        if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.idt = idt, _sync$bind2), ref);
+        if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.rkey = rkey, _sync$bind2), ref);
 
         __sync({
           type: 'val'
@@ -3625,38 +3641,46 @@
 
       };
 
-      ctx.set = function (ccsync, val, delay, idt) {
+      ctx.set = function (ccsync, val, rkey, delay) {
         var _sync;
 
-        __sync((_sync = {}, _sync[CCSYNC_KEY] = ccsync, _sync.type = 'val', _sync.val = val, _sync.delay = delay, _sync.idt = idt, _sync), ref);
+        if (rkey === void 0) {
+          rkey = '';
+        }
+
+        if (delay === void 0) {
+          delay = -1;
+        }
+
+        __sync((_sync = {}, _sync[CCSYNC_KEY] = ccsync, _sync.type = 'val', _sync.val = val, _sync.delay = delay, _sync.rkey = rkey, _sync), ref);
       };
 
-      ctx.setBool = function (ccsync, delay, idt) {
+      ctx.setBool = function (ccsync, rkey, delay) {
         var _sync2;
 
+        if (rkey === void 0) {
+          rkey = '';
+        }
+
         if (delay === void 0) {
           delay = -1;
         }
 
-        if (idt === void 0) {
-          idt = '';
-        }
-
-        __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'bool', _sync2.delay = delay, _sync2.idt = idt, _sync2), ref);
+        __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'bool', _sync2.delay = delay, _sync2.rkey = rkey, _sync2), ref);
       };
 
-      ctx.syncInt = function (e, delay, idt) {
+      ctx.syncInt = function (e, rkey, delay) {
         var _sync$bind3;
+
+        if (rkey === void 0) {
+          rkey = '';
+        }
 
         if (delay === void 0) {
           delay = -1;
         }
 
-        if (idt === void 0) {
-          idt = '';
-        }
-
-        if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.idt = idt, _sync$bind3), ref);
+        if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.rkey = rkey, _sync$bind3), ref);
 
         __sync({
           type: 'int'
@@ -3721,7 +3745,7 @@
 
       ctx.on = on; // on handler been effective in didMount by default, so user can call it in setup safely
       // but if user want on been effective immediately, user can call onDirectly
-      // or on(ev, fn, idt, false)
+      // or on(ev, fn, rkey, false)
 
       ctx.onDirectly = function (event, handler) {
         on(event, handler, false);
@@ -4865,10 +4889,22 @@
         throw new Error('customizing Dispatcher is not allowed in current version cc');
       }
 
-      bindToWindow$1('CC_CONTEXT', ccContext);
-      bindToWindow$1('ccc', ccContext);
-      bindToWindow$1('cccc', ccContext.computed._computedValue);
-      bindToWindow$1('sss', ccContext.store._state);
+      var bindOthers = function bindOthers(bindTarget) {
+        bindToWindow$1('CC_CONTEXT', ccContext, bindTarget);
+        bindToWindow$1('ccc', ccContext, bindTarget);
+        bindToWindow$1('cccc', ccContext.computed._computedValue, bindTarget);
+        bindToWindow$1('sss', ccContext.store._state, bindTarget);
+      };
+
+      if (window.mcc) {
+        setTimeout(function () {
+          //延迟绑定，等待ccns的输入
+          bindOthers(window.mcc[getCcNamespace()]);
+        }, 1200);
+      } else {
+        bindOthers();
+      }
+
       ccContext.isCcAlreadyStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
 
       configPlugins(plugins);
@@ -5023,10 +5059,27 @@
     send(SIG_MODULE_CONFIGURED, module);
   }
 
+  function tagReducerFn(reducerFns, moduleName) {
+    var taggedReducer = {};
+    okeys(reducerFns).forEach(function (fnName) {
+      var oldFn = reducerFns[fnName];
+
+      var fn = function fn() {
+        return oldFn.apply(void 0, arguments);
+      };
+
+      fn.__fnName = fnName;
+      fn.__stateModule = moduleName;
+      fn.__reducerModule = moduleName;
+      taggedReducer[fnName] = fn;
+    });
+    return taggedReducer;
+  }
   /**
    * @param {string} newModule
    * @param {string} existingModule
    */
+
 
   var _cloneModule = (function (newModule, existingModule, _temp) {
     var _ref = _temp === void 0 ? {} : _temp,
@@ -5045,8 +5098,10 @@
     var mState = ccContext.store.getState(existingModule);
     var stateCopy = clone(mState);
     if (state) Object.assign(stateCopy, state);
-    var reducerEx = ccContext.reducer._reducer[existingModule] || {};
-    if (reducer) Object.assign(reducerEx, reducer);
+    var reducerOriginal = ccContext.reducer._reducer[existingModule] || {}; // attach  __fnName  __stateModule __reducerModule, 不能污染原函数的dispatch逻辑里需要的__stateModule __reducerModule
+
+    var taggedReducerOriginal = tagReducerFn(reducerOriginal, newModule);
+    if (reducer) Object.assign(taggedReducerOriginal, tagReducerFn(reducer, newModule));
     var computedEx = ccContext.computed._computedRaw[existingModule] || {};
     if (computed) Object.assign(computedEx, computed);
     var watchEx = ccContext.watch._watchRaw[existingModule] || {};
@@ -5055,7 +5110,7 @@
     if (init) initEx = init;
     var confObj = {
       state: stateCopy,
-      reducer: reducerEx,
+      reducer: taggedReducerOriginal,
       computed: computedEx,
       watch: watchEx
     };
@@ -5781,9 +5836,9 @@
     setState$1(module, state, renderKey, delayMs, skipMiddleware, throwError);
   }
 
-  function _set (moduledKeyPath, val, delay, idt) {
+  function _set (moduledKeyPath, val, renderKey, delay) {
     var dispatcher = pickOneRef();
-    dispatcher.ctx.set(moduledKeyPath, val, delay, idt);
+    dispatcher.ctx.set(moduledKeyPath, val, renderKey, delay);
   }
 
   var getState$6 = (function (module) {
@@ -5810,7 +5865,7 @@
 
   var _computedValue$4 = ccContext.computed._computedValue;
   var _getComputed = (function (module) {
-    return _computedValue$4[module];
+    if (module) return _computedValue$4[module];else return _computedValue$4;
   });
 
   function _emit (event) {
@@ -5979,24 +6034,57 @@
     CcFragment: CcFragment$1,
     cst: cst,
     appendState: appendState$1,
-    useConcent: useConcent$1
+    useConcent: useConcent$1,
+    bindCcToMcc: bindCcToMcc
   };
-  var winCc = window.cc;
-
-  if (winCc) {
-    if (winCc.ccContext && winCc.ccContext.info) {
-      var existedVersion = winCc.ccContext.info.version;
-      var nowVersion = ccContext$1.info.version; //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
-      //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
-      //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
-
-      if (existedVersion !== nowVersion) {
-        throw new Error("a existed version concent " + existedVersion + " is different with current about to import concent " + nowVersion + ", \n      it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)");
-      }
+  function bindCcToMcc(name) {
+    if (!multiCcContainer) {
+      throw new Error('current env is not multi concent ins mode');
     }
+
+    if (multiCcContainer[name]) {
+      throw new Error("ccNamespace[" + name + "] already existed in window.mcc");
+    }
+
+    setCcNamespace(name);
+    bindToWindow(name, defaultExport, multiCcContainer);
   }
 
-  bindToWindow('cc', defaultExport);
+  function avoidMultiCcInSameScope() {
+    var winCc = getWinCc();
+
+    if (winCc) {
+      if (winCc.ccContext && winCc.ccContext.info) {
+        var existedVersion = winCc.ccContext.info.version;
+        var nowVersion = ccContext$1.info.version; //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
+        //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
+        //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
+
+        if (existedVersion !== nowVersion) {
+          throw new Error("a existed version concent " + existedVersion + " is different with current about to import concent " + nowVersion + ", \n        it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)");
+        }
+      }
+    }
+  } // 微前端机构里，每个子应用都有自己的cc实例，需要绑定到mcc下，防止相互覆盖
+
+
+  var multiCcContainer = window.mcc;
+
+  if (multiCcContainer) {
+    // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
+    setTimeout(function () {
+      var ccns = getCcNamespace();
+
+      if (!ccns) {
+        throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
+      } else {
+        avoidMultiCcInSameScope();
+      }
+    }, 1000);
+  } else {
+    avoidMultiCcInSameScope();
+    bindToWindow('cc', defaultExport);
+  }
 
   exports.startup = startup$1;
   exports.cloneModule = cloneModule;
@@ -6032,6 +6120,7 @@
   exports.cst = cst;
   exports.appendState = appendState$1;
   exports.useConcent = useConcent$1;
+  exports.bindCcToMcc = bindCcToMcc;
   exports.default = defaultExport;
 
   Object.defineProperty(exports, '__esModule', { value: true });

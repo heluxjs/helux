@@ -105,10 +105,10 @@ export default function (ref, params, liteLevel = 5) {
   // const setState = (state, reactCallback, renderKey, delay) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
-      //p1 module, p2 state, p3 cb, p4 delay, p5 idt
+      //p1 module, p2 state, p3 cb, p4 rkey, p5 delay
       setModuleState(p1, p2, p3, p4, p5);
     } else {
-      //p1 state, p2 cb, p3 delay, p4 idt
+      //p1 state, p2 cb, p3 rkey, p4 delay
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
@@ -205,22 +205,22 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   if (liteLevel > 2) {// level 3, assign async api
-    ctx.syncBool = (e, delay = -1, idt = '') => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, idt }, ref);
+    ctx.syncBool = (e, rkey = '', delay = -1) => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, rkey }, ref);
       __sync({ type: 'bool' }, e, ref);
     };
-    ctx.sync = (e, val, delay = -1, idt = '') => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, idt }, ref);
+    ctx.sync = (e, val, rkey = '', delay = -1) => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, rkey }, ref);
       __sync({ type: 'val' }, ref, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
     };
-    ctx.set = (ccsync, val, delay, idt) => {
-      __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, idt }, ref);
+    ctx.set = (ccsync, val, rkey = '', delay = -1) => {
+      __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, rkey }, ref);
     };
-    ctx.setBool = (ccsync, delay = -1, idt = '') => {
-      __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, idt }, ref);
+    ctx.setBool = (ccsync, rkey = '', delay = -1) => {
+      __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, rkey }, ref);
     };
-    ctx.syncInt = (e, delay = -1, idt = '') => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, idt }, ref);
+    ctx.syncInt = (e, rkey = '', delay = -1) => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, rkey }, ref);
       __sync({ type: 'int' }, ref, e);
     };
   }
@@ -248,7 +248,7 @@ export default function (ref, params, liteLevel = 5) {
     ctx.on = on;
     // on handler been effective in didMount by default, so user can call it in setup safely
     // but if user want on been effective immediately, user can call onDirectly
-    // or on(ev, fn, idt, false)
+    // or on(ev, fn, rkey, false)
     ctx.onDirectly = (event, handler) => {
       on(event, handler, false);
     }

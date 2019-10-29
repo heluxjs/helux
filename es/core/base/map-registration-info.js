@@ -14,7 +14,7 @@ const {
 const { verifyKeys, makeError: me, verboseInfo: vbi } = util;
 
 function checkCcStartupOrNot() {
-  if (ccContext.isCcAlreadyStartup !== true || !window.cc) {
+  if (ccContext.isCcAlreadyStartup !== true || !util.getWinCc()) {
     throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
   }
 }
