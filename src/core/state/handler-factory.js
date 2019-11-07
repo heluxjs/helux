@@ -242,7 +242,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         //指的是目标模块的state
         moduleState,
         //指的是目标模块的的moduleComputed
-        moduleComputed: _computedValue[targetModule],
+        moduleComputed: _computedValue[targetModule] || {},
 
         //!!!指的是调用源cc类的connectedState
         connectedState: sourceClassContext.connectedState,
