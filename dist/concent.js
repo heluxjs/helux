@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.38',
+      version: '1.5.39',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1109,12 +1109,8 @@
       throw makeError(ERR.CC_STORE_STATE_INVALID, vbi("module[" + moduleName + "]'s state is invalid!"));
     }
   }
-  function checkModuleNameAndState(moduleName, moduleState) {
-    checkModuleName(moduleName);
-    checkModuleState(moduleState, moduleName);
-  }
-  function checkModuleNameBasicallyAndState(moduleName, moduleState) {
-    checkModuleName(moduleName);
+  function checkModuleNameAndState(moduleName, moduleState, moduleStateMustNotDefinedInStore) {
+    checkModuleName(moduleName, moduleStateMustNotDefinedInStore);
     checkModuleState(moduleState, moduleName);
   }
   function checkStoredKeys(moduleStateKeys, storedKeys) {
@@ -4307,12 +4303,23 @@
     }, CC_DISPATCHER)(TargetComponent);
   }
 
-  function initModuleState (module, state, rootStateCanNotContainInputModule) {
-    if (rootStateCanNotContainInputModule === void 0) {
-      rootStateCanNotContainInputModule = true;
+  function initModuleState (module, state, moduleStateMustNotDefinedInStore, tag) {
+    if (moduleStateMustNotDefinedInStore === void 0) {
+      moduleStateMustNotDefinedInStore = true;
     }
 
-    if (rootStateCanNotContainInputModule) checkModuleNameAndState(module, state);else checkModuleNameBasicallyAndState(module, state); // ccContext.store.setState(module, state);
+    if (tag === void 0) {
+      tag = '';
+    }
+
+    try {
+      checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
+    } catch (err) {
+      if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
+        justTip("module[" + module + "] duplicated while you call " + tag + " under hot reload mode, cc will ignore this error");
+      }
+    } // ccContext.store.setState(module, state);
+
 
     var rootState = ccContext.store.getState();
     var prevRootState = ccContext.store.getPrevState();
@@ -4400,13 +4407,21 @@
     dispatch$1(true, action, payLoadWhenActionIsString, renderKey, delay, option);
   }
 
-  function initModuleReducer (module, reducer, rootReducerCanNotContainInputModule) {
+  function initModuleReducer (module, reducer, rootReducerCanNotContainInputModule, tag) {
     if (rootReducerCanNotContainInputModule === void 0) {
       rootReducerCanNotContainInputModule = true;
     }
 
     if (!reducer) return;
-    if (rootReducerCanNotContainInputModule) checkReducerModuleName(module);else checkModuleNameBasically(module);
+
+    try {
+      if (rootReducerCanNotContainInputModule) checkReducerModuleName(module);else checkModuleNameBasically(module);
+    } catch (err) {
+      if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
+        justTip("module[" + module + "] duplicated while you call " + tag + " under hot reload mode, cc will ignore this error");
+      }
+    }
+
     var _ccContext$reducer = ccContext.reducer,
         _reducer = _ccContext$reducer._reducer,
         _reducerCaller = _ccContext$reducer._reducerCaller,
@@ -4425,7 +4440,8 @@
     };
     var reducerNames = okeys(reducer);
     reducerNames.forEach(function (name) {
-      fnNames.push(name);
+      // avoid hot reload
+      if (!fnNames.includes(name)) fnNames.push(name);
       var fullFnName = module + "/" + name;
 
       subReducerCaller[name] = function (payload, delay, idt) {
@@ -4456,8 +4472,9 @@
       // reducerFn.stateModule = module;
 
 
-      var list = safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
-      list.push(fullFnName);
+      var list = safeGetArrayFromObject(_reducerFnName_fullFnNames_, name); // avoid hot reload
+
+      if (!list.includes(fullFnName)) list.push(fullFnName);
     });
   }
 
@@ -5012,8 +5029,8 @@
         globalWatch = _option.globalWatch,
         globalComputed = _option.globalComputed,
         middlewares = _option.middlewares;
-    initModuleState(module, state);
-    initModuleReducer(module, reducer);
+    initModuleState(module, state, true, 'configure');
+    initModuleReducer(module, reducer, true, 'configure');
     var _state = ccContext.store._state;
     var _reducer = ccContext.reducer._reducer;
     _state[module] = state;

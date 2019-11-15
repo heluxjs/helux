@@ -3,11 +3,20 @@ import * as checker from '../checker';
 import * as util from '../../support/util';
 import dispatch from '../../api/dispatch';
 import lazyDispatch from '../../api/lazy-dispatch';
+import { ERR } from '../../support/constant';
 
-export default function(module, reducer, rootReducerCanNotContainInputModule = true) {
+export default function(module, reducer, rootReducerCanNotContainInputModule = true, tag) {
   if (!reducer) return;
-  if (rootReducerCanNotContainInputModule) checker.checkReducerModuleName(module);
+
+  try{
+    if (rootReducerCanNotContainInputModule) checker.checkReducerModuleName(module);
   else checker.checkModuleNameBasically(module);
+  }catch(err){
+    if(err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()){
+      util.justTip(`module[${module}] duplicated while you call ${tag} under hot reload mode, cc will ignore this error`)
+    }
+  }
+  
 
   const {
     _reducer, _reducerCaller, _lazyReducerCaller, _reducerFnName_fullFnNames_, _reducerModule_fnNames_,
@@ -26,7 +35,8 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
 
   const reducerNames = util.okeys(reducer);
   reducerNames.forEach(name => {
-    fnNames.push(name);
+    // avoid hot reload
+    if (!fnNames.includes(name)) fnNames.push(name);
     let fullFnName = `${module}/${name}`;
 
     subReducerCaller[name] = (payload, delay, idt) => dispatch(fullFnName, payload, delay, idt);
@@ -52,6 +62,7 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     // reducerFn.stateModule = module;
 
     const list = util.safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
-    list.push(fullFnName);
+    // avoid hot reload
+    if (!list.includes(fullFnName)) list.push(fullFnName);
   });
 }

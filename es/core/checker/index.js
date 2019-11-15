@@ -55,13 +55,8 @@ export function checkModuleState(moduleState, moduleName) {
   }
 }
 
-export function checkModuleNameAndState(moduleName, moduleState) {
-  checkModuleName(moduleName);
-  checkModuleState(moduleState, moduleName);
-}
-
-export function checkModuleNameBasicallyAndState(moduleName, moduleState) {
-  checkModuleName(moduleName);
+export function checkModuleNameAndState(moduleName, moduleState, moduleStateMustNotDefinedInStore) {
+  checkModuleName(moduleName, moduleStateMustNotDefinedInStore);
   checkModuleState(moduleState, moduleName);
 }
 

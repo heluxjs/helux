@@ -56,8 +56,8 @@ export default function(module, config, option = {}) {
   const { state, reducer, computed, watch, init, isClassSingle } = config;
   const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
 
-  initModuleState(module, state);
-  initModuleReducer(module, reducer);
+  initModuleState(module, state, true, 'configure');
+  initModuleReducer(module, reducer, true, 'configure');
 
   const _state = ccContext.store._state;
   const _reducer = ccContext.reducer._reducer;
