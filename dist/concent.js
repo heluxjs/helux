@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.41',
+      version: '1.5.42',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4338,8 +4338,6 @@
 
     for (var i = 0; i < len; i++) {
       var strPiece = arr[i];
-      if (i > strPickLimit) break;
-      locationStr += strPiece;
 
       if (strPiece.includes(keyWord)) {
         var _ret = function () {

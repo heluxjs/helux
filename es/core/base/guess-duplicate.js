@@ -37,8 +37,6 @@ function getDupLocation(errStack) {
   let locationStr = '';
   for (let i = 0; i < len; i++) {
     const strPiece = arr[i];
-    if (i > strPickLimit) break;
-    locationStr += strPiece;
 
     if (strPiece.includes(keyWord)) {
       const callConfigureIdx = i + 3;// 向下3句就是调用处
