@@ -1,16 +1,13 @@
 import ccContext from '../../cc-context';
 import { MODULE_GLOBAL, ERR } from '../../support/constant';
 import * as checker from '../checker';
-import * as util from '../../support/util';
-
+import guessDuplicate from '../base/guess-duplicate';
 
 export default function(module, state, moduleStateMustNotDefinedInStore = true, tag='') {
   try{
     checker.checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
   }catch(err){
-    if(err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()){
-      util.justTip(`module[${module}] duplicated while you call ${tag} under hot reload mode, cc will ignore this error`)
-    }
+    guessDuplicate(err, module, 'state');
   }
 
   // ccContext.store.setState(module, state);

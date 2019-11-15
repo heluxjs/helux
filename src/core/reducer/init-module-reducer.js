@@ -3,18 +3,16 @@ import * as checker from '../checker';
 import * as util from '../../support/util';
 import dispatch from '../../api/dispatch';
 import lazyDispatch from '../../api/lazy-dispatch';
-import { ERR } from '../../support/constant';
+import guessDuplicate from '../base/guess-duplicate';
 
 export default function(module, reducer, rootReducerCanNotContainInputModule = true, tag) {
   if (!reducer) return;
 
   try{
     if (rootReducerCanNotContainInputModule) checker.checkReducerModuleName(module);
-  else checker.checkModuleNameBasically(module);
+    else checker.checkModuleNameBasically(module);
   }catch(err){
-    if(err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()){
-      util.justTip(`module[${module}] duplicated while you call ${tag} under hot reload mode, cc will ignore this error`)
-    }
+    guessDuplicate(err, module, 'reducer');
   }
   
 
