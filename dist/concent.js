@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.43',
+      version: '1.5.44',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4366,7 +4366,9 @@
 
   var module_dupLocation_ = {};
   var guessDuplicate = (function (err, module, tag) {
-    if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
+    var code = err.code;
+
+    if ([ERR.CC_MODULE_NAME_DUPLICATE, ERR.CC_REDUCER_MODULE_NAME_DUPLICATE].includes(code) && ccContext.isHotReloadMode()) {
       var dupLocation = getDupLocation(err.stack);
       var key = tag + "|--link--|" + module;
       var prevLocation = module_dupLocation_[key];

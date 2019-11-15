@@ -63,7 +63,8 @@ const module_dupLocation_ = {
 };
 
 export default (err, module, tag) => {
-  if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
+  const code = err.code;
+  if ([ERR.CC_MODULE_NAME_DUPLICATE, ERR.CC_REDUCER_MODULE_NAME_DUPLICATE].includes(code) && ccContext.isHotReloadMode()) {
     const dupLocation = getDupLocation(err.stack);
     const key = `${tag}|--link--|${module}`;
     const prevLocation = module_dupLocation_[key];
