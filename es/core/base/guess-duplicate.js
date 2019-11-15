@@ -66,7 +66,7 @@ export default (err, module, tag) => {
   if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
     const dupLocation = getDupLocation(err.stack);
     const key = `${tag}|--link--|${module}`;
-    const prevLocation = !module_dupLocation_[key];
+    const prevLocation = module_dupLocation_[key];
     if (!prevLocation) {
       // 没有记录过
       module_dupLocation_[key] = dupLocation;

@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.42',
+      version: '1.5.43',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4369,7 +4369,7 @@
     if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
       var dupLocation = getDupLocation(err.stack);
       var key = tag + "|--link--|" + module;
-      var prevLocation = !module_dupLocation_[key];
+      var prevLocation = module_dupLocation_[key];
 
       if (!prevLocation) {
         // 没有记录过
