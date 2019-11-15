@@ -1,7 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
 import * as util from '../support/util';
-import { ERR, CC_DISPATCHER_BOX, CC_DISPATCHER } from '../support/constant';
+import { ERR, CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';

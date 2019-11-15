@@ -2,7 +2,7 @@ import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE } from '../suppor
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 
-const refs = {};
+const refs = { };
 const setStateByModule = (module, committedState, refCtx) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
@@ -237,7 +237,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.35',
+    version: '1.5.38',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

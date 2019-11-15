@@ -3,8 +3,31 @@ import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
+import createDispatcher from './create-dispatcher';
+import appendDispatcher from '../core/base/append-dispatcher';
 
 let justCalledByStartUp = false;
+
+/**
+  CodeSandbox ide里，当runConcent.js单独放置时，代码结构如下
+    import React, { Component } from "react";
+    import ReactDom from "react-dom";
+    import "./runConcent";
+    import App from "./App";
+    import { clearContextIfHot } from "concent";
+
+    clearContextIfHot();
+    ReactDom.render(<App />, document.getElementById("root"));
+ * 
+ * 如果只修改了其他地方的代码属于App相关依赖的代码，查看dom结构返现热加载直接将dispatcher div标签丢弃，
+ * 同时refs里也没有dispatcher引用了，这里做一次额外检查
+ */
+function _checkDispatcher() {
+  if (!ccContext.refs[CC_DISPATCHER]) {
+    const Dispatcher = createDispatcher();
+    appendDispatcher(Dispatcher);
+  }
+}
 
 function _clearInsAssociation(recomputed) {
   clearObject(ccContext.event_handlers_);
@@ -75,6 +98,8 @@ export default function (clearAll = false, warningErrForClearAll) {
       }
 
       console.warn(`attention: method[clearContextIfHot] need been invoked before your app rendered!`);
+
+      _checkDispatcher();
 
       // !!!重计算各个模块的computed结果
       _clearInsAssociation(true);

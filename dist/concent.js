@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.35',
+      version: '1.5.38',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2042,7 +2042,7 @@
           //指的是目标模块的state
           moduleState: moduleState,
           //指的是目标模块的的moduleComputed
-          moduleComputed: _computedValue$1[targetModule],
+          moduleComputed: _computedValue$1[targetModule] || {},
           //!!!指的是调用源cc类的connectedState
           connectedState: sourceClassContext.connectedState,
           //!!!指的是调用源cc类的connectedComputed
@@ -4719,7 +4719,46 @@
     }
   }
 
+  var appendDispatcher = (function (Dispatcher) {
+    var box = document.querySelector("#" + CC_DISPATCHER_BOX);
+
+    if (!box) {
+      box = document.createElement('div');
+      box.id = CC_DISPATCHER_BOX;
+      var boxSt = box.style;
+      boxSt.position = 'fixed';
+      boxSt.left = 0;
+      boxSt.top = 0;
+      boxSt.display = 'none';
+      boxSt.zIndex = -888666;
+      document.body.append(box);
+    }
+
+    ReactDOM.render(React.createElement(Dispatcher), box);
+  });
+
   var justCalledByStartUp = false;
+  /**
+    CodeSandbox ide里，当runConcent.js单独放置时，代码结构如下
+      import React, { Component } from "react";
+      import ReactDom from "react-dom";
+      import "./runConcent";
+      import App from "./App";
+      import { clearContextIfHot } from "concent";
+
+      clearContextIfHot();
+      ReactDom.render(<App />, document.getElementById("root"));
+   * 
+   * 如果只修改了其他地方的代码属于App相关依赖的代码，查看dom结构返现热加载直接将dispatcher div标签丢弃，
+   * 同时refs里也没有dispatcher引用了，这里做一次额外检查
+   */
+
+  function _checkDispatcher() {
+    if (!ccContext.refs[CC_DISPATCHER]) {
+      var Dispatcher = createDispatcher();
+      appendDispatcher(Dispatcher);
+    }
+  }
 
   function _clearInsAssociation(recomputed) {
     clearObject(ccContext.event_handlers_);
@@ -4800,7 +4839,10 @@
           return;
         }
 
-        console.warn("attention: method[clearContextIfHot] need been invoked before your app rendered!"); // !!!重计算各个模块的computed结果
+        console.warn("attention: method[clearContextIfHot] need been invoked before your app rendered!");
+
+        _checkDispatcher(); // !!!重计算各个模块的computed结果
+
 
         _clearInsAssociation(true);
       }
@@ -4870,27 +4912,13 @@
       if (autoCreateDispatcher) {
         if (!ccContext.refs[CC_DISPATCHER]) {
           var Dispatcher = createDispatcher();
-          var box = document.querySelector("#" + CC_DISPATCHER_BOX);
-
-          if (!box) {
-            box = document.createElement('div');
-            box.id = CC_DISPATCHER_BOX;
-            var boxSt = box.style;
-            boxSt.position = 'fixed';
-            boxSt.left = 0;
-            boxSt.top = 0;
-            boxSt.display = 'none';
-            boxSt.zIndex = -888666;
-            document.body.append(box);
-          }
-
-          ReactDOM.render(React.createElement(Dispatcher), box);
+          appendDispatcher(Dispatcher);
           justTip$1("[[startUp]]: cc create a CcDispatcher automatically");
         } else {
           justTip$1("[[startUp]]: CcDispatcher existed already");
         }
       } else {
-        throw new Error('customizing Dispatcher is not allowed in current version cc');
+        throw new Error('customizing Dispatcher is not allowed in current version Concent');
       }
 
       var bindOthers = function bindOthers(bindTarget) {
