@@ -5,6 +5,7 @@ import { ERR, CC_DISPATCHER_BOX, CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
+import appendDispatcher from '../core/base/append-dispatcher';
 import clearContextIfHot from './clear-context-if-hot';
 
 const { justTip, bindToWindow, makeError } = util;
@@ -53,25 +54,13 @@ export default function ({
     if (autoCreateDispatcher) {
       if (!ccContext.refs[CC_DISPATCHER]) {
         const Dispatcher = createDispatcher();
-        let box = document.querySelector(`#${CC_DISPATCHER_BOX}`);
-        if (!box) {
-          box = document.createElement('div');
-          box.id = CC_DISPATCHER_BOX;
-          const boxSt = box.style;
-          boxSt.position = 'fixed';
-          boxSt.left = 0;
-          boxSt.top = 0;
-          boxSt.display = 'none';
-          boxSt.zIndex = -888666;
-          document.body.append(box);
-        }
-        ReactDOM.render(React.createElement(Dispatcher), box);
+        appendDispatcher(Dispatcher);
         justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
       } else {
         justTip(`[[startUp]]: CcDispatcher existed already`);
       }
     } else {
-      throw new Error('customizing Dispatcher is not allowed in current version cc');
+      throw new Error('customizing Dispatcher is not allowed in current version Concent');
     }
 
     const bindOthers = (bindTarget) => {
