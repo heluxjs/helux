@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.44',
+      version: '1.5.45',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3846,12 +3846,12 @@
       var refLazyReducerFnObj = safeGetObjectFromObject$1(lazyReducer, m);
       var fnNames = _reducerModule_fnNames_[m] || [];
       fnNames.forEach(function (fnName) {
-        refReducerFnObj[fnName] = function (payload, delay, rkey) {
-          return dispatch(m + "/" + fnName, payload, delay, rkey);
+        refReducerFnObj[fnName] = function (payload, rkey, delay) {
+          return dispatch(m + "/" + fnName, payload, rkey, delay);
         };
 
-        refLazyReducerFnObj[fnName] = function (payload, delay, rkey) {
-          return lazyDispatch(m + "/" + fnName, payload, delay, rkey);
+        refLazyReducerFnObj[fnName] = function (payload, rkey, delay) {
+          return lazyDispatch(m + "/" + fnName, payload, rkey, delay);
         };
       });
     }); // ctx.reducer = ccContext.reducer._reducerRefCaller;
@@ -5351,25 +5351,25 @@
    * @param {string} [registerOption.reducerModule] default is equal as module if you don't declare it
    * if you call cc instance api $$dispatch without module and reducerMoudle like below
    * ```
-   *    this.$$dispatch({type:'doStaff', payload:{foo:1, bar:2}});
+   *    this.ctx.dispatch({type:'doStaff', payload:{foo:1, bar:2}});
    *    // or 
-   *    this.$$dispatch('doStaff', {foo:1, bar:2});
+   *    this.ctx.dispatch('doStaff', {foo:1, bar:2});
    * ```
    * cc will find current cc class's reducerModule function named doStaff to execute 
    * and will change current cc class's moudle state,
    * so you don't have to write code like below if current cc class module is M1 
    * and if you always want to use R1 reducer function to generate new state, you can write like below
    * ```
-   *    this.$$dispatch({module:'M1', reducerModule:'R1', type:'doStaff', payload:{foo:1, bar:2}});
+   *    this.ctx.dispatch({module:'M1', reducerModule:'R1', type:'doStaff', payload:{foo:1, bar:2}});
    *    // or 
-   *    this.$$dispatch('M1/R1/doStaff', {foo:1, bar:2});
+   *    this.ctx.dispatch('M1/R1/doStaff', {foo:1, bar:2});
    * ```
    * 
    * ============   !!!!!!  ============
    * note if you really want to change other module's state and use other reducer function, you must input module and reducerModule
    * in your $$dispatch method, or they will been replaced by current cc class's default module and default reducerModule
    * ```
-   *    this.$$dispatch({module:'M2', reducerModule:'R2', type:'doStaff', payload:{foo:1, bar:2}});
+   *    this.ctx.dispatch({module:'M2', reducerModule:'R2', type:'doStaff', payload:{foo:1, bar:2}});
    * ```
    * @param {string} [registerOption.isPropsProxy] default is false
    * cc alway use strategy of reverse inheritance to wrap your react class, that meas you can call cc instance method from `this` directly
