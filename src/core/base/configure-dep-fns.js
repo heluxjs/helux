@@ -1,4 +1,4 @@
-import { okeys, safeGetObjectFromObject, safeGetArrayFromObject, makeError, verboseInfo, isPlainJsonObject } from '../../support/util';
+import { okeys, safeGetObjectFromObject, safeGetArrayFromObject, makeError, verboseInfo, isPlainJsonObject, justTip } from '../../support/util';
 import { ERR, CATE_MODULE } from '../../support/constant';
 import ccContext from '../../cc-context';
 
@@ -91,7 +91,8 @@ function _mapDepDesc(confMeta, key, module, retKey, fn, depKeys, immediate, comp
   const { retKey_fn_, stateKey_retKeys_ } = moduleDepDesc;
 
   if (retKey_fn_[retKey]) {
-    throw new Error(`key[${retKey}] already declared!`);
+    if (!ccContext.isHotReloadMode()) throw new Error(`key[${retKey}] already declared!`);
+    else justTip(`key[${retKey}] may duplicate, but now is hot reload mode, you can ignore this tip if you can make sure it is unique`)
   }
 
   let _depKeys = depKeys
