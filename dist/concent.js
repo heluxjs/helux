@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.45',
+      version: '1.5.46',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2982,7 +2982,7 @@
         stateKey_retKeys_ = moduleDepDesc.stateKey_retKeys_;
 
     if (retKey_fn_[retKey]) {
-      throw new Error("key[" + retKey + "] already declared!");
+      if (!ccContext.isHotReloadMode()) throw new Error("key[" + retKey + "] already declared!");else justTip("key[" + retKey + "] may duplicate, but now is hot reload mode, you can ignore this tip if you can make sure it is unique");
     }
 
     var _depKeys = depKeys;
