@@ -4,6 +4,9 @@ import { getRegisterOptions } from '../support/util';
 
 export default function registerHookComp(options, ccClassKey) {
   let _options = getRegisterOptions(options);
+  if (typeof _options.state === 'function') {
+    _options.state = _options.state();
+  }
 
   function buildCcHookComp(Dumb) {
     const { memo = true } = _options;

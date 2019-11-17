@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.46',
+      version: '1.5.47',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -5658,6 +5658,10 @@
     }, ccClassKey);
   }
 
+  function _readOnlyError(name) {
+    throw new Error("\"" + name + "\" is read-only");
+  }
+
   var ccUkey_ref_$3 = ccContext.ccUkey_ref_,
       moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_;
   var refCursor = 1;
@@ -5706,6 +5710,7 @@
         _registerOption$props = _registerOption.props,
         props = _registerOption$props === void 0 ? {} : _registerOption$props,
         mapProps = _registerOption.mapProps;
+    if (typeof state === 'function') state = (_readOnlyError("state"), state());
     var reactUseState = React.useState;
 
     if (!reactUseState) {
@@ -5813,6 +5818,10 @@
 
   function registerHookComp(options, ccClassKey) {
     var _options = getRegisterOptions(options);
+
+    if (typeof _options.state === 'function') {
+      _options.state = _options.state();
+    }
 
     function buildCcHookComp(Dumb) {
       var _options$memo = _options.memo,

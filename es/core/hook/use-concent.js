@@ -48,6 +48,8 @@ function CcHook(ccHookState, hookSetState, props) {
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
   const { state = {}, props = {}, mapProps } = _registerOption;
+  if (typeof state === 'function') state = state();
+
   const reactUseState = React.useState;
   if (!reactUseState) {
     throw new Error('make sure your react version is LTE 16.8');
