@@ -111,6 +111,10 @@ declare function refCtxSetModuleState(moduleName:string, state: TAnyObj, cb?: (n
 
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>): void;
 
+declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): TAnyObj;
+declare function syncCb<Val, ModuleState, RefCtx extends IRefCtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: object, refCtx:RefCtx }): TAnyObj;
+
+
 //////////////////////////////////////////
 // exposed interface
 //////////////////////////////////////////
@@ -143,7 +147,7 @@ interface IRefCtxBase{
   setState: typeof refCtxSetState;
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;
-  sync: (string: string, value?: SyncCb | any, renderKey?: string, delay?: string) => Function;
+  sync: (string: string, value?: typeof syncCb | any, renderKey?: string, delay?: string) => Function;
   syncBool: (string: string, renderKey?: string, delay?: string) => Function;
   syncInt: (string: string, renderKey?: string, delay?: string) => Function;
   set: (string: string, value: any, renderKey?: string, delay?: string) => void;
@@ -151,8 +155,6 @@ interface IRefCtxBase{
   settings: TAnyObj;
 }
 
-type SyncCb = (value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string }) => void;
-type SetCb = (newFullState: object) =>void;
 export interface IRefCtx<RootState extends DefaultState, ModuleState, RefState, Settings, Rccu extends TAnyObj> extends IRefCtxBase{
   state: RefState;
   moduleState: ModuleState;

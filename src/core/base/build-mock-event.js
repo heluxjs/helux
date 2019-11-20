@@ -13,7 +13,8 @@ function getValFromEvent(e) {
   }
 }
 
-export default (spec, e, refModule, refState) => {
+export default (spec, e, refCtx) => {
+  const { module: refModule, state: refState } = refCtx;
   let ccint = false, ccsync = '', ccrkey = '', value = '', extraState = undefined, ccdelay = -1, isToggleBool = false;
   const syncKey = spec[CCSYNC_KEY];
   const type = spec.type;
@@ -43,7 +44,7 @@ export default (spec, e, refModule, refState) => {
             module = refModule;
           }
 
-          extraState = val(getValFromEvent(e), keyPath, { moduleState: getState(module), fullKeyPath, state: refState });
+          extraState = val(getValFromEvent(e), keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
         } else {
           value = val;
         }
