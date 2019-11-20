@@ -1,3 +1,8 @@
+#### 2019-11-20
+1.5.48 发布
+* 允许syncCb返回undefined来中断同步流程
+* syncCb第三位参数里syncContext新增透传参数refCtx
+
 #### 2019-10-19
 1.5.29 发布
 * optimize: 允许ctx.dispatch直接传递reducer里的函数（reducer函数被打上tag: __stateModule, __reducerModule）

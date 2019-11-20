@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.47',
+      version: '1.5.48',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2244,7 +2244,8 @@
 
           if (chainId_depth_[oriChainId] == 1) {
             // let dispatch can apply reducer function directly!!!
-            // !!! 如果用户在b模块的组件里dispatch直接调用a模块的函数，千万要注意，写为{module:'b', fn:xxxFoo}的模式
+            // !!! 如果用户在b模块的组件里dispatch直接调用a模块的函数，但是确实想修改的是b模块的数据，只是想复用a模块的那个函数的逻辑
+            // 那么千万要注意，写为{module:'b', fn:xxxFoo}的模式
             _module = paramObj.__stateModule;
             _reducerModule = paramObj.__reducerModule;
           }
@@ -3153,9 +3154,11 @@
     }
   }
 
-  var buildMockEvent = (function (spec, e, refModule, refState) {
+  var buildMockEvent = (function (spec, e, refCtx) {
     var _ref;
 
+    var refModule = refCtx.module,
+        refState = refCtx.state;
     var ccint = false,
         ccsync = '',
         ccrkey = '',
@@ -3165,6 +3168,7 @@
         isToggleBool = false;
     var syncKey = spec[CCSYNC_KEY];
     var type = spec.type;
+    var hasSyncCb = false;
 
     if (syncKey !== undefined) {
       //来自sync生成的setter函数调用
@@ -3199,10 +3203,12 @@
               module = refModule;
             }
 
+            hasSyncCb = true;
             extraState = val(getValFromEvent(e), keyPath, {
               moduleState: getState$1(module),
               fullKeyPath: fullKeyPath,
-              state: refState
+              state: refState,
+              refCtx: refCtx
             });
           } else {
             value = val;
@@ -3241,6 +3247,7 @@
     return _ref = {}, _ref[MOCKE_KEY] = 1, _ref.currentTarget = {
       value: value,
       extraState: extraState,
+      hasSyncCb: hasSyncCb,
       dataset: {
         ccsync: ccsync,
         ccint: ccint,
@@ -3351,7 +3358,7 @@
       mockE = spec;
     } else {
       //可能是来自$$sync生成的setter调用
-      mockE = buildMockEvent(spec, e, refModule, refCtx.state);
+      mockE = buildMockEvent(spec, e, refCtx);
     }
 
     if (!mockE) return; //参数无效
@@ -3359,7 +3366,8 @@
     var currentTarget = mockE.currentTarget;
     var dataset = currentTarget.dataset,
         value = currentTarget.value,
-        extraState = currentTarget.extraState;
+        extraState = currentTarget.extraState,
+        hasSyncCb = currentTarget.hasSyncCb;
     if (e && e.stopPropagation) e.stopPropagation();
     var ccsync = dataset.ccsync,
         ccint = dataset.ccint,
@@ -3377,8 +3385,8 @@
       var ccKey = refCtx.ccKey,
           ccUniqueKey = refCtx.ccUniqueKey;
 
-      if (extraState) {
-        return changeRefState(extraState, {
+      if (hasSyncCb) {
+        if (extraState) return changeRefState(extraState, {
           calledBy: SYNC,
           ccKey: ccKey,
           ccUniqueKey: ccUniqueKey,
@@ -3403,8 +3411,8 @@
       }, ref);
     } else {
       //调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
-      if (extraState) {
-        return ref.setState(extraState, null, ccrkey, ccdelay);
+      if (hasSyncCb) {
+        if (extraState) return ref.setState(extraState, null, ccrkey, ccdelay);
       }
 
       var _extractStateByCcsync2 = extractStateByCcsync(ccsync, value, ccint, ref.state, mockE.isToggleBool),
