@@ -18,6 +18,7 @@ export default (spec, e, refCtx) => {
   let ccint = false, ccsync = '', ccrkey = '', value = '', extraState = undefined, ccdelay = -1, isToggleBool = false;
   const syncKey = spec[CCSYNC_KEY];
   const type = spec.type;
+  let hasSyncCb = false;
   
   if (syncKey !== undefined) {//来自sync生成的setter函数调用
     ccsync = syncKey;
@@ -44,6 +45,7 @@ export default (spec, e, refCtx) => {
             module = refModule;
           }
 
+          hasSyncCb = true;
           extraState = val(getValFromEvent(e), keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
         } else {
           value = val;
@@ -78,5 +80,5 @@ export default (spec, e, refCtx) => {
     }
   }
 
-  return { [MOCKE_KEY]: 1, currentTarget: { value, extraState, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
+  return { [MOCKE_KEY]: 1, currentTarget: { value, extraState, hasSyncCb, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
 }
