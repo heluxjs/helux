@@ -47,7 +47,7 @@ function CcHook(ccHookState, hookSetState, props) {
 //写为具名函数，防止react devtoo里显示.default
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
-  const { state = {}, props = {}, mapProps } = _registerOption;
+  let { state = {}, props = {}, mapProps } = _registerOption;
   if (typeof state === 'function') state = state();
 
   const reactUseState = React.useState;
