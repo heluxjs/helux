@@ -21,11 +21,13 @@ const cl = color;
 const ss = styleStr;
 const me = makeError;
 const vbi = verboseInfo;
+const setupErr = new Error('can not defined setup both in register options and class body');
 
 export default function register({
   module = MODULE_DEFAULT,
   watchedKeys: inputWatchedKeys = '*',
   storedKeys: inputStoredKeys = [],
+  setup = null,
   persistStoredKeys,
   connect = {},
   tag = '',
@@ -68,8 +70,13 @@ export default function register({
             });
             buildRefCtx(this, params, lite);
 
+            if (setup && this.$$setup) {
+              throw setupErr;
+            }
+            if (setup) this.$$setup = setup;
             if (this.$$setup) this.$$setup = this.$$setup.bind(this);
             beforeMount(this, this.$$setup, false);
+
           } catch (err) {
             catchCcError(err);
           }
@@ -116,7 +123,9 @@ export default function register({
           //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
           // this.state = newState; // bad writing
           okeys(newState).forEach(key => thisState[key] = newState[key]);
-          beforeMount(childRef, childRef.$$setup);
+
+          if (setup && childRef.$$setup) throw setupErr;
+          beforeMount(childRef, setup || childRef.$$setup);
         }
 
         componentDidMount() {

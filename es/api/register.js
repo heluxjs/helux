@@ -6,6 +6,7 @@ import { getRegisterOptions } from '../support/util';
  * but you can not register multi react class with a same ccClassKey!
  * @param {object} registerOption
  * @param {string} [registerOption.module] declare which module current cc class belong to, default is '$$default'
+ * @param {Function} [registerOption.setup]
  * @param {Array<string>|string} [registerOption.watchedKeys] 
  * declare current cc class's any instance is concerned which state keys's state changing,
  * @param {{ [moduleName:string]: keys: string[] | '*' }} [registerOption.connect]

@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.48',
+      version: '1.5.49',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4092,6 +4092,7 @@
   var ss$1 = styleStr$1;
   var me$5 = makeError$3;
   var vbi$5 = verboseInfo$2;
+  var setupErr = new Error('can not defined setup both in register options and class body');
   function register(_temp, ccClassKey) {
     var _ref = _temp === void 0 ? {} : _temp,
         _ref$module = _ref.module,
@@ -4100,6 +4101,8 @@
         inputWatchedKeys = _ref$watchedKeys === void 0 ? '*' : _ref$watchedKeys,
         _ref$storedKeys = _ref.storedKeys,
         inputStoredKeys = _ref$storedKeys === void 0 ? [] : _ref$storedKeys,
+        _ref$setup = _ref.setup,
+        setup = _ref$setup === void 0 ? null : _ref$setup,
         persistStoredKeys = _ref.persistStoredKeys,
         _ref$connect = _ref.connect,
         connect = _ref$connect === void 0 ? {} : _ref$connect,
@@ -4171,6 +4174,12 @@
                 ccOption: ccOption
               });
               buildRefCtx(_assertThisInitialized(_this), params, lite);
+
+              if (setup && _this.$$setup) {
+                throw setupErr;
+              }
+
+              if (setup) _this.$$setup = setup;
               if (_this.$$setup) _this.$$setup = _this.$$setup.bind(_assertThisInitialized(_this));
               beforeMount(_assertThisInitialized(_this), _this.$$setup, false);
             } catch (err) {
@@ -4223,7 +4232,8 @@
             okeys$6(newState).forEach(function (key) {
               return thisState[key] = newState[key];
             });
-            beforeMount(childRef, childRef.$$setup);
+            if (setup && childRef.$$setup) throw setupErr;
+            beforeMount(childRef, setup || childRef.$$setup);
           };
 
           _proto.componentDidMount = function componentDidMount() {
@@ -5355,6 +5365,7 @@
    * but you can not register multi react class with a same ccClassKey!
    * @param {object} registerOption
    * @param {string} [registerOption.module] declare which module current cc class belong to, default is '$$default'
+   * @param {Function} [registerOption.setup]
    * @param {Array<string>|string} [registerOption.watchedKeys] 
    * declare current cc class's any instance is concerned which state keys's state changing,
    * @param {{ [moduleName:string]: keys: string[] | '*' }} [registerOption.connect]
