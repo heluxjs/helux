@@ -1,8 +1,17 @@
 import { Component, ReactNode } from 'react';
 
+// !!!use infer
 export type ArrItemsType<T extends any[]> = T extends Array<infer E>  ? E : never;
 
+export type ComputeValType<T> = {
+  readonly [K in keyof T]: T[K] extends (...args: any) => any ? ReturnType<T[K]> : any;
+}
+
 export interface TAnyObj { [key: string]: any }
+
+export interface EvMapBase{
+  [key: string]: any [];
+}
 
 export type TStar = '*';
 
@@ -15,24 +24,31 @@ type AnyFn = (...args: any[]) => any;
 type ReducerFn = (payload: any, moduleState: any, actionCtx: IActionCtx) => any;
 
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
+
 type RefComputedFn<FnCtx extends IFnCtxBase, FnReturnType> = (
-  oldVal: string,
+  oldVal: any,
   newVal: any,
   fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
 ) => FnReturnType;
-type RefComputedFnDesc<FnCtx extends IFnCtxBase, FnReturnType> = {
-  fn: RefComputedFn<FnCtx, FnReturnType>;
-  compare?: boolean;
-  depKeys?: string[];
-};
+type RefComputedValFn<FnCtx extends IFnCtxBase, FnReturnType, Val> = (
+  oldVal: Val,
+  newVal: Val,
+  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+) => FnReturnType;
 
-type ComputedFn = (
+declare function computedFn<FnCtx extends IFnCtxBase>(
   oldVal: any,
   newVal: any,
-  fnCtx: IFnCtxBase,//user decide it is FnCtx or FnCtxConnect
-) => any;
+  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+): any;
+declare function computedFn<Val, FnCtx extends IFnCtxBase>(
+  oldVal: Val,
+  newVal: Val,
+  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+): any;
+
 type ComputedFnDesc = {
-  fn: ComputedFn;
+  fn: typeof computedFn;
   compare?: boolean;
   depKeys?: string[];
 };
@@ -69,6 +85,11 @@ type Super<T> = T extends infer U ? U : object;
 declare function refCtxOn<EventCbArgs extends any[]>(eventName: string, cb: OnCallBack<EventCbArgs>): void;
 declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: [string, string?], cb: OnCallBack<EventCbArgs>): void;
 declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EventCbArgs>): void;
+
+// this way is better!!!
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventName: EvName, cb: OnCallBack<EvMap[EvName]>): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], cb: OnCallBack<EvMap[EvName]>): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EvMap[EvName]>): void;
 
 declare function refCtxEmit<EventCbArgs extends any[]>(eventName: string, ...args: EventCbArgs): void;
 declare function refCtxEmit<EventCbArgs extends any[]>(eventDesc: [string, string?], ...args: EventCbArgs): void;
@@ -115,6 +136,7 @@ declare function refCtxSetModuleState<ModuleState>(moduleName:string, state: Par
 declare function refCtxSetModuleState(moduleName:string, state: TAnyObj, cb?: (newFullState: TAnyObj) => void, renderKey?: string, delay?: number): void;
 
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>): void;
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFn: RefComputedValFn<IFnCtx, FnReturnType, ValType>): void;
 
 declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): TAnyObj;
 declare function syncCb<Val, ModuleState, RefCtx extends IRefCtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: ModuleState, refCtx:RefCtx }): TAnyObj;
@@ -132,8 +154,24 @@ declare function syncCb<Val, ModuleState, FullState, RefCtx extends IRefCtxBase>
  * for class get get like this: this.ctx
  * for function get get like this: const ctx = useConcent('foo');
  */
-interface IRefCtxBase{
+interface IRefCtxBase {
+  module: string;
+  reducerModule: string;
+  ccKey: string;
+  ccClassKey: string;
+  ccUniqueKey: string;
+  initTime: number;
+  renderCount: number;
+  storedKeys: string[] | TStar;
+  watchedKeys: string[] | TStar;
+  connect: { [key: string]: string[] | TStar };
+  ccOptions: {
+    persistStoredKeys?: string[];
+    storedKeys?: string[];
+  };
+
   state: TAnyObj;
+  props: TAnyObj;
   moduleState: TAnyObj;
   globalState: TAnyObj;
   connectedState: TAnyObj;
@@ -161,10 +199,14 @@ interface IRefCtxBase{
   settings: TAnyObj;
 }
 
-export interface IRefCtx<RootState extends DefaultState, ModuleState, RefState, Settings, Rccu extends TAnyObj> extends IRefCtxBase{
-  state: RefState;
-  moduleState: ModuleState;
+//  ***********************************************************
+//  ************ when module state equal ref state ************
+//  ***********************************************************
+export interface IRefCtx<RootState extends DefaultState, ModuleState, Props, Settings extends TAnyObj, Rccu extends TAnyObj> extends IRefCtxBase{
   globalState: RootState['$$global'];
+  moduleState: ModuleState;
+  state: ModuleState;
+  props: Props;
   settings: Settings;
   refConnectedComputed: Rccu;
 }
@@ -172,19 +214,34 @@ export interface IRefCtx<RootState extends DefaultState, ModuleState, RefState, 
  * match ctx type: use belonged module computed
  */
 export interface IRefCtxMcu
-  <RootState extends DefaultState, ModuleState, RefState, ModuleCu, Settings extends TAnyObj, Rccu extends TAnyObj>
+  <
+  RootState extends DefaultState, 
+  ModuleState, 
+  Props, 
+  ModuleCu, // moduleComputed
+  Settings extends TAnyObj, 
+  Rccu extends TAnyObj, // refConnectedComputed
+  >
   extends 
-  IRefCtx<RootState, ModuleState, RefState, Settings, Rccu> {
+  IRefCtx<RootState, ModuleState, Props, Settings, Rccu> {
   moduleComputed: ModuleCu;
 }
 /**
  * match ctx type: use belonged module computed, connect other modules
  */
 export interface IRefCtxMcuCon
-  <RootState extends DefaultState, ModuleState, RefState, ModuleCu, ConnectedModules extends keyof RootState,
-  RootCu extends RootState, Settings extends TAnyObj, Rccu extends TAnyObj>
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  Props,
+  ModuleCu,
+  ConnectedModules extends keyof RootState,
+  RootCu extends RootState,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
   extends
-  IRefCtx<RootState, ModuleState, RefState, Settings, Rccu> {
+  IRefCtx<RootState, ModuleState, Props, Settings, Rccu> {
   moduleComputed: ModuleCu;
   connectedState: Pick<RootState, ConnectedModules>;
   connectedComputed: Pick<RootCu, ConnectedModules>;
@@ -193,8 +250,16 @@ export interface IRefCtxMcuCon
  * match ctx type: use belonged module computed, define ref computed in setup
  */
 export interface IRefCtxMcuRcu
-  <RootState extends DefaultState, ModuleState, RefState, ModuleCu, RefCu, Settings extends TAnyObj, Rccu extends TAnyObj>
-  extends IRefCtx<RootState, ModuleState, RefState, Settings, Rccu> {
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  Props,
+  ModuleCu,
+  RefCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtx<RootState, ModuleState, Props, Settings, Rccu> {
   moduleComputed: ModuleCu;
   refComputed: RefCu;
 }
@@ -202,9 +267,17 @@ export interface IRefCtxMcuRcu
  * match ctx type: use belonged module computed, connect other modules, define ref computed in setup
  */
 export interface IRefCtxMcuConRcu
-  <RootState extends DefaultBase, ModuleState, RefState, ModuleCu, RootCu extends DefaultBase,
-  ConnectedModules extends keyof DefaultBase, RefCu, Settings extends TAnyObj, Rccu extends TAnyObj>
-  extends IRefCtxMcuRcu<RootState, ModuleState, RefState, ModuleCu, RefCu, Settings, Rccu> {
+  <
+  RootState extends DefaultBase,
+  ModuleState,
+  Props,
+  ModuleCu,
+  RootCu extends DefaultBase,
+  ConnectedModules extends keyof DefaultBase,
+  RefCu, Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtxMcuRcu<RootState, ModuleState, Props, ModuleCu, RefCu, Settings, Rccu> {
   connectedState: MyPick<RootState, ConnectedModules>;
   connectedComputed: MyPick<RootCu, ConnectedModules>;
 }
@@ -212,9 +285,16 @@ export interface IRefCtxMcuConRcu
  * match ctx type: connect other modules
  */
 export interface IRefCtxCon
-  <RootState extends DefaultState, ModuleState, RefState, ConnectedModules extends keyof DefaultBase, 
-  RootCu extends DefaultBase, Settings extends TAnyObj, Rccu extends TAnyObj>
-  extends IRefCtx<RootState, ModuleState, RefState, Settings, Rccu> {
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  Props,
+  ConnectedModules extends keyof DefaultBase,
+  RootCu extends DefaultBase,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtx<RootState, ModuleState, Props, Settings, Rccu> {
   // overwrite connectedState , connectedComputed
   connectedState: MyPick<RootState, ConnectedModules>;
   connectedComputed: MyPick<RootCu, ConnectedModules>;
@@ -223,9 +303,17 @@ export interface IRefCtxCon
  * match ctx type: connect other modules, define ref computed in setup
  */
 export interface IRefCtxConRcu
-  <RootState extends DefaultState, ModuleState, RefState, ConnectedModules extends keyof RootState, 
-  RootCu extends RootState, RefCu, Settings extends TAnyObj, Rccu extends TAnyObj>
-  extends IRefCtx<RootState, ModuleState, RefState, Settings, Rccu> {
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  Props,
+  ConnectedModules extends keyof RootState,
+  RootCu extends RootState,
+  RefCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtx<RootState, ModuleState, Props, Settings, Rccu> {
   connectedState: Pick<RootState, ConnectedModules>;
   connectedComputed: Pick<RootCu, ConnectedModules>;
   refComputed: RefCu;
@@ -234,8 +322,164 @@ export interface IRefCtxConRcu
  * match ctx type: define ref computed in setup
  */
 export interface IRefCtxRcu
-  <RootState extends DefaultState, ModuleState, RefState, RefCu, Settings extends TAnyObj, Rccu extends TAnyObj>
-  extends IRefCtx<RootState, ModuleState, RefState, Settings, Rccu> {
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  Props,
+  RefCu,
+  Settings extends TAnyObj,
+  >
+  extends IRefCtx<RootState, ModuleState, Props, TAnyObj, TAnyObj> {
+  refComputed: RefCu;
+}
+
+//  ***************************************************************
+//  ************ when module state not equal ref state ************
+//  ***************************************************************
+export interface IRefCtxRs<
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  > extends IRefCtxBase {
+  globalState: RootState['$$global'];
+  moduleState: ModuleState;
+  state: RefState;
+  props: Props;
+  settings: Settings;
+  refConnectedComputed: Rccu;
+}
+/**
+ * match ctx type: use belonged module computed
+ */
+export interface IRefCtxRsMcu
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props,
+  ModuleCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends
+  IRefCtxRs<RootState, ModuleState, RefState, Props, Settings, Rccu> {
+  moduleComputed: ModuleCu;
+}
+/**
+ * match ctx type: use belonged module computed, connect other modules
+ */
+export interface IRefCtxRsMcuCon
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props,
+  ModuleCu,
+  ConnectedModules extends keyof RootState,
+  RootCu extends RootState,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends
+  IRefCtxRs<RootState, ModuleState, RefState, Props, Settings, Rccu> {
+  moduleComputed: ModuleCu;
+  connectedState: Pick<RootState, ConnectedModules>;
+  connectedComputed: Pick<RootCu, ConnectedModules>;
+}
+/**
+ * match ctx type: use belonged module computed, define ref computed in setup
+ */
+export interface IRefCtxRsMcuRcu
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props, 
+  ModuleCu,
+  RefCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtxRs<RootState, ModuleState, RefState, Props, Settings, Rccu> {
+  moduleComputed: ModuleCu;
+  refComputed: RefCu;
+}
+/**
+ * match ctx type: use belonged module computed, connect other modules, define ref computed in setup
+ */
+export interface IRefCtxRsMcuConRcu
+  <
+  RootState extends DefaultBase,
+  ModuleState,
+  RefState,
+  Props, 
+  ModuleCu,
+  RootCu extends DefaultBase,
+  ConnectedModules extends keyof DefaultBase,
+  RefCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtxRsMcuRcu<RootState, ModuleState, RefState, Props, ModuleCu, RefCu, Settings, Rccu> {
+  connectedState: MyPick<RootState, ConnectedModules>;
+  connectedComputed: MyPick<RootCu, ConnectedModules>;
+}
+/**
+ * match ctx type: connect other modules
+ */
+export interface IRefCtxRsCon
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props,
+  ConnectedModules extends keyof DefaultBase,
+  RootCu extends DefaultBase,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtxRs<RootState, ModuleState, RefState, Props, Settings, Rccu> {
+  // overwrite connectedState , connectedComputed
+  connectedState: MyPick<RootState, ConnectedModules>;
+  connectedComputed: MyPick<RootCu, ConnectedModules>;
+}
+/**
+ * match ctx type: connect other modules, define ref computed in setup
+ */
+export interface IRefCtxRsConRcu
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props,
+  ConnectedModules extends keyof RootState,
+  RootCu extends RootState,
+  RefCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtxRs<RootState, ModuleState, RefState, Props, Settings, Rccu> {
+  connectedState: Pick<RootState, ConnectedModules>;
+  connectedComputed: Pick<RootCu, ConnectedModules>;
+  refComputed: RefCu;
+}
+/**
+ * match ctx type: define ref computed in setup
+ */
+export interface IRefCtxRsRcu
+  <
+  RootState extends DefaultState,
+  ModuleState,
+  RefState,
+  Props,
+  RefCu,
+  Settings extends TAnyObj,
+  Rccu extends TAnyObj
+  >
+  extends IRefCtxRs<RootState, ModuleState, RefState, Props, Settings, Rccu> {
   refComputed: RefCu;
 }
 
@@ -277,6 +521,11 @@ interface RegisterOptions<RootState, ModuleState, RefState> {
   isSingle?: Boolean; //default false
   renderKeyClasses?: string[];
   compareProps?: Boolean;//default true
+  setup?: TAnyObj;
+}
+
+interface FnRegisterOptions<RootState, ModuleState, RefState> extends RegisterOptions<RootState, ModuleState, RefState>{
+  state?: AnyFn | RefState;
 }
 
 // interface reducerFn {
@@ -323,7 +572,7 @@ type ModuleConfig = {
     [fnName: string]: ReducerFn;
   };
   computed?: {
-    [retKey: string]: ComputedFn | ComputedFnDesc;
+    [retKey: string]: typeof computedFn | ComputedFnDesc;
   };
   watch?: {
     [retKey: string]: WatchFn | WatchFnDesc;
@@ -377,22 +626,35 @@ export function clearContextIfHot(clearAll: boolean, warningErrForClearAll?: str
 
 export function run(storeConfig?: StoreConfig | null, runOptions?: RunOptions): void;
 
+export function register<RootState, ModuleState>(
+  registerOptions: String | RegisterOptions<RootState, ModuleState, ModuleState>,
+  ccClassKey?: string,
+): (ReactCompType: typeof Component) => typeof ConcentComponent;
 export function register<RootState, ModuleState, RefState>(
   registerOptions: String | RegisterOptions<RootState, ModuleState, RefState>,
   ccClassKey?: string,
 ): (ReactCompType: typeof Component) => typeof ConcentComponent;
 
 //use decide it is RefCtx or RefCtxConnect
+export function registerDumb<RootState, ModuleState, RefCtxBase>(
+  registerOptions: String | FnRegisterOptions<RootState, ModuleState, ModuleState>,
+  ccClassKey?: string,
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
 export function registerDumb<RootState, ModuleState, RefState, RefCtxBase>(
-  registerOptions: String | RegisterOptions<RootState, ModuleState, RefState>,
+  registerOptions: String | FnRegisterOptions<RootState, ModuleState, RefState>,
   ccClassKey?: string,
 ): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
 
 //use decide it is RefCtx or RefCtxConnect
-export function useConcent<RootState, ModuleState, RefState, RefCtxBase>(
-  registerOptions: String | RegisterOptions<RootState, ModuleState, RefState>,
+export function useConcent<RootState extends DefaultState, ModuleState, RefState, RefCtx extends IRefCtxBase>(
+  registerOptions: String | FnRegisterOptions<RootState, RootState, RefState>,
   ccClassKey?: string,
-): RefCtxBase;
+): RefCtx;
+// when moduleState equal refState
+export function useConcent<RootState extends DefaultState, ModuleState, RefCtx extends IRefCtxBase>(
+  registerOptions: String | FnRegisterOptions<RootState, RootState, ModuleState>,
+  ccClassKey?: string,
+): RefCtx;
 
 export function configure(moduleName: string, moduleConfig: ModuleConfig): void;
 
