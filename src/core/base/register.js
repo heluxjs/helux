@@ -73,10 +73,9 @@ export default function register({
             if (setup && this.$$setup) {
               throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);
             }
-            if (setup) this.$$setup = setup;
-            if (this.$$setup) this.$$setup = this.$$setup.bind(this);
-            beforeMount(this, this.$$setup, false);
 
+            if (this.$$setup) this.$$setup = this.$$setup .bind(this);
+            beforeMount(this, setup || this.$$setup, false);
           } catch (err) {
             catchCcError(err);
           }
@@ -124,6 +123,7 @@ export default function register({
           // this.state = newState; // bad writing
           okeys(newState).forEach(key => thisState[key] = newState[key]);
 
+          if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
           if (setup && childRef.$$setup) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
           beforeMount(childRef, setup || childRef.$$setup);
         }
