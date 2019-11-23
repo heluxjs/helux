@@ -21,9 +21,14 @@ export default class CcFragment extends React.Component {
     const registerOptions = getRegisterOptions(props.register);
     const {
       module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-      watchedKeys = '*', connect = {}, reducerModule, state = {}, isSingle, storedKeys
+      watchedKeys = '*', connect = {}, reducerModule, isSingle, storedKeys
     } = registerOptions;
 
+    let state = registerOptions.state || {};
+    if (typeof state === 'function') {
+      state = state();
+    }
+  
     const { ccClassKey, ccKey, ccOption = {} } = props;
 
     let target_storedKeys = storedKeys;
@@ -46,7 +51,6 @@ export default class CcFragment extends React.Component {
       target_connect = _connect;
     }
     //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
-
 
     buildRefCtx(this, {
       isSingle, ccKey, connect: target_connect, state, module, reducerModule: target_reducerModule,
