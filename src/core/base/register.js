@@ -21,7 +21,7 @@ const cl = color;
 const ss = styleStr;
 const me = makeError;
 const vbi = verboseInfo;
-const setupErr = new Error('can not defined setup both in register options and class body');
+const setupErr = info => new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
 
 export default function register({
   module = MODULE_DEFAULT,
@@ -71,7 +71,7 @@ export default function register({
             buildRefCtx(this, params, lite);
 
             if (setup && this.$$setup) {
-              throw setupErr;
+              throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);
             }
             if (setup) this.$$setup = setup;
             if (this.$$setup) this.$$setup = this.$$setup.bind(this);
@@ -124,7 +124,7 @@ export default function register({
           // this.state = newState; // bad writing
           okeys(newState).forEach(key => thisState[key] = newState[key]);
 
-          if (setup && childRef.$$setup) throw setupErr;
+          if (setup && childRef.$$setup) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
           beforeMount(childRef, setup || childRef.$$setup);
         }
 
