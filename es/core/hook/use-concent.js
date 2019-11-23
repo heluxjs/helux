@@ -48,7 +48,10 @@ function CcHook(ccHookState, hookSetState, props) {
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
   let { state = {}, props = {}, mapProps } = _registerOption;
-  if (typeof state === 'function') state = state();
+  if (typeof state === 'function') {
+    state = state();
+    _registerOption.state = state;
+  }
 
   const reactUseState = React.useState;
   if (!reactUseState) {

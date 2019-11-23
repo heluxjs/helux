@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.52',
+      version: '1.5.53',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4092,7 +4092,11 @@
   var ss$1 = styleStr$1;
   var me$5 = makeError$3;
   var vbi$5 = verboseInfo$2;
-  var setupErr = new Error('can not defined setup both in register options and class body');
+
+  var setupErr = function setupErr(info) {
+    return new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
+  };
+
   function register(_temp, ccClassKey) {
     var _ref = _temp === void 0 ? {} : _temp,
         _ref$module = _ref.module,
@@ -4176,12 +4180,11 @@
               buildRefCtx(_assertThisInitialized(_this), params, lite);
 
               if (setup && _this.$$setup) {
-                throw setupErr;
+                throw setupErr('ccUniqueKey ' + _this.ctx.ccUniqueKey);
               }
 
-              if (setup) _this.$$setup = setup;
               if (_this.$$setup) _this.$$setup = _this.$$setup.bind(_assertThisInitialized(_this));
-              beforeMount(_assertThisInitialized(_this), _this.$$setup, false);
+              beforeMount(_assertThisInitialized(_this), setup || _this.$$setup, false);
             } catch (err) {
               catchCcError(err);
             }
@@ -4232,7 +4235,8 @@
             okeys$6(newState).forEach(function (key) {
               return thisState[key] = newState[key];
             });
-            if (setup && childRef.$$setup) throw setupErr;
+            if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
+            if (setup && childRef.$$setup) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
             beforeMount(childRef, setup || childRef.$$setup);
           };
 
@@ -5465,10 +5469,14 @@
           _registerOptions$conn = registerOptions.connect,
           connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
           reducerModule = registerOptions.reducerModule,
-          _registerOptions$stat = registerOptions.state,
-          state = _registerOptions$stat === void 0 ? {} : _registerOptions$stat,
           isSingle = registerOptions.isSingle,
           storedKeys = registerOptions.storedKeys;
+      var state = registerOptions.state || {};
+
+      if (typeof state === 'function') {
+        state = state();
+      }
+
       var ccClassKey = props.ccClassKey,
           ccKey = props.ccKey,
           _props$ccOption = props.ccOption,
@@ -5727,7 +5735,12 @@
         _registerOption$props = _registerOption.props,
         props = _registerOption$props === void 0 ? {} : _registerOption$props,
         mapProps = _registerOption.mapProps;
-    if (typeof state === 'function') state = state();
+
+    if (typeof state === 'function') {
+      state = state();
+      _registerOption.state = state;
+    }
+
     var reactUseState = React.useState;
 
     if (!reactUseState) {
