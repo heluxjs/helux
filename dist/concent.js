@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.51',
+      version: '1.5.52',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2242,7 +2242,7 @@
           targetFirstParam = fnName; // 这里非常重要，只有处于第一层的调用时，才获取函数对象上的__stateModule __reducerModule参数
           // 防止克隆自模块a的模块b在reducer文件里基于函数引用直接调用时，取的是a的模块相关参数了，但是源头由b发起，应该是b才对
 
-          if (chainId_depth_[oriChainId] == 1) {
+          if (chainId_depth_[_oriChainId] == 1) {
             // let dispatch can apply reducer function directly!!!
             // !!! 如果用户在b模块的组件里dispatch直接调用a模块的函数，但是确实想修改的是b模块的数据，只是想复用a模块的那个函数的逻辑
             // 那么千万要注意，写为{module:'b', fn:xxxFoo}的模式
