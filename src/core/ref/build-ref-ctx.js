@@ -160,6 +160,8 @@ export default function (ref, params, liteLevel = 5) {
     globalComputed,
     connectedComputed,
 
+    moduleReducer: {},
+
     //collect mapProps result
     mapped: {},
 

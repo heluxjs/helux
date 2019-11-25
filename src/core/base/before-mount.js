@@ -29,6 +29,7 @@ export default function (ref, setup, bindCtxToMethod) {
       refLazyReducerFnObj[fnName] = (payload, rkey, delay) => lazyDispatch(`${m}/${fnName}`, payload, rkey, delay);
     });
   });
+  ctx.moduleReducer = reducer[module] || {}; 
 
   // ctx.reducer = ccContext.reducer._reducerRefCaller;
   // ctx.lazyReducer = ccContext.reducer._lazyReducerRefCaller;
