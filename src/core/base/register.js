@@ -53,6 +53,8 @@ export default function register({
       // const isClsPureComponent = ReactClass.prototype.isPureReactComponent;
 
       const ToBeExtendedClass = isPropsProxy === false ? ReactClass : React.Component;
+      const staticSetup = ToBeExtendedClass.$$setup;
+
       const _CcClass = class CcClass extends ToBeExtendedClass {
 
         constructor(props, context) {
@@ -70,12 +72,12 @@ export default function register({
             });
             buildRefCtx(this, params, lite);
 
-            if (setup && this.$$setup) {
+            if (setup && (this.$$setup || staticSetup)) {
               throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);
             }
 
             if (this.$$setup) this.$$setup = this.$$setup .bind(this);
-            beforeMount(this, setup || this.$$setup, false);
+            beforeMount(this, setup || this.$$setup || staticSetup, false);
           } catch (err) {
             catchCcError(err);
           }
@@ -124,8 +126,8 @@ export default function register({
           okeys(newState).forEach(key => thisState[key] = newState[key]);
 
           if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
-          if (setup && childRef.$$setup) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
-          beforeMount(childRef, setup || childRef.$$setup);
+          if (setup && (childRef.$$setup || staticSetup)) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
+          beforeMount(childRef, setup || childRef.$$setup || staticSetup, false);
         }
 
         componentDidMount() {

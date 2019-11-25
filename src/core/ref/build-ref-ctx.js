@@ -161,8 +161,11 @@ export default function (ref, params, liteLevel = 5) {
     connectedComputed,
 
     moduleReducer: {},
+    moduleLazyReducer: {},
     connectedReducer: {},
     connectedLazyReducer: {},
+    reducer: {},
+    lazyReducer: {},
 
     //collect mapProps result
     mapped: {},

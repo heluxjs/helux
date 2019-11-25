@@ -160,6 +160,13 @@ export default function (ref, params, liteLevel = 5) {
     globalComputed,
     connectedComputed,
 
+    moduleReducer: {},
+    moduleLazyReducer: {},
+    connectedReducer: {},
+    connectedLazyReducer: {},
+    reducer: {},
+    lazyReducer: {},
+
     //collect mapProps result
     mapped: {},
 
@@ -169,8 +176,6 @@ export default function (ref, params, liteLevel = 5) {
     computedDep,
     watchDep,
     execute: null,
-    reducer: {},
-    lazyReducer: {},
     auxMap,// auxiliary method map
     effectMeta,
 

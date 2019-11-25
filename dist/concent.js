@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.54',
+      version: '1.5.55',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3590,8 +3590,14 @@
       refConnectedComputed: refConnectedComputed,
       moduleComputed: moduleComputed,
       globalComputed: globalComputed,
-      connectedComputed: connectedComputed
-    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.reducer = {}, _ctx.lazyReducer = {}, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
+      connectedComputed: connectedComputed,
+      moduleReducer: {},
+      moduleLazyReducer: {},
+      connectedReducer: {},
+      connectedLazyReducer: {},
+      reducer: {},
+      lazyReducer: {}
+    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
     ref.ctx = ctx;
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
@@ -3834,12 +3840,17 @@
   var safeGetObjectFromObject$1 = safeGetObjectFromObject,
       okeys$5 = okeys,
       justWarning$6 = justWarning;
-  var _reducerModule_fnNames_ = ccContext.reducer._reducerModule_fnNames_;
+  var _ccContext$reducer = ccContext.reducer,
+      _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_,
+      _reducerCaller = _ccContext$reducer._reducerCaller,
+      _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller;
   function beforeMount (ref, setup, bindCtxToMethod) {
     ref.__$$isUnmounted = false;
     var ctx = ref.ctx;
-    var reducer = ctx.reducer,
-        lazyReducer = ctx.lazyReducer,
+    var connectedReducer = ctx.connectedReducer,
+        connectedLazyReducer = ctx.connectedLazyReducer,
+        moduleReducer = ctx.moduleReducer,
+        moduleLazyReducer = ctx.moduleLazyReducer,
         dispatch = ctx.dispatch,
         lazyDispatch = ctx.lazyDispatch,
         connect = ctx.connect,
@@ -3847,26 +3858,34 @@
     var connectedModules = okeys$5(connect);
     var allModules = connectedModules.slice();
     if (!allModules.includes(module)) allModules.push(module);else {
-      justWarning$6("module[" + module + "] are in belongTo and connect both, it will cause redundant render.");
+      justWarning$6("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
     } //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
     //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
 
     allModules.forEach(function (m) {
-      var refReducerFnObj = safeGetObjectFromObject$1(reducer, m);
-      var refLazyReducerFnObj = safeGetObjectFromObject$1(lazyReducer, m);
+      var reducerObj, lazyReducerObj;
+
+      if (m === module) {
+        reducerObj = moduleReducer;
+        lazyReducerObj = moduleLazyReducer;
+      } else {
+        reducerObj = safeGetObjectFromObject$1(connectedReducer, m);
+        lazyReducerObj = safeGetObjectFromObject$1(connectedLazyReducer, m);
+      }
+
       var fnNames = _reducerModule_fnNames_[m] || [];
       fnNames.forEach(function (fnName) {
-        refReducerFnObj[fnName] = function (payload, rkey, delay) {
+        reducerObj[fnName] = function (payload, rkey, delay) {
           return dispatch(m + "/" + fnName, payload, rkey, delay);
         };
 
-        refLazyReducerFnObj[fnName] = function (payload, rkey, delay) {
+        lazyReducerObj[fnName] = function (payload, rkey, delay) {
           return lazyDispatch(m + "/" + fnName, payload, rkey, delay);
         };
       });
-    }); // ctx.reducer = ccContext.reducer._reducerRefCaller;
-    // ctx.lazyReducer = ccContext.reducer._lazyReducerRefCaller;
-    //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
+    });
+    ctx.reducer = _reducerCaller;
+    ctx.lazyReducer = _lazyReducerCaller; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
 
     if (setup) {
       if (typeof setup !== 'function') throw new Error('type of setup must be function');
@@ -4545,12 +4564,12 @@
       if (!fnNames.includes(name)) fnNames.push(name);
       var fullFnName = module + "/" + name;
 
-      subReducerCaller[name] = function (payload, delay, idt) {
-        return dispatch$2(fullFnName, payload, delay, idt);
+      subReducerCaller[name] = function (payload, renderKey, delay) {
+        return dispatch$2(fullFnName, payload, renderKey, delay);
       };
 
-      subLazyReducerCaller[name] = function (payload, delay, idt) {
-        return lazyDispatch(fullFnName, payload, delay, idt);
+      subLazyReducerCaller[name] = function (payload, renderKey, delay) {
+        return lazyDispatch(fullFnName, payload, renderKey, delay);
       }; // function wrappedReducerFn(payload, delay, idt){
       // }
       // subReducerRefCaller[name] = wrappedReducerFn;
@@ -6127,9 +6146,9 @@
 
   var appendState = ccContext.store.appendState;
 
-  var _reducerCaller = ccContext.reducer._reducerCaller;
+  var _reducerCaller$1 = ccContext.reducer._reducerCaller;
 
-  var _lazyReducerCaller = ccContext.reducer._lazyReducerCaller;
+  var _lazyReducerCaller$1 = ccContext.reducer._lazyReducerCaller;
 
   var startup$1 = startup;
   var cloneModule = _cloneModule;
@@ -6158,8 +6177,8 @@
   var execute = _execute;
   var executeAll = _executeAll;
   var getRefs$1 = getRefs;
-  var reducer = _reducerCaller;
-  var lazyReducer = _lazyReducerCaller;
+  var reducer = _reducerCaller$1;
+  var lazyReducer = _lazyReducerCaller$1;
   var clearContextIfHot$1 = clearContextIfHot;
   var CcFragment$1 = CcFragment;
   var cst = _cst;

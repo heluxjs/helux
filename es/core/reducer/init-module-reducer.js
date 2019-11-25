@@ -37,8 +37,8 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     if (!fnNames.includes(name)) fnNames.push(name);
     let fullFnName = `${module}/${name}`;
 
-    subReducerCaller[name] = (payload, delay, idt) => dispatch(fullFnName, payload, delay, idt);
-    subLazyReducerCaller[name] = (payload, delay, idt) => lazyDispatch(fullFnName, payload, delay, idt);
+    subReducerCaller[name] = (payload, renderKey, delay) => dispatch(fullFnName, payload, renderKey, delay);
+    subLazyReducerCaller[name] = (payload, renderKey, delay) => lazyDispatch(fullFnName, payload, renderKey, delay);
 
     // function wrappedReducerFn(payload, delay, idt){
     // }

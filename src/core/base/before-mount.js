@@ -9,27 +9,33 @@ export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
 
   const ctx = ref.ctx;
-  const { connectedReducer, connectedLazyReducer, dispatch, lazyDispatch, connect, module } = ctx;
+  const { connectedReducer, connectedLazyReducer, moduleReducer, moduleLazyReducer, dispatch, lazyDispatch, connect, module } = ctx;
   const connectedModules = okeys(connect);
 
   const allModules = connectedModules.slice();
   if (!allModules.includes(module)) allModules.push(module);
   else{
-    justWarning(`module[${module}] are in belongTo and connect both, it will cause redundant render.`);
+    justWarning(`module[${module}] is in belongTo and connect both, it will cause redundant render.`);
   }
 
   //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
   //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
-    const refReducerFnObj = safeGetObjectFromObject(connectedReducer, m);
-    const refLazyReducerFnObj = safeGetObjectFromObject(connectedLazyReducer, m);
+    let reducerObj, lazyReducerObj;
+    if(m === module){
+      reducerObj = moduleReducer;
+      lazyReducerObj = moduleLazyReducer;
+    }else{
+      reducerObj = safeGetObjectFromObject(connectedReducer, m);
+      lazyReducerObj = safeGetObjectFromObject(connectedLazyReducer, m);
+    }
+
     const fnNames = _reducerModule_fnNames_[m] || [];
     fnNames.forEach(fnName => {
-      refReducerFnObj[fnName] = (payload, rkey, delay) => dispatch(`${m}/${fnName}`, payload, rkey, delay);
-      refLazyReducerFnObj[fnName] = (payload, rkey, delay) => lazyDispatch(`${m}/${fnName}`, payload, rkey, delay);
+      reducerObj[fnName] = (payload, rkey, delay) => dispatch(`${m}/${fnName}`, payload, rkey, delay);
+      lazyReducerObj[fnName] = (payload, rkey, delay) => lazyDispatch(`${m}/${fnName}`, payload, rkey, delay);
     });
   });
-  ctx.moduleReducer = reducer[module] || {}; 
   ctx.reducer = _reducerCaller;
   ctx.lazyReducer = _lazyReducerCaller;
 
