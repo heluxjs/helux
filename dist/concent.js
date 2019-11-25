@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.55',
+      version: '1.5.57',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4163,6 +4163,7 @@
 
 
         var ToBeExtendedClass = isPropsProxy === false ? ReactClass : React.Component;
+        var staticSetup = ToBeExtendedClass.$$setup;
 
         var _CcClass =
         /*#__PURE__*/
@@ -4198,12 +4199,12 @@
               });
               buildRefCtx(_assertThisInitialized(_this), params, lite);
 
-              if (setup && _this.$$setup) {
+              if (setup && (_this.$$setup || staticSetup)) {
                 throw setupErr('ccUniqueKey ' + _this.ctx.ccUniqueKey);
               }
 
               if (_this.$$setup) _this.$$setup = _this.$$setup.bind(_assertThisInitialized(_this));
-              beforeMount(_assertThisInitialized(_this), setup || _this.$$setup, false);
+              beforeMount(_assertThisInitialized(_this), setup || _this.$$setup || staticSetup, false);
             } catch (err) {
               catchCcError(err);
             }
@@ -4255,8 +4256,8 @@
               return thisState[key] = newState[key];
             });
             if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
-            if (setup && childRef.$$setup) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
-            beforeMount(childRef, setup || childRef.$$setup);
+            if (setup && (childRef.$$setup || staticSetup)) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
+            beforeMount(childRef, setup || childRef.$$setup || staticSetup, false);
           };
 
           _proto.componentDidMount = function componentDidMount() {
