@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.58',
+      version: '1.5.59',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3759,7 +3759,7 @@
       };
 
       ctx.on = on; // on handler been effective in didMount by default, so user can call it in setup safely
-      // but if user want on been effective immediately, user can call onDirectly
+      // but if user want [on-op] been effective immediately, user can call onDirectly, but it may be dangerous!
       // or on(ev, fn, rkey, false)
 
       ctx.onDirectly = function (event, handler) {

@@ -1,5 +1,6 @@
 import { Component, ReactNode } from 'react';
 import { string } from 'prop-types';
+import * as ccCst from './support/constant';
 
 export interface IAnyObj { [key: string]: any }
 export interface IAnyFn {
@@ -38,9 +39,8 @@ export type TStar = '*';
 
 // type EvSyncReturn = (event: React.ChangeEvent<HTMLInputElement>) => void;
 export type TSyncReturn = (val: any) => void;
+
 type SyncReturn = TSyncReturn;
-
-
 
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 
@@ -52,27 +52,34 @@ type RefComputedFn<FnCtx extends IFnCtxBase, FnReturnType> = (
 type RefComputedValFn<FnCtx extends IFnCtxBase, FnReturnType, Val> = (
   oldVal: Val,
   newVal: Val,
-  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+  fnCtx: FnCtx,
 ) => FnReturnType;
+
+type RefWatchFn<FnCtx extends IFnCtxBase> = (
+  oldVal: any,
+  newVal: any,
+  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+) => boolean | void;
+type RefWatchValFn<FnCtx extends IFnCtxBase, Val> = (
+  oldVal: Val,
+  newVal: Val,
+  fnCtx: FnCtx,
+) => boolean | void;
 
 declare function computedFn<FnCtx extends IFnCtxBase>(
   oldVal: any,
   newVal: any,
   fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
 ): any;
-declare function computedFn<Val, FnCtx extends IFnCtxBase>(
-  oldVal: Val,
-  newVal: Val,
-  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
-): any;
-
 
 
 interface IDict {
   [customizedKey: string]: any;
   // [customizedKey2: number]: any;
 }
-interface IRootBase extends IDict {
+
+// make type for empty RootReducer
+export interface IRootBase extends IDict {
   $$global: any;
   $$default: any;
   $$cc?: any;
@@ -88,6 +95,7 @@ type Super<T> = T extends infer U ? U : object;
  * 
  * @param eventName 
  * @param cb 
+ * @param delayToDidMount default is true
  * suggest use conditional type to maitain EventCbArgsType
  * 
     // or type EventCbArgsType<EventName>
@@ -96,14 +104,14 @@ type Super<T> = T extends infer U ? U : object;
       EventName extends 'bar' ? [string, boolean] :
       [];
  */
-declare function refCtxOn<EventCbArgs extends any[]>(eventName: string, cb: OnCallBack<EventCbArgs>): void;
-declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: [string, string?], cb: OnCallBack<EventCbArgs>): void;
-declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EventCbArgs>): void;
+declare function refCtxOn<EventCbArgs extends any[]>(eventName: string, cb: OnCallBack<EventCbArgs>, delayToDidMount?:boolean): void;
+declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: [string, string?], cb: OnCallBack<EventCbArgs>, delayToDidMount?:boolean): void;
+declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EventCbArgs>, delayToDidMount?:boolean): void;
 
 // this way is better!!!
-declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventName: EvName, cb: OnCallBack<EvMap[EvName]>): void;
-declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], cb: OnCallBack<EvMap[EvName]>): void;
-declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EvMap[EvName]>): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventName: EvName, cb: OnCallBack<EvMap[EvName]>, delayToDidMount?:boolean): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], cb: OnCallBack<EvMap[EvName]>, delayToDidMount?:boolean): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EvMap[EvName]>, delayToDidMount?:boolean): void;
 
 declare function refCtxEmit<EventCbArgs extends any[]>(eventName: string, ...args: EventCbArgs): void;
 declare function refCtxEmit<EventCbArgs extends any[]>(eventDesc: [string, string?], ...args: EventCbArgs): void;
@@ -152,8 +160,75 @@ declare function refCtxSetGlobalState(state: IAnyObj, cb?: (newFullState: IAnyOb
 declare function refCtxSetModuleState<ModuleState>(moduleName: string, state: Partial<ModuleState>, cb?: (newFullState: ModuleState) => void, renderKey?: string, delay?: number): void;
 declare function refCtxSetModuleState(moduleName: string, state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: string, delay?: number): void;
 
-declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>): void;
-declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFn: RefComputedValFn<IFnCtx, FnReturnType, ValType>): void;
+/**
+ *
+ * @param retKey
+ * @param computedFn
+ * @param {string[]} depKeys
+ * @param {boolean} compare defalut is true
+ */
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>, depKeys?: string[], compare?: boolean): void;
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean): void;
+//user decide it is FnCtx or FnCtxConnect
+declare function refCtxComputed(multiComputed: {
+  [retKey: string]: <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType,
+}): void;
+declare function refCtxComputed(multiComputed: {
+  [retKey: string]: <FnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => FnReturnType,
+}): void;
+declare function refCtxComputed(multiComputed: {
+  [retKey: string]: {
+    fn: <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType,
+    depKeys?: string[],
+    compare?: boolean,
+  }
+}): void;
+declare function refCtxComputed(multiComputed: {
+  [retKey: string]: {
+    fn: <FnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => FnReturnType,
+    depKeys?: string[],
+    compare?: boolean,
+  }
+}): void;
+
+/**
+ * 
+ * @param retKey 
+ * @param watchFn 
+ * @param {string[]} depKeys 
+ * @param {boolean} compare defalut is true
+ * @param {boolean} immediate defalut is false
+ */
+declare function refCtxWatch<IFnCtx extends IFnCtxBase>(retKey: string, watchFn: RefWatchFn<IFnCtx>, depKeys?: string[], compare?: boolean, immediate?:boolean): void;
+declare function refCtxWatch<IFnCtx extends IFnCtxBase, ValType>(retKey: string, watchFn: RefWatchValFn<IFnCtx, ValType>, depKeys?: string[], compare?: boolean, immediate?:boolean): void;
+declare function refCtxWatch(multiWatch: {
+  [retKey: string]: <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => void,
+}): void;
+declare function refCtxWatch(multiWatch: {
+  [retKey: string]: <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => void,
+}): void;
+declare function refCtxWatch(multiWatch: {
+  [retKey: string]: {
+    fn: <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => void,
+    depKeys?: string[],
+    compare?: boolean,
+    immediate?: boolean,
+  }
+}): void;
+declare function refCtxWatch(multiWatch: {
+  [retKey: string]: {
+    fn: <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => void,
+    depKeys?: string[],
+    compare?: boolean,
+    immediate?: boolean,
+  }
+}): void;
+
+type ClearEffect = IAnyFn | void;
+type EffectDepKeys = string[] | null;
+declare function refCtxEffect<RefCtx extends IRefCtxBase>(cb: (refCtx: RefCtx, isCalledInDidMount: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
+
+declare function refCtxAux(auxMethodName: string, handler: IAnyFn): void;
 
 declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj;
 declare function syncCb<Val, ModuleState, RefCtx extends IRefCtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: ModuleState, refCtx: RefCtx }): IAnyObj;
@@ -187,8 +262,11 @@ interface IRefCtxBase {
     persistStoredKeys?: string[];
     storedKeys?: string[];
   };
+  mapped: IAnyObj;
+  stateKeys: string[];
 
   state: IAnyObj;
+  prevState: IAnyObj;
   props: IAnyObj;
   moduleState: IAnyObj;
   globalState: IAnyObj;
@@ -198,14 +276,19 @@ interface IRefCtxBase {
   moduleComputed: IAnyObj;
   globalComputed: IAnyObj;
   connectedComputed: IAnyObj;
-  computed: typeof refCtxComputed;
-
+  
   moduleReducer: IAnyObj;
   moduleLazyReducer: IAnyObj;
   connectedReducer: IAnyObj;
   connectedLazyReducer: IAnyObj;
   reducer: IAnyFnInObj;
   lazyReducer: IAnyFnInObj;
+
+  computed: typeof refCtxComputed;
+  watch: typeof refCtxWatch;
+  effect: typeof refCtxEffect;
+  aux: typeof refCtxAux;
+  execute: (handler: IAnyFn) => void;
 
   on: typeof refCtxOn;
   emit: typeof refCtxEmit;
@@ -214,6 +297,11 @@ interface IRefCtxBase {
   lazyDispatch: typeof refCtxDispatch;
   invoke: typeof refCtxInvoke;
   lazyInvoke: typeof refCtxInvoke;
+  reactSetState: <P, S, K extends keyof S>(
+    state: ((prevState: Readonly<S>, props: Readonly<P>) => (Pick<S, K> | S | null)) | (Pick<S, K> | S | null),
+    callback?: () => void
+  ) => void;
+  reactForceUpdate: (callback?: () => void)=> void;
   setState: typeof refCtxSetState;
   forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
@@ -246,6 +334,7 @@ export interface IRefCtx
   extends IRefCtxMBase<ModuleName> {
   globalState: RootState['$$global'];
   state: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
+  prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ? 
@@ -411,6 +500,7 @@ export interface IRefCtxRs<
   > extends IRefCtxMBase<ModuleName> {
   globalState: RootState['$$global'];
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
+  prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ? 
     RootReducer[ModuleName] :
@@ -640,7 +730,7 @@ interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefSt
 }
 
 
-type WatchFn = <RootState, ModuleState>(
+type WatchFn = (
   oldVal: any,
   newVal: any,
   fnCtx: IFnCtxBase,//user decide it is FnCtx or FnCtxConnect
@@ -788,6 +878,18 @@ export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: 
 
 export function lazyDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number): Promise<T>;
 
+export declare const emit: typeof refCtxEmit;
+
+export declare const off: typeof refCtxOff;
+
+export function execute(ccClassKey: string, ...args: any): void;
+
+export function executeAll(...args: any): void;
+
+export function appendState(moduleName: string, state: IAnyObj): void;
+
+export declare const cst: typeof ccCst;
+
 /**
  * user specify detail type when use
  * 
@@ -819,6 +921,12 @@ declare type DefaultExport = {
   lazyDispatch: typeof lazyDispatch,
   reducer: typeof reducer,
   lazyReducer: typeof lazyReducer,
+  emit: typeof refCtxEmit,
+  off: typeof refCtxOff,
+  execute: typeof execute,
+  executeAll: typeof executeAll,
+  appendState: typeof appendState,
+  cst: typeof cst, 
 }
 
 declare let defaultExport: DefaultExport;

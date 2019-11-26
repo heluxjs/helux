@@ -1,10 +1,59 @@
 import { Component, ReactNode } from 'react';
 import { string } from 'prop-types';
-import * as ccCst from './support/constant';
+
+type CcCst = {
+  MODULE_GLOBAL: '$$global';
+  MODULE_DEFAULT: '$$default';
+  MODULE_CC: '$$cc';
+  MODULE_CC_ROUTER: '$$CONCENT_ROUTER';
+
+  CC_CLASS_PREFIX: '$$CcClass';
+  CC_FRAGMENT_PREFIX: '$$CcFrag';
+  CC_HOOK_PREFIX: '$$CcHook';
+  CC_PREFIX: '$$Cc';
+
+  CC_DISPATCHER: '$$Dispatcher';
+  CC_DISPATCHER_BOX: '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
+
+  CCSYNC_KEY: typeof Symbol;
+  MOCKE_KEY: typeof Symbol;
+  LAZY_KEY: typeof Symbol;
+
+  SIG_FN_START: 10;
+  SIG_FN_END: 11;
+  SIG_FN_QUIT: 12;
+  SIG_FN_ERR: 13;
+  SIG_MODULE_CONFIGURED: 14;
+  SIG_STATE_CHANGED: 15;
+
+  RENDER_NO_OP: 1;
+  RENDER_BY_KEY: 2;
+  RENDER_BY_STATE: 3;
+
+  STATE_FOR_ONE_CC_INSTANCE_FIRSTLY: 1;
+  STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE: 2;
+
+  EFFECT_AVAILABLE: 1;
+  EFFECT_STOPPED: 0;
+
+  DISPATCH: 'dispatch';
+  SET_STATE: 'setState';
+  SET_MODULE_STATE: 'setModuleState';
+  FORCE_UPDATE: 'forceUpdate';
+  INVOKE: 'invoke';
+  SYNC: 'sync';
+
+  CATE_MODULE: 'module';
+  CATE_REF: 'ref';
+}
+
 
 export interface IAnyObj { [key: string]: any }
 export interface IAnyFn {
   (...args: any): any;
+}
+export interface IAnyFnReturnObj {
+  (...args: any): IAnyFnInObj;
 }
 export interface IAnyFnInObj { [key: string]: IAnyFn }
 
@@ -104,14 +153,14 @@ type Super<T> = T extends infer U ? U : object;
       EventName extends 'bar' ? [string, boolean] :
       [];
  */
-declare function refCtxOn<EventCbArgs extends any[]>(eventName: string, cb: OnCallBack<EventCbArgs>, delayToDidMount?:boolean): void;
-declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: [string, string?], cb: OnCallBack<EventCbArgs>, delayToDidMount?:boolean): void;
-declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EventCbArgs>, delayToDidMount?:boolean): void;
+declare function refCtxOn<EventCbArgs extends any[]>(eventName: string, cb: OnCallBack<EventCbArgs>, delayToDidMount?: boolean): void;
+declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: [string, string?], cb: OnCallBack<EventCbArgs>, delayToDidMount?: boolean): void;
+declare function refCtxOn<EventCbArgs extends any[]>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EventCbArgs>, delayToDidMount?: boolean): void;
 
 // this way is better!!!
-declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventName: EvName, cb: OnCallBack<EvMap[EvName]>, delayToDidMount?:boolean): void;
-declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], cb: OnCallBack<EvMap[EvName]>, delayToDidMount?:boolean): void;
-declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EvMap[EvName]>, delayToDidMount?:boolean): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventName: EvName, cb: OnCallBack<EvMap[EvName]>, delayToDidMount?: boolean): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], cb: OnCallBack<EvMap[EvName]>, delayToDidMount?: boolean): void;
+declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EvMap[EvName]>, delayToDidMount?: boolean): void;
 
 declare function refCtxEmit<EventCbArgs extends any[]>(eventName: string, ...args: EventCbArgs): void;
 declare function refCtxEmit<EventCbArgs extends any[]>(eventDesc: [string, string?], ...args: EventCbArgs): void;
@@ -199,8 +248,8 @@ declare function refCtxComputed(multiComputed: {
  * @param {boolean} compare defalut is true
  * @param {boolean} immediate defalut is false
  */
-declare function refCtxWatch<IFnCtx extends IFnCtxBase>(retKey: string, watchFn: RefWatchFn<IFnCtx>, depKeys?: string[], compare?: boolean, immediate?:boolean): void;
-declare function refCtxWatch<IFnCtx extends IFnCtxBase, ValType>(retKey: string, watchFn: RefWatchValFn<IFnCtx, ValType>, depKeys?: string[], compare?: boolean, immediate?:boolean): void;
+declare function refCtxWatch<IFnCtx extends IFnCtxBase>(retKey: string, watchFn: RefWatchFn<IFnCtx>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
+declare function refCtxWatch<IFnCtx extends IFnCtxBase, ValType>(retKey: string, watchFn: RefWatchValFn<IFnCtx, ValType>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
 declare function refCtxWatch(multiWatch: {
   [retKey: string]: <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => void,
 }): void;
@@ -276,7 +325,7 @@ interface IRefCtxBase {
   moduleComputed: IAnyObj;
   globalComputed: IAnyObj;
   connectedComputed: IAnyObj;
-  
+
   moduleReducer: IAnyObj;
   moduleLazyReducer: IAnyObj;
   connectedReducer: IAnyObj;
@@ -301,7 +350,7 @@ interface IRefCtxBase {
     state: ((prevState: Readonly<S>, props: Readonly<P>) => (Pick<S, K> | S | null)) | (Pick<S, K> | S | null),
     callback?: () => void
   ) => void;
-  reactForceUpdate: (callback?: () => void)=> void;
+  reactForceUpdate: (callback?: () => void) => void;
   setState: typeof refCtxSetState;
   forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
@@ -337,11 +386,11 @@ export interface IRefCtx
   prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleReducer: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
   moduleLazyReducer: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
   props: Props;
@@ -502,13 +551,13 @@ export interface IRefCtxRs<
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleReducer: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] :
     // !!! concent will inject setState to moduleReducer
     RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
   moduleLazyReducer: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] :
     RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
@@ -723,12 +772,16 @@ interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefStat
   renderKeyClasses?: string[];
   compareProps?: Boolean;//default true
   setup?: IAnyObj;
+  mapProps?: <RefCtx extends IRefCtxBase>(refCtx: RefCtx) => IAnyObj;
 }
 
 interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
-  state?: IAnyFn | RefState;
+  state?: IAnyFnReturnObj | RefState;
 }
-
+interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
+  state?: IAnyFnReturnObj | RefState;
+  render: <RefCtx extends IRefCtxBase>(props: RefCtx | any) => ReactNode;
+}
 
 type WatchFn = (
   oldVal: any,
@@ -834,14 +887,39 @@ export function register<RootState, ModuleName extends keyof RootState, RefState
 ): (ReactCompType: typeof Component) => typeof ConcentComponent;
 
 //use decide it is RefCtx or RefCtxConnect
-export function registerDumb<RootState, ModuleName extends keyof RootState, RefCtxBase>(
+export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
-export function registerDumb<RootState, ModuleName extends keyof RootState, RefState, RefCtxBase>(
+export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
+export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+  ccClassKey?: string,
+): typeof Component;
+export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
+  ccClassKey?: string,
+): typeof Component;
+
+export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+  ccClassKey?: string,
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
+export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
+  ccClassKey?: string,
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
+export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+  ccClassKey?: string,
+): typeof Component;
+export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
+  ccClassKey?: string,
+): typeof Component;
 
 //use decide it is RefCtx or RefCtxConnect
 export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
@@ -888,7 +966,7 @@ export function executeAll(...args: any): void;
 
 export function appendState(moduleName: string, state: IAnyObj): void;
 
-export declare const cst: typeof ccCst;
+export declare const cst: CcCst;
 
 /**
  * user specify detail type when use
@@ -926,7 +1004,7 @@ declare type DefaultExport = {
   execute: typeof execute,
   executeAll: typeof executeAll,
   appendState: typeof appendState,
-  cst: typeof cst, 
+  cst: typeof cst,
 }
 
 declare let defaultExport: DefaultExport;
