@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react';
+import { string } from 'prop-types';
 
 export interface IAnyObj { [key: string]: any }
 export interface IAnyFn {
@@ -142,6 +143,9 @@ declare function refCtxSetState<FullState>(moduleName: string, state: Partial<Fu
 declare function refCtxSetState(state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: string, delay?: number): void;
 declare function refCtxSetState(moduleName: string, state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: string, delay?: number): void;
 
+declare function refCtxForceUpdate(cb?: (newFullState: IAnyObj) => void, renderKey?: string, delay?: number): void;
+declare function refCtxForceUpdate<FullState>(cb?: (newFullState: FullState) => void, renderKey?: string, delay?: number): void;
+
 declare function refCtxSetGlobalState<GlobalState>(state: Partial<GlobalState>, cb?: (newFullState: GlobalState) => void, renderKey?: string, delay?: number): void;
 declare function refCtxSetGlobalState(state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: string, delay?: number): void;
 
@@ -167,7 +171,7 @@ declare function syncCb<Val, ModuleState, FullState, RefCtx extends IRefCtxBase>
  * for class get get like this: this.ctx
  * for function get get like this: const ctx = useConcent('foo');
  */
-interface IRefCtxBase{
+interface IRefCtxBase {
   module: '$$default' | string | any;
   // module: '$$default';
   reducerModule: string;
@@ -211,6 +215,7 @@ interface IRefCtxBase{
   invoke: typeof refCtxInvoke;
   lazyInvoke: typeof refCtxInvoke;
   setState: typeof refCtxSetState;
+  forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;
   sync: (string: string, value?: typeof syncCb | any, renderKey?: string, delay?: string) => SyncReturn;
@@ -221,8 +226,8 @@ interface IRefCtxBase{
   settings: IAnyObj;
 }
 
-interface IRefCtxMBase<ModuleName extends any > extends IRefCtxBase{
-// interface IRefCtxMBase<ModuleName> extends IRefCtxBase{
+interface IRefCtxMBase<ModuleName extends any> extends IRefCtxBase {
+  // !!! let ModuleName extends (keyof RootState | keyof RootReducer) works
   module: ModuleName;
 }
 
@@ -242,7 +247,14 @@ export interface IRefCtx
   globalState: RootState['$$global'];
   state: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  moduleReducer: ModuleName extends keyof RootReducer ? RootReducer[ModuleName] : {};
+  moduleReducer: ModuleName extends keyof RootReducer ? (
+    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+  ) : {};
+  moduleLazyReducer: ModuleName extends keyof RootReducer ? (
+    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+  ) : {};
   props: Props;
   settings: Settings;
   refConnectedComputed: Rccu;
@@ -399,7 +411,17 @@ export interface IRefCtxRs<
   > extends IRefCtxMBase<ModuleName> {
   globalState: RootState['$$global'];
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  moduleReducer: ModuleName extends keyof RootReducer ? RootReducer[ModuleName] : {};
+  moduleReducer: ModuleName extends keyof RootReducer ? (
+    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName] :
+    // !!! concent will inject setState to moduleReducer
+    RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+  ) : {};
+  moduleLazyReducer: ModuleName extends keyof RootReducer ? (
+    RootReducer[ModuleName]['setState'] extends Function ? 
+    RootReducer[ModuleName] :
+    RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+  ) : {};
   state: RefState;
   props: Props;
   settings: Settings;
@@ -669,18 +691,33 @@ interface RunOptions {
 }
 
 interface IActionCtxBase {
-  targetModule: string;
+  targetModule: string | any;
   invoke: typeof refCtxInvoke;
   lazyInvoke: typeof refCtxInvoke;
   dispatch: typeof refCtxDispatch;
   lazyDispatch: typeof refCtxDispatch;
-  setState: (obj: IAnyObj) => Promise<IAnyObj>;
+  rootState: IAnyObj;
+  globalState: IAnyObj;
+  moduleState: IAnyObj;
+  moduleComputed: IAnyObj;
+  setState: (obj: IAnyObj, renderKey?: string, delay?: number) => Promise<IAnyObj>;
+  refCtx: IAnyObj;
 }
 export interface IActionCtx extends IActionCtxBase {
-  refCtx: {};
 }
 // constraint RefCtx must be an implement of IRefCtxBase
 export interface IActionCtxRef<RefCtx extends IRefCtxBase> extends IActionCtxBase {
+  refCtx: RefCtx;
+}
+export interface IActionCtxM<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu> extends IActionCtxBase {
+  targetModule: ModuleName;
+  moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : IAnyObj;
+  moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : IAnyObj;
+}
+export interface IActionCtxMRef<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu, RefCtx extends IRefCtxBase> extends IActionCtxBase {
+  targetModule: ModuleName;
+  moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : IAnyObj;
+  moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : IAnyObj;
   refCtx: RefCtx;
 }
 
@@ -711,7 +748,7 @@ export function registerDumb<RootState, ModuleName extends keyof RootState, RefC
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
-export function registerDumb<RootState,  ModuleName extends keyof RootState, RefState, RefCtxBase>(
+export function registerDumb<RootState, ModuleName extends keyof RootState, RefState, RefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;

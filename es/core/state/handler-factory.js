@@ -212,7 +212,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
     if (err) return handleCcFnError(err, __innerCb);
     const moduleState = getState(targetModule);
 
-    let reducerContext = {};
+    let actionContext = {};
     let isSourceCall = false;
     if (context) {
       isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
@@ -226,9 +226,9 @@ export function invokeWith(userLogicFn, executionContext, payload){
         targetRef, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
       );
 
-      const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+      // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
 
-      reducerContext = {
+      actionContext = {
         targetModule,
 
         invoke: makeInvokeHandler(targetRef, { chainId, oriChainId, chainId_depth_ }),
@@ -244,10 +244,10 @@ export function invokeWith(userLogicFn, executionContext, payload){
         //指的是目标模块的的moduleComputed
         moduleComputed: _computedValue[targetModule] || {},
 
-        //!!!指的是调用源cc类的connectedState
-        connectedState: sourceClassContext.connectedState,
-        //!!!指的是调用源cc类的connectedComputed
-        connectedComputed: sourceClassContext.connectedComputed,
+        // //!!!指的是调用源cc类的connectedState
+        // connectedState: sourceClassContext.connectedState,
+        // //!!!指的是调用源cc类的connectedComputed
+        // connectedComputed: sourceClassContext.connectedComputed,
 
         //利用dispatch调用自动生成的setState
         setState: state => dispatch('setState', state),
@@ -259,7 +259,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
     }
 
     send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
-    co.wrap(userLogicFn)(payload, moduleState, reducerContext).then(partialState => {
+    co.wrap(userLogicFn)(payload, moduleState, actionContext).then(partialState => {
 
       chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1
       const curDepth = chainId_depth_[chainId];

@@ -252,7 +252,7 @@ export default function (ref, params, liteLevel = 5) {
     };
     ctx.on = on;
     // on handler been effective in didMount by default, so user can call it in setup safely
-    // but if user want on been effective immediately, user can call onDirectly
+    // but if user want [on-op] been effective immediately, user can call onDirectly, but it may be dangerous!
     // or on(ev, fn, rkey, false)
     ctx.onDirectly = (event, handler) => {
       on(event, handler, false);

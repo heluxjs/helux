@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.57',
+      version: '1.5.58',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1754,8 +1754,7 @@
       getState = _ccContext$store$1.getState,
       storeSetState = _ccContext$store$1.setState,
       _reducer$1 = ccContext.reducer._reducer,
-      _computedValue$1 = ccContext.computed._computedValue,
-      ccClassKey_ccClassContext_$1 = ccContext.ccClassKey_ccClassContext_;
+      _computedValue$1 = ccContext.computed._computedValue;
   var me = makeError$2;
   var vbi$1 = verboseInfo$1;
 
@@ -2006,7 +2005,7 @@
     isStateModuleValid(targetModule, _curStateModule, cb, function (err, newCb) {
       if (err) return handleCcFnError(err, __innerCb);
       var moduleState = getState(targetModule);
-      var reducerContext = {};
+      var actionContext = {};
       var isSourceCall = false;
 
       if (context) {
@@ -2016,9 +2015,9 @@
 
         var _dispatch = makeDispatchHandler(targetRef, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
 
-        var lazyDispatch = makeDispatchHandler(targetRef, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
-        var sourceClassContext = ccClassKey_ccClassContext_$1[targetRef.ctx.ccClassKey];
-        reducerContext = {
+        var lazyDispatch = makeDispatchHandler(targetRef, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+
+        actionContext = {
           targetModule: targetModule,
           invoke: makeInvokeHandler(targetRef, {
             chainId: chainId,
@@ -2039,10 +2038,10 @@
           moduleState: moduleState,
           //指的是目标模块的的moduleComputed
           moduleComputed: _computedValue$1[targetModule] || {},
-          //!!!指的是调用源cc类的connectedState
-          connectedState: sourceClassContext.connectedState,
-          //!!!指的是调用源cc类的connectedComputed
-          connectedComputed: sourceClassContext.connectedComputed,
+          // //!!!指的是调用源cc类的connectedState
+          // connectedState: sourceClassContext.connectedState,
+          // //!!!指的是调用源cc类的connectedComputed
+          // connectedComputed: sourceClassContext.connectedComputed,
           //利用dispatch调用自动生成的setState
           setState: function setState(state) {
             return _dispatch('setState', state);
@@ -2061,7 +2060,7 @@
         chainId: chainId,
         fn: userLogicFn
       });
-      co.wrap(userLogicFn)(payload, moduleState, reducerContext).then(function (partialState) {
+      co.wrap(userLogicFn)(payload, moduleState, actionContext).then(function (partialState) {
         chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
 
         var curDepth = chainId_depth_[chainId];
