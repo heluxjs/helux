@@ -220,11 +220,9 @@ function HookCounter(){
   };
   const incD = () => {
     dispatch('inc');
-    // or ctx.moduleReducer.inc()
   };
   const decD = () => {
     dispatch('dec');
-    // or ctx.moduleReducer.dec()
   };
    return (
       <div style={{ padding: '12px', margin: '6px' }}>
@@ -254,9 +252,11 @@ const setup = ctx =>{
   };
   const incD = () => {
     dispatch('inc');
+    // or ctx.moduleReducer.inc()
   };
   const decD = () => {
     dispatch('dec');
+    // or ctx.moduleReducer.dec()
   };
   return {inc, dec, incD, decD};
 }
