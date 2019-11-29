@@ -781,10 +781,10 @@ interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefStat
 }
 
 interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
-  state?: IAnyFnReturnObj | RefState;
+  state?: IAnyFnReturnObj | IAnyObj;
 }
 interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
-  state?: IAnyFnReturnObj | RefState;
+  state?: IAnyFnReturnObj | IAnyObj;
   render: <RefCtx extends IRefCtxBase>(props: RefCtx | any) => ReactNode;
 }
 
