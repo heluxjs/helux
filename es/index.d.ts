@@ -1,4 +1,4 @@
-import { Component, ReactNode } from 'react';
+import { Component, ReactNode, ComponentClass, FC } from 'react';
 import { string } from 'prop-types';
 
 type CcCst = {
@@ -752,7 +752,11 @@ export interface IFnCtxMComm<ModuleName, RefCtx extends IRefCtxMBase<ModuleName>
   refCtx: RefCtx;
 }
 
-declare class ConcentComponent extends Component {
+declare class ConcentComponent<P> extends Component {
+  ctx: IRefCtxBase;
+
+  constructor(props: Readonly<P>);
+  constructor(props: P, context?: any);
 }
 
 interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefState> {
@@ -882,53 +886,53 @@ export interface IActionCtxMRef<ModuleName extends (keyof RootState | keyof Root
  * @param clearAll default false
  * @param warningErrForClearAll 
  */
-export function clearContextIfHot(clearAll: boolean, warningErrForClearAll?: string): void;
+export function clearContextIfHot(clearAll?: boolean, warningErrForClearAll?: string): void;
 
 export function run(storeConfig?: StoreConfig | null, runOptions?: RunOptions): void;
 
-export function register<RootState, ModuleName extends keyof RootState>(
+export function register<IProps, RootState, ModuleName extends keyof RootState>(
   registerOptions: String | RegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
-): (ReactCompType: typeof Component) => typeof ConcentComponent;
-export function register<RootState, ModuleName extends keyof RootState, RefState>(
+): (ReactComp: typeof Component) => ComponentClass<IProps>;
+export function register<IProps, RootState, ModuleName extends keyof RootState, RefState>(
   registerOptions: String | RegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
-): (ReactCompType: typeof Component) => typeof ConcentComponent;
+): (ReactComp: typeof Component) => ComponentClass<IProps>;
 
 //use decide it is RefCtx or RefCtxConnect
-export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
-): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
-export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => ComponentClass<IProps>;
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
-): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
-export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => ComponentClass<IProps>;
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
-): typeof Component;
-export function registerDumb<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+): ComponentClass<IProps>;
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
-): typeof Component;
+): ComponentClass<IProps>;
 
-export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
-): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
-export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => FC<IProps>;
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
-): (renderFn: (props: RefCtxBase | any) => ReactNode) => typeof Component;
-export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
+): (renderFn: (props: RefCtxBase | any) => ReactNode) => FC<IProps>;
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtxBase extends IRefCtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
-): typeof Component;
-export function registerHookComp<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
+): FC<IProps>;
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtxBase extends IRefCtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
-): typeof Component;
+): FC<IProps>;
 
 //use decide it is RefCtx or RefCtxConnect
 export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
