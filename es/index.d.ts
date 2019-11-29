@@ -53,7 +53,7 @@ export interface IAnyFn {
   (...args: any): any;
 }
 export interface IAnyFnReturnObj {
-  (...args: any): IAnyFnInObj;
+  (...args: any): IAnyObj;
 }
 export interface IAnyFnInObj { [key: string]: IAnyFn }
 
@@ -760,19 +760,20 @@ interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefStat
   watchedKeys?: (keyof RootState[ModuleName])[];
   storedKeys?: (Exclude<keyof RefState, keyof RootState[ModuleName]>)[];
   connect?: (keyof RootState | '$$global' | '$$default')[] |
-  // currently I do not know how to pass ${moduleName} to evaluate target type
+  // currently I do not know how to pass ${moduleName} to evaluate target type in object value
   // something like (keyof RootState[moduleName] )[] but it is wrong writing
   { [moduleName in (keyof RootState | '$$global' | '$$default')]?: TStar | string[] };
   tag?: string;
-  persistStoredKeys?: Boolean;
+  persistStoredKeys?: boolean;
   lite?: 1 | 2 | 3 | 4;
   reducerModule?: string;// defuault equal ${module}
-  isPropsProxy?: Boolean;// default false
-  isSingle?: Boolean; //default false
+  isPropsProxy?: boolean;// default false
+  isSingle?: boolean; //default false
   renderKeyClasses?: string[];
-  compareProps?: Boolean;//default true
+  compareProps?: boolean;//default true
   setup?: IAnyObj;
   mapProps?: <RefCtx extends IRefCtxBase>(refCtx: RefCtx) => IAnyObj;
+  props?: IAnyObj;
 }
 
 interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
@@ -829,8 +830,16 @@ interface Plugin {
   install: (on: PluginOn) => { name: string };
 }
 interface RunOptions {
-  middlewares: ((stateInfo: StateInfo, next: Function) => void)[];
-  plugins: Plugin[];
+  middlewares?: ((stateInfo: StateInfo, next: Function) => void)[];
+  plugins?: Plugin[];// default is false
+  isHot?: boolean;// default is false
+  isStrict?: boolean;
+  errorHandler?: (err: Error) => void;
+  reducer?: IAnyFnInObj;// deprecated
+  bindCtxToMethod?: boolean;
+  computedCompare?: boolean;// default is true
+  watchCompare?: boolean;// default is true
+  watchImmediate?: boolean;// default is false
 }
 
 interface IActionCtxBase {
@@ -976,8 +985,8 @@ export declare const cst: CcCst;
  * 
  * const typedReducer = reducer as RootReducer;
  */
-export declare const reducer: any;
-export declare const lazyReducer: any;
+export declare const reducer: IAnyFnInObj;
+export declare const lazyReducer: IAnyFnInObj;
 
 declare type DefaultExport = {
   clearContextIfHot: typeof clearContextIfHot,
