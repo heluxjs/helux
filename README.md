@@ -211,7 +211,7 @@ const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
 import { useConcent } from 'concent';
 
 function HookCounter(){
-  const {state, setState, dispatch} = useConcent('counter');
+  const { setState, dispatch } = useConcent('counter');
   const inc = () => {
     setState({ count: ctx.state.count + 1 });
   };
@@ -252,9 +252,11 @@ const setup = ctx =>{
   };
   const incD = () => {
     dispatch('inc');
+    // or ctx.moduleReducer.inc()
   };
   const decD = () => {
     dispatch('dec');
+    // or ctx.moduleReducer.dec()
   };
   return {inc, dec, incD, decD};
 }
