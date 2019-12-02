@@ -812,6 +812,8 @@
     moduleName_ccClassKeys_: {},
     // 映射好模块的状态所有key并缓存住，用于提高性能
     moduleName_stateKeys_: {},
+    // 记录模块是不是通过configure配置的
+    moduleName_isConfigured_: {},
     // 记录某个模块作为其他被哪些ccClass连接
     connectedModuleName_ccClassKeys_: {},
 
@@ -906,7 +908,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.63',
+      version: '1.5.65',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4927,11 +4929,14 @@
       recomputed = false;
     }
 
-    clearObject(ccContext.globalStateKeys);
-    clearObject(ccContext.reducer._reducer);
-    clearObject(ccContext.store._state, [MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER], {});
-    clearObject(ccContext.computed._computedDep);
-    clearObject(ccContext.computed._computedValue);
+    clearObject(ccContext.globalStateKeys); // 在codesandbox里，按标准模式组织的代码，如果只是修改了runConcent里相关联的代码，pages目录下的configure调用不会被再次触发的
+    // 所以是配置的模块则不参与清理，防止报错
+
+    var toExcludedModules = okeys(ccContext.moduleName_isConfigured_).concat([MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER]);
+    clearObject(ccContext.reducer._reducer, toExcludedModules);
+    clearObject(ccContext.store._state, toExcludedModules, {});
+    clearObject(ccContext.computed._computedDep, toExcludedModules);
+    clearObject(ccContext.computed._computedValue, toExcludedModules);
     clearObject(ccContext.watch._watchDep);
     clearObject(ccContext.middlewares);
     clearCachedData();
@@ -5225,6 +5230,7 @@
       });
     }
 
+    ccContext.moduleName_isConfigured_[module] = true;
     send(SIG_MODULE_CONFIGURED, module);
   }
 

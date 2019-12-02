@@ -126,5 +126,6 @@ export default function(module, config, option = {}) {
     });
   }
 
+  ccContext.moduleName_isConfigured_[module] = true;
   send(SIG_MODULE_CONFIGURED, module);
 }

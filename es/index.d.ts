@@ -52,6 +52,9 @@ export interface IAnyObj { [key: string]: any }
 export interface IAnyFn {
   (...args: any): any;
 }
+export interface IAnyFnPromise {
+  (...args: any): any | Promise<any>;
+}
 export interface IAnyFnReturnObj {
   (...args: any): IAnyObj;
 }
@@ -63,14 +66,14 @@ interface IComputedFnDesc {
   depKeys?: string[];
 }
 interface IReducerFn {
-  (payload: any, moduleState: any, actionCtx: IActionCtx): any;
+  (payload: any, moduleState: any, actionCtx: IActionCtx): any | Promise<any>;
 }
 
 // !!!use infer
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
 export type ComputeValType<T> = {
-  readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> : (T[K] extends IComputedFnDesc ? ReturnType<T[K]['fn']> : unknown);
+  readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> : (T[K] extends IComputedFnDesc ? ReturnType<T[K]['fn']> : never);
 }
 export type ReducerType<T> = {
   // readonly [K in keyof T]: T[K] extends IAnyFn ? (payload: Parameters<T[K]>[0]) => Promise<ReturnType<T[K]>> : unknown;
@@ -266,18 +269,18 @@ declare function refCtxWatch(multiWatch: {
 }): void;
 declare function refCtxWatch(multiWatch: {
   [retKey: string]: {
-    fn: <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => void,
+    fn: <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => boolean | void,
     depKeys?: string[],
     compare?: boolean,
     immediate?: boolean,
   }
 }): void;
 
-type ClearEffect = IAnyFn | void;
+type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
 declare function refCtxEffect<RefCtx extends IRefCtxBase>(cb: (refCtx: RefCtx, isCalledInDidMount: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
-declare function refCtxAux(auxMethodName: string, handler: IAnyFn): void;
+declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 
 declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj;
 declare function syncCb<Val, ModuleState, RefCtx extends IRefCtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: ModuleState, refCtx: RefCtx }): IAnyObj;
@@ -337,7 +340,7 @@ interface IRefCtxBase {
   watch: typeof refCtxWatch;
   effect: typeof refCtxEffect;
   aux: typeof refCtxAux;
-  execute: (handler: IAnyFn) => void;
+  execute: (handler: IAnyFnPromise) => void;
 
   on: typeof refCtxOn;
   emit: typeof refCtxEmit;

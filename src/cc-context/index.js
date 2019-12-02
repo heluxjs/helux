@@ -134,6 +134,9 @@ const ccContext = {
   // 映射好模块的状态所有key并缓存住，用于提高性能
   moduleName_stateKeys_: {
   },
+  // 记录模块是不是通过configure配置的
+  moduleName_isConfigured_: {
+  },
   // 记录某个模块作为其他被哪些ccClass连接
   connectedModuleName_ccClassKeys_: {
 
@@ -237,7 +240,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.64',
+    version: '1.5.65',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',
