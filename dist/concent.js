@@ -908,7 +908,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.65',
+      version: '1.5.66',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3484,7 +3484,7 @@
     if (storedKeys !== undefined && storedKeys.length > 0) {
       if (!ccKey) throw me$4(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi$4("ccClassKey[" + ccClassKey + "]"));
       _storedKeys = storedKeys;
-    } // pic ref defined tag first, register tag second
+    } // pick ref defined tag first, register tag second
 
 
     var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, ccOption.tag || tag); // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
@@ -3601,7 +3601,15 @@
     }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
     ref.ctx = ctx;
     ref.setState = setState;
-    ref.forceUpdate = forceUpdate; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
+    ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
+
+    ref.initState = function (initState) {
+      if (!ref.__$$isBeforeFirstRender) throw new Error("ctx.initState can only been called before first render period!");
+      if (!isPlainJsonObject(state)) throw new Error("state must be a plain json object!");
+      ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
+      ctx.prevState = ctx.state = ref.state;
+    }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
+
 
     var dispatch$$1 = makeDispatchHandler(ref, false, stateModule, stateModule);
     ctx.dispatch = dispatch$$1;
@@ -3847,6 +3855,7 @@
       _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller;
   function beforeMount (ref, setup, bindCtxToMethod) {
     ref.__$$isUnmounted = false;
+    ref.__$$isBeforeFirstRender = true;
     var ctx = ref.ctx;
     var connectedReducer = ctx.connectedReducer,
         connectedLazyReducer = ctx.connectedLazyReducer,
@@ -4005,6 +4014,7 @@
   }
 
   function didMount (ref) {
+    ref.__$$isBeforeFirstRender = false;
     var _ref$ctx = ref.ctx,
         module = _ref$ctx.module,
         ccClassKey = _ref$ctx.ccClassKey,

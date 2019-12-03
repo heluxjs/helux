@@ -1,3 +1,8 @@
+#### 2019-12-03
+1.5.66 发布
+* 新增ctx.initState接口，该接口只允许在setup调用，用作动态的初始化组件state
+* type新增mapped描述
+
 #### 2019-11-22
 1.5.49 发布
 * 支持register接口传入setup，注意传入setup后class内部不能定义$$setup，否则会抛出错误

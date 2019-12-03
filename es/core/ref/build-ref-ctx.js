@@ -59,7 +59,7 @@ export default function (ref, params, liteLevel = 5) {
     _storedKeys = storedKeys;
   }
 
-  // pic ref defined tag first, register tag second
+  // pick ref defined tag first, register tag second
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, ccOption.tag || tag);
 
   // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
@@ -193,6 +193,14 @@ export default function (ref, params, liteLevel = 5) {
   ref.ctx = ctx;
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
+
+  // allow user have a chance to define state in setup block;
+  ref.initState = (initState) => {
+    if (!ref.__$$isBeforeFirstRender) throw new Error(`ctx.initState can only been called before first render period!`);
+    if (!util.isPlainJsonObject(state)) throw new Error(`state must be a plain json object!`);
+    ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
+    ctx.prevState = ctx.state = ref.state;
+  }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
   const dispatch = hf.makeDispatchHandler(ref, false, stateModule, stateModule);

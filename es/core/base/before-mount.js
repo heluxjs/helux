@@ -7,6 +7,7 @@ const { reducer: { _reducerModule_fnNames_, _reducerCaller, _lazyReducerCaller }
 
 export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
+  ref.__$$isBeforeFirstRender = true;
 
   const ctx = ref.ctx;
   const { connectedReducer, connectedLazyReducer, moduleReducer, moduleLazyReducer, dispatch, lazyDispatch, connect, module } = ctx;
