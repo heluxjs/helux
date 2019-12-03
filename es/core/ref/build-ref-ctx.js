@@ -195,7 +195,7 @@ export default function (ref, params, liteLevel = 5) {
   ref.forceUpdate = forceUpdate;
 
   // allow user have a chance to define state in setup block;
-  ref.initState = (initState) => {
+  ctx.initState = (initState) => {
     if (!ref.__$$isBeforeFirstRender) throw new Error(`ctx.initState can only been called before first render period!`);
     if (!util.isPlainJsonObject(state)) throw new Error(`state must be a plain json object!`);
     ref.state = Object.assign({}, state, initState, refStoredState, moduleState);

@@ -334,10 +334,8 @@
     }
 
     if (Array.isArray(object)) object.length = 0;else Object.keys(object).forEach(function (key) {
-      if (!excludeKeys.includes(key)) {
-        delete object[key];
-      } else {
-        if (reset) object[key] = reset;
+      if (excludeKeys.includes(key)) ; else {
+        if (reset) object[key] = reset;else delete object[key];
       }
     });
   }
@@ -908,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.67',
+      version: '1.5.69',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3630,7 +3628,7 @@
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
 
-    ref.initState = function (initState) {
+    ctx.initState = function (initState) {
       if (!ref.__$$isBeforeFirstRender) throw new Error("ctx.initState can only been called before first render period!");
       if (!isPlainJsonObject(state)) throw new Error("state must be a plain json object!");
       ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
