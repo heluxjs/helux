@@ -203,14 +203,20 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
-  const dispatch = hf.makeDispatchHandler(ref, false, stateModule, stateModule);
+  const dispatch = hf.makeDispatchHandler(ref, false, false, stateModule, stateModule);
   ctx.dispatch = dispatch;
 
-
   if (liteLevel > 1) {// level 2, assign these mod data api
-    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, stateModule, stateModule);
+    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, false, stateModule, stateModule);
+    ctx.silentDispatch = hf.makeDispatchHandler(ref, false, true, stateModule, stateModule);
+    ctx.dispatchLazy = ctx.lazyDispatch;// alias of lazyDispatch
+    ctx.dispatchSilent = ctx.silentDispatch;// alias of silentDispatch
+
     ctx.invoke = hf.makeInvokeHandler(ref);
     ctx.lazyInvoke = hf.makeInvokeHandler(ref, { isLazy: true });
+    ctx.silentInvoke = hf.makeInvokeHandler(ref, { isLazy: false, isSilent: true });
+    ctx.invokeLazy = ctx.lazyInvoke;// alias of lazyInvoke
+    ctx.invokeSilent = ctx.silentInvoke;// alias of silentInvoke
 
     ctx.setGlobalState = (state, reactCallback, renderKey, delay) => {
       _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
