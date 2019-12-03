@@ -345,10 +345,19 @@ interface IRefCtxBase{
   on: typeof refCtxOn;
   emit: typeof refCtxEmit;
   off: typeof refCtxOff;
+
   dispatch: typeof refCtxDispatch;
+  dispatchLazy: typeof refCtxDispatch;
+  dispatchSilent: typeof refCtxDispatch;
   lazyDispatch: typeof refCtxDispatch;
+  silentDispatch: typeof refCtxDispatch;
+
   invoke: typeof refCtxInvoke;
+  invokeLazy: typeof refCtxInvoke;
+  invokeSilent: typeof refCtxInvoke;
   lazyInvoke: typeof refCtxInvoke;
+  silentInvoke: typeof refCtxInvoke;
+
   reactSetState: <P, S, K extends keyof S>(
     state: ((prevState: Readonly<S>, props: Readonly<P>) => (Pick<S, K> | S | null)) | (Pick<S, K> | S | null),
     callback?: () => void
@@ -1010,9 +1019,15 @@ export function getGlobalComputed<T>(): T;
 
 export function set(keyPath: string, value: any, renderKey?: string, delay?: number): void;
 
-export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number): Promise<T>;
+interface IDispatchOptions {
+  ccClassKey?: string; 
+  ccKey?: string; 
+  throwError?: boolean; 
+  isSilent?: boolean;
+}
+export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?:IDispatchOptions): Promise<T>;
 
-export function lazyDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number): Promise<T>;
+export function lazyDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?:IDispatchOptions): Promise<T>;
 
 export declare const emit: typeof refCtxEmit;
 

@@ -908,7 +908,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.66',
+      version: '1.5.67',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1869,7 +1869,8 @@
         module = option.module,
         chainId = option.chainId,
         oriChainId = option.oriChainId,
-        chainId_depth_ = option.chainId_depth_;
+        chainId_depth_ = option.chainId_depth_,
+        isSilent = option.isSilent;
     return __promisifiedInvokeWith(userLogicFn, {
       targetRef: targetRef,
       context: true,
@@ -1880,7 +1881,8 @@
       renderKey: renderKey,
       chainId: chainId,
       oriChainId: oriChainId,
-      chainId_depth_: chainId_depth_
+      chainId_depth_: chainId_depth_,
+      isSilent: isSilent
     }, payload);
   }
 
@@ -1938,6 +1940,8 @@
         chainId = _ref.chainId,
         oriChainId = _ref.oriChainId,
         isLazy = _ref.isLazy,
+        _ref$isSilent = _ref.isSilent,
+        isSilent = _ref$isSilent === void 0 ? false : _ref$isSilent,
         _ref$chainId_depth_ = _ref.chainId_depth_,
         chainId_depth_ = _ref$chainId_depth_ === void 0 ? {} : _ref$chainId_depth_;
 
@@ -1951,6 +1955,7 @@
         targetRef: targetRef,
         calledBy: INVOKE,
         module: targetRef.ctx.module,
+        isSilent: isSilent,
         chainId: _chainId,
         oriChainId: _oriChainId,
         chainId_depth_: chainId_depth_,
@@ -2003,7 +2008,8 @@
         renderKey = executionContext.renderKey,
         chainId = executionContext.chainId,
         oriChainId = executionContext.oriChainId,
-        chainId_depth_ = executionContext.chainId_depth_;
+        chainId_depth_ = executionContext.chainId_depth_,
+        isSilent = executionContext.isSilent;
     isStateModuleValid(targetModule, _curStateModule, cb, function (err, newCb) {
       if (err) return handleCcFnError(err, __innerCb);
       var moduleState = getState(targetModule);
@@ -2015,25 +2021,40 @@
 
         chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
-        var _dispatch = makeDispatchHandler(targetRef, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
+        var _dispatch = makeDispatchHandler(targetRef, false, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
 
-        var lazyDispatch = makeDispatchHandler(targetRef, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+        var silentDispatch = makeDispatchHandler(targetRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
+        var lazyDispatch = makeDispatchHandler(targetRef, true, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+        //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
 
+        var invoke = makeInvokeHandler(targetRef, {
+          chainId: chainId,
+          oriChainId: oriChainId,
+          chainId_depth_: chainId_depth_
+        });
+        var lazyInvoke = makeInvokeHandler(targetRef, {
+          isLazy: true,
+          oriChainId: oriChainId,
+          chainId_depth_: chainId_depth_
+        });
+        var silentInvoke = makeInvokeHandler(targetRef, {
+          isLazy: false,
+          isSilent: true,
+          oriChainId: oriChainId,
+          chainId_depth_: chainId_depth_
+        });
         actionContext = {
           targetModule: targetModule,
-          invoke: makeInvokeHandler(targetRef, {
-            chainId: chainId,
-            oriChainId: oriChainId,
-            chainId_depth_: chainId_depth_
-          }),
-          //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
-          lazyInvoke: makeInvokeHandler(targetRef, {
-            isLazy: true,
-            oriChainId: oriChainId,
-            chainId_depth_: chainId_depth_
-          }),
+          invoke: invoke,
+          lazyInvoke: lazyInvoke,
+          silentInvoke: silentInvoke,
+          invokeLazy: lazyInvoke,
+          invokeSilent: silentInvoke,
           dispatch: _dispatch,
           lazyDispatch: lazyDispatch,
+          silentDispatch: silentDispatch,
+          dispatchLazy: lazyDispatch,
+          dispatchSilent: silentDispatch,
           rootState: getState(),
           globalState: getState(MODULE_GLOBAL),
           //指的是目标模块的state
@@ -2055,43 +2076,49 @@
         };
       }
 
-      send(SIG_FN_START, {
-        isSourceCall: isSourceCall,
-        calledBy: calledBy,
-        module: targetModule,
-        chainId: chainId,
-        fn: userLogicFn
-      });
-      co.wrap(userLogicFn)(payload, moduleState, actionContext).then(function (partialState) {
-        chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
-
-        var curDepth = chainId_depth_[chainId];
-        var commitStateList = [];
-        send(SIG_FN_END, {
+      if (isSilent === false) {
+        send(SIG_FN_START, {
           isSourceCall: isSourceCall,
           calledBy: calledBy,
           module: targetModule,
           chainId: chainId,
           fn: userLogicFn
-        }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
+        });
+      }
 
-        if (isChainIdLazy(chainId)) {
-          //来自于惰性派发的调用
-          if (curDepth > 1) {
-            //某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
-            setChainState(chainId, targetModule, partialState);
-          } else {
-            // chainDepth === 1, 合并状态一次性提交到store并派发到组件实例
-            if (isChainExited(chainId)) ; else {
-              commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
-              removeChainState(chainId);
-            }
-          }
-        } else {
-          commitStateList = [{
+      co.wrap(userLogicFn)(payload, moduleState, actionContext).then(function (partialState) {
+        chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
+
+        var curDepth = chainId_depth_[chainId];
+        var commitStateList = [];
+
+        if (isSilent === false) {
+          send(SIG_FN_END, {
+            isSourceCall: isSourceCall,
+            calledBy: calledBy,
             module: targetModule,
-            state: partialState
-          }];
+            chainId: chainId,
+            fn: userLogicFn
+          }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
+
+          if (isChainIdLazy(chainId)) {
+            //来自于惰性派发的调用
+            if (curDepth > 1) {
+              //某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
+              setChainState(chainId, targetModule, partialState);
+            } else {
+              // chainDepth === 1, 合并状态一次性提交到store并派发到组件实例
+              if (isChainExited(chainId)) ; else {
+                commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
+                removeChainState(chainId);
+              }
+            }
+          } else {
+            commitStateList = [{
+              module: targetModule,
+              state: partialState
+            }];
+          }
         }
 
         commitStateList.forEach(function (v) {
@@ -2099,7 +2126,7 @@
             changeRefState(v.state, {
               renderKey: renderKey,
               module: v.module,
-              cb: newCb,
+              reactCallback: newCb,
               type: type,
               reducerModule: reducerModule,
               calledBy: calledBy,
@@ -2127,6 +2154,7 @@
         inputModule = _ref2.module,
         inputReducerModule = _ref2.reducerModule,
         renderKey = _ref2.renderKey,
+        isSilent = _ref2.isSilent,
         type = _ref2.type,
         payload = _ref2.payload,
         reactCallback = _ref2.cb,
@@ -2152,27 +2180,25 @@
     // if (errMsg) return justWarning(errMsg);
 
 
-    isStateModuleValid(inputModule, targetRef.ctx.module, reactCallback, function (err, newCb) {
-      if (err) return __innerCb(err);
-      var executionContext = {
-        targetRef: targetRef,
-        module: inputModule,
-        reducerModule: inputReducerModule,
-        type: type,
-        cb: newCb,
-        context: true,
-        __innerCb: __innerCb,
-        calledBy: DISPATCH,
-        delay: delay,
-        renderKey: renderKey,
-        chainId: chainId,
-        oriChainId: oriChainId,
-        chainId_depth_: chainId_depth_
-      };
-      invokeWith(reducerFn, executionContext, payload);
-    });
+    var executionContext = {
+      targetRef: targetRef,
+      module: inputModule,
+      reducerModule: inputReducerModule,
+      type: type,
+      cb: reactCallback,
+      context: true,
+      __innerCb: __innerCb,
+      calledBy: DISPATCH,
+      delay: delay,
+      renderKey: renderKey,
+      isSilent: isSilent,
+      chainId: chainId,
+      oriChainId: oriChainId,
+      chainId_depth_: chainId_depth_
+    };
+    invokeWith(reducerFn, executionContext, payload);
   }
-  function makeDispatchHandler(targetRef, isLazy, defaultModule, defaultReducerModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
+  function makeDispatchHandler(targetRef, isLazy, isSilent, defaultModule, defaultReducerModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
   ) {
     if (defaultRenderKey === void 0) {
       defaultRenderKey = '';
@@ -2298,6 +2324,7 @@
           __innerCb: _promiseErrorHandler(resolve, reject),
           delay: _delay,
           renderKey: _renderKey,
+          isSilent: isSilent,
           chainId: _chainId,
           oriChainId: _oriChainId,
           chainId_depth_: chainId_depth_ // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
@@ -3611,16 +3638,28 @@
     }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
 
 
-    var dispatch$$1 = makeDispatchHandler(ref, false, stateModule, stateModule);
+    var dispatch$$1 = makeDispatchHandler(ref, false, false, stateModule, stateModule);
     ctx.dispatch = dispatch$$1;
 
     if (liteLevel > 1) {
       // level 2, assign these mod data api
-      ctx.lazyDispatch = makeDispatchHandler(ref, true, stateModule, stateModule);
+      ctx.lazyDispatch = makeDispatchHandler(ref, true, false, stateModule, stateModule);
+      ctx.silentDispatch = makeDispatchHandler(ref, false, true, stateModule, stateModule);
+      ctx.dispatchLazy = ctx.lazyDispatch; // alias of lazyDispatch
+
+      ctx.dispatchSilent = ctx.silentDispatch; // alias of silentDispatch
+
       ctx.invoke = makeInvokeHandler(ref);
       ctx.lazyInvoke = makeInvokeHandler(ref, {
         isLazy: true
       });
+      ctx.silentInvoke = makeInvokeHandler(ref, {
+        isLazy: false,
+        isSilent: true
+      });
+      ctx.invokeLazy = ctx.lazyInvoke; // alias of lazyInvoke
+
+      ctx.invokeSilent = ctx.silentInvoke; // alias of silentInvoke
 
       ctx.setGlobalState = function (state, reactCallback, renderKey, delay) {
         _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
@@ -4480,7 +4519,9 @@
     var _ref = _temp === void 0 ? {} : _temp,
         ccClassKey = _ref.ccClassKey,
         ccKey = _ref.ccKey,
-        throwError = _ref.throwError;
+        throwError = _ref.throwError,
+        _ref$isSilent = _ref.isSilent,
+        isSilent = _ref$isSilent === void 0 ? false : _ref$isSilent;
 
     if (action === undefined && payLoadWhenActionIsString === undefined) {
       throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload");
@@ -4513,7 +4554,7 @@
           ref = pickOneRef();
         }
 
-        dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
+        if (isSilent === true) dispatchFn = ref.ctx.silentDispatch;else dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
       }
 
       if (typeof action === 'string' && action.startsWith('*')) {

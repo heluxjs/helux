@@ -4,7 +4,7 @@ import pickOneRef from '../../core/ref/pick-one-ref';
 
 const { makeUniqueCcKey, justWarning } = util;
 
-export default function (isLazy, action, payLoadWhenActionIsString, renderKey = '', delay, { ccClassKey, ccKey, throwError } = {}) {
+export default function (isLazy, action, payLoadWhenActionIsString, renderKey = '', delay, { ccClassKey, ccKey, throwError, isSilent = false } = {}) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {
     throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload`);
   }
@@ -32,7 +32,8 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
         ref = pickOneRef();
       }
 
-      dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
+      if (isSilent === true) dispatchFn = ref.ctx.silentDispatch;
+      else dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
     }
 
     if (typeof action === 'string' && action.startsWith('*')) {

@@ -1,4 +1,10 @@
 #### 2019-12-03
+1.5.67 发布
+* 支持silentDispatch(别名dispatchSilent), 调用此方法，仅执行reducer函数而不提交状态到store并分发状态到其他实例
+* 支持silentInvoke(别名invokeSilent), 作用同silentDispatch
+* 为lazyDispatch新增别名dispatchLazy
+
+#### 2019-12-03
 1.5.66 发布
 * 新增ctx.initState接口，该接口只允许在setup调用，用作动态的初始化组件state
 * type新增mapped描述
