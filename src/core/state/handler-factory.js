@@ -316,15 +316,12 @@ export function dispatch({
   // const errMsg = util.isCcActionValid({ type, payload });
   // if (errMsg) return justWarning(errMsg);
 
-  isStateModuleValid(inputModule, targetRef.ctx.module, reactCallback, (err, newCb) => {
-    if (err) return __innerCb(err);
-    const executionContext = {
-      targetRef, module: inputModule, reducerModule: inputReducerModule, type,
-      cb: newCb, context: true, __innerCb, calledBy: DISPATCH, delay, renderKey,
-      chainId, oriChainId, chainId_depth_
-    };
-    invokeWith(reducerFn, executionContext, payload);
-  });
+  const executionContext = {
+    targetRef, module: inputModule, reducerModule: inputReducerModule, type,
+    cb: newCb, context: true, __innerCb, calledBy: DISPATCH, delay, renderKey,
+    chainId, oriChainId, chainId_depth_
+  };
+  invokeWith(reducerFn, executionContext, payload);
 }
 
 export function makeDispatchHandler(
