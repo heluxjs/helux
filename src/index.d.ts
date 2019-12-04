@@ -317,7 +317,8 @@ interface IRefCtxBase{
   readonly mapped: IAnyObj;
   readonly stateKeys: string[];
 
-  readonly state: IAnyObj;
+  // readonly state: IAnyObj;
+  state: IAnyObj;
   readonly prevState: IAnyObj;
   readonly props: IAnyObj;
   readonly moduleState: IAnyObj;
