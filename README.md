@@ -115,10 +115,10 @@ import { register, run } from 'concent';
 
 run({
   counter: {// 定义counter模块
-    state: {// 定义state
+    state: {// 【必需】，定义state
       count: 0,
     },
-    reducer: {// 定义reducer，可选，书写修改模块状态逻辑
+    reducer: {// 【可选】定义reducer，书写修改模块状态逻辑
       inc(payload=1, moduleState) {
         return { count: moduleState.count + payload };
       },
@@ -130,17 +130,17 @@ run({
         await actionCtx.dispatch('dec', 3);
       }
     },
-    computed:{// 定义computed,可选，当对应的stateKey发生变化时触发计算函数，结果将被缓存
+    computed:{// 【可选】定义computed，当对应的stateKey发生变化时触发计算函数，结果将被缓存
       count(newVal, oldVal){
         return newVal * 2;
       }
     },
-    watch:{// 定义computed,可选，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
+    watch:{// 【可选】定义computed，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
       count(newVal, oldVal){
         console.log(`count changed to ${newVal}`);
       }
     },
-    init: async ()=>{// 模块状态的初始化函数，可选，当状态需要异步的定义，且与具体挂载的组件无关时定义此项
+    init: async ()=>{// 【可选】模块状态的初始化函数，当状态需要异步的定义，且与具体挂载的组件无关时定义此项
       const state = await api.fetchState();
       return state;
     }
@@ -151,7 +151,7 @@ run({
 ```
 |____models             # business models
 | |____index.js
-| |____global
+| |____counter
 | | |____index.js
 | | |____reducer.js     # change state methods(optional)
 | | |____computed.js    # computed methods(optional)
