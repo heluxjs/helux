@@ -130,12 +130,12 @@ run({
         await actionCtx.dispatch('dec', 3);
       }
     },
-    computed:{// 【可选】定义computed，当对应的stateKey发生变化时触发计算函数，结果将被缓存
+    computed:{// 【可选】定义模块computed，当对应的stateKey发生变化时触发计算函数，结果将被缓存
       count(newVal, oldVal){
         return newVal * 2;
       }
     },
-    watch:{// 【可选】定义computed，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
+    watch:{// 【可选】定义模块watch，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
       count(newVal, oldVal){
         console.log(`count changed to ${newVal}`);
       }
