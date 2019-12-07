@@ -245,7 +245,8 @@ const setup = ctx=>{
   return {inc, dec, incD, decD};
 }
 
-//定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
+// 定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
+// 如不定义mapProps, Concent将直接透传ctx给render函数，即 const UI = ctx => <div>ui</div>
 const mapProps = ctx=>{
   return {count:ctx.state.count, ...ctx.settings};
 }
