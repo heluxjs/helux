@@ -176,6 +176,19 @@ export function makeInvokeHandler(targetRef, { chainId, oriChainId, isLazy, isSi
 
     const err = new Error(`param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:[module:string, fn:function], ...args:any[])`);
     if (firstParamType === 'function') {
+      // 可能用户直接使用invoke调用了reducer函数
+      if (firstParam.__fnName) firstParam.name = firstParam.__fnName;
+      
+      // 这里不修改option.module，concent明确定义了dispatch和invoke规则
+      /**
+        invoke调用函数引用时
+        无论组件有无注册模块，一定走调用方模块
+
+        dispatch调用函数引用时
+        优先走函数引用的模块（此时函数是一个reducer函数），没有(此函数不是reducer函数)则走调用方的模块并降级为invoke调用
+       */
+      // if (firstParam.__stateModule) option.module = firstParam.__stateModule;
+
       return __invoke(firstParam, option, payload);
     } else if (firstParamType === 'object') {
       let _fn, _module;
@@ -373,7 +386,7 @@ export function makeDispatchHandler(
       let targetFirstParam = paramObj;
       if (paramObjType === 'function') {
         const fnName = paramObj.__fnName;
-        if (!fnName) {
+        if (!fnName) {// 此函数是一个普通函数，没有配置到某个模块的reducer里，降级为invoke调用
           return callInvoke();
           // throw new Error('you are calling a unnamed function!!!');
         }

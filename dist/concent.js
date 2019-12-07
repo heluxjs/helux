@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.72',
+      version: '1.5.75',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1963,6 +1963,17 @@
       var err = new Error("param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:[module:string, fn:function], ...args:any[])");
 
       if (firstParamType === 'function') {
+        // 可能用户直接使用invoke调用了reducer函数
+        if (firstParam.__fnName) firstParam.name = firstParam.__fnName; // 这里不修改option.module，concent明确定义了dispatch和invoke规则
+
+        /**
+          invoke调用函数引用时
+          无论组件有无注册模块，一定走调用方模块
+           dispatch调用函数引用时
+          优先走函数引用的模块（此时函数是一个reducer函数），没有(此函数不是reducer函数)则走调用方的模块并降级为invoke调用
+         */
+        // if (firstParam.__stateModule) option.module = firstParam.__stateModule;
+
         return __invoke(firstParam, option, payload);
       } else if (firstParamType === 'object') {
         var _fn, _module;
@@ -2262,6 +2273,7 @@
           var fnName = paramObj.__fnName;
 
           if (!fnName) {
+            // 此函数是一个普通函数，没有配置到某个模块的reducer里，降级为invoke调用
             return callInvoke(); // throw new Error('you are calling a unnamed function!!!');
           }
 
@@ -4656,18 +4668,20 @@
         _reducerCaller = _ccContext$reducer._reducerCaller,
         _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller,
         _reducerFnName_fullFnNames_ = _ccContext$reducer._reducerFnName_fullFnNames_,
-        _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_;
-    _reducer[module] = reducer;
+        _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_; // 防止同一个reducer被载入到不同模块时，setState附加逻辑不正确
+
+    var newReducer = Object.assign({}, reducer);
+    _reducer[module] = newReducer;
     var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module);
     var subLazyReducerCaller = safeGetObjectFromObject(_lazyReducerCaller, module); // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
     // const subLazyReducerRefCaller = util.safeGetObjectFromObject(_lazyReducerRefCaller, module);
 
     var fnNames = safeGetArrayFromObject(_reducerModule_fnNames_, module); // 自动附加一个setState在reducer里
 
-    if (!reducer.setState) reducer.setState = function (payload) {
+    if (!newReducer.setState) newReducer.setState = function (payload) {
       return payload;
     };
-    var reducerNames = okeys(reducer);
+    var reducerNames = okeys(newReducer);
     reducerNames.forEach(function (name) {
       // avoid hot reload
       if (!fnNames.includes(name)) fnNames.push(name);
@@ -4687,15 +4701,26 @@
       // subLazyReducerRefCaller[name] = wrappedLazyReducerFn;
 
 
-      var reducerFn = reducer[name];
+      var reducerFn = newReducer[name];
 
       if (typeof reducerFn !== 'function') {
         throw new Error("reducer key[" + name + "] 's value is not a function");
       } else {
-        reducerFn.__fnName = name; //!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
+        var targetFn = reducerFn;
 
-        reducerFn.__stateModule = module;
-        reducerFn.__reducerModule = module;
+        if (reducerFn.__fnName) {
+          // 将某个已载入到模块a的reducer再次载入到模块b
+          targetFn = function targetFn(payload, moduleState, actionCtx) {
+            return reducerFn(payload, moduleState, actionCtx);
+          };
+
+          newReducer[name] = targetFn;
+        }
+
+        targetFn.__fnName = name; //!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
+
+        targetFn.__stateModule = module;
+        targetFn.__reducerModule = module;
       } // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
       // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
       // reducerFn.stateModule = module;
