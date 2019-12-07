@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.71',
+      version: '1.5.72',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -5947,7 +5947,8 @@
 
     var refCtx = hookRef.ctx;
     refCtx.prevProps = refCtx.props;
-    refCtx.props = props; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
+    refCtx.props = props;
+    hookRef.props = props; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
     //after every render
 
     React.useEffect(function () {

@@ -176,6 +176,10 @@ export function makeInvokeHandler(targetRef, { chainId, oriChainId, isLazy, isSi
 
     const err = new Error(`param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:[module:string, fn:function], ...args:any[])`);
     if (firstParamType === 'function') {
+      // 可能用户直接使用invoke调用了reducer函数
+      if (firstParam.__fnName) firstParam.name = firstParam.__fnName;
+      if (firstParam.__stateModule) option.module = firstParam.__stateModule;
+
       return __invoke(firstParam, option, payload);
     } else if (firstParamType === 'object') {
       let _fn, _module;
