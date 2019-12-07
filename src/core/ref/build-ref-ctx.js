@@ -120,14 +120,16 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   const onEvents = [];
-  const effectItems = [];// {fn:function, status:0, eId:'', immediate:true}
-  const eid_effectReturnCb_ = {};// fn
-  const effectMeta = { effectItems, eid_effectReturnCb_ };
+  const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}
+  const eid_effectReturnCb_ = {}, eid_effectPropsReturnCb_ = {};// fn
+  const effectMeta = { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ };
   const auxMap = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
+
+  const props = getOutProps(ref.props);
   const ctx = {
     // static params
     type,
@@ -143,7 +145,8 @@ export default function (ref, params, liteLevel = 5) {
     connect,
     ccOption,
 
-    props: getOutProps(ref.props),
+    prevProps: props,
+    props,
     mapped:{},
 
     prevState: mergedState,
@@ -281,7 +284,8 @@ export default function (ref, params, liteLevel = 5) {
     }
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
-    ctx.effect = (fn, depKeys, immediate = true, eId) => {
+
+    const makeEffectHandler = targetEffectItems => (fn, depKeys, immediate = true, eId) => {
       if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
       if (depKeys !== null && depKeys !== undefined) {
         if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
@@ -289,8 +293,11 @@ export default function (ref, params, liteLevel = 5) {
       const _eId = eId || getEId();
       // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
       const effectItem = { fn, depKeys, eId: _eId, depKeys, immediate };
-      effectItems.push(effectItem);
+      targetEffectItems.push(effectItem);
     };
+
+    ctx.effect = makeEffectHandler(effectItems);
+    ctx.effectProps = makeEffectHandler(effectPropsItems);
   }
 
 }

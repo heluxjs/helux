@@ -10,18 +10,28 @@ const frag1 = 'has not been declared in';
 
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
-  const { effectItems, eid_effectReturnCb_ } = ctx.effectMeta;
+  const { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ } = ctx.effectMeta;
+
+  const makeItemHandler = (eid_cleanCb_, isDidMount, needJudgeImmediate) => item => {
+    const { fn, eId, immediate } = item;
+    if (needJudgeImmediate) {
+      if (immediate === false) return;
+    }
+    const cb = fn(ctx, isDidMount);
+    if (cb) eid_cleanCb_[eId] = cb;
+  };
 
   if (callByDidMount) {
-    effectItems.forEach(item => {
-      if (item.immediate === false) return;
-      const cb = item.fn(ctx, true);// set true flag isDidMount = true
-      if (cb) eid_effectReturnCb_[item.eId] = cb;
-    });
-  } else {//callByDidUpdate
+    // flag isDidMount as true
+    effectItems.forEach(makeItemHandler(eid_effectReturnCb_, true, true));
+    effectPropsItems.forEach(makeItemHandler(eid_effectPropsReturnCb_, true, true));
+  } else {// callByDidUpdate
+
+    // start handle effect meta data of state keys
     const prevState = ctx.prevState;
     const curState = ref.state;
     const toBeExecutedFns = [];
+
     effectItems.forEach(item => {
       // const { status, depKeys, fn, eId } = item;
       // if (status === EFFECT_STOPPED) return;
@@ -68,11 +78,34 @@ export default function (ref, callByDidMount) {
         toBeExecutedFns.push({ fn, eId });
       }
     });
+    
+    // flag isDidMount as false, means effect triggered in didUpdate period
+    toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false));
 
-    toBeExecutedFns.forEach(item => {
-      const { fn, eId } = item;
-      const cb = fn(ctx, false);// set false flag isDidMount = false, means effect triggered in didUpdate period
-      if (cb) eid_effectReturnCb_[eId] = cb;
+     // start handle effect meta data of props keys
+    const prevProps = ctx.prevProps;
+    const curProps = ctx.props;
+    const toBeExecutedPropFns = [];
+    effectPropsItems.forEach(item=>{
+      const { depKeys, fn, eId } = item;
+      if (depKeys) {
+        const keysLen = depKeys.length;
+        if (keysLen === 0) return;
+        let shouldEffectExecute = false;
+        for (let i = 0; i < keysLen; i++) {
+          const key = depKeys[i];
+          if (prevProps[key] !== curProps[key]) {
+            shouldEffectExecute = true;
+            break;
+          }
+        }
+        if (shouldEffectExecute) toBeExecutedPropFns.push({ fn, eId });
+      } else {
+        toBeExecutedPropFns.push({ fn, eId });
+      }
     });
+
+    toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
+
   }
 }

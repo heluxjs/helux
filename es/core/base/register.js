@@ -150,7 +150,9 @@ export default function register({
         }
 
         render() {
+          this.ctx.prevProps = this.ctx.props;
           this.ctx.props = this.props;
+
           if (ccContext.isDebug) {
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }

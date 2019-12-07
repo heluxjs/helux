@@ -1,4 +1,13 @@
 #### 2019-12-03
+1.5.71 发布
+* 新增方法ctx.effectProps，使用方式和ctx.effect一模一样，唯一不同的是传入的depKeys数组元素值是props的key名称
+
+#### 2019-12-03
+1.5.70 发布
+* 调整ICtx Props泛型位置，放在第一位，使其和React.Component保持一致
+* 新增ctx.prevProps属性（每次渲染之前将ctx.props交给ctx.prevProps时，同时将最新的props交给ctx.props）
+
+#### 2019-12-03
 1.5.67 发布
 * 支持silentDispatch(别名dispatchSilent), 调用此方法，仅执行reducer函数而不提交状态到store并分发状态到其他实例
 * 支持silentInvoke(别名invokeSilent), 作用同silentDispatch

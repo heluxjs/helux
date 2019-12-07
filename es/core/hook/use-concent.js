@@ -97,6 +97,7 @@ export default function useConcent(registerOption, ccClassKey){
   }
   
   const refCtx = hookRef.ctx;
+  refCtx.prevProps = refCtx.props;
   refCtx.props = props;
 
   // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???

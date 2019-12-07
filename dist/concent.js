@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.69',
+      version: '1.5.71',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2224,7 +2224,8 @@
       var _type, _cb;
 
       var _module = defaultModule;
-      var _reducerModule = defaultReducerModule;
+
+      var _reducerModule = defaultReducerModule || defaultModule;
 
       var _delay = userInputDelay || delay;
 
@@ -2361,7 +2362,7 @@
     };
   }
 
-  var okeys$3 = okeys,
+  var okeys$2 = okeys,
       isPlainJsonObject$2 = isPlainJsonObject;
   var _state$1 = ccContext.store._state;
   /**
@@ -2379,7 +2380,7 @@
       return invalidConnect + " module[" + m + "]'s value must be * or array of string";
     };
 
-    var moduleNames = okeys$3(connectSpec);
+    var moduleNames = okeys$2(connectSpec);
     moduleNames.sort();
     var featureStrs = [];
     var connectedModuleKeyMapping = {};
@@ -2396,7 +2397,7 @@
       if (typeof val === 'string') {
         if (val !== '*') throw new Error(invalidConnectItem(m));else {
           featureStrs.push(feature + "*");
-          okeys$3(moduleState).forEach(function (sKey) {
+          okeys$2(moduleState).forEach(function (sKey) {
             return connectedModuleKeyMapping[m + "/" + sKey] = sKey;
           });
         }
@@ -2432,7 +2433,7 @@
       me$1 = makeError;
   var featureStr_classKey_ = ccContext.featureStr_classKey_,
       userClassKey_featureStr_ = ccContext.userClassKey_featureStr_,
-      ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_;
+      ccClassKey_ccClassContext_$1 = ccContext.ccClassKey_ccClassContext_;
   var cursor = 0;
   function getCcClassKey (allowNamingDispatcher, module, connect, watchedKeys, prefix, featureStr, classKey) {
     if (classKey === void 0) {
@@ -2470,7 +2471,7 @@
       }
     }
 
-    var ctx = ccClassKey_ccClassContext_$2[classKey];
+    var ctx = ccClassKey_ccClassContext_$1[classKey];
 
     if (ctx) {
       var fStr = userClassKey_featureStr_[classKey];
@@ -2489,7 +2490,7 @@
   var moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_,
       moduleName_ccClassKeys_$1 = ccContext.moduleName_ccClassKeys_,
       moduleSingleClass = ccContext.moduleSingleClass,
-      ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
+      ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_,
       connectedModuleName_ccClassKeys_$1 = ccContext.connectedModuleName_ccClassKeys_,
       _computedValue$2 = ccContext.computed._computedValue;
   var verifyKeys$1 = verifyKeys,
@@ -2536,11 +2537,11 @@
   }
 
   function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
-    var ccClassContext = ccClassKey_ccClassContext_$3[ccClassKey]; //做一个判断，有可能是热加载调用
+    var ccClassContext = ccClassKey_ccClassContext_$2[ccClassKey]; //做一个判断，有可能是热加载调用
 
     if (!ccClassContext) {
       ccClassContext = makeCcClassContext(moduleName, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys);
-      ccClassKey_ccClassContext_$3[ccClassKey] = ccClassContext;
+      ccClassKey_ccClassContext_$2[ccClassKey] = ccClassContext;
     }
 
     var connectedModule = {};
@@ -3451,12 +3452,12 @@
   }
 
   var refStore$1 = ccContext.refStore,
-      ccClassKey_ccClassContext_$4 = ccContext.ccClassKey_ccClassContext_,
+      ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
       getState$3 = ccContext.store.getState,
       moduleName_ccClassKeys_$2 = ccContext.moduleName_ccClassKeys_,
       _computedValue$3 = ccContext.computed._computedValue,
       renderKey_ccUkeys_$1 = ccContext.renderKey_ccUkeys_;
-  var okeys$4 = okeys,
+  var okeys$3 = okeys,
       me$4 = makeError,
       vbi$4 = verboseInfo,
       safeGetArrayFromObject$2 = safeGetArrayFromObject;
@@ -3518,7 +3519,7 @@
     if (!renderKey) renderKey = ccOption.renderKey = ccUniqueKey;
     var ccUkeys = safeGetArrayFromObject$2(renderKey_ccUkeys_$1, renderKey);
     ccUkeys.push(ccUniqueKey);
-    var classCtx = ccClassKey_ccClassContext_$4[ccClassKey];
+    var classCtx = ccClassKey_ccClassContext_$3[ccClassKey];
     var connectedComputed = classCtx.connectedComputed || {};
     var connectedState = classCtx.connectedState || {};
     var moduleState = getState$3(module);
@@ -3526,14 +3527,14 @@
     var globalComputed = _computedValue$3[MODULE_GLOBAL] || {};
     var globalState = getState$3(MODULE_GLOBAL);
     var refConnectedComputed = {};
-    okeys$4(connect).forEach(function (moduleName) {
+    okeys$3(connect).forEach(function (moduleName) {
       refConnectedComputed[moduleName] = {};
     }); // recover ref state
 
     var refStoredState = refStore$1._state[ccUniqueKey] || {};
     var mergedState = Object.assign({}, state, refStoredState, moduleState);
     ref.state = mergedState;
-    var stateKeys = okeys$4(mergedState); // record ref
+    var stateKeys = okeys$3(mergedState); // record ref
 
     setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey); // record ccClassKey
 
@@ -3576,19 +3577,24 @@
     };
 
     var onEvents = [];
-    var effectItems = []; // {fn:function, status:0, eId:'', immediate:true}
+    var effectItems = [],
+        effectPropsItems = []; // {fn:function, status:0, eId:'', immediate:true}
 
-    var eid_effectReturnCb_ = {}; // fn
+    var eid_effectReturnCb_ = {},
+        eid_effectPropsReturnCb_ = {}; // fn
 
     var effectMeta = {
       effectItems: effectItems,
-      eid_effectReturnCb_: eid_effectReturnCb_
+      eid_effectReturnCb_: eid_effectReturnCb_,
+      effectPropsItems: effectPropsItems,
+      eid_effectPropsReturnCb_: eid_effectPropsReturnCb_
     };
     var auxMap = {}; // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
     // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
 
     var computedDep = {},
         watchDep = {};
+    var props = getOutProps(ref.props);
     var ctx = (_ctx = {
       // static params
       type: type,
@@ -3603,7 +3609,8 @@
       watchedKeys: watchedKeys,
       connect: connect,
       ccOption: ccOption,
-      props: getOutProps(ref.props),
+      prevProps: props,
+      props: props,
       mapped: {},
       prevState: mergedState,
       // state
@@ -3828,29 +3835,34 @@
       ctx.watch = getDefineWatchHandler(ctx);
       ctx.computed = getDefineComputedHandler(ctx);
 
-      ctx.effect = function (fn, depKeys, immediate, eId) {
-        var _effectItem;
+      var makeEffectHandler = function makeEffectHandler(targetEffectItems) {
+        return function (fn, depKeys, immediate, eId) {
+          var _effectItem;
 
-        if (immediate === void 0) {
-          immediate = true;
-        }
+          if (immediate === void 0) {
+            immediate = true;
+          }
 
-        if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
+          if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
 
-        if (depKeys !== null && depKeys !== undefined) {
-          if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
-        }
+          if (depKeys !== null && depKeys !== undefined) {
+            if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+          }
 
-        var _eId = eId || getEId(); // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
+          var _eId = eId || getEId(); // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
 
 
-        var effectItem = (_effectItem = {
-          fn: fn,
-          depKeys: depKeys,
-          eId: _eId
-        }, _effectItem["depKeys"] = depKeys, _effectItem.immediate = immediate, _effectItem);
-        effectItems.push(effectItem);
+          var effectItem = (_effectItem = {
+            fn: fn,
+            depKeys: depKeys,
+            eId: _eId
+          }, _effectItem["depKeys"] = depKeys, _effectItem.immediate = immediate, _effectItem);
+          targetEffectItems.push(effectItem);
+        };
       };
+
+      ctx.effect = makeEffectHandler(effectItems);
+      ctx.effectProps = makeEffectHandler(effectPropsItems);
     }
   }
 
@@ -3884,7 +3896,7 @@
   }
 
   var safeGetObjectFromObject$1 = safeGetObjectFromObject,
-      okeys$5 = okeys,
+      okeys$4 = okeys,
       justWarning$6 = justWarning;
   var _ccContext$reducer = ccContext.reducer,
       _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_,
@@ -3902,7 +3914,7 @@
         lazyDispatch = ctx.lazyDispatch,
         connect = ctx.connect,
         module = ctx.module;
-    var connectedModules = okeys$5(connect);
+    var connectedModules = okeys$4(connect);
     var allModules = connectedModules.slice();
     if (!allModules.includes(module)) allModules.push(module);else {
       justWarning$6("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
@@ -3941,7 +3953,7 @@
       var globalBindCtx = ccContext.bindCtxToMethod; //优先读自己的，再读全局的
 
       if (bindCtxToMethod === true || globalBindCtx === true && bindCtxToMethod !== false) {
-        okeys$5(settingsObj).forEach(function (name) {
+        okeys$4(settingsObj).forEach(function (name) {
           var settingValue = settingsObj[name];
           if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
         });
@@ -3962,17 +3974,32 @@
     var ctx = ref.ctx;
     var _ctx$effectMeta = ctx.effectMeta,
         effectItems = _ctx$effectMeta.effectItems,
-        eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_;
+        eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_,
+        effectPropsItems = _ctx$effectMeta.effectPropsItems,
+        eid_effectPropsReturnCb_ = _ctx$effectMeta.eid_effectPropsReturnCb_;
+
+    var makeItemHandler = function makeItemHandler(eid_cleanCb_, isDidMount, needJudgeImmediate) {
+      return function (item) {
+        var fn = item.fn,
+            eId = item.eId,
+            immediate = item.immediate;
+
+        if (needJudgeImmediate) {
+          if (immediate === false) return;
+        }
+
+        var cb = fn(ctx, isDidMount);
+        if (cb) eid_cleanCb_[eId] = cb;
+      };
+    };
 
     if (callByDidMount) {
-      effectItems.forEach(function (item) {
-        if (item.immediate === false) return;
-        var cb = item.fn(ctx, true); // set true flag isDidMount = true
-
-        if (cb) eid_effectReturnCb_[item.eId] = cb;
-      });
+      // flag isDidMount as true
+      effectItems.forEach(makeItemHandler(eid_effectReturnCb_, true, true));
+      effectPropsItems.forEach(makeItemHandler(eid_effectPropsReturnCb_, true, true));
     } else {
-      //callByDidUpdate
+      // callByDidUpdate
+      // start handle effect meta data of state keys
       var prevState = ctx.prevState;
       var curState = ref.state;
       var toBeExecutedFns = [];
@@ -4039,14 +4066,44 @@
             eId: eId
           });
         }
-      });
-      toBeExecutedFns.forEach(function (item) {
-        var fn = item.fn,
-            eId = item.eId;
-        var cb = fn(ctx, false); // set false flag isDidMount = false, means effect triggered in didUpdate period
+      }); // flag isDidMount as false, means effect triggered in didUpdate period
 
-        if (cb) eid_effectReturnCb_[eId] = cb;
+      toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false)); // start handle effect meta data of props keys
+
+      var prevProps = ctx.prevProps;
+      var curProps = ctx.props;
+      var toBeExecutedPropFns = [];
+      effectPropsItems.forEach(function (item) {
+        var depKeys = item.depKeys,
+            fn = item.fn,
+            eId = item.eId;
+
+        if (depKeys) {
+          var keysLen = depKeys.length;
+          if (keysLen === 0) return;
+          var shouldEffectExecute = false;
+
+          for (var i = 0; i < keysLen; i++) {
+            var key = depKeys[i];
+
+            if (prevProps[key] !== curProps[key]) {
+              shouldEffectExecute = true;
+              break;
+            }
+          }
+
+          if (shouldEffectExecute) toBeExecutedPropFns.push({
+            fn: fn,
+            eId: eId
+          });
+        } else {
+          toBeExecutedPropFns.push({
+            fn: fn,
+            eId: eId
+          });
+        }
       });
+      toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
     }
   }
 
@@ -4078,7 +4135,7 @@
 
   var ccUkey_ref_$2 = ccContext.ccUkey_ref_,
       ccUKey_handlerKeys_$1 = ccContext.ccUKey_handlerKeys_,
-      ccClassKey_ccClassContext_$5 = ccContext.ccClassKey_ccClassContext_,
+      ccClassKey_ccClassContext_$4 = ccContext.ccClassKey_ccClassContext_,
       handlerKey_handler_$1 = ccContext.handlerKey_handler_,
       renderKey_ccUkeys_$2 = ccContext.renderKey_ccUkeys_;
   function unsetRef (ccClassKey, ccUniqueKey, renderKey) {
@@ -4095,7 +4152,7 @@
       ccUkeys.splice(ccUkeys.indexOf(ccUniqueKey), 1);
     }
 
-    var classContext = ccClassKey_ccClassContext_$5[ccClassKey];
+    var classContext = ccClassKey_ccClassContext_$4[ccClassKey];
     var ccKeys = classContext.ccKeys;
     var ccKeyIdx = ccKeys.indexOf(ccUniqueKey);
     if (ccKeyIdx >= 0) ccKeys.splice(ccKeyIdx, 1);
@@ -4153,7 +4210,7 @@
       color$1 = color,
       verboseInfo$2 = verboseInfo,
       makeError$3 = makeError,
-      okeys$6 = okeys,
+      okeys$5 = okeys,
       shallowDiffers$1 = shallowDiffers;
   var cl$1 = color$1;
   var ss$1 = styleStr$1;
@@ -4300,7 +4357,7 @@
             ctx.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
             // this.state = newState; // bad writing
 
-            okeys$6(newState).forEach(function (key) {
+            okeys$5(newState).forEach(function (key) {
               return thisState[key] = newState[key];
             });
             if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
@@ -4327,6 +4384,7 @@
           };
 
           _proto.render = function render() {
+            this.ctx.prevProps = this.ctx.props;
             this.ctx.props = this.props;
 
             if (ccContext.isDebug) {
@@ -4784,7 +4842,7 @@
   }
 
   var isPlainJsonObject$5 = isPlainJsonObject,
-      okeys$7 = okeys;
+      okeys$6 = okeys;
   /** 对已有的store.$$global状态追加新的state */
   // export function appendGlobalState(globalState) {
   //   // todo
@@ -4799,7 +4857,7 @@
     store.initStateDangerously(MODULE_CC, {});
     if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
     if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$7(storeState);
+    var moduleNames = okeys$6(storeState);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -4816,7 +4874,7 @@
   function configRootReducer(rootReducer) {
     if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
     if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-    var moduleNames = okeys$7(rootReducer);
+    var moduleNames = okeys$6(rootReducer);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -4829,7 +4887,7 @@
       throw new Error("StartUpOption.computed is not a plain json object!");
     }
 
-    var moduleNames = okeys$7(computed);
+    var moduleNames = okeys$6(computed);
     moduleNames.forEach(function (m) {
       return initModuleComputed(m, computed[m]);
     });
@@ -4851,7 +4909,7 @@
       throw new Error('StartupOption.init is valid, it must be a object like {[module:string]:Function}!');
     }
 
-    var moduleNames = okeys$7(init);
+    var moduleNames = okeys$6(init);
     moduleNames.forEach(function (moduleName) {
       checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
       var initFn = init[moduleName];
@@ -5140,7 +5198,7 @@
   var makeError$5 = makeError,
       verboseInfo$3 = verboseInfo,
       isPlainJsonObject$6 = isPlainJsonObject,
-      okeys$8 = okeys;
+      okeys$7 = okeys;
 
   function setGlobalState(storedGlobalState, inputGlobalState) {
     if (inputGlobalState) {
@@ -5148,7 +5206,7 @@
         throw new Error("option.globalState is not a plain json object");
       }
 
-      var gKeys = okeys$8(inputGlobalState);
+      var gKeys = okeys$7(inputGlobalState);
       gKeys.forEach(function (gKey) {
         if (storedGlobalState.hasOwnProperty(gKey)) {
           throw new Error("key[" + gKey + "] duplicated in globalState");
@@ -5343,7 +5401,7 @@
   });
 
   var isPlainJsonObject$7 = isPlainJsonObject,
-      okeys$9 = okeys,
+      okeys$8 = okeys,
       isObjectNotNull$2 = isObjectNotNull;
 
   var pError = function pError(label) {
@@ -5374,7 +5432,7 @@
     var _init = {};
     var _moduleSingleClass = {}; // traversal moduleNames
 
-    okeys$9(store).forEach(function (m) {
+    okeys$8(store).forEach(function (m) {
       var config = store[m];
       var state = config.state,
           reducer = config.reducer,
@@ -5414,7 +5472,7 @@
 
     if (reducer) {
       if (!isPlainJsonObject$7(reducer)) pError('option.reducer');
-      okeys$9(reducer).forEach(function (reducerModule) {
+      okeys$8(reducer).forEach(function (reducerModule) {
         if (_reducer[reducerModule]) throw new Error("reducerModule[" + reducerModule + "] has been declared in store");
         var reducerFns = reducer[reducerModule];
         _reducer[reducerModule] = reducerFns;
@@ -5623,6 +5681,7 @@
     _proto.render = function render() {
       //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
       var thisProps = this.props;
+      this.ctx.prevProps = this.ctx.props;
       this.ctx.props = getOutProps(thisProps);
       var children = thisProps.children,
           render = thisProps.render;
@@ -5887,6 +5946,7 @@
     }
 
     var refCtx = hookRef.ctx;
+    refCtx.prevProps = refCtx.props;
     refCtx.props = props; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
     //after every render
 
@@ -6137,10 +6197,10 @@
   }
 
   var ccUkey_ref_$4 = ccContext.ccUkey_ref_,
-      ccClassKey_ccClassContext_$6 = ccContext.ccClassKey_ccClassContext_;
+      ccClassKey_ccClassContext_$5 = ccContext.ccClassKey_ccClassContext_;
   function getRefsByClassKey (ccClassKey) {
     var refs = [];
-    var ccClassContext = ccClassKey_ccClassContext_$6[ccClassKey];
+    var ccClassContext = ccClassKey_ccClassContext_$5[ccClassKey];
 
     if (!ccClassContext) {
       return refs;
@@ -6193,9 +6253,9 @@
     });
   });
 
-  var ccClassKey_ccClassContext_$7 = ccContext.ccClassKey_ccClassContext_;
+  var ccClassKey_ccClassContext_$6 = ccContext.ccClassKey_ccClassContext_;
   var _getConnectedState = (function (ccClassKey) {
-    var ctx = ccClassKey_ccClassContext_$7[ccClassKey];
+    var ctx = ccClassKey_ccClassContext_$6[ccClassKey];
     return ctx.connectedState || {};
   });
 

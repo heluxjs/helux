@@ -16,12 +16,12 @@ import setState from './set-state';
 import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import extractStateByKeys from './extract-state-by-keys';
 
-const { verboseInfo, makeError, justWarning, okeys } = util;
+const { verboseInfo, makeError, justWarning } = util;
 const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer }, 
   computed: { _computedValue },
-  ccClassKey_ccClassContext_,
+  // ccClassKey_ccClassContext_,
 } = ccContext;
 const me = makeError;
 const vbi = verboseInfo;
@@ -350,7 +350,7 @@ export function makeDispatchHandler(
     let _type, _cb;
 
     let _module = defaultModule;
-    let _reducerModule = defaultReducerModule;
+    let _reducerModule = defaultReducerModule || defaultModule;
     const _delay = userInputDelay || delay;
     const _renderKey = userInputRKey || defaultRenderKey;
 

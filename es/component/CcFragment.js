@@ -85,6 +85,7 @@ export default class CcFragment extends React.Component {
   render() {
     //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
     const thisProps = this.props;
+    this.ctx.prevProps = this.ctx.props;
     this.ctx.props = getOutProps(thisProps);
 
     const { children, render } = thisProps;
