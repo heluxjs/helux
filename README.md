@@ -114,21 +114,68 @@ import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';
 
 run({
-  counter: {//定义counter模块
-    state: {//定义state
+  counter: {// 定义counter模块
+    state: {// 【必需】，定义state
       count: 0,
     },
-    reducer: {
-      inc(payload, moduleState) {
-        return { count: moduleState.count + 1 };
+    reducer: {// 【可选】定义reducer，书写修改模块状态逻辑
+      inc(payload=1, moduleState) {
+        return { count: moduleState.count + payload };
       },
-      dec(payload, moduleState) {
-        return { count: moduleState.count - 1 };
+      dec(payload=1, moduleState) {
+        return { count: moduleState.count - payload };
+      },
+      async inc2ThenDec3(payload, moduleState, actionCtx){
+        await actionCtx.dispatch('inc', 2);
+        await actionCtx.dispatch('dec', 3);
       }
+    },
+    computed:{// 【可选】定义模块computed，当对应的stateKey发生变化时触发计算函数，结果将被缓存
+      count(newVal, oldVal){
+        return newVal * 2;
+      }
+    },
+    watch:{// 【可选】定义模块watch，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
+      count(newVal, oldVal){
+        console.log(`count changed to ${newVal}`);
+      }
+    },
+    init: async ()=>{// 【可选】模块状态的初始化函数，当状态需要异步的定义，且与具体挂载的组件无关时定义此项
+      const state = await api.fetchState();
+      return state;
     }
   }
 })
 ```
+更推荐将模块定义选项放置到各个文件中，然后在各自导出交给`run`函数配置.
+```
+|____models             # business models
+| |____index.js
+| |____counter
+| | |____index.js
+| | |____reducer.js     # change state methods(optional)
+| | |____computed.js    # computed methods(optional)
+| | |____watch.js       # watch methods(optional)
+| | |____init.js        # async state initialization function(optional)
+| | |____state.js       # module init state(required)
+```
+此时reducer文件里函数可以不需要基于字符串发起组合型调用了
+```
+export function inc(payload=1, moduleState) {
+  return { count: moduleState.count + payload };
+}
+
+export function dec(payload=1, moduleState) {
+  return { count: moduleState.count - payload };
+}
+
+// 组合调用其他的reducer函数完成业务逻辑
+export async function inc2ThenDec3(payload, moduleState, actionCtx){
+  await actionCtx.dispatch(inc, 2);
+  await actionCtx.dispatch(dec, 3);
+}
+```
+
 - 基于react class注册成为cc类组件
 ```jsx
 class Counter extends Component {
@@ -141,10 +188,10 @@ class Counter extends Component {
   }
   //调用dispatch, 同样的能够将数据将同步到store，广播到其他属于counter模块或者连接到counter模块的实例
   incD = () => {
-    this.ctx.dispatch('inc');
+    this.ctx.dispatch('inc');// or this.ctx.moduleReducer.inc()
   }
   decD = () => {
-    this.ctx.dispatch('dec');
+    this.ctx.dispatch('dec');// or this.ctx.moduleReducer.dec()
   }
   render() {
     //concent注入counter模块的数据到state
@@ -198,7 +245,8 @@ const setup = ctx=>{
   return {inc, dec, incD, decD};
 }
 
-//定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
+// 定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
+// 如不定义mapProps, Concent将直接透传ctx给render函数，即 const UI = ctx => <div>ui</div>
 const mapProps = ctx=>{
   return {count:ctx.state.count, ...ctx.settings};
 }
