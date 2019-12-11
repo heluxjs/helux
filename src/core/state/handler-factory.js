@@ -8,7 +8,10 @@ import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 import co from 'co';
 import catchCcError from '../base/catch-cc-error';
-import { getChainId, setChainState, setAndGetChainStateList, exitChain, removeChainState, isChainExited, setChainIdLazy, isChainIdLazy } from '../chain';
+import {
+  getChainId, setChainState, setAllChainState, setAndGetChainStateList, exitChain, getChainStateMap, getAllChainStateMap,
+  removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
+} from '../chain';
 import { send } from '../plugin';
 import * as checker from '../checker';
 import changeRefState from '../state/change-ref-state';
@@ -227,8 +230,8 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
     let actionContext = {};
     let isSourceCall = false;
+    isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
     if (context) {
-      isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
       //调用前先加1
       chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
@@ -249,8 +252,14 @@ export function invokeWith(userLogicFn, executionContext, payload){
       const lazyInvoke =  makeInvokeHandler(targetRef, { isLazy: true, oriChainId, chainId_depth_ });
       const silentInvoke =  makeInvokeHandler(targetRef, { isLazy: false, isSilent:true, oriChainId, chainId_depth_ });
 
+      // 首次调用时是undefined，这里做个保护
+      const committedStateMap = getAllChainStateMap(chainId) || {};
+      const committedState = committedStateMap[targetModule] || {};
+
       actionContext = {
         targetModule,
+        committedStateMap,
+        committedState,
 
         invoke, lazyInvoke, silentInvoke,
         invokeLazy: lazyInvoke,
@@ -288,16 +297,21 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
       chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1
       const curDepth = chainId_depth_[chainId];
+      const isFirstDepth = curDepth === 1;
+
+      //调用结束就记录
+      setAllChainState(chainId, targetModule, partialState);
 
       let commitStateList = [];
 
       if (isSilent === false) {
         send(SIG_FN_END, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
+
         // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
         if (isChainIdLazy(chainId)) {//来自于惰性派发的调用
-          if (curDepth > 1) {//某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
+          if (!isFirstDepth) {// 某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
             setChainState(chainId, targetModule, partialState);
-          } else {// chainDepth === 1, 合并状态一次性提交到store并派发到组件实例
+          } else {// 合并状态一次性提交到store并派发到组件实例
             if (isChainExited(chainId)) {
               //丢弃本次状态，不做任何处理
             } else {
@@ -318,6 +332,11 @@ export function invokeWith(userLogicFn, executionContext, payload){
           }, targetRef);
         }
       });
+
+      if (isSourceCall) {//源头dispatch or invoke结束调用
+        removeChainState(chainId);
+        removeAllChainState(chainId);
+      }
 
       if (__innerCb) __innerCb(null, partialState);
     }).catch(err => {

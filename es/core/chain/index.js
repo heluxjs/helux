@@ -1,28 +1,39 @@
 import { okeys } from '../../support/util';
 
 let id = 0;
+/** 针对lazy的reducer调用链状态记录缓存map */
 const chainId_moduleStateMap_ = {};
 const chainId_isExited_ = {};
 const chainId_isLazy_ = {};
+
+/** 所有的reducer调用链状态记录缓存map */
+const normalChainId_moduleStateMap_ = {};
 
 export function getChainId() {
   id++;
   return id;
 }
 
-export function setChainState(chainId, targetModule, partialState) {
+function __setChainState(chainId, targetModule, partialState, targetId_msMap) {
   if (partialState) {
-    let moduleStateMap = chainId_moduleStateMap_[chainId];
-    if (!moduleStateMap) moduleStateMap = chainId_moduleStateMap_[chainId] = {};
+    let moduleStateMap = targetId_msMap[chainId];
+    if (!moduleStateMap) moduleStateMap = targetId_msMap[chainId] = {};
 
     const state = moduleStateMap[targetModule];
     if (!state) {
       moduleStateMap[targetModule] = partialState;
     } else {
-      const mergedState = Object.assign(state, partialState);
-      moduleStateMap[targetModule] = mergedState;
+      Object.assign(state, partialState);
     }
   }
+}
+
+export function setChainState(chainId, targetModule, partialState) {
+  __setChainState(chainId, targetModule, partialState, chainId_moduleStateMap_)
+}
+
+export function setAllChainState(chainId, targetModule, partialState) {
+  __setChainState(chainId, targetModule, partialState, normalChainId_moduleStateMap_)
 }
 
 export function setAndGetChainStateList(chainId, targetModule, partialState) {
@@ -30,8 +41,21 @@ export function setAndGetChainStateList(chainId, targetModule, partialState) {
   return getChainStateList(chainId);
 }
 
+export function getChainStateMap(chainId) {
+  return chainId_moduleStateMap_[chainId];
+}
+
+export function getAllChainStateMap(chainId) {
+  return normalChainId_moduleStateMap_[chainId];
+}
+
+// export function getChainModuleState(chainId, module) {
+//   const moduleStateMap = getChainStateMap(chainId);
+//   return moduleStateMap[module];
+// }
+
 export function getChainStateList(chainId) {
-  const moduleStateMap = chainId_moduleStateMap_[chainId];
+  const moduleStateMap = getChainStateMap(chainId);
   const list = [];
   okeys(moduleStateMap).forEach(m => {
     list.push({ module: m, state: moduleStateMap[m] });
@@ -41,6 +65,10 @@ export function getChainStateList(chainId) {
 
 export function removeChainState(chainId) {
   delete chainId_moduleStateMap_[chainId];
+}
+
+export function removeAllChainState(chainId) {
+  delete normalChainId_moduleStateMap_[chainId];
 }
 
 export function exitChain(chainId) {

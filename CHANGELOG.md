@@ -1,3 +1,12 @@
+#### 2019-12-11
+1.5.77 发布
+*  优化chainState记录和清理方式
+
+#### 2019-12-11
+1.5.76 发布
+*  透传committedState，committedStateMap给IActionCtx
+> 通常用于lazy调用链的最后一个函数里，想取出committedState，分析改变的key来再次计算state其他部分的场景，注意此流程和computed的区别，computed计算放置在moduleComputed里，而reducer里返回的是放moduleState里的。
+
 #### 2019-12-03
 1.5.75 发布
 *  支持同一个reducer函数对象体被配置到多个模块中(尽管这种场景特别少)

@@ -892,6 +892,8 @@ interface RunOptions {
 
 interface IActionCtxBase {
   targetModule: string | any;
+  committedStateMap: IAnyObj,
+  committedState: IAnyObj,
   invoke: typeof refCtxInvoke;
   lazyInvoke: typeof refCtxInvoke;
   dispatch: typeof refCtxDispatch;

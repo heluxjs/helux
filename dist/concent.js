@@ -906,7 +906,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.75',
+      version: '1.5.78',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -953,33 +953,55 @@
   });
 
   var id = 0;
+  /** 针对lazy的reducer调用链状态记录缓存map */
+
   var chainId_moduleStateMap_ = {};
   var chainId_isExited_ = {};
   var chainId_isLazy_ = {};
+  /** 所有的reducer调用链状态记录缓存map */
+
+  var normalChainId_moduleStateMap_ = {};
   function getChainId() {
     id++;
     return id;
   }
-  function setChainState(chainId, targetModule, partialState) {
+
+  function __setChainState(chainId, targetModule, partialState, targetId_msMap) {
     if (partialState) {
-      var moduleStateMap = chainId_moduleStateMap_[chainId];
-      if (!moduleStateMap) moduleStateMap = chainId_moduleStateMap_[chainId] = {};
+      var moduleStateMap = targetId_msMap[chainId];
+      if (!moduleStateMap) moduleStateMap = targetId_msMap[chainId] = {};
       var state = moduleStateMap[targetModule];
 
       if (!state) {
         moduleStateMap[targetModule] = partialState;
       } else {
-        var mergedState = Object.assign(state, partialState);
-        moduleStateMap[targetModule] = mergedState;
+        Object.assign(state, partialState);
       }
     }
+  }
+
+  function setChainState(chainId, targetModule, partialState) {
+    __setChainState(chainId, targetModule, partialState, chainId_moduleStateMap_);
+  }
+  function setAllChainState(chainId, targetModule, partialState) {
+    __setChainState(chainId, targetModule, partialState, normalChainId_moduleStateMap_);
   }
   function setAndGetChainStateList(chainId, targetModule, partialState) {
     setChainState(chainId, targetModule, partialState);
     return getChainStateList(chainId);
   }
+  function getChainStateMap(chainId) {
+    return chainId_moduleStateMap_[chainId];
+  }
+  function getAllChainStateMap(chainId) {
+    return normalChainId_moduleStateMap_[chainId];
+  } // export function getChainModuleState(chainId, module) {
+  //   const moduleStateMap = getChainStateMap(chainId);
+  //   return moduleStateMap[module];
+  // }
+
   function getChainStateList(chainId) {
-    var moduleStateMap = chainId_moduleStateMap_[chainId];
+    var moduleStateMap = getChainStateMap(chainId);
     var list = [];
     okeys(moduleStateMap).forEach(function (m) {
       list.push({
@@ -991,6 +1013,9 @@
   }
   function removeChainState(chainId) {
     delete chainId_moduleStateMap_[chainId];
+  }
+  function removeAllChainState(chainId) {
+    delete normalChainId_moduleStateMap_[chainId];
   }
   function isChainExited(chainId) {
     return chainId_isExited_[chainId] === true;
@@ -2024,10 +2049,10 @@
       var moduleState = getState(targetModule);
       var actionContext = {};
       var isSourceCall = false;
+      isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1;
 
       if (context) {
-        isSourceCall = chainId === oriChainId && chainId_depth_[chainId] === 1; //调用前先加1
-
+        //调用前先加1
         chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
         var _dispatch = makeDispatchHandler(targetRef, false, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
@@ -2051,9 +2076,14 @@
           isSilent: true,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
-        });
+        }); // 首次调用时是undefined，这里做个保护
+
+        var committedStateMap = getAllChainStateMap(chainId) || {};
+        var committedState = committedStateMap[targetModule] || {};
         actionContext = {
           targetModule: targetModule,
+          committedStateMap: committedStateMap,
+          committedState: committedState,
           invoke: invoke,
           lazyInvoke: lazyInvoke,
           silentInvoke: silentInvoke,
@@ -2099,6 +2129,9 @@
         chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
 
         var curDepth = chainId_depth_[chainId];
+        var isFirstDepth = curDepth === 1; //调用结束就记录
+
+        setAllChainState(chainId, targetModule, partialState);
         var commitStateList = [];
 
         if (isSilent === false) {
@@ -2112,11 +2145,11 @@
 
           if (isChainIdLazy(chainId)) {
             //来自于惰性派发的调用
-            if (curDepth > 1) {
-              //某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
+            if (!isFirstDepth) {
+              // 某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
               setChainState(chainId, targetModule, partialState);
             } else {
-              // chainDepth === 1, 合并状态一次性提交到store并派发到组件实例
+              // 合并状态一次性提交到store并派发到组件实例
               if (isChainExited(chainId)) ; else {
                 commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
                 removeChainState(chainId);
@@ -2144,6 +2177,13 @@
             }, targetRef);
           }
         });
+
+        if (isSourceCall) {
+          //源头dispatch or invoke结束调用
+          removeChainState(chainId);
+          removeAllChainState(chainId);
+        }
+
         if (__innerCb) __innerCb(null, partialState);
       })["catch"](function (err) {
         send(SIG_FN_ERR, {
