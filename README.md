@@ -175,6 +175,24 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
   await actionCtx.dispatch(dec, 3);
 }
 ```
+当然reducer文件里，你可以调用setState，是一个被promise话的句柄
+```js
+export updateLoading(loading){
+  return { loading }
+}
+
+export async function inc2ThenDec3(payload, moduleState, actionCtx){
+  await actionCtx.dispatch(inc, 2);
+  //等效于调用actionCtx.dispatch(updateLoading, true);
+  await actionCtx.setState({loading: true});
+  await actionCtx.dispatch(dec, 3);
+  //等效于调用actionCtx.dispatch(updateLoading, false);
+  await actionCtx.setState({loading: false});
+  
+  //最后这里你可以选择的返回一个新的片断状态，也会触发视图更新
+  return { tip: 'you can return some new value in a reducer fn ot not' };
+}
+```
 
 - 基于react class注册成为cc类组件
 ```jsx
