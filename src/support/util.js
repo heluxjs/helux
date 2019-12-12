@@ -342,16 +342,17 @@ export function shallowDiffers(a, b) {
 }
 
 export function differStateKeys(oldState, newState) {
-  const changed = [], unchanged=[], setted = [];
+  const changed = [], setted = [];
+  // const unchanged=[];
   okeys(newState).forEach(k => {
     const newVal = newState[k];
     if (newVal !== undefined) {
       setted.push(k);
       if (newVal !== oldState[k]) changed.push(k);
-      else unchanged.push(k);
+      // else unchanged.push(k);
     }
   });
-  return { changed, unchanged, setted };
+  return { changed, setted };
 }
 
 export function removeArrElements(arr, toRemoveArr) {
