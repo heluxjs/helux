@@ -754,6 +754,7 @@ export interface IRefCtxRsRcu
 
 export interface IFnCtxBase {
   retKey: string;
+  isBeforeMount: boolean;
   setted: string[];
   changed: string[];
   stateModule: string;
@@ -764,6 +765,7 @@ export interface IFnCtxBase {
 }
 export interface IFnCtxMBase<ModuleName> {
   retKey: string;
+  isBeforeMount: boolean;
   setted: string[];
   changed: string[];
   stateModule: string;

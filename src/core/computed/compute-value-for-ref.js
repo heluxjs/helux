@@ -15,7 +15,7 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
   if(pickedFns.length ){
     const newState = Object.assign({}, oldState, committedState);
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
-      const fnCtx = { retKey, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
+      const fnCtx = { retKey, isBeforeMount, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
       const firstDepKey = depKeys[0];
       let computedValue;
   
