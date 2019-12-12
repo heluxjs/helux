@@ -294,8 +294,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
     }
 
     let firstStepCall;
-    // if(userLogicFn.constructor.name === 'GeneratorFunction' || !window.Promise){
-    if (!window.Promise) {
+    if (!window.Promise || ccContext.generatorReducer) {
       firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
     } else {
       firstStepCall = new Promise(r => r(userLogicFn(payload, moduleState, actionContext)));

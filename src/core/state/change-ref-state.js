@@ -55,6 +55,8 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
   }
 }
 
+const ccUid_sharedState_ = {};
+
 export default function (state, {
   module, skipMiddleware = false,
   reactCallback, type, reducerModule, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
@@ -72,15 +74,22 @@ export default function (state, {
     //在triggerReactSetState之前把状态存储到store，
     //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
     const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
-    const sharedState = syncCommittedStateToStore(module, state, passedCtx);
+    let { sharedState, watchSU } = syncCommittedStateToStore(module, state, passedCtx);
+
+    // if (passedCtx && watchSU === false) {
+    //   // 阻断后面所有流程
+    //   ccUid_sharedState_[passedCtx.ccUniqueKey] = sharedState;
+    //   return;
+    // }
+
+    // source ref will receive the whole committed state 
+    const renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
 
     send(SIG_STATE_CHANGED, {
       committedState: state, sharedState,
       module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
     });
 
-    // source ref will receive the whole committed state 
-    const renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
     triggerBroadcastState(renderType, targetRef, sharedState, stateFor, module, renderKey, delay);
   });
 }
@@ -127,14 +136,15 @@ function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, r
 
 function syncCommittedStateToStore(moduleName, committedState, refCtx) {
   const stateKeys = moduleName_stateKeys_[moduleName]
-  const { isStateEmpty: isPartialSharedStateEmpty, partialState } = extractStateByKeys(committedState, stateKeys);
+  const { isStateEmpty: isPartialSharedStateEmpty, partialState: sharedState } = extractStateByKeys(committedState, stateKeys);
 
   //!!! save state to store
   if (!isPartialSharedStateEmpty) {
-    setState(moduleName, partialState, refCtx);
-    return partialState;
+    // watchReturnedShouldUpdate
+    const watchSU = setState(moduleName, sharedState, refCtx);
+    return { watchSU, sharedState };
   }
-  return null;
+  return { sharedState, watchSU: true };
 }
 
 function triggerBroadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {

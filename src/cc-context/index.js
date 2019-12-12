@@ -23,9 +23,10 @@ const setStateByModule = (module, committedState, refCtx) => {
 
   const rootWatchDep = watch.getRootWatchDep();
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  let watchRet = true;
   wFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
+    watchRet = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
   });
 
 
@@ -35,6 +36,8 @@ const setStateByModule = (module, committedState, refCtx) => {
     // const fnCtx = { key, module, moduleState, committedState };
     moduleState[key] = committedState[key];
   });
+
+  return watchRet;
 }
 
 const getState = (module) => {
@@ -106,6 +109,9 @@ const ccContext = {
   computedCompare: true,
   watchCompare: true,
   watchImmediate: false,
+  //allow reducer fn be generator function, default is false
+  // why do this, because with co.wrap, chrome's debug breakpoint works not well
+  generatorReducer: false,
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,
@@ -176,10 +182,10 @@ const ccContext = {
       else return _prevState;
     },
     setState: function (module, partialSharedState, refCtx) {
-      setStateByModule(module, partialSharedState, refCtx);
+      return setStateByModule(module, partialSharedState, refCtx);
     },
     setGlobalState: function (partialGlobalState) {
-      setStateByModule(MODULE_GLOBAL, partialGlobalState);
+      return setStateByModule(MODULE_GLOBAL, partialGlobalState);
     },
     getGlobalState: function () {
       return _state[MODULE_GLOBAL];
@@ -229,7 +235,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.81',
+    version: '1.5.82',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

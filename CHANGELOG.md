@@ -1,4 +1,11 @@
 #### 2019-12-11
+1.5.82 发布
+*  给reducerFn打上__ctName标签，方便loading模式判断
+*  加上generatorReducer参数选项，默认是false，表示在有Promise环境的情况下，如果强制设置为true的话，就不走co逻辑，而是直接采用Promise保证reducer函数运行，
+这意味着，如果你使用生成器函数来书写reducer函数，在有Promise环境的情况下就必须设置generatorReducer为true，才能正常工作
+> 这样设计是为了推荐用户首选async来书写副作用reducer函数
+
+#### 2019-12-11
 1.5.80 发布
 *  新增defComputed、defWatch接口定义模块computed和模块watch，支持用一个非stateKey同名的retKey依赖一个stateKey
 ```js
