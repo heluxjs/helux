@@ -293,7 +293,15 @@ export function invokeWith(userLogicFn, executionContext, payload){
       send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
     }
 
-    co.wrap(userLogicFn)(payload, moduleState, actionContext).then(partialState => {
+    let firstStepCall;
+    // if(userLogicFn.constructor.name === 'GeneratorFunction' || !window.Promise){
+    if (!window.Promise) {
+      firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
+    } else {
+      firstStepCall = new Promise(r => r(userLogicFn(payload, moduleState, actionContext)));
+    }
+
+    firstStepCall.then(partialState => {
 
       chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1
       const curDepth = chainId_depth_[chainId];

@@ -398,3 +398,7 @@ export function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCt
 
   return computedValue;
 }
+
+export function isGenFn(fn) {
+  return fn.constructor.name === 'GeneratorFunction';
+}

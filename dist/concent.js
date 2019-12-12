@@ -2115,7 +2115,17 @@
         });
       }
 
-      co.wrap(userLogicFn)(payload, moduleState, actionContext).then(function (partialState) {
+      var firstStepCall; // if(userLogicFn.constructor.name === 'GeneratorFunction' || !window.Promise){
+
+      if (!window.Promise) {
+        firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
+      } else {
+        firstStepCall = new Promise(function (r) {
+          return r(userLogicFn(payload, moduleState, actionContext));
+        });
+      }
+
+      firstStepCall.then(function (partialState) {
         chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
 
         var curDepth = chainId_depth_[chainId];
@@ -4740,6 +4750,11 @@
 
         if (reducerFn.__fnName) {
           // 将某个已载入到模块a的reducer再次载入到模块b
+          // if (util.isGenFn(reducerFn)) {
+          //   targetFn = function* (payload, moduleState, actionCtx) { return reducerFn(payload, moduleState, actionCtx) };
+          // } else {
+          //   targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
+          // }
           targetFn = function targetFn(payload, moduleState, actionCtx) {
             return reducerFn(payload, moduleState, actionCtx);
           };

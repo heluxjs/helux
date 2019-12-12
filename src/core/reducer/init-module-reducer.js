@@ -56,6 +56,11 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     } else {
       let targetFn = reducerFn;
       if (reducerFn.__fnName) {// 将某个已载入到模块a的reducer再次载入到模块b
+        // if (util.isGenFn(reducerFn)) {
+        //   targetFn = function* (payload, moduleState, actionCtx) { return reducerFn(payload, moduleState, actionCtx) };
+        // } else {
+        //   targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
+        // }
         targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
         newReducer[name] = targetFn;
       }
