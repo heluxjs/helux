@@ -36,14 +36,14 @@ export default function (module, computed, append = false, configureDep = true) 
   pickedFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, isBeforeMount:false, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
 
-    const fistDepKey = depKeys[0];
+    const firstDepKey = depKeys[0];
     let computedValue;
 
-    if (depKeys.length === 1 && fistDepKey !== '*') {
+    if (depKeys.length === 1 && firstDepKey !== '*') {
       if (firstDepKey !== retKey) {
         computedValue = fn(moduleState, moduleState, fnCtx);
       } else {
-        computedValue = fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
+        computedValue = fn(moduleState[firstDepKey], moduleState[firstDepKey], fnCtx);
       }
     } else {
       computedValue = fn(moduleState, moduleState, fnCtx);

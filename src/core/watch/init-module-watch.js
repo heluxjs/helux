@@ -36,13 +36,13 @@ export default function (module, moduleWatch, append = false) {
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
   pickedFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, isBeforeMount:false, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
-    const fistDepKey = depKeys[0];
+    const firstDepKey = depKeys[0];
 
-    if (depKeys.length === 1 && fistDepKey !== '*') {
+    if (depKeys.length === 1 && firstDepKey !== '*') {
       if (firstDepKey !== retKey) {
         fn(moduleState, moduleState, fnCtx);
       } else {
-        fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
+        fn(moduleState[firstDepKey], moduleState[firstDepKey], fnCtx);
       }
     }else{
       fn(moduleState, moduleState, fnCtx);
