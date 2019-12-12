@@ -160,7 +160,7 @@ run({
 | | |____state.js       # module init state(required)
 ```
 此时reducer文件里函数可以不需要基于字符串发起组合型调用了
-```
+```js
 export function inc(payload=1, moduleState) {
   return { count: moduleState.count + payload };
 }
