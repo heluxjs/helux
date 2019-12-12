@@ -16,7 +16,11 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
 
       let ret;
       if (depKeys.length === 1 && firstDepKey !== '*') {
-        ret = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
+        if (firstDepKey !== retKey) {
+          ret = fn(newState, oldState, fnCtx);
+        } else {
+          ret = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
+        }
       } else {
         ret = fn(newState, oldState, fnCtx);
       }

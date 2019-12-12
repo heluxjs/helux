@@ -20,7 +20,11 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
       let computedValue;
   
       if (depKeys.length === 1 && firstDepKey !== '*') {
-        computedValue = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
+        if (firstDepKey !== retKey) {
+          computedValue = fn(newState, oldState, fnCtx);
+        } else {
+          computedValue = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
+        }
       } else {
         computedValue = fn(newState, oldState, fnCtx);
       }
