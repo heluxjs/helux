@@ -34,13 +34,17 @@ export default function (module, computed, append = false, configureDep = true) 
 
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, moduleState);
   pickedFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+    const fnCtx = { retKey, isBeforeMount:false, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
 
     const fistDepKey = depKeys[0];
     let computedValue;
 
     if (depKeys.length === 1 && fistDepKey !== '*') {
-      computedValue = fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
+      if (firstDepKey !== retKey) {
+        computedValue = fn(moduleState, moduleState, fnCtx);
+      } else {
+        computedValue = fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
+      }
     } else {
       computedValue = fn(moduleState, moduleState, fnCtx);
     }
