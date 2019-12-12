@@ -34,7 +34,7 @@ export default function (module, moduleWatch, append = false) {
 
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
   pickedFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, isBeforeMount: false, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+    const fnCtx = { retKey, isFirstCall: true, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
     executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
   });
 

@@ -16,7 +16,7 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
   if(pickedFns.length ){
     const newState = Object.assign({}, oldState, committedState);
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
-      const fnCtx = { retKey, isBeforeMount, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
+      const fnCtx = { retKey, isFirstCall:isBeforeMount, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
       const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
   
       if (refModule === stateModule) {

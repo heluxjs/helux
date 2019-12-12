@@ -16,7 +16,7 @@ const setStateByModule = (module, committedState, refCtx) => {
   const newState = Object.assign({}, moduleState, committedState);
 
   cFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
+    const fnCtx = { retKey, isFirstCall:false, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
     const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
     moduleComputedValue[retKey] = computedValue;
   });
@@ -25,7 +25,7 @@ const setStateByModule = (module, committedState, refCtx) => {
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
   let watchRet = true;
   wFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
+    const fnCtx = { retKey, isFirstCall:false, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
     watchRet = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
   });
 
