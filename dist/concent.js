@@ -909,7 +909,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.78',
+      version: '1.5.80',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'

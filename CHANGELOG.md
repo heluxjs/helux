@@ -1,4 +1,24 @@
 #### 2019-12-11
+1.5.80 发布
+*  新增defComputed、defWatch接口定义模块computed和模块watch，支持用一个非stateKey同名的retKey依赖一个stateKey
+```js
+export function f1(){
+
+}
+
+// 这个效果和 `export function f1`一样，只不过retKey名为myF1
+export const myF1 = {
+  fn: ()=>{},
+  depKeys: ['f1']
+}
+
+//亦可以写为defComputed调用形式
+export const myF1 = defComputed(()=>{
+
+}, ['f1'])
+```
+
+#### 2019-12-11
 1.5.77 发布
 *  优化chainState记录和清理方式
 
