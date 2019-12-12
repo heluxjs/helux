@@ -2,6 +2,8 @@ import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE } from '../suppor
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 
+const { executeCompOrWatch } = util;
+
 const refs = { };
 const setStateByModule = (module, committedState, refCtx) => {
   const moduleState = getState(module);
@@ -15,14 +17,7 @@ const setStateByModule = (module, committedState, refCtx) => {
 
   cFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    const fistDepKey = depKeys[0];
-    let computedValue;
-
-    if (depKeys.length === 1 && fistDepKey !== '*') {
-      computedValue = fn(committedState[fistDepKey], moduleState[fistDepKey], fnCtx);
-    } else {
-      computedValue = fn(newState, moduleState, fnCtx);
-    }
+    const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
     moduleComputedValue[retKey] = computedValue;
   });
 
@@ -30,13 +25,7 @@ const setStateByModule = (module, committedState, refCtx) => {
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
   wFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    const firstDepKey = depKeys[0];
-
-    if (depKeys.length === 1 && firstDepKey !== '*') {
-      fn(committedState[firstDepKey], moduleState[firstDepKey], fnCtx);
-    } else {
-      fn(newState, moduleState, fnCtx);
-    }
+    executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
   });
 
 

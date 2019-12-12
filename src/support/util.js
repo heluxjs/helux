@@ -381,3 +381,20 @@ export function getWinCc() {
   if (ccns) return window.mcc[ccns];
   return window.cc;
 }
+
+export function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
+  const firstDepKey = depKeys[0];
+  let computedValue;
+
+  if (depKeys.length === 1 && firstDepKey !== '*') {
+    if (firstDepKey !== retKey) {
+      computedValue = fn(newState, oldState, fnCtx);
+    } else {
+      computedValue = fn(newState[firstDepKey], oldState[firstDepKey], fnCtx);
+    }
+  } else {
+    computedValue = fn(newState, oldState, fnCtx);
+  }
+
+  return computedValue;
+}

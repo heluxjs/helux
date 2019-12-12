@@ -754,6 +754,7 @@ export interface IRefCtxRsRcu
 
 export interface IFnCtxBase {
   retKey: string;
+  isBeforeMount: boolean;
   setted: string[];
   changed: string[];
   stateModule: string;
@@ -764,6 +765,7 @@ export interface IFnCtxBase {
 }
 export interface IFnCtxMBase<ModuleName> {
   retKey: string;
+  isBeforeMount: boolean;
   setted: string[];
   changed: string[];
   stateModule: string;
@@ -1046,6 +1048,10 @@ export function execute(ccClassKey: string, ...args: any): void;
 export function executeAll(...args: any): void;
 
 export function appendState(moduleName: string, state: IAnyObj): void;
+
+export function defComputed(fn: typeof computedFn, depKeys: string[], compare?: boolean): IComputedFnDesc;
+
+export function defWatch(fn: WatchFn, depKeys: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
 
 export declare const cst: CcCst;
 

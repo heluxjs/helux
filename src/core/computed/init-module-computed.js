@@ -36,20 +36,9 @@ export default function (module, computed, append = false, configureDep = true) 
   pickedFns.forEach(({ retKey, fn, depKeys }) => {
     const fnCtx = { retKey, isBeforeMount:false, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
 
-    const firstDepKey = depKeys[0];
-    let computedValue;
+    const computedValue = util.executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
 
-    if (depKeys.length === 1 && firstDepKey !== '*') {
-      if (firstDepKey !== retKey) {
-        computedValue = fn(moduleState, moduleState, fnCtx);
-      } else {
-        computedValue = fn(moduleState[firstDepKey], moduleState[firstDepKey], fnCtx);
-      }
-    } else {
-      computedValue = fn(moduleState, moduleState, fnCtx);
-    }
-
-    const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);;
+    const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
     moduleComputedValue[retKey] = computedValue;
   });
 

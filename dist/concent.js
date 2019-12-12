@@ -437,6 +437,22 @@
     if (ccns) return window.mcc[ccns];
     return window.cc;
   }
+  function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
+    var firstDepKey = depKeys[0];
+    var computedValue;
+
+    if (depKeys.length === 1 && firstDepKey !== '*') {
+      if (firstDepKey !== retKey) {
+        computedValue = fn(newState, oldState, fnCtx);
+      } else {
+        computedValue = fn(newState[firstDepKey], oldState[firstDepKey], fnCtx);
+      }
+    } else {
+      computedValue = fn(newState, oldState, fnCtx);
+    }
+
+    return computedValue;
+  }
 
   function getCacheDataContainer() {
     return {
@@ -639,6 +655,7 @@
   }
 
   var _computedValue2, _reducer;
+  var executeCompOrWatch$1 = executeCompOrWatch;
   var refs = {};
 
   var setStateByModule = function setStateByModule(module, committedState, refCtx) {
@@ -670,15 +687,7 @@
         committedState: committedState,
         refCtx: refCtx
       };
-      var fistDepKey = depKeys[0];
-      var computedValue;
-
-      if (depKeys.length === 1 && fistDepKey !== '*') {
-        computedValue = fn(committedState[fistDepKey], moduleState[fistDepKey], fnCtx);
-      } else {
-        computedValue = fn(newState, moduleState, fnCtx);
-      }
-
+      var computedValue = executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
       moduleComputedValue[retKey] = computedValue;
     });
     var rootWatchDep = watch.getRootWatchDep();
@@ -702,13 +711,7 @@
         committedState: committedState,
         refCtx: refCtx
       };
-      var firstDepKey = depKeys[0];
-
-      if (depKeys.length === 1 && firstDepKey !== '*') {
-        fn(committedState[firstDepKey], moduleState[firstDepKey], fnCtx);
-      } else {
-        fn(newState, moduleState, fnCtx);
-      }
+      executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
     });
     Object.keys(committedState).forEach(function (key) {
       /** setStateByModuleAndKey */
@@ -1217,6 +1220,7 @@
             depKeys = _ref.depKeys;
         var fnCtx = {
           retKey: retKey,
+          isBeforeMount: isBeforeMount,
           setted: setted,
           changed: changed,
           stateModule: stateModule,
@@ -1225,15 +1229,7 @@
           committedState: committedState,
           refCtx: refCtx
         };
-        var firstDepKey = depKeys[0];
-        var ret;
-
-        if (depKeys.length === 1 && firstDepKey !== '*') {
-          ret = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
-        } else {
-          ret = fn(newState, oldState, fnCtx);
-        } //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
-
+        var ret = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
 
         if (ret === false) shouldCurrentRefUpdate = false;
       });
@@ -1271,6 +1267,7 @@
             depKeys = _ref.depKeys;
         var fnCtx = {
           retKey: retKey,
+          isBeforeMount: isBeforeMount,
           setted: setted,
           changed: changed,
           stateModule: stateModule,
@@ -1279,14 +1276,7 @@
           committedState: committedState,
           refCtx: refCtx
         };
-        var firstDepKey = depKeys[0];
-        var computedValue;
-
-        if (depKeys.length === 1 && firstDepKey !== '*') {
-          computedValue = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
-        } else {
-          computedValue = fn(newState, oldState, fnCtx);
-        }
+        var computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
 
         if (refModule === stateModule) {
           refComputed[retKey] = computedValue;
@@ -4772,7 +4762,8 @@
     });
   }
 
-  var isPlainJsonObject$3 = isPlainJsonObject;
+  var isPlainJsonObject$3 = isPlainJsonObject,
+      executeCompOrWatch$2 = executeCompOrWatch;
   /**
    * 设置watch值，过滤掉一些无效的key
    */
@@ -4816,6 +4807,7 @@
           depKeys = _ref.depKeys;
       var fnCtx = {
         retKey: retKey,
+        isBeforeMount: false,
         setted: setted,
         changed: changed,
         stateModule: module,
@@ -4824,13 +4816,7 @@
         committedState: moduleState,
         refCtx: null
       };
-      var fistDepKey = depKeys[0];
-
-      if (depKeys.length === 1 && fistDepKey !== '*') {
-        fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
-      } else {
-        fn(moduleState, moduleState, fnCtx);
-      }
+      executeCompOrWatch$2(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
     });
   }
 
@@ -4884,6 +4870,7 @@
           depKeys = _ref.depKeys;
       var fnCtx = {
         retKey: retKey,
+        isBeforeMount: false,
         setted: setted,
         changed: changed,
         stateModule: module,
@@ -4892,15 +4879,7 @@
         committedState: moduleState,
         refCtx: null
       };
-      var fistDepKey = depKeys[0];
-      var computedValue;
-
-      if (depKeys.length === 1 && fistDepKey !== '*') {
-        computedValue = fn(moduleState[fistDepKey], moduleState[fistDepKey], fnCtx);
-      } else {
-        computedValue = fn(moduleState, moduleState, fnCtx);
-      }
-
+      var computedValue = executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
       var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
       moduleComputedValue[retKey] = computedValue;
     });
@@ -6365,6 +6344,21 @@
   var cst = _cst;
   var appendState$1 = appendState;
   var useConcent$1 = useConcent;
+  var defComputed = function defComputed(fn, depKeys, compare) {
+    return {
+      fn: fn,
+      depKeys: depKeys,
+      compare: compare
+    };
+  };
+  var defWatch = function defWatch(fn, depKeys, compare, immediate) {
+    return {
+      fn: fn,
+      depKeys: depKeys,
+      compare: compare,
+      immediate: immediate
+    };
+  };
   var defaultExport = {
     cloneModule: cloneModule,
     emit: emit,
@@ -6400,7 +6394,9 @@
     cst: cst,
     appendState: appendState$1,
     useConcent: useConcent$1,
-    bindCcToMcc: bindCcToMcc
+    bindCcToMcc: bindCcToMcc,
+    defComputed: defComputed,
+    defWatch: defWatch
   };
   function bindCcToMcc(name) {
     if (!multiCcContainer) {
@@ -6485,6 +6481,8 @@
   exports.cst = cst;
   exports.appendState = appendState$1;
   exports.useConcent = useConcent$1;
+  exports.defComputed = defComputed;
+  exports.defWatch = defWatch;
   exports.bindCcToMcc = bindCcToMcc;
   exports.default = defaultExport;
 

@@ -1,4 +1,5 @@
 import pickDepFns from '../base/pick-dep-fns';
+import { executeCompOrWatch } from '../../support/util';
 
 export default function (refCtx, stateModule, oldState, committedState, isBeforeMount) {
   if (!refCtx.hasWatchFn) return true;
@@ -12,18 +13,7 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
     const newState = Object.assign({}, oldState, committedState);
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
       const fnCtx = { retKey, isBeforeMount, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
-      const firstDepKey = depKeys[0];
-
-      let ret;
-      if (depKeys.length === 1 && firstDepKey !== '*') {
-        if (firstDepKey !== retKey) {
-          ret = fn(newState, oldState, fnCtx);
-        } else {
-          ret = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
-        }
-      } else {
-        ret = fn(newState, oldState, fnCtx);
-      }
+      const ret = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
 
       //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
       if (ret === false) shouldCurrentRefUpdate = false;

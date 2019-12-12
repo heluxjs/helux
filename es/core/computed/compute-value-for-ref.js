@@ -1,4 +1,5 @@
 import pickDepFns from '../base/pick-dep-fns';
+import { executeCompOrWatch } from '../../support/util';
 // import ccContext from '../../cc-context';
 
 //CcFragment实例调用会提供callerCtx
@@ -15,15 +16,8 @@ export default function (refCtx, stateModule, oldState, committedState, isBefore
   if(pickedFns.length ){
     const newState = Object.assign({}, oldState, committedState);
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
-      const fnCtx = { retKey, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
-      const firstDepKey = depKeys[0];
-      let computedValue;
-  
-      if (depKeys.length === 1 && firstDepKey !== '*') {
-        computedValue = fn(committedState[firstDepKey], oldState[firstDepKey], fnCtx, refCtx);
-      } else {
-        computedValue = fn(newState, oldState, fnCtx);
-      }
+      const fnCtx = { retKey, isBeforeMount, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
+      const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
   
       if (refModule === stateModule) {
         refComputed[retKey] = computedValue;
