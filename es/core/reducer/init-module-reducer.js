@@ -22,8 +22,8 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
 
   // 防止同一个reducer被载入到不同模块时，setState附加逻辑不正确
   const newReducer = Object.assign({}, reducer);
-
   _reducer[module] = newReducer;
+  
   const subReducerCaller = util.safeGetObjectFromObject(_reducerCaller, module);
   const subLazyReducerCaller = util.safeGetObjectFromObject(_lazyReducerCaller, module);
   // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);

@@ -52,6 +52,9 @@ export default function(module, config, option = {}) {
   if (module === MODULE_GLOBAL) {
     throw new Error('cc do not allow configure global module');
   }
+  if (reducer && !isPlainJsonObject(reducer)) {
+    throw makeError(ERR.CC_MODULE_REDUCER_INVALID, verboseInfo(`module[${module}]`));
+  }
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
   const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
@@ -96,13 +99,6 @@ export default function(module, config, option = {}) {
         _reducer[rmName] = moduleReducer;
       }
     });
-  }
-
-  if (reducer) {
-    if (!isPlainJsonObject(reducer)) {
-      throw makeError(ERR.CC_MODULE_REDUCER_IN_CC_CONFIGURE_OPTION_IS_INVALID, verboseInfo(`config.reducer is not a plain json object`));
-    }
-    _reducer[module] = reducer;
   }
 
   const storedGlobalState = _state[MODULE_GLOBAL];
