@@ -68,6 +68,9 @@ export const CcFragment = _CcFragment;
 export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
+export const defComputed = (fn, depKeys, compare) => ({ fn, depKeys, compare });
+export const defWatch = (fn, depKeys, compare, immediate) => ({ fn, depKeys, compare, immediate });
+
 
 const defaultExport = {
   cloneModule,
@@ -105,6 +108,8 @@ const defaultExport = {
   appendState,
   useConcent,
   bindCcToMcc,
+  defComputed,
+  defWatch,
 }
 
 export function bindCcToMcc(name) {

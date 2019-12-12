@@ -1049,6 +1049,10 @@ export function executeAll(...args: any): void;
 
 export function appendState(moduleName: string, state: IAnyObj): void;
 
+export function defComputed(fn: typeof computedFn, depKeys: string[], compare?: boolean): IComputedFnDesc;
+
+export function defWatch(fn: WatchFn, depKeys: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+
 export declare const cst: CcCst;
 
 /**
