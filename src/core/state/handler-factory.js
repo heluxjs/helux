@@ -335,7 +335,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         if (v.state) {
           changeRefState(v.state, {
             renderKey, module: v.module, reactCallback: newCb, type,
-            reducerModule, calledBy, fnName, delay
+            reducerModule, calledBy, fnName, delay, payload
           }, targetRef);
         }
       });
@@ -491,16 +491,5 @@ export function makeSetStateHandler(module) {
   }
 }
 
-export function makeCommitHandler(module, refCtx) {
-  const tmpState = {};
-  const commit = (state) => {
-    Object.assign(tmpState, state);
-  };
-  const flush = () => {
-    if (isObjectNotNull(tmpState)) {
-      if (refCtx && refCtx.module === module) refCtx.setState(tmpState);
-      else storeSetState(module, tmpState, refCtx);
-    }
-  }
-  return { commit, flush };
-}
+/** avoid  Circular dependency, move this fn to util */
+// export function makeCommitHandler(module, refCtx) {}

@@ -4,9 +4,8 @@ import * as util from '../../support/util';
 import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import pickDepFns from '../base/pick-dep-fns';
-import { makeCommitHandler } from '../state/handler-factory';
 
-const { isPlainJsonObject, executeCompOrWatch } = util;
+const { isPlainJsonObject, executeCompOrWatch, makeCommitHandler } = util;
 
 /**
  * 设置watch值，过滤掉一些无效的key
@@ -35,10 +34,10 @@ export default function (module, moduleWatch, append = false) {
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
 
   if (pickDepFns.length ) {
-    const { commit, flush } = makeCommitHandler(module, null);
+    const { commit, flush } = makeCommitHandler(module, ccContext.store.setState);
 
     pickedFns.forEach(({ retKey, fn, depKeys }) => {
-      const fnCtx = { retKey, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+      const fnCtx = { retKey, payload: null, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
       executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
     });
 

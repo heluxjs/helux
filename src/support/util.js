@@ -400,3 +400,15 @@ export function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCt
   return computedValue;
 }
 
+export function makeCommitHandler(module, setState) {
+  const tmpState = {};
+  const commit = (state) => {
+    Object.assign(tmpState, state);
+  };
+  const flush = () => {
+    if (isObjectNotNull(tmpState)) {
+      if (setState) setState(module, tmpState);
+    }
+  }
+  return { commit, flush };
+}

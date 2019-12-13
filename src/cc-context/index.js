@@ -1,7 +1,7 @@
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
-import { makeCommitHandler, makeCcForceUpdateHandler } from '../core/state/handler-factory';
+// import { makeCommitHandler } from '../core/state/handler-factory';
 
 const { executeCompOrWatch, okeys } = util;
 
@@ -22,9 +22,11 @@ const setStateByModule = (module, committedState, refCtx = null) => {
   if (cLen || wLen) {
     const refModule = refCtx ? refCtx.module : null;
     const newState = Object.assign({}, moduleState, committedState);
+    //直接从dispatcher上拿更新句柄，而不是import api/set-state,避免循环依赖
+    const setStateHandler = refs[CC_DISPATCHER] && refs[CC_DISPATCHER].setState;
 
     if(cLen){
-      const { commit, flush } = makeCcForceUpdateHandler(module, refCtx);
+      const { commit, flush } = util.makeCommitHandler(module, setStateHandler);
       cFns.forEach(({ retKey, fn, depKeys }) => {
         const fnCtx = { retKey, isFirstCall: false, commit, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
         const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
@@ -34,7 +36,7 @@ const setStateByModule = (module, committedState, refCtx = null) => {
     }
 
     if(wLen){
-      const { commit, flush } = makeCcForceUpdateHandler(module, refCtx);
+      const { commit, flush } = util.makeCommitHandler(module, setStateHandler);
       wFns.forEach(({ retKey, fn, depKeys }) => {
         const fnCtx = { retKey, isFirstCall: false, commit, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
         watchRet = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
