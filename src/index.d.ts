@@ -755,7 +755,7 @@ export interface IRefCtxRsRcu
 export interface IFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
-  payload: IAnyObj;
+  callInfo: { payload: IAnyObj, renderKey: string, delay: number };
   commit: (partialState: IAnyObj) => void;
   setted: string[];
   changed: string[];
@@ -768,7 +768,7 @@ export interface IFnCtxBase {
 export interface IFnCtxMBase<ModuleName> {
   retKey: string;
   isFirstCall: boolean;
-  payload: IAnyObj;
+  callInfo: { payload: IAnyObj, renderKey: string, delay: number };
   commit: (partialState: IAnyObj) => void;
   setted: string[];
   changed: string[];

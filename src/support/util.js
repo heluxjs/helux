@@ -400,14 +400,16 @@ export function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCt
   return computedValue;
 }
 
-export function makeCommitHandler(module, setState) {
-  const tmpState = {};
-  const commit = (state) => {
-    Object.assign(tmpState, state);
-  };
+export function makeCommitHandler(module, changeState, callInfo) {
+  const state = {};
+  const commit = partialState => Object.assign(state, partialState);
   const flush = () => {
     if (isObjectNotNull(tmpState)) {
-      if (setState) setState(module, tmpState);
+      // flag noCW true, tell concent not trigger computed&watch again!!!
+      if (changeState) {
+        const options = Object.assign({ module, calledBy: 'flush', noCW: true }, callInfo);
+        changeState(state, options);
+      }
     }
   }
   return { commit, flush };

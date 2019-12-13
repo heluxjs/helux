@@ -6,7 +6,10 @@ import pickDepFns from '../core/base/pick-dep-fns';
 const { executeCompOrWatch, okeys } = util;
 
 const refs = { };
-const setStateByModule = (module, committedState, refCtx = null) => {
+
+const getDispatcher = () => refs[CC_DISPATCHER];
+
+const setStateByModule = (module, committedState, { refCtx = null, callInfo = {} } = {}) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
   const moduleComputedValue = _computedValue[module];
@@ -17,16 +20,21 @@ const setStateByModule = (module, committedState, refCtx = null) => {
   const rootWatchDep = watch.getRootWatchDep();
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
 
-  let watchRet = true;
   const cLen = cFns.length, wLen = wFns.length;
-  if (cLen || wLen) {
-    const refModule = refCtx ? refCtx.module : null;
+  if (callInfo.noCW === false && (cLen || wLen)) {
+    let refModule = null, changeState;
+    if (refCtx) {
+      refModule = refCtx.module;
+      changeState = refCtx.changeState;
+    } else {
+      const d = getDispatcher();
+      changeState = d && d.ctx.changeState;
+    }
+
     const newState = Object.assign({}, moduleState, committedState);
-    //直接从dispatcher上拿更新句柄，而不是import api/set-state,避免循环依赖
-    const setStateHandler = refs[CC_DISPATCHER] && refs[CC_DISPATCHER].setState;
 
     if(cLen){
-      const { commit, flush } = util.makeCommitHandler(module, setStateHandler);
+      const { commit, flush } = util.makeCommitHandler(module, changeState, callInfo);
       cFns.forEach(({ retKey, fn, depKeys }) => {
         const fnCtx = { retKey, isFirstCall: false, commit, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
         const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
@@ -36,10 +44,10 @@ const setStateByModule = (module, committedState, refCtx = null) => {
     }
 
     if(wLen){
-      const { commit, flush } = util.makeCommitHandler(module, setStateHandler);
+      const { commit, flush } = util.makeCommitHandler(module, changeState, callInfo);
       wFns.forEach(({ retKey, fn, depKeys }) => {
         const fnCtx = { retKey, isFirstCall: false, commit, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-        watchRet = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
+        executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
       });
       flush();
     }
@@ -52,7 +60,6 @@ const setStateByModule = (module, committedState, refCtx = null) => {
     moduleState[key] = committedState[key];
   });
 
-  return watchRet;
 }
 
 const getState = (module) => {
@@ -100,6 +107,7 @@ function hotReloadWarning(err) {
 const _state = {};
 const _prevState = {};
 const ccContext = {
+  getDispatcher,
   isHotReloadMode: function () {
     if (ccContext.isHot) return true;
 
@@ -196,11 +204,11 @@ const ccContext = {
       if (module) return getPrevState(module);
       else return _prevState;
     },
-    setState: function (module, partialSharedState, refCtx) {
-      return setStateByModule(module, partialSharedState, refCtx);
+    setState: function (module, partialSharedState, options) {
+      setStateByModule(module, partialSharedState, options);
     },
     setGlobalState: function (partialGlobalState) {
-      return setStateByModule(MODULE_GLOBAL, partialGlobalState);
+      setStateByModule(MODULE_GLOBAL, partialGlobalState);
     },
     getGlobalState: function () {
       return _state[MODULE_GLOBAL];

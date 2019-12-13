@@ -1,7 +1,7 @@
 import pickDepFns from '../base/pick-dep-fns';
 import { executeCompOrWatch, makeCommitHandler } from '../../support/util';
 
-export default function (refCtx, stateModule, oldState, committedState, payload, isBeforeMount) {
+export default function (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount) {
   if (!refCtx.hasWatchFn) return true;
   const { watchDep, module: refModule, ccUniqueKey } = refCtx;
 
@@ -9,12 +9,12 @@ export default function (refCtx, stateModule, oldState, committedState, payload,
   // 触发有stateKey依赖列表相关的watch函数
   const { pickedFns, setted, changed } = pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
 
-  if (pickedFns.length) {
+  if (callInfo.noCW === false && pickedFns.length) {
     const newState = Object.assign({}, oldState, committedState);
-    const { commit, flush } = makeCommitHandler(stateModule, refCtx.setState);
+    const { commit, flush } = makeCommitHandler(stateModule, refCtx.changeState, callInfo);
 
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
-      const fnCtx = { retKey, payload, isFirstCall: isBeforeMount, commit, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
+      const fnCtx = { retKey, callInfo, isFirstCall: isBeforeMount, commit, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
       const ret = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
 
       //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新

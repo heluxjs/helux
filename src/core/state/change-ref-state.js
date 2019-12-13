@@ -55,10 +55,15 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
   }
 }
 
-// const ccUid_sharedState_ = {};
-
+/**
+ * 
+ * @param {*} state 
+ * @param {*} option 
+ * @param {boolean} option.noCW 不需要再计算computed & watch，避免fn.commit照成死循环
+ * @param {*} targetRef 
+ */
 export default function (state, {
-  module, skipMiddleware = false, payload,
+  module, skipMiddleware = false, payload, noCW = false,
   reactCallback, type, reducerModule, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
 ) {
   if (!isPlainJsonObject(state)) {
@@ -68,33 +73,34 @@ export default function (state, {
 
   const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
   const stateFor = getStateFor(module, refModule);
-  const passToMiddleware = { calledBy, type, payload, ccKey, ccUniqueKey, state, refModule, module, reducerModule, fnName };
+  const passToMiddleware = {
+    calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
+    state, refModule, module, reducerModule, fnName
+  };
+  const callInfo = { payload, renderKey, ccKey, noCW };
 
   callMiddlewares(skipMiddleware, passToMiddleware, () => {
     //在triggerReactSetState之前把状态存储到store，
     //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
     const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
-    let { sharedState, watchSU } = syncCommittedStateToStore(module, state, passedCtx);
-
-    // if (passedCtx && watchSU === false) {
-    //   // 阻断后面所有流程
-    //   ccUid_sharedState_[passedCtx.ccUniqueKey] = sharedState;
-    //   return;
-    // }
+    let sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
 
     // source ref will receive the whole committed state 
-    const renderType = triggerReactSetState(targetRef, payload, renderKey, calledBy, state, stateFor, reactCallback);
+    const renderType = triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback);
 
-    send(SIG_STATE_CHANGED, {
-      committedState: state, sharedState,
-      module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
-    });
+    if (renderType === RENDER_NO_OP && !sharedState) {
+    } else {
+      send(SIG_STATE_CHANGED, {
+        committedState: state, sharedState,
+        module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
+      });
+    }
 
-    triggerBroadcastState(renderType, payload, targetRef, sharedState, stateFor, module, renderKey, delay);
+    if (sharedState) triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
   });
 }
 
-function triggerReactSetState(targetRef, payload, renderKey, calledBy, state, stateFor, reactCallback) {
+function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback) {
   const { state: refState, ctx: refCtx } = targetRef;
   if (
     targetRef.__$$isUnmounted === true ||
@@ -128,28 +134,26 @@ function triggerReactSetState(targetRef, payload, renderKey, calledBy, state, st
     }
   }
 
-  computeValueForRef(refCtx, stateModule, refState, state, payload);
-  const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, state, payload);
+  computeValueForRef(refCtx, stateModule, refState, state, callInfo);
+  const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, state, callInfo);
   refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
   return renderType;
 }
 
-function syncCommittedStateToStore(moduleName, committedState, refCtx) {
-  const stateKeys = moduleName_stateKeys_[moduleName]
-  const { isStateEmpty: isPartialSharedStateEmpty, partialState: sharedState } = extractStateByKeys(committedState, stateKeys);
+function syncCommittedStateToStore(moduleName, committedState, options) {
+  const stateKeys = moduleName_stateKeys_[moduleName];
+  // extract shared state
+  const { partialState } = extractStateByKeys(committedState, stateKeys, true);
 
   //!!! save state to store
-  if (!isPartialSharedStateEmpty) {
-    // watchReturnedShouldUpdate
-    const watchSU = setState(moduleName, sharedState, refCtx);
-    return { watchSU, sharedState };
-  }
-  return { sharedState, watchSU: true };
+  if (partialState) setState(moduleName, partialState, options);
+
+  return partialState;
 }
 
-function triggerBroadcastState(renderType, payload, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
+function triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
   const startBroadcastState = () => {
-    broadcastState(renderType, payload, targetRef, sharedState, stateFor, moduleName, renderKey);
+    broadcastState(renderType, callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
   };
 
   if (delay > 0) {
@@ -160,12 +164,12 @@ function triggerBroadcastState(renderType, payload, targetRef, sharedState, stat
   }
 }
 
-function updateRefs(ccUkeys, moduleName, partialSharedState, payload) {
+function updateRefs(ccUkeys, moduleName, partialSharedState, callInfo) {
   ccUkeys.forEach(ukey => {
     const ref = ccUkey_ref_[ukey];
     if (ref.ctx.module === moduleName) {
       //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
-      triggerReactSetState(ref, payload, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
     } else {
       // consider this is a redundant render behavior .....
       // ref.__$$ccForceUpdate();
@@ -173,7 +177,7 @@ function updateRefs(ccUkeys, moduleName, partialSharedState, payload) {
   });
 }
 
-function broadcastState(renderType, payload, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
+function broadcastState(renderType, callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
   if (!partialSharedState) {// null
     return;
   }
@@ -194,7 +198,7 @@ function broadcastState(renderType, payload, targetRef, partialSharedState, stat
       const ukeyIndex = ccUkeys.indexOf(currentCcUkey);
       if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
 
-      updateRefs(ccUkeys, moduleName, partialSharedState, payload);
+      updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
     }
   }
 
@@ -236,25 +240,25 @@ function broadcastState(renderType, payload, targetRef, partialSharedState, stat
       const ref = ccUkey_ref_[ccKey];
       if (ref) {
         // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-        triggerReactSetState(ref, payload, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+        triggerReactSetState(ref, callInfo, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
       }
     });
   }
 
-  broadcastConnectedState(moduleName, partialSharedState, payload);
+  broadcastConnectedState(moduleName, partialSharedState, callInfo);
 }
 
-function broadcastConnectedState(commitModule, sharedState, payload) {
+function broadcastConnectedState(commitModule, sharedState, callInfo) {
   const sharedStateKeys = okeys(sharedState);//提前把sharedStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
 
   const ccClassKeys = connectedModuleName_ccClassKeys_[commitModule] || [];
   ccClassKeys.forEach(ccClassKey => {
     const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-    updateConnectedState(ccClassContext, commitModule, sharedState, sharedStateKeys, payload);
+    updateConnectedState(ccClassContext, commitModule, sharedState, sharedStateKeys, callInfo);
   });
 }
 
-function updateConnectedState(targetClassContext, targetModule, sharedState, sharedStateKeys, payload) {
+function updateConnectedState(targetClassContext, targetModule, sharedState, sharedStateKeys, callInfo) {
   const { connectedModuleKeyMapping, connectedModule } = targetClassContext;
   if (connectedModule[targetModule] === 1) {
 
@@ -278,8 +282,8 @@ function updateConnectedState(targetClassContext, targetModule, sharedState, sha
         const ref = ccUkey_ref_[ccUniKey];
         if (ref && ref.__$$isUnmounted !== true) {
           const refCtx = ref.ctx;
-          computeValueForRef(refCtx, targetModule, prevModuleState, sharedState, payload);
-          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState, payload);
+          computeValueForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
+          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
           if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
         }
       });

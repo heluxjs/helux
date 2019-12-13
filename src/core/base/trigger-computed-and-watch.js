@@ -5,6 +5,8 @@ import watchKeyForRef from '../watch/watch-key-for-ref';
 
 const { store: { getState } } = ccContext;
 
+const callInfo = { payload: null, renderKey: '', delay: -1 };
+
 /** 由首次render触发 */
 export default function (ref) {
   const ctx = ref.ctx;
@@ -13,18 +15,18 @@ export default function (ref) {
   const connectedModules = okeys(connect);
   const refState = ctx.state;
   if (hasComputedFn) {
-    computeValueForRef(ctx, refModule, refState, refState, null, true);
+    computeValueForRef(ctx, refModule, refState, refState, callInfo, true);
     connectedModules.forEach(m => {
       const mState = getState(m);
-      computeValueForRef(ctx, m, mState, mState, null, true);
+      computeValueForRef(ctx, m, mState, mState, callInfo, true);
     });
   }
 
   if (hasWatchFn) {
-    watchKeyForRef(ctx, refModule, refState, refState, null, true);
+    watchKeyForRef(ctx, refModule, refState, refState, callInfo, true);
     connectedModules.forEach(m => {
       const mState = getState(m);
-      watchKeyForRef(ctx, m, mState, mState, null, true);
+      watchKeyForRef(ctx, m, mState, mState, callInfo, true);
     });
   }
 

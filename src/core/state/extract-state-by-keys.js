@@ -1,7 +1,7 @@
 import { isPlainJsonObject } from '../../support/util';
 
 export default function (state, stateKeys, returnNullIfEmpty = false) {
-  const partialState = {};
+  let partialState = {};
   if (!isPlainJsonObject(state)) {
     return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true };
   }
@@ -13,5 +13,8 @@ export default function (state, stateKeys, returnNullIfEmpty = false) {
       isStateEmpty = false;
     }
   });
+
+  if (isStateEmpty && returnNullIfEmpty) partialState = null;
+
   return { partialState, isStateEmpty };
 }

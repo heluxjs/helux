@@ -94,10 +94,11 @@ export default function (ref, params, liteLevel = 5) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // create cc api
+  const changeState = (state, option) => {
+    changeRefState(state, option, ref);
+  }
   const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
-    changeRefState(state, {
-      calledBy, ccKey, ccUniqueKey, module, renderKey, delay, reactCallback
-    }, ref);
+    changeState(state, { calledBy, module, renderKey, delay, reactCallback });
   };
   const setModuleState = (module, state, reactCallback, renderKey, delay) => {
     _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
@@ -115,9 +116,7 @@ export default function (ref, params, liteLevel = 5) {
   const forceUpdate = (reactCallback, renderKey, delay) => {
     _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
   };
-  const changeState = (state, option) => {
-    changeRefState(state, option, ref);
-  }
+
 
   const onEvents = [];
   const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}

@@ -4,7 +4,7 @@ import { executeCompOrWatch, makeCommitHandler } from '../../support/util';
 
 //CcFragment实例调用会提供callerCtx
 // stateModule表示状态所属的模块
-export default function (refCtx, stateModule, oldState, committedState, payload, isBeforeMount = false) {
+export default function (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount = false) {
   if (!refCtx.hasComputedFn) return;
 
   const { computedDep, module: refModule, refComputed, refConnectedComputed, ccUniqueKey } = refCtx;
@@ -13,12 +13,12 @@ export default function (refCtx, stateModule, oldState, committedState, payload,
   // 触发依赖stateKeys相关的computed函数
   const { pickedFns, setted, changed } = pickDepFns(isBeforeMount, 'ref', 'computed', computedDep, stateModule, oldState, committedState, ccUniqueKey);
 
-  if (pickedFns.length) {
+  if (callInfo.noCW === false && pickedFns.length) {
     const newState = Object.assign({}, oldState, committedState);
-    const { commit, flush } = makeCommitHandler(stateModule, refCtx.setState);
+    const { commit, flush } = makeCommitHandler(stateModule, refCtx.changeState, callInfo);
 
     pickedFns.forEach(({ fn, retKey, depKeys }) => {
-      const fnCtx = { retKey, payload, isFirstCall: isBeforeMount, commit, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
+      const fnCtx = { retKey, callInfo, isFirstCall: isBeforeMount, commit, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
       const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
 
       if (refModule === stateModule) {
