@@ -1,4 +1,26 @@
 #### 2019-12-11
+1.5.83 发布
+*  新增fnCtx.commit，支持computed函数里，调用commit接口再次修改state的数据
+> cc会收集一轮渲染命中的多个computed里commit的状态并做合并然后调用flush，刷新为store，注意flush触发的二次渲染并不会在此触发所有相关的computed&watch函数，以避免死循环产生
+```js
+export const myF2 = defComputed((nv, ov, { commit })=>{
+  commit({f1:'tell'});
+  return 'f2_ret';
+}, ['f2'])
+
+export const myF1 = defComputed((nv, ov, { commit })=>{
+  commit({f2:'me'});
+  return 'f1_ret';
+}, ['f1'])
+
+// 如下reducer函数，返回了f1、f2，会命中myF1、myF2两个计算函数，在其内部又分别commit了新的f1,f2，不会再次引发计算。
+export function foo(){
+  return {f1:'f1', f2:'f2'};
+}
+```
+* watch函数也同样支持fnCtx.commit，和computed函数使用方法无区别
+
+#### 2019-12-11
 1.5.82 发布
 *  给reducerFn打上__ctName标签，方便loading模式判断
 *  加上generatorReducer参数选项，默认是false，表示在有Promise环境的情况下，如果强制设置为true的话，就不走co逻辑，而是直接采用Promise保证reducer函数运行，

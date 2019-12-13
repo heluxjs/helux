@@ -294,8 +294,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
     }
 
     let firstStepCall;
-    // if(userLogicFn.constructor.name === 'GeneratorFunction' || !window.Promise){
-    if (!window.Promise) {
+    if (!window.Promise || ccContext.generatorReducer) {
       firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
     } else {
       firstStepCall = new Promise(r => r(userLogicFn(payload, moduleState, actionContext)));
@@ -336,7 +335,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         if (v.state) {
           changeRefState(v.state, {
             renderKey, module: v.module, reactCallback: newCb, type,
-            reducerModule, calledBy, fnName, delay
+            reducerModule, calledBy, fnName, delay, payload
           }, targetRef);
         }
       });
@@ -491,3 +490,6 @@ export function makeSetStateHandler(module) {
     }
   }
 }
+
+/** avoid  Circular dependency, move this fn to util */
+// export function makeCommitHandler(module, refCtx) {}

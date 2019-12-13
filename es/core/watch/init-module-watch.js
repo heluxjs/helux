@@ -5,7 +5,8 @@ import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { isPlainJsonObject, executeCompOrWatch } = util;
+const { isPlainJsonObject, executeCompOrWatch, makeCommitHandler } = util;
+const callInfo = { payload: null, renderKey: '', delay: -1 };
 
 /**
  * 设置watch值，过滤掉一些无效的key
@@ -31,11 +32,18 @@ export default function (module, moduleWatch, append = false) {
   const moduleState = getState(module);
 
   configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootWatchDep }, moduleWatch);
-
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
-  pickedFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, isBeforeMount: false, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
-    executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-  });
+
+  if (pickDepFns.length ) {
+    const d = ccContext.getDispatcher();
+    const { commit, flush } = makeCommitHandler(module, d && d.ctx.changeState, callInfo);
+
+    pickedFns.forEach(({ retKey, fn, depKeys }) => {
+      const fnCtx = { retKey, payload: null, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+      executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
+    });
+
+    flush();
+  }
 
 }

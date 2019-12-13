@@ -26,6 +26,7 @@ export default function ({
   computedCompare = true, 
   watchCompare = true, 
   watchImmediate = false,
+  generatorReducer = false,
 } = {}) {
   try {
     justTip(`cc version ${ccContext.info.version}`);
@@ -37,6 +38,7 @@ export default function ({
     ccContext.computedCompare = computedCompare;
     ccContext.watchCompare = watchCompare;
     ccContext.watchImmediate = watchImmediate;
+    ccContext.generatorReducer = generatorReducer;
 
     const err = makeError(ERR.CC_ALREADY_STARTUP);
     clearContextIfHot(true, err);

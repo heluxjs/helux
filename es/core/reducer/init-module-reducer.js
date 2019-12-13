@@ -51,16 +51,11 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     // subLazyReducerRefCaller[name] = wrappedLazyReducerFn;
 
     const reducerFn = newReducer[name];
-    if(typeof reducerFn !== 'function'){
+    if (typeof reducerFn !== 'function') {
       throw new Error(`reducer key[${name}] 's value is not a function`);
     } else {
       let targetFn = reducerFn;
       if (reducerFn.__fnName) {// 将某个已载入到模块a的reducer再次载入到模块b
-        // if (util.isGenFn(reducerFn)) {
-        //   targetFn = function* (payload, moduleState, actionCtx) { return reducerFn(payload, moduleState, actionCtx) };
-        // } else {
-        //   targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
-        // }
         targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
         newReducer[name] = targetFn;
       }
@@ -68,6 +63,8 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
       targetFn.__fnName = name;//!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
       targetFn.__stateModule = module;
       targetFn.__reducerModule = module;
+      // AsyncFunction GeneratorFunction Function
+      targetFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
     }
     // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
     // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数

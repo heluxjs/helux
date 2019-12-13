@@ -52,12 +52,13 @@ export default function(module, config, option = {}) {
   if (module === MODULE_GLOBAL) {
     throw new Error('cc do not allow configure global module');
   }
-  if (reducer && !isPlainJsonObject(reducer)) {
-    throw makeError(ERR.CC_MODULE_REDUCER_INVALID, verboseInfo(`module[${module}]`));
-  }
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
   const { reducer: optionReducer, globalState, globalWatch, globalComputed, middlewares } = option;
+
+  if (reducer && !isPlainJsonObject(reducer)) {
+    throw makeError(ERR.CC_MODULE_REDUCER_INVALID, verboseInfo(`module[${module}]`));
+  }
 
   initModuleState(module, state, true, 'configure');
   initModuleReducer(module, reducer, true, 'configure');

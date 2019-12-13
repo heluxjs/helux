@@ -47,12 +47,13 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
       };
     }
     
+    // for watch
     retKeys.forEach(retKey => {
       const { fn, immediate, depKeys } = retKey_fn_[retKey];
       if (immediate) pickedFns.push({ retKey, fn, depKeys });
     });
-    return { pickedFns, setted, changed };
 
+    return { pickedFns, setted, changed };
   }
 
   // 这些目标stateKey的值发生了变化
@@ -104,7 +105,7 @@ function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, state
     });
   }
 
-  // 还没有挑完，再遍历settedStateKeys, 挑选出剩余的目标fn
+  // 继续遍历settedStateKeys, 挑选出剩余的目标fn（非*相关的）
   if (pickedFns.length < fnCount) {
     const retKey_picked_ = {};
     const len = settedStateKeys.length;

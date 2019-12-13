@@ -62,21 +62,15 @@ function _parseDescObj(cate, confMeta, descObj) {
     // 解释key，提取相关信息
     const { isStateKey, module, retKey } = _resolveKey(cate, confMeta, key);
 
+    const depKeysOfStateKey = isStateKey ? [retKey] : [];
     if (vType === 'function') {
-      _checkIsStateKeyTrue(key, isStateKey);
-      _mapDepDesc(confMeta, key, module, retKey, val, [retKey], watchImmediate, defaultCompare);
+      _mapDepDesc(confMeta, key, module, retKey, val, depKeysOfStateKey, watchImmediate, defaultCompare);
       return;
     }
 
     if (vType === 'object') {
       const { fn, depKeys, immediate = watchImmediate, compare = defaultCompare } = val;
-
-      let _depKeys = depKeys;
-      if (!_depKeys) {
-        _checkIsStateKeyTrue(key, isStateKey);
-        _depKeys = [retKey];
-      }
-
+      const _depKeys = depKeys || depKeysOfStateKey;
       _mapDepDesc(confMeta, key, module, retKey, fn, _depKeys, immediate, compare);
     }
   });
@@ -117,12 +111,6 @@ function _mapDepDesc(confMeta, key, module, retKey, fn, depKeys, immediate, comp
     const retKeys = safeGetArrayFromObject(stateKey_retKeys_, sKey);
     retKeys.push(retKey);
   });
-}
-
-function _checkIsStateKeyTrue(key, isStateKey) {
-  // concent can't deduce it's dependencyStateKeys
-  if (!isStateKey) throw new Error(`key[${key}] is not a stateKey, please specify depKeys explicitly`);
-  // if (!isStateKey) throw new Error(`key[${key}] is not a stateKey`);
 }
 
 function _resolveKey(cate, confMeta, key) {

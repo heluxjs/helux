@@ -388,19 +388,18 @@
   }
   function differStateKeys(oldState, newState) {
     var changed = [],
-        unchanged = [],
-        setted = [];
+        setted = []; // const unchanged=[];
+
     okeys(newState).forEach(function (k) {
       var newVal = newState[k];
 
       if (newVal !== undefined) {
         setted.push(k);
-        if (newVal !== oldState[k]) changed.push(k);else unchanged.push(k);
+        if (newVal !== oldState[k]) changed.push(k); // else unchanged.push(k);
       }
     });
     return {
       changed: changed,
-      unchanged: unchanged,
       setted: setted
     };
   }
@@ -452,6 +451,32 @@
     }
 
     return computedValue;
+  }
+  function makeCommitHandler(module, changeState, callInfo) {
+    var state = {};
+
+    var commit = function commit(partialState) {
+      return Object.assign(state, partialState);
+    };
+
+    var flush = function flush() {
+      if (isObjectNotNull(state)) {
+        // flag noCW true, tell concent not trigger computed&watch again!!!
+        if (changeState) {
+          var options = Object.assign(callInfo, {
+            module: module,
+            calledBy: 'flush',
+            noCW: true
+          });
+          changeState(state, options);
+        }
+      }
+    };
+
+    return {
+      commit: commit,
+      flush: flush
+    };
   }
 
   function getCacheDataContainer() {
@@ -515,7 +540,8 @@
           setted: _setted,
           changed: _changed
         };
-      }
+      } // for watch
+
 
       retKeys.forEach(function (retKey) {
         var _retKey_fn_$retKey2 = retKey_fn_[retKey],
@@ -600,7 +626,7 @@
 
         pickedFns.push(toPush);
       });
-    } // 还没有挑完，再遍历settedStateKeys, 挑选出剩余的目标fn
+    } // 继续遍历settedStateKeys, 挑选出剩余的目标fn（非*相关的）
 
 
     if (pickedFns.length < fnCount) {
@@ -655,10 +681,22 @@
   }
 
   var _computedValue2, _reducer;
-  var executeCompOrWatch$1 = executeCompOrWatch;
+
+  var executeCompOrWatch$1 = executeCompOrWatch,
+      okeys$1 = okeys;
   var refs = {};
 
-  var setStateByModule = function setStateByModule(module, committedState, refCtx) {
+  var getDispatcher = function getDispatcher() {
+    return refs[CC_DISPATCHER];
+  };
+
+  var setStateByModule = function setStateByModule(module, committedState, _temp) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        _ref$refCtx = _ref.refCtx,
+        refCtx = _ref$refCtx === void 0 ? null : _ref$refCtx,
+        _ref$callInfo = _ref.callInfo,
+        callInfo = _ref$callInfo === void 0 ? {} : _ref$callInfo;
+
     var moduleState = _getState(module);
 
     var prevModuleState = _getPrevState(module);
@@ -671,25 +709,6 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    var refModule = refCtx ? refCtx.module : null;
-    var newState = Object.assign({}, moduleState, committedState);
-    cFns.forEach(function (_ref) {
-      var retKey = _ref.retKey,
-          fn = _ref.fn,
-          depKeys = _ref.depKeys;
-      var fnCtx = {
-        retKey: retKey,
-        setted: setted,
-        changed: changed,
-        stateModule: module,
-        refModule: refModule,
-        oldState: moduleState,
-        committedState: committedState,
-        refCtx: refCtx
-      };
-      var computedValue = executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
-      moduleComputedValue[retKey] = computedValue;
-    });
     var rootWatchDep = watch.getRootWatchDep();
 
     var _pickDepFns2 = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState),
@@ -697,23 +716,79 @@
         ws = _pickDepFns2.setted,
         wc = _pickDepFns2.changed;
 
-    wFns.forEach(function (_ref2) {
-      var retKey = _ref2.retKey,
-          fn = _ref2.fn,
-          depKeys = _ref2.depKeys;
-      var fnCtx = {
-        retKey: retKey,
-        setted: ws,
-        changed: wc,
-        stateModule: module,
-        refModule: refModule,
-        oldState: moduleState,
-        committedState: committedState,
-        refCtx: refCtx
-      };
-      executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
-    });
-    Object.keys(committedState).forEach(function (key) {
+    var cLen = cFns.length,
+        wLen = wFns.length;
+
+    if (callInfo.noCW === false && (cLen || wLen)) {
+      var refModule = null,
+          changeState;
+
+      if (refCtx) {
+        refModule = refCtx.module;
+        changeState = refCtx.changeState;
+      } else {
+        var d = getDispatcher();
+        changeState = d && d.ctx.changeState;
+      }
+
+      var newState = Object.assign({}, moduleState, committedState);
+
+      if (cLen) {
+        var _util$makeCommitHandl = makeCommitHandler(module, changeState, callInfo),
+            commit = _util$makeCommitHandl.commit,
+            flush = _util$makeCommitHandl.flush;
+
+        cFns.forEach(function (_ref2) {
+          var retKey = _ref2.retKey,
+              fn = _ref2.fn,
+              depKeys = _ref2.depKeys;
+          var fnCtx = {
+            retKey: retKey,
+            isFirstCall: false,
+            commit: commit,
+            setted: setted,
+            changed: changed,
+            stateModule: module,
+            refModule: refModule,
+            oldState: moduleState,
+            committedState: committedState,
+            refCtx: refCtx
+          };
+          var computedValue = executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
+          moduleComputedValue[retKey] = computedValue;
+        });
+        flush();
+      }
+
+      if (wLen) {
+        var _util$makeCommitHandl2 = makeCommitHandler(module, changeState, callInfo),
+            _commit = _util$makeCommitHandl2.commit,
+            _flush = _util$makeCommitHandl2.flush;
+
+        wFns.forEach(function (_ref3) {
+          var retKey = _ref3.retKey,
+              fn = _ref3.fn,
+              depKeys = _ref3.depKeys;
+          var fnCtx = {
+            retKey: retKey,
+            isFirstCall: false,
+            commit: _commit,
+            setted: ws,
+            changed: wc,
+            stateModule: module,
+            refModule: refModule,
+            oldState: moduleState,
+            committedState: committedState,
+            refCtx: refCtx
+          };
+          executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
+        });
+
+        _flush();
+      }
+    }
+
+    okeys$1(committedState).forEach(function (key) {
       /** setStateByModuleAndKey */
       prevModuleState[key] = moduleState[key]; // const fnCtx = { key, module, moduleState, committedState };
 
@@ -774,6 +849,7 @@
   var _state = {};
   var _prevState = {};
   var ccContext = {
+    getDispatcher: getDispatcher,
     isHotReloadMode: function isHotReloadMode() {
       if (ccContext.isHot) return true;
       var result = false;
@@ -799,6 +875,9 @@
     computedCompare: true,
     watchCompare: true,
     watchImmediate: false,
+    //allow reducer fn be generator function, default is false
+    // why do this, because with co.wrap, chrome's debug breakpoint works not well
+    generatorReducer: false,
     isDebug: false,
     // if isStrict is true, every error will be throw out instead of console.error, 
     // but this may crash your app, make sure you have a nice error handling way,
@@ -860,8 +939,8 @@
       getPrevState: function getPrevState(module) {
         if (module) return _getPrevState(module);else return _prevState;
       },
-      setState: function setState(module, partialSharedState, refCtx) {
-        setStateByModule(module, partialSharedState, refCtx);
+      setState: function setState(module, partialSharedState, options) {
+        setStateByModule(module, partialSharedState, options);
       },
       setGlobalState: function setGlobalState(partialGlobalState) {
         setStateByModule(MODULE_GLOBAL, partialGlobalState);
@@ -909,7 +988,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.81',
+      version: '1.5.82',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1194,13 +1273,14 @@
         isStateEmpty = false;
       }
     });
+    if (isStateEmpty && returnNullIfEmpty) partialState = null;
     return {
       partialState: partialState,
       isStateEmpty: isStateEmpty
     };
   }
 
-  function watchKeyForRef (refCtx, stateModule, oldState, committedState, isBeforeMount) {
+  function watchKeyForRef (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount) {
     if (!refCtx.hasWatchFn) return true;
     var watchDep = refCtx.watchDep,
         refModule = refCtx.module,
@@ -1212,15 +1292,22 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    if (pickedFns.length) {
+    if (callInfo.noCW === false && pickedFns.length) {
       var newState = Object.assign({}, oldState, committedState);
+
+      var _makeCommitHandler = makeCommitHandler(stateModule, refCtx.changeState, callInfo),
+          commit = _makeCommitHandler.commit,
+          flush = _makeCommitHandler.flush;
+
       pickedFns.forEach(function (_ref) {
         var fn = _ref.fn,
             retKey = _ref.retKey,
             depKeys = _ref.depKeys;
         var fnCtx = {
           retKey: retKey,
-          isBeforeMount: isBeforeMount,
+          callInfo: callInfo,
+          isFirstCall: isBeforeMount,
+          commit: commit,
           setted: setted,
           changed: changed,
           stateModule: stateModule,
@@ -1233,6 +1320,7 @@
 
         if (ret === false) shouldCurrentRefUpdate = false;
       });
+      flush();
     }
 
     return shouldCurrentRefUpdate;
@@ -1241,7 +1329,7 @@
   //CcFragment实例调用会提供callerCtx
   // stateModule表示状态所属的模块
 
-  function computeValueForRef (refCtx, stateModule, oldState, committedState, isBeforeMount) {
+  function computeValueForRef (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount) {
     if (isBeforeMount === void 0) {
       isBeforeMount = false;
     }
@@ -1259,15 +1347,22 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    if (pickedFns.length) {
+    if (callInfo.noCW === false && pickedFns.length) {
       var newState = Object.assign({}, oldState, committedState);
+
+      var _makeCommitHandler = makeCommitHandler(stateModule, refCtx.changeState, callInfo),
+          commit = _makeCommitHandler.commit,
+          flush = _makeCommitHandler.flush;
+
       pickedFns.forEach(function (_ref) {
         var fn = _ref.fn,
             retKey = _ref.retKey,
             depKeys = _ref.depKeys;
         var fnCtx = {
           retKey: retKey,
-          isBeforeMount: isBeforeMount,
+          callInfo: callInfo,
+          isFirstCall: isBeforeMount,
+          commit: commit,
           setted: setted,
           changed: changed,
           stateModule: stateModule,
@@ -1289,6 +1384,7 @@
           targetComputed[retKey] = computedValue;
         }
       });
+      flush();
     }
   }
 
@@ -1296,7 +1392,7 @@
       justWarning$1 = justWarning,
       isObjectNotNull$1 = isObjectNotNull,
       computeFeature$1 = computeFeature,
-      okeys$1 = okeys,
+      okeys$2 = okeys,
       removeArrElements$1 = removeArrElements;
   var STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 = STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
       STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE$1 = STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
@@ -1359,12 +1455,23 @@
       cb();
     }
   }
+  /**
+   * 
+   * @param {*} state 
+   * @param {*} option 
+   * @param {boolean} option.noCW 不需要再计算computed & watch，避免fn.commit照成死循环
+   * @param {*} targetRef 
+   */
+
 
   function changeRefState (state, _temp, targetRef) {
     var _ref = _temp === void 0 ? {} : _temp,
         module = _ref.module,
         _ref$skipMiddleware = _ref.skipMiddleware,
         skipMiddleware = _ref$skipMiddleware === void 0 ? false : _ref$skipMiddleware,
+        payload = _ref.payload,
+        _ref$noCW = _ref.noCW,
+        noCW = _ref$noCW === void 0 ? false : _ref$noCW,
         reactCallback = _ref.reactCallback,
         type = _ref.type,
         reducerModule = _ref.reducerModule,
@@ -1390,6 +1497,9 @@
     var passToMiddleware = {
       calledBy: calledBy,
       type: type,
+      payload: payload,
+      renderKey: renderKey,
+      delay: delay,
       ccKey: ccKey,
       ccUniqueKey: ccUniqueKey,
       state: state,
@@ -1398,26 +1508,39 @@
       reducerModule: reducerModule,
       fnName: fnName
     };
+    var callInfo = {
+      payload: payload,
+      renderKey: renderKey,
+      ccKey: ccKey,
+      noCW: noCW
+    };
     callMiddlewares(skipMiddleware, passToMiddleware, function () {
       //在triggerReactSetState之前把状态存储到store，
       //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
       var passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 ? targetRef.ctx : null;
-      var sharedState = syncCommittedStateToStore(module, state, passedCtx);
-      send(SIG_STATE_CHANGED$1, {
-        committedState: state,
-        sharedState: sharedState,
-        module: module,
-        type: getActionType(calledBy, type),
-        ccUniqueKey: ccUniqueKey,
-        renderKey: renderKey
+      var sharedState = syncCommittedStateToStore(module, state, {
+        refCtx: passedCtx,
+        callInfo: callInfo
       }); // source ref will receive the whole committed state 
 
-      var renderType = triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback);
-      triggerBroadcastState(renderType, targetRef, sharedState, stateFor, module, renderKey, delay);
+      var renderType = triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback);
+
+      if (renderType === RENDER_NO_OP$1 && !sharedState) ; else {
+        send(SIG_STATE_CHANGED$1, {
+          committedState: state,
+          sharedState: sharedState,
+          module: module,
+          type: getActionType(calledBy, type),
+          ccUniqueKey: ccUniqueKey,
+          renderKey: renderKey
+        });
+      }
+
+      if (sharedState) triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
     });
   }
 
-  function triggerReactSetState(targetRef, renderKey, calledBy, state, stateFor, reactCallback) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback) {
     var refState = targetRef.state,
         refCtx = targetRef.ctx;
 
@@ -1461,33 +1584,28 @@
       }
     }
 
-    computeValueForRef(refCtx, stateModule, refState, state);
-    var shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, state);
+    computeValueForRef(refCtx, stateModule, refState, state, callInfo);
+    var shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, state, callInfo);
 
     refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
 
     return renderType;
   }
 
-  function syncCommittedStateToStore(moduleName, committedState, refCtx) {
-    var stateKeys = moduleName_stateKeys_[moduleName];
+  function syncCommittedStateToStore(moduleName, committedState, options) {
+    var stateKeys = moduleName_stateKeys_[moduleName]; // extract shared state
 
-    var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys),
-        isPartialSharedStateEmpty = _extractStateByKeys3.isStateEmpty,
+    var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys, true),
         partialState = _extractStateByKeys3.partialState; //!!! save state to store
 
 
-    if (!isPartialSharedStateEmpty) {
-      setState(moduleName, partialState, refCtx);
-      return partialState;
-    }
-
-    return null;
+    if (partialState) setState(moduleName, partialState, options);
+    return partialState;
   }
 
-  function triggerBroadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
+  function triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
     var startBroadcastState = function startBroadcastState() {
-      broadcastState(renderType, targetRef, sharedState, stateFor, moduleName, renderKey);
+      broadcastState(renderType, callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
     };
 
     if (delay > 0) {
@@ -1498,18 +1616,18 @@
     }
   }
 
-  function updateRefs(ccUkeys, moduleName, partialSharedState) {
+  function updateRefs(ccUkeys, moduleName, partialSharedState, callInfo) {
     ccUkeys.forEach(function (ukey) {
       var ref = ccUkey_ref_[ukey];
 
       if (ref.ctx.module === moduleName) {
         //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
-        triggerReactSetState(ref, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
+        triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
       }
     });
   }
 
-  function broadcastState(renderType, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
+  function broadcastState(renderType, callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
     if (!partialSharedState) {
       // null
       return;
@@ -1528,7 +1646,7 @@
         var ccUkeys = renderKey_ccUkeys_[renderKey].slice();
         var ukeyIndex = ccUkeys.indexOf(currentCcUkey);
         if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
-        updateRefs(ccUkeys, moduleName, partialSharedState);
+        updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
       }
     } // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
     // so flag ignoreCurrentCcUkey as true;
@@ -1577,7 +1695,7 @@
 
         if (ref) {
           // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-          triggerReactSetState(ref, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
+          triggerReactSetState(ref, callInfo, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
         }
       });
     };
@@ -1588,20 +1706,20 @@
       if (_ret === "continue") continue;
     }
 
-    broadcastConnectedState(moduleName, partialSharedState);
+    broadcastConnectedState(moduleName, partialSharedState, callInfo);
   }
 
-  function broadcastConnectedState(commitModule, sharedState) {
-    var sharedStateKeys = okeys$1(sharedState); //提前把sharedStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
+  function broadcastConnectedState(commitModule, sharedState, callInfo) {
+    var sharedStateKeys = okeys$2(sharedState); //提前把sharedStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
 
     var ccClassKeys = connectedModuleName_ccClassKeys_[commitModule] || [];
     ccClassKeys.forEach(function (ccClassKey) {
       var ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-      updateConnectedState(ccClassContext, commitModule, sharedState, sharedStateKeys);
+      updateConnectedState(ccClassContext, commitModule, sharedState, sharedStateKeys, callInfo);
     });
   }
 
-  function updateConnectedState(targetClassContext, targetModule, sharedState, sharedStateKeys) {
+  function updateConnectedState(targetClassContext, targetModule, sharedState, sharedStateKeys, callInfo) {
     var connectedModuleKeyMapping = targetClassContext.connectedModuleKeyMapping,
         connectedModule = targetClassContext.connectedModule;
 
@@ -1628,8 +1746,8 @@
 
           if (ref && ref.__$$isUnmounted !== true) {
             var refCtx = ref.ctx;
-            computeValueForRef(refCtx, targetModule, prevModuleState, sharedState);
-            var shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState);
+            computeValueForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
+            var shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
             if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
           }
         });
@@ -2115,9 +2233,9 @@
         });
       }
 
-      var firstStepCall; // if(userLogicFn.constructor.name === 'GeneratorFunction' || !window.Promise){
+      var firstStepCall;
 
-      if (!window.Promise) {
+      if (!window.Promise || ccContext.generatorReducer) {
         firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
       } else {
         firstStepCall = new Promise(function (r) {
@@ -2173,7 +2291,8 @@
               reducerModule: reducerModule,
               calledBy: calledBy,
               fnName: fnName,
-              delay: delay
+              delay: delay,
+              payload: payload
             }, targetRef);
           }
         });
@@ -2413,8 +2532,10 @@
       }
     };
   }
+  /** avoid  Circular dependency, move this fn to util */
+  // export function makeCommitHandler(module, refCtx) {}
 
-  var okeys$2 = okeys,
+  var okeys$3 = okeys,
       isPlainJsonObject$2 = isPlainJsonObject;
   var _state$1 = ccContext.store._state;
   /**
@@ -2432,7 +2553,7 @@
       return invalidConnect + " module[" + m + "]'s value must be * or array of string";
     };
 
-    var moduleNames = okeys$2(connectSpec);
+    var moduleNames = okeys$3(connectSpec);
     moduleNames.sort();
     var featureStrs = [];
     var connectedModuleKeyMapping = {};
@@ -2449,7 +2570,7 @@
       if (typeof val === 'string') {
         if (val !== '*') throw new Error(invalidConnectItem(m));else {
           featureStrs.push(feature + "*");
-          okeys$2(moduleState).forEach(function (sKey) {
+          okeys$3(moduleState).forEach(function (sKey) {
             return connectedModuleKeyMapping[m + "/" + sKey] = sKey;
           });
         }
@@ -3022,10 +3143,10 @@
           module = _resolveKey2.module,
           retKey = _resolveKey2.retKey;
 
-      if (vType === 'function') {
-        _checkIsStateKeyTrue(key, isStateKey);
+      var depKeysOfStateKey = isStateKey ? [retKey] : [];
 
-        _mapDepDesc(confMeta, key, module, retKey, val, [retKey], watchImmediate, defaultCompare);
+      if (vType === 'function') {
+        _mapDepDesc(confMeta, key, module, retKey, val, depKeysOfStateKey, watchImmediate, defaultCompare);
 
         return;
       }
@@ -3037,13 +3158,8 @@
             immediate = _val$immediate === void 0 ? watchImmediate : _val$immediate,
             _val$compare = val.compare,
             compare = _val$compare === void 0 ? defaultCompare : _val$compare;
-        var _depKeys = depKeys;
 
-        if (!_depKeys) {
-          _checkIsStateKeyTrue(key, isStateKey);
-
-          _depKeys = [retKey];
-        }
+        var _depKeys = depKeys || depKeysOfStateKey;
 
         _mapDepDesc(confMeta, key, module, retKey, fn, _depKeys, immediate, compare);
       }
@@ -3093,11 +3209,6 @@
       var retKeys = safeGetArrayFromObject(stateKey_retKeys_, sKey);
       retKeys.push(retKey);
     });
-  }
-
-  function _checkIsStateKeyTrue(key, isStateKey) {
-    // concent can't deduce it's dependencyStateKeys
-    if (!isStateKey) throw new Error("key[" + key + "] is not a stateKey, please specify depKeys explicitly"); // if (!isStateKey) throw new Error(`key[${key}] is not a stateKey`);
   }
 
   function _resolveKey(cate, confMeta, key) {
@@ -3509,7 +3620,7 @@
       moduleName_ccClassKeys_$2 = ccContext.moduleName_ccClassKeys_,
       _computedValue$3 = ccContext.computed._computedValue,
       renderKey_ccUkeys_$1 = ccContext.renderKey_ccUkeys_;
-  var okeys$3 = okeys,
+  var okeys$4 = okeys,
       me$4 = makeError,
       vbi$4 = verboseInfo,
       safeGetArrayFromObject$2 = safeGetArrayFromObject;
@@ -3579,30 +3690,32 @@
     var globalComputed = _computedValue$3[MODULE_GLOBAL] || {};
     var globalState = getState$3(MODULE_GLOBAL);
     var refConnectedComputed = {};
-    okeys$3(connect).forEach(function (moduleName) {
+    okeys$4(connect).forEach(function (moduleName) {
       refConnectedComputed[moduleName] = {};
     }); // recover ref state
 
     var refStoredState = refStore$1._state[ccUniqueKey] || {};
     var mergedState = Object.assign({}, state, refStoredState, moduleState);
     ref.state = mergedState;
-    var stateKeys = okeys$3(mergedState); // record ref
+    var stateKeys = okeys$4(mergedState); // record ref
 
     setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey); // record ccClassKey
 
     var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_$2, module);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // create cc api
 
+    var changeState = function changeState(state, option) {
+      changeRefState(state, option, ref);
+    };
+
     var _setState = function _setState(module, state, calledBy, reactCallback, renderKey, delay) {
-      changeRefState(state, {
+      changeState(state, {
         calledBy: calledBy,
-        ccKey: ccKey,
-        ccUniqueKey: ccUniqueKey,
         module: module,
         renderKey: renderKey,
         delay: delay,
         reactCallback: reactCallback
-      }, ref);
+      });
     };
 
     var setModuleState = function setModuleState(module, state, reactCallback, renderKey, delay) {
@@ -3622,10 +3735,6 @@
 
     var forceUpdate = function forceUpdate(reactCallback, renderKey, delay) {
       _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
-    };
-
-    var changeState = function changeState(state, option) {
-      changeRefState(state, option, ref);
     };
 
     var onEvents = [];
@@ -3919,6 +4028,11 @@
   }
 
   var getState$4 = ccContext.store.getState;
+  var callInfo = {
+    payload: null,
+    renderKey: '',
+    delay: -1
+  };
   /** 由首次render触发 */
 
   function triggerComputedAndWatch (ref) {
@@ -3931,24 +4045,24 @@
     var refState = ctx.state;
 
     if (hasComputedFn) {
-      computeValueForRef(ctx, refModule, refState, refState, true);
+      computeValueForRef(ctx, refModule, refState, refState, callInfo, true);
       connectedModules.forEach(function (m) {
         var mState = getState$4(m);
-        computeValueForRef(ctx, m, mState, mState, true);
+        computeValueForRef(ctx, m, mState, mState, callInfo, true);
       });
     }
 
     if (hasWatchFn) {
-      watchKeyForRef(ctx, refModule, refState, refState, true);
+      watchKeyForRef(ctx, refModule, refState, refState, callInfo, true);
       connectedModules.forEach(function (m) {
         var mState = getState$4(m);
-        watchKeyForRef(ctx, m, mState, mState, true);
+        watchKeyForRef(ctx, m, mState, mState, callInfo, true);
       });
     }
   }
 
   var safeGetObjectFromObject$1 = safeGetObjectFromObject,
-      okeys$4 = okeys,
+      okeys$5 = okeys,
       justWarning$6 = justWarning;
   var _ccContext$reducer = ccContext.reducer,
       _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_,
@@ -3966,7 +4080,7 @@
         lazyDispatch = ctx.lazyDispatch,
         connect = ctx.connect,
         module = ctx.module;
-    var connectedModules = okeys$4(connect);
+    var connectedModules = okeys$5(connect);
     var allModules = connectedModules.slice();
     if (!allModules.includes(module)) allModules.push(module);else {
       justWarning$6("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
@@ -4005,7 +4119,7 @@
       var globalBindCtx = ccContext.bindCtxToMethod; //优先读自己的，再读全局的
 
       if (bindCtxToMethod === true || globalBindCtx === true && bindCtxToMethod !== false) {
-        okeys$4(settingsObj).forEach(function (name) {
+        okeys$5(settingsObj).forEach(function (name) {
           var settingValue = settingsObj[name];
           if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
         });
@@ -4262,7 +4376,7 @@
       color$1 = color,
       verboseInfo$2 = verboseInfo,
       makeError$3 = makeError,
-      okeys$5 = okeys,
+      okeys$6 = okeys,
       shallowDiffers$1 = shallowDiffers;
   var cl$1 = color$1;
   var ss$1 = styleStr$1;
@@ -4409,7 +4523,7 @@
             ctx.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
             // this.state = newState; // bad writing
 
-            okeys$5(newState).forEach(function (key) {
+            okeys$6(newState).forEach(function (key) {
               return thisState[key] = newState[key];
             });
             if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
@@ -4750,11 +4864,6 @@
 
         if (reducerFn.__fnName) {
           // 将某个已载入到模块a的reducer再次载入到模块b
-          // if (util.isGenFn(reducerFn)) {
-          //   targetFn = function* (payload, moduleState, actionCtx) { return reducerFn(payload, moduleState, actionCtx) };
-          // } else {
-          //   targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
-          // }
           targetFn = function targetFn(payload, moduleState, actionCtx) {
             return reducerFn(payload, moduleState, actionCtx);
           };
@@ -4765,7 +4874,9 @@
         targetFn.__fnName = name; //!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
 
         targetFn.__stateModule = module;
-        targetFn.__reducerModule = module;
+        targetFn.__reducerModule = module; // AsyncFunction GeneratorFunction Function
+
+        targetFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
       } // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
       // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
       // reducerFn.stateModule = module;
@@ -4778,7 +4889,13 @@
   }
 
   var isPlainJsonObject$3 = isPlainJsonObject,
-      executeCompOrWatch$2 = executeCompOrWatch;
+      executeCompOrWatch$2 = executeCompOrWatch,
+      makeCommitHandler$1 = makeCommitHandler;
+  var callInfo$1 = {
+    payload: null,
+    renderKey: '',
+    delay: -1
+  };
   /**
    * 设置watch值，过滤掉一些无效的key
    */
@@ -4816,27 +4933,44 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    pickedFns.forEach(function (_ref) {
-      var retKey = _ref.retKey,
-          fn = _ref.fn,
-          depKeys = _ref.depKeys;
-      var fnCtx = {
-        retKey: retKey,
-        isBeforeMount: false,
-        setted: setted,
-        changed: changed,
-        stateModule: module,
-        refModule: null,
-        oldState: moduleState,
-        committedState: moduleState,
-        refCtx: null
-      };
-      executeCompOrWatch$2(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-    });
+    if (pickDepFns.length) {
+      var d = ccContext.getDispatcher();
+
+      var _makeCommitHandler = makeCommitHandler$1(module, d && d.ctx.changeState, callInfo$1),
+          commit = _makeCommitHandler.commit,
+          flush = _makeCommitHandler.flush;
+
+      pickedFns.forEach(function (_ref) {
+        var retKey = _ref.retKey,
+            fn = _ref.fn,
+            depKeys = _ref.depKeys;
+        var fnCtx = {
+          retKey: retKey,
+          payload: null,
+          isFirstCall: true,
+          commit: commit,
+          setted: setted,
+          changed: changed,
+          stateModule: module,
+          refModule: null,
+          oldState: moduleState,
+          committedState: moduleState,
+          refCtx: null
+        };
+        executeCompOrWatch$2(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
+      });
+      flush();
+    }
   }
 
   var safeGetObjectFromObject$2 = safeGetObjectFromObject,
-      isPlainJsonObject$4 = isPlainJsonObject;
+      isPlainJsonObject$4 = isPlainJsonObject,
+      makeCommitHandler$2 = makeCommitHandler;
+  var callInfo$2 = {
+    payload: null,
+    renderKey: '',
+    delay: -1
+  };
   function initModuleComputed (module, computed, append, configureDep) {
     if (append === void 0) {
       append = false;
@@ -4879,29 +5013,40 @@
         setted = _pickDepFns.setted,
         changed = _pickDepFns.changed;
 
-    pickedFns.forEach(function (_ref) {
-      var retKey = _ref.retKey,
-          fn = _ref.fn,
-          depKeys = _ref.depKeys;
-      var fnCtx = {
-        retKey: retKey,
-        isBeforeMount: false,
-        setted: setted,
-        changed: changed,
-        stateModule: module,
-        refModule: null,
-        oldState: moduleState,
-        committedState: moduleState,
-        refCtx: null
-      };
-      var computedValue = executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-      var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
-      moduleComputedValue[retKey] = computedValue;
-    });
+    if (pickedFns.length) {
+      var d = ccContext.getDispatcher();
+
+      var _makeCommitHandler = makeCommitHandler$2(module, d && d.ctx.changeState, callInfo$2),
+          commit = _makeCommitHandler.commit,
+          flush = _makeCommitHandler.flush;
+
+      pickedFns.forEach(function (_ref) {
+        var retKey = _ref.retKey,
+            fn = _ref.fn,
+            depKeys = _ref.depKeys;
+        var fnCtx = {
+          retKey: retKey,
+          payload: null,
+          isFirstCall: true,
+          commit: commit,
+          setted: setted,
+          changed: changed,
+          stateModule: module,
+          refModule: null,
+          oldState: moduleState,
+          committedState: moduleState,
+          refCtx: null
+        };
+        var computedValue = executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
+        var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
+        moduleComputedValue[retKey] = computedValue;
+      });
+      flush();
+    }
   }
 
   var isPlainJsonObject$5 = isPlainJsonObject,
-      okeys$6 = okeys;
+      okeys$7 = okeys;
   /** 对已有的store.$$global状态追加新的state */
   // export function appendGlobalState(globalState) {
   //   // todo
@@ -4916,7 +5061,7 @@
     store.initStateDangerously(MODULE_CC, {});
     if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
     if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$6(storeState);
+    var moduleNames = okeys$7(storeState);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -4933,7 +5078,7 @@
   function configRootReducer(rootReducer) {
     if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
     if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-    var moduleNames = okeys$6(rootReducer);
+    var moduleNames = okeys$7(rootReducer);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -4946,7 +5091,7 @@
       throw new Error("StartUpOption.computed is not a plain json object!");
     }
 
-    var moduleNames = okeys$6(computed);
+    var moduleNames = okeys$7(computed);
     moduleNames.forEach(function (m) {
       return initModuleComputed(m, computed[m]);
     });
@@ -4968,7 +5113,7 @@
       throw new Error('StartupOption.init is valid, it must be a object like {[module:string]:Function}!');
     }
 
-    var moduleNames = okeys$6(init);
+    var moduleNames = okeys$7(init);
     moduleNames.forEach(function (moduleName) {
       checkModuleName(moduleName, false, "there is no module state defined in store for init." + moduleName);
       var initFn = init[moduleName];
@@ -5195,7 +5340,9 @@
         _ref$watchCompare = _ref.watchCompare,
         watchCompare = _ref$watchCompare === void 0 ? true : _ref$watchCompare,
         _ref$watchImmediate = _ref.watchImmediate,
-        watchImmediate = _ref$watchImmediate === void 0 ? false : _ref$watchImmediate;
+        watchImmediate = _ref$watchImmediate === void 0 ? false : _ref$watchImmediate,
+        _ref$generatorReducer = _ref.generatorReducer,
+        generatorReducer = _ref$generatorReducer === void 0 ? false : _ref$generatorReducer;
 
     try {
       justTip$1("cc version " + ccContext.info.version);
@@ -5207,6 +5354,7 @@
       ccContext.computedCompare = computedCompare;
       ccContext.watchCompare = watchCompare;
       ccContext.watchImmediate = watchImmediate;
+      ccContext.generatorReducer = generatorReducer;
       var err = makeError$4(ERR.CC_ALREADY_STARTUP);
       clearContextIfHot(true, err);
       configModuleSingleClass(moduleSingleClass);
@@ -5257,7 +5405,7 @@
   var makeError$5 = makeError,
       verboseInfo$3 = verboseInfo,
       isPlainJsonObject$6 = isPlainJsonObject,
-      okeys$7 = okeys;
+      okeys$8 = okeys;
 
   function setGlobalState(storedGlobalState, inputGlobalState) {
     if (inputGlobalState) {
@@ -5265,7 +5413,7 @@
         throw new Error("option.globalState is not a plain json object");
       }
 
-      var gKeys = okeys$7(inputGlobalState);
+      var gKeys = okeys$8(inputGlobalState);
       gKeys.forEach(function (gKey) {
         if (storedGlobalState.hasOwnProperty(gKey)) {
           throw new Error("key[" + gKey + "] duplicated in globalState");
@@ -5308,10 +5456,6 @@
       throw new Error('cc do not allow configure global module');
     }
 
-    if (reducer && !isPlainJsonObject$6(reducer)) {
-      throw makeError$5(ERR.CC_MODULE_REDUCER_INVALID, verboseInfo$3("module[" + module + "]"));
-    }
-
     var state = config.state,
         reducer = config.reducer,
         computed = config.computed,
@@ -5324,6 +5468,11 @@
         globalWatch = _option.globalWatch,
         globalComputed = _option.globalComputed,
         middlewares = _option.middlewares;
+
+    if (reducer && !isPlainJsonObject$6(reducer)) {
+      throw makeError$5(ERR.CC_MODULE_REDUCER_INVALID, verboseInfo$3("module[" + module + "]"));
+    }
+
     initModuleState(module, state, true, 'configure');
     initModuleReducer(module, reducer, true, 'configure');
     var _state = ccContext.store._state;
@@ -5456,7 +5605,7 @@
   });
 
   var isPlainJsonObject$7 = isPlainJsonObject,
-      okeys$8 = okeys,
+      okeys$9 = okeys,
       isObjectNotNull$2 = isObjectNotNull;
 
   var pError = function pError(label) {
@@ -5487,7 +5636,7 @@
     var _init = {};
     var _moduleSingleClass = {}; // traversal moduleNames
 
-    okeys$8(store).forEach(function (m) {
+    okeys$9(store).forEach(function (m) {
       var config = store[m];
       var state = config.state,
           reducer = config.reducer,
@@ -5523,11 +5672,12 @@
         bindCtxToMethod = _option.bindCtxToMethod,
         computedCompare = _option.computedCompare,
         watchCompare = _option.watchCompare,
-        watchImmediate = _option.watchImmediate;
+        watchImmediate = _option.watchImmediate,
+        generatorReducer = _option.generatorReducer;
 
     if (reducer) {
       if (!isPlainJsonObject$7(reducer)) pError('option.reducer');
-      okeys$8(reducer).forEach(function (reducerModule) {
+      okeys$9(reducer).forEach(function (reducerModule) {
         if (_reducer[reducerModule]) throw new Error("reducerModule[" + reducerModule + "] has been declared in store");
         var reducerFns = reducer[reducerModule];
         _reducer[reducerModule] = reducerFns;
@@ -5546,7 +5696,8 @@
       bindCtxToMethod: bindCtxToMethod,
       computedCompare: computedCompare,
       watchCompare: watchCompare,
-      watchImmediate: watchImmediate
+      watchImmediate: watchImmediate,
+      generatorReducer: generatorReducer
     });
     startup(startupOption);
   }

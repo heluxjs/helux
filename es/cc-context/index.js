@@ -1,40 +1,65 @@
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
+// import { makeCommitHandler } from '../core/state/handler-factory';
 
-const { executeCompOrWatch } = util;
+const { executeCompOrWatch, okeys } = util;
 
 const refs = { };
-const setStateByModule = (module, committedState, refCtx) => {
+
+const getDispatcher = () => refs[CC_DISPATCHER];
+
+const setStateByModule = (module, committedState, { refCtx = null, callInfo = {} } = {}) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
   const moduleComputedValue = _computedValue[module];
 
   const rootComputedDep = computed.getRootComputedDep();
   const { pickedFns: cFns, setted, changed } = pickDepFns(false, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
-  const refModule = refCtx ? refCtx.module : null;
-  const newState = Object.assign({}, moduleState, committedState);
-
-  cFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
-    moduleComputedValue[retKey] = computedValue;
-  });
 
   const rootWatchDep = watch.getRootWatchDep();
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
-  wFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
-  });
 
+  const cLen = cFns.length, wLen = wFns.length;
+  if (callInfo.noCW === false && (cLen || wLen)) {
+    let refModule = null, changeState;
+    if (refCtx) {
+      refModule = refCtx.module;
+      changeState = refCtx.changeState;
+    } else {
+      const d = getDispatcher();
+      changeState = d && d.ctx.changeState;
+    }
 
-  Object.keys(committedState).forEach(key => {
+    const newState = Object.assign({}, moduleState, committedState);
+
+    if(cLen){
+      const { commit, flush } = util.makeCommitHandler(module, changeState, callInfo);
+      cFns.forEach(({ retKey, fn, depKeys }) => {
+        const fnCtx = { retKey, isFirstCall: false, commit, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
+        const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
+        moduleComputedValue[retKey] = computedValue;
+      });
+      flush();
+    }
+
+    if(wLen){
+      const { commit, flush } = util.makeCommitHandler(module, changeState, callInfo);
+      wFns.forEach(({ retKey, fn, depKeys }) => {
+        const fnCtx = { retKey, isFirstCall: false, commit, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
+        executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
+      });
+      flush();
+    }
+  }
+
+  okeys(committedState).forEach(key => {
     /** setStateByModuleAndKey */
     prevModuleState[key] = moduleState[key];
     // const fnCtx = { key, module, moduleState, committedState };
     moduleState[key] = committedState[key];
   });
+
 }
 
 const getState = (module) => {
@@ -82,6 +107,7 @@ function hotReloadWarning(err) {
 const _state = {};
 const _prevState = {};
 const ccContext = {
+  getDispatcher,
   isHotReloadMode: function () {
     if (ccContext.isHot) return true;
 
@@ -106,6 +132,9 @@ const ccContext = {
   computedCompare: true,
   watchCompare: true,
   watchImmediate: false,
+  //allow reducer fn be generator function, default is false
+  // why do this, because with co.wrap, chrome's debug breakpoint works not well
+  generatorReducer: false,
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,
@@ -175,8 +204,8 @@ const ccContext = {
       if (module) return getPrevState(module);
       else return _prevState;
     },
-    setState: function (module, partialSharedState, refCtx) {
-      setStateByModule(module, partialSharedState, refCtx);
+    setState: function (module, partialSharedState, options) {
+      setStateByModule(module, partialSharedState, options);
     },
     setGlobalState: function (partialGlobalState) {
       setStateByModule(MODULE_GLOBAL, partialGlobalState);
@@ -229,7 +258,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.81',
+    version: '1.5.82',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

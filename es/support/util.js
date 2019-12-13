@@ -342,16 +342,17 @@ export function shallowDiffers(a, b) {
 }
 
 export function differStateKeys(oldState, newState) {
-  const changed = [], unchanged=[], setted = [];
+  const changed = [], setted = [];
+  // const unchanged=[];
   okeys(newState).forEach(k => {
     const newVal = newState[k];
     if (newVal !== undefined) {
       setted.push(k);
       if (newVal !== oldState[k]) changed.push(k);
-      else unchanged.push(k);
+      // else unchanged.push(k);
     }
   });
-  return { changed, unchanged, setted };
+  return { changed, setted };
 }
 
 export function removeArrElements(arr, toRemoveArr) {
@@ -399,6 +400,17 @@ export function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCt
   return computedValue;
 }
 
-export function isGenFn(fn) {
-  return fn.constructor.name === 'GeneratorFunction';
+export function makeCommitHandler(module, changeState, callInfo) {
+  const state = {};
+  const commit = partialState => Object.assign(state, partialState);
+  const flush = () => {
+    if (isObjectNotNull(state)) {
+      // flag noCW true, tell concent not trigger computed&watch again!!!
+      if (changeState) {
+        const options = Object.assign(callInfo, { module, calledBy: 'flush', noCW: true });
+        changeState(state, options);
+      }
+    }
+  }
+  return { commit, flush };
 }
