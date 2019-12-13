@@ -160,7 +160,7 @@ run({
 | | |____state.js       # module init state(required)
 ```
 此时reducer文件里函数可以不需要基于字符串发起组合型调用了
-```
+```js
 export function inc(payload=1, moduleState) {
   return { count: moduleState.count + payload };
 }
@@ -173,6 +173,24 @@ export function dec(payload=1, moduleState) {
 export async function inc2ThenDec3(payload, moduleState, actionCtx){
   await actionCtx.dispatch(inc, 2);
   await actionCtx.dispatch(dec, 3);
+}
+```
+当然reducer文件里，你可以调用setState，是一个被promise话的句柄
+```js
+export updateLoading(loading){
+  return { loading }
+}
+
+export async function inc2ThenDec3(payload, moduleState, actionCtx){
+  await actionCtx.dispatch(inc, 2);
+  //等效于调用actionCtx.dispatch(updateLoading, true);
+  await actionCtx.setState({loading: true});
+  await actionCtx.dispatch(dec, 3);
+  //等效于调用actionCtx.dispatch(updateLoading, false);
+  await actionCtx.setState({loading: false});
+  
+  //最后这里你可以选择的返回一个新的片断状态，也会触发视图更新
+  return { tip: 'you can return some new value in a reducer fn ot not' };
 }
 ```
 
