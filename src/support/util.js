@@ -404,10 +404,10 @@ export function makeCommitHandler(module, changeState, callInfo) {
   const state = {};
   const commit = partialState => Object.assign(state, partialState);
   const flush = () => {
-    if (isObjectNotNull(tmpState)) {
+    if (isObjectNotNull(state)) {
       // flag noCW true, tell concent not trigger computed&watch again!!!
       if (changeState) {
-        const options = Object.assign({ module, calledBy: 'flush', noCW: true }, callInfo);
+        const options = Object.assign(callInfo, { module, calledBy: 'flush', noCW: true });
         changeState(state, options);
       }
     }
