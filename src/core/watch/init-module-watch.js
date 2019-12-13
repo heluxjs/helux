@@ -4,6 +4,7 @@ import * as util from '../../support/util';
 import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import pickDepFns from '../base/pick-dep-fns';
+import { makeCommitHandler } from '../state/handler-factory';
 
 const { isPlainJsonObject, executeCompOrWatch } = util;
 
@@ -31,11 +32,17 @@ export default function (module, moduleWatch, append = false) {
   const moduleState = getState(module);
 
   configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootWatchDep }, moduleWatch);
-
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
-  pickedFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, isFirstCall: true, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
-    executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-  });
+
+  if (pickDepFns.length ) {
+    const { commit, flush } = makeCommitHandler(module, null);
+
+    pickedFns.forEach(({ retKey, fn, depKeys }) => {
+      const fnCtx = { retKey, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+      executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
+    });
+
+    flush();
+  }
 
 }

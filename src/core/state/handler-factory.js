@@ -490,3 +490,17 @@ export function makeSetStateHandler(module) {
     }
   }
 }
+
+export function makeCommitHandler(module, refCtx) {
+  const tmpState = {};
+  const commit = (state) => {
+    Object.assign(tmpState, state);
+  };
+  const flush = () => {
+    if (isObjectNotNull(tmpState)) {
+      if (refCtx && refCtx.module === module) refCtx.setState(tmpState);
+      else storeSetState(module, tmpState, refCtx);
+    }
+  }
+  return { commit, flush };
+}

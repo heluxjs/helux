@@ -298,7 +298,7 @@ declare function syncCb<Val, ModuleState, FullState, RefCtx extends IRefCtxBase>
  * for class get get like this: this.ctx
  * for function get get like this: const ctx = useConcent('foo');
  */
-interface IRefCtxBase{
+interface IRefCtxBase {
   readonly module: '$$default' | string | any;
   // module: '$$default';
   readonly reducerModule: string;
@@ -755,6 +755,7 @@ export interface IRefCtxRsRcu
 export interface IFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
+  commit: (partialState: IAnyObj) => void;
   setted: string[];
   changed: string[];
   stateModule: string;
@@ -766,6 +767,7 @@ export interface IFnCtxBase {
 export interface IFnCtxMBase<ModuleName> {
   retKey: string;
   isFirstCall: boolean;
+  commit: (partialState: IAnyObj) => void;
   setted: string[];
   changed: string[];
   stateModule: string;
@@ -953,9 +955,9 @@ export function registerDumb<IProps, RootState extends IRootBase, ModuleName ext
   ccClassKey?: string,
 ): (renderFn: (
   props: FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps'] extends Function ?
-      ReturnType<NonNullable<FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps']>> :
-      RefCtx
-  ) => ReactNode) => ComponentClass<IProps>;
+    ReturnType<NonNullable<FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps']>> :
+    RefCtx
+) => ReactNode) => ComponentClass<IProps>;
 export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
@@ -1030,14 +1032,14 @@ export function getGlobalComputed<T>(): T;
 export function set(keyPath: string, value: any, renderKey?: string, delay?: number): void;
 
 interface IDispatchOptions {
-  ccClassKey?: string; 
-  ccKey?: string; 
-  throwError?: boolean; 
+  ccClassKey?: string;
+  ccKey?: string;
+  throwError?: boolean;
   isSilent?: boolean;
 }
-export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?:IDispatchOptions): Promise<T>;
+export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?: IDispatchOptions): Promise<T>;
 
-export function lazyDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?:IDispatchOptions): Promise<T>;
+export function lazyDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?: IDispatchOptions): Promise<T>;
 
 export declare const emit: typeof refCtxEmit;
 

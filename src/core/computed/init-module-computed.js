@@ -4,8 +4,9 @@ import * as util from '../../support/util';
 import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import pickDepFns from '../base/pick-dep-fns';
+import { makeCommitHandler } from '../state/handler-factory';
 
-const { safeGetObjectFromObject, isPlainJsonObject } = util;
+const { safeGetObjectFromObject, isPlainJsonObject, isObjectNotNull } = util;
 
 export default function (module, computed, append = false, configureDep = true) {
   if (!isPlainJsonObject(computed)) {
@@ -33,11 +34,18 @@ export default function (module, computed, append = false, configureDep = true) 
   }
 
   const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, moduleState);
-  pickedFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, isFirstCall:true, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
-    const computedValue = util.executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-    const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
-    moduleComputedValue[retKey] = computedValue;
-  });
+
+  if (pickedFns.length ) {
+    const { commit, flush } = makeCommitHandler(module, null);
+
+    pickedFns.forEach(({ retKey, fn, depKeys }) => {
+      const fnCtx = { retKey, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
+      const computedValue = util.executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
+      const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
+      moduleComputedValue[retKey] = computedValue;
+    });
+
+    flush();
+  }
 
 }

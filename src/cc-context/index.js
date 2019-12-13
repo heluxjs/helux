@@ -1,36 +1,49 @@
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
+import { makeCommitHandler, makeCcForceUpdateHandler } from '../core/state/handler-factory';
 
-const { executeCompOrWatch } = util;
+const { executeCompOrWatch, okeys } = util;
 
 const refs = { };
-const setStateByModule = (module, committedState, refCtx) => {
+const setStateByModule = (module, committedState, refCtx = null) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
   const moduleComputedValue = _computedValue[module];
 
   const rootComputedDep = computed.getRootComputedDep();
   const { pickedFns: cFns, setted, changed } = pickDepFns(false, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
-  const refModule = refCtx ? refCtx.module : null;
-  const newState = Object.assign({}, moduleState, committedState);
-
-  cFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, isFirstCall:false, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
-    moduleComputedValue[retKey] = computedValue;
-  });
 
   const rootWatchDep = watch.getRootWatchDep();
   const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+
   let watchRet = true;
-  wFns.forEach(({ retKey, fn, depKeys }) => {
-    const fnCtx = { retKey, isFirstCall:false, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-    watchRet = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
-  });
+  const cLen = cFns.length, wLen = wFns.length;
+  if (cLen || wLen) {
+    const refModule = refCtx ? refCtx.module : null;
+    const newState = Object.assign({}, moduleState, committedState);
 
+    if(cLen){
+      const { commit, flush } = makeCcForceUpdateHandler(module, refCtx);
+      cFns.forEach(({ retKey, fn, depKeys }) => {
+        const fnCtx = { retKey, isFirstCall: false, commit, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
+        const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
+        moduleComputedValue[retKey] = computedValue;
+      });
+      flush();
+    }
 
-  Object.keys(committedState).forEach(key => {
+    if(wLen){
+      const { commit, flush } = makeCcForceUpdateHandler(module, refCtx);
+      wFns.forEach(({ retKey, fn, depKeys }) => {
+        const fnCtx = { retKey, isFirstCall: false, commit, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
+        watchRet = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
+      });
+      flush();
+    }
+  }
+
+  okeys(committedState).forEach(key => {
     /** setStateByModuleAndKey */
     prevModuleState[key] = moduleState[key];
     // const fnCtx = { key, module, moduleState, committedState };
