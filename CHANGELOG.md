@@ -1,7 +1,7 @@
 #### 2019-12-11
 1.5.83 发布
 *  新增fnCtx.commit，支持computed函数里，调用commit接口再次修改state的数据
-> cc会收集一轮渲染命中的多个computed里commit的状态并做合并然后调用flush，刷新为store，注意flush触发的二次渲染并不会在此触发所有相关的computed&watch函数，以避免死循环产生
+> cc会收集一轮渲染命中的多个computed里commit的状态并做合并然后调用flush，刷新到store并触发视图渲染更新，注意flush触发的二次渲染并不会在此触发所有相关的computed&watch函数，以避免死循环产生
 ```js
 export const myF2 = defComputed((nv, ov, { commit })=>{
   commit({f1:'tell'});
