@@ -190,7 +190,7 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
   await actionCtx.setState({loading: false});
   
   //最后这里你可以选择的返回一个新的片断状态，也会触发视图更新
-  return { tip: 'you can return some new value in a reducer fn ot not' };
+  return { tip: 'you can return some new value in current reducer fn ot not' };
 }
 ```
 
