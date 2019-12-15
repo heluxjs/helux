@@ -169,6 +169,11 @@ declare function refCtxEmit<EventCbArgs extends any[]>(eventName: string, ...arg
 declare function refCtxEmit<EventCbArgs extends any[]>(eventDesc: [string, string?], ...args: EventCbArgs): void;
 declare function refCtxEmit<EventCbArgs extends any[]>(eventDesc: { name: string, identity?: string }, ...args: EventCbArgs): void;
 
+// this way is better!!!
+declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventName: string, ...args: EvMap[EvName]): void;
+declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], ...args: EvMap[EvName]): void;
+declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, ...args: EvMap[EvName]): void;
+
 declare function refCtxOff(eventName: string): void;
 declare function refCtxOff(eventDesc: [string, string?]): void;
 declare function refCtxOff(eventDesc: { name: string, identity?: string }): void;
