@@ -278,14 +278,14 @@ declare function refCtxWatch(multiWatch: {
 
 type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
-declare function refCtxEffect<RefCtx extends IRefCtxBase>(cb: (refCtx: RefCtx, isCalledInDidMount: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
+declare function refCtxEffect<RefCtx extends ICtxBase>(cb: (refCtx: RefCtx, isCalledInDidMount: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
 declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 
 declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj;
-declare function syncCb<Val, ModuleState, RefCtx extends IRefCtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: ModuleState, refCtx: RefCtx }): IAnyObj;
+declare function syncCb<Val, ModuleState, RefCtx extends ICtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: ModuleState, refCtx: RefCtx }): IAnyObj;
 // if module state is not equal full state, you need pass generic type FullState
-declare function syncCb<Val, ModuleState, FullState, RefCtx extends IRefCtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState, refCtx: RefCtx }): IAnyObj;
+declare function syncCb<Val, ModuleState, FullState, RefCtx extends ICtxBase>(value: Val, keyPath: string, syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState, refCtx: RefCtx }): IAnyObj;
 
 //////////////////////////////////////////
 // exposed interface
@@ -298,7 +298,7 @@ declare function syncCb<Val, ModuleState, FullState, RefCtx extends IRefCtxBase>
  * for class get get like this: this.ctx
  * for function get get like this: const ctx = useConcent('foo');
  */
-interface IRefCtxBase {
+export interface ICtxBase {
   readonly module: '$$default' | string | any;
   // module: '$$default';
   readonly reducerModule: string;
@@ -394,7 +394,7 @@ export interface ICtx<
   RefComputed extends IAnyObj, 
   Mapped extends IAnyObj
   >
-  extends IRefCtxBase {
+  extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   state: ModuleState;
@@ -421,7 +421,7 @@ export interface ICtxCon<
   ConnectedComputed extends IAnyObj,
   RefConnectedComputed extends IAnyObj,
   >
-  extends IRefCtxBase {
+  extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   state: ModuleState;
@@ -453,7 +453,7 @@ export interface ICtxRs<
   RefComputed extends IAnyObj, 
   Mapped extends IAnyObj
   >
-  extends IRefCtxBase {
+  extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   state: State;
@@ -481,7 +481,7 @@ export interface ICtxRsCon<
   ConnectedComputed extends IAnyObj,
   RefConnectedComputed extends IAnyObj,
   >
-  extends IRefCtxBase {
+  extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   state: State;
@@ -500,7 +500,7 @@ export interface ICtxRsCon<
   readonly refConnectedComputed: RefConnectedComputed;
 }
 
-interface IRefCtxMBase<ModuleName extends any> extends IRefCtxBase {
+interface ICtxMBase<ModuleName extends any> extends ICtxBase {
   // !!! let ModuleName extends (keyof RootState | keyof RootReducer) works
   module: any;
 }
@@ -522,7 +522,7 @@ export interface IRefCtx
   RefComputed extends IAnyObj, 
   Mapped extends IAnyObj
   >
-  extends IRefCtxMBase<ModuleName> {
+  extends ICtxMBase<ModuleName> {
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState['$$global'];
@@ -579,7 +579,7 @@ export interface IRefCtxRs
   RefComputed extends IAnyObj,
   Mapped extends IAnyObj
   >
-  extends IRefCtxMBase<ModuleName> {
+  extends ICtxMBase<ModuleName> {
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState['$$global'];
@@ -636,7 +636,7 @@ export interface IFnCtxBase {
   refModule: string;
   oldState: IAnyObj;
   committedState: IAnyObj;
-  refCtx: IRefCtxBase;
+  refCtx: ICtxBase;
 }
 export interface IFnCtxMBase<ModuleName> {
   retKey: string;
@@ -649,27 +649,27 @@ export interface IFnCtxMBase<ModuleName> {
   refModule: string;
   oldState: IAnyObj;
   committedState: IAnyObj;
-  refCtx: IRefCtxMBase<ModuleName>;
+  refCtx: ICtxMBase<ModuleName>;
 }
-export interface IFnCtx<RefCtx extends IRefCtxBase> extends IFnCtxBase {
+export interface IFnCtx<RefCtx extends ICtxBase> extends IFnCtxBase {
   refCtx: RefCtx;
 }
-export interface IFnCtxComm<RefCtx extends IRefCtxBase, FullState> extends IFnCtxBase {
+export interface IFnCtxComm<RefCtx extends ICtxBase, FullState> extends IFnCtxBase {
   oldState: FullState;
   committedState: Partial<FullState>;
   refCtx: RefCtx;
 }
-export interface IFnCtxM<ModuleName, RefCtx extends IRefCtxMBase<ModuleName>> extends IFnCtxMBase<ModuleName> {
+export interface IFnCtxM<ModuleName, RefCtx extends ICtxMBase<ModuleName>> extends IFnCtxMBase<ModuleName> {
   refCtx: RefCtx;
 }
-export interface IFnCtxMComm<ModuleName, RefCtx extends IRefCtxMBase<ModuleName>, FullState> extends IFnCtxMBase<ModuleName> {
+export interface IFnCtxMComm<ModuleName, RefCtx extends ICtxMBase<ModuleName>, FullState> extends IFnCtxMBase<ModuleName> {
   oldState: FullState;
   committedState: Partial<FullState>;
   refCtx: RefCtx;
 }
 
 declare class ConcentComponent<P> extends Component {
-  ctx: IRefCtxBase;
+  ctx: ICtxBase;
 
   constructor(props: Readonly<P>);
   constructor(props: P, context?: any);
@@ -692,7 +692,7 @@ interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefStat
   renderKeyClasses?: string[];
   compareProps?: boolean;//default true
   setup?: IAnyObj;
-  mapProps?: <RefCtx extends IRefCtxBase>(refCtx: RefCtx) => IAnyObj;
+  mapProps?: <RefCtx extends ICtxBase>(refCtx: RefCtx) => IAnyObj;
 }
 
 interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
@@ -702,7 +702,7 @@ interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefSt
 interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
   state?: IAnyFnReturnObj | IAnyObj;
   props?: IAnyObj;
-  render: <RefCtx extends IRefCtxBase>(
+  render: <RefCtx extends ICtxBase>(
     props: RegisterOptions<RootState, ModuleName, RefState>['mapProps'] extends Function ?
       // !!! use NonNullable to exclude undefined
       // ReturnType<RegisterOptions<RootState, ModuleName, RefState>['mapProps']> : RefCtx
@@ -783,8 +783,8 @@ interface IActionCtxBase {
 }
 export interface IActionCtx extends IActionCtxBase {
 }
-// constraint RefCtx must be an implement of IRefCtxBase
-export interface IActionCtxRef<RefCtx extends IRefCtxBase> extends IActionCtxBase {
+// constraint RefCtx must be an implement of ICtxBase
+export interface IActionCtxRef<RefCtx extends ICtxBase> extends IActionCtxBase {
   refCtx: RefCtx;
 }
 export interface IActionCtxM<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu> extends IActionCtxBase {
@@ -792,7 +792,7 @@ export interface IActionCtxM<ModuleName extends (keyof RootState | keyof RootCu)
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : IAnyObj;
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : IAnyObj;
 }
-export interface IActionCtxMRef<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu, RefCtx extends IRefCtxBase> extends IActionCtxBase {
+export interface IActionCtxMRef<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu, RefCtx extends ICtxBase> extends IActionCtxBase {
   targetModule: ModuleName;
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : IAnyObj;
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : IAnyObj;
@@ -822,7 +822,7 @@ export function register<IProps, RootState, ModuleName extends keyof RootState, 
 ): (ReactComp: typeof Component) => ComponentClass<IProps>;
 
 //use decide it is RefCtx or RefCtxConnect
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends IRefCtxBase>(
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): (renderFn: (
@@ -830,24 +830,24 @@ export function registerDumb<IProps, RootState extends IRootBase, ModuleName ext
     ReturnType<NonNullable<FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps']>> :
     RefCtx
 ) => ReactNode) => ComponentClass<IProps>;
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): (renderFn: (props: FnRegisterOptions<RootState, ModuleName, RefState>['mapProps'] extends Function ?
   ReturnType<NonNullable<FnRegisterOptions<RootState, ModuleName, RefState>['mapProps']>> :
   RefCtx
 ) => ReactNode) => ComponentClass<IProps>;
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends IRefCtxBase>(
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): ComponentClass<IProps>;
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
+export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): ComponentClass<IProps>;
 
 
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends IRefCtxBase>(
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): (renderFn: (
@@ -855,7 +855,7 @@ export function registerHookComp<IProps, RootState extends IRootBase, ModuleName
     ReturnType<NonNullable<RegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps']>> :
     RefCtx
 ) => ReactNode) => FC<IProps>;
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): (renderFn: (
@@ -863,22 +863,22 @@ export function registerHookComp<IProps, RootState extends IRootBase, ModuleName
     ReturnType<NonNullable<RegisterOptions<RootState, ModuleName, RefState>['mapProps']>> :
     RefCtx
 ) => ReactNode) => FC<IProps>;
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends IRefCtxBase>(
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): FC<IProps>;
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
+export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
   registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): FC<IProps>;
 
 //use decide it is RefCtx or RefCtxConnect
-export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends IRefCtxBase>(
+export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): RefCtx;
 // when moduleState equal refState
-export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends IRefCtxBase>(
+export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
   registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
   ccClassKey?: string,
 ): RefCtx;
