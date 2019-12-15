@@ -376,381 +376,254 @@ interface IRefCtxBase {
   syncInt: (string: string, renderKey?: string, delay?: string) => SyncReturn;
   set: (string: string, value: any, renderKey?: string, delay?: string) => void;
   setBool: (string: string, renderKey?: string, delay?: string) => void;
-  settings: IAnyObj;
+  readonly settings: IAnyObj;
+}
+
+/**
+ * ICtx series is simple than IRefCtx series, it is a loose mode check,
+ * so it is more easy to use when your coding environment is js^_^
+ * IRefCtx is more suitable for ts coding environment!
+ * so my suggestion is : when you use js, try ICtx series to mark type, and when you use ts , try use IRefCtx series.
+ */
+export interface ICtx<
+  Props extends IAnyObj, 
+  ModuleState extends IAnyObj, 
+  ModuleReducer extends IAnyObj, 
+  ModuleComputed extends IAnyObj,
+  Settings extends IAnyObj, 
+  RefComputed extends IAnyObj, 
+  Mapped extends IAnyObj
+  >
+  extends IRefCtxBase {
+  readonly props: Props;
+  readonly prevProps: Props;
+  state: ModuleState;
+  readonly prevState: ModuleState;
+  readonly moduleState: ModuleState;
+  readonly moduleComputed: ModuleComputed;
+  readonly moduleReducer: ModuleReducer;
+  readonly moduleLazyReducer: ModuleReducer;
+  readonly settings: Settings;
+  readonly mapped: Mapped;
+  readonly refComputed: RefComputed;
+}
+export interface ICtxCon<
+  Props extends IAnyObj, 
+  ModuleState extends IAnyObj, 
+  ModuleReducer extends IAnyObj,
+  ModuleComputed extends IAnyObj, 
+  Settings extends IAnyObj, 
+  RefComputed extends IAnyObj,
+  Mapped extends IAnyObj,
+  // when connect other modules
+  ConnectedState extends IAnyObj, 
+  ConnectedReducer extends IAnyObj, 
+  ConnectedComputed extends IAnyObj,
+  RefConnectedComputed extends IAnyObj,
+  >
+  extends IRefCtxBase {
+  readonly props: Props;
+  readonly prevProps: Props;
+  state: ModuleState;
+  readonly prevState: ModuleState;
+  readonly moduleState: ModuleState;
+  readonly moduleReducer: ModuleReducer;
+  readonly moduleLazyReducer: ModuleReducer;
+  readonly settings: Settings;
+  readonly moduleComputed: ModuleComputed;
+  readonly mapped: Mapped;
+  readonly refComputed: RefComputed;
+  readonly connectedState: ConnectedState;
+  readonly connectedReducer: ConnectedReducer;
+  readonly connectedLazyReducer: ConnectedReducer;
+  readonly connectedComputed: ConnectedComputed;
+  readonly refConnectedComputed: RefConnectedComputed;
+}
+
+/**
+ * when ref state not equal moduleState, need pass State generic type
+ */
+export interface ICtxRs<
+  Props extends IAnyObj, 
+  State extends IAnyObj, 
+  ModuleState extends IAnyObj, 
+  ModuleReducer extends IAnyObj, 
+  ModuleComputed extends IAnyObj,
+  Settings extends IAnyObj, 
+  RefComputed extends IAnyObj, 
+  Mapped extends IAnyObj
+  >
+  extends IRefCtxBase {
+  readonly props: Props;
+  readonly prevProps: Props;
+  state: State;
+  readonly prevState: State;
+  readonly moduleState: ModuleState;
+  readonly moduleComputed: ModuleComputed;
+  readonly moduleReducer: ModuleReducer;
+  readonly moduleLazyReducer: ModuleReducer;
+  readonly settings: Settings;
+  readonly mapped: Mapped;
+  readonly refComputed: RefComputed;
+}
+export interface ICtxRsCon<
+  Props extends IAnyObj, 
+  State extends IAnyObj, 
+  ModuleState extends IAnyObj, 
+  ModuleReducer extends IAnyObj,
+  ModuleComputed extends IAnyObj, 
+  Settings extends IAnyObj, 
+  RefComputed extends IAnyObj,
+  Mapped extends IAnyObj,
+  // when connect other modules
+  ConnectedState extends IAnyObj, 
+  ConnectedReducer extends IAnyObj, 
+  ConnectedComputed extends IAnyObj,
+  RefConnectedComputed extends IAnyObj,
+  >
+  extends IRefCtxBase {
+  readonly props: Props;
+  readonly prevProps: Props;
+  state: State;
+  readonly prevState: State;
+  readonly moduleState: ModuleState;
+  readonly moduleReducer: ModuleReducer;
+  readonly moduleLazyReducer: ModuleReducer;
+  readonly settings: Settings;
+  readonly moduleComputed: ModuleComputed;
+  readonly mapped: Mapped;
+  readonly refComputed: RefComputed;
+  readonly connectedState: ConnectedState;
+  readonly connectedReducer: ConnectedReducer;
+  readonly connectedLazyReducer: ConnectedReducer;
+  readonly connectedComputed: ConnectedComputed;
+  readonly refConnectedComputed: RefConnectedComputed;
 }
 
 interface IRefCtxMBase<ModuleName extends any> extends IRefCtxBase {
   // !!! let ModuleName extends (keyof RootState | keyof RootReducer) works
-  module: ModuleName;
+  module: any;
 }
 
-//  ***********************************************************
-//  ************ when module state equal ref state ************
-//  ***********************************************************
+/**
+ *  =================================
+ *   IRefCtx series start!!!!!!
+ *  =================================
+ */
+
 export interface IRefCtx
   <
-  Props,
   RootState extends IRootBase,
   RootReducer extends IRootBase,
-  ModuleName extends (keyof RootState | keyof RootReducer),// !!! let RootReducer[ModuleName] and RootState[ModuleName] works
+  RootComputed extends IRootBase,
+  Props,
+  ModuleName extends keyof IRootBase,
   Settings extends IAnyObj,
-  Rccu extends IAnyObj,
+  RefComputed extends IAnyObj, 
   Mapped extends IAnyObj
   >
   extends IRefCtxMBase<ModuleName> {
-  mapped: Mapped;
-  globalState: RootState['$$global'];
+  readonly props: Props;
+  readonly prevProps: Props;
+  readonly globalState: RootState['$$global'];
   state: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  moduleReducer: ModuleName extends keyof RootReducer ? (
+  readonly prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
+  readonly moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
+  readonly moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
-  moduleLazyReducer: ModuleName extends keyof RootReducer ? (
+  readonly moduleLazyReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
-  props: Props;
-  prevProps: Props;
-  settings: Settings;
-  refConnectedComputed: Rccu;
+  readonly moduleComputed: ModuleName extends keyof RootState ? RootComputed[ModuleName] : {};
+  readonly settings: Settings;
+  readonly refComputed: RefComputed;
+  readonly mapped: Mapped;
 }
-/**
- * match ctx type: use belonged module computed
- */
-export interface IRefCtxMcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  ModuleCu, // moduleComputed
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj, // refConnectedComputed
-  Mapped extends IAnyObj
-  >
-  extends
-  IRefCtx<Props, RootState, RootReducer, ModuleName, Settings, Rccu, Mapped> {
-  moduleComputed: ModuleCu;
-}
-/**
- * match ctx type: use belonged module computed, connect other modules
- */
-export interface IRefCtxMcuCon
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  ModuleCu,
-  ConnectedModules extends keyof IRootBase,
-  RootCu extends IRootBase,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends
-  IRefCtx<Props, RootState, RootReducer, ModuleName, Settings, Rccu, Mapped> {
-  moduleComputed: ModuleCu;
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-}
-/**
- * match ctx type: use belonged module computed, define ref computed in setup
- */
-export interface IRefCtxMcuRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  ModuleCu,
-  RefCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtx<Props, RootState, RootReducer, ModuleName, Settings, Rccu, Mapped> {
-  moduleComputed: ModuleCu;
-  refComputed: RefCu;
-}
-/**
- * match ctx type: use belonged module computed, connect other modules, define ref computed in setup
- */
-export interface IRefCtxMcuConRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  ModuleCu,
-  RootCu extends IRootBase,
-  ConnectedModules extends keyof IRootBase,
-  RefCu, Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtxMcuRcu<Props, RootState, RootReducer, ModuleName, ModuleCu, RefCu, Settings, Rccu, Mapped> {
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-}
-/**
- * match ctx type: connect other modules
- */
+
 export interface IRefCtxCon
   <
-  Props,
   RootState extends IRootBase,
   RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
+  RootComputed extends IRootBase,
+  Props,
+  ModuleName extends keyof IRootBase,
   ConnectedModules extends keyof IRootBase,
-  RootCu extends IRootBase,
   Settings extends IAnyObj,
-  Rccu extends IAnyObj,
+  RefComputed extends IAnyObj,
   Mapped extends IAnyObj
   >
-  extends IRefCtx<Props, RootState, RootReducer, ModuleName, Settings, Rccu, Mapped> {
+  extends IRefCtx<RootState, RootReducer, RootComputed, Props, ModuleName, Settings, RefComputed, Mapped> {
   // overwrite connectedState , connectedComputed
   connectedState: Pick<RootState, ConnectedModules>;
   connectedReducer: Pick<RootReducer, ConnectedModules>;
   connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-}
-/**
- * match ctx type: connect other modules, define ref computed in setup
- */
-export interface IRefCtxConRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  ConnectedModules extends keyof IRootBase,
-  RootCu extends IRootBase,
-  RefCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtx<Props, RootState, RootReducer, ModuleName, Settings, Rccu, Mapped> {
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-  refComputed: RefCu;
-}
-/**
- * match ctx type: define ref computed in setup
- */
-export interface IRefCtxRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefCu,
-  Settings extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtx<Props, RootState, RootReducer, ModuleName, IAnyObj, IAnyObj, Mapped> {
-  refComputed: RefCu;
+  connectedComputed: Pick<RootComputed, ConnectedModules>;
 }
 
-//  ***************************************************************
-//  ************ when module state not equal ref state ************
-//  ***************************************************************
-export interface IRefCtxRs<
-  Props,
+//  ***********************************************************
+//  when ref state not equal module state 
+//  use IRefCtxRs instead of IRefCtx
+//  ***********************************************************
+export interface IRefCtxRs
+  <
   RootState extends IRootBase,
   RootReducer extends IRootBase,
-  ModuleName extends (keyof RootState | keyof RootReducer),
-  RefState,
+  RootComputed extends IRootBase,
+  Props,
+  State,
+  ModuleName extends keyof IRootBase,
   Settings extends IAnyObj,
-  Rccu extends IAnyObj,
+  RefComputed extends IAnyObj,
   Mapped extends IAnyObj
-  > extends IRefCtxMBase<ModuleName> {
-  mapped: Mapped;
-  globalState: RootState['$$global'];
-  moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  prevState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
-  moduleReducer: ModuleName extends keyof RootReducer ? (
+  >
+  extends IRefCtxMBase<ModuleName> {
+  readonly props: Props;
+  readonly prevProps: Props;
+  readonly globalState: RootState['$$global'];
+  state: State;
+  readonly prevState: State;
+  readonly moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : {};
+  readonly moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] :
-    // !!! concent will inject setState to moduleReducer
-    RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
-  moduleLazyReducer: ModuleName extends keyof RootReducer ? (
+  readonly moduleLazyReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] :
-    RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
-  state: RefState;
-  props: Props;
-  prevProps: Props;
-  settings: Settings;
-  refConnectedComputed: Rccu;
+  readonly moduleComputed: ModuleName extends keyof RootState ? RootComputed[ModuleName] : {};
+  readonly settings: Settings;
+  readonly refComputed: RefComputed;
+  readonly mapped: Mapped;
 }
-/**
- * match ctx type: use belonged module computed
- */
-export interface IRefCtxRsMcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefState,
-  ModuleCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends
-  IRefCtxRs<Props, RootState, RootReducer, ModuleName, RefState, Settings, Rccu, Mapped> {
-  moduleComputed: ModuleCu;
-}
-/**
- * match ctx type: use belonged module computed, connect other modules
- */
-export interface IRefCtxRsMcuCon
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefState,
-  ModuleCu,
-  ConnectedModules extends keyof IRootBase,
-  RootCu extends IRootBase,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends
-  IRefCtxRs<Props, RootState, RootReducer, ModuleName, RefState, Settings, Rccu, Mapped> {
-  moduleComputed: ModuleCu;
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-}
-/**
- * match ctx type: use belonged module computed, define ref computed in setup
- */
-export interface IRefCtxRsMcuRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  // ModuleName extends keyof RootState,
-  ModuleName extends keyof RootState,
-  RefState,
-  ModuleCu,
-  RefCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtxRs<Props, RootState, RootReducer, ModuleName, RefState, Settings, Rccu, Mapped> {
-  // extends IRefCtxRs<RootState, RootReducer, ModuleName extends string ? string : string, RefState, Props, Settings, Rccu> {
-  moduleComputed: ModuleCu;
-  refComputed: RefCu;
-}
-/**
- * match ctx type: use belonged module computed, connect other modules, define ref computed in setup
- */
-export interface IRefCtxRsMcuConRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefState,
-  ModuleCu,
-  RootCu extends IRootBase,
-  ConnectedModules extends keyof IRootBase,
-  RefCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtxRsMcuRcu<Props, RootState, RootReducer, ModuleName, RefState, ModuleCu, RefCu, Settings, Rccu, Mapped> {
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-}
-/**
- * match ctx type: connect other modules
- */
+
+//  ***********************************************************
+//  when ref state not equal module state 
+//  use IRefCtxRsCon instead of IRefCtxCon
+//  ***********************************************************
 export interface IRefCtxRsCon
   <
-  Props,
   RootState extends IRootBase,
   RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefState,
+  RootComputed extends IRootBase,
+  Props,
+  State,
+  ModuleName extends keyof IRootBase,
   ConnectedModules extends keyof IRootBase,
-  RootCu extends IRootBase,
   Settings extends IAnyObj,
-  Rccu extends IAnyObj,
+  RefComputed extends IAnyObj,
   Mapped extends IAnyObj
   >
-  extends IRefCtxRs<Props, RootState, RootReducer, ModuleName, RefState, Settings, Rccu, Mapped> {
+  extends IRefCtxRs<RootState, RootReducer, RootComputed, Props, State, ModuleName, Settings, RefComputed, Mapped> {
   // overwrite connectedState , connectedComputed
   connectedState: Pick<RootState, ConnectedModules>;
   connectedReducer: Pick<RootReducer, ConnectedModules>;
   connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
+  connectedComputed: Pick<RootComputed, ConnectedModules>;
 }
-/**
- * match ctx type: connect other modules, define ref computed in setup
- */
-export interface IRefCtxRsConRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefState,
-  ConnectedModules extends keyof IRootBase,
-  RootCu extends IRootBase,
-  RefCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtxRs<Props, RootState, RootReducer, ModuleName, RefState, Settings, Rccu, Mapped> {
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
-  refComputed: RefCu;
-}
-/**
- * match ctx type: define ref computed in setup
- */
-export interface IRefCtxRsRcu
-  <
-  Props,
-  RootState extends IRootBase,
-  RootReducer extends IRootBase,
-  ModuleName extends keyof RootState,
-  RefState,
-  RefCu,
-  Settings extends IAnyObj,
-  Rccu extends IAnyObj,
-  Mapped extends IAnyObj
-  >
-  extends IRefCtxRs<Props, RootState, RootReducer, ModuleName, RefState, Settings, Rccu, Mapped> {
-  refComputed: RefCu;
-}
-
 
 export interface IFnCtxBase {
   retKey: string;
@@ -838,13 +711,10 @@ interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState,
   ) => ReactNode;
 }
 
-type WatchFn = (
-  oldVal: any,
-  newVal: any,
-  fnCtx: IFnCtxBase,//user decide it is FnCtx or FnCtxConnect
-) => void;
+//user decide it is FnCtx or FnCtxConnect
+declare function watchFn<IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void;
 type WatchFnDesc = {
-  fn: WatchFn,
+  fn: typeof watchFn,
   compare?: boolean,
   immediate?: boolean,
   depKeys?: string[],
@@ -866,7 +736,7 @@ type ModuleConfig = {
     [retKey: string]: typeof computedFn | IComputedFnDesc;
   };
   watch?: {
-    [retKey: string]: WatchFn | WatchFnDesc;
+    [retKey: string]: typeof watchFn | WatchFnDesc;
   };
   init?: <ModuleState>() => Partial<ModuleState>
 }
@@ -1055,7 +925,7 @@ export function appendState(moduleName: string, state: IAnyObj): void;
 
 export function defComputed(fn: typeof computedFn, depKeys: string[], compare?: boolean): IComputedFnDesc;
 
-export function defWatch(fn: WatchFn, depKeys: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+export function defWatch(fn: typeof watchFn, depKeys: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
 
 export declare const cst: CcCst;
 
