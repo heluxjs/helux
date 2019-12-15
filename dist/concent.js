@@ -988,7 +988,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.86',
+      version: '1.5.87',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'

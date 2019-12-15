@@ -704,10 +704,10 @@ interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefSt
   state?: IAnyFnReturnObj | IAnyObj;
   props?: IAnyObj;
 }
-interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
+interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState, RefCtx> extends RegisterOptions<RootState, ModuleName, RefState> {
   state?: IAnyFnReturnObj | IAnyObj;
   props?: IAnyObj;
-  render: <RefCtx extends ICtxBase>(
+  render: (
     props: RegisterOptions<RootState, ModuleName, RefState>['mapProps'] extends Function ?
       // !!! use NonNullable to exclude undefined
       // ReturnType<RegisterOptions<RootState, ModuleName, RefState>['mapProps']> : RefCtx
@@ -843,11 +843,11 @@ export function registerDumb<IProps, RootState extends IRootBase, ModuleName ext
   RefCtx
 ) => ReactNode) => ComponentClass<IProps>;
 export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName], RefCtx>,
   ccClassKey?: string,
 ): ComponentClass<IProps>;
 export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState, RefCtx>,
   ccClassKey?: string,
 ): ComponentClass<IProps>;
 
@@ -869,11 +869,11 @@ export function registerHookComp<IProps, RootState extends IRootBase, ModuleName
     RefCtx
 ) => ReactNode) => FC<IProps>;
 export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName], RefCtx>,
   ccClassKey?: string,
 ): FC<IProps>;
 export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState>,
+  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState, RefCtx>,
   ccClassKey?: string,
 ): FC<IProps>;
 
