@@ -380,7 +380,7 @@ export AwesomeComp = registerHookComp({
 });
 ```
 - setup里可以定义事件监听，或者生命周期函数，统一类组件和函数组件的生命生命周期差异性，增强react组件能力
-```
+```js
 const setup = ctx => {
   console.log('setup函数只会在组件初次渲染之前被执行一次');
   
