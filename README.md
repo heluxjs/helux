@@ -310,7 +310,7 @@ function HookCounter(){
 }
 
 ```
-- 更优的hook写法，将函数提升为静态api
+- 更优的hook写法，将函数提升为静态api，函数组件内部在重复渲染期间不再产生大量临时闭包函数
 ```jsx
 import { useConcent } from 'concent';
 
@@ -351,9 +351,101 @@ function HookCounter(){
 }
 
 ```
+- 当然setup同样可以传递给类组件，这意味着函数组件和类组件的形态可以自由切换。
+```js
+class Counter extends Component {
+  render() {
+    const { count } = this.state;
+    const {inc, dec, incD, decD} = this.ctx.settings;
+    // 此处ui渲染略......
+    return <>your ui</>
+  }
+}
+
+const SetupCounter = register({module:'counter', setup})(Counter);
+```
+- 稍加处理，将useConcent隐藏起来，即可使用一个标准的组合型api创建组件
+```js
+import { registerHookComp } from 'concent';
+
+export AwesomeComp = registerHookComp({
+  module:'counter',
+  setup,
+  render: ctx=>{
+      const { count } = ctx.state;
+      const {inc, dec, incD, decD} = ctx.settings;
+      // 此处ui渲染略......
+      return <>your ui</>
+  }
+});
+```
+- setup里可以定义事件监听，或者生命周期函数，统一类组件和函数组件的生命生命周期差异性，增强react组件能力
+```
+const setup = ctx => {
+  console.log('setup函数只会在组件初次渲染之前被执行一次');
+  
+  ctx.on('someEvent', (p1, p2)=> console.log('receive ', p1, p2));
+  
+  const fetchProducts = () => {
+    const { type, sex, addr, keyword } = ctx.state;
+    api.fetchProducts({ type, sex, addr, keyword })
+      .then(products => ctx.setState({ products }))
+      .catch(err => alert(err.message));
+  };
+
+  ctx.effect(() => {
+    fetchProducts();
+  }, ["type", "sex", "addr", "keyword"]);//这里只需要传key名称就可以了
+  /** 原函数组件内写法：
+    useEffect(() => {
+      fetchProducts(type, sex, addr, keyword);
+    }, [type, sex, addr, keyword]);
+  */
+
+  ctx.effect(() => {
+    return () => {
+      // 返回一个清理函数
+      // 等价于componentWillUnmout, 这里搞清理事情
+    };
+  }, []);
+  /** 原函数组件内写法：
+    useEffect(()=>{
+      return ()=>{// 返回一个清理函数
+        // 等价于componentWillUnmout, 这里搞清理事情
+      }
+    }, []);//第二位参数传空数组，次副作用只在初次渲染完毕后执行一次
+  */
+
+  ctx.effectProps(() => {
+    // 对props上的变更书写副作用，注意这里不同于ctx.effect，ctx.effect是针对state写副作用
+    const curTag = ctx.props.tag;
+    if (curTag !== ctx.prevProps.tag) ctx.setState({ tag: curTag });
+  }, ["tag"]);//这里只需要传key名称就可以了
+  /** 原函数组件内写法：
+  useEffect(()=>{
+    // 首次渲染时，此副作用还是会执行的，在内部巧妙的再比较一次，避免一次多余的ui更新
+    // 等价于类组件里getDerivedStateFromProps里的逻辑
+    if(tag !== propTag)setTag(tag);
+  }, [propTag, tag]);
+ */
+
+  return {// 返回结果收集在ctx.settings里
+    fetchProducts,
+    //推荐使用此方式，把方法定义在settings里，下面示例故意直接使用sync语法糖函数
+    changeType: ctx.sync('type'),
+  };
+};
+```
 
 ### [0入侵，渐进式实例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
 
+___
+## 相关文章介绍
+### [聊一聊状态管理&Concent设计理念](https://juejin.im/post/5da7cb9cf265da5bbb1e4f8c)
+### [应战Vue3 setup，Concent携手React出招了！](https://juejin.im/post/5dd123ec5188253dbe5eeebd)
+### [深度挖掘Concent的effect，全面提升useEffect的开发体验](https://juejin.im/post/5deb43256fb9a0166316c3e9)
+### [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
+### [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
 ___
 ## 🔨更多精彩示例
 ### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
