@@ -88,6 +88,8 @@ ts版本的代码仓库：https://github.com/fantasticsoul/concent-guid-ts
 ## 搭配react-router使用
 请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，暴露`history`对象，可以全局任意地方使用，享受编程式的导航跳转。
 
+[react-router-concent在线示例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
+
 ## 搭配redux-dev-tool使用
 请移步阅读和了解[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，全流程追溯你的状态变更过程。
 
