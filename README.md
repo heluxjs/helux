@@ -92,9 +92,12 @@ ts版本的代码仓库：https://github.com/fantasticsoul/concent-guid-ts
 
 ## 搭配redux-dev-tool使用
 请移步阅读和了解[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，全流程追溯你的状态变更过程。
+![redux-dev-tool](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-eco/cc-pic1.png)
 
 ## 搭配loading插件使用
 请移步阅读和了解[concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，轻松控制concent应用里所有reducer函数的loading状态。
+
+[concent-plugin-loading在线示例](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
 ## 📦 快速开始
 确保你本地机器上安装有[nodejs](http://nodejs.cn/download/)。
