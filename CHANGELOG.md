@@ -1,3 +1,8 @@
+#### 2019-12-22
+1.5.88 发布
+* bug fix: broadcastState针对设置的renderKeyClasses失效，因为是否基于renderKey渲染判断错误导致，不该使用renderType作为条件，而应该直接基于传入的renderKey来判断
+> see online demo: https://stackblitz.com/edit/concent-render-key?file=BookItem.jsvv
+
 #### 2019-12-11
 1.5.83 发布
 *  新增fnCtx.commit，支持computed函数里，调用commit接口再次修改state的数据

@@ -988,7 +988,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.87',
+      version: '1.5.88',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1638,6 +1638,7 @@
         ccClassKey = _targetRef$ctx2.ccClassKey;
     var targetClassContext = ccClassKey_ccClassContext_[ccClassKey];
     var renderKeyClasses = targetClassContext.renderKeyClasses;
+    var toExcludeUkeys = [];
 
     if (renderKey) {
       // 如果renderKey是ukey（此时renderType是RENDER_BY_KEY）, 则不会进入updateRefs逻辑
@@ -1647,6 +1648,7 @@
         var ukeyIndex = ccUkeys.indexOf(currentCcUkey);
         if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
         updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
+        toExcludeUkeys = ccUkeys;
       }
     } // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
     // so flag ignoreCurrentCcUkey as true;
@@ -1656,8 +1658,8 @@
 
     var ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
 
-    if (renderType === RENDER_BY_KEY$1) {
-      //基于renderKey触发渲染
+    if (renderKey) {
+      //调用发起者传递了renderKey
       if (renderKeyClasses === '*') {
         //要影响所属模块的所有类
         ccClassKeys = []; //这里设置为空数据
@@ -1690,6 +1692,7 @@
       }
 
       ccKeys.forEach(function (ccKey) {
+        if (toExcludeUkeys.includes(ccKey)) return;
         if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
         var ref = ccUkey_ref_[ccKey];
 

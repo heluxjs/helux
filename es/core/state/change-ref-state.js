@@ -186,6 +186,7 @@ function broadcastState(renderType, callInfo, targetRef, partialSharedState, sta
   const targetClassContext = ccClassKey_ccClassContext_[ccClassKey];
   const renderKeyClasses = targetClassContext.renderKeyClasses;
 
+  let toExcludeUkeys = [];
   if (renderKey) {
     // 如果renderKey是ukey（此时renderType是RENDER_BY_KEY）, 则不会进入updateRefs逻辑
     if (
@@ -199,6 +200,7 @@ function broadcastState(renderType, callInfo, targetRef, partialSharedState, sta
       if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
 
       updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
+      toExcludeUkeys = ccUkeys;
     }
   }
 
@@ -209,7 +211,7 @@ function broadcastState(renderType, callInfo, targetRef, partialSharedState, sta
   // these ccClass are watching the same module's state
   let ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
 
-  if (renderType === RENDER_BY_KEY) {//基于renderKey触发渲染
+  if (renderKey) {//调用发起者传递了renderKey
     if (renderKeyClasses === '*') {//要影响所属模块的所有类
       ccClassKeys = [];//这里设置为空数据
     } else {
@@ -236,6 +238,7 @@ function broadcastState(renderType, callInfo, targetRef, partialSharedState, sta
     }
 
     ccKeys.forEach(ccKey => {
+      if (toExcludeUkeys.includes(ccKey)) return;
       if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
       const ref = ccUkey_ref_[ccKey];
       if (ref) {
