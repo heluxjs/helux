@@ -5,7 +5,7 @@ import watchKeyForRef from '../watch/watch-key-for-ref';
 
 const { store: { getState } } = ccContext;
 
-const callInfo = { payload: null, renderKey: '', delay: -1 };
+const callInfo = { payload: null, renderKey: '', delay: -1, noCW: false };
 
 /** 由首次render触发 */
 export default function (ref) {
