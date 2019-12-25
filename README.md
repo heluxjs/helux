@@ -323,7 +323,7 @@ import { useConcent } from 'concent';
 
 //同样的，该函数只在ui首次渲染前被执行一次！！！
 const setup = ctx =>{
-  const {state, setState, dispatch} = ctx;
+  const {setState, dispatch} = ctx;
   const inc = () => {
     setState({ count: ctx.state.count + 1 });
   };
