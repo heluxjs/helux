@@ -76,7 +76,7 @@ a predictable、zero-cost-use、progressive、high performance's enhanced state 
 source code see here：https://github.com/fantasticsoul/concent-guid-ts
 
 ## ✨Fetures
-* **simple core api**，use 'run' to load model configuration, use 'register' to decorate class component, or use 'useConcent' in function component。
+* **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component。
 * **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by [setState] directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
 * **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene。
 * **flexible data consumption granularity**，your can consume multi model data with state key level dependency.。
