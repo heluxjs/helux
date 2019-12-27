@@ -1,7 +1,7 @@
 English | [简体中文](./README.zh-CN.md)
 
 ## [concent](https://concentjs.github.io/concent-doc)
-a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on**dependency mark**、**ref collection** and **state broadcast**，power you react!
+a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency mark**、**ref collection** and **state broadcast**，power you react!
 
 <p align="center">
   <a href="#">
