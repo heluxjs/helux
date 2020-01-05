@@ -3,6 +3,7 @@ import * as checker from '../checker';
 import * as util from '../../support/util';
 import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
+import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
 const { isPlainJsonObject, executeCompOrWatch, makeCommitHandler } = util;
@@ -30,20 +31,15 @@ export default function (module, moduleWatch, append = false) {
 
   const getState = ccContext.store.getState;
   const moduleState = getState(module);
-
   configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootWatchDep }, moduleWatch);
-  const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState);
 
-  if (pickDepFns.length ) {
-    const d = ccContext.getDispatcher();
-    const { commit, flush } = makeCommitHandler(module, d && d.ctx.changeState, callInfo);
-
-    pickedFns.forEach(({ retKey, fn, depKeys }) => {
-      const fnCtx = { retKey, payload: null, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
-      executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-    });
-
-    flush();
-  }
+  const d = ccContext.getDispatcher();
+  const deltaCommittedState = Object.assign({}, moduleState);
+  const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  
+  findDepFnsToExecute(
+    d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns,
+    moduleState, moduleState, deltaCommittedState, callInfo, true,
+  );
 
 }

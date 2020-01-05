@@ -1,3 +1,53 @@
+#### 2020-01-05
+1.5.90 发布
+* bug fix: effect连接到其他模块的stateKey时，可能会产生无线循环调用
+> 通过给模块状态里修改过的key加版本号来解决此问题，造成无线循环的原因是prevState里和state里某个字段的值始终是不一样的，但是effect回调里触发了修改自己实例的状态，导致effect depKeys一直比较，一直都认为有差异.    
+> effectProps不会有此类问题，因为prevProps是用过就指向最新的props   
+> effect的depKeys如果是自己实例的stateKey也不会出现此问题，因为prevState是用过就指向最新的state
+```
+const setup = ctx => {
+  ctx.effect(()=>{
+    const typeList = ctx.globalState.typeList;
+    if(typeList.length>0){
+      // 加了字段版本控制后，现在这样调用时安全的了，不会引起无线循环
+      ctx.setState({type: typeList[0].id});
+    }
+  }, ['$$global/typeList']);
+}
+```
+
+* optimize: 让computed 和 watch函数的commit状态合并到本轮渲染里，同时限制commit里触发的其他computed&watch函数的调用深度，防止死循环
+* optimize: 去掉lazyReducer(包括moduleLazyReducer、connectedLazyReducer等)相关逻辑，通过控制moduleReducer.xxx(payload, rKeyOrOptions)来控制发起调用的更多形态
+```js
+//renderKeyOrOptions?: string | { silent?: boolean, lazy?: boolean, renderKey?: string, delay?: number }
+
+const setup = ctx =>{
+  //  const normalCall = ()=> ctx.dispatch('callFoo', '2')
+  const normalCall = ()=> ctx.moduleReducer.callFoo('2');
+  
+  //  const lazyCall = ()=> ctx.dispatchLazy('callFoo', '2')
+  const lazyCall = ()=> ctx.moduleReducer.callFoo('2', {lazy:true});
+
+  //  const silentCall = ()=> ctx.dispatchSilent('callFoo', '2')
+  const silentCall = ()=> ctx.moduleReducer.callFoo('2', {silent:true});
+}
+```
+* refactor: 去掉顶层api属性`lazyReducer`，只保留`reducer`
+```js
+//呼叫lazy模式
+cc.reducer.fooModule.barMethod(222, {lazy:true})
+//呼叫silent模式
+cc.reducer.fooModule.barMethod(222, {silent:true})
+```
+* refactor: 去掉顶层api属性`lazy-dispatch`，只保留`dispatch`
+```js
+//呼叫lazy模式
+cc.dispatch('fooModule/barMethod', 222, {lazy:true})
+//呼叫silent模式
+cc.dispatch('fooModule/barMethod', 222, {silent:true})
+```
+* fix: 将append 修改为 appendChild, 以保持老版本chrome（<=49）创建dispatcher不报错
+
 #### 2019-12-22
 1.5.88 发布
 * bug fix: broadcastState针对设置的renderKeyClasses失效，因为是否基于renderKey渲染判断错误导致，不该使用renderType作为条件，而应该直接基于传入的renderKey来判断

@@ -36,7 +36,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   // NC noCompare
   const { retKey_fn_, stateKey_retKeys_, fnCount } = moduleDep;
 
-  /** 在首次渲染前调用 */
+  /** 首次调用 */
   if (isBeforeMount) {
     const retKeys = okeys(retKey_fn_);
     const setted = okeys(committedState);

@@ -3,14 +3,14 @@ import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 
 const { safeGetObjectFromObject, okeys, justWarning } = util;
-const { reducer: { _reducerModule_fnNames_, _reducerCaller, _lazyReducerCaller } } = ccContext;
+const { reducer: { _reducerModule_fnNames_, _reducerCaller } } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
   ref.__$$isBeforeFirstRender = true;
 
   const ctx = ref.ctx;
-  const { connectedReducer, connectedLazyReducer, moduleReducer, moduleLazyReducer, dispatch, lazyDispatch, connect, module } = ctx;
+  const { connectedReducer, moduleReducer, dispatch, connect, module } = ctx;
   const connectedModules = okeys(connect);
 
   const allModules = connectedModules.slice();
@@ -22,23 +22,19 @@ export default function (ref, setup, bindCtxToMethod) {
   //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
   //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
-    let reducerObj, lazyReducerObj;
+    let reducerObj;
     if(m === module){
       reducerObj = moduleReducer;
-      lazyReducerObj = moduleLazyReducer;
     }else{
       reducerObj = safeGetObjectFromObject(connectedReducer, m);
-      lazyReducerObj = safeGetObjectFromObject(connectedLazyReducer, m);
     }
 
     const fnNames = _reducerModule_fnNames_[m] || [];
     fnNames.forEach(fnName => {
       reducerObj[fnName] = (payload, rkey, delay) => dispatch(`${m}/${fnName}`, payload, rkey, delay);
-      lazyReducerObj[fnName] = (payload, rkey, delay) => lazyDispatch(`${m}/${fnName}`, payload, rkey, delay);
     });
   });
   ctx.reducer = _reducerCaller;
-  ctx.lazyReducer = _lazyReducerCaller;
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {

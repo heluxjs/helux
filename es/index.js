@@ -18,7 +18,6 @@ import _getComputed from './api/get-computed';
 import _emit from './api/emit';
 import _off from './api/off';
 import _dispatch from './api/dispatch';
-import _lazyDispatch from './api/lazy-dispatch';
 import _ccContext from './cc-context';
 import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
@@ -27,7 +26,6 @@ import _getRefs from './api/get-refs';
 import _getConnectedState from './api/get-connected-state';
 import _appendState from './api/append-state';
 import _reducer from './api/reducer';
-import _lazyReducer from './api/lazy-reducer';
 import _clearContextIfHot from './api/clear-context-if-hot';
 import _CcFragment from './component/CcFragment';
 import _useConcent from './api/use-concent';
@@ -55,14 +53,12 @@ export const getComputed = _getComputed;
 export const emit = _emit;
 export const off = _off;
 export const dispatch = _dispatch;
-export const lazyDispatch = _lazyDispatch;
 export const ccContext = _ccContext;
 export const createDispatcher = _createDispatcher;
 export const execute = _execute;
 export const executeAll = _executeAll;
 export const getRefs = _getRefs;
 export const reducer = _reducer;
-export const lazyReducer = _lazyReducer;
 export const clearContextIfHot = _clearContextIfHot;
 export const CcFragment = _CcFragment;
 export const cst = _cst;
@@ -83,7 +79,6 @@ const defaultExport = {
   registerHookComp,
   configure,
   dispatch,
-  lazyDispatch,
   startup,
   run,
   call,
@@ -101,7 +96,6 @@ const defaultExport = {
   executeAll,
   getRefs,
   reducer,
-  lazyReducer,
   clearContextIfHot,
   CcFragment,
   cst,

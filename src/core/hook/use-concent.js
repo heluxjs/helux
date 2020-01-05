@@ -91,7 +91,7 @@ export default function useConcent(registerOption, ccClassKey){
     hookRef = ccUkey_ref_[refKey];
 
     const refCtx = hookRef.ctx;
-    //existing period, replace reactSetState and reactForceUpdate
+    // existing period, replace reactSetState and reactForceUpdate
     refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
     refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
   }

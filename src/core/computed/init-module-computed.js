@@ -3,9 +3,10 @@ import * as checker from '../checker';
 import * as util from '../../support/util';
 import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
+import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { safeGetObjectFromObject, isPlainJsonObject, makeCommitHandler } = util;
+const { safeGetObjectFromObject, isPlainJsonObject } = util;
 const callInfo = { payload: null, renderKey: '', delay: -1 };
 
 export default function (module, computed, append = false, configureDep = true) {
@@ -33,20 +34,15 @@ export default function (module, computed, append = false, configureDep = true) 
     configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootComputedDep }, computed);
   }
 
-  const { pickedFns, setted, changed } = pickDepFns(true, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, moduleState);
+  const d = ccContext.getDispatcher();
+  const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
+  const deltaCommittedState = Object.assign({}, moduleState);
+  const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
 
-  if (pickedFns.length ) {
-    const d = ccContext.getDispatcher();
-    const { commit, flush } = makeCommitHandler(module, d && d.ctx.changeState, callInfo);
-
-    pickedFns.forEach(({ retKey, fn, depKeys }) => {
-      const fnCtx = { retKey, payload: null, isFirstCall: true, commit, setted, changed, stateModule: module, refModule: null, oldState: moduleState, committedState: moduleState, refCtx: null };
-      const computedValue = util.executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-      const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
-      moduleComputedValue[retKey] = computedValue;
-    });
-
-    flush();
-  }
+  findDepFnsToExecute(
+    d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns,
+    moduleState, moduleState, deltaCommittedState, callInfo, true,
+    'computed', '', moduleComputedValue,
+  );
 
 }

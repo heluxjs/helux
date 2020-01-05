@@ -4,7 +4,7 @@ import pickOneRef from '../../core/ref/pick-one-ref';
 
 const { makeUniqueCcKey, justWarning } = util;
 
-export default function (isLazy, action, payLoadWhenActionIsString, renderKey = '', delay, { ccClassKey, ccKey, throwError, isSilent = false } = {}) {
+export default function (action, payLoadWhenActionIsString, rkOrOptions = '', delay, { ccClassKey, ccKey, throwError, isSilent = false } = {}) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {
     throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload`);
   }
@@ -17,7 +17,7 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
       if (!targetRef) {
         throw new Error(`no ref found for uniqueCcKey:${uKey}!`);
       } else {
-        dispatchFn = isLazy ? targetRef.ctx.lazyDispatch : targetRef.ctx.dispatch;
+        dispatchFn = targetRef.ctx.dispatch;
       }
     } else {
       let module = '';
@@ -32,8 +32,7 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
         ref = pickOneRef();
       }
 
-      if (isSilent === true) dispatchFn = ref.ctx.silentDispatch;
-      else dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
+      dispatchFn = ref.ctx.dispatch;
     }
 
     if (typeof action === 'string' && action.startsWith('*')) {
@@ -42,11 +41,11 @@ export default function (isLazy, action, payLoadWhenActionIsString, renderKey = 
       if (!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {
-        tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, renderKey, delay));
+        tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, rkOrOptions, delay));
       });
       return Promise.all(tasks);
     } else {
-      return dispatchFn(action, payLoadWhenActionIsString, renderKey, delay);
+      return dispatchFn(action, payLoadWhenActionIsString, rkOrOptions, delay);
     }
   } catch (err) {
     if (throwError) throw err;

@@ -201,6 +201,19 @@ export function verifyKeys(keys1, keys2) {
   return { duplicate, notArray, keyElementNotString };
 }
 
+export function getDupKeys(arr1, arr2) {
+  const keys1 = okeys(arr1);
+  const keys2 = okeys(arr2);
+  let longer = keys2, shorter = keys1;
+  if (keys1.length > keys2.length) {
+    longer = keys1;
+    shorter = keys2;
+  }
+  const dupKeys = [];
+  shorter.forEach(k => longer.includes(k) && dupKeys.push(k));
+  return dupKeys;
+}
+
 export function color(color = 'green') {
   return `color:${color};border:1px solid ${color}`;
 }
@@ -400,17 +413,13 @@ export function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCt
   return computedValue;
 }
 
-export function makeCommitHandler(module, changeState, callInfo) {
-  const state = {};
-  const commit = partialState => Object.assign(state, partialState);
-  const flush = () => {
-    if (isObjectNotNull(state)) {
-      // flag noCW true, tell concent not trigger computed&watch again!!!
-      if (changeState) {
-        const options = Object.assign(callInfo, { module, calledBy: 'flush', noCW: true });
-        changeState(state, options);
-      }
-    }
+export function makeCommitHandler() {
+  let state = null;
+  const commit = partialState => {
+    if (!state) state = {};
+    Object.assign(state, partialState);
   }
-  return { commit, flush };
+
+  const getFnCommittedState = () => state;
+  return { commit, getFnCommittedState }
 }

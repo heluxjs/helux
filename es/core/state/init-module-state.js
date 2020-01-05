@@ -1,20 +1,26 @@
 import ccContext from '../../cc-context';
-import { MODULE_GLOBAL, ERR } from '../../support/constant';
+import { MODULE_GLOBAL } from '../../support/constant';
+import * as util from '../../support/util';
 import * as checker from '../checker';
 import guessDuplicate from '../base/guess-duplicate';
 
-export default function(module, state, moduleStateMustNotDefinedInStore = true, tag='') {
-  try{
+export default function (module, state, moduleStateMustNotDefinedInStore = true, tag = '') {
+  try {
     checker.checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
-  }catch(err){
+  } catch (err) {
     guessDuplicate(err, module, 'state');
   }
 
-  // ccContext.store.setState(module, state);
-  const rootState = ccContext.store.getState();
-  const prevRootState = ccContext.store.getPrevState();
+  const ccStore = ccContext.store;
+  const rootState = ccStore.getState();
+  const rootStateVer = ccStore.getStateVer();
+  const prevRootState = ccStore.getPrevState();
   rootState[module] = state;
   prevRootState[module] = Object.assign({}, state);
+  rootStateVer[module] = util.okeys(state).reduce((map, key) => {
+    map[key] = 1;
+    return map;
+  }, {});
 
   const statKeys = Object.keys(state);
   ccContext.moduleName_stateKeys_[module] = statKeys;

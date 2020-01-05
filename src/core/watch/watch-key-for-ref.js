@@ -1,27 +1,23 @@
 import pickDepFns from '../base/pick-dep-fns';
-import { executeCompOrWatch, makeCommitHandler } from '../../support/util';
+import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 
-export default function (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount) {
+export default function (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount, autoMergeDeltaToCommitted = false) {
+
   if (!refCtx.hasWatchFn) return true;
+
+  const deltaCommittedState = Object.assign({}, committedState);
   const { watchDep, module: refModule, ccUniqueKey } = refCtx;
+  const newState = Object.assign({}, oldState, committedState);
 
-  let shouldCurrentRefUpdate = true;
+  const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
   // 触发有stateKey依赖列表相关的watch函数
-  const { pickedFns, setted, changed } = pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
+  const shouldCurrentRefUpdate = findDepFnsToExecute(
+    refCtx, stateModule, refModule, oldState, curDepComputedFns,
+    committedState, newState, deltaCommittedState, callInfo, isBeforeMount,
+  );
 
-  if (callInfo.noCW === false && pickedFns.length) {
-    const newState = Object.assign({}, oldState, committedState);
-    const { commit, flush } = makeCommitHandler(stateModule, refCtx.changeState, callInfo);
-
-    pickedFns.forEach(({ fn, retKey, depKeys }) => {
-      const fnCtx = { retKey, callInfo, isFirstCall: isBeforeMount, commit, setted, changed, stateModule, refModule, oldState, committedState, refCtx };
-      const ret = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
-
-      //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
-      if (ret === false) shouldCurrentRefUpdate = false;
-    });
-
-    flush();
+  if (autoMergeDeltaToCommitted) {
+    Object.assign(committedState, deltaCommittedState);
   }
 
   return shouldCurrentRefUpdate;

@@ -1,11 +1,11 @@
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
-// import { makeCommitHandler } from '../core/state/handler-factory';
+import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
 
-const { executeCompOrWatch, okeys } = util;
+const { okeys } = util;
 
-const refs = { };
+const refs = {};
 
 const getDispatcher = () => refs[CC_DISPATCHER];
 
@@ -15,51 +15,34 @@ const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}
   const moduleComputedValue = _computedValue[module];
 
   const rootComputedDep = computed.getRootComputedDep();
-  const { pickedFns: cFns, setted, changed } = pickDepFns(false, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
+  const curDepComputedFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
 
   const rootWatchDep = watch.getRootWatchDep();
-  const { pickedFns: wFns, setted: ws, changed: wc } = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
 
-  const cLen = cFns.length, wLen = wFns.length;
-  if (callInfo.noCW === false && (cLen || wLen)) {
-    let refModule = null, changeState;
-    if (refCtx) {
-      refModule = refCtx.module;
-      changeState = refCtx.changeState;
-    } else {
-      const d = getDispatcher();
-      changeState = d && d.ctx.changeState;
-    }
+  const refModule = refCtx ? refCtx.module : null;
+  const newState = Object.assign({}, moduleState, committedState);
 
-    const newState = Object.assign({}, moduleState, committedState);
+  const deltaCommittedState = Object.assign({}, committedState);
+  let toComputedState = deltaCommittedState;
 
-    if(cLen){
-      const { commit, flush } = util.makeCommitHandler(module, changeState, callInfo);
-      cFns.forEach(({ retKey, fn, depKeys }) => {
-        const fnCtx = { retKey, isFirstCall: false, commit, setted, changed, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-        const computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
-        moduleComputedValue[retKey] = computedValue;
-      });
-      flush();
-    }
+  findDepFnsToExecute(
+    refCtx, module, refModule, moduleState, curDepComputedFns,
+    toComputedState, newState, deltaCommittedState, callInfo, false,
+    'computed', '', moduleComputedValue,
+  );
+  findDepFnsToExecute(
+    refCtx, module, refModule, moduleState, curDepWatchFns,
+    toComputedState, newState, deltaCommittedState, callInfo, false,
+  );
 
-    if(wLen){
-      const { commit, flush } = util.makeCommitHandler(module, changeState, callInfo);
-      wFns.forEach(({ retKey, fn, depKeys }) => {
-        const fnCtx = { retKey, isFirstCall: false, commit, setted: ws, changed: wc, stateModule: module, refModule, oldState: moduleState, committedState, refCtx };
-        executeCompOrWatch(retKey, depKeys, fn, newState, moduleState, fnCtx);
-      });
-      flush();
-    }
-  }
-
-  okeys(committedState).forEach(key => {
-    /** setStateByModuleAndKey */
+  okeys(deltaCommittedState).forEach(key => {
     prevModuleState[key] = moduleState[key];
-    // const fnCtx = { key, module, moduleState, committedState };
-    moduleState[key] = committedState[key];
+    incStateVer(module, key);
+    moduleState[key] = deltaCommittedState[key];
   });
 
+  return deltaCommittedState;
 }
 
 const getState = (module) => {
@@ -68,6 +51,14 @@ const getState = (module) => {
 
 const getPrevState = (module) => {
   return _prevState[module];
+}
+
+const getStateVer = function (module) {
+  if (!module) return _stateVer;
+  return _stateVer[module];
+}
+const incStateVer = function (module, key) {
+  _stateVer[module][key]++;
 }
 
 const _computedValue = {
@@ -106,6 +97,7 @@ function hotReloadWarning(err) {
 /** ccContext section */
 const _state = {};
 const _prevState = {};
+const _stateVer = {};// record state version, to let ref effect avoid endless
 const ccContext = {
   getDispatcher,
   isHotReloadMode: function () {
@@ -195,7 +187,8 @@ const ccContext = {
       ccContext.store.setState(module, state);
     },
     _state,
-    _prevState,//辅助CcFragment defineEffect之用
+    _prevState,//辅助effect逻辑用
+    _stateVer,//触发时，比较state版本，防止死循环
     getState: function (module) {
       if (module) return getState(module);
       else return _state;
@@ -204,11 +197,12 @@ const ccContext = {
       if (module) return getPrevState(module);
       else return _prevState;
     },
+    getStateVer,
     setState: function (module, partialSharedState, options) {
-      setStateByModule(module, partialSharedState, options);
+      return setStateByModule(module, partialSharedState, options);
     },
     setGlobalState: function (partialGlobalState) {
-      setStateByModule(MODULE_GLOBAL, partialGlobalState);
+      return setStateByModule(MODULE_GLOBAL, partialGlobalState);
     },
     getGlobalState: function () {
       return _state[MODULE_GLOBAL];
@@ -226,9 +220,7 @@ const ccContext = {
       }
     },
     _reducerCaller: {},
-    _lazyReducerCaller: {},
     // _reducerRefCaller: {},//为实例准备的reducer caller
-    // _lazyReducerRefCaller: {},//为实例准备的lazy reducer caller
     _reducerFnName_fullFnNames_: {},
     _reducerModule_fnNames_: {}
   },
@@ -258,7 +250,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.89',
+    version: '1.5.90',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

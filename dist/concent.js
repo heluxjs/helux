@@ -452,30 +452,21 @@
 
     return computedValue;
   }
-  function makeCommitHandler(module, changeState, callInfo) {
-    var state = {};
+  function makeCommitHandler() {
+    var state = null;
 
     var commit = function commit(partialState) {
-      return Object.assign(state, partialState);
+      if (!state) state = {};
+      Object.assign(state, partialState);
     };
 
-    var flush = function flush() {
-      if (isObjectNotNull(state)) {
-        // flag noCW true, tell concent not trigger computed&watch again!!!
-        if (changeState) {
-          var options = Object.assign(callInfo, {
-            module: module,
-            calledBy: 'flush',
-            noCW: true
-          });
-          changeState(state, options);
-        }
-      }
+    var getFnCommittedState = function getFnCommittedState() {
+      return state;
     };
 
     return {
       commit: commit,
-      flush: flush
+      getFnCommittedState: getFnCommittedState
     };
   }
 
@@ -523,7 +514,7 @@
     var retKey_fn_ = moduleDep.retKey_fn_,
         stateKey_retKeys_ = moduleDep.stateKey_retKeys_,
         fnCount = moduleDep.fnCount;
-    /** 在首次渲染前调用 */
+    /** 首次调用 */
 
     if (isBeforeMount) {
       var retKeys = okeys(retKey_fn_);
@@ -680,10 +671,89 @@
     }
   }
 
-  var _computedValue2, _reducer;
+  var findDepFnsToExecute = (function (refCtx, stateModule, refModule, oldState, finder, toComputedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall, fnType, sourceType, computedContainer, refConnectedComputed) {
+    var whileCount = 0;
+    var initComputedState = toComputedState;
+    var shouldCurrentRefUpdate = true;
 
-  var executeCompOrWatch$1 = executeCompOrWatch,
-      okeys$1 = okeys;
+    var _loop = function _loop() {
+      whileCount++; // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
+      // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
+
+      var beforeMountFlag = whileCount === 1 ? isFirstCall : false;
+
+      var _finder = finder(initComputedState, beforeMountFlag),
+          pickedFns = _finder.pickedFns,
+          setted = _finder.setted,
+          changed = _finder.changed;
+
+      if (!pickedFns.length) return "break";
+
+      var _makeCommitHandler = makeCommitHandler(),
+          commit = _makeCommitHandler.commit,
+          getFnCommittedState = _makeCommitHandler.getFnCommittedState;
+
+      pickedFns.forEach(function (_ref) {
+        var retKey = _ref.retKey,
+            fn = _ref.fn,
+            depKeys = _ref.depKeys;
+        var fnCtx = {
+          retKey: retKey,
+          callInfo: callInfo,
+          isFirstCall: isFirstCall,
+          commit: commit,
+          setted: setted,
+          changed: changed,
+          stateModule: stateModule,
+          refModule: refModule,
+          oldState: oldState,
+          committedState: initComputedState,
+          refCtx: refCtx
+        };
+        var computedValueOrRet = executeCompOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+
+        if (fnType === 'computed') {
+          if (sourceType === 'ref') {
+            if (refModule === stateModule) {
+              computedContainer[retKey] = computedValueOrRet;
+            } // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
+
+
+            var targetComputed = refConnectedComputed[stateModule];
+
+            if (targetComputed) {
+              targetComputed[retKey] = computedValueOrRet;
+            }
+          } else {
+            computedContainer[retKey] = computedValueOrRet;
+          }
+        } else {
+          // watch
+          //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
+          if (computedValueOrRet === false) shouldCurrentRefUpdate = false;
+        }
+      });
+      initComputedState = getFnCommittedState();
+
+      if (initComputedState) {
+        Object.assign(initNewState, initComputedState);
+        Object.assign(initDeltaCommittedState, initComputedState);
+      }
+
+      if (whileCount > 10) throw new Error('fnCtx.commit may goes endless loop, please check your code');
+    };
+
+    while (initComputedState) {
+      var _ret = _loop();
+
+      if (_ret === "break") break;
+    }
+
+    return shouldCurrentRefUpdate;
+  });
+
+  var _computedValue2, _reducer;
+  var okeys$1 = okeys;
   var refs = {};
 
   var getDispatcher = function getDispatcher() {
@@ -704,96 +774,28 @@
     var moduleComputedValue = _computedValue[module];
     var rootComputedDep = computed.getRootComputedDep();
 
-    var _pickDepFns = pickDepFns(false, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState),
-        cFns = _pickDepFns.pickedFns,
-        setted = _pickDepFns.setted,
-        changed = _pickDepFns.changed;
+    var curDepComputedFns = function curDepComputedFns(committedState, isFirstCall) {
+      return pickDepFns(isFirstCall, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
+    };
 
     var rootWatchDep = watch.getRootWatchDep();
 
-    var _pickDepFns2 = pickDepFns(false, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState),
-        wFns = _pickDepFns2.pickedFns,
-        ws = _pickDepFns2.setted,
-        wc = _pickDepFns2.changed;
+    var curDepWatchFns = function curDepWatchFns(committedState, isFirstCall) {
+      return pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+    };
 
-    var cLen = cFns.length,
-        wLen = wFns.length;
-
-    if (callInfo.noCW === false && (cLen || wLen)) {
-      var refModule = null,
-          changeState;
-
-      if (refCtx) {
-        refModule = refCtx.module;
-        changeState = refCtx.changeState;
-      } else {
-        var d = getDispatcher();
-        changeState = d && d.ctx.changeState;
-      }
-
-      var newState = Object.assign({}, moduleState, committedState);
-
-      if (cLen) {
-        var _util$makeCommitHandl = makeCommitHandler(module, changeState, callInfo),
-            commit = _util$makeCommitHandl.commit,
-            flush = _util$makeCommitHandl.flush;
-
-        cFns.forEach(function (_ref2) {
-          var retKey = _ref2.retKey,
-              fn = _ref2.fn,
-              depKeys = _ref2.depKeys;
-          var fnCtx = {
-            retKey: retKey,
-            isFirstCall: false,
-            commit: commit,
-            setted: setted,
-            changed: changed,
-            stateModule: module,
-            refModule: refModule,
-            oldState: moduleState,
-            committedState: committedState,
-            refCtx: refCtx
-          };
-          var computedValue = executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
-          moduleComputedValue[retKey] = computedValue;
-        });
-        flush();
-      }
-
-      if (wLen) {
-        var _util$makeCommitHandl2 = makeCommitHandler(module, changeState, callInfo),
-            _commit = _util$makeCommitHandl2.commit,
-            _flush = _util$makeCommitHandl2.flush;
-
-        wFns.forEach(function (_ref3) {
-          var retKey = _ref3.retKey,
-              fn = _ref3.fn,
-              depKeys = _ref3.depKeys;
-          var fnCtx = {
-            retKey: retKey,
-            isFirstCall: false,
-            commit: _commit,
-            setted: ws,
-            changed: wc,
-            stateModule: module,
-            refModule: refModule,
-            oldState: moduleState,
-            committedState: committedState,
-            refCtx: refCtx
-          };
-          executeCompOrWatch$1(retKey, depKeys, fn, newState, moduleState, fnCtx);
-        });
-
-        _flush();
-      }
-    }
-
-    okeys$1(committedState).forEach(function (key) {
-      /** setStateByModuleAndKey */
-      prevModuleState[key] = moduleState[key]; // const fnCtx = { key, module, moduleState, committedState };
-
-      moduleState[key] = committedState[key];
+    var refModule = refCtx ? refCtx.module : null;
+    var newState = Object.assign({}, moduleState, committedState);
+    var deltaCommittedState = Object.assign({}, committedState);
+    var toComputedState = deltaCommittedState;
+    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepComputedFns, toComputedState, newState, deltaCommittedState, callInfo, false, 'computed', '', moduleComputedValue);
+    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepWatchFns, toComputedState, newState, deltaCommittedState, callInfo, false);
+    okeys$1(deltaCommittedState).forEach(function (key) {
+      prevModuleState[key] = moduleState[key];
+      incStateVer(module, key);
+      moduleState[key] = deltaCommittedState[key];
     });
+    return deltaCommittedState;
   };
 
   var _getState = function getState(module) {
@@ -802,6 +804,15 @@
 
   var _getPrevState = function getPrevState(module) {
     return _prevState[module];
+  };
+
+  var getStateVer = function getStateVer(module) {
+    if (!module) return _stateVer;
+    return _stateVer[module];
+  };
+
+  var incStateVer = function incStateVer(module, key) {
+    _stateVer[module][key]++;
   };
 
   var _computedValue = (_computedValue2 = {}, _computedValue2[MODULE_GLOBAL] = {}, _computedValue2[MODULE_DEFAULT] = {}, _computedValue2[MODULE_CC] = {}, _computedValue2);
@@ -848,6 +859,8 @@
 
   var _state = {};
   var _prevState = {};
+  var _stateVer = {}; // record state version, to let ref effect avoid endless
+
   var ccContext = {
     getDispatcher: getDispatcher,
     isHotReloadMode: function isHotReloadMode() {
@@ -932,18 +945,21 @@
       },
       _state: _state,
       _prevState: _prevState,
-      //辅助CcFragment defineEffect之用
+      //辅助effect逻辑用
+      _stateVer: _stateVer,
+      //触发时，比较state版本，防止死循环
       getState: function getState(module) {
         if (module) return _getState(module);else return _state;
       },
       getPrevState: function getPrevState(module) {
         if (module) return _getPrevState(module);else return _prevState;
       },
+      getStateVer: getStateVer,
       setState: function setState(module, partialSharedState, options) {
-        setStateByModule(module, partialSharedState, options);
+        return setStateByModule(module, partialSharedState, options);
       },
       setGlobalState: function setGlobalState(partialGlobalState) {
-        setStateByModule(MODULE_GLOBAL, partialGlobalState);
+        return setStateByModule(MODULE_GLOBAL, partialGlobalState);
       },
       getGlobalState: function getGlobalState() {
         return _state[MODULE_GLOBAL];
@@ -956,9 +972,7 @@
     reducer: {
       _reducer: (_reducer = {}, _reducer[MODULE_GLOBAL] = {}, _reducer[MODULE_CC] = {}, _reducer),
       _reducerCaller: {},
-      _lazyReducerCaller: {},
       // _reducerRefCaller: {},//为实例准备的reducer caller
-      // _lazyReducerRefCaller: {},//为实例准备的lazy reducer caller
       _reducerFnName_fullFnNames_: {},
       _reducerModule_fnNames_: {}
     },
@@ -988,7 +1002,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.88',
+      version: '1.5.90',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1280,112 +1294,65 @@
     };
   }
 
-  function watchKeyForRef (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount) {
+  function watchKeyForRef (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount, autoMergeDeltaToCommitted) {
+    if (autoMergeDeltaToCommitted === void 0) {
+      autoMergeDeltaToCommitted = false;
+    }
+
     if (!refCtx.hasWatchFn) return true;
+    var deltaCommittedState = Object.assign({}, committedState);
     var watchDep = refCtx.watchDep,
         refModule = refCtx.module,
         ccUniqueKey = refCtx.ccUniqueKey;
-    var shouldCurrentRefUpdate = true; // 触发有stateKey依赖列表相关的watch函数
+    var newState = Object.assign({}, oldState, committedState);
 
-    var _pickDepFns = pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey),
-        pickedFns = _pickDepFns.pickedFns,
-        setted = _pickDepFns.setted,
-        changed = _pickDepFns.changed;
+    var curDepComputedFns = function curDepComputedFns(committedState, isBeforeMount) {
+      return pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
+    }; // 触发有stateKey依赖列表相关的watch函数
 
-    if (callInfo.noCW === false && pickedFns.length) {
-      var newState = Object.assign({}, oldState, committedState);
 
-      var _makeCommitHandler = makeCommitHandler(stateModule, refCtx.changeState, callInfo),
-          commit = _makeCommitHandler.commit,
-          flush = _makeCommitHandler.flush;
+    var shouldCurrentRefUpdate = findDepFnsToExecute(refCtx, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount);
 
-      pickedFns.forEach(function (_ref) {
-        var fn = _ref.fn,
-            retKey = _ref.retKey,
-            depKeys = _ref.depKeys;
-        var fnCtx = {
-          retKey: retKey,
-          callInfo: callInfo,
-          isFirstCall: isBeforeMount,
-          commit: commit,
-          setted: setted,
-          changed: changed,
-          stateModule: stateModule,
-          refModule: refModule,
-          oldState: oldState,
-          committedState: committedState,
-          refCtx: refCtx
-        };
-        var ret = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
-
-        if (ret === false) shouldCurrentRefUpdate = false;
-      });
-      flush();
+    if (autoMergeDeltaToCommitted) {
+      Object.assign(committedState, deltaCommittedState);
     }
 
     return shouldCurrentRefUpdate;
   }
 
-  //CcFragment实例调用会提供callerCtx
   // stateModule表示状态所属的模块
 
-  function computeValueForRef (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount) {
+  function computeValueForRef (refCtx, stateModule, oldState, committedState, callInfo, isBeforeMount, autoMergeDeltaToCommitted) {
     if (isBeforeMount === void 0) {
       isBeforeMount = false;
     }
 
-    if (!refCtx.hasComputedFn) return;
+    if (autoMergeDeltaToCommitted === void 0) {
+      autoMergeDeltaToCommitted = false;
+    }
+
+    var deltaCommittedState = Object.assign({}, committedState);
+    if (!refCtx.hasComputedFn) return deltaCommittedState;
     var computedDep = refCtx.computedDep,
         refModule = refCtx.module,
         refComputed = refCtx.refComputed,
         refConnectedComputed = refCtx.refConnectedComputed,
         ccUniqueKey = refCtx.ccUniqueKey; // const moduleState = ccContext.store.getState(stateModule);
-    // 触发依赖stateKeys相关的computed函数
 
-    var _pickDepFns = pickDepFns(isBeforeMount, 'ref', 'computed', computedDep, stateModule, oldState, committedState, ccUniqueKey),
-        pickedFns = _pickDepFns.pickedFns,
-        setted = _pickDepFns.setted,
-        changed = _pickDepFns.changed;
+    var newState = Object.assign({}, oldState, committedState);
 
-    if (callInfo.noCW === false && pickedFns.length) {
-      var newState = Object.assign({}, oldState, committedState);
-
-      var _makeCommitHandler = makeCommitHandler(stateModule, refCtx.changeState, callInfo),
-          commit = _makeCommitHandler.commit,
-          flush = _makeCommitHandler.flush;
-
-      pickedFns.forEach(function (_ref) {
-        var fn = _ref.fn,
-            retKey = _ref.retKey,
-            depKeys = _ref.depKeys;
-        var fnCtx = {
-          retKey: retKey,
-          callInfo: callInfo,
-          isFirstCall: isBeforeMount,
-          commit: commit,
-          setted: setted,
-          changed: changed,
-          stateModule: stateModule,
-          refModule: refModule,
-          oldState: oldState,
-          committedState: committedState,
-          refCtx: refCtx
-        };
-        var computedValue = executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx);
-
-        if (refModule === stateModule) {
-          refComputed[retKey] = computedValue;
-        } // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
+    var curDepComputedFns = function curDepComputedFns(committedState, isBeforeMount) {
+      return pickDepFns(isBeforeMount, CATE_REF, 'computed', computedDep, stateModule, oldState, committedState, ccUniqueKey);
+    }; // 触发依赖stateKeys相关的computed函数
 
 
-        var targetComputed = refConnectedComputed[stateModule];
+    findDepFnsToExecute(refCtx, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'computed', CATE_REF, refComputed, refConnectedComputed);
 
-        if (targetComputed) {
-          targetComputed[retKey] = computedValue;
-        }
-      });
-      flush();
+    if (autoMergeDeltaToCommitted) {
+      Object.assign(committedState, deltaCommittedState);
     }
+
+    return deltaCommittedState;
   }
 
   var isPlainJsonObject$1 = isPlainJsonObject,
@@ -1459,7 +1426,6 @@
    * 
    * @param {*} state 
    * @param {*} option 
-   * @param {boolean} option.noCW 不需要再计算computed & watch，避免fn.commit照成死循环
    * @param {*} targetRef 
    */
 
@@ -1470,8 +1436,6 @@
         _ref$skipMiddleware = _ref.skipMiddleware,
         skipMiddleware = _ref$skipMiddleware === void 0 ? false : _ref$skipMiddleware,
         payload = _ref.payload,
-        _ref$noCW = _ref.noCW,
-        noCW = _ref$noCW === void 0 ? false : _ref$noCW,
         reactCallback = _ref.reactCallback,
         type = _ref.type,
         reducerModule = _ref.reducerModule,
@@ -1511,23 +1475,21 @@
     var callInfo = {
       payload: payload,
       renderKey: renderKey,
-      ccKey: ccKey,
-      noCW: noCW
-    };
-    callMiddlewares(skipMiddleware, passToMiddleware, function () {
-      //在triggerReactSetState之前把状态存储到store，
-      //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-      var passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 ? targetRef.ctx : null;
-      var sharedState = syncCommittedStateToStore(module, state, {
-        refCtx: passedCtx,
-        callInfo: callInfo
-      }); // source ref will receive the whole committed state 
+      ccKey: ccKey
+    }; //在triggerReactSetState之前把状态存储到store，
+    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
 
-      var renderType = triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback);
+    var passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 ? targetRef.ctx : null;
+    var sharedState = syncCommittedStateToStore(module, state, {
+      refCtx: passedCtx,
+      callInfo: callInfo
+    });
+    Object.assign(state, sharedState); // source ref will receive the whole committed state 
 
+    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, function (renderType, committedState) {
       if (renderType === RENDER_NO_OP$1 && !sharedState) ; else {
         send(SIG_STATE_CHANGED$1, {
-          committedState: state,
+          committedState: committedState,
           sharedState: sharedState,
           module: module,
           type: getActionType(calledBy, type),
@@ -1537,17 +1499,17 @@
       }
 
       if (sharedState) triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
-    });
+    }, skipMiddleware, passToMiddleware);
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next, skipMiddleware, passToMiddleware) {
     var refState = targetRef.state,
         refCtx = targetRef.ctx;
 
     if (targetRef.__$$isUnmounted === true || stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
       if (reactCallback) reactCallback(refState);
-      return RENDER_NO_OP$1;
+      return next && next(RENDER_NO_OP$1, state);
     }
 
     var stateModule = refCtx.module,
@@ -1562,7 +1524,7 @@
 
       if (ccOption.renderKey !== renderKey) {
         // current instance can been rendered only if current instance's ccKey equal renderKey
-        return RENDER_NO_OP$1;
+        return next && next(RENDER_NO_OP$1, state);
       }
     }
 
@@ -1584,22 +1546,37 @@
       }
     }
 
-    computeValueForRef(refCtx, stateModule, refState, state, callInfo);
-    var shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, state, callInfo);
+    var deltaCommittedState = computeValueForRef(refCtx, stateModule, refState, state, callInfo);
+    var shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
 
-    refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
+    var ccSetState = function ccSetState() {
+      return refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+    };
 
-    return renderType;
+    if (next) {
+      passToMiddleware.state = deltaCommittedState;
+      callMiddlewares(skipMiddleware, passToMiddleware, function () {
+        ccSetState();
+        next(renderType, deltaCommittedState);
+      });
+    } else {
+      ccSetState();
+    }
   }
 
   function syncCommittedStateToStore(moduleName, committedState, options) {
     var stateKeys = moduleName_stateKeys_[moduleName]; // extract shared state
 
     var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys, true),
-        partialState = _extractStateByKeys3.partialState; //!!! save state to store
+        partialState = _extractStateByKeys3.partialState; // save state to store
 
 
-    if (partialState) setState(moduleName, partialState, options);
+    if (partialState) {
+      var mayChangedState = setState(moduleName, partialState, options);
+      Object.assign(partialState, mayChangedState);
+      return partialState;
+    }
+
     return partialState;
   }
 
@@ -1644,7 +1621,8 @@
       // 如果renderKey是ukey（此时renderType是RENDER_BY_KEY）, 则不会进入updateRefs逻辑
       if (renderType === RENDER_BY_KEY$1 && !ccUkey_ref_[renderKey] || renderType === RENDER_NO_OP$1) {
         // targetRef刚刚已被触发过渲染，这里排除掉currentCcUkey
-        var ccUkeys = renderKey_ccUkeys_[renderKey].slice();
+        var ccUkeys__ = renderKey_ccUkeys_[renderKey] || [];
+        var ccUkeys = ccUkeys__.slice();
         var ukeyIndex = ccUkeys.indexOf(currentCcUkey);
         if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
         updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
@@ -2079,8 +2057,26 @@
         _ref$chainId_depth_ = _ref.chainId_depth_,
         chainId_depth_ = _ref$chainId_depth_ === void 0 ? {} : _ref$chainId_depth_;
 
-    return function (firstParam, payload, renderKey, delay) {
-      var _getNewChainData = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
+    return function (firstParam, payload, inputRKey, inputDelay) {
+      var _isLazy = isLazy,
+          _isSilent = isSilent;
+      var _renderKey = '',
+          _delay = inputDelay;
+
+      if (typeof inputRKey === 'object') {
+        var lazy = inputRKey.lazy,
+            silent = inputRKey.silent,
+            renderKey = inputRKey.renderKey,
+            delay = inputRKey.delay;
+        lazy !== undefined && (_isLazy = lazy);
+        silent !== undefined && (_isSilent = silent);
+        renderKey !== undefined && (_renderKey = renderKey);
+        delay !== undefined && (_delay = delay);
+      } else {
+        _renderKey = inputRKey;
+      }
+
+      var _getNewChainData = getNewChainData(_isLazy, chainId, oriChainId, chainId_depth_),
           _chainId = _getNewChainData._chainId,
           _oriChainId = _getNewChainData._oriChainId;
 
@@ -2089,12 +2085,12 @@
         targetRef: targetRef,
         calledBy: INVOKE,
         module: targetRef.ctx.module,
-        isSilent: isSilent,
+        isSilent: _isSilent,
         chainId: _chainId,
         oriChainId: _oriChainId,
         chainId_depth_: chainId_depth_,
-        delay: delay,
-        renderKey: renderKey
+        delay: _delay,
+        renderKey: _renderKey
       };
       var err = new Error("param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:[module:string, fn:function], ...args:any[])");
 
@@ -2164,12 +2160,12 @@
 
       if (context) {
         //调用前先加1
-        chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
+        chainId_depth_[chainId] = chainId_depth_[chainId] + 1; // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
 
-        var _dispatch = makeDispatchHandler(targetRef, false, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
+        var _dispatch = makeDispatchHandler(targetRef, false, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
 
         var silentDispatch = makeDispatchHandler(targetRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
-        var lazyDispatch = makeDispatchHandler(targetRef, true, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+        var lazyDispatch = makeDispatchHandler(targetRef, true, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
         //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
 
         var invoke = makeInvokeHandler(targetRef, {
@@ -2217,8 +2213,13 @@
           // connectedComputed: sourceClassContext.connectedComputed,
           //利用dispatch调用自动生成的setState
           setState: function setState(state) {
-            return _dispatch('setState', state);
+            return _dispatch('setState', state, {
+              silent: isSilent,
+              renderKey: renderKey,
+              delay: delay
+            });
           },
+          //透传上下文参数给IDispatchOptions
           //!!!指的是调用源cc类实例的ctx
           refCtx: targetRef.ctx // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
           // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
@@ -2369,7 +2370,7 @@
     };
     invokeWith(reducerFn, executionContext, payload);
   }
-  function makeDispatchHandler(targetRef, isLazy, isSilent, defaultModule, defaultReducerModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
+  function makeDispatchHandler(targetRef, in_isLazy, in_isSilent, defaultModule, defaultReducerModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
   ) {
     if (defaultRenderKey === void 0) {
       defaultRenderKey = '';
@@ -2388,6 +2389,27 @@
         paramObj = {};
       }
 
+      var isLazy = in_isLazy,
+          isSilent = in_isSilent;
+
+      var _renderKey;
+
+      var _delay = userInputDelay || delay;
+
+      if (typeof userInputRKey === 'object') {
+        _renderKey = defaultRenderKey;
+        var lazy = userInputRKey.lazy,
+            silent = userInputRKey.silent,
+            renderKey = userInputRKey.renderKey,
+            _delay2 = userInputRKey.delay;
+        lazy !== undefined && (isLazy = lazy);
+        silent !== undefined && (isSilent = silent);
+        renderKey !== undefined && (_renderKey = renderKey);
+        _delay2 !== undefined && (_delay = _delay2);
+      } else {
+        _renderKey = userInputRKey || defaultRenderKey;
+      }
+
       var _getNewChainData2 = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_),
           _chainId = _getNewChainData2._chainId,
           _oriChainId = _getNewChainData2._oriChainId;
@@ -2399,10 +2421,6 @@
       var _module = defaultModule;
 
       var _reducerModule = defaultReducerModule || defaultModule;
-
-      var _delay = userInputDelay || delay;
-
-      var _renderKey = userInputRKey || defaultRenderKey;
 
       var callInvoke = function callInvoke() {
         var iHandler = makeInvokeHandler(targetRef, {
@@ -3789,12 +3807,10 @@
       globalComputed: globalComputed,
       connectedComputed: connectedComputed,
       moduleReducer: {},
-      moduleLazyReducer: {},
       connectedReducer: {},
-      connectedLazyReducer: {},
       reducer: {},
       lazyReducer: {}
-    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
+    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.watchDep = watchDep, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
     ref.ctx = ctx;
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
@@ -4048,18 +4064,18 @@
     var refState = ctx.state;
 
     if (hasComputedFn) {
-      computeValueForRef(ctx, refModule, refState, refState, callInfo, true);
+      computeValueForRef(ctx, refModule, refState, refState, callInfo, true, true);
       connectedModules.forEach(function (m) {
         var mState = getState$4(m);
-        computeValueForRef(ctx, m, mState, mState, callInfo, true);
+        computeValueForRef(ctx, m, mState, mState, callInfo, true, true);
       });
     }
 
     if (hasWatchFn) {
-      watchKeyForRef(ctx, refModule, refState, refState, callInfo, true);
+      watchKeyForRef(ctx, refModule, refState, refState, callInfo, true, true);
       connectedModules.forEach(function (m) {
         var mState = getState$4(m);
-        watchKeyForRef(ctx, m, mState, mState, callInfo, true);
+        watchKeyForRef(ctx, m, mState, mState, callInfo, true, true);
       });
     }
   }
@@ -4069,18 +4085,14 @@
       justWarning$6 = justWarning;
   var _ccContext$reducer = ccContext.reducer,
       _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_,
-      _reducerCaller = _ccContext$reducer._reducerCaller,
-      _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller;
+      _reducerCaller = _ccContext$reducer._reducerCaller;
   function beforeMount (ref, setup, bindCtxToMethod) {
     ref.__$$isUnmounted = false;
     ref.__$$isBeforeFirstRender = true;
     var ctx = ref.ctx;
     var connectedReducer = ctx.connectedReducer,
-        connectedLazyReducer = ctx.connectedLazyReducer,
         moduleReducer = ctx.moduleReducer,
-        moduleLazyReducer = ctx.moduleLazyReducer,
         dispatch = ctx.dispatch,
-        lazyDispatch = ctx.lazyDispatch,
         connect = ctx.connect,
         module = ctx.module;
     var connectedModules = okeys$5(connect);
@@ -4091,14 +4103,12 @@
     //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
 
     allModules.forEach(function (m) {
-      var reducerObj, lazyReducerObj;
+      var reducerObj;
 
       if (m === module) {
         reducerObj = moduleReducer;
-        lazyReducerObj = moduleLazyReducer;
       } else {
         reducerObj = safeGetObjectFromObject$1(connectedReducer, m);
-        lazyReducerObj = safeGetObjectFromObject$1(connectedLazyReducer, m);
       }
 
       var fnNames = _reducerModule_fnNames_[m] || [];
@@ -4106,14 +4116,9 @@
         reducerObj[fnName] = function (payload, rkey, delay) {
           return dispatch(m + "/" + fnName, payload, rkey, delay);
         };
-
-        lazyReducerObj[fnName] = function (payload, rkey, delay) {
-          return lazyDispatch(m + "/" + fnName, payload, rkey, delay);
-        };
       });
     });
-    ctx.reducer = _reducerCaller;
-    ctx.lazyReducer = _lazyReducerCaller; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
+    ctx.reducer = _reducerCaller; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
 
     if (setup) {
       if (typeof setup !== 'function') throw new Error('type of setup must be function');
@@ -4137,7 +4142,8 @@
   var moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
       _ccContext$store$2 = ccContext.store,
       getPrevState$1 = _ccContext$store$2.getPrevState,
-      getState$5 = _ccContext$store$2.getState;
+      getState$5 = _ccContext$store$2.getState,
+      getStateVer$1 = _ccContext$store$2.getStateVer;
   var frag1 = 'has not been declared in';
   function triggerSetupEffect (ref, callByDidMount) {
     var ctx = ref.ctx;
@@ -4146,6 +4152,7 @@
         eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_,
         effectPropsItems = _ctx$effectMeta.effectPropsItems,
         eid_effectPropsReturnCb_ = _ctx$effectMeta.eid_effectPropsReturnCb_;
+    var prevModuleStateVer = ctx.prevModuleStateVer;
 
     var makeItemHandler = function makeItemHandler(eid_cleanCb_, isDidMount, needJudgeImmediate) {
       return function (item) {
@@ -4197,6 +4204,14 @@
                   unmoduledKey = _key$split[1];
 
               var _prevState = getPrevState$1(module);
+
+              var moduleStateVer = getStateVer$1(module);
+
+              if (prevModuleStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
+                continue;
+              } else {
+                ctx.prevModuleStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
+              }
 
               if (!_prevState) {
                 justWarning("effect: key[" + key + "] is invalid, its module[" + module + "] " + frag1 + " store!");
@@ -4716,13 +4731,18 @@
       checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
     } catch (err) {
       guessDuplicate(err, module, 'state');
-    } // ccContext.store.setState(module, state);
+    }
 
-
-    var rootState = ccContext.store.getState();
-    var prevRootState = ccContext.store.getPrevState();
+    var ccStore = ccContext.store;
+    var rootState = ccStore.getState();
+    var rootStateVer = ccStore.getStateVer();
+    var prevRootState = ccStore.getPrevState();
     rootState[module] = state;
     prevRootState[module] = Object.assign({}, state);
+    rootStateVer[module] = okeys(state).reduce(function (map, key) {
+      map[key] = 1;
+      return map;
+    }, {});
     var statKeys = Object.keys(state);
     ccContext.moduleName_stateKeys_[module] = statKeys;
 
@@ -4736,17 +4756,16 @@
 
   var makeUniqueCcKey$2 = makeUniqueCcKey,
       justWarning$7 = justWarning;
-  function dispatch$1 (isLazy, action, payLoadWhenActionIsString, renderKey, delay, _temp) {
-    if (renderKey === void 0) {
-      renderKey = '';
+  function dispatch$1 (action, payLoadWhenActionIsString, rkOrOptions, delay, _temp) {
+    if (rkOrOptions === void 0) {
+      rkOrOptions = '';
     }
 
     var _ref = _temp === void 0 ? {} : _temp,
         ccClassKey = _ref.ccClassKey,
         ccKey = _ref.ccKey,
         throwError = _ref.throwError,
-        _ref$isSilent = _ref.isSilent,
-        isSilent = _ref$isSilent === void 0 ? false : _ref$isSilent;
+        _ref$isSilent = _ref.isSilent;
 
     if (action === undefined && payLoadWhenActionIsString === undefined) {
       throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload");
@@ -4762,7 +4781,7 @@
         if (!targetRef) {
           throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
         } else {
-          dispatchFn = isLazy ? targetRef.ctx.lazyDispatch : targetRef.ctx.dispatch;
+          dispatchFn = targetRef.ctx.dispatch;
         }
       } else {
         var module = '';
@@ -4779,7 +4798,7 @@
           ref = pickOneRef();
         }
 
-        if (isSilent === true) dispatchFn = ref.ctx.silentDispatch;else dispatchFn = isLazy ? ref.ctx.lazyDispatch : ref.ctx.dispatch;
+        dispatchFn = ref.ctx.dispatch;
       }
 
       if (typeof action === 'string' && action.startsWith('*')) {
@@ -4788,23 +4807,19 @@
         if (!fullFnNames) return;
         var tasks = [];
         fullFnNames.forEach(function (fullFnName) {
-          tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, renderKey, delay));
+          tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, rkOrOptions, delay));
         });
         return Promise.all(tasks);
       } else {
-        return dispatchFn(action, payLoadWhenActionIsString, renderKey, delay);
+        return dispatchFn(action, payLoadWhenActionIsString, rkOrOptions, delay);
       }
     } catch (err) {
       if (throwError) throw err;else justWarning$7(err.message);
     }
   }
 
-  function dispatch$2 (action, payLoadWhenActionIsString, renderKey, delay, option) {
-    return dispatch$1(false, action, payLoadWhenActionIsString, renderKey, delay, option);
-  }
-
-  function lazyDispatch (action, payLoadWhenActionIsString, renderKey, delay, option) {
-    dispatch$1(true, action, payLoadWhenActionIsString, renderKey, delay, option);
+  function dispatch$2 (action, payLoadWhenActionIsString, rkOrOptions, delay, extra) {
+    return dispatch$1(action, payLoadWhenActionIsString, rkOrOptions, delay, extra);
   }
 
   function initModuleReducer (module, reducer, rootReducerCanNotContainInputModule, tag) {
@@ -4823,15 +4838,12 @@
     var _ccContext$reducer = ccContext.reducer,
         _reducer = _ccContext$reducer._reducer,
         _reducerCaller = _ccContext$reducer._reducerCaller,
-        _lazyReducerCaller = _ccContext$reducer._lazyReducerCaller,
         _reducerFnName_fullFnNames_ = _ccContext$reducer._reducerFnName_fullFnNames_,
         _reducerModule_fnNames_ = _ccContext$reducer._reducerModule_fnNames_; // 防止同一个reducer被载入到不同模块时，setState附加逻辑不正确
 
     var newReducer = Object.assign({}, reducer);
     _reducer[module] = newReducer;
-    var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module);
-    var subLazyReducerCaller = safeGetObjectFromObject(_lazyReducerCaller, module); // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
-    // const subLazyReducerRefCaller = util.safeGetObjectFromObject(_lazyReducerRefCaller, module);
+    var subReducerCaller = safeGetObjectFromObject(_reducerCaller, module); // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
 
     var fnNames = safeGetArrayFromObject(_reducerModule_fnNames_, module); // 自动附加一个setState在reducer里
 
@@ -4844,18 +4856,11 @@
       if (!fnNames.includes(name)) fnNames.push(name);
       var fullFnName = module + "/" + name;
 
-      subReducerCaller[name] = function (payload, renderKey, delay) {
-        return dispatch$2(fullFnName, payload, renderKey, delay);
-      };
-
-      subLazyReducerCaller[name] = function (payload, renderKey, delay) {
-        return lazyDispatch(fullFnName, payload, renderKey, delay);
+      subReducerCaller[name] = function (payload, renderKeyOrOptions, delay) {
+        return dispatch$2(fullFnName, payload, renderKeyOrOptions, delay);
       }; // function wrappedReducerFn(payload, delay, idt){
       // }
       // subReducerRefCaller[name] = wrappedReducerFn;
-      // function wrappedLazyReducerFn(payload, delay, idt) {
-      // }
-      // subLazyReducerRefCaller[name] = wrappedLazyReducerFn;
 
 
       var reducerFn = newReducer[name];
@@ -4891,9 +4896,7 @@
     });
   }
 
-  var isPlainJsonObject$3 = isPlainJsonObject,
-      executeCompOrWatch$2 = executeCompOrWatch,
-      makeCommitHandler$1 = makeCommitHandler;
+  var isPlainJsonObject$3 = isPlainJsonObject;
   var callInfo$1 = {
     payload: null,
     renderKey: '',
@@ -4930,45 +4933,18 @@
       state: moduleState,
       dep: rootWatchDep
     }, moduleWatch);
+    var d = ccContext.getDispatcher();
+    var deltaCommittedState = Object.assign({}, moduleState);
 
-    var _pickDepFns = pickDepFns(true, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, moduleState),
-        pickedFns = _pickDepFns.pickedFns,
-        setted = _pickDepFns.setted,
-        changed = _pickDepFns.changed;
+    var curDepWatchFns = function curDepWatchFns(committedState, isFirstCall) {
+      return pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+    };
 
-    if (pickDepFns.length) {
-      var d = ccContext.getDispatcher();
-
-      var _makeCommitHandler = makeCommitHandler$1(module, d && d.ctx.changeState, callInfo$1),
-          commit = _makeCommitHandler.commit,
-          flush = _makeCommitHandler.flush;
-
-      pickedFns.forEach(function (_ref) {
-        var retKey = _ref.retKey,
-            fn = _ref.fn,
-            depKeys = _ref.depKeys;
-        var fnCtx = {
-          retKey: retKey,
-          payload: null,
-          isFirstCall: true,
-          commit: commit,
-          setted: setted,
-          changed: changed,
-          stateModule: module,
-          refModule: null,
-          oldState: moduleState,
-          committedState: moduleState,
-          refCtx: null
-        };
-        executeCompOrWatch$2(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-      });
-      flush();
-    }
+    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, callInfo$1, true);
   }
 
   var safeGetObjectFromObject$2 = safeGetObjectFromObject,
-      isPlainJsonObject$4 = isPlainJsonObject,
-      makeCommitHandler$2 = makeCommitHandler;
+      isPlainJsonObject$4 = isPlainJsonObject;
   var callInfo$2 = {
     payload: null,
     renderKey: '',
@@ -5011,41 +4987,15 @@
       }, computed);
     }
 
-    var _pickDepFns = pickDepFns(true, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, moduleState),
-        pickedFns = _pickDepFns.pickedFns,
-        setted = _pickDepFns.setted,
-        changed = _pickDepFns.changed;
+    var d = ccContext.getDispatcher();
 
-    if (pickedFns.length) {
-      var d = ccContext.getDispatcher();
+    var curDepComputedFns = function curDepComputedFns(committedState, isBeforeMount) {
+      return pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
+    };
 
-      var _makeCommitHandler = makeCommitHandler$2(module, d && d.ctx.changeState, callInfo$2),
-          commit = _makeCommitHandler.commit,
-          flush = _makeCommitHandler.flush;
-
-      pickedFns.forEach(function (_ref) {
-        var retKey = _ref.retKey,
-            fn = _ref.fn,
-            depKeys = _ref.depKeys;
-        var fnCtx = {
-          retKey: retKey,
-          payload: null,
-          isFirstCall: true,
-          commit: commit,
-          setted: setted,
-          changed: changed,
-          stateModule: module,
-          refModule: null,
-          oldState: moduleState,
-          committedState: moduleState,
-          refCtx: null
-        };
-        var computedValue = executeCompOrWatch(retKey, depKeys, fn, moduleState, moduleState, fnCtx);
-        var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
-        moduleComputedValue[retKey] = computedValue;
-      });
-      flush();
-    }
+    var deltaCommittedState = Object.assign({}, moduleState);
+    var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
+    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, callInfo$2, true, 'computed', '', moduleComputedValue);
   }
 
   var isPlainJsonObject$5 = isPlainJsonObject,
@@ -5183,8 +5133,9 @@
       boxSt.left = 0;
       boxSt.top = 0;
       boxSt.display = 'none';
-      boxSt.zIndex = -888666;
-      document.body.append(box);
+      boxSt.zIndex = -888666; // document.body.append(box);// chrome <= 49 not support append
+
+      document.body.appendChild(box);
     }
 
     ReactDOM.render(React.createElement(Dispatcher), box);
@@ -6148,7 +6099,7 @@
     } else {
       var refKey = cursor_refKey_[nowCursor];
       hookRef = ccUkey_ref_$3[refKey];
-      var _refCtx = hookRef.ctx; //existing period, replace reactSetState and reactForceUpdate
+      var _refCtx = hookRef.ctx; // existing period, replace reactSetState and reactForceUpdate
 
       _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
       _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
@@ -6473,8 +6424,6 @@
 
   var _reducerCaller$1 = ccContext.reducer._reducerCaller;
 
-  var _lazyReducerCaller$1 = ccContext.reducer._lazyReducerCaller;
-
   var startup$1 = startup;
   var cloneModule = _cloneModule;
   var run = _run;
@@ -6496,14 +6445,12 @@
   var emit = _emit;
   var off = _off;
   var dispatch$3 = dispatch$2;
-  var lazyDispatch$1 = lazyDispatch;
   var ccContext$1 = ccContext;
   var createDispatcher$1 = createDispatcher;
   var execute = _execute;
   var executeAll = _executeAll;
   var getRefs$1 = getRefs;
   var reducer = _reducerCaller$1;
-  var lazyReducer = _lazyReducerCaller$1;
   var clearContextIfHot$1 = clearContextIfHot;
   var CcFragment$1 = CcFragment;
   var cst = _cst;
@@ -6535,7 +6482,6 @@
     registerHookComp: registerHookComp$1,
     configure: configure$1,
     dispatch: dispatch$3,
-    lazyDispatch: lazyDispatch$1,
     startup: startup$1,
     run: run,
     call: call,
@@ -6553,7 +6499,6 @@
     executeAll: executeAll,
     getRefs: getRefs$1,
     reducer: reducer,
-    lazyReducer: lazyReducer,
     clearContextIfHot: clearContextIfHot$1,
     CcFragment: CcFragment$1,
     cst: cst,
@@ -6633,14 +6578,12 @@
   exports.emit = emit;
   exports.off = off;
   exports.dispatch = dispatch$3;
-  exports.lazyDispatch = lazyDispatch$1;
   exports.ccContext = ccContext$1;
   exports.createDispatcher = createDispatcher$1;
   exports.execute = execute;
   exports.executeAll = executeAll;
   exports.getRefs = getRefs$1;
   exports.reducer = reducer;
-  exports.lazyReducer = lazyReducer;
   exports.clearContextIfHot = clearContextIfHot$1;
   exports.CcFragment = CcFragment$1;
   exports.cst = cst;

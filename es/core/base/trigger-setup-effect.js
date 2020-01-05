@@ -3,14 +3,17 @@ import * as util from '../../support/util';
 
 const {
   moduleName_stateKeys_, 
-  store: { getPrevState, getState }
+  store: { getPrevState, getState, getStateVer }
 } = ccContext;
 
 const frag1 = 'has not been declared in';
 
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
-  const { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ } = ctx.effectMeta;
+  const {
+    effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_,
+  } = ctx.effectMeta;
+  const { prevModuleStateVer } = ctx;
 
   const makeItemHandler = (eid_cleanCb_, isDidMount, needJudgeImmediate) => item => {
     const { fn, eId, immediate } = item;
@@ -49,6 +52,14 @@ export default function (ref, callByDidMount) {
           if (key.includes('/')) {
             const [module, unmoduledKey] = key.split('/');
             const prevState = getPrevState(module);
+            const moduleStateVer = getStateVer(module);
+
+            if (prevModuleStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
+              continue;
+            } else {
+              ctx.prevModuleStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
+            }
+
             if (!prevState) {
               util.justWarning(`effect: key[${key}] is invalid, its module[${module}] ${frag1} store!`);
               continue;
@@ -57,6 +68,7 @@ export default function (ref, callByDidMount) {
               util.justWarning(`effect: key[${key}] is invalid, its unmoduledKey[${unmoduledKey}] ${frag1} state!`);
               continue;
             }
+
             targetCurState = getState(module);
             targetPrevState = prevState;
             targetKey = unmoduledKey;

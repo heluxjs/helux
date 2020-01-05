@@ -163,9 +163,7 @@ export default function (ref, params, liteLevel = 5) {
     connectedComputed,
 
     moduleReducer: {},
-    moduleLazyReducer: {},
     connectedReducer: {},
-    connectedLazyReducer: {},
     reducer: {},
     lazyReducer: {},
 
@@ -173,6 +171,7 @@ export default function (ref, params, liteLevel = 5) {
     mapped: {},
 
     // api meta data
+    prevModuleStateVer: {},
     stateKeys,
     onEvents,
     computedDep,

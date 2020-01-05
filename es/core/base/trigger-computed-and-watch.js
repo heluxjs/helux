@@ -15,18 +15,18 @@ export default function (ref) {
   const connectedModules = okeys(connect);
   const refState = ctx.state;
   if (hasComputedFn) {
-    computeValueForRef(ctx, refModule, refState, refState, callInfo, true);
+    computeValueForRef(ctx, refModule, refState, refState, callInfo, true, true);
     connectedModules.forEach(m => {
       const mState = getState(m);
-      computeValueForRef(ctx, m, mState, mState, callInfo, true);
+      computeValueForRef(ctx, m, mState, mState, callInfo, true, true);
     });
   }
 
   if (hasWatchFn) {
-    watchKeyForRef(ctx, refModule, refState, refState, callInfo, true);
+    watchKeyForRef(ctx, refModule, refState, refState, callInfo, true, true);
     connectedModules.forEach(m => {
       const mState = getState(m);
-      watchKeyForRef(ctx, m, mState, mState, callInfo, true);
+      watchKeyForRef(ctx, m, mState, mState, callInfo, true, true);
     });
   }
 

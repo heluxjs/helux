@@ -59,11 +59,10 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
  * 
  * @param {*} state 
  * @param {*} option 
- * @param {boolean} option.noCW 不需要再计算computed & watch，避免fn.commit照成死循环
  * @param {*} targetRef 
  */
 export default function (state, {
-  module, skipMiddleware = false, payload, noCW = false,
+  module, skipMiddleware = false, payload,
   reactCallback, type, reducerModule, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
 ) {
   if (!isPlainJsonObject(state)) {
@@ -77,30 +76,29 @@ export default function (state, {
     calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
     state, refModule, module, reducerModule, fnName
   };
-  const callInfo = { payload, renderKey, ccKey, noCW };
+  const callInfo = { payload, renderKey, ccKey };
 
-  callMiddlewares(skipMiddleware, passToMiddleware, () => {
-    //在triggerReactSetState之前把状态存储到store，
-    //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-    const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
-    let sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
+  //在triggerReactSetState之前把状态存储到store，
+  //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+  const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
+  const sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
+  Object.assign(state, sharedState);
 
-    // source ref will receive the whole committed state 
-    const renderType = triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback);
-
+  // source ref will receive the whole committed state 
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, (renderType, committedState) => {
     if (renderType === RENDER_NO_OP && !sharedState) {
     } else {
       send(SIG_STATE_CHANGED, {
-        committedState: state, sharedState,
+        committedState, sharedState,
         module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
       });
     }
 
     if (sharedState) triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
-  });
+  }, skipMiddleware, passToMiddleware);
 }
 
-function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback) {
+function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next, skipMiddleware, passToMiddleware) {
   const { state: refState, ctx: refCtx } = targetRef;
   if (
     targetRef.__$$isUnmounted === true ||
@@ -109,7 +107,7 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
     calledBy !== FORCE_UPDATE && !isObjectNotNull(state)
   ) {
     if (reactCallback) reactCallback(refState);
-    return RENDER_NO_OP;
+    return next && next(RENDER_NO_OP, state);
   }
 
   const { module: stateModule, storedKeys, ccOption, ccUniqueKey } = refCtx;
@@ -118,7 +116,7 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   if (renderKey) {//if user specify renderKey
     renderType = RENDER_BY_KEY;
     if (ccOption.renderKey !== renderKey) {// current instance can been rendered only if current instance's ccKey equal renderKey
-      return RENDER_NO_OP;
+      return next && next(RENDER_NO_OP, state);
     }
   }
 
@@ -134,10 +132,19 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
     }
   }
 
-  computeValueForRef(refCtx, stateModule, refState, state, callInfo);
-  const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, state, callInfo);
-  refCtx.__$$ccSetState(state, reactCallback, shouldCurrentRefUpdate);
-  return renderType;
+  let deltaCommittedState = computeValueForRef(refCtx, stateModule, refState, state, callInfo);
+  const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
+
+  const ccSetState = () => refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+  if (next) {
+    passToMiddleware.state = deltaCommittedState;
+    callMiddlewares(skipMiddleware, passToMiddleware, () => {
+      ccSetState();
+      next(renderType, deltaCommittedState);
+    });
+  } else {
+    ccSetState();
+  }
 }
 
 function syncCommittedStateToStore(moduleName, committedState, options) {
@@ -145,8 +152,12 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
   // extract shared state
   const { partialState } = extractStateByKeys(committedState, stateKeys, true);
 
-  //!!! save state to store
-  if (partialState) setState(moduleName, partialState, options);
+  // save state to store
+  if (partialState) {
+    const mayChangedState = setState(moduleName, partialState, options);
+    Object.assign(partialState, mayChangedState);
+    return partialState;
+  }
 
   return partialState;
 }
@@ -195,7 +206,8 @@ function broadcastState(renderType, callInfo, targetRef, partialSharedState, sta
     ) {
 
       // targetRef刚刚已被触发过渲染，这里排除掉currentCcUkey
-      const ccUkeys = renderKey_ccUkeys_[renderKey].slice();
+      const ccUkeys__ = renderKey_ccUkeys_[renderKey] || [];
+      const ccUkeys = ccUkeys__.slice();
       const ukeyIndex = ccUkeys.indexOf(currentCcUkey);
       if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
 

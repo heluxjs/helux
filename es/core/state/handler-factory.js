@@ -168,13 +168,26 @@ export function makeCcForceUpdateHandler(ref) {
 
 // last param: chainData
 export function makeInvokeHandler(targetRef, { chainId, oriChainId, isLazy, isSilent = false, chainId_depth_ = {} } = {}) {
-  return (firstParam, payload, renderKey, delay) => {
-    const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
+  return (firstParam, payload, inputRKey, inputDelay) => {
+
+    let _isLazy = isLazy, _isSilent = isSilent;
+    let _renderKey = '', _delay = inputDelay;
+
+    if (typeof inputRKey === 'object') {
+      const { lazy, silent, renderKey, delay } = inputRKey;
+      lazy !== undefined && (_isLazy = lazy);
+      silent !== undefined && (_isSilent = silent);
+      renderKey !== undefined && (_renderKey = renderKey);
+      delay !== undefined && (_delay = delay);
+    } else {
+      _renderKey = inputRKey;
+    }
+    const { _chainId, _oriChainId } = getNewChainData(_isLazy, chainId, oriChainId, chainId_depth_);
 
     const firstParamType = typeof firstParam;
     const option = {
-      targetRef, calledBy: INVOKE, module: targetRef.ctx.module, isSilent,
-      chainId: _chainId, oriChainId: _oriChainId, chainId_depth_, delay, renderKey,
+      targetRef, calledBy: INVOKE, module: targetRef.ctx.module, isSilent: _isSilent,
+      chainId: _chainId, oriChainId: _oriChainId, chainId_depth_, delay: _delay, renderKey: _renderKey,
     };
 
     const err = new Error(`param type error, correct usage: invoke(userFn:function, ...args:any[]) or invoke(option:[module:string, fn:function], ...args:any[])`);
@@ -235,14 +248,15 @@ export function invokeWith(userLogicFn, executionContext, payload){
       //调用前先加1
       chainId_depth_[chainId] = chainId_depth_[chainId] + 1;
 
+      // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
       const dispatch = makeDispatchHandler(
-        targetRef, false, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
+        targetRef, false, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
       );
       const silentDispatch = makeDispatchHandler(
         targetRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
-        targetRef, true, false, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
+        targetRef, true, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
       );
 
       // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
@@ -281,7 +295,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         // connectedComputed: sourceClassContext.connectedComputed,
 
         //利用dispatch调用自动生成的setState
-        setState: state => dispatch('setState', state),
+        setState: state => dispatch('setState', state, { silent: isSilent, renderKey, delay }),//透传上下文参数给IDispatchOptions
         //!!!指的是调用源cc类实例的ctx
         refCtx: targetRef.ctx,
         // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
@@ -378,11 +392,26 @@ export function dispatch({
 }
 
 export function makeDispatchHandler(
-  targetRef, isLazy, isSilent, defaultModule, defaultReducerModule,
+  targetRef, in_isLazy, in_isSilent, defaultModule, defaultReducerModule,
   defaultRenderKey = '', delay = -1, chainId, oriChainId, chainId_depth_ = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
   return (paramObj = {}, payload, userInputRKey, userInputDelay) => {
+    let isLazy = in_isLazy, isSilent = in_isSilent;
+    let _renderKey;
+    let _delay = userInputDelay || delay;
+
+    if (typeof userInputRKey === 'object') {
+      _renderKey = defaultRenderKey;
+      const { lazy, silent, renderKey, delay } = userInputRKey;
+      lazy !== undefined && (isLazy = lazy);
+      silent !== undefined && (isSilent = silent);
+      renderKey !== undefined && (_renderKey = renderKey);
+      delay !== undefined && (_delay = delay);
+    }else{
+      _renderKey = userInputRKey || defaultRenderKey;
+    }
+
     const { _chainId, _oriChainId } = getNewChainData(isLazy, chainId, oriChainId, chainId_depth_);
 
     const paramObjType = typeof paramObj;
@@ -390,8 +419,6 @@ export function makeDispatchHandler(
 
     let _module = defaultModule;
     let _reducerModule = defaultReducerModule || defaultModule;
-    const _delay = userInputDelay || delay;
-    const _renderKey = userInputRKey || defaultRenderKey;
 
     const callInvoke = ()=>{
       const iHandler = makeInvokeHandler(targetRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, chainId_depth_ });

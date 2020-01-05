@@ -13,7 +13,8 @@ export default (Dispatcher) => {
     boxSt.top = 0;
     boxSt.display = 'none';
     boxSt.zIndex = -888666;
-    document.body.append(box);
+    // document.body.append(box);// chrome <= 49 not support append
+    document.body.appendChild(box);
   }
   ReactDOM.render(React.createElement(Dispatcher), box);
 }

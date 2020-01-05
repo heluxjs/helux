@@ -75,10 +75,21 @@ export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never
 export type ComputeValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> : (T[K] extends IComputedFnDesc ? ReturnType<T[K]['fn']> : never);
 }
+
+interface IDispatchOptions {
+  silent?: boolean;
+  lazy?: boolean;
+  renderKey?: string;
+  delay?: number;
+}
 export type ReducerType<T> = {
   // readonly [K in keyof T]: T[K] extends IAnyFn ? (payload: Parameters<T[K]>[0]) => Promise<ReturnType<T[K]>> : unknown;
   readonly [K in keyof T]: T[K] extends IAnyFn ?
-  (payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0]) =>
+  (
+    payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
+    renderKeyOrOptions?: string | IDispatchOptions,
+    delay?: number,
+  ) =>
     ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>>
   : unknown;
 }
@@ -226,6 +237,8 @@ declare function refCtxSetModuleState(moduleName: string, state: IAnyObj, cb?: (
  */
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>, depKeys?: string[], compare?: boolean): void;
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean): void;
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFnDesc: { fn: RefComputedFn<IFnCtx, FnReturnType>, depKeys?: string[], compare?: boolean }): void;
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFnDesc: { fn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean }): void;
 //user decide it is FnCtx or FnCtxConnect
 declare function refCtxComputed(multiComputed: {
   [retKey: string]: <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType,
@@ -337,11 +350,8 @@ export interface ICtxBase {
   readonly connectedComputed: IAnyObj;
 
   readonly moduleReducer: IAnyObj;
-  readonly moduleLazyReducer: IAnyObj;
   readonly connectedReducer: IAnyObj;
-  readonly connectedLazyReducer: IAnyObj;
   readonly reducer: IAnyFnInObj;
-  readonly lazyReducer: IAnyFnInObj;
 
   computed: typeof refCtxComputed;
   watch: typeof refCtxWatch;
@@ -407,7 +417,6 @@ export interface ICtx<
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
-  readonly moduleLazyReducer: ModuleReducer;
   readonly settings: Settings;
   readonly mapped: Mapped;
   readonly refComputed: RefComputed;
@@ -433,14 +442,12 @@ export interface ICtxCon<
   readonly prevState: ModuleState;
   readonly moduleState: ModuleState;
   readonly moduleReducer: ModuleReducer;
-  readonly moduleLazyReducer: ModuleReducer;
   readonly settings: Settings;
   readonly moduleComputed: ModuleComputed;
   readonly mapped: Mapped;
   readonly refComputed: RefComputed;
   readonly connectedState: ConnectedState;
   readonly connectedReducer: ConnectedReducer;
-  readonly connectedLazyReducer: ConnectedReducer;
   readonly connectedComputed: ConnectedComputed;
   readonly refConnectedComputed: RefConnectedComputed;
 }
@@ -466,7 +473,6 @@ export interface ICtxRs<
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
-  readonly moduleLazyReducer: ModuleReducer;
   readonly settings: Settings;
   readonly mapped: Mapped;
   readonly refComputed: RefComputed;
@@ -493,14 +499,12 @@ export interface ICtxRsCon<
   readonly prevState: State;
   readonly moduleState: ModuleState;
   readonly moduleReducer: ModuleReducer;
-  readonly moduleLazyReducer: ModuleReducer;
   readonly settings: Settings;
   readonly moduleComputed: ModuleComputed;
   readonly mapped: Mapped;
   readonly refComputed: RefComputed;
   readonly connectedState: ConnectedState;
   readonly connectedReducer: ConnectedReducer;
-  readonly connectedLazyReducer: ConnectedReducer;
   readonly connectedComputed: ConnectedComputed;
   readonly refConnectedComputed: RefConnectedComputed;
 }
@@ -538,10 +542,6 @@ export interface IRefCtx
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
-  readonly moduleLazyReducer: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
-  ) : {};
   readonly moduleComputed: ModuleName extends keyof RootState ? RootComputed[ModuleName] : {};
   readonly settings: Settings;
   readonly refComputed: RefComputed;
@@ -564,7 +564,6 @@ export interface IRefCtxCon
   // overwrite connectedState , connectedComputed
   connectedState: Pick<RootState, ConnectedModules>;
   connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
   connectedComputed: Pick<RootComputed, ConnectedModules>;
 }
 
@@ -595,10 +594,6 @@ export interface IRefCtxRs
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
-  readonly moduleLazyReducer: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
-  ) : {};
   readonly moduleComputed: ModuleName extends keyof RootState ? RootComputed[ModuleName] : {};
   readonly settings: Settings;
   readonly refComputed: RefComputed;
@@ -626,14 +621,13 @@ export interface IRefCtxRsCon
   // overwrite connectedState , connectedComputed
   connectedState: Pick<RootState, ConnectedModules>;
   connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedLazyReducer: Pick<RootReducer, ConnectedModules>;
   connectedComputed: Pick<RootComputed, ConnectedModules>;
 }
 
 export interface IFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
-  callInfo: { payload: IAnyObj, renderKey: string, delay: number, noCW: boolean };
+  callInfo: { payload: IAnyObj, renderKey: string, delay: number };
   commit: (partialState: IAnyObj) => void;
   setted: string[];
   changed: string[];
@@ -646,7 +640,7 @@ export interface IFnCtxBase {
 export interface IFnCtxMBase<ModuleName> {
   retKey: string;
   isFirstCall: boolean;
-  callInfo: { payload: IAnyObj, renderKey: string, delay: number, noCW: boolean };
+  callInfo: { payload: IAnyObj, renderKey: string, delay: number };
   commit: (partialState: IAnyObj) => void;
   setted: string[];
   changed: string[];
@@ -908,15 +902,12 @@ export function getGlobalComputed<T>(): T;
 
 export function set(keyPath: string, value: any, renderKey?: string, delay?: number): void;
 
-interface IDispatchOptions {
+interface IDispatchExtra {
   ccClassKey?: string;
   ccKey?: string;
   throwError?: boolean;
-  isSilent?: boolean;
 }
-export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?: IDispatchOptions): Promise<T>;
-
-export function lazyDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string, delay?: number, options?: IDispatchOptions): Promise<T>;
+export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
 
 export declare const emit: typeof refCtxEmit;
 
@@ -943,7 +934,6 @@ export declare const cst: CcCst;
  * const typedReducer = reducer as RootReducer;
  */
 export declare const reducer: IAnyFnInObj;
-export declare const lazyReducer: IAnyFnInObj;
 
 declare type DefaultExport = {
   clearContextIfHot: typeof clearContextIfHot,
@@ -962,9 +952,7 @@ declare type DefaultExport = {
   getGlobalComputed: typeof getGlobalComputed,
   set: typeof set,
   dispatch: typeof dispatch,
-  lazyDispatch: typeof lazyDispatch,
   reducer: typeof reducer,
-  lazyReducer: typeof lazyReducer,
   emit: typeof refCtxEmit,
   off: typeof refCtxOff,
   execute: typeof execute,
