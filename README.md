@@ -1,5 +1,7 @@
+English | [简体中文](./README.zh-CN.md)
+
 ## [concent](https://concentjs.github.io/concent-doc)
-一个可预测、0入侵、渐进式、高性能的增强型状态管理方案，基于**依赖标记**、**引用收集**和**状态分发**原理，power you react!
+a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency mark**、**ref collection** and **state broadcast**，power you react!
 
 <p align="center">
   <a href="#">
@@ -58,67 +60,81 @@
     
 ![hello-concent](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/hello.gif)
 
+[review this gif](https://xvcej.csb.app/#/)
 
-## 🖥在线体验
+
+## 🖥Online experience
+- js version:
 <p>
 <a href="https://codesandbox.io/s/concent-guide-xvcej" rel="nofollow">
 <img src="https://camo.githubusercontent.com/416c7a7433e9d81b4e430b561d92f22ac4f15988/68747470733a2f2f636f646573616e64626f782e696f2f7374617469632f696d672f706c61792d636f646573616e64626f782e737667" alt="Edit" data-canonical-src="https://codesandbox.io/static/img/play-codesandbox.svg" style="max-width:100%;"></a></p>
 
-## ✨特性
-* **极简的核心api**，`run`载入模块配置启动concent，`register`注册组件，无需包一层`Provider`在根组件。
-* **0入侵成本接入**，不改造代码的情况下直接接入；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
-* **贴心的模块配置**，除了`state`，还提供`reducer`、`computed`、`watch`和`init`四项可选定义。
-* **灵活的数据消费粒度**，支持跨多个模块场景，以及模块内stateKey级别的细粒度控制。
-* **渐进式构建react应用**，除了`setState`,支持`dispatch`、`invoke`调用来让ui视图与业务逻辑彻底解耦。[从class到function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
-* **组件能力增强**，支持实例级别`computed`、`watch`定义,支持`emit&on`,以及支持`setup`特性，让函数组件拥有定义静态api的能力。
-* **高度一致的编程体验**，`hoc`、`render props`和`hook`3种方式定义的组件均享有一致的api调用体验，相互切换代价为0。[多种方式定义组件](https://stackblitz.com/edit/cc-4-render-mode)
-* **渲染性能出众**，内置`renderKey`、`lazyDispatch`、`delayBroadcast`等特性，保证极速的渲染效率。[长列表精准渲染](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[批处理状态提交](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[高频输入场景状态延迟分发](https://stackblitz.com/edit/concent-delay-broadcast)
-* **干净的dom层级**，对于class组件，默认采用反向继承策略，让react dom树的层级结构保持简洁与干净。
-* **扩展中间件与插件**，允许用户定义中间件拦截所有的数据变更提交记录，做额外处理，也可以自定义插件，接收运行时的发出的各种信号，按需增强concent自身的能力。
-* **去中心化配置模块**，除了`run`接口一次性配置模块，还提供`configure`接口在任意地方动态配置模块。
-* **模块克隆**，支持对已定义模块进行克隆,满足你高维度抽象的需要。
+- ts version:
+<p>
+<a href="https://codesandbox.io/s/concent-guide-ts-zrxd5" rel="nofollow">
+<img src="https://camo.githubusercontent.com/416c7a7433e9d81b4e430b561d92f22ac4f15988/68747470733a2f2f636f646573616e64626f782e696f2f7374617469632f696d672f706c61792d636f646573616e64626f782e737667" alt="Edit" data-canonical-src="https://codesandbox.io/static/img/play-codesandbox.svg" style="max-width:100%;"></a></p>
+source code see here：https://github.com/fantasticsoul/concent-guid-ts
 
-## 搭配react-router使用
-请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，暴露`history`对象，可以全局任意地方使用，享受编程式的导航跳转。
+## ✨Fetures
+* **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component。
+* **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by [setState] directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
+* **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene。
+* **flexible data consumption granularity**，your can consume multi model data with state key level dependency.。
+* **progressive**，except `setState`, you can also use `dispatch` or `invoke` to change state, separate your business logic and ui completely.。[from class to function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
+* **enhance component ability**，support ref level computed 、watch、emit&on、setup etc(setup is is inspired by vue3)。
+* **highly consistent coding experience**，no matter class component or function component, they can enjoy the same api calling。[multi ways to define component](https://stackblitz.com/edit/cc-4-render-mode)
+* **high performance rendering mechanism**，working based on dependency mark、ref collection and state broadcast，built-in renderKey、lazyDispatch、delayBroadcast feature.。[long list exact upate](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[state batch commit](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[high frequency input&delay broadcast](https://stackblitz.com/edit/concent-delay-broadcast)
+* **clean dom hierarchy**，use reverse inheritance strategy for class component by default, to let your react dom tree keep clean。
+* **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.。
+* **de-centralization model configuration**，except define models in run, user can also call configure api to configure you model definition near your component, that means you can publish your component to npm with model。
+* **model clone**，allow user clone new model by existed model, to meet the abstract factory need.。
 
-## 搭配redux-dev-tool使用
-请移步阅读和了解[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，全流程追溯你的状态变更过程。
+## Use with react router
+Details see here[react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
 
-## 搭配loading插件使用
-请移步阅读和了解[concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，轻松控制concent应用里所有reducer函数的loading状态。
+[react-router-concent online demo](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
+
+## Use with redux-dev-tool
+Details see here[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，track your state changing history。
+![redux-dev-tool](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-eco/cc-pic1.png)
+
+##  Use with plugin-loading
+Details see here[concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，control all your reducer function's loading status easily。
+
+[concent-plugin-loading online demo](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
-## 📦 快速开始
-确保你本地机器上安装有[nodejs](http://nodejs.cn/download/)。
-### 创建一个app
-在你的电脑上，选择一个合适的目录并进入，使用[create-react-app](https://github.com/facebookincubator/create-react-app) 创建一个app
+## 📦Quick start
+Make sure you have installed [nodejs](http://nodejs.cn/download/)。
+### Create an app
+In your computer，use [create-react-app](https://github.com/facebookincubator/create-react-app) to create an app
 ```sh
 $ npm i -g create-react-app
 $ create-react-app cc-app
 ```
-### 安装cc
-创建好app后，进入你的app根目录，使用npm安装`concent`
+### Install concent
+After app created，go to the app's root directory，install `concent` with npm command.
 ```sh
 $ cd cc-app
 $ npm i --save concent
 ```
-或者使用yarn安装
+or yarn command
 ```sh
 $ yarn add concent
 ```
 
-### 新手counter示例
-将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
-- 运行concent，载入模块配置
+### A simple Counter demo
+copy the code below to your `src/App.js` file.
+- run concent，load model configuration
 ```javascript
 import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';
 
 run({
-  counter: {// 定义counter模块
-    state: {// 【必需】，定义state
+  counter: {// define counter module
+    state: {// 【necessary】，define state
       count: 0,
     },
-    reducer: {// 【可选】定义reducer，书写修改模块状态逻辑
+    reducer: {// 【optional】define reducer，write logic code to change the state
       inc(payload=1, moduleState) {
         return { count: moduleState.count + payload };
       },
@@ -130,24 +146,24 @@ run({
         await actionCtx.dispatch('dec', 3);
       }
     },
-    computed:{// 【可选】定义模块computed，当对应的stateKey发生变化时触发计算函数，结果将被缓存
+    computed:{// 【optional】define computed，the function will be triggered when stateKey changed，and the return result will be cached.
       count(newVal, oldVal){
         return newVal * 2;
       }
     },
-    watch:{// 【可选】定义模块watch，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
+    watch:{// 【optional】define watch，the function will be triggered when stateKey changed，usually for some async tasks
       count(newVal, oldVal){
         console.log(`count changed to ${newVal}`);
       }
     },
-    init: async ()=>{// 【可选】模块状态的初始化函数，当状态需要异步的定义，且与具体挂载的组件无关时定义此项
+    init: async ()=>{//【optional】async state init process, attention this process has nothing to do with whether the component is mounted or not, but the result can effect all the components belong to this module.
       const state = await api.fetchState();
       return state;
     }
   }
 })
 ```
-更推荐将模块定义选项放置到各个文件中，然后在各自导出交给`run`函数配置.
+recommend user put every part of model configure to separate files，because they have clear responsibilities.
 ```
 |____models             # business models
 | |____index.js
@@ -159,7 +175,7 @@ run({
 | | |____init.js        # async state initialization function(optional)
 | | |____state.js       # module init state(required)
 ```
-此时reducer文件里函数可以不需要基于字符串发起组合型调用了
+now reducer functions can call each other with function ref directly(not only string)
 ```js
 export function inc(payload=1, moduleState) {
   return { count: moduleState.count + payload };
@@ -169,13 +185,13 @@ export function dec(payload=1, moduleState) {
   return { count: moduleState.count - payload };
 }
 
-// 组合调用其他的reducer函数完成业务逻辑
+// combine other reducer functions to complete a logic
 export async function inc2ThenDec3(payload, moduleState, actionCtx){
   await actionCtx.dispatch(inc, 2);
   await actionCtx.dispatch(dec, 3);
 }
 ```
-当然reducer文件里，你可以调用setState，是一个被promise话的句柄
+you can also call `setState` in reducer function block, it is a promisified api.
 ```js
 export updateLoading(loading){
   return { loading }
@@ -183,36 +199,36 @@ export updateLoading(loading){
 
 export async function inc2ThenDec3(payload, moduleState, actionCtx){
   await actionCtx.dispatch(inc, 2);
-  //等效于调用actionCtx.dispatch(updateLoading, true);
+  //equivalent actionCtx.dispatch(updateLoading, true);
   await actionCtx.setState({loading: true});
   await actionCtx.dispatch(dec, 3);
-  //等效于调用actionCtx.dispatch(updateLoading, false);
+  //equivalent actionCtx.dispatch(updateLoading, false);
   await actionCtx.setState({loading: false});
   
-  //最后这里你可以选择的返回一个新的片断状态，也会触发视图更新
+  //if you return a new partial state here, it will trigger view updated also, but this is optional.
   return { tip: 'you can return some new value in current reducer fn ot not' };
 }
 ```
 
-- 基于react class注册成为cc类组件
+- register a normal react component as cc component
 ```jsx
 class Counter extends Component {
-  //setState 能够将数据将同步到store，广播到其他实例
+  //setState can commit state to store, and broadcast state to other refs
   inc = () => {
     this.setState({ count: this.state.count + 1 });
   }
   dec = () => {
     this.setState({ count: this.state.count - 1 });
   }
-  //调用dispatch, 同样的能够将数据将同步到store，广播到其他属于counter模块或者连接到counter模块的实例
+  //dispatch can commit state to store, and broadcast state to other refs(which belongs to module counter) also
   incD = () => {
-    this.ctx.dispatch('inc');// or this.ctx.moduleReducer.inc()
+    this.ctx.dispatch('inc');// or better way: this.ctx.moduleReducer.inc()
   }
   decD = () => {
-    this.ctx.dispatch('dec');// or this.ctx.moduleReducer.dec()
+    this.ctx.dispatch('dec');// or better way: this.ctx.moduleReducer.dec()
   }
   render() {
-    //concent注入counter模块的数据到state
+    //concent inject module counter's state to this.state
     const { count } = this.state;
     return (
       <div style={{ padding: '12px', margin: '6px' }}>
@@ -226,10 +242,10 @@ class Counter extends Component {
     );
   }
 }
-//将Counter类注册为CcClazzCounter，属于counter模块
+//register Counter class as CcClazzCounter which belong to module counter
 const CcClazzCounter = register('counter')(Counter);
 ```
-- 基于renderProps注册为cc类组件
+- register as cc component base on renderProps
 ```jsx
 import { registerDumb } from 'concent';
 
@@ -246,7 +262,7 @@ const UI = ({count, inc, dec, incD, decD})=>{
     );
 }
 
-//定义setup，该函数只会在ui初次渲染前执行一次，通常用于定义一些方法，结果会收集到ctx.settings里
+//define setup，it will only been executed on time before first render, usually for defining some apis, the use can get them from ctx.settings.
 const setup = ctx=>{
   const inc = () => {
     ctx.setState({ count: ctx.state.count + 1 });
@@ -263,16 +279,16 @@ const setup = ctx=>{
   return {inc, dec, incD, decD};
 }
 
-// 定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
-// 如不定义mapProps, Concent将直接透传ctx给render函数，即 const UI = ctx => <div>ui</div>
+// [optional]defien mapProps，this function will been excuted before every render, the return result will pass to component props
+// if you don't define mapProps，the props will be ctx, code may like this: const UI = ctx => <div>ui</div>
 const mapProps = ctx=>{
   return {count:ctx.state.count, ...ctx.settings};
 }
 
-//将Counter类注册为CcFnCounter，属于counter模块
+//register sfc UI as CcFnCounter which belong to module counter
 const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
 ```
-- 基于hook注册为组件
+- register as cc component base on hook
 ```jsx
 import { useConcent } from 'concent';
 
@@ -303,13 +319,13 @@ function HookCounter(){
 }
 
 ```
-- 更优的hook写法，将函数提升为静态api
+- the better way to write hook is use setup feature, then there is no more temporary closure method any more in your render function block.
 ```jsx
 import { useConcent } from 'concent';
 
-//同样的，该函数只在ui首次渲染前被执行一次！！！
+//define setup，it will only been executed on time before first render, usually for defining some apis, the use can get them from ctx.settings.
 const setup = ctx =>{
-  const {state, setState, dispatch} = ctx;
+  const {setState, dispatch} = ctx;
   const inc = () => {
     setState({ count: ctx.state.count + 1 });
   };
@@ -344,9 +360,99 @@ function HookCounter(){
 }
 
 ```
+- the setup can also been passed to class! that means you can switch your component definition way between class and function as you like。
+```js
+class Counter extends Component {
+  render() {
+    const { count } = this.state;
+    const {inc, dec, incD, decD} = this.ctx.settings;
+    // here ignore redner logic......
+    return <>your ui</>
+  }
+}
+
+const SetupCounter = register({module:'counter', setup})(Counter);
+```
+- With a little processing, you can use a standard composite API to create components by hiding `useConcent`
+```js
+import { registerHookComp } from 'concent';
+
+export AwesomeComp = registerHookComp({
+  module:'counter',
+  setup,
+  render: ctx=>{
+      const { count } = ctx.state;
+      const {inc, dec, incD, decD} = ctx.settings;
+      // here ignore redner logic......
+      return <>your ui</>
+  }
+});
+```
+- in setup block, you can define event listen, life cycle method(works for both class component and function component)
+```js
+const setup = ctx => {
+  console.log('setup only execute one time before first render period');
+  
+  ctx.on('someEvent', (p1, p2)=> console.log('receive ', p1, p2));
+  
+  const fetchProducts = () => {
+    const { type, sex, addr, keyword } = ctx.state;
+    api.fetchProducts({ type, sex, addr, keyword })
+      .then(products => ctx.setState({ products }))
+      .catch(err => alert(err.message));
+  };
+
+  ctx.effect(() => {
+    fetchProducts();
+  }, ["type", "sex", "addr", "keyword"]);//only pass state key
+  /** equivalent code below in function component
+    useEffect(() => {
+      fetchProducts(type, sex, addr, keyword);
+    }, [type, sex, addr, keyword]);
+  */
+
+  ctx.effect(() => {
+    return () => {
+      // clear up
+      // equivalent componentWillUnmout
+    };
+  }, []);// pass zero length array, to let effect only execute one time after first render period
+  /** equivalent code below in function component
+    useEffect(()=>{
+      return ()=>{
+        // clear up
+      }
+    }, []);
+  */
+
+  ctx.effectProps(() => {
+    // write effect handler to props value change，it is different with ctx.effect which works for state value changing
+    const curTag = ctx.props.tag;
+    if (curTag !== ctx.prevProps.tag) ctx.setState({ tag: curTag });
+  }, ["tag"]);//only pass props key
+  /**  equivalent code below in function component
+  useEffect(()=>{
+    if(tag !== propTag)setTag(tag);
+  }, [propTag, tag]);
+ */
+
+  return {// return result will been collected to ctx.settings
+    fetchProducts,
+    //sync type value, sync method can extract value from event automatically
+    changeType: ctx.sync('type'),
+  };
+};
+```
 
 ### [0入侵，渐进式实例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
 
+___
+## 相关文章介绍
+### [聊一聊状态管理&Concent设计理念](https://juejin.im/post/5da7cb9cf265da5bbb1e4f8c)
+### [应战Vue3 setup，Concent携手React出招了！](https://juejin.im/post/5dd123ec5188253dbe5eeebd)
+### [深度挖掘Concent的effect，全面提升useEffect的开发体验](https://juejin.im/post/5deb43256fb9a0166316c3e9)
+### [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
+### [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
 ___
 ## 🔨更多精彩示例
 ### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
@@ -355,7 +461,7 @@ ___
 ### [有趣的counter](https://stackblitz.com/edit/funny-counter)
 ___
 ## 图文介绍
-### cc状态分发流程
+### cc state broadcast process
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
-### cc组件渲染流程
+### cc component working process
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)
