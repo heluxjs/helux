@@ -1002,7 +1002,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.91',
+      version: '1.5.92',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1447,6 +1447,8 @@
         renderKey = _ref$renderKey === void 0 ? '' : _ref$renderKey,
         _ref$delay = _ref.delay,
         delay = _ref$delay === void 0 ? -1 : _ref$delay;
+
+    if (state === undefined) return;
 
     if (!isPlainJsonObject$1(state)) {
       justWarning$1("your committed state is not a plain json object!");

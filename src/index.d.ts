@@ -82,17 +82,18 @@ interface IDispatchOptions {
   renderKey?: string;
   delay?: number;
 }
-export type ReducerType<T> = {
+type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
+  payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
+  renderKeyOrOptions?: string | IDispatchOptions,
+  delay?: number,
+) => ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>> : unknown;
+
+export type ReducerType<T extends IAnyObj> = T['setState'] extends Function ? {
   // readonly [K in keyof T]: T[K] extends IAnyFn ? (payload: Parameters<T[K]>[0]) => Promise<ReturnType<T[K]>> : unknown;
-  readonly [K in keyof T]: T[K] extends IAnyFn ?
-  (
-    payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
-    renderKeyOrOptions?: string | IDispatchOptions,
-    delay?: number,
-  ) =>
-    ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>>
-  : unknown;
-}
+  readonly [K in keyof T]: ReducerMethod<T, K>;
+} : {
+  readonly [K in keyof T]: ReducerMethod<T, K>;
+} & { setState: ReducerMethod<{ setState: (payload: IAnyObj, renderKeyOrOptions?: string | IDispatchOptions, delay?: number) => any }, 'setState'> }
 
 export interface EvMapBase {
   [key: string]: any[];

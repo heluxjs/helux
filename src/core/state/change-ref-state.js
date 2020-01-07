@@ -65,6 +65,8 @@ export default function (state, {
   module, skipMiddleware = false, payload,
   reactCallback, type, reducerModule, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
 ) {
+  if (state === undefined) return;
+
   if (!isPlainJsonObject(state)) {
     justWarning(`your committed state is not a plain json object!`);
     return;

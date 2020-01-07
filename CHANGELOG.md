@@ -1,4 +1,9 @@
 #### 2020-01-07
+1.5.92 发布
+* optimize: reducer返回的state为undefined不再产生warning信息
+* optimize: 新增`ReducerType`类型，辅助生成正确的reducer类型
+
+#### 2020-01-07
 1.5.91 发布
 * bug fix: useConcent的setState句柄里的回调参数传递的是`ccHookState`
 > 应该和class的setState回调保持一致，现已修正为`ccHookState.state`
