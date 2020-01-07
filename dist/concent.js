@@ -1002,7 +1002,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.90',
+      version: '1.5.91',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -5999,7 +5999,7 @@
       var newHookState = Object.assign({}, ccHookState);
       hookSetState(newHookState); // 和class setState(partialState, cb); 保持一致
 
-      if (cb) cb(newHookState);
+      if (cb) cb(newHookState.state);
     };
   };
 
@@ -6007,7 +6007,7 @@
     return function (cb) {
       var newHookState = Object.assign({}, ccHookState);
       hookSetState(newHookState);
-      if (cb) cb(newHookState);
+      if (cb) cb(newHookState.state);
     };
   };
 

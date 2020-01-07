@@ -1,3 +1,9 @@
+#### 2020-01-07
+1.5.91 发布
+* bug fix: useConcent的setState句柄里的回调参数传递的是`ccHookState`
+> 应该和class的setState回调保持一致，现已修正为`ccHookState.state`
+
+
 #### 2020-01-05
 1.5.90 发布
 * bug fix: effect连接到其他模块的stateKey时，可能会产生无线循环调用

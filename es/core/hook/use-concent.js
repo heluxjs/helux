@@ -28,12 +28,12 @@ const makeSetState = (ccHookState, hookSetState) => (partialState, cb) => {
   hookSetState(newHookState);
 
   // 和class setState(partialState, cb); 保持一致
-  if (cb) cb(newHookState);
+  if (cb) cb(newHookState.state);
 }
 const makeForceUpdate = (ccHookState, hookSetState) => cb => {
   const newHookState = Object.assign({}, ccHookState);
   hookSetState(newHookState);
-  if (cb) cb(newHookState);
+  if (cb) cb(newHookState.state);
 }
 
 function CcHook(ccHookState, hookSetState, props) {
