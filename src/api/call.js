@@ -48,7 +48,7 @@ export default function (keyDesc, method, ...args) {
     return console.error(err.message);
   }
 
-  var fn = ref[method];
+  const fn = ref[method];
   if (!fn) {
     const err = util.makeError(ERR.CC_CLASS_INSTANCE_METHOD_NOT_FOUND, vbi(`method:${method}`));
     // only error
