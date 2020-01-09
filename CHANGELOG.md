@@ -1,3 +1,8 @@
+#### 2020-01-09
+1.5.93 发布
+* bug fix: connectedModuleName_ccClassKeys_记录了重复的ccClassKey
+> bug重现：当使用useConcent注册组件时，组件的反复卸载和重加载导致connectedModuleName_ccClassKeys_记录了重复了ccClassKey，导致broadcastConnectedState触发了冗余的渲染
+
 #### 2020-01-07
 1.5.92 发布
 * optimize: reducer返回的state为undefined不再产生warning信息

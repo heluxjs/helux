@@ -1002,7 +1002,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.92',
+      version: '1.5.94',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2751,10 +2751,10 @@
         connectedState[m] = _state[m];
         connectedComputed[m] = _computedValue$2[m];
         connectedModule[m] = 1; //记录连接的模块
-        //记录这个模块被某个ccClassKey连接
+        //记录当前某个被连接的模块下，有哪些ccClassKeys连接到了此模块，方便broadcastConnectedState之用
 
         var ccClassKeys = safeGetArrayFromObject(connectedModuleName_ccClassKeys_$1, m);
-        ccClassKeys.push(ccClassKey);
+        if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
       });
       ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
       ccClassContext.connectedModule = connectedModule;

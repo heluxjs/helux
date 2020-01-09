@@ -66,9 +66,9 @@ function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName,
       connectedComputed[m] = _computedValue[m];
       connectedModule[m] = 1;//记录连接的模块
 
-      //记录这个模块被某个ccClassKey连接
+      //记录当前某个被连接的模块下，有哪些ccClassKeys连接到了此模块，方便broadcastConnectedState之用
       const ccClassKeys = util.safeGetArrayFromObject(connectedModuleName_ccClassKeys_, m);
-      ccClassKeys.push(ccClassKey);
+      if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
     });
 
     ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
