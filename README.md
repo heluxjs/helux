@@ -77,7 +77,7 @@ source code see here：https://github.com/fantasticsoul/concent-guid-ts
 
 ## ✨Fetures
 * **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component。
-* **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by [setState] directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
+* **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by `setState` directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
 * **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene。
 * **flexible data consumption granularity**，your can consume multi model data with state key level dependency.。
 * **progressive**，except `setState`, you can also use `dispatch` or `invoke` to change state, separate your business logic and ui completely.。[from class to function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
