@@ -996,13 +996,13 @@
     ccUKey_handlerKeys_: {},
     // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
     // it is a ref that towards ccUniqueKeyEvent_handler_'s key
-    // when component unmounted, it's handler will been removed
+    // when component unmounted, its handler will been removed
     handlerKey_handler_: {},
     renderKey_ccUkeys_: {},
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.94',
+      version: '1.5.95',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3782,6 +3782,7 @@
     var ctx = (_ctx = {
       // static params
       type: type,
+      isSingle: isSingle,
       module: module,
       reducerModule: reducerModule,
       ccClassKey: ccClassKey,
@@ -6053,6 +6054,7 @@
 
     var nowCursor = ccHookState.cursor;
     var isFirstRendered = nowCursor === cursor;
+    var bindCtxToMethod = _registerOption.bindCtxToMethod;
     var hookRef;
 
     if (isFirstRendered) {
@@ -6067,7 +6069,6 @@
           _registerOption$conne = _registerOption.connect,
           connect = _registerOption$conne === void 0 ? {} : _registerOption$conne,
           setup = _registerOption.setup,
-          bindCtxToMethod = _registerOption.bindCtxToMethod,
           lite = _registerOption.lite;
       incCursor();
 
@@ -6122,8 +6123,20 @@
 
     React.useEffect(function () {
       // mock componentDidMount
-      hookRef.isFirstRendered = false;
-      didMount(hookRef);
+      // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为
+      if (hookRef.isFirstRendered === false) {
+        // 记录一下丢失的ref，因为上面不再会走buildRefCtx beforeMount流程
+        var _hookRef$ctx = hookRef.ctx,
+            isSingle = _hookRef$ctx.isSingle,
+            _ccClassKey2 = _hookRef$ctx.ccClassKey,
+            ccKey = _hookRef$ctx.ccKey,
+            ccUniqueKey = _hookRef$ctx.ccUniqueKey;
+        setRef(hookRef, isSingle, _ccClassKey2, ccKey, ccUniqueKey);
+      } else {
+        hookRef.isFirstRendered = false;
+        didMount(hookRef);
+      }
+
       return function () {
         // mock componentWillUnmount
         beforeUnmount(hookRef);

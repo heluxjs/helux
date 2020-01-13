@@ -90,7 +90,7 @@ export default function(module, config, option = {}) {
           if (globalReducer[fnName]) {
             throw makeError(ERR.CC_REDUCER_ACTION_TYPE_DUPLICATE, verboseInfo(`type ${fnName}`));
           }
-          var reducerFn = moduleReducer[fnName];
+          const reducerFn = moduleReducer[fnName];
           if (typeof reducerFn !== 'function') {
             throw makeError(ERR.CC_REDUCER_NOT_A_FUNCTION);
           }

@@ -1,15 +1,19 @@
 import { Component, ReactNode, ComponentClass, FC } from 'react';
 import { string } from 'prop-types';
 
+type CC_CLASS_PREFIX = '$$CcClass';
+type CC_FRAGMENT_PREFIX = '$$CcFrag';
+type CC_HOOK_PREFIX = '$$CcHook';
+
 type CcCst = {
   MODULE_GLOBAL: '$$global';
   MODULE_DEFAULT: '$$default';
   MODULE_CC: '$$cc';
   MODULE_CC_ROUTER: '$$CONCENT_ROUTER';
 
-  CC_CLASS_PREFIX: '$$CcClass';
-  CC_FRAGMENT_PREFIX: '$$CcFrag';
-  CC_HOOK_PREFIX: '$$CcHook';
+  CC_CLASS_PREFIX: CC_CLASS_PREFIX;
+  CC_FRAGMENT_PREFIX: CC_FRAGMENT_PREFIX;
+  CC_HOOK_PREFIX: CC_HOOK_PREFIX;
   CC_PREFIX: '$$Cc';
 
   CC_DISPATCHER: '$$Dispatcher';
@@ -320,6 +324,8 @@ declare function syncCb<Val, ModuleState, FullState, RefCtx extends ICtxBase>(va
 export interface ICtxBase {
   readonly module: '$$default' | string | any;
   // module: '$$default';
+  readonly isSingle: boolean;
+  readonly type: CC_CLASS_PREFIX | CC_FRAGMENT_PREFIX | CC_HOOK_PREFIX;
   readonly reducerModule: string;
   readonly ccKey: string;
   readonly ccClassKey: string;

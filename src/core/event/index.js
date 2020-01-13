@@ -108,7 +108,7 @@ export function offEventHandlersByCcUniqueKey(ccUniqueKey) {
 }
 
 export function getEventItem(event) {
-  if (typeof event === 'object') {
+  if (event && typeof event === 'object') {
     let _event;
     if (Array.isArray(event)) {
       const [name, identity] = event;

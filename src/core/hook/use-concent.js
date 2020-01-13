@@ -9,6 +9,7 @@ import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import getStoredKeys from '../base/get-stored-keys';
 import { isPlainJsonObject, getRegisterOptions } from '../../support/util';
+import setRef from '../ref/set-ref';
 
 const { ccUkey_ref_, moduleName_stateKeys_ } = ccContext;
 
@@ -63,11 +64,12 @@ export default function useConcent(registerOption, ccClassKey){
   const nowCursor = ccHookState.cursor;
 
   const isFirstRendered = nowCursor === cursor;
+  const bindCtxToMethod = _registerOption.bindCtxToMethod;
   let hookRef;
   if (isFirstRendered) {
     const {
       renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys = [],
-      persistStoredKeys, connect = {}, setup, bindCtxToMethod, lite,
+      persistStoredKeys, connect = {}, setup, lite,
     } = _registerOption;
 
     incCursor();
@@ -112,8 +114,15 @@ export default function useConcent(registerOption, ccClassKey){
 
   //after first render
   React.useEffect(() => {// mock componentDidMount
-    hookRef.isFirstRendered = false;
-    didMount(hookRef);
+    // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为
+    if (hookRef.isFirstRendered === false) {
+      // 记录一下丢失的ref，因为上面不再会走buildRefCtx beforeMount流程
+      const { isSingle, ccClassKey, ccKey, ccUniqueKey } = hookRef.ctx;
+      setRef(hookRef, isSingle, ccClassKey, ccKey, ccUniqueKey);
+    } else {
+      hookRef.isFirstRendered = false;
+      didMount(hookRef);
+    }
 
     return () => {// mock componentWillUnmount
       beforeUnmount(hookRef);

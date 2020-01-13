@@ -173,7 +173,7 @@ export function makeInvokeHandler(targetRef, { chainId, oriChainId, isLazy, isSi
     let _isLazy = isLazy, _isSilent = isSilent;
     let _renderKey = '', _delay = inputDelay;
 
-    if (typeof inputRKey === 'object') {
+    if (inputRKey && typeof inputRKey === 'object') {
       const { lazy, silent, renderKey, delay } = inputRKey;
       lazy !== undefined && (_isLazy = lazy);
       silent !== undefined && (_isSilent = silent);
@@ -425,7 +425,7 @@ export function makeDispatchHandler(
       return iHandler(paramObj, payload, _renderKey, _delay);
     }
 
-    if (paramObjType === 'object') {
+    if (paramObjType && paramObjType === 'object') {
       if (Array.isArray(paramObjType)) {
         return callInvoke();
       }

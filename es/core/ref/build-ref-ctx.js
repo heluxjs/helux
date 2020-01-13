@@ -132,6 +132,7 @@ export default function (ref, params, liteLevel = 5) {
   const ctx = {
     // static params
     type,
+    isSingle,
     module,
     reducerModule,
     ccClassKey,

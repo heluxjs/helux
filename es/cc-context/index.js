@@ -244,13 +244,13 @@ const ccContext = {
   ccUKey_handlerKeys_: {},
   // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
   // it is a ref that towards ccUniqueKeyEvent_handler_'s key
-  // when component unmounted, it's handler will been removed
+  // when component unmounted, its handler will been removed
   handlerKey_handler_: {},
   renderKey_ccUkeys_: {},
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.94',
+    version: '1.5.95',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',
@@ -271,7 +271,7 @@ export function getCcContext() {
 
 const lsLen = localStorage.length;
 const _refStoreState = ccContext.refStore._state;
-for (var i = 0; i < lsLen; i++) {
+for (let i = 0; i < lsLen; i++) {
   const lsKey = localStorage.key(i);
   if (lsKey.startsWith('CCSS_')) {
     try {

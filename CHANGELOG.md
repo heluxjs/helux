@@ -1,3 +1,9 @@
+#### 2020-01-10
+1.5.95 发布
+* bug fix: 热加载模式下，hook卸载和再次挂载其实指向的是同一个引用，但是卸掉逻辑导致引用丢失导致报错
+> bug修复关键点：useConcent逻辑里 模拟didMount时，先判断下hookRef.isFirstRendered === false 是否成立，如果成立但是此刻有进入了didMount逻辑，则认为是热加载情况下的hook行为，再次调用setRef记录丢失的ref，而不知走真正的didMount逻辑，因为此时对于react-dom-tree来说，还可以认为是原来的那个组件   
+> 查看此链接 https://codesandbox.io/s/react-calculator-8hvqw， 修改App.js任意代码95之后的版本不再报错，95之前的版本会报错。
+
 #### 2020-01-09
 1.5.93 发布
 * bug fix: connectedModuleName_ccClassKeys_记录了重复的ccClassKey
