@@ -32,8 +32,6 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   const pickedFns = [];
 
   if (!moduleDep) return { pickedFns, setted:[], changed:[] };
-
-  // NC noCompare
   const { retKey_fn_, stateKey_retKeys_, fnCount } = moduleDep;
 
   /** 首次调用 */

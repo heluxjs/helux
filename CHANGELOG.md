@@ -1,3 +1,21 @@
+#### 2020-0-31
+1.5.98 发布
+* fix: 最新版codesandbox编译Concent报错`ReferenceError: Cannot access 'CcFragment' before initialization`
+```
+//这是编译结果
+exports.default = CcFragment;
+class CcFragment extends React.Component {...}
+```
+现修改原来的暴露方式解决此问题
+
+#### 2020-01-17
+1.5.97 发布
+* fix: configure接口的init函数不执行
+
+#### 2020-01-12
+1.5.96 发布
+* optimize: 优化renderKey匹配写法
+
 #### 2020-01-10
 1.5.95 发布
 * bug fix: 热加载模式下，hook卸载和再次挂载其实指向的是同一个引用，但是卸掉逻辑导致引用丢失导致报错

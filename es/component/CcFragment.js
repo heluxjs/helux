@@ -15,7 +15,7 @@ const { shallowDiffers, getRegisterOptions } = util;
 const { moduleName_stateKeys_ } = ccContext;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
-export default class CcFragment extends React.Component {
+class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
     const registerOptions = getRegisterOptions(props.register);
@@ -111,3 +111,5 @@ export default class CcFragment extends React.Component {
   }
 
 }
+
+export default CcFragment;

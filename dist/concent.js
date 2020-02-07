@@ -342,6 +342,17 @@
   function okeys(obj) {
     return Object.keys(obj);
   }
+  function excludeArrStringItem(arr, toExcludeStr) {
+    var idx = arr.indexOf(toExcludeStr);
+
+    if (idx > -1) {
+      var arrCopy = arr.slice();
+      arrCopy.splice(idx, 1);
+      return arrCopy;
+    } else {
+      return arr;
+    }
+  }
   function convertToStandardEvent(e) {
     var ret = null;
 
@@ -1002,7 +1013,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.95',
+      version: '1.5.98',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1500,7 +1511,7 @@
         });
       }
 
-      if (sharedState) triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
+      if (sharedState) triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
     }, skipMiddleware, passToMiddleware);
   }
 
@@ -1582,9 +1593,9 @@
     return partialState;
   }
 
-  function triggerBroadcastState(renderType, callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
+  function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
     var startBroadcastState = function startBroadcastState() {
-      broadcastState(renderType, callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
+      broadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
     };
 
     if (delay > 0) {
@@ -1598,15 +1609,20 @@
   function updateRefs(ccUkeys, moduleName, partialSharedState, callInfo) {
     ccUkeys.forEach(function (ukey) {
       var ref = ccUkey_ref_[ukey];
+      var refModule = ref.ctx.module;
 
-      if (ref.ctx.module === moduleName) {
+      if (refModule === moduleName) {
         //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
         triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1);
+      } else {
+        // consider this is a redundant render behavior .....
+        // ref.__$$ccForceUpdate();
+        justTip("although ref's renderKey matched but its module " + refModule + " mismatch target module " + moduleName + ", cc will ignore trigger it re-render");
       }
     });
   }
 
-  function broadcastState(renderType, callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
+  function broadcastState(callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
     if (!partialSharedState) {
       // null
       return;
@@ -1616,36 +1632,30 @@
         currentCcUkey = _targetRef$ctx2.ccUniqueKey,
         ccClassKey = _targetRef$ctx2.ccClassKey;
     var targetClassContext = ccClassKey_ccClassContext_[ccClassKey];
-    var renderKeyClasses = targetClassContext.renderKeyClasses;
-    var toExcludeUkeys = [];
-
-    if (renderKey) {
-      // 如果renderKey是ukey（此时renderType是RENDER_BY_KEY）, 则不会进入updateRefs逻辑
-      if (renderType === RENDER_BY_KEY$1 && !ccUkey_ref_[renderKey] || renderType === RENDER_NO_OP$1) {
-        // targetRef刚刚已被触发过渲染，这里排除掉currentCcUkey
-        var ccUkeys__ = renderKey_ccUkeys_[renderKey] || [];
-        var ccUkeys = ccUkeys__.slice();
-        var ukeyIndex = ccUkeys.indexOf(currentCcUkey);
-        if (ukeyIndex > -1) ccUkeys.splice(ukeyIndex, 1);
-        updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
-        toExcludeUkeys = ccUkeys;
-      }
-    } // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
+    var renderKeyClasses = targetClassContext.renderKeyClasses; // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
     // so flag ignoreCurrentCcUkey as true;
-
 
     var ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY$1; // these ccClass are watching the same module's state
 
     var ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
+    var toExcludeUkeys = [];
 
     if (renderKey) {
       //调用发起者传递了renderKey
+      // 此时renderType一定是 RENDER_BY_KEY or RENDER_NO_OP
       if (renderKeyClasses === '*') {
-        //要影响所属模块的所有类
-        ccClassKeys = []; //这里设置为空数据
+        // renderKey规则在同一个模块下没有类范围约束，所有renderKey属性为传入的{renderKey}的实例都会被触发渲染
+        // 这里人工设置ccClassKeys为[]，让下面的遍历ccClassKeys找目标渲染被跳过，走renderKey匹配渲染规则
+        ccClassKeys = [];
       } else {
         ccClassKeys = removeArrElements$1(ccClassKeys, renderKeyClasses); //移除掉指定的类
       }
+
+      var ccUkeysOri = renderKey_ccUkeys_[renderKey] || []; // targetRef刚刚可能已被触发过渲染，这里排除掉currentCcUkey
+
+      var ccUkeys = excludeArrStringItem(ccUkeysOri, currentCcUkey);
+      toExcludeUkeys = ccUkeys;
+      updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
     }
 
     var keysLen = ccClassKeys.length;
@@ -2065,7 +2075,7 @@
       var _renderKey = '',
           _delay = inputDelay;
 
-      if (typeof inputRKey === 'object') {
+      if (inputRKey && typeof inputRKey === 'object') {
         var lazy = inputRKey.lazy,
             silent = inputRKey.silent,
             renderKey = inputRKey.renderKey,
@@ -2434,7 +2444,7 @@
         return iHandler(paramObj, payload, _renderKey, _delay);
       };
 
-      if (paramObjType === 'object') {
+      if (paramObjType && paramObjType === 'object') {
         if (Array.isArray(paramObjType)) {
           return callInvoke();
         }
@@ -3065,7 +3075,7 @@
     }
   }
   function getEventItem(event) {
-    if (typeof event === 'object') {
+    if (event && typeof event === 'object') {
       var _event;
 
       if (Array.isArray(event)) {
@@ -5487,7 +5497,9 @@
         throw new Error('init value must be a function!');
       }
 
-      init(makeSetStateHandler(module));
+      co(init).then(function (state) {
+        makeSetStateHandler(module)(state);
+      });
     }
 
     if (middlewares && middlewares.length > 0) {
