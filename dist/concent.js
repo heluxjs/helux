@@ -517,11 +517,11 @@
     var moduleDep = depDesc[stateModule];
     var pickedFns = [];
     if (!moduleDep) return {
+      retKey_fn_: {},
       pickedFns: pickedFns,
       setted: [],
       changed: []
-    }; // NC noCompare
-
+    };
     var retKey_fn_ = moduleDep.retKey_fn_,
         stateKey_retKeys_ = moduleDep.stateKey_retKeys_,
         fnCount = moduleDep.fnCount;
@@ -536,6 +536,7 @@
 
       if (type === 'computed') {
         return {
+          retKey_fn_: retKey_fn_,
           pickedFns: retKeys.map(function (retKey) {
             return _wrapFn(retKey, retKey_fn_);
           }),
@@ -557,6 +558,7 @@
         });
       });
       return {
+        retKey_fn_: retKey_fn_,
         pickedFns: pickedFns,
         setted: _setted,
         changed: _changed
@@ -570,7 +572,10 @@
 
     if (setted.length === 0) {
       return {
-        pickedFns: pickedFns
+        retKey_fn_: retKey_fn_,
+        pickedFns: pickedFns,
+        setted: [],
+        changed: []
       };
     } //用setted + changed + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
 
@@ -583,6 +588,7 @@
 
     if (cachedPickedRetKeys) {
       return {
+        retKey_fn_: retKey_fn_,
         pickedFns: cachedPickedRetKeys.map(function (retKey) {
           return _wrapFn(retKey, retKey_fn_);
         }),
@@ -597,6 +603,7 @@
       return v.retKey;
     });
     return {
+      retKey_fn_: retKey_fn_,
       pickedFns: pickedFns,
       setted: setted,
       changed: changed
@@ -682,6 +689,23 @@
     }
   }
 
+  function setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, computedValueOrRet) {
+    if (sourceType === 'ref') {
+      if (refModule === stateModule) {
+        computedContainer[retKey] = computedValueOrRet;
+      } // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
+
+
+      var targetComputed = refConnectedComputed[stateModule];
+
+      if (targetComputed) {
+        targetComputed[retKey] = computedValueOrRet;
+      }
+    } else {
+      computedContainer[retKey] = computedValueOrRet;
+    }
+  }
+
   var findDepFnsToExecute = (function (refCtx, stateModule, refModule, oldState, finder, toComputedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall, fnType, sourceType, computedContainer, refConnectedComputed) {
     var whileCount = 0;
     var initComputedState = toComputedState;
@@ -694,6 +718,7 @@
       var beforeMountFlag = whileCount === 1 ? isFirstCall : false;
 
       var _finder = finder(initComputedState, beforeMountFlag),
+          retKey_fn_ = _finder.retKey_fn_,
           pickedFns = _finder.pickedFns,
           setted = _finder.setted,
           changed = _finder.changed;
@@ -704,6 +729,10 @@
           commit = _makeCommitHandler.commit,
           getFnCommittedState = _makeCommitHandler.getFnCommittedState;
 
+      var _makeCommitHandler2 = makeCommitHandler(),
+          commitComp = _makeCommitHandler2.commit,
+          getFinalComp = _makeCommitHandler2.getFnCommittedState;
+
       pickedFns.forEach(function (_ref) {
         var retKey = _ref.retKey,
             fn = _ref.fn,
@@ -713,6 +742,7 @@
           callInfo: callInfo,
           isFirstCall: isFirstCall,
           commit: commit,
+          commitComp: commitComp,
           setted: setted,
           changed: changed,
           stateModule: stateModule,
@@ -724,20 +754,7 @@
         var computedValueOrRet = executeCompOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
 
         if (fnType === 'computed') {
-          if (sourceType === 'ref') {
-            if (refModule === stateModule) {
-              computedContainer[retKey] = computedValueOrRet;
-            } // 意味着用户必须将组建connect到此模块，computed&watch里模块定义才有效果
-
-
-            var targetComputed = refConnectedComputed[stateModule];
-
-            if (targetComputed) {
-              targetComputed[retKey] = computedValueOrRet;
-            }
-          } else {
-            computedContainer[retKey] = computedValueOrRet;
-          }
+          setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, computedValueOrRet);
         } else {
           // watch
           //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
@@ -749,6 +766,15 @@
       if (initComputedState) {
         Object.assign(initNewState, initComputedState);
         Object.assign(initDeltaCommittedState, initComputedState);
+      }
+
+      var committedComp = getFinalComp();
+
+      if (committedComp) {
+        okeys(committedComp).forEach(function (retKey) {
+          if (!retKey_fn_[retKey]) throw new Error("fnCtx.commitComp commit an invalid retKey[" + retKey + "]");
+          setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedComp[retKey]);
+        });
       }
 
       if (whileCount > 10) throw new Error('fnCtx.commit may goes endless loop, please check your code');
@@ -799,8 +825,8 @@
     var newState = Object.assign({}, moduleState, committedState);
     var deltaCommittedState = Object.assign({}, committedState);
     var toComputedState = deltaCommittedState;
-    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepComputedFns, toComputedState, newState, deltaCommittedState, callInfo, false, 'computed', '', moduleComputedValue);
-    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepWatchFns, toComputedState, newState, deltaCommittedState, callInfo, false);
+    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepComputedFns, toComputedState, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
+    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepWatchFns, toComputedState, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
     okeys$1(deltaCommittedState).forEach(function (key) {
       prevModuleState[key] = moduleState[key];
       incStateVer(module, key);
@@ -1013,7 +1039,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.98',
+      version: '1.5.99',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1314,7 +1340,9 @@
     var deltaCommittedState = Object.assign({}, committedState);
     var watchDep = refCtx.watchDep,
         refModule = refCtx.module,
-        ccUniqueKey = refCtx.ccUniqueKey;
+        ccUniqueKey = refCtx.ccUniqueKey,
+        refComputed = refCtx.refComputed,
+        refConnectedComputed = refCtx.refConnectedComputed;
     var newState = Object.assign({}, oldState, committedState);
 
     var curDepComputedFns = function curDepComputedFns(committedState, isBeforeMount) {
@@ -1322,7 +1350,7 @@
     }; // 触发有stateKey依赖列表相关的watch函数
 
 
-    var shouldCurrentRefUpdate = findDepFnsToExecute(refCtx, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount);
+    var shouldCurrentRefUpdate = findDepFnsToExecute(refCtx, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'watch', CATE_REF, refComputed, refConnectedComputed);
 
     if (autoMergeDeltaToCommitted) {
       Object.assign(committedState, deltaCommittedState);
@@ -4909,7 +4937,8 @@
     });
   }
 
-  var isPlainJsonObject$3 = isPlainJsonObject;
+  var isPlainJsonObject$3 = isPlainJsonObject,
+      safeGetObjectFromObject$2 = safeGetObjectFromObject;
   var callInfo$1 = {
     payload: null,
     renderKey: '',
@@ -4931,6 +4960,7 @@
     checkModuleName(module, false, "watch." + module + " is invalid");
     var rootWatchDep = ccContext.watch.getRootWatchDep();
     var rootWatchRaw = ccContext.watch.getRootWatchRaw();
+    var rootComputedValue = ccContext.computed.getRootComputedValue();
 
     if (append) {
       var ori = rootWatchRaw[module];
@@ -4953,10 +4983,11 @@
       return pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
     };
 
-    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, callInfo$1, true);
+    var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
+    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, callInfo$1, true, 'watch', CATE_MODULE, moduleComputedValue);
   }
 
-  var safeGetObjectFromObject$2 = safeGetObjectFromObject,
+  var safeGetObjectFromObject$3 = safeGetObjectFromObject,
       isPlainJsonObject$4 = isPlainJsonObject;
   var callInfo$2 = {
     payload: null,
@@ -5007,8 +5038,8 @@
     };
 
     var deltaCommittedState = Object.assign({}, moduleState);
-    var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
-    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, callInfo$2, true, 'computed', '', moduleComputedValue);
+    var moduleComputedValue = safeGetObjectFromObject$3(rootComputedValue, module);
+    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, callInfo$2, true, 'computed', CATE_MODULE, moduleComputedValue);
   }
 
   var isPlainJsonObject$5 = isPlainJsonObject,
@@ -6490,12 +6521,33 @@
       compare: compare
     };
   };
+  var defComputedVal = function defComputedVal(val, compare) {
+    if (compare === void 0) {
+      compare = true;
+    }
+
+    return {
+      fn: function fn() {
+        return val;
+      },
+      depKeys: [],
+      compare: compare
+    };
+  };
   var defWatch = function defWatch(fn, depKeys, compare, immediate) {
     return {
       fn: fn,
       depKeys: depKeys,
       compare: compare,
       immediate: immediate
+    };
+  };
+  var defWatchImmediate = function defWatchImmediate(fn, depKeys, compare) {
+    return {
+      fn: fn,
+      depKeys: depKeys,
+      compare: compare,
+      immediate: true
     };
   };
   var defaultExport = {
@@ -6533,7 +6585,9 @@
     useConcent: useConcent$1,
     bindCcToMcc: bindCcToMcc,
     defComputed: defComputed,
-    defWatch: defWatch
+    defComputedVal: defComputedVal,
+    defWatch: defWatch,
+    defWatchImmediate: defWatchImmediate
   };
   function bindCcToMcc(name) {
     if (!multiCcContainer) {
@@ -6617,7 +6671,9 @@
   exports.appendState = appendState$1;
   exports.useConcent = useConcent$1;
   exports.defComputed = defComputed;
+  exports.defComputedVal = defComputedVal;
   exports.defWatch = defWatch;
+  exports.defWatchImmediate = defWatchImmediate;
   exports.bindCcToMcc = bindCcToMcc;
   exports.default = defaultExport;
 

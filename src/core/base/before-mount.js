@@ -31,7 +31,7 @@ export default function (ref, setup, bindCtxToMethod) {
 
     const fnNames = _reducerModule_fnNames_[m] || [];
     fnNames.forEach(fnName => {
-      reducerObj[fnName] = (payload, rkey, delay) => dispatch(`${m}/${fnName}`, payload, rkey, delay);
+      reducerObj[fnName] = (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
     });
   });
   ctx.reducer = _reducerCaller;

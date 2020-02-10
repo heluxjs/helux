@@ -64,8 +64,13 @@ export interface IAnyFnReturnObj {
 }
 export interface IAnyFnInObj { [key: string]: IAnyFn }
 
-interface IComputedFnDesc {
-  fn: typeof computedFn;
+interface IComputedFnDesc<Fn extends typeof computedFn> {
+  fn: Fn;
+  compare?: boolean;
+  depKeys?: string[];
+}
+interface IComputedFnSimpleDesc {
+  fn: IAnyFn;
   compare?: boolean;
   depKeys?: string[];
 }
@@ -77,8 +82,10 @@ interface IReducerFn {
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
 export type ComputeValType<T> = {
-  readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> : (T[K] extends IComputedFnDesc ? ReturnType<T[K]['fn']> : never);
+  readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> : (T[K] extends IComputedFnSimpleDesc ? ReturnType<T[K]['fn']> : never);
 }
+
+export type SettingsType<SetupFn extends (...args: any) => any> = ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>;
 
 interface IDispatchOptions {
   silent?: boolean;
@@ -115,7 +122,7 @@ type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 type RefComputedFn<FnCtx extends IFnCtxBase, FnReturnType> = (
   oldVal: any,
   newVal: any,
-  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+  fnCtx: FnCtx,//user decide it is IFnCtx or IFnCtxM
 ) => FnReturnType;
 type RefComputedValFn<FnCtx extends IFnCtxBase, FnReturnType, Val> = (
   oldVal: Val,
@@ -126,7 +133,7 @@ type RefComputedValFn<FnCtx extends IFnCtxBase, FnReturnType, Val> = (
 type RefWatchFn<FnCtx extends IFnCtxBase> = (
   oldVal: any,
   newVal: any,
-  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+  fnCtx: FnCtx,//user decide it is IFnCtx or IFnCtxM
 ) => boolean | void;
 type RefWatchValFn<FnCtx extends IFnCtxBase, Val> = (
   oldVal: Val,
@@ -137,8 +144,13 @@ type RefWatchValFn<FnCtx extends IFnCtxBase, Val> = (
 declare function computedFn<FnCtx extends IFnCtxBase>(
   oldVal: any,
   newVal: any,
-  fnCtx: FnCtx,//user decide it is FnCtx or FnCtxConnect
+  fnCtx: FnCtx,//user decide it is IFnCtx or IFnCtxM
 ): any;
+type GetComputedFn<T> = <FnCtx extends IFnCtxBase>(
+  oldVal: any,
+  newVal: any,
+  fnCtx: FnCtx,
+) => T;
 
 
 interface IDict {
@@ -153,6 +165,7 @@ export interface IRootBase extends IDict {
   $$cc?: any;
 }
 
+type PropKey = string | number | symbol;
 
 // export function dodo<TA, TB, keyof TA extends keyof TB>(a: TA, b: TB): void; 
 type MyPick<RootState extends IRootBase, ConnectedModules extends keyof IRootBase> = Pick<RootState, ConnectedModules>;
@@ -233,6 +246,7 @@ declare function refCtxSetGlobalState(state: IAnyObj, cb?: (newFullState: IAnyOb
 declare function refCtxSetModuleState<ModuleState>(moduleName: string, state: Partial<ModuleState>, cb?: (newFullState: ModuleState) => void, renderKey?: string, delay?: number): void;
 declare function refCtxSetModuleState(moduleName: string, state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: string, delay?: number): void;
 
+type Rfn<T> = <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => T;
 /**
  *
  * @param retKey
@@ -244,28 +258,22 @@ declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey:
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean): void;
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFnDesc: { fn: RefComputedFn<IFnCtx, FnReturnType>, depKeys?: string[], compare?: boolean }): void;
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFnDesc: { fn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean }): void;
-//user decide it is FnCtx or FnCtxConnect
+
+// !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
+// !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
+// 先写为如下方式
 declare function refCtxComputed(multiComputed: {
-  [retKey: string]: <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType,
-}): void;
-declare function refCtxComputed(multiComputed: {
-  [retKey: string]: <FnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => FnReturnType,
-}): void;
-declare function refCtxComputed(multiComputed: {
-  [retKey: string]: {
-    fn: <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType,
-    depKeys?: string[],
-    compare?: boolean,
-  }
+  [retKey: string]: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any,
 }): void;
 declare function refCtxComputed(multiComputed: {
   [retKey: string]: {
-    fn: <FnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => FnReturnType,
+    fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any,
     depKeys?: string[],
     compare?: boolean,
   }
 }): void;
 
+type VorB = void | boolean;
 /**
  * 
  * @param retKey 
@@ -276,23 +284,15 @@ declare function refCtxComputed(multiComputed: {
  */
 declare function refCtxWatch<IFnCtx extends IFnCtxBase>(retKey: string, watchFn: RefWatchFn<IFnCtx>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
 declare function refCtxWatch<IFnCtx extends IFnCtxBase, ValType>(retKey: string, watchFn: RefWatchValFn<IFnCtx, ValType>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
+
+// !!! 写成  <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => VorB 暂时无法约束值类型
+// 先写为如下方式
 declare function refCtxWatch(multiWatch: {
-  [retKey: string]: <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => void,
-}): void;
-declare function refCtxWatch(multiWatch: {
-  [retKey: string]: <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => void,
-}): void;
-declare function refCtxWatch(multiWatch: {
-  [retKey: string]: {
-    fn: <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => void,
-    depKeys?: string[],
-    compare?: boolean,
-    immediate?: boolean,
-  }
+  [retKey: string]: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => VorB,
 }): void;
 declare function refCtxWatch(multiWatch: {
   [retKey: string]: {
-    fn: <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => boolean | void,
+    fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => VorB,
     depKeys?: string[],
     compare?: boolean,
     immediate?: boolean,
@@ -343,20 +343,20 @@ export interface ICtxBase {
   readonly stateKeys: string[];
 
   // readonly state: IAnyObj;
-  state: IAnyObj;
-  readonly prevState: IAnyObj;
-  readonly props: IAnyObj;
-  readonly prevProps: IAnyObj;
-  readonly moduleState: IAnyObj;
+  state: any;
+  readonly prevState: any;
+  readonly props: any;
+  readonly prevProps: any;
+  readonly moduleState: any;
   readonly globalState: IAnyObj;
   readonly connectedState: IAnyObj;
   readonly refComputed: IAnyObj;
   readonly refConnectedComputed: IAnyObj;
-  readonly moduleComputed: IAnyObj;
+  readonly moduleComputed: any;
   readonly globalComputed: IAnyObj;
   readonly connectedComputed: IAnyObj;
 
-  readonly moduleReducer: IAnyObj;
+  readonly moduleReducer: any;
   readonly connectedReducer: IAnyObj;
   readonly reducer: IAnyFnInObj;
 
@@ -408,12 +408,12 @@ export interface ICtxBase {
  * so my suggestion is : when you use js, try ICtx series to mark type, and when you use ts , try use IRefCtx series.
  */
 export interface ICtx<
-  Props extends IAnyObj, 
-  ModuleState extends IAnyObj, 
-  ModuleReducer extends IAnyObj, 
+  Props extends IAnyObj,
+  ModuleState extends IAnyObj,
+  ModuleReducer extends IAnyObj,
   ModuleComputed extends IAnyObj,
-  Settings extends IAnyObj, 
-  RefComputed extends IAnyObj, 
+  Settings extends IAnyObj,
+  RefComputed extends IAnyObj,
   Mapped extends IAnyObj
   >
   extends ICtxBase {
@@ -429,16 +429,16 @@ export interface ICtx<
   readonly refComputed: RefComputed;
 }
 export interface ICtxCon<
-  Props extends IAnyObj, 
-  ModuleState extends IAnyObj, 
+  Props extends IAnyObj,
+  ModuleState extends IAnyObj,
   ModuleReducer extends IAnyObj,
-  ModuleComputed extends IAnyObj, 
-  Settings extends IAnyObj, 
+  ModuleComputed extends IAnyObj,
+  Settings extends IAnyObj,
   RefComputed extends IAnyObj,
   Mapped extends IAnyObj,
   // when connect other modules
-  ConnectedState extends IAnyObj, 
-  ConnectedReducer extends IAnyObj, 
+  ConnectedState extends IAnyObj,
+  ConnectedReducer extends IAnyObj,
   ConnectedComputed extends IAnyObj,
   RefConnectedComputed extends IAnyObj,
   >
@@ -463,13 +463,13 @@ export interface ICtxCon<
  * when ref state not equal moduleState, need pass State generic type
  */
 export interface ICtxRs<
-  Props extends IAnyObj, 
-  State extends IAnyObj, 
-  ModuleState extends IAnyObj, 
-  ModuleReducer extends IAnyObj, 
+  Props extends IAnyObj,
+  State extends IAnyObj,
+  ModuleState extends IAnyObj,
+  ModuleReducer extends IAnyObj,
   ModuleComputed extends IAnyObj,
-  Settings extends IAnyObj, 
-  RefComputed extends IAnyObj, 
+  Settings extends IAnyObj,
+  RefComputed extends IAnyObj,
   Mapped extends IAnyObj
   >
   extends ICtxBase {
@@ -485,17 +485,17 @@ export interface ICtxRs<
   readonly refComputed: RefComputed;
 }
 export interface ICtxRsCon<
-  Props extends IAnyObj, 
-  State extends IAnyObj, 
-  ModuleState extends IAnyObj, 
+  Props extends IAnyObj,
+  State extends IAnyObj,
+  ModuleState extends IAnyObj,
   ModuleReducer extends IAnyObj,
-  ModuleComputed extends IAnyObj, 
-  Settings extends IAnyObj, 
+  ModuleComputed extends IAnyObj,
+  Settings extends IAnyObj,
   RefComputed extends IAnyObj,
   Mapped extends IAnyObj,
   // when connect other modules
-  ConnectedState extends IAnyObj, 
-  ConnectedReducer extends IAnyObj, 
+  ConnectedState extends IAnyObj,
+  ConnectedReducer extends IAnyObj,
   ConnectedComputed extends IAnyObj,
   RefConnectedComputed extends IAnyObj,
   >
@@ -535,7 +535,7 @@ export interface IRefCtx
   Props,
   ModuleName extends keyof IRootBase,
   Settings extends IAnyObj,
-  RefComputed extends IAnyObj, 
+  RefComputed extends IAnyObj,
   Mapped extends IAnyObj
   >
   extends ICtxMBase<ModuleName> {
@@ -631,47 +631,38 @@ export interface IRefCtxRsCon
   connectedComputed: Pick<RootComputed, ConnectedModules>;
 }
 
+
+type GetFnCtxCommit<ModuleState> = <PS extends Partial<ModuleState>>(partialState: PS) => void;
+type GetFnCtxCommitComp<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
+
+// To constrain IFnCtx interface series shape
 export interface IFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
   callInfo: { payload: IAnyObj, renderKey: string, delay: number };
-  commit: (partialState: IAnyObj) => void;
+  commit: GetFnCtxCommit<any>;
+  commitComp: GetFnCtxCommitComp<any>;
   setted: string[];
   changed: string[];
   stateModule: string;
   refModule: string;
-  oldState: IAnyObj;
+  oldState: any;
   committedState: IAnyObj;
   refCtx: ICtxBase;
 }
-export interface IFnCtxMBase<ModuleName> {
-  retKey: string;
-  isFirstCall: boolean;
-  callInfo: { payload: IAnyObj, renderKey: string, delay: number };
-  commit: (partialState: IAnyObj) => void;
-  setted: string[];
-  changed: string[];
-  stateModule: string;
-  refModule: string;
-  oldState: IAnyObj;
-  committedState: IAnyObj;
+// M, means need module associate generic type
+export interface IFnCtxMBase<ModuleName, FullState, Computed> extends IFnCtxBase {
+  commit: GetFnCtxCommit<FullState>;// for module computed or watch definition, FullState equivalent ModuleState, Computed equivalent ModuleComputed
+  commitComp: GetFnCtxCommitComp<Computed>;
+  oldState: FullState;
   refCtx: ICtxMBase<ModuleName>;
 }
 export interface IFnCtx<RefCtx extends ICtxBase> extends IFnCtxBase {
   refCtx: RefCtx;
 }
-export interface IFnCtxComm<RefCtx extends ICtxBase, FullState> extends IFnCtxBase {
-  oldState: FullState;
+export interface IFnCtxM<RefCtx extends ICtxMBase<ModuleName>, ModuleName, FullState, Computed> extends IFnCtxMBase<ModuleName, FullState, Computed> {
+  refCtx: RefCtx;
   committedState: Partial<FullState>;
-  refCtx: RefCtx;
-}
-export interface IFnCtxM<ModuleName, RefCtx extends ICtxMBase<ModuleName>> extends IFnCtxMBase<ModuleName> {
-  refCtx: RefCtx;
-}
-export interface IFnCtxMComm<ModuleName, RefCtx extends ICtxMBase<ModuleName>, FullState> extends IFnCtxMBase<ModuleName> {
-  oldState: FullState;
-  committedState: Partial<FullState>;
-  refCtx: RefCtx;
 }
 
 declare class ConcentComponent<P> extends Component {
@@ -681,14 +672,13 @@ declare class ConcentComponent<P> extends Component {
   constructor(props: P, context?: any);
 }
 
-interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefState> {
-  module?: ModuleName// default '$$default'
-  watchedKeys?: (keyof RootState[ModuleName])[];
-  storedKeys?: (Exclude<keyof RefState, keyof RootState[ModuleName]>)[];
-  connect?: (keyof RootState | '$$global' | '$$default')[] |
-  // currently I do not know how to pass ${moduleName} to evaluate target type in object value
-  // something like (keyof RootState[moduleName] )[] but it is wrong writing
-  { [moduleName in (keyof RootState | '$$global' | '$$default')]?: TStar | string[] };
+interface InnerRegisterBase {
+  props?: any;
+  module?: PropKey // default '$$default'
+  state?: IAnyFnReturnObj | IAnyObj;
+  watchedKeys?: string[];
+  storedKeys?: any;
+  connect?: any;
   tag?: string;
   persistStoredKeys?: boolean;
   lite?: 1 | 2 | 3 | 4;
@@ -697,30 +687,33 @@ interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefStat
   isSingle?: boolean; //default false
   renderKeyClasses?: string[];
   compareProps?: boolean;//default true
-  setup?: IAnyObj;
-  mapProps?: <RefCtx extends ICtxBase>(refCtx: RefCtx) => IAnyObj;
+  setup?: (refCtx: ICtxBase) => IAnyObj;
+}
+interface InnerRegisterCtxBase<RefCtx extends ICtxBase> extends InnerRegisterBase {
+  setup?: (refCtx: RefCtx) => IAnyObj;
 }
 
-interface FnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
-  state?: IAnyFnReturnObj | IAnyObj;
-  props?: IAnyObj;
+export interface RegisterOptions<RootState, ModuleName extends keyof RootState, RefState> extends InnerRegisterBase {
+  module: ModuleName,
+  watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[];
+  storedKeys?: (Exclude<keyof RefState, keyof RootState[ModuleName]>)[];
+  connect?: (keyof RootState | '$$global' | '$$default')[] |
+  // !!! currently I do not know how to pass ${moduleName} to evaluate target type in object value
+  // something like (keyof RootState[moduleName] )[] but it is wrong writing
+  { [moduleName in (keyof RootState | '$$global' | '$$default')]?: TStar | string[] };
+  setup?: (refCtx: ICtxBase) => any;
 }
-interface RenderFnRegisterOptions<RootState, ModuleName extends keyof RootState, RefState, RefCtx> extends RegisterOptions<RootState, ModuleName, RefState> {
-  state?: IAnyFnReturnObj | IAnyObj;
-  props?: IAnyObj;
-  render: (
-    props: RegisterOptions<RootState, ModuleName, RefState>['mapProps'] extends Function ?
-      // !!! use NonNullable to exclude undefined
-      // ReturnType<RegisterOptions<RootState, ModuleName, RefState>['mapProps']> : RefCtx
-      ReturnType<NonNullable<RegisterOptions<RootState, ModuleName, RefState>['mapProps']>> :
-      RefCtx
-  ) => ReactNode;
+export interface RegisterOptionsCtx<RefCtx extends ICtxBase, RootState, ModuleName extends keyof RootState, RefState> extends RegisterOptions<RootState, ModuleName, RefState> {
+  setup?: (refCtx: RefCtx) => any;
 }
 
 //user decide it is FnCtx or FnCtxConnect
-declare function watchFn<IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void;
+interface WatchFn {
+  <IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void | boolean;
+}
+// declare function watchFn<IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void;
 type WatchFnDesc = {
-  fn: typeof watchFn,
+  fn: WatchFn,
   compare?: boolean,
   immediate?: boolean,
   depKeys?: string[],
@@ -739,10 +732,11 @@ type ModuleConfig = {
     [fnName: string]: IReducerFn;
   };
   computed?: {
-    [retKey: string]: typeof computedFn | IComputedFnDesc;
+    [retKey: string]: typeof computedFn | IComputedFnSimpleDesc;
   };
   watch?: {
-    [retKey: string]: typeof watchFn | WatchFnDesc;
+    // [retKey: string]: typeof watchFn | WatchFnDesc;
+    [retKey: string]: WatchFn | WatchFnDesc;
   };
   init?: <ModuleState>() => Partial<ModuleState>
 }
@@ -818,74 +812,187 @@ export function clearContextIfHot(clearAll?: boolean, warningErrForClearAll?: st
 
 export function run(storeConfig?: StoreConfig | null, runOptions?: RunOptions): void;
 
-export function register<IProps, RootState, ModuleName extends keyof RootState>(
-  registerOptions: String | RegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+export function register<IProps extends IAnyObj = {}>(
+  registerOptions: string,
   ccClassKey?: string,
 ): (ReactComp: typeof Component) => ComponentClass<IProps>;
-export function register<IProps, RootState, ModuleName extends keyof RootState, RefState>(
-  registerOptions: String | RegisterOptions<RootState, ModuleName, RefState>,
+export function register<IProps extends IAnyObj, RootState, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+  ccClassKey?: string,
+): (ReactComp: typeof Component) => ComponentClass<IProps>;
+export function register<IProps extends IAnyObj, RootState, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptions<RootState, ModuleName, RefState>,
   ccClassKey?: string,
 ): (ReactComp: typeof Component) => ComponentClass<IProps>;
 
-//use decide it is RefCtx or RefCtxConnect
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
-  ccClassKey?: string,
-): (renderFn: (
-  props: FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps'] extends Function ?
-    ReturnType<NonNullable<FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps']>> :
-    RefCtx
-) => ReactNode) => ComponentClass<IProps>;
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
-  ccClassKey?: string,
-): (renderFn: (props: FnRegisterOptions<RootState, ModuleName, RefState>['mapProps'] extends Function ?
-  ReturnType<NonNullable<FnRegisterOptions<RootState, ModuleName, RefState>['mapProps']>> :
-  RefCtx
-) => ReactNode) => ComponentClass<IProps>;
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName], RefCtx>,
-  ccClassKey?: string,
-): ComponentClass<IProps>;
-export function registerDumb<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState, RefCtx>,
-  ccClassKey?: string,
-): ComponentClass<IProps>;
 
 
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+export function registerHookComp<IProps, RefCtx extends ICtxBase = ICtxBase>(
+  registerOptions?: string,
   ccClassKey?: string,
-): (renderFn: (
-  props: RegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps'] extends Function ?
-    ReturnType<NonNullable<RegisterOptions<RootState, ModuleName, RootState[ModuleName]>['mapProps']>> :
-    RefCtx
-) => ReactNode) => FC<IProps>;
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
-  ccClassKey?: string,
-): (renderFn: (
-  props: RegisterOptions<RootState, ModuleName, RefState>['mapProps'] extends Function ?
-    ReturnType<NonNullable<RegisterOptions<RootState, ModuleName, RefState>['mapProps']>> :
-    RefCtx
-) => ReactNode) => FC<IProps>;
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RootState[ModuleName], RefCtx>,
+): (renderFn: (props: RefCtx) => ReactNode) => FC<IProps>;
+
+// ********* registerOptions 【包含】render时，直接返回组件 *********
+
+// <<<<<< Start: 有mapProps，命中以下3个函数，render函数的参数类型就是mapProps返回类型
+/** ======  赋默认type，方便定义含render含mapProps的registerOptions参数时，可以缺省泛型来调用 ======*/
+export function registerHookComp<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { mapProps: (refCtx: RefCtx) => T; render: (props: T) => ReactNode },
   ccClassKey?: string,
 ): FC<IProps>;
-export function registerHookComp<IProps, RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: RenderFnRegisterOptions<RootState, ModuleName, RefState, RefCtx>,
+/** ====== 需要约束module, watchedKeys, storedKeys, connect 参数时，传递RootState、ModuleName ======*/
+export function registerHookComp<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { mapProps: (refCtx: RefCtx) => T; render: (props: T) => ReactNode },
   ccClassKey?: string,
 ): FC<IProps>;
+/** ====== 当refState和moduleState不等时，传递第5位泛型参数 ======*/
+export function registerHookComp<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { mapProps: (refCtx: RefCtx) => T; render: (props: T) => ReactNode },
+  ccClassKey?: string,
+): FC<IProps>;
+// >>>>>> End
 
-//use decide it is RefCtx or RefCtxConnect
-export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefState, RefCtx extends ICtxBase>(
-  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RefState>,
+// <<<<<< Start:无mapProps，命中以下3个函数，以下T仅用于占位，实际调用时填写{}，render函数的参数类型就是RefCtx
+/** ======  赋默认type，方便定义含render不含mapProps的registerOptions参数时，可以缺省泛型来调用 ======*/
+export function registerHookComp<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { render: (props: RefCtx) => ReactNode },
+  ccClassKey?: string,
+): FC<IProps>;
+export function registerHookComp<IProps extends IAnyObj, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { render: (props: RefCtx) => ReactNode },
+  ccClassKey?: string,
+): FC<IProps>;
+export function registerHookComp<IProps extends IAnyObj, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { render: (props: RefCtx) => ReactNode },
+  ccClassKey?: string,
+): FC<IProps>;
+// >>>>>> End
+// -----------------------------------------------------------------------------------------------------------------------------------------
+// ********* registerOptions 【不包含】render时，返回一个接收render函数作为参数的函数，由函数返回组件 *********
+// <<<<<< Start: 有mapProps，命中以下3个函数，render函数的参数类型就是mapProps返回类型
+export function registerHookComp<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { mapProps: (refCtx: RefCtx) => T; },
+  ccClassKey?: string,
+): (render: (props: T) => ReactNode) => FC<IProps>;
+export function registerHookComp<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { mapProps: (refCtx: RefCtx) => T; },
+  ccClassKey?: string,
+): (render: (props: T) => ReactNode) => FC<IProps>;
+export function registerHookComp<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { mapProps: (refCtx: RefCtx) => T; },
+  ccClassKey?: string,
+): (render: (props: T) => ReactNode) => FC<IProps>;
+// >>>>>> End
+
+// <<<<<< Start: 无mapProps，命中以下3个函数，以下T仅用于占位，render函数的参数类型就是RefCtx
+export function registerHookComp<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx>,
+  ccClassKey?: string,
+): (render: (props: RefCtx) => ReactNode) => FC<IProps>;
+export function registerHookComp<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]>,
+  ccClassKey?: string,
+): (render: (props: RefCtx) => ReactNode) => FC<IProps>;
+export function registerHookComp<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState>,
+  ccClassKey?: string,
+): (render: (props: RefCtx) => ReactNode) => FC<IProps>;
+// >>>>>> End
+
+
+
+// 除了返回组件是ClassComponent，registerDumb效果和registerHookComp一样
+export function registerDumb<IProps, RefCtx extends ICtxBase = ICtxBase>(
+  registerOptions?: string,
+  ccClassKey?: string,
+): (renderFn: (props: RefCtx) => ReactNode) => ComponentClass<IProps>;
+
+// ********* registerOptions 【包含】render时，直接返回组件 *********
+
+// <<<<<< Start: 有mapProps，命中以下3个函数，render函数的参数类型就是mapProps返回类型
+/** ======  赋默认type，方便定义含render含mapProps的registerOptions参数时，可以缺省泛型来调用 ======*/
+export function registerDumb<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { mapProps: (refCtx: RefCtx) => T; render: (props: T) => ReactNode },
+  ccClassKey?: string,
+): ComponentClass<IProps>;
+/** ====== 需要约束module, watchedKeys, storedKeys, connect 参数时，传递RootState、ModuleName ======*/
+export function registerDumb<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { mapProps: (refCtx: RefCtx) => T; render: (props: T) => ReactNode },
+  ccClassKey?: string,
+): ComponentClass<IProps>;
+/** ====== 当refState和moduleState不等时，传递第5位泛型参数 ======*/
+export function registerDumb<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { mapProps: (refCtx: RefCtx) => T; render: (props: T) => ReactNode },
+  ccClassKey?: string,
+): ComponentClass<IProps>;
+// >>>>>> End
+
+// <<<<<< Start:无mapProps，命中以下3个函数，以下T仅用于占位，实际调用时填写{}，render函数的参数类型就是RefCtx
+/** ======  赋默认type，方便定义含render不含mapProps的registerOptions参数时，可以缺省泛型来调用 ======*/
+export function registerDumb<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { render: (props: RefCtx) => ReactNode },
+  ccClassKey?: string,
+): ComponentClass<IProps>;
+export function registerDumb<IProps extends IAnyObj, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { render: (props: RefCtx) => ReactNode },
+  ccClassKey?: string,
+): ComponentClass<IProps>;
+export function registerDumb<IProps extends IAnyObj, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { render: (props: RefCtx) => ReactNode },
+  ccClassKey?: string,
+): ComponentClass<IProps>;
+// >>>>>> End
+// -----------------------------------------------------------------------------------------------------------------------------------------
+// ********* registerOptions 【不包含】render时，返回一个接收render函数作为参数的函数，由函数返回组件 *********
+// <<<<<< Start: 有mapProps，命中以下3个函数，render函数的参数类型就是mapProps返回类型
+export function registerDumb<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { mapProps: (refCtx: RefCtx) => T; },
+  ccClassKey?: string,
+): (render: (props: T) => ReactNode) => ComponentClass<IProps>;
+export function registerDumb<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { mapProps: (refCtx: RefCtx) => T; },
+  ccClassKey?: string,
+): (render: (props: T) => ReactNode) => ComponentClass<IProps>;
+export function registerDumb<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { mapProps: (refCtx: RefCtx) => T; },
+  ccClassKey?: string,
+): (render: (props: T) => ReactNode) => ComponentClass<IProps>;
+// >>>>>> End
+
+// <<<<<< Start: 无mapProps，命中以下3个函数，以下T仅用于占位，render函数的参数类型就是RefCtx
+export function registerDumb<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase, T = {}>(
+  registerOptions: InnerRegisterCtxBase<RefCtx>,
+  ccClassKey?: string,
+): (render: (props: RefCtx) => ReactNode) => ComponentClass<IProps>;
+export function registerDumb<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]>,
+  ccClassKey?: string,
+): (render: (props: RefCtx) => ReactNode) => ComponentClass<IProps>;
+export function registerDumb<IProps, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState>,
+  ccClassKey?: string,
+): (render: (props: RefCtx) => ReactNode) => ComponentClass<IProps>;
+// >>>>>> End
+
+
+
+// user decide RefCtx type is which one of RefCtx series, default is ICtxBase
+export function useConcent<IProps extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase>(
+  registerOptions?: string,
+  ccClassKey?: string,
+): RefCtx;
+export function useConcent<IProps extends IAnyObj, RefCtx extends ICtxBase, T extends IAnyObj>(
+  // 这里重定义props，覆盖InnerRegisterCtxBase里的props属性，和泛型关联上以便产生类型约束
+  registerOptions: InnerRegisterCtxBase<RefCtx> & { layoutEffect?: boolean, mapProps?: (refCtx: RefCtx) => T; props?: IProps },
   ccClassKey?: string,
 ): RefCtx;
 // when moduleState equal refState
-export function useConcent<RootState extends IRootBase, ModuleName extends keyof RootState, RefCtx extends ICtxBase>(
-  registerOptions: String | FnRegisterOptions<RootState, ModuleName, RootState[ModuleName]>,
+export function useConcent<IProps extends IAnyObj, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RootState[ModuleName]> & { layoutEffect?: boolean, mapProps?: (refCtx: RefCtx) => T; props?: IProps },
+  ccClassKey?: string,
+): RefCtx;
+export function useConcent<IProps extends IAnyObj, RefCtx extends ICtxBase, T, RootState extends IRootBase, ModuleName extends keyof RootState, RefState>(
+  registerOptions: RegisterOptionsCtx<RefCtx, RootState, ModuleName, RefState> & { layoutEffect?: boolean, mapProps?: (refCtx: RefCtx) => T; props?: IProps },
   ccClassKey?: string,
 ): RefCtx;
 
@@ -926,11 +1033,21 @@ export function executeAll(...args: any): void;
 
 export function appendState(moduleName: string, state: IAnyObj): void;
 
-export function defComputed(fn: typeof computedFn, depKeys: string[], compare?: boolean): IComputedFnDesc;
+export function defComputedVal<V>(val: V, compare?: boolean): IComputedFnDesc<GetComputedFn<V>>;
 
-export function defWatch(fn: typeof watchFn, depKeys: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+export function defComputed<F extends IFnCtxBase, T>(fn: (oldVal: any, newVal: any, fnCtx: F) => T, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<T>>;
+export function defComputed<F extends IFnCtxBase, T, V>(fn: (oldVal: V, newVal: V, fnCtx: F) => T, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<T>>;
+
+export function defWatch<F extends IFnCtxBase>(fn: (oldVal: any, newVal: any, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+export function defWatch<F extends IFnCtxBase, V>(fn: (oldVal: V, newVal: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+
+export function defWatchImmediate<F extends IFnCtxBase>(fn: (oldVal: any, newVal: any, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean): WatchFnDesc;
+export function defWatchImmediate<F extends IFnCtxBase, V>(fn: (oldVal: V, newVal: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean): WatchFnDesc;
 
 export declare const cst: CcCst;
+
+export function test<T extends string, U extends number | boolean>(p1: T, p2: U): string;
+export function test<T extends string>(p1: T, p2: string): string;
 
 /**
  * user specify detail type when use
@@ -965,6 +1082,10 @@ declare type DefaultExport = {
   execute: typeof execute,
   executeAll: typeof executeAll,
   appendState: typeof appendState,
+  defComputed: typeof defComputed,
+  defComputedVal: typeof defComputedVal,
+  defWatch: typeof defWatch,
+  defWatchImmediate: typeof defWatchImmediate,
   cst: typeof cst,
 }
 

@@ -42,7 +42,7 @@ export default function (module, computed, append = false, configureDep = true) 
   findDepFnsToExecute(
     d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns,
     moduleState, moduleState, deltaCommittedState, callInfo, true,
-    'computed', '', moduleComputedValue,
+    'computed', CATE_MODULE, moduleComputedValue,
   );
 
 }

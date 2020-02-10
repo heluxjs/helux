@@ -65,7 +65,9 @@ export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
 export const defComputed = (fn, depKeys, compare) => ({ fn, depKeys, compare });
+export const defComputedVal = (val, compare = true) => ({ fn: () => val, depKeys: [], compare });
 export const defWatch = (fn, depKeys, compare, immediate) => ({ fn, depKeys, compare, immediate });
+export const defWatchImmediate = (fn, depKeys, compare) => ({ fn, depKeys, compare, immediate: true });
 
 
 const defaultExport = {
@@ -103,7 +105,9 @@ const defaultExport = {
   useConcent,
   bindCcToMcc,
   defComputed,
+  defComputedVal,
   defWatch,
+  defWatchImmediate,
 }
 
 export function bindCcToMcc(name) {

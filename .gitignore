@@ -1,6 +1,7 @@
 .DS_Store
 **/.DS_Store
 node_modules/
+es/
 
 TODO.md
 ATTENTION.md

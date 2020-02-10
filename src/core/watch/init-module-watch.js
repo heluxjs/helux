@@ -6,7 +6,7 @@ import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { isPlainJsonObject, executeCompOrWatch, makeCommitHandler } = util;
+const { isPlainJsonObject, safeGetObjectFromObject } = util;
 const callInfo = { payload: null, renderKey: '', delay: -1 };
 
 /**
@@ -20,6 +20,7 @@ export default function (module, moduleWatch, append = false) {
 
   const rootWatchDep = ccContext.watch.getRootWatchDep();
   const rootWatchRaw = ccContext.watch.getRootWatchRaw();
+  const rootComputedValue = ccContext.computed.getRootComputedValue();
 
   if (append) {
     const ori = rootWatchRaw[module];
@@ -36,10 +37,12 @@ export default function (module, moduleWatch, append = false) {
   const d = ccContext.getDispatcher();
   const deltaCommittedState = Object.assign({}, moduleState);
   const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
   
   findDepFnsToExecute(
     d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns,
     moduleState, moduleState, deltaCommittedState, callInfo, true,
+    'watch', CATE_MODULE, moduleComputedValue,
   );
 
 }

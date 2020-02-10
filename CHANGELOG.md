@@ -1,3 +1,105 @@
+#### 2020-02-07
+1.5.100 发布
+* feature: `useConcent`的注册参数新增可选参数`layoutEffect`,默认是false，当设置为true时，`concent`使用`useLayoutEffect`来做渲染后的逻辑处理
+* optimize: 完善`defComputedVal`和`defComputed`的类型推导描述
+* optimize: 改善`register`、`registerHookComp`、`registerDumb`、`useConcent`的类型推导描述
+
+#### 2020-02-07
+1.5.99 发布
+* feature: 新增顶层接口`defComputedVal`，用于静态定义computed的初始值
+```js
+// code in models/foo/computed.js
+import { defComputed, defComputedVal } from 'concent';
+
+export oneVal = defComputed(()=> {
+  return 'init value';
+}, []);
+
+// 以上表示定义computed 结果oneVal 初始值为'init value'，因depKeys定义为空数组，初次计算后，再也不会发生变化，可以简写为如下
+export oneVal = defComputedVal('init value');
+```
+
+* feature: `fnCtx`新增接口`commitComp`，用于动态提交computed值，通常用于watch函数里，观察一个值的变化，修改多个computed结果，方便将分散的各个computed函数里的聚合在一起，是否一定要使用依赖具体场景而定
+
+未使用`commitComp`时
+```js
+export oneVal = defComputed((newVal)=> {
+  //因为depKey1值改变重计算oneVal ......
+  if(newVal === 'xxx'){
+    return 'new 1';
+  }else{
+    return 'new new 1';
+  }
+}, ['depKey1']);
+
+export twoVal = defComputed((newVal)=> {
+  // 因为depKey1值改变重计算twoVal ......
+  if(newVal === 'xxx'){
+    return 'new 2';
+  }else{
+    return 'new new 2';
+  }
+}, ['depKey1']);
+
+export threeVal = defComputed((newVal)=> {
+  //因为depKey1值改变重计算threeVal ......
+  if(newVal === 'xxx'){
+    return 'new 3';
+  }else{
+    return 'new new 3';
+  }
+}, ['depKey1']);
+
+```
+
+使用`commitComp`搭配`defComputedVal`
+```js
+// code in models/foo/computed.js
+export oneVal = defComputedVal('new 1');
+export twoVal = defComputedVal('new 2');
+export threeVal = defComputedVal('new 3');
+
+// code in models/foo/watch.js
+export computeDepKey1Assoc = defWatch((newVal, oldVal, fnCtx)=>{
+
+  // 计算oneVal的逻辑略...
+  if(newVal === 'xxx'){
+    fnCtx.commitComp({oneVal:'new 1'});
+  }else{
+    fnCtx.commitComp({oneVal:'new new 1'});
+  }
+
+  // 计算twoVal的逻辑略...
+  if(newVal === 'xxx'){
+    fnCtx.commitComp({twoVal:'new 1'});
+  }else{
+    fnCtx.commitComp({twoVal:'new new 2'});
+  }
+
+  // 计算threeVal的逻辑略...
+  if(newVal === 'xxx'){
+    fnCtx.commitComp({threeVal:'new 3'});
+  }else{
+    fnCtx.commitComp({threeVal:'new new 3'});
+  }
+  
+  }, ['depKey1'], true, true); // 设置第四位参数immediate为true，确保初次就触发计算
+```
+
+* feature: 新增顶层接口`defWatchImmediate`，方便书写直接触发的watch函数
+```js
+// code in models/foo/watch.js
+import { defWatch, defWatchImmediate } from 'concent';
+export const w1 = defWatch(()=>{
+  /** 逻辑略 */
+}, ['depKey'], true, true);
+
+// 等同于写为
+export const w1 = defWatchImmediate(()=>{
+  /** 逻辑略 */
+}, ['depKey']);
+```
+
 #### 2020-0-31
 1.5.98 发布
 * fix: 最新版codesandbox编译Concent报错`ReferenceError: Cannot access 'CcFragment' before initialization`
@@ -44,7 +146,7 @@ class CcFragment extends React.Component {...}
 > 通过给模块状态里修改过的key加版本号来解决此问题，造成无线循环的原因是prevState里和state里某个字段的值始终是不一样的，但是effect回调里触发了修改自己实例的状态，导致effect depKeys一直比较，一直都认为有差异.    
 > effectProps不会有此类问题，因为prevProps是用过就指向最新的props   
 > effect的depKeys如果是自己实例的stateKey也不会出现此问题，因为prevState是用过就指向最新的state
-```
+```js
 const setup = ctx => {
   ctx.effect(()=>{
     const typeList = ctx.globalState.typeList;
@@ -127,7 +229,6 @@ export function foo(){
 *  新增defComputed、defWatch接口定义模块computed和模块watch，支持用一个非stateKey同名的retKey依赖一个stateKey
 ```js
 export function f1(){
-
 }
 
 // 这个效果和 `export function f1`一样，只不过retKey名为myF1

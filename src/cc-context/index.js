@@ -29,11 +29,12 @@ const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}
   findDepFnsToExecute(
     refCtx, module, refModule, moduleState, curDepComputedFns,
     toComputedState, newState, deltaCommittedState, callInfo, false,
-    'computed', '', moduleComputedValue,
+    'computed', CATE_MODULE, moduleComputedValue,
   );
   findDepFnsToExecute(
     refCtx, module, refModule, moduleState, curDepWatchFns,
     toComputedState, newState, deltaCommittedState, callInfo, false,
+    'watch', CATE_MODULE, moduleComputedValue,
   );
 
   okeys(deltaCommittedState).forEach(key => {
@@ -250,7 +251,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.98',
+    version: '1.5.100',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

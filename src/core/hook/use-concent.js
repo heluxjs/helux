@@ -48,7 +48,7 @@ function CcHook(ccHookState, hookSetState, props) {
 //写为具名函数，防止react devtoo里显示.default
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
-  let { state = {}, props = {}, mapProps } = _registerOption;
+  let { state = {}, props = {}, mapProps, layoutEffect = false } = _registerOption;
   if (typeof state === 'function') {
     state = state();
     _registerOption.state = state;
@@ -105,15 +105,16 @@ export default function useConcent(registerOption, ccClassKey){
 
   // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
+  const effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect;
   //after every render
-  React.useEffect(() => {
+  effectHandler(() => {
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       didUpdate(hookRef);
     }
   });
 
   //after first render
-  React.useEffect(() => {// mock componentDidMount
+  effectHandler(() => {// mock componentDidMount
     // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为
     if (hookRef.isFirstRendered === false) {
       // 记录一下丢失的ref，因为上面不再会走buildRefCtx beforeMount流程
