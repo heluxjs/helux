@@ -1039,7 +1039,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.99',
+      version: '1.5.100',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4154,8 +4154,8 @@
 
       var fnNames = _reducerModule_fnNames_[m] || [];
       fnNames.forEach(function (fnName) {
-        reducerObj[fnName] = function (payload, rkey, delay) {
-          return dispatch(m + "/" + fnName, payload, rkey, delay);
+        reducerObj[fnName] = function (payload, rkeyOrOption, delay) {
+          return dispatch(m + "/" + fnName, payload, rkeyOrOption, delay);
         };
       });
     });
@@ -6073,7 +6073,9 @@
         state = _registerOption$state === void 0 ? {} : _registerOption$state,
         _registerOption$props = _registerOption.props,
         props = _registerOption$props === void 0 ? {} : _registerOption$props,
-        mapProps = _registerOption.mapProps;
+        mapProps = _registerOption.mapProps,
+        _registerOption$layou = _registerOption.layoutEffect,
+        layoutEffect = _registerOption$layou === void 0 ? false : _registerOption$layou;
 
     if (typeof state === 'function') {
       state = state();
@@ -6155,16 +6157,17 @@
     refCtx.prevProps = refCtx.props;
     refCtx.props = props;
     hookRef.props = props; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
-    //after every render
 
-    React.useEffect(function () {
+    var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; //after every render
+
+    effectHandler(function () {
       if (!hookRef.isFirstRendered) {
         // mock componentDidUpdate
         didUpdate(hookRef);
       }
     }); //after first render
 
-    React.useEffect(function () {
+    effectHandler(function () {
       // mock componentDidMount
       // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为
       if (hookRef.isFirstRendered === false) {
