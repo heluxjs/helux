@@ -1,3 +1,10 @@
+#### 2020-02-11
+1.5.100 发布
+* optimize: 完善`refCtx.computed`和`refCtx.watch`的类型推导描述，使其可以约束值类型
+* optimize: 新增属性`actionCtx.callerModule`
+* break change: 重命名`fnCtx.commitComp`为`fnCtx.commitCu`
+* break change: 重命名`actionCtx.targetModule`为`actionCtx.module`
+
 #### 2020-02-07
 1.5.100 发布
 * feature: `useConcent`的注册参数新增可选参数`layoutEffect`,默认是false，当设置为true时，`concent`使用`useLayoutEffect`来做渲染后的逻辑处理

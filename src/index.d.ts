@@ -256,8 +256,13 @@ type Rfn<T> = <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx)
  */
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFn: RefComputedFn<IFnCtx, FnReturnType>, depKeys?: string[], compare?: boolean): void;
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean): void;
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, RootState extends IRootBase, ModuleName extends keyof RootState, T extends keyof RootState[ModuleName]>
+  (retKey: T, computedFn: RefComputedValFn<IFnCtx, FnReturnType, RootState[ModuleName][T]>, depKeys?: string[], compare?: boolean): void;
+
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType>(retKey: string, computedFnDesc: { fn: RefComputedFn<IFnCtx, FnReturnType>, depKeys?: string[], compare?: boolean }): void;
 declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, ValType>(retKey: string, computedFnDesc: { fn: RefComputedValFn<IFnCtx, FnReturnType, ValType>, depKeys?: string[], compare?: boolean }): void;
+declare function refCtxComputed<IFnCtx extends IFnCtxBase, FnReturnType, RootState extends IRootBase, ModuleName extends keyof RootState, T extends keyof RootState[ModuleName]>
+  (retKey: T, computedFnDesc: { fn: RefComputedValFn<IFnCtx, FnReturnType, RootState[ModuleName][T]>, depKeys?: string[], compare?: boolean }): void;
 
 // !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
 // !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
@@ -284,6 +289,13 @@ type VorB = void | boolean;
  */
 declare function refCtxWatch<IFnCtx extends IFnCtxBase>(retKey: string, watchFn: RefWatchFn<IFnCtx>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
 declare function refCtxWatch<IFnCtx extends IFnCtxBase, ValType>(retKey: string, watchFn: RefWatchValFn<IFnCtx, ValType>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
+declare function refCtxWatch<IFnCtx extends IFnCtxBase, RootState extends IRootBase, ModuleName extends keyof RootState, T extends keyof RootState[ModuleName]>
+  (retKey: string, watchFn: RefWatchValFn<IFnCtx, RootState[ModuleName][T]>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
+
+declare function refCtxWatch<IFnCtx extends IFnCtxBase>(retKey: string, watchFnDesc: { fn: RefWatchFn<IFnCtx>, depKeys?: string[], compare?: boolean, immediate?: boolean }): void;
+declare function refCtxWatch<IFnCtx extends IFnCtxBase, ValType>(retKey: string, watchFnDesc: { fn: RefWatchValFn<IFnCtx, ValType>, depKeys?: string[], compare?: boolean, immediate?: boolean }): void;
+declare function refCtxWatch<IFnCtx extends IFnCtxBase, RootState extends IRootBase, ModuleName extends keyof RootState, T extends keyof RootState[ModuleName]>
+  (retKey: T, watchFnDesc: { fn: RefWatchValFn<IFnCtx, RootState[ModuleName][T]>, depKeys?: string[], compare?: boolean, immediate?: boolean }): void;
 
 // !!! 写成  <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => VorB 暂时无法约束值类型
 // 先写为如下方式
@@ -633,7 +645,7 @@ export interface IRefCtxRsCon
 
 
 type GetFnCtxCommit<ModuleState> = <PS extends Partial<ModuleState>>(partialState: PS) => void;
-type GetFnCtxCommitComp<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
+type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
 
 // To constrain IFnCtx interface series shape
 export interface IFnCtxBase {
@@ -641,7 +653,7 @@ export interface IFnCtxBase {
   isFirstCall: boolean;
   callInfo: { payload: IAnyObj, renderKey: string, delay: number };
   commit: GetFnCtxCommit<any>;
-  commitComp: GetFnCtxCommitComp<any>;
+  commitCu: GetFnCtxCommitCu<any>;
   setted: string[];
   changed: string[];
   stateModule: string;
@@ -653,7 +665,7 @@ export interface IFnCtxBase {
 // M, means need module associate generic type
 export interface IFnCtxMBase<ModuleName, FullState, Computed> extends IFnCtxBase {
   commit: GetFnCtxCommit<FullState>;// for module computed or watch definition, FullState equivalent ModuleState, Computed equivalent ModuleComputed
-  commitComp: GetFnCtxCommitComp<Computed>;
+  commitCu: GetFnCtxCommitCu<Computed>;
   oldState: FullState;
   refCtx: ICtxMBase<ModuleName>;
 }
@@ -767,7 +779,8 @@ interface RunOptions {
 }
 
 interface IActionCtxBase {
-  targetModule: string | any;
+  callerModule: string;
+  module: string | any;
   committedStateMap: IAnyObj,
   committedState: IAnyObj,
   invoke: typeof refCtxInvoke;
@@ -788,12 +801,12 @@ export interface IActionCtxRef<RefCtx extends ICtxBase> extends IActionCtxBase {
   refCtx: RefCtx;
 }
 export interface IActionCtxM<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu> extends IActionCtxBase {
-  targetModule: ModuleName;
+  module: ModuleName;
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : IAnyObj;
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : IAnyObj;
 }
 export interface IActionCtxMRef<ModuleName extends (keyof RootState | keyof RootCu), RootState, RootCu, RefCtx extends ICtxBase> extends IActionCtxBase {
-  targetModule: ModuleName;
+  module: ModuleName;
   moduleState: ModuleName extends keyof RootState ? RootState[ModuleName] : IAnyObj;
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : IAnyObj;
   refCtx: RefCtx;

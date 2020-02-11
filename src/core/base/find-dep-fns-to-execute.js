@@ -35,9 +35,9 @@ export default (
     if (!pickedFns.length) break;
 
     const { commit, getFnCommittedState } = makeCommitHandler();
-    const { commit: commitComp, getFnCommittedState: getFinalComp } = makeCommitHandler();
+    const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
     pickedFns.forEach(({ retKey, fn, depKeys }) => {
-      const fnCtx = { retKey, callInfo, isFirstCall, commit, commitComp, setted, changed, stateModule, refModule, oldState, committedState: initComputedState, refCtx };
+      const fnCtx = { retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, stateModule, refModule, oldState, committedState: initComputedState, refCtx };
       const computedValueOrRet = executeCompOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
 
       if (fnType === 'computed') {
@@ -54,11 +54,11 @@ export default (
       Object.assign(initDeltaCommittedState, initComputedState);
     }
 
-    const committedComp = getFinalComp();
-    if (committedComp) {
-      okeys(committedComp).forEach(retKey => {
-        if (!retKey_fn_[retKey]) throw new Error(`fnCtx.commitComp commit an invalid retKey[${retKey}]`);
-        setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedComp[retKey])
+    const committedCu = getFinalCu();
+    if (committedCu) {
+      okeys(committedCu).forEach(retKey => {
+        if (!retKey_fn_[retKey]) throw new Error(`fnCtx.commitCu commit an invalid retKey[${retKey}]`);
+        setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedCu[retKey])
       })
     }
 

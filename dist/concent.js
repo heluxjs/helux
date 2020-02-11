@@ -730,8 +730,8 @@
           getFnCommittedState = _makeCommitHandler.getFnCommittedState;
 
       var _makeCommitHandler2 = makeCommitHandler(),
-          commitComp = _makeCommitHandler2.commit,
-          getFinalComp = _makeCommitHandler2.getFnCommittedState;
+          commitCu = _makeCommitHandler2.commit,
+          getFinalCu = _makeCommitHandler2.getFnCommittedState;
 
       pickedFns.forEach(function (_ref) {
         var retKey = _ref.retKey,
@@ -742,7 +742,7 @@
           callInfo: callInfo,
           isFirstCall: isFirstCall,
           commit: commit,
-          commitComp: commitComp,
+          commitCu: commitCu,
           setted: setted,
           changed: changed,
           stateModule: stateModule,
@@ -768,12 +768,12 @@
         Object.assign(initDeltaCommittedState, initComputedState);
       }
 
-      var committedComp = getFinalComp();
+      var committedCu = getFinalCu();
 
-      if (committedComp) {
-        okeys(committedComp).forEach(function (retKey) {
-          if (!retKey_fn_[retKey]) throw new Error("fnCtx.commitComp commit an invalid retKey[" + retKey + "]");
-          setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedComp[retKey]);
+      if (committedCu) {
+        okeys(committedCu).forEach(function (retKey) {
+          if (!retKey_fn_[retKey]) throw new Error("fnCtx.commitCu commit an invalid retKey[" + retKey + "]");
+          setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedCu[retKey]);
         });
       }
 
@@ -1039,7 +1039,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.100',
+      version: '1.5.101',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2014,7 +2014,7 @@
   }
 
   function __invoke(userLogicFn, option, payload) {
-    var targetRef = option.targetRef,
+    var callerRef = option.callerRef,
         delay = option.delay,
         renderKey = option.renderKey,
         calledBy = option.calledBy,
@@ -2024,7 +2024,7 @@
         chainId_depth_ = option.chainId_depth_,
         isSilent = option.isSilent;
     return __promisifiedInvokeWith(userLogicFn, {
-      targetRef: targetRef,
+      callerRef: callerRef,
       context: true,
       module: module,
       calledBy: calledBy,
@@ -2087,7 +2087,7 @@
     };
   } // last param: chainData
 
-  function makeInvokeHandler(targetRef, _temp) {
+  function makeInvokeHandler(callerRef, _temp) {
     var _ref = _temp === void 0 ? {} : _temp,
         chainId = _ref.chainId,
         oriChainId = _ref.oriChainId,
@@ -2122,9 +2122,9 @@
 
       var firstParamType = typeof firstParam;
       var option = {
-        targetRef: targetRef,
+        callerRef: callerRef,
         calledBy: INVOKE,
-        module: targetRef.ctx.module,
+        module: callerRef.ctx.module,
         isSilent: _isSilent,
         chainId: _chainId,
         oriChainId: _oriChainId,
@@ -2172,10 +2172,10 @@
     };
   }
   function invokeWith(userLogicFn, executionContext, payload) {
-    var targetRef = executionContext.targetRef;
-    var _curStateModule = targetRef.ctx.module;
+    var callerRef = executionContext.callerRef;
+    var callerModule = callerRef.ctx.module;
     var _executionContext$mod = executionContext.module,
-        targetModule = _executionContext$mod === void 0 ? _curStateModule : _executionContext$mod,
+        targetModule = _executionContext$mod === void 0 ? callerModule : _executionContext$mod,
         _executionContext$con = executionContext.context,
         context = _executionContext$con === void 0 ? false : _executionContext$con,
         cb = executionContext.cb,
@@ -2191,7 +2191,7 @@
         oriChainId = executionContext.oriChainId,
         chainId_depth_ = executionContext.chainId_depth_,
         isSilent = executionContext.isSilent;
-    isStateModuleValid(targetModule, _curStateModule, cb, function (err, newCb) {
+    isStateModuleValid(targetModule, callerModule, cb, function (err, newCb) {
       if (err) return handleCcFnError(err, __innerCb);
       var moduleState = getState(targetModule);
       var actionContext = {};
@@ -2202,23 +2202,23 @@
         //调用前先加1
         chainId_depth_[chainId] = chainId_depth_[chainId] + 1; // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
 
-        var _dispatch = makeDispatchHandler(targetRef, false, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
+        var _dispatch = makeDispatchHandler(callerRef, false, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
 
-        var silentDispatch = makeDispatchHandler(targetRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
-        var lazyDispatch = makeDispatchHandler(targetRef, true, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[targetRef.ctx.ccClassKey];
+        var silentDispatch = makeDispatchHandler(callerRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
+        var lazyDispatch = makeDispatchHandler(callerRef, true, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
         //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
 
-        var invoke = makeInvokeHandler(targetRef, {
+        var invoke = makeInvokeHandler(callerRef, {
           chainId: chainId,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
         });
-        var lazyInvoke = makeInvokeHandler(targetRef, {
+        var lazyInvoke = makeInvokeHandler(callerRef, {
           isLazy: true,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
         });
-        var silentInvoke = makeInvokeHandler(targetRef, {
+        var silentInvoke = makeInvokeHandler(callerRef, {
           isLazy: false,
           isSilent: true,
           oriChainId: oriChainId,
@@ -2228,8 +2228,10 @@
         var committedStateMap = getAllChainStateMap(chainId) || {};
         var committedState = committedStateMap[targetModule] || {};
         actionContext = {
-          targetModule: targetModule,
+          module: targetModule,
+          callerModule: callerModule,
           committedStateMap: committedStateMap,
+          //一次ref dispatch调用，所经过的所有reducer的返回结果收集
           committedState: committedState,
           invoke: invoke,
           lazyInvoke: lazyInvoke,
@@ -2261,7 +2263,7 @@
           },
           //透传上下文参数给IDispatchOptions
           //!!!指的是调用源cc类实例的ctx
-          refCtx: targetRef.ctx // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
+          refCtx: callerRef.ctx // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
           // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
 
         };
@@ -2337,7 +2339,7 @@
               fnName: fnName,
               delay: delay,
               payload: payload
-            }, targetRef);
+            }, callerRef);
           }
         });
 
@@ -2362,7 +2364,7 @@
   }
   function dispatch(_temp2) {
     var _ref2 = _temp2 === void 0 ? {} : _temp2,
-        targetRef = _ref2.targetRef,
+        callerRef = _ref2.callerRef,
         inputModule = _ref2.module,
         inputReducerModule = _ref2.reducerModule,
         renderKey = _ref2.renderKey,
@@ -2393,7 +2395,7 @@
 
 
     var executionContext = {
-      targetRef: targetRef,
+      callerRef: callerRef,
       module: inputModule,
       reducerModule: inputReducerModule,
       type: type,
@@ -2410,7 +2412,7 @@
     };
     invokeWith(reducerFn, executionContext, payload);
   }
-  function makeDispatchHandler(targetRef, in_isLazy, in_isSilent, defaultModule, defaultReducerModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
+  function makeDispatchHandler(callerRef, in_isLazy, in_isSilent, defaultModule, defaultReducerModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
   ) {
     if (defaultRenderKey === void 0) {
       defaultRenderKey = '';
@@ -2463,7 +2465,7 @@
       var _reducerModule = defaultReducerModule || defaultModule;
 
       var callInvoke = function callInvoke() {
-        var iHandler = makeInvokeHandler(targetRef, {
+        var iHandler = makeInvokeHandler(callerRef, {
           chainId: _chainId,
           oriChainId: _oriChainId,
           isLazy: isLazy,
@@ -2546,7 +2548,7 @@
 
       var p = new Promise(function (resolve, reject) {
         dispatch({
-          targetRef: targetRef,
+          callerRef: callerRef,
           module: _module,
           reducerModule: _reducerModule,
           type: _type,
