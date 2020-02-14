@@ -1,6 +1,6 @@
 
 import * as util from '../../support/util';
-import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC } from '../../support/constant';
+import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_NONE } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import initModuleState from '../state/init-module-state';
@@ -19,6 +19,8 @@ const { isPlainJsonObject, okeys } = util;
 // }
 
 export function configStoreState(storeState) {
+  storeState[MODULE_NONE] = {};//force MODULE_NONE state as {}
+
   if (!isPlainJsonObject(storeState)) {
     throw new Error(`the storeState is not a plain json object!`);
   }

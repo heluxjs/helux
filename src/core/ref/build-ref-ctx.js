@@ -155,6 +155,7 @@ export default function (ref, params, liteLevel = 5) {
     moduleState,
     globalState,
     connectedState,
+    extra: {},
 
     // computed
     refComputed: {},

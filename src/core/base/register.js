@@ -25,6 +25,7 @@ const setupErr = info => new Error('can not defined setup both in register optio
 
 export default function register({
   module = MODULE_DEFAULT,
+  state = {},
   watchedKeys: inputWatchedKeys = '*',
   storedKeys: inputStoredKeys = [],
   setup = null,
@@ -60,7 +61,9 @@ export default function register({
         constructor(props, context) {
           try {
             super(props, context);
-            this.state = this.state || {};
+            const optState = typeof state === 'function' ? state() : state;
+            const thisState = this.state || {};
+            this.state = Object.assign(thisState, optState);
             this.$$attach = this.$$attach.bind(this);
             const ccOption = props.ccOption || { persistStoredKeys };
 

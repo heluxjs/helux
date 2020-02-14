@@ -48,7 +48,7 @@ function CcHook(ccHookState, hookSetState, props) {
 //写为具名函数，防止react devtoo里显示.default
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
-  let { state = {}, props = {}, mapProps, layoutEffect = false } = _registerOption;
+  let { state = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
   if (typeof state === 'function') {
     state = state();
     _registerOption.state = state;
@@ -101,6 +101,7 @@ export default function useConcent(registerOption, ccClassKey){
   const refCtx = hookRef.ctx;
   refCtx.prevProps = refCtx.props;
   refCtx.props = props;
+  refCtx.extra = extra;
   hookRef.props = props;
 
   // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???

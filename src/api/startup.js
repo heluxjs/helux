@@ -29,6 +29,7 @@ export default function ({
   generatorReducer = false,
 } = {}) {
   try {
+    console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
     justTip(`cc version ${ccContext.info.version}`);
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;

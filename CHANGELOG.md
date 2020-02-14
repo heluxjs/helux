@@ -1,5 +1,11 @@
+#### 2020-02-12
+1.5.105 发布
+* feature: 新增`MODULE_NONE`常量，可以让组件连接或者属于一个空模块，该模块任何时候设置状态都是无效的，这样同时方便connectModules可以设置默认值`MODULE_NONE`
+* optimize: 为了适配`stackblitz`ts服务，在package.json里显式的加上types属性(尽管可以不用加)
+* optimize: 优化`refCtx`和`fnCtx`类型，利用默认值减少一些不必要的定义
+
 #### 2020-02-11
-1.5.100 发布
+1.5.101 发布
 * optimize: 完善`refCtx.computed`和`refCtx.watch`的类型推导描述，使其可以约束值类型
 * optimize: 新增属性`actionCtx.callerModule`
 * break change: 重命名`fnCtx.commitComp`为`fnCtx.commitCu`

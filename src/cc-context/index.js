@@ -106,7 +106,6 @@ const ccContext = {
 
     let result = false;
     if (window) {
-      console.log(`%c[[isHotReloadMode]] window.name:${window.name}`, 'color:green;border:1px solid green');
       if (window.webpackHotUpdate
         || window.name === 'previewFrame' //for stackblitz
         || window.__SANDBOX_DATA__ // for codesandbox
@@ -251,7 +250,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.101',
+    version: '1.5.105',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

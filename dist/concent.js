@@ -12,7 +12,9 @@
 
   var MODULE_GLOBAL = '$$global';
   var MODULE_DEFAULT = '$$default';
-  var MODULE_CC = '$$cc';
+  var MODULE_CC = '$$cc'; //do not consider symbol as MODULE_NONE
+
+  var MODULE_NONE = '$$concent_void_module_624313307';
   var MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
   var CC_CLASS_PREFIX = '$$CcClass';
   var CC_FRAGMENT_PREFIX = '$$CcFrag';
@@ -97,6 +99,7 @@
     MODULE_GLOBAL: MODULE_GLOBAL,
     MODULE_DEFAULT: MODULE_DEFAULT,
     MODULE_CC: MODULE_CC,
+    MODULE_NONE: MODULE_NONE,
     MODULE_CC_ROUTER: MODULE_CC_ROUTER,
     CC_CLASS_PREFIX: CC_CLASS_PREFIX,
     CC_FRAGMENT_PREFIX: CC_FRAGMENT_PREFIX,
@@ -905,8 +908,6 @@
       var result = false;
 
       if (window) {
-        console.log("%c[[isHotReloadMode]] window.name:" + window.name, 'color:green;border:1px solid green');
-
         if (window.webpackHotUpdate || window.name === 'previewFrame' //for stackblitz
         || window.__SANDBOX_DATA__ // for codesandbox
         || window.BrowserFS // for codesandbox
@@ -1039,7 +1040,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.101',
+      version: '1.5.105',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3843,6 +3844,7 @@
       moduleState: moduleState,
       globalState: globalState,
       connectedState: connectedState,
+      extra: {},
       // computed
       refComputed: {},
       refConnectedComputed: refConnectedComputed,
@@ -4761,14 +4763,13 @@
     }
   });
 
-  function initModuleState (module, state, moduleStateMustNotDefinedInStore, tag) {
+  function initModuleState (module, mState, moduleStateMustNotDefinedInStore) {
     if (moduleStateMustNotDefinedInStore === void 0) {
       moduleStateMustNotDefinedInStore = true;
     }
 
-    if (tag === void 0) {
-      tag = '';
-    }
+    //force MODULE_NONE state as {}
+    var state = module === MODULE_NONE ? {} : mState;
 
     try {
       checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
@@ -5052,6 +5053,8 @@
   // }
 
   function configStoreState(storeState) {
+    storeState[MODULE_NONE] = {}; //force MODULE_NONE state as {}
+
     if (!isPlainJsonObject$5(storeState)) {
       throw new Error("the storeState is not a plain json object!");
     }
@@ -5345,6 +5348,7 @@
         generatorReducer = _ref$generatorReducer === void 0 ? false : _ref$generatorReducer;
 
     try {
+      console.log("%c window.name:" + window.name, 'color:green;border:1px solid green');
       justTip$1("cc version " + ccContext.info.version);
       ccContext.isHot = isHot;
       ccContext.errorHandler = errorHandler;
@@ -6077,7 +6081,9 @@
         props = _registerOption$props === void 0 ? {} : _registerOption$props,
         mapProps = _registerOption.mapProps,
         _registerOption$layou = _registerOption.layoutEffect,
-        layoutEffect = _registerOption$layou === void 0 ? false : _registerOption$layou;
+        layoutEffect = _registerOption$layou === void 0 ? false : _registerOption$layou,
+        _registerOption$extra = _registerOption.extra,
+        extra = _registerOption$extra === void 0 ? {} : _registerOption$extra;
 
     if (typeof state === 'function') {
       state = state();
@@ -6158,6 +6164,7 @@
     var refCtx = hookRef.ctx;
     refCtx.prevProps = refCtx.props;
     refCtx.props = props;
+    refCtx.extra = extra;
     hookRef.props = props; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
     var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; //after every render
