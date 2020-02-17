@@ -1,12 +1,12 @@
 import ccContext from '../../cc-context';
-import { MODULE_GLOBAL, MODULE_NONE } from '../../support/constant';
+import { MODULE_GLOBAL, MODULE_VOID } from '../../support/constant';
 import * as util from '../../support/util';
 import * as checker from '../checker';
 import guessDuplicate from '../base/guess-duplicate';
 
 export default function (module, mState, moduleStateMustNotDefinedInStore = true) {
-  //force MODULE_NONE state as {}
-  let state = module === MODULE_NONE ? {} : mState;
+  //force MODULE_VOID state as {}
+  let state = module === MODULE_VOID ? {} : mState;
 
   try {
     checker.checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);

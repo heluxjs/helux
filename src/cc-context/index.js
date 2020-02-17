@@ -1,12 +1,13 @@
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
+import moduleName_stateKeys_ from './statekeys-map';
+import computed from './computed-map';
+import { MODULE_GLOBAL, MODULE_CC, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
 
+const { _computedValue } = computed;
 const { okeys } = util;
-
 const refs = {};
-
 const getDispatcher = () => refs[CC_DISPATCHER];
 
 const setStateByModule = (module, committedState, { refCtx = null, callInfo = {} } = {}) => {
@@ -62,22 +63,6 @@ const incStateVer = function (module, key) {
   _stateVer[module][key]++;
 }
 
-const _computedValue = {
-  [MODULE_GLOBAL]: {},
-  [MODULE_DEFAULT]: {},
-  [MODULE_CC]: {},
-};
-const _computedDep = {};
-const _computedRaw = {};
-const computed = {
-  _computedValue,
-  _computedRaw,
-  _computedDep,
-  getRootComputedValue: () => _computedValue,
-  getRootComputedDep: () => _computedDep,
-  getRootComputedRaw: () => _computedRaw,
-};
-
 /** watch section */
 const _watchDep = {};
 const _watchRaw = {};
@@ -98,7 +83,10 @@ function hotReloadWarning(err) {
 /** ccContext section */
 const _state = {};
 const _prevState = {};
-const _stateVer = {};// record state version, to let ref effect avoid endless
+// record state version, to let ref effect avoid endless execute
+// 1 effect里的函数再次出发当前实例渲染，渲染完后检查prevModuleState curModuleState, 对应的key值还是不一样，又再次出发effect，造成死循环
+// 2 确保引用型值是基于原有引用修改某个属性的值时，也能触发effect
+const _stateVer = {};
 const ccContext = {
   getDispatcher,
   isHotReloadMode: function () {
@@ -124,9 +112,6 @@ const ccContext = {
   computedCompare: true,
   watchCompare: true,
   watchImmediate: false,
-  //allow reducer fn be generator function, default is false
-  // why do this, because with co.wrap, chrome's debug breakpoint works not well
-  generatorReducer: false,
   isDebug: false,
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,
@@ -142,8 +127,7 @@ const ccContext = {
   moduleName_ccClassKeys_: {
   },
   // 映射好模块的状态所有key并缓存住，用于提高性能
-  moduleName_stateKeys_: {
-  },
+  moduleName_stateKeys_,
   // 记录模块是不是通过configure配置的
   moduleName_isConfigured_: {
   },
@@ -177,7 +161,6 @@ const ccContext = {
   //store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     appendState: function (module, state) {
-      const moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
       const stateKeys = util.safeGetArrayFromObject(moduleName_stateKeys_, module);
       util.okeys(state).forEach(k => {
         if (!stateKeys.includes(k)) {
@@ -250,7 +233,7 @@ const ccContext = {
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.105',
+    version: '1.5.119',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

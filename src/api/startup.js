@@ -26,7 +26,6 @@ export default function ({
   computedCompare = true, 
   watchCompare = true, 
   watchImmediate = false,
-  generatorReducer = false,
 } = {}) {
   try {
     console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
@@ -39,7 +38,6 @@ export default function ({
     ccContext.computedCompare = computedCompare;
     ccContext.watchCompare = watchCompare;
     ccContext.watchImmediate = watchImmediate;
-    ccContext.generatorReducer = generatorReducer;
 
     const err = makeError(ERR.CC_ALREADY_STARTUP);
     clearContextIfHot(true, err);

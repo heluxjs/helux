@@ -6,7 +6,6 @@ import {
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import co from 'co';
 import catchCcError from '../base/catch-cc-error';
 import {
   getChainId, setChainState, setAllChainState, setAndGetChainStateList, exitChain, getChainStateMap, getAllChainStateMap,
@@ -167,11 +166,11 @@ export function makeCcForceUpdateHandler(ref) {
 }
 
 // last param: chainData
-export function makeInvokeHandler(callerRef, { chainId, oriChainId, isLazy, isSilent = false, chainId_depth_ = {} } = {}) {
+export function makeInvokeHandler(callerRef, { chainId, oriChainId, isLazy, delay = -1, isSilent = false, chainId_depth_ = {} } = {}) {
   return (firstParam, payload, inputRKey, inputDelay) => {
 
     let _isLazy = isLazy, _isSilent = isSilent;
-    let _renderKey = '', _delay = inputDelay;
+    let _renderKey = '', _delay = inputDelay != undefined ? inputDelay : delay;
 
     if (inputRKey && typeof inputRKey === 'object') {
       const { lazy, silent, renderKey, delay } = inputRKey;
@@ -250,21 +249,21 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
       // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
       const dispatch = makeDispatchHandler(
-        callerRef, false, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
+        callerRef, false, isSilent, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
       const silentDispatch = makeDispatchHandler(
-        callerRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
+        callerRef, false, true, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
-        callerRef, true, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_
+        callerRef, true, isSilent, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
 
       // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
 
       //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
-      const invoke = makeInvokeHandler(callerRef, { chainId, oriChainId, chainId_depth_ });
-      const lazyInvoke =  makeInvokeHandler(callerRef, { isLazy: true, oriChainId, chainId_depth_ });
-      const silentInvoke =  makeInvokeHandler(callerRef, { isLazy: false, isSilent:true, oriChainId, chainId_depth_ });
+      const invoke = makeInvokeHandler(callerRef, { delay, chainId, oriChainId, chainId_depth_ });
+      const lazyInvoke =  makeInvokeHandler(callerRef, { isLazy: true, delay, oriChainId, chainId_depth_ });
+      const silentInvoke =  makeInvokeHandler(callerRef, { isLazy: false, delay, isSilent:true, oriChainId, chainId_depth_ });
 
       // 首次调用时是undefined，这里做个保护
       const committedStateMap = getAllChainStateMap(chainId) || {};
@@ -296,7 +295,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         // connectedComputed: sourceClassContext.connectedComputed,
 
         //利用dispatch调用自动生成的setState
-        setState: state => dispatch('setState', state, { silent: isSilent, renderKey, delay }),//透传上下文参数给IDispatchOptions
+        setState: (state) => dispatch('setState', state, { silent: isSilent, renderKey, delay }),//透传上下文参数给IDispatchOptions,
         //!!!指的是调用源cc类实例的ctx
         refCtx: callerRef.ctx,
         // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
@@ -308,13 +307,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
       send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
     }
 
-    let firstStepCall;
-    if (!window.Promise || ccContext.generatorReducer) {
-      firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
-    } else {
-      firstStepCall = new Promise(r => r(userLogicFn(payload, moduleState, actionContext)));
-    }
-
+    const firstStepCall = new Promise(r => r(userLogicFn(payload, moduleState, actionContext)));
     firstStepCall.then(partialState => {
 
       chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1

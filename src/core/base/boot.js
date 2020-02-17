@@ -1,6 +1,6 @@
 
 import * as util from '../../support/util';
-import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_NONE } from '../../support/constant';
+import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_VOID } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import initModuleState from '../state/init-module-state';
@@ -9,7 +9,6 @@ import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
 import { on, clearCbs } from '../plugin';
-import co from 'co';
 
 const { isPlainJsonObject, okeys } = util;
 
@@ -19,7 +18,7 @@ const { isPlainJsonObject, okeys } = util;
 // }
 
 export function configStoreState(storeState) {
-  storeState[MODULE_NONE] = {};//force MODULE_NONE state as {}
+  storeState[MODULE_VOID] = {};//force MODULE_VOID state as {}
 
   if (!isPlainJsonObject(storeState)) {
     throw new Error(`the storeState is not a plain json object!`);
@@ -83,7 +82,7 @@ export function executeRootInit(init) {
     checker.checkModuleName(moduleName, false, `there is no module state defined in store for init.${moduleName}`);
     const initFn = init[moduleName];
     if (initFn) {
-      co(initFn).then(state => {
+      Promise.resolve().then(initFn).then(state => {
         makeSetStateHandler(moduleName)(state)
       });
     }

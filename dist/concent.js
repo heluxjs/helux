@@ -1,10 +1,9 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('co'), require('react'), require('react-dom')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'co', 'react', 'react-dom'], factory) :
-  (factory((global.concent = {}),global.co,global.React,global.ReactDOM));
-}(this, (function (exports,co,React,ReactDOM) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('react-dom')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'react', 'react-dom'], factory) :
+  (factory((global.concent = {}),global.React,global.ReactDOM));
+}(this, (function (exports,React,ReactDOM) { 'use strict';
 
-  co = co && co.hasOwnProperty('default') ? co['default'] : co;
   React = React && React.hasOwnProperty('default') ? React['default'] : React;
   ReactDOM = ReactDOM && ReactDOM.hasOwnProperty('default') ? ReactDOM['default'] : ReactDOM;
 
@@ -12,9 +11,9 @@
 
   var MODULE_GLOBAL = '$$global';
   var MODULE_DEFAULT = '$$default';
-  var MODULE_CC = '$$cc'; //do not consider symbol as MODULE_NONE
+  var MODULE_CC = '$$cc'; //do not consider symbol as MODULE_VOID
 
-  var MODULE_NONE = '$$concent_void_module_624313307';
+  var MODULE_VOID = '$$concent_void_module_624313307';
   var MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
   var CC_CLASS_PREFIX = '$$CcClass';
   var CC_FRAGMENT_PREFIX = '$$CcFrag';
@@ -99,7 +98,7 @@
     MODULE_GLOBAL: MODULE_GLOBAL,
     MODULE_DEFAULT: MODULE_DEFAULT,
     MODULE_CC: MODULE_CC,
-    MODULE_NONE: MODULE_NONE,
+    MODULE_VOID: MODULE_VOID,
     MODULE_CC_ROUTER: MODULE_CC_ROUTER,
     CC_CLASS_PREFIX: CC_CLASS_PREFIX,
     CC_FRAGMENT_PREFIX: CC_FRAGMENT_PREFIX,
@@ -450,22 +449,6 @@
     if (ccns) return window.mcc[ccns];
     return window.cc;
   }
-  function executeCompOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
-    var firstDepKey = depKeys[0];
-    var computedValue;
-
-    if (depKeys.length === 1 && firstDepKey !== '*') {
-      if (firstDepKey !== retKey) {
-        computedValue = fn(newState, oldState, fnCtx);
-      } else {
-        computedValue = fn(newState[firstDepKey], oldState[firstDepKey], fnCtx);
-      }
-    } else {
-      computedValue = fn(newState, oldState, fnCtx);
-    }
-
-    return computedValue;
-  }
   function makeCommitHandler() {
     var state = null;
 
@@ -483,6 +466,33 @@
       getFnCommittedState: getFnCommittedState
     };
   }
+
+  /**
+   * 为避免cc-context文件里调用的方法和自身产生循环引用，将moduleName_stateKeys_单独拆开放置到此文件
+   * 如果还有别的类似循环引用产生，都可以像moduleName_stateKeys_一样单独拆出来放置为一个文件
+   */
+  var moduleName_stateKeys_ = {}; // 映射好模块的状态所有key并缓存住，用于提高性能
+
+  var _computedValue2;
+
+  var _computedValue = (_computedValue2 = {}, _computedValue2[MODULE_GLOBAL] = {}, _computedValue2[MODULE_DEFAULT] = {}, _computedValue2[MODULE_CC] = {}, _computedValue2);
+
+  var _computedDep = {};
+  var _computedRaw = {};
+  var cuMap = {
+    _computedValue: _computedValue,
+    _computedRaw: _computedRaw,
+    _computedDep: _computedDep,
+    getRootComputedValue: function getRootComputedValue() {
+      return _computedValue;
+    },
+    getRootComputedDep: function getRootComputedDep() {
+      return _computedDep;
+    },
+    getRootComputedRaw: function getRootComputedRaw() {
+      return _computedRaw;
+    }
+  };
 
   function getCacheDataContainer() {
     return {
@@ -520,7 +530,6 @@
     var moduleDep = depDesc[stateModule];
     var pickedFns = [];
     if (!moduleDep) return {
-      retKey_fn_: {},
       pickedFns: pickedFns,
       setted: [],
       changed: []
@@ -539,7 +548,6 @@
 
       if (type === 'computed') {
         return {
-          retKey_fn_: retKey_fn_,
           pickedFns: retKeys.map(function (retKey) {
             return _wrapFn(retKey, retKey_fn_);
           }),
@@ -561,7 +569,6 @@
         });
       });
       return {
-        retKey_fn_: retKey_fn_,
         pickedFns: pickedFns,
         setted: _setted,
         changed: _changed
@@ -575,7 +582,6 @@
 
     if (setted.length === 0) {
       return {
-        retKey_fn_: retKey_fn_,
         pickedFns: pickedFns,
         setted: [],
         changed: []
@@ -591,7 +597,6 @@
 
     if (cachedPickedRetKeys) {
       return {
-        retKey_fn_: retKey_fn_,
         pickedFns: cachedPickedRetKeys.map(function (retKey) {
           return _wrapFn(retKey, retKey_fn_);
         }),
@@ -606,7 +611,6 @@
       return v.retKey;
     });
     return {
-      retKey_fn_: retKey_fn_,
       pickedFns: pickedFns,
       setted: setted,
       changed: changed
@@ -714,6 +718,13 @@
     var initComputedState = toComputedState;
     var shouldCurrentRefUpdate = true;
 
+    var _computedDep = cuMap.getRootComputedDep();
+
+    var _computedValue = cuMap.getRootComputedValue();
+
+    var moduleCuDep = _computedDep[stateModule];
+    var moduleCuContainer = _computedValue[stateModule];
+
     var _loop = function _loop() {
       whileCount++; // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
       // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
@@ -721,7 +732,6 @@
       var beforeMountFlag = whileCount === 1 ? isFirstCall : false;
 
       var _finder = finder(initComputedState, beforeMountFlag),
-          retKey_fn_ = _finder.retKey_fn_,
           pickedFns = _finder.pickedFns,
           setted = _finder.setted,
           changed = _finder.changed;
@@ -738,8 +748,7 @@
 
       pickedFns.forEach(function (_ref) {
         var retKey = _ref.retKey,
-            fn = _ref.fn,
-            depKeys = _ref.depKeys;
+            fn = _ref.fn;
         var fnCtx = {
           retKey: retKey,
           callInfo: callInfo,
@@ -754,7 +763,7 @@
           committedState: initComputedState,
           refCtx: refCtx
         };
-        var computedValueOrRet = executeCompOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+        var computedValueOrRet = fn(initNewState, oldState, fnCtx);
 
         if (fnType === 'computed') {
           setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, computedValueOrRet);
@@ -773,10 +782,11 @@
 
       var committedCu = getFinalCu();
 
-      if (committedCu) {
+      if (moduleCuDep && committedCu) {
+        var _moduleCuDep$retKey_f = moduleCuDep.retKey_fn_,
+            retKey_fn_ = _moduleCuDep$retKey_f === void 0 ? {} : _moduleCuDep$retKey_f;
         okeys(committedCu).forEach(function (retKey) {
-          if (!retKey_fn_[retKey]) throw new Error("fnCtx.commitCu commit an invalid retKey[" + retKey + "]");
-          setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedCu[retKey]);
+          if (!retKey_fn_[retKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + retKey + "]");else setComputedVal(sourceType, refModule, stateModule, moduleCuContainer, refConnectedComputed, retKey, committedCu[retKey]);
         });
       }
 
@@ -792,7 +802,8 @@
     return shouldCurrentRefUpdate;
   });
 
-  var _computedValue2, _reducer;
+  var _reducer;
+  var _computedValue$1 = cuMap._computedValue;
   var okeys$1 = okeys;
   var refs = {};
 
@@ -811,8 +822,8 @@
 
     var prevModuleState = _getPrevState(module);
 
-    var moduleComputedValue = _computedValue[module];
-    var rootComputedDep = computed.getRootComputedDep();
+    var moduleComputedValue = _computedValue$1[module];
+    var rootComputedDep = cuMap.getRootComputedDep();
 
     var curDepComputedFns = function curDepComputedFns(committedState, isFirstCall) {
       return pickDepFns(isFirstCall, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
@@ -854,26 +865,8 @@
   var incStateVer = function incStateVer(module, key) {
     _stateVer[module][key]++;
   };
-
-  var _computedValue = (_computedValue2 = {}, _computedValue2[MODULE_GLOBAL] = {}, _computedValue2[MODULE_DEFAULT] = {}, _computedValue2[MODULE_CC] = {}, _computedValue2);
-
-  var _computedDep = {};
-  var _computedRaw = {};
-  var computed = {
-    _computedValue: _computedValue,
-    _computedRaw: _computedRaw,
-    _computedDep: _computedDep,
-    getRootComputedValue: function getRootComputedValue() {
-      return _computedValue;
-    },
-    getRootComputedDep: function getRootComputedDep() {
-      return _computedDep;
-    },
-    getRootComputedRaw: function getRootComputedRaw() {
-      return _computedRaw;
-    }
-  };
   /** watch section */
+
 
   var _watchDep = {};
   var _watchRaw = {};
@@ -898,9 +891,11 @@
 
 
   var _state = {};
-  var _prevState = {};
-  var _stateVer = {}; // record state version, to let ref effect avoid endless
+  var _prevState = {}; // record state version, to let ref effect avoid endless execute
+  // 1 effect里的函数再次出发当前实例渲染，渲染完后检查prevModuleState curModuleState, 对应的key值还是不一样，又再次出发effect，造成死循环
+  // 2 确保引用型值是基于原有引用修改某个属性的值时，也能触发effect
 
+  var _stateVer = {};
   var ccContext = {
     getDispatcher: getDispatcher,
     isHotReloadMode: function isHotReloadMode() {
@@ -926,9 +921,6 @@
     computedCompare: true,
     watchCompare: true,
     watchImmediate: false,
-    //allow reducer fn be generator function, default is false
-    // why do this, because with co.wrap, chrome's debug breakpoint works not well
-    generatorReducer: false,
     isDebug: false,
     // if isStrict is true, every error will be throw out instead of console.error, 
     // but this may crash your app, make sure you have a nice error handling way,
@@ -942,7 +934,7 @@
     moduleSingleClass: {},
     moduleName_ccClassKeys_: {},
     // 映射好模块的状态所有key并缓存住，用于提高性能
-    moduleName_stateKeys_: {},
+    moduleName_stateKeys_: moduleName_stateKeys_,
     // 记录模块是不是通过configure配置的
     moduleName_isConfigured_: {},
     // 记录某个模块作为其他被哪些ccClass连接
@@ -972,7 +964,6 @@
     //store里的setState行为会自动触发模块级别的computed、watch函数
     store: {
       appendState: function appendState(module, state) {
-        var moduleName_stateKeys_ = ccContext.moduleName_stateKeys_;
         var stateKeys = safeGetArrayFromObject(moduleName_stateKeys_, module);
         okeys(state).forEach(function (k) {
           if (!stateKeys.includes(k)) {
@@ -1014,7 +1005,7 @@
       _reducerFnName_fullFnNames_: {},
       _reducerModule_fnNames_: {}
     },
-    computed: computed,
+    computed: cuMap,
     watch: watch,
     refStore: {
       _state: {},
@@ -1040,7 +1031,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.105',
+      version: '1.5.119',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1420,7 +1411,7 @@
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       connectedModuleName_ccClassKeys_ = ccContext.connectedModuleName_ccClassKeys_,
       refStore = ccContext.refStore,
-      moduleName_stateKeys_ = ccContext.moduleName_stateKeys_,
+      moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_,
       ccUkey_ref_ = ccContext.ccUkey_ref_,
       renderKey_ccUkeys_ = ccContext.renderKey_ccUkeys_; //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE
 
@@ -1607,7 +1598,7 @@
   }
 
   function syncCommittedStateToStore(moduleName, committedState, options) {
-    var stateKeys = moduleName_stateKeys_[moduleName]; // extract shared state
+    var stateKeys = moduleName_stateKeys_$1[moduleName]; // extract shared state
 
     var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys, true),
         partialState = _extractStateByKeys3.partialState; // save state to store
@@ -1909,7 +1900,7 @@
       getState = _ccContext$store$1.getState,
       storeSetState = _ccContext$store$1.setState,
       _reducer$1 = ccContext.reducer._reducer,
-      _computedValue$1 = ccContext.computed._computedValue;
+      _computedValue$2 = ccContext.computed._computedValue;
   var me = makeError$2;
   var vbi$1 = verboseInfo$1;
 
@@ -2093,6 +2084,8 @@
         chainId = _ref.chainId,
         oriChainId = _ref.oriChainId,
         isLazy = _ref.isLazy,
+        _ref$delay = _ref.delay,
+        delay = _ref$delay === void 0 ? -1 : _ref$delay,
         _ref$isSilent = _ref.isSilent,
         isSilent = _ref$isSilent === void 0 ? false : _ref$isSilent,
         _ref$chainId_depth_ = _ref.chainId_depth_,
@@ -2101,18 +2094,19 @@
     return function (firstParam, payload, inputRKey, inputDelay) {
       var _isLazy = isLazy,
           _isSilent = isSilent;
+
       var _renderKey = '',
-          _delay = inputDelay;
+          _delay = inputDelay != undefined ? inputDelay : delay;
 
       if (inputRKey && typeof inputRKey === 'object') {
         var lazy = inputRKey.lazy,
             silent = inputRKey.silent,
             renderKey = inputRKey.renderKey,
-            delay = inputRKey.delay;
+            _delay2 = inputRKey.delay;
         lazy !== undefined && (_isLazy = lazy);
         silent !== undefined && (_isSilent = silent);
         renderKey !== undefined && (_renderKey = renderKey);
-        delay !== undefined && (_delay = delay);
+        _delay2 !== undefined && (_delay = _delay2);
       } else {
         _renderKey = inputRKey;
       }
@@ -2203,24 +2197,27 @@
         //调用前先加1
         chainId_depth_[chainId] = chainId_depth_[chainId] + 1; // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
 
-        var _dispatch = makeDispatchHandler(callerRef, false, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
+        var _dispatch = makeDispatchHandler(callerRef, false, isSilent, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_);
 
-        var silentDispatch = makeDispatchHandler(callerRef, false, true, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_);
-        var lazyDispatch = makeDispatchHandler(callerRef, true, isSilent, targetModule, reducerModule, renderKey, -1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
+        var silentDispatch = makeDispatchHandler(callerRef, false, true, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_);
+        var lazyDispatch = makeDispatchHandler(callerRef, true, isSilent, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
         //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
 
         var invoke = makeInvokeHandler(callerRef, {
+          delay: delay,
           chainId: chainId,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
         });
         var lazyInvoke = makeInvokeHandler(callerRef, {
           isLazy: true,
+          delay: delay,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
         });
         var silentInvoke = makeInvokeHandler(callerRef, {
           isLazy: false,
+          delay: delay,
           isSilent: true,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
@@ -2249,7 +2246,7 @@
           //指的是目标模块的state
           moduleState: moduleState,
           //指的是目标模块的的moduleComputed
-          moduleComputed: _computedValue$1[targetModule] || {},
+          moduleComputed: _computedValue$2[targetModule] || {},
           // //!!!指的是调用源cc类的connectedState
           // connectedState: sourceClassContext.connectedState,
           // //!!!指的是调用源cc类的connectedComputed
@@ -2262,7 +2259,7 @@
               delay: delay
             });
           },
-          //透传上下文参数给IDispatchOptions
+          //透传上下文参数给IDispatchOptions,
           //!!!指的是调用源cc类实例的ctx
           refCtx: callerRef.ctx // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
           // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
@@ -2280,16 +2277,9 @@
         });
       }
 
-      var firstStepCall;
-
-      if (!window.Promise || ccContext.generatorReducer) {
-        firstStepCall = co.wrap(userLogicFn)(payload, moduleState, actionContext);
-      } else {
-        firstStepCall = new Promise(function (r) {
-          return r(userLogicFn(payload, moduleState, actionContext));
-        });
-      }
-
+      var firstStepCall = new Promise(function (r) {
+        return r(userLogicFn(payload, moduleState, actionContext));
+      });
       firstStepCall.then(function (partialState) {
         chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
 
@@ -2444,11 +2434,11 @@
         var lazy = userInputRKey.lazy,
             silent = userInputRKey.silent,
             renderKey = userInputRKey.renderKey,
-            _delay2 = userInputRKey.delay;
+            _delay3 = userInputRKey.delay;
         lazy !== undefined && (isLazy = lazy);
         silent !== undefined && (isSilent = silent);
         renderKey !== undefined && (_renderKey = renderKey);
-        _delay2 !== undefined && (_delay = _delay2);
+        _delay3 !== undefined && (_delay = _delay3);
       } else {
         _renderKey = userInputRKey || defaultRenderKey;
       }
@@ -2724,12 +2714,12 @@
     return classKey;
   }
 
-  var moduleName_stateKeys_$1 = ccContext.moduleName_stateKeys_,
+  var moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_,
       moduleName_ccClassKeys_$1 = ccContext.moduleName_ccClassKeys_,
       moduleSingleClass = ccContext.moduleSingleClass,
       ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_,
       connectedModuleName_ccClassKeys_$1 = ccContext.connectedModuleName_ccClassKeys_,
-      _computedValue$2 = ccContext.computed._computedValue;
+      _computedValue$3 = ccContext.computed._computedValue;
   var verifyKeys$1 = verifyKeys,
       me$2 = makeError,
       vbi$2 = verboseInfo;
@@ -2744,7 +2734,7 @@
     var watchedKeys = inputWatchedKeys;
 
     if (inputWatchedKeys === '*') {
-      watchedKeys = moduleName_stateKeys_$1[module];
+      watchedKeys = moduleName_stateKeys_$2[module];
     }
 
     var _verifyKeys = verifyKeys$1(watchedKeys, []),
@@ -2790,7 +2780,7 @@
 
       connectedModuleNames.forEach(function (m) {
         connectedState[m] = _state[m];
-        connectedComputed[m] = _computedValue$2[m];
+        connectedComputed[m] = _computedValue$3[m];
         connectedModule[m] = 1; //记录连接的模块
         //记录当前某个被连接的模块下，有哪些ccClassKeys连接到了此模块，方便broadcastConnectedState之用
 
@@ -2823,7 +2813,7 @@
 
 
     checkModuleName(module, false, "module[" + module + "] is not configured in store");
-    checkStoredKeys(moduleName_stateKeys_$1[module], inputStoredKeys);
+    checkStoredKeys(moduleName_stateKeys_$2[module], inputStoredKeys);
     var _connect = connect;
 
     if (Array.isArray(connect)) {
@@ -3137,7 +3127,7 @@
     getEventItem: getEventItem
   });
 
-  var moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_;
+  var moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_;
   /**
   computed('foo/firstName', ()=>{});
 
@@ -3297,7 +3287,7 @@
       _stateKeys = okeys(confMeta.state);
     } else {
       // 对于属于bar的ref 配置key 'foo/a'时，会走入到此块
-      _stateKeys = moduleName_stateKeys_$2[_module];
+      _stateKeys = moduleName_stateKeys_$3[_module];
 
       if (!_stateKeys) {
         throw makeError(ERR.CC_MODULE_NOT_FOUND, verboseInfo("module[" + _module + "]"));
@@ -3682,7 +3672,7 @@
       ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
       getState$3 = ccContext.store.getState,
       moduleName_ccClassKeys_$2 = ccContext.moduleName_ccClassKeys_,
-      _computedValue$3 = ccContext.computed._computedValue,
+      _computedValue$4 = ccContext.computed._computedValue,
       renderKey_ccUkeys_$1 = ccContext.renderKey_ccUkeys_;
   var okeys$4 = okeys,
       me$4 = makeError,
@@ -3750,8 +3740,8 @@
     var connectedComputed = classCtx.connectedComputed || {};
     var connectedState = classCtx.connectedState || {};
     var moduleState = getState$3(module);
-    var moduleComputed = _computedValue$3[module] || {};
-    var globalComputed = _computedValue$3[MODULE_GLOBAL] || {};
+    var moduleComputed = _computedValue$4[module] || {};
+    var globalComputed = _computedValue$4[MODULE_GLOBAL] || {};
     var globalState = getState$3(MODULE_GLOBAL);
     var refConnectedComputed = {};
     okeys$4(connect).forEach(function (moduleName) {
@@ -4184,7 +4174,7 @@
     triggerComputedAndWatch(ref);
   }
 
-  var moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
+  var moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_,
       _ccContext$store$2 = ccContext.store,
       getPrevState$1 = _ccContext$store$2.getPrevState,
       getState$5 = _ccContext$store$2.getState,
@@ -4263,7 +4253,7 @@
                 continue;
               }
 
-              if (!moduleName_stateKeys_$3[module].includes(unmoduledKey)) {
+              if (!moduleName_stateKeys_$4[module].includes(unmoduledKey)) {
                 justWarning("effect: key[" + key + "] is invalid, its unmoduledKey[" + unmoduledKey + "] " + frag1 + " state!");
                 continue;
               }
@@ -4433,7 +4423,7 @@
     }
   }
 
-  var moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_;
+  var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_;
   var ccClassDisplayName$1 = ccClassDisplayName,
       styleStr$1 = styleStr,
       color$1 = color,
@@ -4454,6 +4444,8 @@
     var _ref = _temp === void 0 ? {} : _temp,
         _ref$module = _ref.module,
         module = _ref$module === void 0 ? MODULE_DEFAULT : _ref$module,
+        _ref$state = _ref.state,
+        state = _ref$state === void 0 ? {} : _ref$state,
         _ref$watchedKeys = _ref.watchedKeys,
         inputWatchedKeys = _ref$watchedKeys === void 0 ? '*' : _ref$watchedKeys,
         _ref$storedKeys = _ref.storedKeys,
@@ -4509,14 +4501,16 @@
 
             try {
               _this = _ToBeExtendedClass.call(this, props, context) || this;
-              _this.state = _this.state || {};
+              var optState = typeof state === 'function' ? state() : state;
+              var thisState = _this.state || {};
+              _this.state = Object.assign(thisState, optState);
               _this.$$attach = _this.$$attach.bind(_assertThisInitialized(_this));
               var ccOption = props.ccOption || {
                 persistStoredKeys: persistStoredKeys
               };
               var declaredState = _this.state;
 
-              var _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_$4[_module], ccOption.storedKeys, inputStoredKeys);
+              var _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_$5[_module], ccOption.storedKeys, inputStoredKeys);
 
               var params = Object.assign({}, props, {
                 isSingle: isSingle,
@@ -4768,8 +4762,8 @@
       moduleStateMustNotDefinedInStore = true;
     }
 
-    //force MODULE_NONE state as {}
-    var state = module === MODULE_NONE ? {} : mState;
+    //force MODULE_VOID state as {}
+    var state = module === MODULE_VOID ? {} : mState;
 
     try {
       checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
@@ -5053,7 +5047,7 @@
   // }
 
   function configStoreState(storeState) {
-    storeState[MODULE_NONE] = {}; //force MODULE_NONE state as {}
+    storeState[MODULE_VOID] = {}; //force MODULE_VOID state as {}
 
     if (!isPlainJsonObject$5(storeState)) {
       throw new Error("the storeState is not a plain json object!");
@@ -5121,7 +5115,7 @@
       var initFn = init[moduleName];
 
       if (initFn) {
-        co(initFn).then(function (state) {
+        Promise.resolve().then(initFn).then(function (state) {
           makeSetStateHandler(moduleName)(state);
         });
       }
@@ -5343,9 +5337,7 @@
         _ref$watchCompare = _ref.watchCompare,
         watchCompare = _ref$watchCompare === void 0 ? true : _ref$watchCompare,
         _ref$watchImmediate = _ref.watchImmediate,
-        watchImmediate = _ref$watchImmediate === void 0 ? false : _ref$watchImmediate,
-        _ref$generatorReducer = _ref.generatorReducer,
-        generatorReducer = _ref$generatorReducer === void 0 ? false : _ref$generatorReducer;
+        watchImmediate = _ref$watchImmediate === void 0 ? false : _ref$watchImmediate;
 
     try {
       console.log("%c window.name:" + window.name, 'color:green;border:1px solid green');
@@ -5358,7 +5350,6 @@
       ccContext.computedCompare = computedCompare;
       ccContext.watchCompare = watchCompare;
       ccContext.watchImmediate = watchImmediate;
-      ccContext.generatorReducer = generatorReducer;
       var err = makeError$4(ERR.CC_ALREADY_STARTUP);
       clearContextIfHot(true, err);
       configModuleSingleClass(moduleSingleClass);
@@ -5534,7 +5525,7 @@
         throw new Error('init value must be a function!');
       }
 
-      co(init).then(function (state) {
+      Promise.resolve().then(init).then(function (state) {
         makeSetStateHandler(module)(state);
       });
     }
@@ -5678,8 +5669,7 @@
         bindCtxToMethod = _option.bindCtxToMethod,
         computedCompare = _option.computedCompare,
         watchCompare = _option.watchCompare,
-        watchImmediate = _option.watchImmediate,
-        generatorReducer = _option.generatorReducer;
+        watchImmediate = _option.watchImmediate;
 
     if (reducer) {
       if (!isPlainJsonObject$7(reducer)) pError('option.reducer');
@@ -5702,8 +5692,7 @@
       bindCtxToMethod: bindCtxToMethod,
       computedCompare: computedCompare,
       watchCompare: watchCompare,
-      watchImmediate: watchImmediate,
-      generatorReducer: generatorReducer
+      watchImmediate: watchImmediate
     });
     startup(startupOption);
   }
@@ -5783,7 +5772,7 @@
 
   var shallowDiffers$2 = shallowDiffers,
       getRegisterOptions$1 = getRegisterOptions;
-  var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_;
+  var moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_;
   var nullSpan = React.createElement('span', {
     style: {
       display: 'none'
@@ -5832,7 +5821,7 @@
       var target_connect = connect; //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb已在外部注册过）
 
       if (props.__$$regDumb !== true) {
-        var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$5[module], ccOption.storedKeys, registerOptions.storedKeys);
+        var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$6[module], ccOption.storedKeys, registerOptions.storedKeys);
 
         var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, _storedKeys, connect, reducerModule, true),
             _reducerModule = _mapRegistrationInfo._reducerModule,
@@ -6033,7 +6022,7 @@
   }
 
   var ccUkey_ref_$3 = ccContext.ccUkey_ref_,
-      moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_;
+      moduleName_stateKeys_$7 = ccContext.moduleName_stateKeys_;
   var refCursor = 1;
   var cursor_refKey_ = {};
 
@@ -6137,7 +6126,7 @@
         persistStoredKeys: persistStoredKeys
       };
 
-      var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$6[_module], ccOption.storedKeys, storedKeys);
+      var _storedKeys = getStoredKeys(state, moduleName_stateKeys_$7[_module], ccOption.storedKeys, storedKeys);
 
       var params = Object.assign({}, _registerOption, {
         module: _module,
@@ -6393,9 +6382,9 @@
 
   var getGlobalState = ccContext.store.getGlobalState;
 
-  var _computedValue$4 = ccContext.computed._computedValue;
+  var _computedValue$5 = ccContext.computed._computedValue;
   var _getComputed = (function (module) {
-    if (module) return _computedValue$4[module];else return _computedValue$4;
+    if (module) return _computedValue$5[module];else return _computedValue$5;
   });
 
   function _emit (event) {

@@ -1,3 +1,78 @@
+#### 2020-02-17
+1.5.119 发布
+* break-change: `refComputed`、`moduleComputed`定义的回调函数始终从`valOfStateKey`变为`state`
+为了方便ts类型约束和传递，同时也为了统一depKeys长度为1和不为1的书写方式
+```
+// before
+function books(newBooks, oldBooks){}
+
+// >=1.5.119
+function books(newState, oldState){}
+// or
+function books({books:newBooks}, {books:oldBooks}){}
+```
+
+#### 2020-02-17
+1.5.118 发布
+* fix: `commitCu`提交参数的目标`computedContainer`错误
+
+#### 2020-02-16
+1.5.117 发布
+* optimize: 调整`IActionCtx`泛型参数顺序
+
+#### 2020-02-16
+1.5.116 发布
+* optimize: 暴露`IActionCtxBase`
+
+#### 2020-02-15
+1.5.115 发布
+* optimize: 优化`IActionCtx`类型描述，添加`setState`方法
+
+#### 2020-02-15
+1.5.114 发布
+* fix: `commitCu`取了refComputedDep的retKey_fn_来参与逻辑
+* optimize: `commitCu`针对不正确的retKey只做警告
+
+#### 2020-02-15
+1.5.113 发布
+* optimize: 新增`CcFragment`类型描述
+* optimize: 新增`ICtxCommon`类型描述，方便快速描述一些属于$$default模块的组件
+
+#### 2020-02-15
+1.5.111 发布
+* optimize: 去掉`generatorReducer`参数配置，去掉`co`依赖，全面拥抱`Promise`
+* optimize: `defComputed`回调的val值类型不再由retKey是否等于firstKey控制，由depKeys和stateKeys联合控制
+```
+// 如下代码位于 models/foo/computed.js
+
+// < 1.5.111
+export const addrValidCount = defComputed((val) => {
+  // list为整个foo模块state，因为retKey 'addrValidCount' 和 depKey 'addrList' 名字不一样
+  return 0;
+}, ["addrList"]);
+
+// >= 1.5.111
+export const addrValidCount = defComputed((list) => {
+  // list为foo模块state.addrList，depKeys长度为1 且'addrList'是foo模块的stateKeys一份子
+  return 0;
+}, ["addrList"]);
+
+```
+
+#### 2020-02-15
+1.5.108 发布
+* optimize: 利用`Exclude<T, U>`改进类型约束
+
+#### 2020-02-15
+1.5.107 发布
+* optimize: 进一步优化`useConcent`、`register`、`registerHookComp`、`registerDumb`的接口类型描述，使其保持一致，并提高对module、state属性是否必需传入的验证
+
+#### 2020-02-14
+1.5.106 发布
+* feature: `register`也支持传入`options.state`，可以是函数或者对象，保持和`useConcent`、`registerHookComp`、`registerDumb`参数一致
+* optimize: 利用条件类型和默认类型参数精简泛型重载函数数量，同时更严格的约束传入的`options`字段和泛型之间的关系
+* refactor: rename MODULE_NONE TO MODULE_VOID
+
 #### 2020-02-12
 1.5.105 发布
 * feature: 新增`MODULE_NONE`常量，可以让组件连接或者属于一个空模块，该模块任何时候设置状态都是无效的，这样同时方便connectModules可以设置默认值`MODULE_NONE`

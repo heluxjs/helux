@@ -49,7 +49,6 @@ export default function (store = {}, option = {}) {
     middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
     autoCreateDispatcher, reducer, bindCtxToMethod,
     computedCompare, watchCompare, watchImmediate,
-    generatorReducer,
   } = option;
 
   if (reducer) {
@@ -67,7 +66,7 @@ export default function (store = {}, option = {}) {
   // merge startupOption
   Object.assign(startupOption, {
     middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, bindCtxToMethod,
-    computedCompare, watchCompare, watchImmediate, generatorReducer,
+    computedCompare, watchCompare, watchImmediate,
   });
 
   startup(startupOption);

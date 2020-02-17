@@ -8,7 +8,6 @@ import initModuleWatch from '../core/watch/init-module-watch';
 import * as checker from '../core/checker';
 import { send } from '../core/plugin';
 import { makeSetStateHandler } from '../core/state/handler-factory';
-import co from 'co';
 
 const ccGlobalStateKeys = ccContext.globalStateKeys;
 const { makeError, verboseInfo, isPlainJsonObject, okeys } = util;
@@ -113,8 +112,8 @@ export default function(module, config, option = {}) {
     if (typeof init !== 'function') {
       throw new Error('init value must be a function!');
     }
-    co(init).then(state => {
-      makeSetStateHandler(module)(state);
+    Promise.resolve().then(init).then(state => {
+      makeSetStateHandler(module)(state)
     });
   }
 

@@ -31,7 +31,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   const moduleDep = depDesc[stateModule];
   const pickedFns = [];
 
-  if (!moduleDep) return { retKey_fn_:{}, pickedFns, setted:[], changed:[] };
+  if (!moduleDep) return { pickedFns, setted:[], changed:[] };
   const { retKey_fn_, stateKey_retKeys_, fnCount } = moduleDep;
 
   /** 首次调用 */
@@ -41,7 +41,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
     const changed = setted;
     if (type === 'computed') {
       return {
-        retKey_fn_, pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_)), setted, changed
+        pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_)), setted, changed
       };
     }
     
@@ -51,14 +51,14 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
       if (immediate) pickedFns.push({ retKey, fn, depKeys });
     });
 
-    return { retKey_fn_, pickedFns, setted, changed };
+    return { pickedFns, setted, changed };
   }
 
   // 这些目标stateKey的值发生了变化
   const { setted, changed } = differStateKeys(oldState, committedState);
 
   if (setted.length === 0) {
-    return { retKey_fn_, pickedFns, setted: [], changed: [] };
+    return { pickedFns, setted: [], changed: [] };
   }
 
   //用setted + changed + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
@@ -71,7 +71,6 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
 
   if (cachedPickedRetKeys) {
     return {
-      retKey_fn_,
       pickedFns: cachedPickedRetKeys.map(retKey => _wrapFn(retKey, retKey_fn_)),
       setted,
       changed,
@@ -81,7 +80,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   _pickFn(pickedFns, setted, changed, retKey_fn_, stateKey_retKeys_, fnCount);
   cachePool[cacheKey] = pickedFns.map(v => v.retKey);
 
-  return { retKey_fn_, pickedFns, setted, changed };
+  return { pickedFns, setted, changed };
 }
 
 

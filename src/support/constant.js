@@ -1,8 +1,8 @@
 export const MODULE_GLOBAL = '$$global';
 export const MODULE_DEFAULT = '$$default';
 export const MODULE_CC = '$$cc';
-//do not consider symbol as MODULE_NONE
-export const MODULE_NONE = '$$concent_void_module_624313307';
+//do not consider symbol as MODULE_VOID
+export const MODULE_VOID = '$$concent_void_module_624313307';
 export const MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
 
 export const CC_CLASS_PREFIX = '$$CcClass';

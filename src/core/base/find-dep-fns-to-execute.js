@@ -1,4 +1,6 @@
-import { executeCompOrWatch, makeCommitHandler, okeys } from '../../support/util';
+import { makeCommitHandler, okeys, justWarning } from '../../support/util';
+import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
+import cuMap from '../../cc-context/computed-map';
 
 function setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, computedValueOrRet) {
   if (sourceType === 'ref') {
@@ -25,20 +27,27 @@ export default (
   let whileCount = 0;
   let initComputedState = toComputedState;
   let shouldCurrentRefUpdate = true;
+  const stateKeys = moduleName_stateKeys_[stateModule];
+
+  // commitCu提交的结果是存到moduleComputed里的，所以这里从_computedDep取retKey_fn_
+  const _computedDep = cuMap.getRootComputedDep();
+  const _computedValue = cuMap.getRootComputedValue();
+  const moduleCuDep = _computedDep[stateModule];
+  const moduleCuContainer = _computedValue[stateModule];
 
   while (initComputedState) {
     whileCount++;
     // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
     // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
     const beforeMountFlag = whileCount === 1 ? isFirstCall : false;
-    const { retKey_fn_, pickedFns, setted, changed } = finder(initComputedState, beforeMountFlag);
+    const { pickedFns, setted, changed } = finder(initComputedState, beforeMountFlag);
     if (!pickedFns.length) break;
 
     const { commit, getFnCommittedState } = makeCommitHandler();
     const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
-    pickedFns.forEach(({ retKey, fn, depKeys }) => {
+    pickedFns.forEach(({ retKey, fn }) => {
       const fnCtx = { retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, stateModule, refModule, oldState, committedState: initComputedState, refCtx };
-      const computedValueOrRet = executeCompOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+      const computedValueOrRet = fn(initNewState, oldState, fnCtx);
 
       if (fnType === 'computed') {
         setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, computedValueOrRet);
@@ -55,10 +64,11 @@ export default (
     }
 
     const committedCu = getFinalCu();
-    if (committedCu) {
+    if (moduleCuDep && committedCu) {
+      const { retKey_fn_ = {} } = moduleCuDep;
       okeys(committedCu).forEach(retKey => {
-        if (!retKey_fn_[retKey]) throw new Error(`fnCtx.commitCu commit an invalid retKey[${retKey}]`);
-        setComputedVal(sourceType, refModule, stateModule, computedContainer, refConnectedComputed, retKey, committedCu[retKey])
+        if (!retKey_fn_[retKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${retKey}]`);
+        else setComputedVal(sourceType, refModule, stateModule, moduleCuContainer, refConnectedComputed, retKey, committedCu[retKey])
       })
     }
 
