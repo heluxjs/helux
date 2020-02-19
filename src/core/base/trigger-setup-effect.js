@@ -6,7 +6,7 @@ const {
   store: { getPrevState, getState, getStateVer }
 } = ccContext;
 
-const frag1 = 'has not been declared in';
+const warn = (key, frag) => util.justWarning(`effect: key[${key}] is invalid, its ${frag} has not been declared in' store!`);
 
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
@@ -61,11 +61,11 @@ export default function (ref, callByDidMount) {
             }
 
             if (!prevState) {
-              util.justWarning(`effect: key[${key}] is invalid, its module[${module}] ${frag1} store!`);
+              warn(key, `module[${module}]`);
               continue;
             }
             if (!moduleName_stateKeys_[module].includes(unmoduledKey)) {
-              util.justWarning(`effect: key[${key}] is invalid, its unmoduledKey[${unmoduledKey}] ${frag1} state!`);
+              warn(key, `unmoduledKey[${unmoduledKey}]`);
               continue;
             }
 

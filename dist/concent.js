@@ -1031,7 +1031,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.119',
+      version: '1.5.125',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3164,6 +3164,7 @@
     if (itype === 'string') {
       var _descObj2, _descObj3;
 
+      // retKey
       if (typeof handler === 'object') _descObj = (_descObj2 = {}, _descObj2[item] = handler, _descObj2);else _descObj = (_descObj3 = {}, _descObj3[item] = {
         fn: handler,
         depKeys: depKeys,
@@ -4179,7 +4180,11 @@
       getPrevState$1 = _ccContext$store$2.getPrevState,
       getState$5 = _ccContext$store$2.getState,
       getStateVer$1 = _ccContext$store$2.getStateVer;
-  var frag1 = 'has not been declared in';
+
+  var warn = function warn(key, frag) {
+    return justWarning("effect: key[" + key + "] is invalid, its " + frag + " has not been declared in' store!");
+  };
+
   function triggerSetupEffect (ref, callByDidMount) {
     var ctx = ref.ctx;
     var _ctx$effectMeta = ctx.effectMeta,
@@ -4249,12 +4254,12 @@
               }
 
               if (!_prevState) {
-                justWarning("effect: key[" + key + "] is invalid, its module[" + module + "] " + frag1 + " store!");
+                warn(key, "module[" + module + "]");
                 continue;
               }
 
               if (!moduleName_stateKeys_$4[module].includes(unmoduledKey)) {
-                justWarning("effect: key[" + key + "] is invalid, its unmoduledKey[" + unmoduledKey + "] " + frag1 + " state!");
+                warn(key, "unmoduledKey[" + unmoduledKey + "]");
                 continue;
               }
 

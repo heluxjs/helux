@@ -167,7 +167,7 @@ export default function (ref, params, liteLevel = 5) {
     moduleReducer: {},
     connectedReducer: {},
     reducer: {},
-    lazyReducer: {},
+    // lazyReducer: {},
 
     //collect mapProps result
     mapped: {},

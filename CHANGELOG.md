@@ -1,3 +1,8 @@
+#### 2020-02-18
+1.5.124 发布
+* optimize: 优化`refCtxDispatch`、`refCtxInvoke`、`refCtxComputed`、`refCtxWatch`类型描述
+新暴露`GetPromiseT`接口反解promise泛型，`refCtxDispatch`和`refCtxInvoke`也利用`GetPromiseT`获得精确的类型
+
 #### 2020-02-17
 1.5.119 发布
 * break-change: `refComputed`、`moduleComputed`定义的回调函数始终从`valOfStateKey`变为`state`

@@ -36,7 +36,7 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
   const itype = typeof item;
 
   let _descObj;
-  if (itype === 'string') {
+  if (itype === 'string') {// retKey
     if (typeof handler === 'object') _descObj = { [item]: handler };
     else _descObj = { [item]: { fn: handler, depKeys, compare, immediate } };
   } else if (itype === 'object') {
