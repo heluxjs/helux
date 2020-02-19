@@ -147,8 +147,8 @@ run({
       }
     },
     computed:{// 【optional】define computed，the function will be triggered when stateKey changed，and the return result will be cached.
-      count(newVal, oldVal){
-        return newVal * 2;
+      count(newState, oldState){
+        return newState.count * 2;
       }
     },
     watch:{// 【optional】define watch，the function will be triggered when stateKey changed，usually for some async tasks
