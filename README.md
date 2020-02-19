@@ -86,11 +86,12 @@ source code see here：https://github.com/fantasticsoul/concent-guid-ts
 * **high performance rendering mechanism**，working based on dependency mark、ref collection and state broadcast，built-in renderKey、lazyDispatch、delayBroadcast feature.。[long list exact upate](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[state batch commit](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[high frequency input&delay broadcast](https://stackblitz.com/edit/concent-delay-broadcast)
 * **clean dom hierarchy**，use reverse inheritance strategy for class component by default, to let your react dom tree keep clean。
 * **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.。
-* **de-centralization model configuration**，except define models in run, user can also call configure api to configure you model definition near your component, that means you can publish your component to npm with model。
+* **de-centralization model configuration**，except for configuring models with `run`, user can also call `configure` api to configure you model definition near your component, that means you can publish your component to npm with your component model。
 * **model clone**，allow user clone new model by existed model, to meet the abstract factory need.。
+* **fullly typescript support**，writting [elegant ts code](https://codesandbox.io/s/concent-guide-ts-zrxd5) with concent is easy.。
 
 ## Use with react router
-Details see here[react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
+Details see here [react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
 
 [react-router-concent online demo](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
 
@@ -123,7 +124,7 @@ $ yarn add concent
 ```
 
 ### A simple Counter demo
-copy the code below to your `src/App.js` file.
+copy the [code](https://stackblitz.com/edit/concent-doc-home-demo-simple) below to your `src/App.js` file.
 - run concent，load model configuration
 ```javascript
 import React, { Component, Fragment } from 'react';
