@@ -95,11 +95,11 @@ Details see here[react-router-concent](https://github.com/concentjs/react-router
 [react-router-concent online demo](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
 
 ## Use with redux-dev-tool
-Details see here[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，track your state changing history。
+Details see here [concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，track your state changing history。
 ![redux-dev-tool](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-eco/cc-pic1.png)
 
 ##  Use with plugin-loading
-Details see here[concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，control all your reducer function's loading status easily。
+Details see here [concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，control all your reducer function's loading status easily。
 
 [concent-plugin-loading online demo](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
@@ -152,8 +152,8 @@ run({
       }
     },
     watch:{// 【optional】define watch，the function will be triggered when stateKey changed，usually for some async tasks
-      count(newVal, oldVal){
-        console.log(`count changed to ${newVal}`);
+      count(newState, oldState){
+        console.log(`count changed from ${oldState.count} to ${newState.count}`);
       }
     },
     init: async ()=>{//【optional】async state init process, attention this process has nothing to do with whether the component is mounted or not, but the result can effect all the components belong to this module.
