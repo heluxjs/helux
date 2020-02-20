@@ -213,6 +213,8 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
 
 - register a normal react component as cc component
 ```jsx
+// register normal component Counter as concent component which belong to module 'counter'
+@register('counter')
 class Counter extends Component {
   //setState can commit state to store, and broadcast state to other refs
   inc = () => {
@@ -263,7 +265,7 @@ const UI = ({count, inc, dec, incD, decD})=>{
     );
 }
 
-//define setup，it will only been executed on time before first render, usually for defining some apis, the use can get them from ctx.settings.
+//define setup，it will only been executed before first render, usually for defining some effects or return methods, then user can get them from ctx.settings.
 const setup = ctx=>{
   const inc = () => {
     ctx.setState({ count: ctx.state.count + 1 });
@@ -280,7 +282,7 @@ const setup = ctx=>{
   return {inc, dec, incD, decD};
 }
 
-// [optional]defien mapProps，this function will been excuted before every render, the return result will pass to component props
+// [optional]define mapProps，this function will been excuted before every render, the return result will pass to component props
 // if you don't define mapProps，the props will be ctx, code may like this: const UI = ctx => <div>ui</div>
 const mapProps = ctx=>{
   return {count:ctx.state.count, ...ctx.settings};
