@@ -245,8 +245,6 @@ class Counter extends Component {
     );
   }
 }
-//register Counter class as CcClazzCounter which belong to module counter
-const CcClazzCounter = register('counter')(Counter);
 ```
 - register as cc component base on renderProps
 ```jsx
