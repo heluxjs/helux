@@ -86,20 +86,21 @@ source code see here：https://github.com/fantasticsoul/concent-guid-ts
 * **high performance rendering mechanism**，working based on dependency mark、ref collection and state broadcast，built-in renderKey、lazyDispatch、delayBroadcast feature.。[long list exact upate](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[state batch commit](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[high frequency input&delay broadcast](https://stackblitz.com/edit/concent-delay-broadcast)
 * **clean dom hierarchy**，use reverse inheritance strategy for class component by default, to let your react dom tree keep clean。
 * **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.。
-* **de-centralization model configuration**，except define models in run, user can also call configure api to configure you model definition near your component, that means you can publish your component to npm with model。
+* **de-centralization model configuration**，except for configuring models with `run`, user can also call `configure` api to configure you model definition near your component, that means you can publish your component to npm with your component model。
 * **model clone**，allow user clone new model by existed model, to meet the abstract factory need.。
+* **fullly typescript support**，writting [elegant ts code](https://codesandbox.io/s/concent-guide-ts-zrxd5) with concent is easy.。
 
 ## Use with react router
-Details see here[react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
+Details see here [react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
 
 [react-router-concent online demo](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
 
 ## Use with redux-dev-tool
-Details see here[concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，track your state changing history。
+Details see here [concent-plugin-redux-devtool](https://github.com/concentjs/concent-plugin-redux-devtool)，track your state changing history。
 ![redux-dev-tool](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-eco/cc-pic1.png)
 
 ##  Use with plugin-loading
-Details see here[concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，control all your reducer function's loading status easily。
+Details see here [concent-plugin-loading](https://github.com/concentjs/concent-plugin-loading)，control all your reducer function's loading status easily。
 
 [concent-plugin-loading online demo](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
@@ -123,7 +124,7 @@ $ yarn add concent
 ```
 
 ### A simple Counter demo
-copy the code below to your `src/App.js` file.
+copy the [code](https://stackblitz.com/edit/concent-doc-home-demo-simple) below to your `src/App.js` file.
 - run concent，load model configuration
 ```javascript
 import React, { Component, Fragment } from 'react';
@@ -147,13 +148,13 @@ run({
       }
     },
     computed:{// 【optional】define computed，the function will be triggered when stateKey changed，and the return result will be cached.
-      count(newVal, oldVal){
-        return newVal * 2;
+      count(newState, oldState){
+        return newState.count * 2;
       }
     },
     watch:{// 【optional】define watch，the function will be triggered when stateKey changed，usually for some async tasks
-      count(newVal, oldVal){
-        console.log(`count changed to ${newVal}`);
+      count(newState, oldState){
+        console.log(`count changed from ${oldState.count} to ${newState.count}`);
       }
     },
     init: async ()=>{//【optional】async state init process, attention this process has nothing to do with whether the component is mounted or not, but the result can effect all the components belong to this module.
@@ -212,6 +213,8 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
 
 - register a normal react component as cc component
 ```jsx
+// register normal component Counter as concent component which belong to module 'counter'
+@register('counter')
 class Counter extends Component {
   //setState can commit state to store, and broadcast state to other refs
   inc = () => {
@@ -242,8 +245,6 @@ class Counter extends Component {
     );
   }
 }
-//register Counter class as CcClazzCounter which belong to module counter
-const CcClazzCounter = register('counter')(Counter);
 ```
 - register as cc component base on renderProps
 ```jsx
@@ -262,7 +263,7 @@ const UI = ({count, inc, dec, incD, decD})=>{
     );
 }
 
-//define setup，it will only been executed on time before first render, usually for defining some apis, the use can get them from ctx.settings.
+//define setup，it will only been executed before first render, usually for defining some effects or return methods, then user can get them from ctx.settings.
 const setup = ctx=>{
   const inc = () => {
     ctx.setState({ count: ctx.state.count + 1 });
@@ -279,7 +280,7 @@ const setup = ctx=>{
   return {inc, dec, incD, decD};
 }
 
-// [optional]defien mapProps，this function will been excuted before every render, the return result will pass to component props
+// [optional]define mapProps，this function will been excuted before every render, the return result will pass to component props
 // if you don't define mapProps，the props will be ctx, code may like this: const UI = ctx => <div>ui</div>
 const mapProps = ctx=>{
   return {count:ctx.state.count, ...ctx.settings};
