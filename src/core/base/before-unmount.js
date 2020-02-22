@@ -18,7 +18,7 @@ export default function (ref) {
     if (typeof cb === 'function') cb(ctx);
   });
 
-  const { ccUniqueKey, ccClassKey, ccOption } = ctx;
+  const { ccUniqueKey, ccClassKey, renderKey } = ctx;
   ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
-  unsetRef(ccClassKey, ccUniqueKey, ccOption.renderKey);
+  unsetRef(ccClassKey, ccUniqueKey, renderKey);
 }

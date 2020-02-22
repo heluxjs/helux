@@ -1,3 +1,40 @@
+#### 2020-02-19
+1.5.149 发布
+* optimize: 简化configure, 不再允许传入option参数配置global相关的东西
+* optimize: 下沉getStoredKeys逻辑至buildRefCtx
+* optimize: 删除cc.call接口(后续迁移到concent-ext-call)
+* optimize: 精简constant文件描述
+* optimize: 重构`commit`和`commitCu`逻辑,现支持depKeys里定义多个模块的stateKey
+实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
+实例computed回调里调用committedCu调用提交到refComputed结果容器，模块computed回调里调用committedCu调用提交到moduleComputed结果容器
+* optimize: 删除refConnectedComputed
+
+#### 2020-02-19
+1.5.126 发布
+* feature: 限制`commitCu`提交的computed结果范围，即在模块computed&watch里调用`commitCu`，提交的结果是提到moduleComputed结果容器里，而在实例computed&watch里调用`commitCu`，提交的结果是提到refComputed结果容器里
+```js
+//code in models/foo/watch.js
+export const retKey1 = defWatch((_, __, fnCtx)=>{
+  fnCtx.commitCu({bookCount:10});//提交到moduleComputed
+}, ['books']);
+```
+
+```js
+//  code in pages/SomeComp.js belong to book module, connect foo and bar modules;
+const setup = ctx=>{
+  ctx.computed('bookCount', ()=>10);
+
+  ctx.watch('retKey1', (_, __, fnCtx)=>{
+    fnCtx.commitCu({bookCount:10});//提交到refComputed
+  }, ['books']);
+
+  ctx.watch('retKey2', (_, __, fnCtx)=>{
+    fnCtx.commitCu({'bookCount':10});//提交到refComputed
+  }, ['foo/books', 'bar/books']);
+}
+```
+* optimize: 优化内部`extractByStateKeys`效率
+
 #### 2020-02-18
 1.5.124 发布
 * optimize: 优化`refCtxDispatch`、`refCtxInvoke`、`refCtxComputed`、`refCtxWatch`类型描述

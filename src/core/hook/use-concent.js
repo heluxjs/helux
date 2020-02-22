@@ -7,11 +7,10 @@ import beforeMount from '../base/before-mount';
 import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
-import getStoredKeys from '../base/get-stored-keys';
 import { isPlainJsonObject, getRegisterOptions } from '../../support/util';
 import setRef from '../ref/set-ref';
 
-const { ccUkey_ref_, moduleName_stateKeys_ } = ccContext;
+const { ccUkey_ref_ } = ccContext;
 
 let refCursor = 1;
 const cursor_refKey_ = {};
@@ -49,9 +48,10 @@ function CcHook(ccHookState, hookSetState, props) {
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
   let { state = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
+  let privState = state;
   if (typeof state === 'function') {
-    state = state();
-    _registerOption.state = state;
+    privState = state();
+    _registerOption.state = privState;
   }
 
   const reactUseState = React.useState;
@@ -69,7 +69,7 @@ export default function useConcent(registerOption, ccClassKey){
   if (isFirstRendered) {
     const {
       renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys = [],
-      persistStoredKeys, connect = {}, setup, lite,
+      connect = {}, setup, lite,
     } = _registerOption;
 
     incCursor();
@@ -78,11 +78,9 @@ export default function useConcent(registerOption, ccClassKey){
     );
     hookRef = new CcHook(ccHookState, hookSetState, props);
 
-    const ccOption = props.ccOption || { persistStoredKeys };
-    const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[_module], ccOption.storedKeys, storedKeys);
     const params = Object.assign({}, _registerOption, {
-      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, type: CC_HOOK_PREFIX,
-      ccClassKey: _ccClassKey, connect: _connect, ccOption, storedKeys: _storedKeys,
+      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, state: privState, type: CC_HOOK_PREFIX,
+      ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
     });
 
     buildRefCtx(hookRef, params, lite);

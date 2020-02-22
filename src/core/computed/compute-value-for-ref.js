@@ -8,7 +8,7 @@ export default function (refCtx, stateModule, oldState, committedState, callInfo
   const deltaCommittedState = Object.assign({}, committedState);
 
   if (!refCtx.hasComputedFn) return deltaCommittedState;
-  const { computedDep, module: refModule, refComputed, refConnectedComputed, ccUniqueKey } = refCtx;
+  const { computedDep, module: refModule, refComputed, ccUniqueKey } = refCtx;
   // const moduleState = ccContext.store.getState(stateModule);
   const newState = Object.assign({}, oldState, committedState);
 
@@ -17,7 +17,7 @@ export default function (refCtx, stateModule, oldState, committedState, callInfo
   findDepFnsToExecute(
     refCtx, stateModule, refModule, oldState, curDepComputedFns,
     committedState, newState, deltaCommittedState, callInfo, isBeforeMount,
-    'computed', CATE_REF, refComputed, refConnectedComputed,
+    'computed', CATE_REF, refComputed,
   );
 
   if (autoMergeDeltaToCommitted) {

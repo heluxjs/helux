@@ -28,7 +28,7 @@ export function clearCachedData(){
 // cate module | ref
 // type computed | watch
 export default function (isBeforeMount, cate, type, depDesc, stateModule, oldState, committedState, cUkey) {
-  const moduleDep = depDesc[stateModule];
+  const moduleDep = depDesc[stateModule];// it can be refModuleDep or moduleDep
   const pickedFns = [];
 
   if (!moduleDep) return { pickedFns, setted:[], changed:[] };

@@ -1,5 +1,6 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
+import { NOT_A_JSON } from '../../support/priv-constant';
 
 const { okeys, isPlainJsonObject } = util;
 const { store: { _state } } = ccContext;
@@ -9,7 +10,7 @@ const { store: { _state } } = ccContext;
  */
 export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) {
   if (!isPlainJsonObject(connectSpec)) {
-    throw new Error(`CcFragment or CcClass's prop connect type error, it is not a plain json object`);
+    throw new Error(`CcFragment or CcClass's prop connect type error, it ${NOT_A_JSON}`);
   }
 
   const invalidConnect = `CcFragment or CcClass's prop connect is invalid,`;

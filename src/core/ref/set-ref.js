@@ -3,11 +3,12 @@ import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
 const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
+const { runtimeVar, ccClassKey_ccClassContext_, ccUkey_ref_ } = ccContext;
 const ccUKey_insCount = {};
 
 function setCcInstanceRef(ccUniqueKey, ref, ccKeys, delayMs) {
   function setRef() {
-    ccContext.ccUkey_ref_[ccUniqueKey] = ref;
+    ccUkey_ref_[ccUniqueKey] = ref;
     ccKeys.push(ccUniqueKey);
   }
   incCcKeyInsCount(ccUniqueKey);
@@ -33,24 +34,28 @@ export function getCcKeyInsCount(ccUniqueKey) {
 
 
 export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
-  const classContext = ccContext.ccClassKey_ccClassContext_[ccClassKey];
+  const classContext = ccClassKey_ccClassContext_[ccClassKey];
   const ccKeys = classContext.ccKeys;
-  if (ccContext.isDebug) {
+  if (runtimeVar.isDebug) {
     console.log(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
   }
 
   const isHot = ccContext.isHotReloadMode();
   if (ccKeys.includes(ccUniqueKey)) {
     if (isHot) {
+      const dupErr = () => {
+        throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
+      }
+
       // get existed ins count
       const insCount = getCcKeyInsCount(ccUniqueKey);
       if (isSingle && insCount > 0) throw me(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi(`ccClass:${ccClassKey}`));
       if (insCount > 1) {// now cc can make sure the ccKey duplicate
-        throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
+        dupErr();
       }
       // just warning
       justWarning(`
-        found ccKey ${ccKey} may duplicate, but now is in hot reload mode, cc can't throw the error, please make sure your ccKey is unique manually,
+        found ccKey[${ccKey}] duplicated in hot reload mode, please make sure your ccKey is unique manually,
         ${vbi(`ccClassKey:${ccClassKey} ccKey:${ccKey} ccUniqueKey:${ccUniqueKey}`)}
       `);
 
@@ -60,7 +65,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
       // so cc set ref later
       setCcInstanceRef(ccUniqueKey, ref, ccKeys, 600);
     } else {
-      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:[${ccClassKey}],ccKey:[${ccUniqueKey}]`));
+      dupErr();
     }
   } else {
     setCcInstanceRef(ccUniqueKey, ref, ccKeys);

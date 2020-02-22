@@ -12,11 +12,13 @@ import getDefineWatchHandler from '../watch/get-define-watch-handler';
 import getDefineComputedHandler from '../computed/get-define-computed-handler';
 import computeCcUniqueKey from '../base/compute-cc-unique-key';
 import getOutProps from '../base/get-out-props';
+import getStoredKeys from '../base/get-stored-keys';
 import __sync from '../base/sync';
 
 const {
   refStore,
   ccClassKey_ccClassContext_,
+  moduleName_stateKeys_,
   store: { getState },
   moduleName_ccClassKeys_,
   computed: { _computedValue },
@@ -41,32 +43,34 @@ export default function (ref, params, liteLevel = 5) {
   const reactSetState = ref.setState.bind(ref);
   const reactForceUpdate = ref.forceUpdate.bind(ref);
 
+  // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
     isSingle, ccClassKey, ccKey = '', module, reducerModule, type,
-    state = {}, storedKeys, watchedKeys, connect = {}, tag, ccOption,
+    state, storedKeys = [], persistStoredKeys = false, watchedKeys, connect = {}, tag = '', ccOption = {},
   } = params;
   reducerModule = reducerModule || module;
   const stateModule = module;
+
+  const refOption = {};
+  refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined ? persistStoredKeys : ccOption.persistStoredKeys;
+  refOption.tag = ccOption.tag || tag;
+
+  // pick ref defined tag first, register tag second
+  const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
+  refOption.renderKey = ccOption.renderKey || ccUniqueKey;// 没有设定renderKey的话，默认ccUniqueKey就是renderKey
+  const ccUkeys = safeGetArrayFromObject(renderKey_ccUkeys_, refOption.renderKey);
+  ccUkeys.push(ccUniqueKey);
+
+  refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_[stateModule], ccOption.storedKeys, storedKeys);
 
   //用户使用ccKey属性的话，必需显示的指定ccClassKey
   if (ccKey && !ccClassKey) {
     throw new Error(`missing ccClassKey while init a cc ins with ccKey[${ccKey}]`);
   }
 
-  let _storedKeys = [];
-  if (storedKeys !== undefined && storedKeys.length > 0) {
+  if (refOption.storedKeys.length > 0) {
     if (!ccKey) throw me(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi(`ccClassKey[${ccClassKey}]`));
-    _storedKeys = storedKeys;
   }
-
-  // pick ref defined tag first, register tag second
-  const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, ccOption.tag || tag);
-
-  // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
-  let renderKey = ccOption.renderKey;
-  if (!renderKey) renderKey = ccOption.renderKey = ccUniqueKey;
-  const ccUkeys = safeGetArrayFromObject(renderKey_ccUkeys_, renderKey);
-  ccUkeys.push(ccUniqueKey);
 
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
   const connectedComputed = classCtx.connectedComputed || {};
@@ -75,10 +79,9 @@ export default function (ref, params, liteLevel = 5) {
   const moduleComputed = _computedValue[module] || {};
   const globalComputed = _computedValue[MODULE_GLOBAL] || {};
   const globalState = getState(MODULE_GLOBAL);
-  const refConnectedComputed = {};
-  okeys(connect).forEach(moduleName => {
-    refConnectedComputed[moduleName] = {};
-  });
+
+  // extract privStateKeys
+  const privStateKeys = util.removeArrElements(okeys(state), moduleName_stateKeys_[stateModule]);
 
   // recover ref state
   let refStoredState = refStore._state[ccUniqueKey] || {};
@@ -140,10 +143,14 @@ export default function (ref, params, liteLevel = 5) {
     ccUniqueKey,
     renderCount: 1,
     initTime: Date.now(),
-    storedKeys: _storedKeys,
     watchedKeys,
+    privStateKeys,
     connect,
-    ccOption,
+    
+    persistStoredKeys: refOption.persistStoredKeys,
+    storedKeys: refOption.storedKeys,
+    renderKey: refOption.renderKey,
+    tag: refOption.tag,
 
     prevProps: props,
     props,
@@ -159,7 +166,6 @@ export default function (ref, params, liteLevel = 5) {
 
     // computed
     refComputed: {},
-    refConnectedComputed,
     moduleComputed,
     globalComputed,
     connectedComputed,
@@ -167,7 +173,6 @@ export default function (ref, params, liteLevel = 5) {
     moduleReducer: {},
     connectedReducer: {},
     reducer: {},
-    // lazyReducer: {},
 
     //collect mapProps result
     mapped: {},
@@ -177,7 +182,9 @@ export default function (ref, params, liteLevel = 5) {
     stateKeys,
     onEvents,
     computedDep,
+    computedRetKeyFns: {},//不按模块分类，映射的cuRetKey_fn_
     watchDep,
+    watchRetKeyFns: {},//不按模块分类，映射的watchRetKey_fn_
     execute: null,
     auxMap,// auxiliary method map
     effectMeta,

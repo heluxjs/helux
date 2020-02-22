@@ -1,9 +1,6 @@
 
-import { ERR_MESSAGE, MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT } from './constant';
-
-export function bindThis(_this, methods) {
-  methods.forEach(method => _this[method] = _this[method].bind(_this));
-}
+import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
+import runtimeVar from '../cc-context/runtime-var';
 
 export function isValueNotNull(value) {
   return !(value === null || value === undefined);
@@ -35,24 +32,6 @@ export function isPlainJsonObject(obj, canBeArray = false) {
     return true;
   } else {
     return false;
-  }
-}
-
-export function isPrefixedKeyValid(key) {
-  const slashCount = key.split('').filter(v => v === '/').length;
-  if (slashCount === 1) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-export function isActionTypeValid(type) {
-  if (typeof type !== 'string') {
-    return false
-  } else {
-    if (type.length === 0) return false;
-    else return true;
   }
 }
 
@@ -107,63 +86,8 @@ export function isModuleStateValid(state) {
   return isPlainJsonObject(state);
 }
 
-export function verifyNamespacedActionType(actionType, allowSlashCountZero = true) {
-  const isOk = /^[\$\#\/\&a-zA-Z0-9_-]+$/.test(actionType);
-  if (isOk) {
-    const charArr = actionType.split('');
-    let slashCount = charArr.filter(char => char === '/').length;
-    if (slashCount !== 1) {
-      if (slashCount === 0) {
-        if (allowSlashCountZero) return true;
-        else return false;
-      } else {
-        return false
-      }
-    } else {
-      if (charArr[0] === '/' || charArr[charArr.length - 1] === '/') {
-        return false
-      } else {
-        return true;
-      }
-    }
-  } else {
-    return false;
-  }
-}
-
-// todo, modify verify rule
-export function isCcOptionValid(ccOption) {
-  return isPlainJsonObject(ccOption);
-}
-
-export function isCcActionValid(action) {
-  let errMessage = '';
-  if (!action) {
-    errMessage = 'trying to dispatch an null action is meaningless!';
-  } else {
-    // const { type, payload } = action;
-    const { type } = action;
-    if (!isActionTypeValid(type)) {
-      errMessage += 'action type must be string and length must LTE 1! ';
-    }
-    // if (!isPlainJsonObject(payload, true)) {
-    //   errMessage += 'payload must be a plain json object! ';
-    // }
-  }
-  return errMessage;
-}
-
-export function disassembleActionType(namespacedActionType) {
-  if (namespacedActionType.includes('/')) {
-    const [moduleName, actionType] = namespacedActionType.split('/');
-    return { moduleName, actionType };
-  } else {
-    return { moduleName: MODULE_GLOBAL, actionType: namespacedActionType }
-  }
-}
-
 export function verboseInfo(info) {
-  return ` --verbose-info: ${info}`;
+  return info ? ` --verbose-info: ${info}` : '';
 }
 
 export function ccClassDisplayName(className) {
@@ -201,19 +125,6 @@ export function verifyKeys(keys1, keys2) {
   return { duplicate, notArray, keyElementNotString };
 }
 
-export function getDupKeys(arr1, arr2) {
-  const keys1 = okeys(arr1);
-  const keys2 = okeys(arr2);
-  let longer = keys2, shorter = keys1;
-  if (keys1.length > keys2.length) {
-    longer = keys1;
-    shorter = keys2;
-  }
-  const dupKeys = [];
-  shorter.forEach(k => longer.includes(k) && dupKeys.push(k));
-  return dupKeys;
-}
-
 export function color(color = 'green') {
   return `color:${color};border:1px solid ${color}`;
 }
@@ -222,8 +133,9 @@ export function styleStr(str) {
   return `%c${str}`;
 }
 
+const tipStart = (str) => `------------ CC ${str} ------------`;
 export function justWarning(err) {
-  console.error(' ------------ CC WARNING ------------');
+  console.error(tipStart('WARNING'));
   if (err instanceof Error) {
     console.error(err.message);
     console.error(err.stack);
@@ -232,8 +144,16 @@ export function justWarning(err) {
 }
 
 export function justTip(msg) {
-  console.log(' ------------ CC TIP ------------');
+  console.log(tipStart('TIP'));
   console.log(`%c${msg}`, 'color:green;border:1px solid green;');
+}
+
+export function strictWarning(err) {
+  console.error(tipStart('WARNING'));
+  console.error(err);
+  if (runtimeVar.isStrict) {
+    throw err;
+  }
 }
 
 export function safeGetObjectFromObject(object, key, defaultVal = {}) {

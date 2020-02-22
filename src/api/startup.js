@@ -8,36 +8,56 @@ import clearContextIfHot from './clear-context-if-hot';
 
 const { justTip, bindToWindow, makeError } = util;
 
-export default function ({
-  store = {},
-  reducer = {},
-  init = null,
-  computed = {},
-  watch = {},
-  moduleSingleClass = {},
-  middlewares = [],
-  plugins = [],
-  isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
-  isDebug = false,
-  errorHandler = null,
-  isHot = false,
-  autoCreateDispatcher = true,
-  bindCtxToMethod = false,
-  computedCompare = true, 
-  watchCompare = true, 
-  watchImmediate = false,
-} = {}) {
+export default function (
+  {
+    store = {},
+    reducer = {},
+    init = null,
+    computed = {},
+    watch = {},
+    moduleSingleClass = {},
+    middlewares = [],
+  } = {},
+  {
+    plugins = [],
+    isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
+    isDebug = false,
+    errorHandler = null,
+    isHot = false,
+    autoCreateDispatcher = true,
+    bindCtxToMethod = false,
+    computedCompare = true,
+    watchCompare = true,
+    watchImmediate = false,
+    alwaysGiveState = true,
+    reducer: optionReducer,
+  } = {}) {
   try {
+
+    if (optionReducer) {
+      if (!util.isPlainJsonObject(optionReducer)) throw new Error(`option.reducer not a plain json object`);
+      util.okeys(optionReducer).forEach(reducerModule => {
+        if (reducer[reducerModule]) throw new Error(`reducerModule[${reducerModule}] has been declared in store`);
+        const reducerFns = optionReducer[reducerModule];
+        util.okeys(reducerFns).forEach(k => {
+          reducerFns[k].__reducerModule = reducerModule;// tag reducer fn
+        });
+        reducer[reducerModule] = reducerFns;
+      });
+    }
+
     console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
     justTip(`cc version ${ccContext.info.version}`);
     ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
-    ccContext.isStrict = isStrict;
-    ccContext.isDebug = isDebug;
-    ccContext.bindCtxToMethod = bindCtxToMethod;
-    ccContext.computedCompare = computedCompare;
-    ccContext.watchCompare = watchCompare;
-    ccContext.watchImmediate = watchImmediate;
+    const rv = ccContext.runtimeVar;
+    rv.alwaysGiveState = alwaysGiveState;
+    rv.isStrict = isStrict;
+    rv.isDebug = isDebug;
+    rv.computedCompare = computedCompare;
+    rv.watchCompare = watchCompare;
+    rv.watchImmediate = watchImmediate;
+    rv.bindCtxToMethod = bindCtxToMethod;
 
     const err = makeError(ERR.CC_ALREADY_STARTUP);
     clearContextIfHot(true, err);
@@ -56,7 +76,7 @@ export default function ({
         appendDispatcher(Dispatcher);
         justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
       } else {
-        justTip(`[[startUp]]: CcDispatcher existed already`);
+        justTip(`[[startUp]]: CcDispatcher already existed`);
       }
     } else {
       throw new Error('customizing Dispatcher is not allowed in current version Concent');

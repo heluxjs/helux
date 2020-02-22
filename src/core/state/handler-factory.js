@@ -46,7 +46,7 @@ function checkStoreModule(module, throwError = true) {
 }
 
 function paramCallBackShouldNotSupply(module, currentModule) {
-  return `if you pass param reactCallback, param module must equal current CCInstance's module, module: ${module}, CCInstance's module:${currentModule}, now the cb will never been triggered! `;
+  return `param module[${module}] must equal current ref's module[${currentModule}] when pass param reactCallback, or it will never been triggered! `;
 }
 
 function _promiseErrorHandler(resolve, reject) {
@@ -70,15 +70,14 @@ function getNewChainData(isLazy, chainId, oriChainId, chainId_depth_) {
   return { _chainId, _oriChainId }
 }
 
-// any error in this function will not been throwed, cc just warning, 
+// any error in this function will not been throw, cc just warning, 
 function isStateModuleValid(inputModule, currentModule, reactCallback, cb) {
   let targetCb = reactCallback;
   if (checkStoreModule(inputModule, false)) {
-    if (inputModule !== currentModule) {
-      if (reactCallback) {
-        justWarning(me(ERR.CC_CLASS_INSTANCE_CALL_WITH_ARGS_INVALID, vbi(paramCallBackShouldNotSupply(inputModule, currentModule))));
-        targetCb = null;//let user's reactCallback has no chance to be triggered
-      }
+    if (inputModule !== currentModule && reactCallback) {
+      // ???strict
+      justWarning(paramCallBackShouldNotSupply(inputModule, currentModule));
+      targetCb = null;//let user's reactCallback has no chance to be triggered
     }
     cb(null, targetCb);
   } else {
@@ -374,8 +373,6 @@ export function dispatch({
     const fns = Object.keys(targetReducerMap);
     return __innerCb(new Error(`no reducer defined in ccContext for reducer module:${inputReducerModule} type:${type}, maybe you want to invoke one of them:${fns}`));
   }
-  // const errMsg = util.isCcActionValid({ type, payload });
-  // if (errMsg) return justWarning(errMsg);
 
   const executionContext = {
     callerRef, module: inputModule, reducerModule: inputReducerModule, type,

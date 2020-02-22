@@ -30,6 +30,7 @@ function _checkDispatcher() {
 }
 
 function _clearInsAssociation(recomputed) {
+  clearObject(ccContext.refRetKey_fnUid_);
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
   clearObject(ccContext.renderKey_ccUkeys_);

@@ -3,12 +3,12 @@ import { decCcKeyInsCount } from './set-ref';
 import { styleStr, color } from '../../support/util';
 
 const {
-  ccUkey_ref_, ccUKey_handlerKeys_,
+  ccUkey_ref_, ccUKey_handlerKeys_, runtimeVar,
   ccClassKey_ccClassContext_, handlerKey_handler_, renderKey_ccUkeys_,
 } = ccContext;
 
 export default function (ccClassKey, ccUniqueKey, renderKey) {
-  if (ccContext.isDebug) {
+  if (runtimeVar.isDebug) {
     console.log(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
   }
 

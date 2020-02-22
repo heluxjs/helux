@@ -1,5 +1,7 @@
 import moduleName_stateKeys_ from './statekeys-map';
 import computed from './computed-map';
+import watch from './watch-map';
+import runtimeVar from './runtime-var';
 import { MODULE_GLOBAL, MODULE_CC, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
@@ -63,23 +65,6 @@ const incStateVer = function (module, key) {
   _stateVer[module][key]++;
 }
 
-/** watch section */
-const _watchDep = {};
-const _watchRaw = {};
-const watch = {
-  _watchRaw,
-  _watchDep,
-  getRootWatchDep: () => _watchDep,
-  getRootWatchRaw: () => _watchRaw,
-};
-
-function hotReloadWarning(err) {
-  const message = err.message || err;
-  const st = 'color:green;border:1px solid green';
-  console.log(`%c error detected ${message}, cc found app is maybe running in hot reload mode, so cc will silent this error...`, st);
-  console.log(`%c but if this is not as your expectation ,maybe you can reload your whole app to avoid this error message`, st);
-}
-
 /** ccContext section */
 const _state = {};
 const _prevState = {};
@@ -104,20 +89,7 @@ const ccContext = {
     }
     return result;
   },
-  throwCcHmrError: function (err) {
-    if (ccContext.isHotReloadMode()) {
-      hotReloadWarning(err);
-    } else throw err;
-  },
-  computedCompare: true,
-  watchCompare: true,
-  watchImmediate: false,
-  isDebug: false,
-  // if isStrict is true, every error will be throw out instead of console.error, 
-  // but this may crash your app, make sure you have a nice error handling way,
-  // like componentDidCatch in react 16.*
-  isStrict: false,
-  returnRootState: false,
+  runtimeVar,
   isCcAlreadyStartup: false,
   //  cc allow multi react class register to a module by default, but if want to control some module 
   //  to only allow register one react class, flag the module name as true in this option object
@@ -230,10 +202,11 @@ const ccContext = {
   // when component unmounted, its handler will been removed
   handlerKey_handler_: {},
   renderKey_ccUkeys_: {},
+  refRetKey_fnUid_: {},// to avoid ref computed retKey dup
   refs,
   info: {
     startupTime: Date.now(),
-    version: '1.5.125',
+    version: '1.5.149',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

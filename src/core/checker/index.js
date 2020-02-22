@@ -1,6 +1,7 @@
 
 
 import * as util from '../../support/util';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import { ERR, MODULE_GLOBAL } from '../../support/constant';
 import ccContext from '../../cc-context';
 
@@ -9,10 +10,10 @@ const { isModuleNameCcLike, isModuleNameValid, verboseInfo: vbi, makeError } = u
 /** 检查模块名，名字合法，就算检查通过 */
 export function checkModuleNameBasically(moduleName) {
   if (!isModuleNameValid(moduleName)) {
-    throw makeError(ERR.CC_MODULE_NAME_INVALID, vbi(` module[${moduleName}] is invalid!`));
+    throw new Error(`module[${moduleName}] writing is invalid!`);
   }
   if (isModuleNameCcLike(moduleName)) {
-    throw makeError(ERR.CC_MODULE_KEY_CC_FOUND);
+    throw new Error(`'$$cc' is a built-in module name for concent`);
   }
 }
 
@@ -27,37 +28,33 @@ export function checkReducerModuleName(moduleName) {
 }
 
 /**
- * 检查模块名, moduleStateMustNotDefinedInStore 默认为true，表示【module名字合法】且【对应的moduleState不存在】，才算检查通过  
+ * 检查模块名, moduleMustNotExisted 默认为true，表示【module名字合法】且【对应的moduleState不存在】，才算检查通过  
  * 如果设置为false，表示【module名字合法】且【对应的moduleState存在】，才算检查通过
  * @param {string} moduleName 
- * @param {boolean} moduleStateMustNotDefinedInStore 
+ * @param {boolean} moduleMustNotExisted 
  */
-export function checkModuleName(moduleName, moduleStateMustNotDefinedInStore = true, vbiMsg = '') {
+export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg = '') {
   const _vbiMsg = vbiMsg || `module[${moduleName}]`
   const _state = ccContext.store._state;
   checkModuleNameBasically(moduleName);
   if (moduleName !== MODULE_GLOBAL) {
-    if (moduleStateMustNotDefinedInStore === true) {//要求模块状态应该不存在
+    if (moduleMustNotExisted === true) {//要求模块应该不存在
       if (util.isObjectNotNull(_state[moduleName])) {//但是却存在了
         throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, vbi(_vbiMsg));
       }
-    } else {//要求模块状态应该存在
+    } else {//要求模块状态应该已存在
       if (!_state[moduleName]) {//实际上却不存在
-        throw makeError(ERR.CC_MODULE_NAME_HAS_NO_STATE, vbi(_vbiMsg));
+        throw makeError(ERR.CC_MODULE_NOT_FOUND, vbi(_vbiMsg));
       }
     }
   }
 }
 
-export function checkModuleState(moduleState, moduleName) {
-  if (!util.isModuleStateValid(moduleState)) {
-    throw util.makeError(ERR.CC_STORE_STATE_INVALID, vbi(`module[${moduleName}]'s state is invalid!`));
+export function checkModuleNameAndState(moduleName, moduleState, moduleMustNotExisted) {
+  checkModuleName(moduleName, moduleMustNotExisted);
+  if(!util.isPlainJsonObject(moduleState)){
+    throw new Error(`module[${moduleName}]'s state ${NOT_A_JSON}`);
   }
-}
-
-export function checkModuleNameAndState(moduleName, moduleState, moduleStateMustNotDefinedInStore) {
-  checkModuleName(moduleName, moduleStateMustNotDefinedInStore);
-  checkModuleState(moduleState, moduleName);
 }
 
 export function checkStoredKeys(moduleStateKeys, storedKeys) {

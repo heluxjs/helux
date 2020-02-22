@@ -3,7 +3,7 @@ import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 
 const { safeGetObjectFromObject, okeys, justWarning } = util;
-const { reducer: { _reducerModule_fnNames_, _reducerCaller } } = ccContext;
+const { reducer: { _reducerModule_fnNames_, _reducerCaller }, runtimeVar } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
@@ -42,10 +42,9 @@ export default function (ref, setup, bindCtxToMethod) {
 
     const settingsObj = setup(ctx) || {};
     if (!util.isPlainJsonObject(settingsObj)) throw new Error('type of setup return result must be an plain json object');
-    const globalBindCtx = ccContext.bindCtxToMethod;
 
     //优先读自己的，再读全局的
-    if (bindCtxToMethod === true || (globalBindCtx === true && bindCtxToMethod !== false)) {
+    if (bindCtxToMethod === true || (runtimeVar.bindCtxToMethod === true && bindCtxToMethod !== false)) {
       okeys(settingsObj).forEach(name => {
         const settingValue = settingsObj[name];
         if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);

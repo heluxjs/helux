@@ -1,5 +1,6 @@
 
 import * as util from '../../support/util';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_VOID } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
@@ -21,7 +22,7 @@ export function configStoreState(storeState) {
   storeState[MODULE_VOID] = {};//force MODULE_VOID state as {}
 
   if (!isPlainJsonObject(storeState)) {
-    throw new Error(`the storeState is not a plain json object!`);
+    throw new Error(`the storeState ${NOT_A_JSON}`);
   }
   const store = ccContext.store;
   store.initStateDangerously(MODULE_CC, {});
@@ -56,7 +57,7 @@ export function configRootReducer(rootReducer) {
 
 export function configRootComputed(computed) {
   if (!isPlainJsonObject(computed)) {
-    throw new Error(`StartUpOption.computed is not a plain json object!`);
+    throw new Error(`StartUpOption.computed ${NOT_A_JSON}`);
   }
   const moduleNames = okeys(computed);
   moduleNames.forEach(m => initModuleComputed(m, computed[m]));
@@ -64,7 +65,7 @@ export function configRootComputed(computed) {
 
 export function configRootWatch(watch) {
   if (!isPlainJsonObject(watch)) {
-    throw new Error(`StartUpOption.watch is not a plain json object!`);
+    throw new Error(`StartUpOption.watch ${NOT_A_JSON}`);
   }
   const moduleNames = Object.keys(watch);
   moduleNames.forEach(m => initModuleWatch(m, watch[m]));
@@ -74,12 +75,12 @@ export function executeRootInit(init) {
   if (!init) return;
 
   if (!isPlainJsonObject(init)) {
-    throw new Error('StartupOption.init is valid, it must be a object like {[module:string]:Function}!');
+    throw new Error(`StartupOption.init ${NOT_A_JSON}`);
   }
 
   const moduleNames = okeys(init);
   moduleNames.forEach(moduleName => {
-    checker.checkModuleName(moduleName, false, `there is no module state defined in store for init.${moduleName}`);
+    checker.checkModuleName(moduleName, false);
     const initFn = init[moduleName];
     if (initFn) {
       Promise.resolve().then(initFn).then(state => {
@@ -93,7 +94,7 @@ export function executeRootInit(init) {
 
 export function configModuleSingleClass(moduleSingleClass) {
   if (!isPlainJsonObject(moduleSingleClass)) {
-    throw new Error(`StartupOption.moduleSingleClass is not a plain json object!`);
+    throw new Error(`StartupOption.moduleSingleClass ${NOT_A_JSON}`);
   }
   util.safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
 }

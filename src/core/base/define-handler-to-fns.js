@@ -151,7 +151,7 @@ function mapDepDesc(refCtx, key, fn, depFn, depKeys, immediate, type) {
   });
 }
 
-// retKey作为将计算结果映射到refComputed | refConnectedComputed | moduleComputed 里的key
+// retKey作为将计算结果映射到refComputed | moduleComputed 里的key
 function getModuleAndRetKey(refCtx, key, mustInclude = true) {
   let _module = refCtx.module, _retKey = key, _stateKeys;
   if (key.includes('/')) {

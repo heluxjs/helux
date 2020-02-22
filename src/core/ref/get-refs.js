@@ -7,7 +7,7 @@ export default function () {
   const ccKeys = util.okeys(ccUkey_ref_);
   ccKeys.forEach(k => {
     const ref = ccUkey_ref_[k];
-    if (ref) refs.push(ref);
+    if (ref && !ref.__$$isUnmounted) refs.push(ref);
   });
   return refs;
 }

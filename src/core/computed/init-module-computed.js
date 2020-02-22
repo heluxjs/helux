@@ -1,6 +1,7 @@
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
@@ -11,7 +12,7 @@ const callInfo = { payload: null, renderKey: '', delay: -1 };
 
 export default function (module, computed, append = false, configureDep = true) {
   if (!isPlainJsonObject(computed)) {
-    throw new Error(`StartUpOption.computed.${module}'s value is not a plain json object!`);
+    throw new Error(`StartUpOption.computed.${module}'s value ${NOT_A_JSON}`);
   }
   checker.checkModuleName(module, false, `computed.${module} is invalid`);
   const ccComputed = ccContext.computed;
@@ -31,7 +32,7 @@ export default function (module, computed, append = false, configureDep = true) 
   const moduleState = rootState[module];
 
   if(configureDep === true){
-    configureDepFns(CATE_MODULE, { module, state: moduleState, dep: rootComputedDep }, computed);
+    configureDepFns(CATE_MODULE, { module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
   }
 
   const d = ccContext.getDispatcher();

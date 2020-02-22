@@ -7,7 +7,6 @@ import _register from './api/register';
 import _registerDumb from './api/register-dumb';
 import _registerHookComp from './api/register-hook-comp';
 import _configure from './api/configure';
-import _call from './api/call';
 import _setGlobalState from './api/set-global-state';
 import _setState from './api/set-state';
 import _set from './api/set';
@@ -41,7 +40,6 @@ export const register = _register;
 export const registerDumb = _registerDumb;
 export const registerHookComp = _registerHookComp;
 export const configure = _configure;
-export const call = _call;
 export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const set = _set;
@@ -83,7 +81,6 @@ const defaultExport = {
   dispatch,
   startup,
   run,
-  call,
   setGlobalState,
   setState,
   set,

@@ -351,13 +351,16 @@ export interface ICtxBase {
   readonly ccUniqueKey: string;
   readonly initTime: number;
   readonly renderCount: number;
-  readonly storedKeys: string[] | TStar;
-  readonly watchedKeys: string[] | TStar;
+  readonly watchedKeys: string[];
+  readonly privStateKeys: string[];
   readonly connect: { [key: string]: string[] | TStar };
-  readonly ccOptions: {
-    persistStoredKeys?: string[];
-    storedKeys?: string[];
-  };
+
+  // ref can rewrite these 4 props by ccOption
+  readonly persistStoredKeys: boolean;
+  readonly storedKeys: string[];
+  readonly renderKey: string;
+  readonly tag: string;
+
   readonly mapped: IAnyObj;
   readonly stateKeys: string[];
 
@@ -371,7 +374,6 @@ export interface ICtxBase {
   readonly globalState: IAnyObj;
   readonly connectedState: any;
   readonly refComputed: IAnyObj;
-  readonly refConnectedComputed: any;
   readonly moduleComputed: any;
   readonly globalComputed: IAnyObj;
   readonly connectedComputed: any;
@@ -441,7 +443,6 @@ export interface IRefCtx<
   ConnectedState extends IAnyObj = {},
   ConnectedReducer extends IAnyObj = {},
   ConnectedComputed extends IAnyObj = {},
-  RefConnectedComputed extends IAnyObj = {},
   >
   extends ICtxBase {
   readonly props: Props;
@@ -458,7 +459,6 @@ export interface IRefCtx<
   readonly connectedState: ConnectedState;
   readonly connectedReducer: ConnectedReducer;
   readonly connectedComputed: ConnectedComputed;
-  readonly refConnectedComputed: RefConnectedComputed;
 }
 
 
@@ -620,30 +620,57 @@ interface IRegBaseSt<P extends IAnyObj, ICtx extends ICtxBase, FnState = {}> ext
   state: FnState; // state required
 }
 
-export interface RegisterOptions<P extends IAnyObj, RootState extends IRootBase, ModuleName extends keyof RootState, RefState extends FnState, ICtx extends ICtxBase = ICtxBase> extends IRegBase<P, ICtx> {
-  module?: ModuleName,
-  state?: RefState,
-  watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[];
-  storedKeys?: RefState extends IAnyFn ? (keyof ReturnType<RefState>)[] : (keyof RefState)[]
-  connect?: (keyof RootState)[] |
+type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] |
   // !!! currently I do not know how to pass ${moduleName} to evaluate target type in object value
   // something like (keyof RootState[moduleName] )[] but it is wrong writing
   { [moduleName in (keyof RootState)]?: TStar | string[] };
+export interface RegisterOptions<
+  P extends IAnyObj,
+  RootState extends IRootBase,
+  ModuleName extends keyof RootState,
+  PrivState extends FnState,
+  ICtx extends ICtxBase = ICtxBase
+  >
+  extends IRegBase<P, ICtx> {
+  module?: ModuleName,
+  state?: PrivState,
+  watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[];
+  storedKeys?: PrivState extends IAnyFn ? (keyof ReturnType<PrivState>)[] : (keyof PrivState)[]
+  connect?: ConnectSpec<RootState>,
   setup?: (refCtx: ICtx) => IAnyObj | void;
 }
 
+
 // only state required
-interface RegisterOptionsSt<P extends IAnyObj, RootState extends IRootBase, ModuleName extends keyof RootState, RefState extends FnState, ICtx extends ICtxBase = ICtxBase>
+interface RegisterOptionsSt<
+  P extends IAnyObj,
+  RootState extends IRootBase,
+  ModuleName extends keyof RootState,
+  RefState extends FnState,
+  ICtx extends ICtxBase = ICtxBase
+  >
   extends RegisterOptions<P, RootState, ModuleName, RefState, ICtx> {
   state: RefState;
 }
 // only module required
-interface RegisterOptionsMo<P extends IAnyObj, RootState extends IRootBase, ModuleName extends keyof RootState, RefState extends FnState, ICtx extends ICtxBase = ICtxBase>
+interface RegisterOptionsMo<
+  P extends IAnyObj,
+  RootState extends IRootBase,
+  ModuleName extends keyof RootState,
+  RefState extends FnState,
+  ICtx extends ICtxBase = ICtxBase
+  >
   extends RegisterOptions<P, RootState, ModuleName, RefState, ICtx> {
   module: ModuleName,
 }
 // both module、state required
-interface RegisterOptionsMoSt<P extends IAnyObj, RootState extends IRootBase, ModuleName extends keyof RootState, RefState extends FnState, ICtx extends ICtxBase = ICtxBase>
+interface RegisterOptionsMoSt<
+  P extends IAnyObj,
+  RootState extends IRootBase,
+  ModuleName extends keyof RootState,
+  RefState extends FnState,
+  ICtx extends ICtxBase = ICtxBase
+  >
   extends RegisterOptions<P, RootState, ModuleName, RefState, ICtx> {
   module: ModuleName,
   state: RefState;
@@ -771,6 +798,17 @@ export function register<
     (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>>),
   ccClassKey?: string,
 ): (ReactComp: typeof Component) => ComponentClass<Props>;
+
+
+
+export function connect<
+  Props extends IAnyObj = {},
+  RootState extends IRootBase = IRootBase,
+>(
+  connectSpec: ConnectSpec<RootState>,
+  ccClassKey?: string,
+): (ReactComp: typeof Component) => ComponentClass<Props>;
+
 
 export type NoMap = 'NoMap';
 type NoRefState = 'NoRefState';
@@ -918,7 +956,10 @@ export function registerDumb<
   ccClassKey?: string,
 ): (render: (props: T extends NoMap ? RefCtx : T) => ReactNode) => ComponentClass<Props>;
 
-
+export function connectDumb<Props extends IAnyObj = {}, RootState extends IRootBase = IRootBase, RefCtx extends ICtxBase = ICtxBase>(
+  connectSpec: ConnectSpec<RootState>,
+  ccClassKey: string,
+): (render: (props: RefCtx) => ReactNode) => ComponentClass<Props>;
 
 // user decide RefCtx type is which one of RefCtx series, default is ICtxBase
 export function useConcent<Props extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase>(
@@ -1004,7 +1045,11 @@ export function defWatchImmediate<V extends IAnyObj = {}, F extends IFnCtxBase =
 
 export declare const cst: CcCst;
 
-export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends Component<{ register: IRegBaseFrag<P, Ctx> }, any> { }
+export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
+  Component<{
+    register: IRegBaseFrag<P, Ctx>, ccKey?: string, ccClassKey?: string,
+    ccOption?: { storedKeys?: string[], renderKey?: string, persistStoredKeys?: boolean, tag?: string }
+  }, any> { }
 
 /**
  * user specify detail type when use
@@ -1016,14 +1061,22 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends Compone
  */
 export declare const reducer: IAnyFnInObj;
 
+export function getRefs<Ctx extends ICtxBase>(): Ctx[];
+
+export function cloneModule(moduleName: string, existingModule: string, moduleConfig?: ModuleConfig): void;
+
 declare type DefaultExport = {
   clearContextIfHot: typeof clearContextIfHot,
   run: typeof run,
   register: typeof register,
+  connect: typeof connect,
   registerDumb: typeof registerDumb,
+  connectDumb: typeof connectDumb,
+  registerHookComp: typeof registerHookComp,
   useConcent: typeof useConcent,
   configure: typeof configure,
   cloneModule: typeof cloneModule,
+  set: typeof set,
   setState: typeof setState,
   setGlobalState: typeof setGlobalState,
   getState: typeof getState,
@@ -1031,7 +1084,7 @@ declare type DefaultExport = {
   getConnectedState: typeof getConnectedState,
   getComputed: typeof getComputed,
   getGlobalComputed: typeof getGlobalComputed,
-  set: typeof set,
+  getRefs: typeof getRefs,
   dispatch: typeof dispatch,
   reducer: typeof reducer,
   emit: typeof refCtxEmit,

@@ -8,11 +8,9 @@ import didMount from '../core/base/did-mount';
 import didUpdate from '../core/base/did-update';
 import buildRefCtx from '../core/ref/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
-import getStoredKeys from '../core/base/get-stored-keys';
 import ccContext from '../cc-context';
 
 const { shallowDiffers, getRegisterOptions } = util;
-const { moduleName_stateKeys_ } = ccContext;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
 class CcFragment extends React.Component {
@@ -21,7 +19,7 @@ class CcFragment extends React.Component {
     const registerOptions = getRegisterOptions(props.register);
     const {
       module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-      watchedKeys = '*', connect = {}, reducerModule, isSingle, storedKeys
+      watchedKeys = '*', connect = {}, reducerModule, isSingle, storedKeys = []
     } = registerOptions;
 
     let state = registerOptions.state || {};
@@ -31,20 +29,16 @@ class CcFragment extends React.Component {
   
     const { ccClassKey, ccKey, ccOption = {} } = props;
 
-    let target_storedKeys = storedKeys;
     let target_reducerModule = reducerModule;
     let target_watchedKeys = watchedKeys;
     let target_ccClassKey = ccClassKey;
     let target_connect = connect;
 
-    //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb已在外部注册过）
+    //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
     if (props.__$$regDumb !== true) {
-      const _storedKeys = getStoredKeys(state, moduleName_stateKeys_[module], ccOption.storedKeys, registerOptions.storedKeys);
-
       const { _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, _storedKeys, connect, reducerModule, true
+        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
       );
-      target_storedKeys = _storedKeys;
       target_reducerModule = _reducerModule;
       target_watchedKeys = _watchedKeys;
       target_ccClassKey = _ccClassKey;
@@ -54,7 +48,7 @@ class CcFragment extends React.Component {
 
     buildRefCtx(this, {
       isSingle, ccKey, connect: target_connect, state, module, reducerModule: target_reducerModule,
-      storedKeys: target_storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
+      storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
     }, lite);
 
     this.__$$compareProps = compareProps;

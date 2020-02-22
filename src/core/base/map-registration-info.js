@@ -3,6 +3,7 @@ import getFeatureStrAndCmkMapping from './get-feature-str-and-cmkmapping';
 import getCcClassKey from './get-cc-classkey';
 import * as checker from '../checker';
 import * as util from '../../support/util';
+import { STR_ARR_OR_STAR } from '../../support/priv-constant';
 import { ERR, MODULE_DEFAULT } from '../../support/constant';
 
 const {
@@ -20,18 +21,17 @@ function checkCcStartupOrNot() {
 }
 
 function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
-  let watchedKeys = inputWatchedKeys;
+  if (!inputWatchedKeys) return [];
+
   if (inputWatchedKeys === '*') {
-    watchedKeys = moduleName_stateKeys_[module];
+    return moduleName_stateKeys_[module];
   }
-  const { notArray, keyElementNotString } = verifyKeys(watchedKeys, []);
-  if (notArray) {
-    throw me(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi(`ccClassKey:${ccClassKey}`));
+
+  const { notArray, keyElementNotString } = verifyKeys(inputWatchedKeys, []);
+  if (notArray || keyElementNotString) {
+    throw new Error(`watchedKeys ${STR_ARR_OR_STAR} ${vbi(`ccClassKey:${ccClassKey}`)}`);
   }
-  if (keyElementNotString) {
-    throw me(ERR.CC_ARG_KEYS_NOT_AN_ARRAY, vbi(`ccClassKey:${ccClassKey}`));
-  }
-  return watchedKeys || [];
+  return inputWatchedKeys;
 }
 
 function mapModuleToCcClassKeys(moduleName, ccClassKey) {
@@ -113,18 +113,6 @@ export default function (
 
   mapCcClassKeyToCcClassContext(_ccClassKey, _renderKeyClasses, module, inputWatchedKeys, _watchedKeys, connectedModuleKeyMapping, connectedModuleNames);
   mapModuleToCcClassKeys(module, _ccClassKey);
-
-  const isSKeysArr = Array.isArray(inputStoredKeys);
-  if (!isSKeysArr && inputStoredKeys !== '*') {
-    throw new Error(`storedKeys type err, it is must be an array or string *`)
-  }
-  if (isSKeysArr) {
-    inputStoredKeys.forEach(v => {
-      if (_watchedKeys.includes(v)) {
-        throw new Error(`storedKeys key err, the key[${v}] is already been declared in watchedKeys`)
-      }
-    });
-  }
 
   return { _module: module, _reducerModule, _connect, _watchedKeys, _ccClassKey };
 }

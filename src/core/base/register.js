@@ -1,7 +1,7 @@
 import React from 'react';
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
-  MODULE_DEFAULT, ERR, CC_DISPATCHER, CC_CLASS_PREFIX
+  MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS_PREFIX
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -13,25 +13,22 @@ import beforeMount from './before-mount';
 import didMount from './did-mount';
 import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
-import getStoredKeys from './get-stored-keys';
 
-const { moduleName_stateKeys_ } = ccContext;
-const {  ccClassDisplayName, styleStr, color, verboseInfo, makeError, okeys, shallowDiffers } = util;
+const { ccClassDisplayName, styleStr, color, okeys, shallowDiffers } = util;
+const { runtimeVar } = ccContext;
 const cl = color;
 const ss = styleStr;
-const me = makeError;
-const vbi = verboseInfo;
 const setupErr = info => new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
 
 export default function register({
   module = MODULE_DEFAULT,
   state = {},
   watchedKeys: inputWatchedKeys = '*',
-  storedKeys: inputStoredKeys = [],
+  storedKeys = [],
   setup = null,
   persistStoredKeys,
   connect = {},
-  tag = '',
+  tag,
   lite,
   reducerModule,
   isPropsProxy = false,
@@ -44,12 +41,12 @@ export default function register({
   try {
 
     const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS_PREFIX, inputWatchedKeys, inputStoredKeys, connect, reducerModule, __checkStartUp, __calledBy
+      module, ccClassKey, renderKeyClasses, CC_CLASS_PREFIX, inputWatchedKeys, storedKeys, connect, reducerModule, __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {
       if (ReactClass.prototype && ReactClass.prototype.$$attach) {
-        throw me(ERR.CC_REGISTER_A_CC_CLASS, vbi(`CcClass can not been registered!`));
+        throw new Error(`register a cc class is prohibited!`);
       }
       // const isClsPureComponent = ReactClass.prototype.isPureReactComponent;
 
@@ -63,15 +60,14 @@ export default function register({
             super(props, context);
             const optState = typeof state === 'function' ? state() : state;
             const thisState = this.state || {};
-            this.state = Object.assign(thisState, optState);
-            this.$$attach = this.$$attach.bind(this);
-            const ccOption = props.ccOption || { persistStoredKeys };
+            const privState  = Object.assign(thisState, optState);
 
-            const declaredState = this.state;
-            const _storedKeys = getStoredKeys(declaredState, moduleName_stateKeys_[_module], ccOption.storedKeys, inputStoredKeys);
+            this.$$attach = this.$$attach.bind(this);
+
+            // props.ccOption
             const params = Object.assign({}, props, {
-              isSingle, module: _module, reducerModule: _reducerModule, tag, state: declaredState, type: CC_CLASS_PREFIX,
-              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys: _storedKeys, ccOption
+              isSingle, module: _module, reducerModule: _reducerModule, tag, state: privState, type: CC_CLASS_PREFIX,
+              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
             });
             buildRefCtx(this, params, lite);
 
@@ -156,7 +152,7 @@ export default function register({
           this.ctx.prevProps = this.ctx.props;
           this.ctx.props = this.props;
 
-          if (ccContext.isDebug) {
+          if (runtimeVar.isDebug) {
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }
           if (isPropsProxy === false) {

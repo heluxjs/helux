@@ -1,5 +1,6 @@
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import runLater from '../base/run-later';
 import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
@@ -68,7 +69,7 @@ export default function (state, {
   if (state === undefined) return;
 
   if (!isPlainJsonObject(state)) {
-    justWarning(`your committed state is not a plain json object!`);
+    justWarning(`your committed state ${NOT_A_JSON}`);
     return;
   }
 
@@ -113,12 +114,12 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
     return next && next(RENDER_NO_OP, state);
   }
 
-  const { module: stateModule, storedKeys, ccOption, ccUniqueKey } = refCtx;
+  const { module: stateModule, storedKeys, ccUniqueKey } = refCtx;
   let renderType = RENDER_BY_STATE;
 
   if (renderKey) {//if user specify renderKey
     renderType = RENDER_BY_KEY;
-    if (ccOption.renderKey !== renderKey) {// current instance can been rendered only if current instance's ccKey equal renderKey
+    if (refCtx.renderKey !== renderKey) {// current instance can been rendered only if current instance's ccKey equal renderKey
       return next && next(RENDER_NO_OP, state);
     }
   }
@@ -126,7 +127,7 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   if (storedKeys.length > 0) {
     const { partialState, isStateEmpty } = extractStateByKeys(state, storedKeys);
     if (!isStateEmpty) {
-      if (ccOption.persistStoredKeys === true) {
+      if (refCtx.persistStoredKeys === true) {
         const { partialState: entireStoredState } = extractStateByKeys(refState, storedKeys);
         const currentStoredState = Object.assign({}, entireStoredState, partialState);
         localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
@@ -221,7 +222,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     }
 
     const ccUkeysOri = renderKey_ccUkeys_[renderKey] || [];
-    // targetRef刚刚可能已被触发过渲染，这里排除掉currentCcUkey
+    // targetRef刚刚可能已被触发过渲染，这里排除掉currentCcUkey, 这里使用excludeArrStringItem比removeArrElements效率更高
     const ccUkeys = util.excludeArrStringItem(ccUkeysOri, currentCcUkey);
     toExcludeUkeys = ccUkeys;
     updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);

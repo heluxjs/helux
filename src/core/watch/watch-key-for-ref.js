@@ -7,7 +7,7 @@ export default function (refCtx, stateModule, oldState, committedState, callInfo
   if (!refCtx.hasWatchFn) return true;
 
   const deltaCommittedState = Object.assign({}, committedState);
-  const { watchDep, module: refModule, ccUniqueKey, refComputed, refConnectedComputed } = refCtx;
+  const { watchDep, module: refModule, ccUniqueKey, refComputed } = refCtx;
   const newState = Object.assign({}, oldState, committedState);
 
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
@@ -15,7 +15,7 @@ export default function (refCtx, stateModule, oldState, committedState, callInfo
   const shouldCurrentRefUpdate = findDepFnsToExecute(
     refCtx, stateModule, refModule, oldState, curDepComputedFns,
     committedState, newState, deltaCommittedState, callInfo, isBeforeMount,
-    'watch', CATE_REF, refComputed, refConnectedComputed,
+    'watch', CATE_REF, refComputed,
   );
 
   if (autoMergeDeltaToCommitted) {

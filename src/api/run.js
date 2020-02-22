@@ -1,10 +1,16 @@
 import startup from './startup';
 import * as util from '../support/util';
+import { NOT_A_JSON } from '../support/priv-constant';
 
-const { isPlainJsonObject, okeys, isObjectNotNull } = util;
+const { isPlainJsonObject, okeys, isObjectNull } = util;
 const pError = label => {
-  throw new Error(`[[run]]: param error, ${label} is not a plain json object`);
+  throw new Error(`[[run]]: param error, ${label} ${NOT_A_JSON}`);
 }
+
+// option:
+// middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
+// autoCreateDispatcher, reducer, bindCtxToMethod,
+// computedCompare, watchCompare, watchImmediate, alwaysGiveState
 
 /**
  * run will call startup
@@ -16,58 +22,28 @@ export default function (store = {}, option = {}) {
   if (!isPlainJsonObject(store)) pError('store');
   if (!isPlainJsonObject(option)) pError('option');
 
-  const _store = {};
-  const _reducer = {};
-  const _watch = {};
-  const _computed = {};
-  let _init = {};
-  const _moduleSingleClass = {};
+  const storeConf = {
+    store: {},
+    reducer: {},
+    watch: {},
+    computed: {},
+    init: {},
+    moduleSingleClass: {},
+  }
 
   // traversal moduleNames
   okeys(store).forEach(m => {
     const config = store[m];
     const { state, reducer, watch, computed, init, isClassSingle } = config;
-    if (state) _store[m] = state;
-    if (reducer) _reducer[m] = reducer;
-    if (watch) _watch[m] = watch;
-    if (computed) _computed[m] = computed;
-    if (init) _init[m] = init;
-    _moduleSingleClass[m] = isClassSingle === true;
+    if (state) storeConf.store[m] = state;
+    if (reducer) storeConf.reducer[m] = reducer;
+    if (watch) storeConf.watch[m] = watch;
+    if (computed) storeConf.computed[m] = computed;
+    if (init) storeConf.init[m] = init;
+    storeConf.moduleSingleClass[m] = isClassSingle === true;
   });
 
-  if (!isObjectNotNull(_init)) _init = null;
-  const startupOption = {
-    store: _store,
-    reducer: _reducer,
-    watch: _watch,
-    computed: _computed,
-    init: _init,
-    moduleSingleClass: _moduleSingleClass,
-  }
+  if (isObjectNull(storeConf.init)) storeConf.init = null;
 
-  const {
-    middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
-    autoCreateDispatcher, reducer, bindCtxToMethod,
-    computedCompare, watchCompare, watchImmediate,
-  } = option;
-
-  if (reducer) {
-    if (!isPlainJsonObject(reducer)) pError('option.reducer');
-    okeys(reducer).forEach(reducerModule => {
-      if (_reducer[reducerModule]) throw new Error(`reducerModule[${reducerModule}] has been declared in store`);
-      const reducerFns = reducer[reducerModule];
-      Object.keys(k => {
-        reducerFns[k].__reducerModule = reducerModule;// tag reducer fn
-      });
-      _reducer[reducerModule] = reducerFns;
-    });
-  }
-
-  // merge startupOption
-  Object.assign(startupOption, {
-    middlewares, plugins, isStrict, isDebug, errorHandler, isHot, autoCreateDispatcher, bindCtxToMethod,
-    computedCompare, watchCompare, watchImmediate,
-  });
-
-  startup(startupOption);
+  startup(storeConf, option);
 }
