@@ -123,7 +123,7 @@ $ yarn add concent
 ```
 
 ### 新手counter示例
-将以下代码复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
+将以下[代码](https://stackblitz.com/edit/concent-doc-home-demo-simple)复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
 - 运行concent，载入模块配置
 ```javascript
 import React, { Component, Fragment } from 'react';
@@ -147,13 +147,13 @@ run({
       }
     },
     computed:{// 【可选】定义模块computed，当对应的stateKey发生变化时触发计算函数，结果将被缓存
-      count(newVal, oldVal){
-        return newVal * 2;
+      count(newState, oldState){
+        return newState.count * 2;
       }
     },
     watch:{// 【可选】定义模块watch，当对应的stateKey发生变化时触发watch函数，通常用于触发一些异步任务的执行
-      count(newVal, oldVal){
-        console.log(`count changed to ${newVal}`);
+      count(newState, oldState){
+        console.log(`count changed from ${oldState.count} to ${newState.count}`);
       }
     },
     init: async ()=>{// 【可选】模块状态的初始化函数，当状态需要异步的定义，且与具体挂载的组件无关时定义此项
@@ -212,6 +212,8 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
 
 - 基于react class注册成为cc类组件
 ```jsx
+//将Counter类注册为concent组件，属于counter模块
+register('counter')
 class Counter extends Component {
   //setState 能够将数据将同步到store，广播到其他实例
   inc = () => {
@@ -242,8 +244,6 @@ class Counter extends Component {
     );
   }
 }
-//将Counter类注册为CcClazzCounter，属于counter模块
-const CcClazzCounter = register('counter')(Counter);
 ```
 - 基于renderProps注册为cc类组件
 ```jsx
@@ -362,6 +362,7 @@ function HookCounter(){
 ```
 - 当然setup同样可以传递给类组件，这意味着函数组件和类组件的形态可以自由切换。
 ```js
+@register({module:'counter', setup})
 class Counter extends Component {
   render() {
     const { count } = this.state;
@@ -370,14 +371,12 @@ class Counter extends Component {
     return <>your ui</>
   }
 }
-
-const SetupCounter = register({module:'counter', setup})(Counter);
 ```
 - 稍加处理，将useConcent隐藏起来，即可使用一个标准的组合型api创建组件
 ```js
 import { registerHookComp } from 'concent';
 
-export AwesomeComp = registerHookComp({
+export const AwesomeComp = registerHookComp({
   module:'counter',
   setup,
   render: ctx=>{

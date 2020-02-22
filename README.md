@@ -363,6 +363,7 @@ function HookCounter(){
 ```
 - the setup can also been passed to class! that means you can switch your component definition way between class and function as you like。
 ```js
+@register({module:'counter', setup})
 class Counter extends Component {
   render() {
     const { count } = this.state;
@@ -371,14 +372,12 @@ class Counter extends Component {
     return <>your ui</>
   }
 }
-
-const SetupCounter = register({module:'counter', setup})(Counter);
 ```
 - With a little processing, you can use a standard composite API to create components by hiding `useConcent`
 ```js
 import { registerHookComp } from 'concent';
 
-export AwesomeComp = registerHookComp({
+export const AwesomeComp = registerHookComp({
   module:'counter',
   setup,
   render: ctx=>{
