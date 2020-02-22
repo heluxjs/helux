@@ -1096,7 +1096,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.149',
+      version: '1.5.150',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4521,20 +4521,29 @@
     }
   }
 
+  var okeys$6 = okeys;
+
+  function executeClearCb(cbMap, ctx) {
+    var execute = function execute(key) {
+      // symbolKey or normalKey
+      var cb = cbMap[key];
+      if (typeof cb === 'function') cb(ctx);
+    };
+
+    Object.getOwnPropertySymbols(cbMap).forEach(execute);
+    okeys$6(cbMap).forEach(execute);
+  }
+
   function beforeUnmount (ref) {
     //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
     //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
     ref.__$$isUnmounted = true;
     var ctx = ref.ctx;
-    var eid_effectReturnCb_ = ctx.effectMeta.eid_effectReturnCb_;
-    Object.getOwnPropertySymbols(eid_effectReturnCb_).forEach(function (symbolKey) {
-      var cb = eid_effectReturnCb_[symbolKey];
-      if (typeof cb === 'function') cb(ctx);
-    });
-    okeys(eid_effectReturnCb_).forEach(function (eId) {
-      var cb = eid_effectReturnCb_[eId];
-      if (typeof cb === 'function') cb(ctx);
-    });
+    var _ctx$effectMeta = ctx.effectMeta,
+        eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_,
+        eid_effectPropsReturnCb_ = _ctx$effectMeta.eid_effectPropsReturnCb_;
+    executeClearCb(eid_effectReturnCb_, ctx);
+    executeClearCb(eid_effectPropsReturnCb_, ctx);
     var ccUniqueKey = ctx.ccUniqueKey,
         ccClassKey = ctx.ccClassKey,
         renderKey = ctx.renderKey;
@@ -4545,7 +4554,7 @@
   var ccClassDisplayName$1 = ccClassDisplayName,
       styleStr$1 = styleStr,
       color$1 = color,
-      okeys$6 = okeys,
+      okeys$7 = okeys,
       shallowDiffers$1 = shallowDiffers;
   var runtimeVar$5 = ccContext.runtimeVar;
   var cl$1 = color$1;
@@ -4688,7 +4697,7 @@
             ctx.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
             // this.state = newState; // bad writing
 
-            okeys$6(newState).forEach(function (key) {
+            okeys$7(newState).forEach(function (key) {
               return thisState[key] = newState[key];
             });
             if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
@@ -5044,7 +5053,7 @@
 
   var isPlainJsonObject$3 = isPlainJsonObject,
       safeGetObjectFromObject$2 = safeGetObjectFromObject,
-      okeys$7 = okeys;
+      okeys$8 = okeys;
   var callInfo$1 = {
     payload: null,
     renderKey: '',
@@ -5079,7 +5088,7 @@
     var moduleState = getState(module);
     configureDepFns(CATE_MODULE, {
       module: module,
-      stateKeys: okeys$7(moduleState),
+      stateKeys: okeys$8(moduleState),
       dep: rootWatchDep
     }, moduleWatch);
     var d = ccContext.getDispatcher();
@@ -5149,7 +5158,7 @@
   }
 
   var isPlainJsonObject$5 = isPlainJsonObject,
-      okeys$8 = okeys;
+      okeys$9 = okeys;
   /** 对已有的store.$$global状态追加新的state */
   // export function appendGlobalState(globalState) {
   //   // todo
@@ -5166,7 +5175,7 @@
     store.initStateDangerously(MODULE_CC, {});
     if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
     if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$8(storeState);
+    var moduleNames = okeys$9(storeState);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -5183,7 +5192,7 @@
   function configRootReducer(rootReducer) {
     if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
     if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-    var moduleNames = okeys$8(rootReducer);
+    var moduleNames = okeys$9(rootReducer);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -5196,7 +5205,7 @@
       throw new Error("StartUpOption.computed " + NOT_A_JSON);
     }
 
-    var moduleNames = okeys$8(computed);
+    var moduleNames = okeys$9(computed);
     moduleNames.forEach(function (m) {
       return initModuleComputed(m, computed[m]);
     });
@@ -5218,7 +5227,7 @@
       throw new Error("StartupOption.init " + NOT_A_JSON);
     }
 
-    var moduleNames = okeys$8(init);
+    var moduleNames = okeys$9(init);
     moduleNames.forEach(function (moduleName) {
       checkModuleName(moduleName, false);
       var initFn = init[moduleName];
@@ -5638,7 +5647,7 @@
   });
 
   var isPlainJsonObject$7 = isPlainJsonObject,
-      okeys$9 = okeys,
+      okeys$a = okeys,
       isObjectNull$2 = isObjectNull;
 
   var pError = function pError(label) {
@@ -5675,7 +5684,7 @@
       moduleSingleClass: {} // traversal moduleNames
 
     };
-    okeys$9(store).forEach(function (m) {
+    okeys$a(store).forEach(function (m) {
       var config = store[m];
       var state = config.state,
           reducer = config.reducer,

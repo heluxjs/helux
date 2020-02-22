@@ -118,6 +118,5 @@ export default function (ref, callByDidMount) {
     });
 
     toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
-
   }
 }
