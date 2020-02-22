@@ -1,7 +1,9 @@
 English | [简体中文](./README.zh-CN.md)
 
 ## [concent](https://concentjs.github.io/concent-doc)
-a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency mark**、**ref collection** and **state broadcast**，power you react!
+a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency mark**、**ref collection** and **state broadcast**，power you react!   
+
+visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
 <p align="center">
   <a href="#">
@@ -88,7 +90,7 @@ source code see here：https://github.com/fantasticsoul/concent-guid-ts
 * **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.。
 * **de-centralization model configuration**，except for configuring models with `run`, user can also call `configure` api to configure you model definition near your component, that means you can publish your component to npm with your component model。
 * **model clone**，allow user clone new model by existed model, to meet the abstract factory need.。
-* **fullly typescript support**，writting [elegant ts code](https://codesandbox.io/s/concent-guide-ts-zrxd5) with concent is easy.。
+* **fully typescript support**，writing [elegant ts code](https://codesandbox.io/s/concent-guide-ts-zrxd5) with concent is easy.。
 
 ## Use with react router
 Details see here [react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
@@ -123,10 +125,60 @@ or yarn command
 $ yarn add concent
 ```
 
-### A simple Counter demo
-copy the [code](https://stackblitz.com/edit/concent-doc-home-demo-simple) below to your `src/App.js` file.
-- run concent，load model configuration
+### Replace App.js file content with the code below
+> you can also review the [online example](https://codesandbox.io/s/green-tdd-g2mcr).
 ```javascript
+import React, { Component } from 'react';
+import { register, run, useConcent } from 'concent';
+
+// run concent with a module named counter
+run({
+  counter:{
+    state:{count:1}
+  }
+})
+
+// define a class component that belong to 'counter' module
+@register('counter')
+class Counter extends Component{
+  render(){
+    // now setState can commit state to store and broadcast state to other refs which also belong to counter module
+    const add = ()=>this.setState({count:this.state.count+1});
+    return (
+      <div>
+        {this.state.count}
+        <button onClick={add}>add</button>
+      </div>
+    )
+  }
+}
+
+// define a function component that belong to 'counter' module
+function FnCounter(){
+  const ctx = useConcent('counter');
+  const add = ()=>ctx.setState({count:ctx.state.count+1});
+  return (
+    <div>
+      {ctx.state.count}
+      <button onClick={add}>add</button>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <div className="App">
+      <Counter />
+      <FnCounter />
+    </div>
+  );
+}
+```
+
+
+## 🔨Examples with some advanced features
+- run concent，load model configuration
+```js
 import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';
 
@@ -134,6 +186,8 @@ run({
   counter: {// define counter module
     state: {// 【necessary】，define state
       count: 0,
+      products: [],
+      type: '',
     },
     reducer: {// 【optional】define reducer，write logic code to change the state
       inc(payload=1, moduleState) {
@@ -211,197 +265,15 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
 }
 ```
 
-- register a normal react component as cc component
-```jsx
-// register normal component Counter as concent component which belong to module 'counter'
-@register('counter')
-class Counter extends Component {
-  //setState can commit state to store, and broadcast state to other refs
-  inc = () => {
-    this.setState({ count: this.state.count + 1 });
-  }
-  dec = () => {
-    this.setState({ count: this.state.count - 1 });
-  }
-  //dispatch can commit state to store, and broadcast state to other refs(which belongs to module counter) also
-  incD = () => {
-    this.ctx.dispatch('inc');// or better way: this.ctx.moduleReducer.inc()
-  }
-  decD = () => {
-    this.ctx.dispatch('dec');// or better way: this.ctx.moduleReducer.dec()
-  }
-  render() {
-    //concent inject module counter's state to this.state
-    const { count } = this.state;
-    return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {count}</div>
-        <button onClick={this.inc}>inc by setState</button>
-        <button onClick={this.dec}>dec by setState</button>
-        <br />
-        <button onClick={this.incD}>inc by dispatch</button>
-        <button onClick={this.decD}>dec by dispatch</button>
-      </div>
-    );
-  }
-}
-```
-- register as cc component base on renderProps
-```jsx
-import { registerDumb } from 'concent';
-
-const UI = ({count, inc, dec, incD, decD})=>{
-    return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {count}</div>
-        <button onClick={inc}>inc by setState</button>
-        <button onClick={dec}>dec by setState</button>
-        <br />
-        <button onClick={incD}>inc by dispatch</button>
-        <button onClick={decD}>dec by dispatch</button>
-      </div>
-    );
-}
-
-//define setup，it will only been executed before first render, usually for defining some effects or return methods, then user can get them from ctx.settings.
-const setup = ctx=>{
-  const inc = () => {
-    ctx.setState({ count: ctx.state.count + 1 });
-  };
-  const dec = () => {
-    ctx.setState({ count: ctx.state.count - 1 });
-  };
-  const incD = () => {
-    ctx.dispatch('inc');
-  };
-  const decD = () => {
-    ctx.dispatch('dec');
-  };
-  return {inc, dec, incD, decD};
-}
-
-// [optional]define mapProps，this function will been excuted before every render, the return result will pass to component props
-// if you don't define mapProps，the props will be ctx, code may like this: const UI = ctx => <div>ui</div>
-const mapProps = ctx=>{
-  return {count:ctx.state.count, ...ctx.settings};
-}
-
-//register sfc UI as CcFnCounter which belong to module counter
-const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
-```
-- register as cc component base on hook
-```jsx
-import { useConcent } from 'concent';
-
-function HookCounter(){
-  const { setState, dispatch } = useConcent('counter');
-  const inc = () => {
-    setState({ count: ctx.state.count + 1 });
-  };
-  const dec = () => {
-    setState({ count: ctx.state.count - 1 });
-  };
-  const incD = () => {
-    dispatch('inc');
-  };
-  const decD = () => {
-    dispatch('dec');
-  };
-   return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {count}</div>
-        <button onClick={inc}>inc by setState</button>
-        <button onClick={dec}>dec by setState</button>
-        <br />
-        <button onClick={incD}>inc by dispatch</button>
-        <button onClick={decD}>dec by dispatch</button>
-      </div>
-   );
-}
-
-```
-- the better way to write hook is use setup feature, then there is no more temporary closure method any more in your render function block.
-```jsx
-import { useConcent } from 'concent';
-
-//define setup，it will only been executed on time before first render, usually for defining some apis, the use can get them from ctx.settings.
-const setup = ctx =>{
-  const {setState, dispatch} = ctx;
-  const inc = () => {
-    setState({ count: ctx.state.count + 1 });
-  };
-  const dec = () => {
-    setState({ count: ctx.state.count - 1 });
-  };
-  const incD = () => {
-    dispatch('inc');
-    // or ctx.moduleReducer.inc()
-  };
-  const decD = () => {
-    dispatch('dec');
-    // or ctx.moduleReducer.dec()
-  };
-  return {inc, dec, incD, decD};
-}
-
-function HookCounter(){
-  const {settings, state} = useConcent({module:'counter', setup});
-  const {inc, dec, incD, decD} = settings;
-
-   return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {state.count}</div>
-        <button onClick={inc}>inc by setState</button>
-        <button onClick={dec}>dec by setState</button>
-        <br />
-        <button onClick={incD}>inc by dispatch</button>
-        <button onClick={decD}>dec by dispatch</button>
-      </div>
-   );
-}
-
-```
-- the setup can also been passed to class! that means you can switch your component definition way between class and function as you like。
-```js
-@register({module:'counter', setup})
-class Counter extends Component {
-  render() {
-    const { count } = this.state;
-    const {inc, dec, incD, decD} = this.ctx.settings;
-    // here ignore redner logic......
-    return <>your ui</>
-  }
-}
-```
-- With a little processing, you can use a standard composite API to create components by hiding `useConcent`
-```js
-import { registerHookComp } from 'concent';
-
-export const AwesomeComp = registerHookComp({
-  module:'counter',
-  setup,
-  render: ctx=>{
-      const { count } = ctx.state;
-      const {inc, dec, incD, decD} = ctx.settings;
-      // here ignore redner logic......
-      return <>your ui</>
-  }
-});
-```
-- in setup block, you can define event listen, life cycle method(works for both class component and function component)
+- define setup   
+setup will only been executed before first render, usually for defining some effects or return methods that user can get them from ctx.settings later, so there is no **temporary closure method** any more in your render function block,
+and setup can pass to class and function both, that means you can switch your component definition way between class and function as you like，reuse business logic elegantly。
 ```js
 const setup = ctx => {
   console.log('setup only execute one time before first render period');
   
   ctx.on('someEvent', (p1, p2)=> console.log('receive ', p1, p2));
   
-  const fetchProducts = () => {
-    const { type, sex, addr, keyword } = ctx.state;
-    api.fetchProducts({ type, sex, addr, keyword })
-      .then(products => ctx.setState({ products }))
-      .catch(err => alert(err.message));
-  };
-
   ctx.effect(() => {
     fetchProducts();
   }, ["type", "sex", "addr", "keyword"]);//only pass state key
@@ -431,12 +303,52 @@ const setup = ctx => {
     if (curTag !== ctx.prevProps.tag) ctx.setState({ tag: curTag });
   }, ["tag"]);//only pass props key
   /**  equivalent code below in function component
-  useEffect(()=>{
-    if(tag !== propTag)setTag(tag);
-  }, [propTag, tag]);
- */
+    useEffect(()=>{
+      if(tag !== propTag)setTag(tag);
+    }, [propTag, tag]);
+  */
 
-  return {// return result will been collected to ctx.settings
+
+  // define ref computed, the function will been triggered when count changed, user can get the function result from ctx.refComputed.doubleTen later in render block
+  ctx.computed('doubleTen', (newState, oldState)=>{
+    return newState.count * 10;
+  }, ['count']);
+  // but mostly you should think about module computed first if you want to share the computed logic between all refs and only want the computed function only been triggered one time when state state changed, cause every ref will trigger its own computed function;
+
+
+  // if retKey is equal to stateKey, you can write like below
+  ctx.computed('count', ({count})=>count*2);
+
+  // define ref watch, and just like reason of module computed, you should think about module watch first
+  ctx.watch('retKey', ()=>{}, ['count']);
+
+  const fetchProducts = () => {
+    const { type, sex, addr, keyword } = ctx.state;
+    api.fetchProducts({ type, sex, addr, keyword })
+      .then(products => ctx.setState({ products }))
+      .catch(err => alert(err.message));
+  };
+
+  const inc = () => {
+    ctx.setState({ count: this.state.count + 1 });
+  }
+  const dec = () => {
+    ctx.setState({ count: this.state.count - 1 });
+  }
+  //dispatch can commit state to store, and broadcast state to other refs(which belongs to module counter) also
+  const incD = () => {
+    ctx.dispatch('inc');// or better way: this.ctx.moduleReducer.inc()
+  }
+  const decD = () => {
+    ctx.dispatch('dec');// or better way: this.ctx.moduleReducer.dec()
+  }
+
+  // return result will been collected to ctx.settings
+  return {
+    inc,
+    dec,
+    incD,
+    decD,
     fetchProducts,
     //sync type value, sync method can extract value from event automatically
     changeType: ctx.sync('type'),
@@ -444,23 +356,68 @@ const setup = ctx => {
 };
 ```
 
-### [0入侵，渐进式实例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
+- register as a concent component base on class、renderProps, hook
+```jsx
+// base on class
+@register({module:'counter', setup})
+class Counter extends Component {
+  constructor(props, context){
+    super(props, context);
+    this.state = {tag: props.tag};// private state
+  }
+  render() {
+    // now the state is a combination of private state and module state
+    const { count, products, tag } = this.state;
+    // this.state can replace with this.ctx.state 
+    //const { count, products, tag } = this.ctx.state;
 
+    const {inc, dec, indD, decD, fetchProducts, changeType} = this.ctx.settings;    
+
+    return 'your ui xml...';
+  }
+}
+
+// base on renderProps
+const PropsCounter = registerDumb({module:'counter', setup})(ctx=>{
+  const { count, products, tag } = ctx.state;
+  const {inc, dec, indD, decD, fetchProducts, changeType} = ctx.settings;    
+  return 'your ui xml...';
+});
+
+// base on hook
+function HookCounter(){
+  const ctx = useConcent({module:'counter', setup});
+  const { count, products, tag } = ctx.state;
+  const {inc, dec, indD, decD, fetchProducts, changeType} = ctx.settings;    
+
+  return 'your ui xml...';
+}
+```
+
+## ⚖️Some online comparative examples
+* [traditional hook calculator](https://codesandbox.io/s/react-calculator-84f2m) **vs** [concent calculator](https://codesandbox.io/s/react-calculator-8hvqw)
+* [traditional hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4) **vs** [concent query list](https://codesandbox.io/s/query-react-list-00mkd)& [concent shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb)
+
+
+## 💻Some online examples
+* [progressive way to write react app](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
+* [funny counter](https://stackblitz.com/edit/funny-counter)
+* [stackblitz demo collection](https://stackblitz.com/@fantasticsoul)
+* [run api demo](https://stackblitz.com/edit/cc-awesome)
+
+
+## ⌨️Some git repo
+* [concent ant-design-pro](https://github.com/concentjs/antd-pro-concent)
+
+
+## 📰Some articles
+* [聊一聊状态管理&Concent设计理念](https://juejin.im/post/5da7cb9cf265da5bbb1e4f8c)
+* [应战Vue3 setup，Concent携手React出招了！](https://juejin.im/post/5dd123ec5188253dbe5eeebd)
+* [深度挖掘Concent的effect，全面提升useEffect的开发体验](https://juejin.im/post/5deb43256fb9a0166316c3e9)
+* [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
+* [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
 ___
-## 相关文章介绍
-### [聊一聊状态管理&Concent设计理念](https://juejin.im/post/5da7cb9cf265da5bbb1e4f8c)
-### [应战Vue3 setup，Concent携手React出招了！](https://juejin.im/post/5dd123ec5188253dbe5eeebd)
-### [深度挖掘Concent的effect，全面提升useEffect的开发体验](https://juejin.im/post/5deb43256fb9a0166316c3e9)
-### [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
-### [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
-___
-## 🔨更多精彩示例
-### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
-### [concent版本的ant-design-pro](https://github.com/concentjs/antd-pro-concent)
-### [一个相对完整的示例](https://stackblitz.com/edit/cc-awesome)
-### [有趣的counter](https://stackblitz.com/edit/funny-counter)
-___
-## 图文介绍
+## Pic introduction
 ### cc state broadcast process
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
 ### cc component working process

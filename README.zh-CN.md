@@ -88,6 +88,7 @@ ts版本的代码仓库：https://github.com/fantasticsoul/concent-guid-ts
 * **扩展中间件与插件**，允许用户定义中间件拦截所有的数据变更提交记录，做额外处理，也可以自定义插件，接收运行时的发出的各种信号，按需增强concent自身的能力。
 * **去中心化配置模块**，除了`run`接口一次性配置模块，还提供`configure`接口在任意地方动态配置模块。
 * **模块克隆**，支持对已定义模块进行克隆,满足你高维度抽象的需要。
+* **完整的typescript支持**，能够非常容易地书写[优雅的ts代码](https://codesandbox.io/s/concent-guide-ts-zrxd5)。
 
 ## 搭配react-router使用
 请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，暴露`history`对象，可以全局任意地方使用，享受编程式的导航跳转。
@@ -111,7 +112,7 @@ ___
 $ npm i -g create-react-app
 $ create-react-app cc-app
 ```
-### 安装cc
+### 安装concent
 创建好app后，进入你的app根目录，使用npm安装`concent`
 ```sh
 $ cd cc-app
@@ -121,9 +122,57 @@ $ npm i --save concent
 ```sh
 $ yarn add concent
 ```
+### 将`App.js`文件的内容全部替换为以下代码
+> 你也可以[点击这里在线编辑](https://codesandbox.io/s/green-tdd-g2mcr).
+```javascript
+import React, { Component } from 'react';
+import { register, run, useConcent } from 'concent';
 
-### 新手counter示例
-将以下[代码](https://stackblitz.com/edit/concent-doc-home-demo-simple)复制粘贴到`cc-app`目录下的`src/App.js`文件里(注：是完全覆盖掉原来的内容)。
+// 运行concent，配置一个名为counter的模块
+run({
+  counter:{
+    state:{count:1}
+  }
+})
+
+// 定义一个属于counter模块的类组件
+@register('counter')
+class Counter extends Component{
+  render(){
+    //此时setState能够直接提交状态到store，并广播到其他同属于counter模块的实例
+    const add = ()=>this.setState({count:this.state.count+1});
+    return (
+      <div>
+        {this.state.count}
+        <button onClick={add}>add</button>
+      </div>
+    )
+  }
+}
+
+// 定义一个属于counter模块的函数组件
+function FnCounter(){
+  const ctx = useConcent('counter');
+  const add = ()=>ctx.setState({count:ctx.state.count+1});
+  return (
+    <div>
+      {ctx.state.count}
+      <button onClick={add}>add</button>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <div className="App">
+      <Counter />
+      <FnCounter />
+    </div>
+  );
+}
+```
+
+## 🔨Examples with some advanced features
 - 运行concent，载入模块配置
 ```javascript
 import React, { Component, Fragment } from 'react';
@@ -133,6 +182,8 @@ run({
   counter: {// 定义counter模块
     state: {// 【必需】，定义state
       count: 0,
+      products: [],
+      type: '',
     },
     reducer: {// 【可选】定义reducer，书写修改模块状态逻辑
       inc(payload=1, moduleState) {
@@ -210,196 +261,13 @@ export async function inc2ThenDec3(payload, moduleState, actionCtx){
 }
 ```
 
-- 基于react class注册成为cc类组件
-```jsx
-//将Counter类注册为concent组件，属于counter模块
-register('counter')
-class Counter extends Component {
-  //setState 能够将数据将同步到store，广播到其他实例
-  inc = () => {
-    this.setState({ count: this.state.count + 1 });
-  }
-  dec = () => {
-    this.setState({ count: this.state.count - 1 });
-  }
-  //调用dispatch, 同样的能够将数据将同步到store，广播到其他属于counter模块或者连接到counter模块的实例
-  incD = () => {
-    this.ctx.dispatch('inc');// or this.ctx.moduleReducer.inc()
-  }
-  decD = () => {
-    this.ctx.dispatch('dec');// or this.ctx.moduleReducer.dec()
-  }
-  render() {
-    //concent注入counter模块的数据到state
-    const { count } = this.state;
-    return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {count}</div>
-        <button onClick={this.inc}>inc by setState</button>
-        <button onClick={this.dec}>dec by setState</button>
-        <br />
-        <button onClick={this.incD}>inc by dispatch</button>
-        <button onClick={this.decD}>dec by dispatch</button>
-      </div>
-    );
-  }
-}
-```
-- 基于renderProps注册为cc类组件
-```jsx
-import { registerDumb } from 'concent';
-
-const UI = ({count, inc, dec, incD, decD})=>{
-    return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {count}</div>
-        <button onClick={inc}>inc by setState</button>
-        <button onClick={dec}>dec by setState</button>
-        <br />
-        <button onClick={incD}>inc by dispatch</button>
-        <button onClick={decD}>dec by dispatch</button>
-      </div>
-    );
-}
-
-//定义setup，该函数只会在ui初次渲染前执行一次，通常用于定义一些方法，结果会收集到ctx.settings里
-const setup = ctx=>{
-  const inc = () => {
-    ctx.setState({ count: ctx.state.count + 1 });
-  };
-  const dec = () => {
-    ctx.setState({ count: ctx.state.count - 1 });
-  };
-  const incD = () => {
-    ctx.dispatch('inc');
-  };
-  const decD = () => {
-    ctx.dispatch('dec');
-  };
-  return {inc, dec, incD, decD};
-}
-
-// 定义mapProps，该函数在ui每次渲染前被执行，结果将映射到组件的props上
-// 如不定义mapProps, Concent将直接透传ctx给render函数，即 const UI = ctx => <div>ui</div>
-const mapProps = ctx=>{
-  return {count:ctx.state.count, ...ctx.settings};
-}
-
-//将Counter类注册为CcFnCounter，属于counter模块
-const CcFnCounter = registerDumb({module:'counter', setup, mapProps})(UI);
-```
-- 基于hook注册为组件
-```jsx
-import { useConcent } from 'concent';
-
-function HookCounter(){
-  const { setState, dispatch } = useConcent('counter');
-  const inc = () => {
-    setState({ count: ctx.state.count + 1 });
-  };
-  const dec = () => {
-    setState({ count: ctx.state.count - 1 });
-  };
-  const incD = () => {
-    dispatch('inc');
-  };
-  const decD = () => {
-    dispatch('dec');
-  };
-   return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {count}</div>
-        <button onClick={inc}>inc by setState</button>
-        <button onClick={dec}>dec by setState</button>
-        <br />
-        <button onClick={incD}>inc by dispatch</button>
-        <button onClick={decD}>dec by dispatch</button>
-      </div>
-   );
-}
-
-```
-- 更优的hook写法，将函数提升为静态api，函数组件内部在重复渲染期间不再产生大量临时闭包函数
-```jsx
-import { useConcent } from 'concent';
-
-//同样的，该函数只在ui首次渲染前被执行一次！！！
-const setup = ctx =>{
-  const {setState, dispatch} = ctx;
-  const inc = () => {
-    setState({ count: ctx.state.count + 1 });
-  };
-  const dec = () => {
-    setState({ count: ctx.state.count - 1 });
-  };
-  const incD = () => {
-    dispatch('inc');
-    // or ctx.moduleReducer.inc()
-  };
-  const decD = () => {
-    dispatch('dec');
-    // or ctx.moduleReducer.dec()
-  };
-  return {inc, dec, incD, decD};
-}
-
-function HookCounter(){
-  const {settings, state} = useConcent({module:'counter', setup});
-  const {inc, dec, incD, decD} = settings;
-
-   return (
-      <div style={{ padding: '12px', margin: '6px' }}>
-        <div>count: {state.count}</div>
-        <button onClick={inc}>inc by setState</button>
-        <button onClick={dec}>dec by setState</button>
-        <br />
-        <button onClick={incD}>inc by dispatch</button>
-        <button onClick={decD}>dec by dispatch</button>
-      </div>
-   );
-}
-
-```
-- 当然setup同样可以传递给类组件，这意味着函数组件和类组件的形态可以自由切换。
-```js
-@register({module:'counter', setup})
-class Counter extends Component {
-  render() {
-    const { count } = this.state;
-    const {inc, dec, incD, decD} = this.ctx.settings;
-    // 此处ui渲染略......
-    return <>your ui</>
-  }
-}
-```
-- 稍加处理，将useConcent隐藏起来，即可使用一个标准的组合型api创建组件
-```js
-import { registerHookComp } from 'concent';
-
-export const AwesomeComp = registerHookComp({
-  module:'counter',
-  setup,
-  render: ctx=>{
-      const { count } = ctx.state;
-      const {inc, dec, incD, decD} = ctx.settings;
-      // 此处ui渲染略......
-      return <>your ui</>
-  }
-});
-```
-- setup里可以定义事件监听，或者生命周期函数，统一类组件和函数组件的生命生命周期差异性，增强react组件能力
+- 定义 setup  
+`setup`只会在初次渲染之前被执行一次，同样用于定义一些副作用函数，或者一些随后可以在渲染函数体内通过`ctx.settings`取到的方法，所以将不在产生大量的**临时闭包函数**，且`setup`可以同时传递给类组件和函数组件，意味着你可以随时地切换组件形态，优雅的复用业务逻辑。
 ```js
 const setup = ctx => {
   console.log('setup函数只会在组件初次渲染之前被执行一次');
   
   ctx.on('someEvent', (p1, p2)=> console.log('receive ', p1, p2));
-  
-  const fetchProducts = () => {
-    const { type, sex, addr, keyword } = ctx.state;
-    api.fetchProducts({ type, sex, addr, keyword })
-      .then(products => ctx.setState({ products }))
-      .catch(err => alert(err.message));
-  };
 
   ctx.effect(() => {
     fetchProducts();
@@ -430,38 +298,120 @@ const setup = ctx => {
     if (curTag !== ctx.prevProps.tag) ctx.setState({ tag: curTag });
   }, ["tag"]);//这里只需要传key名称就可以了
   /** 原函数组件内写法：
-  useEffect(()=>{
-    // 首次渲染时，此副作用还是会执行的，在内部巧妙的再比较一次，避免一次多余的ui更新
-    // 等价于类组件里getDerivedStateFromProps里的逻辑
-    if(tag !== propTag)setTag(tag);
-  }, [propTag, tag]);
+    useEffect(()=>{
+      // 首次渲染时，此副作用还是会执行的，在内部巧妙的再比较一次，避免一次多余的ui更新
+      // 等价于类组件里getDerivedStateFromProps里的逻辑
+      if(tag !== propTag)setTag(tag);
+    }, [propTag, tag]);
  */
 
-  return {// 返回结果收集在ctx.settings里
+
+  // 定义实例计算函数，当count值变化时会触发其计算，用户可随后在渲染函数体内通过ctx.refComputed.doubleTen获得计算结果
+  ctx.computed('doubleTen', (newState, oldState)=>{
+    return newState.count * 10;
+  }, ['count']);
+  // 大多数情况你应该首先考虑定义模块计算函数，如果你想所有实例共享计算逻辑且计算函数只被执行一次，因为对于实例计算函数来说是每个实例都会自己单独触发的
+
+
+  // 如果结果key和状态key命名一样，可简写为如下格式
+  ctx.computed('count', ({count})=>count*2);
+
+  // 定义实例观察函数, 和模块计算的理由一样，你应该优先考虑定义模块模块级别的观察函数
+  ctx.watch('retKey', ()=>{}, ['count']);
+
+  const fetchProducts = () => {
+    const { type, sex, addr, keyword } = ctx.state;
+    api.fetchProducts({ type, sex, addr, keyword })
+      .then(products => ctx.setState({ products }))
+      .catch(err => alert(err.message));
+  };
+
+  const inc = () => {
+    ctx.setState({ count: this.state.count + 1 });
+  }
+  const dec = () => {
+    ctx.setState({ count: this.state.count - 1 });
+  }
+  // 通过dispatch触发reducer函数
+  const incD = () => {
+    ctx.dispatch('inc');// 也可以写为: this.ctx.moduleReducer.inc()
+  }
+  const decD = () => {
+    ctx.dispatch('dec');// 也可以写为: this.ctx.moduleReducer.dec()
+  }
+
+  // 返回结果将收集ctx.settings里
+  return {
+    inc,
+    dec,
+    incD,
+    decD,
     fetchProducts,
-    //推荐使用此方式，把方法定义在settings里，下面示例故意直接使用sync语法糖函数
+    //同步type值, sync能够自动提取event事件里的值
     changeType: ctx.sync('type'),
   };
 };
 ```
 
-### [0入侵，渐进式实例](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
+- 基于`class`、`renderProps`, `hook`3种方式注册为concent组件
+```jsx
+@register({module:'counter', setup})
+class Counter extends Component {
+  constructor(props, context){
+    super(props, context);
+    this.state = {tag: props.tag};// 私有状态
+  }
+  render() {
+    // 此时的state由私有状态和模块状态合并而得
+    const { count, products, tag } = this.state;
+    // this.state 也可以写为 this.ctx.state 
+    //const { count, products, tag } = this.ctx.state;
 
+    const {inc, dec, indD, decD, fetchProducts, changeType} = this.ctx.settings;    
+
+    return 'your ui xml...';
+  }
+}
+
+const PropsCounter = registerDumb({module:'counter', setup})(ctx=>{
+  const { count, products, tag } = ctx.state;
+  const {inc, dec, indD, decD, fetchProducts, changeType} = ctx.settings;    
+  return 'your ui xml...';
+});
+
+function HookCounter(){
+  const ctx = useConcent({module:'counter', setup});
+  const { count, products, tag } = ctx.state;
+  const {inc, dec, indD, decD, fetchProducts, changeType} = ctx.settings;    
+
+  return 'your ui xml...';
+}
+```
+
+## ⚖️在线比较
+* [基于hook的计算器](https://codesandbox.io/s/react-calculator-84f2m) **vs** [基于concent的计算器](https://codesandbox.io/s/react-calculator-8hvqw)
+* [基于hook的查询列表](https://codesandbox.io/s/elastic-dhawan-qw7m4) **vs** [基于concent的查询列表](https://codesandbox.io/s/query-react-list-00mkd)& [基于concent的共享状态查询列表](https://codesandbox.io/s/query-react-list-shared-state-l3fhb)
+
+
+## 💻在线示例
+* [渐进式的开发react应用](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code?file=index.js)
+* [有趣的counter](https://stackblitz.com/edit/funny-counter)
+* [stackblitz示例集合](https://stackblitz.com/@fantasticsoul)
+* [run api demo](https://stackblitz.com/edit/cc-awesome)
+
+
+## ⌨️在线git
+* [concent ant-design-pro](https://github.com/concentjs/antd-pro-concent)
+
+
+## 📰图文收集
+* [聊一聊状态管理&Concent设计理念](https://juejin.im/post/5da7cb9cf265da5bbb1e4f8c)
+* [应战Vue3 setup，Concent携手React出招了！](https://juejin.im/post/5dd123ec5188253dbe5eeebd)
+* [深度挖掘Concent的effect，全面提升useEffect的开发体验](https://juejin.im/post/5deb43256fb9a0166316c3e9)
+* [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
+* [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
 ___
-## 相关文章介绍
-### [聊一聊状态管理&Concent设计理念](https://juejin.im/post/5da7cb9cf265da5bbb1e4f8c)
-### [应战Vue3 setup，Concent携手React出招了！](https://juejin.im/post/5dd123ec5188253dbe5eeebd)
-### [深度挖掘Concent的effect，全面提升useEffect的开发体验](https://juejin.im/post/5deb43256fb9a0166316c3e9)
-### [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
-### [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
-___
-## 🔨更多精彩示例
-### [stackblitz在线练习示例集合](https://stackblitz.com/@fantasticsoul)
-### [concent版本的ant-design-pro](https://github.com/concentjs/antd-pro-concent)
-### [一个相对完整的示例](https://stackblitz.com/edit/cc-awesome)
-### [有趣的counter](https://stackblitz.com/edit/funny-counter)
-___
-## 图文介绍
+## 图片介绍
 ### cc状态分发流程
 ![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
 ### cc组件渲染流程
