@@ -20,8 +20,11 @@ export default function (ref, callByDidMount) {
     if (needJudgeImmediate) {
       if (immediate === false) return;
     }
+    const prevCb = eid_cleanCb_[eId];
     const cb = fn(ctx, isDidMount);
+
     if (cb) eid_cleanCb_[eId] = cb;
+    if (prevCb) prevCb(ctx);// let ctx.effect have the totally same behavior with useEffect
   };
 
   if (callByDidMount) {

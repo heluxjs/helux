@@ -1096,7 +1096,7 @@
     refs: refs,
     info: {
       startupTime: Date.now(),
-      version: '1.5.150',
+      version: '1.5.151',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4334,8 +4334,10 @@
           if (immediate === false) return;
         }
 
+        var prevCb = eid_cleanCb_[eId];
         var cb = fn(ctx, isDidMount);
         if (cb) eid_cleanCb_[eId] = cb;
+        if (prevCb) prevCb(ctx); // let ctx.effect have the totally same behavior with useEffect
       };
     };
 
