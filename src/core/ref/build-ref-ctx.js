@@ -95,7 +95,7 @@ export default function (ref, params, liteLevel = 5) {
   const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, module);
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
-  // create cc api
+  // declare cc state series api
   const changeState = (state, option) => {
     changeRefState(state, option, ref);
   }
@@ -125,11 +125,12 @@ export default function (ref, params, liteLevel = 5) {
   const eid_effectReturnCb_ = {}, eid_effectPropsReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ };
   const auxMap = {};
+  const refs = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
-
+  
   const props = getOutProps(ref.props);
   const ctx = {
     // static params
@@ -193,10 +194,14 @@ export default function (ref, params, liteLevel = 5) {
     setState,
     setModuleState,
     forceUpdate,
-    changeState,
+    changeState,// not expose in d.ts
+    refs,
+    useRef: (refName) => {
+      return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
+    },
 
-    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
-    __$$ccSetState: hf.makeCcSetStateHandler(ref),
+    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),// not expose in d.ts
+    __$$ccSetState: hf.makeCcSetStateHandler(ref),// not expose in d.ts
   };
   ref.ctx = ctx;
   ref.setState = setState;

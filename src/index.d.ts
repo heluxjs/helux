@@ -411,6 +411,8 @@ export interface ICtxBase {
   reactForceUpdate: (callback?: () => void) => void;
   initState: (state: IAnyObj) => void;
   setState: typeof refCtxSetState;
+  refs: { [key: PropKey]: { current: any } };
+  useRef: (refName: PropKey) => any;//for class return ref=>{...}, for function return hookRef
   forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;

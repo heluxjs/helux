@@ -105,7 +105,8 @@ export default (
         }
       }
       if (ignoredStateKeys.length) {
-        justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid`)
+        const reason = `they are not ${sourceType === CATE_REF ? 'private' : 'module'}, fn is ${sourceType} ${fnType}`;
+        justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid, ${reason}`)
       }
     }
 

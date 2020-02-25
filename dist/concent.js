@@ -1158,7 +1158,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.158',
+      version: '1.5.160',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -3907,7 +3907,7 @@
     setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey); // record ccClassKey
 
     var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_$2, module);
-    if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // create cc api
+    if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // declare cc state series api
 
     var changeState = function changeState(state, option) {
       changeRefState(state, option, ref);
@@ -3955,7 +3955,8 @@
       effectPropsItems: effectPropsItems,
       eid_effectPropsReturnCb_: eid_effectPropsReturnCb_
     };
-    var auxMap = {}; // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
+    var auxMap = {};
+    var refs = {}; // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
     // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
 
     var computedDep = {},
@@ -3996,7 +3997,13 @@
       moduleReducer: {},
       connectedReducer: {},
       reducer: {}
-    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
+    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
+      return function (ref) {
+        return refs[refName] = {
+          current: ref
+        };
+      }; // keep the same shape with hook useRef
+    }, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
     ref.ctx = ctx;
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
@@ -5469,11 +5476,14 @@
           cachedLocation = curLocation;
         } else {
           strictWarning(tip);
+          return false;
         }
       }
     } else {
       letRunOk();
     }
+
+    return true;
   }
 
   function startup (_temp, _temp2) {
@@ -5516,18 +5526,21 @@
         _ref2$reComputed = _ref2.reComputed,
         reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed;
 
+    var canStartup = true;
+
     try {
       throw new Error();
     } catch (err) {
-      checkStartup(err);
+      canStartup = checkStartup(err);
     }
 
-    if (isHot !== undefined) ccContext.isHot = isHot;
-    ccContext.reComputed = reComputed;
+    if (!canStartup) return;
 
     try {
       console.log("%c window.name:" + window.name, 'color:green;border:1px solid green');
       justTip$1("cc version " + ccContext.info.version);
+      if (isHot !== undefined) ccContext.isHot = isHot;
+      ccContext.reComputed = reComputed;
       ccContext.errorHandler = errorHandler;
       var rv = ccContext.runtimeVar;
       rv.alwaysGiveState = alwaysGiveState;
@@ -6124,6 +6137,13 @@
       buildRefCtx(hookRef, params, lite);
       beforeMount(hookRef, setup, bindCtxToMethod);
       cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
+      var refCtx = hookRef.ctx; // rewrite useRef for CcHook
+
+      refCtx.useRef = function (refName) {
+        var ref = React.useRef(null);
+        refCtx.refs[refName] = ref;
+        return ref;
+      };
     };
 
     if (isFirstRendered) {

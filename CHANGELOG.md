@@ -1,3 +1,7 @@
+#### 2020-02-25
+1.5.160 发布
+* feature: 新增`ctx.refs`和`ctx.useRef`,统一类组件和函数组件的ref获取方式
+
 #### 2020-02-24
 1.5.156 发布
 * optimize: 删除额外reducer配置和reducerModule相关逻辑（invoke可替代它的功能且对ts更友好）

@@ -87,6 +87,14 @@ export default function useConcent(registerOption, ccClassKey){
     buildRefCtx(hookRef, params, lite);
     beforeMount(hookRef, setup, bindCtxToMethod);
     cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
+
+    const refCtx = hookRef.ctx;
+    // rewrite useRef for CcHook
+    refCtx.useRef = function (refName) {
+      const ref = React.useRef(null);
+      refCtx.refs[refName] = ref;
+      return ref;
+    }
   }
 
   if (isFirstRendered) {
