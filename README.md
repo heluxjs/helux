@@ -133,6 +133,7 @@ $ yarn add concent
 
 ### Replace App.js file content with the code below
 > you can also review the [online example](https://codesandbox.io/s/green-tdd-g2mcr).
+
 ```javascript
 import React, { Component } from 'react';
 import { register, run, useConcent } from 'concent';
@@ -184,6 +185,7 @@ export default function App() {
 
 ## 🔨Examples with some advanced features
 - run concent，load model configuration
+
 ```js
 import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';
