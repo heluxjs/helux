@@ -307,3 +307,17 @@ export function makeCommitHandler() {
   const getFnCommittedState = () => state;
   return { commit, getFnCommittedState }
 }
+
+export function isOnlineEditor() {
+  let result = false;
+  if (window) {
+    if (
+      window.name === 'previewFrame' //for stackblitz
+      || window.__SANDBOX_DATA__ // for codesandbox
+      || window.BrowserFS // for codesandbox
+    ) {
+      result = true;
+    }
+  }
+  return result;
+}

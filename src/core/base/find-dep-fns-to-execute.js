@@ -1,4 +1,5 @@
 import { makeCommitHandler, okeys, justWarning } from '../../support/util';
+import { FN_CU, FN_WATCH, CATE_MODULE, CATE_REF } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import cuMap from '../../cc-context/computed-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
@@ -24,25 +25,25 @@ export function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx)
 // sourceType: module ref
 export default (
   refCtx, stateModule, refModule, oldState, finder,
-  toComputedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
+  toBeComputedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
   fnType, sourceType, computedContainer,
 ) => {
   let whileCount = 0;
-  let initComputedState = toComputedState;
+  let curToBeComputedState = toBeComputedState;
   let shouldCurrentRefUpdate = true;
 
-  while (initComputedState) {
+  while (curToBeComputedState) {
     whileCount++;
     // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
     // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
     const beforeMountFlag = whileCount === 1 ? isFirstCall : false;
-    const { pickedFns, setted, changed } = finder(initComputedState, beforeMountFlag);
+    const { pickedFns, setted, changed } = finder(curToBeComputedState, beforeMountFlag);
     if (!pickedFns.length) break;
 
     const { commit, getFnCommittedState } = makeCommitHandler();
     const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
     pickedFns.forEach(({ retKey, fn, depKeys }) => {
-      const fnCtx = { retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, stateModule, refModule, oldState, committedState: initComputedState, refCtx };
+      const fnCtx = { retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, stateModule, refModule, oldState, committedState: curToBeComputedState, refCtx };
       const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
 
       if (fnType === 'computed') {
@@ -53,18 +54,58 @@ export default (
       }
     });
 
-    initComputedState = getFnCommittedState();
-    if (initComputedState) {
+    curToBeComputedState = getFnCommittedState();
+    if (curToBeComputedState) {
+      const assignCuState = (toAssign, judgeEmpty = false) => {
+        curToBeComputedState = toAssign;
+        if (judgeEmpty && okeys(toAssign).length === 0) {
+          curToBeComputedState = null;
+          return;
+        }
+        Object.assign(initNewState, curToBeComputedState);
+        Object.assign(initDeltaCommittedState, curToBeComputedState);
+      }
+
       // !!!确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
       const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
-      const { partialState, ignoredStateKeys } = extractStateByKeys(initComputedState, stateKeys, true, true);
+      const { partialState, ignoredStateKeys } = extractStateByKeys(curToBeComputedState, stateKeys, true, true);
+
       if (partialState) {
-        initComputedState = partialState;
-        Object.assign(initNewState, initComputedState);
-        Object.assign(initDeltaCommittedState, initComputedState);
+        if (fnType === FN_WATCH) {
+          let modDep;
+          if (sourceType === CATE_REF) {
+            modDep = refCtx.computedDep[refCtx.module] || {};
+          } else {
+            modDep = cuMap._computedDep[stateModule] || {};
+          }
+          const { stateKey_retKeys_ } = modDep;
+
+          if (stateKey_retKeys_) {
+            // 确保watch函数里调用commit提交的state keys没有出现在computed函数的depKeys里
+            // 因为按照先执行computed，再执行watch的顺序，提交了这种stateKey，会照成computed函数返回结果过失的情况产生
+            const ignoredStateKeysAsDepInCu = [], canAssignState = {};
+            okeys(partialState).forEach(stateKey => {
+              if (stateKey_retKeys_[stateKey]) {
+                ignoredStateKeysAsDepInCu.push(stateKey);
+              } else {
+                canAssignState[stateKey] = partialState[stateKey];
+              }
+            });
+
+            if (ignoredStateKeysAsDepInCu.length > 0) {
+              justWarning(`these state keys[${ignoredStateKeysAsDepInCu.join(',')}] will been ignored, cause they are also appeared in computed depKeys,
+              cc suggest you move the logic to computed file.`)
+            }
+            assignCuState(canAssignState, true);
+          } else {
+            assignCuState(partialState);
+          }
+        } else {
+          assignCuState(partialState);
+        }
       }
       if (ignoredStateKeys.length) {
-        justWarning(`these state keys were ignored ${ignoredStateKeys.join(',')}`)
+        justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid`)
       }
     }
 

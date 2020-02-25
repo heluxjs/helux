@@ -15,7 +15,7 @@ const {
 const { verifyKeys, makeError: me, verboseInfo: vbi } = util;
 
 function checkCcStartupOrNot() {
-  if (ccContext.isCcAlreadyStartup !== true) {
+  if (ccContext.isStartup !== true) {
     throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
   }
 }
@@ -82,11 +82,10 @@ function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName,
  */
 export default function (
   module = MODULE_DEFAULT, ccClassKey, renderKeyClasses, classKeyPrefix, inputWatchedKeys,
-  inputStoredKeys = [], connect, reducerModule, __checkStartUp, __calledBy
+  inputStoredKeys = [], connect, __checkStartUp, __calledBy
 ) {
   if (__checkStartUp === true) checkCcStartupOrNot();
   const allowNamingDispatcher = __calledBy === 'cc';
-  const _reducerModule = reducerModule || module;//if reducerModule not defined, will be equal module;
 
   checker.checkModuleName(module, false, `module[${module}] is not configured in store`);
   checker.checkStoredKeys(moduleName_stateKeys_[module], inputStoredKeys);
@@ -114,5 +113,5 @@ export default function (
   mapCcClassKeyToCcClassContext(_ccClassKey, _renderKeyClasses, module, inputWatchedKeys, _watchedKeys, connectedModuleKeyMapping, connectedModuleNames);
   mapModuleToCcClassKeys(module, _ccClassKey);
 
-  return { _module: module, _reducerModule, _connect, _watchedKeys, _ccClassKey };
+  return { _module: module, _connect, _watchedKeys, _ccClassKey };
 }

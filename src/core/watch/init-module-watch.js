@@ -14,10 +14,13 @@ const callInfo = { payload: null, renderKey: '', delay: -1 };
  * 设置watch值，过滤掉一些无效的key
  */
 export default function (module, moduleWatch, append = false) {
+  if(!moduleWatch) return;
+
+  const tip = `module[${module}] watch`;
   if (!isPlainJsonObject(moduleWatch)) {
-    throw new Error(`StartUpOption.watch.${module}'s value ${NOT_A_JSON}`);
+    throw new Error(`${tip} ${NOT_A_JSON}`);
   }
-  checker.checkModuleName(module, false, `watch.${module} is invalid`);
+  checker.checkModuleName(module, false, `${tip} is invalid`);
 
   const rootWatchDep = ccContext.watch.getRootWatchDep();
   const rootWatchRaw = ccContext.watch.getRootWatchRaw();

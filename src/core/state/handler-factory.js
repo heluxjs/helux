@@ -231,7 +231,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
   const callerModule = callerRef.ctx.module; 
   const {
     module: targetModule = callerModule, context = false,
-    cb, __innerCb, type, reducerModule, calledBy, fnName, delay = -1, renderKey,
+    cb, __innerCb, type, calledBy, fnName, delay = -1, renderKey,
     chainId, oriChainId, chainId_depth_, isSilent
     // sourceModule
   } = executionContext;
@@ -248,13 +248,13 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
       // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
       const dispatch = makeDispatchHandler(
-        callerRef, false, isSilent, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_
+        callerRef, false, isSilent, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
       const silentDispatch = makeDispatchHandler(
-        callerRef, false, true, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_
+        callerRef, false, true, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
       const lazyDispatch = makeDispatchHandler(
-        callerRef, true, isSilent, targetModule, reducerModule, renderKey, delay, chainId, oriChainId, chainId_depth_
+        callerRef, true, isSilent, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
 
       // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
@@ -342,7 +342,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
         if (v.state) {
           changeRefState(v.state, {
             renderKey, module: v.module, reactCallback: newCb, type,
-            reducerModule, calledBy, fnName, delay, payload
+            calledBy, fnName, delay, payload
           }, callerRef);
         }
       });
@@ -361,21 +361,21 @@ export function invokeWith(userLogicFn, executionContext, payload){
 }
 
 export function dispatch({
-  callerRef, module: inputModule, reducerModule: inputReducerModule, renderKey, isSilent,
+  callerRef, module: inputModule, renderKey, isSilent,
   type, payload, cb: reactCallback, __innerCb, delay = -1, chainId, oriChainId, chainId_depth_ } = {}
 ){
-  const targetReducerMap = _reducer[inputReducerModule];
+  const targetReducerMap = _reducer[inputModule];
   if (!targetReducerMap) {
-    return __innerCb(new Error(`no reducerMap found for reducer module:${inputReducerModule}`));
+    return __innerCb(new Error(`no reducerMap found for module:[${inputModule}]`));
   }
   const reducerFn = targetReducerMap[type];
   if (!reducerFn) {
     const fns = Object.keys(targetReducerMap);
-    return __innerCb(new Error(`no reducer defined in ccContext for reducer module:${inputReducerModule} type:${type}, maybe you want to invoke one of them:${fns}`));
+    return __innerCb(new Error(`no reducer fn found for [${inputModule}/${type}], is these fn you want:${fns}`));
   }
 
   const executionContext = {
-    callerRef, module: inputModule, reducerModule: inputReducerModule, type,
+    callerRef, module: inputModule, type,
     cb: reactCallback, context: true, __innerCb, calledBy: DISPATCH, delay, renderKey, isSilent,
     chainId, oriChainId, chainId_depth_
   };
@@ -383,7 +383,7 @@ export function dispatch({
 }
 
 export function makeDispatchHandler(
-  callerRef, in_isLazy, in_isSilent, defaultModule, defaultReducerModule,
+  callerRef, in_isLazy, in_isSilent, defaultModule,
   defaultRenderKey = '', delay = -1, chainId, oriChainId, chainId_depth_ = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
@@ -409,7 +409,6 @@ export function makeDispatchHandler(
     let _type, _cb;
 
     let _module = defaultModule;
-    let _reducerModule = defaultReducerModule || defaultModule;
 
     const callInvoke = ()=>{
       const iHandler = makeInvokeHandler(callerRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, chainId_depth_ });
@@ -420,9 +419,8 @@ export function makeDispatchHandler(
       if (Array.isArray(paramObjType)) {
         return callInvoke();
       }
-      const { module, reducerModule, type, cb } = paramObj;
+      const { module, type, cb } = paramObj;
       if (module) _module = module;
-      _reducerModule = reducerModule || (module || defaultReducerModule);
       _type = type;
       _cb = cb;
 
@@ -436,14 +434,13 @@ export function makeDispatchHandler(
         }
         targetFirstParam = fnName;
 
-        // 这里非常重要，只有处于第一层的调用时，才获取函数对象上的__stateModule __reducerModule参数
+        // 这里非常重要，只有处于第一层的调用时，才获取函数对象上的__stateModule参数
         // 防止克隆自模块a的模块b在reducer文件里基于函数引用直接调用时，取的是a的模块相关参数了，但是源头由b发起，应该是b才对
         if (chainId_depth_[_oriChainId] == 1) {
           // let dispatch can apply reducer function directly!!!
           // !!! 如果用户在b模块的组件里dispatch直接调用a模块的函数，但是确实想修改的是b模块的数据，只是想复用a模块的那个函数的逻辑
           // 那么千万要注意，写为{module:'b', fn:xxxFoo}的模式
           _module = paramObj.__stateModule;
-          _reducerModule = paramObj.__reducerModule;
         }
       }
 
@@ -453,13 +450,7 @@ export function makeDispatchHandler(
         _type = targetFirstParam;
       } else if (slashCount === 1) {
         const [module, type] = targetFirstParam.split('/');
-        _module = module;
-        _reducerModule = _module;
-        _type = type;
-      } else if (slashCount === 2) {
-        const [module, reducerModule, type] = targetFirstParam.split('/');
         if (module) _module = module;//targetFirstParam may like: /foo/changeName
-        _reducerModule = reducerModule;
         _type = type;
       } else {
         return Promise.reject(me(ERR.CC_DISPATCH_STRING_INVALID, vbi(targetFirstParam)));
@@ -474,7 +465,7 @@ export function makeDispatchHandler(
 
     const p = new Promise((resolve, reject) => {
       dispatch({
-        callerRef, module: _module, reducerModule: _reducerModule, type: _type, payload,
+        callerRef, module: _module, type: _type, payload,
         cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject),
         delay: _delay, renderKey: _renderKey, isSilent,
         chainId: _chainId, oriChainId: _oriChainId, chainId_depth_

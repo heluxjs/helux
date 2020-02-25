@@ -64,7 +64,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
  */
 export default function (state, {
   module, skipMiddleware = false, payload,
-  reactCallback, type, reducerModule, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
+  reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
 ) {
   if (state === undefined) return;
 
@@ -77,7 +77,7 @@ export default function (state, {
   const stateFor = getStateFor(module, refModule);
   const passToMiddleware = {
     calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
-    state, refModule, module, reducerModule, fnName
+    state, refModule, module, fnName
   };
   const callInfo = { payload, renderKey, ccKey };
 

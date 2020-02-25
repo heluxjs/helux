@@ -4,12 +4,12 @@ import * as util from '../../support/util';
 import * as checker from '../checker';
 import guessDuplicate from '../base/guess-duplicate';
 
-export default function (module, mState, moduleStateMustNotDefinedInStore = true) {
+export default function (module, mState, moduleMustNotExisted = true) {
   //force MODULE_VOID state as {}
   let state = module === MODULE_VOID ? {} : mState;
 
   try {
-    checker.checkModuleNameAndState(module, state, moduleStateMustNotDefinedInStore);
+    checker.checkModuleNameAndState(module, state, moduleMustNotExisted);
   } catch (err) {
     guessDuplicate(err, module, 'state');
   }
@@ -30,6 +30,8 @@ export default function (module, mState, moduleStateMustNotDefinedInStore = true
 
   if (module === MODULE_GLOBAL) {
     const globalStateKeys = ccContext.globalStateKeys;
-    statKeys.forEach(key => globalStateKeys.push(key));
+    statKeys.forEach(key => {
+      if (!globalStateKeys.includes(key)) globalStateKeys.push(key)
+    });
   }
 }

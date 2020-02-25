@@ -10,7 +10,6 @@ function tagReducerFn(reducerFns, moduleName) {
     const fn = (...args) => oldFn(...args);
     fn.__fnName = fnName;
     fn.__stateModule = moduleName;
-    fn.__reducerModule = moduleName;
     taggedReducer[fnName] = fn;
   });
   return taggedReducer;
@@ -21,7 +20,7 @@ function tagReducerFn(reducerFns, moduleName) {
  * @param {string} existingModule
  */
 export default (newModule, existingModule, { state, reducer, computed, watch, init } = {}) => {
-  if (!ccContext.isCcAlreadyStartup) {
+  if (!ccContext.isStartup) {
     throw new Error('cc is not startup yet');
   }
   checker.checkModuleNameBasically(newModule);
@@ -32,7 +31,7 @@ export default (newModule, existingModule, { state, reducer, computed, watch, in
   if (state) Object.assign(stateCopy, state);
 
   let reducerOriginal = ccContext.reducer._reducer[existingModule] || {};
-  // attach  __fnName  __stateModule __reducerModule, 不能污染原函数的dispatch逻辑里需要的__stateModule __reducerModule
+  // attach  __fnName  __stateModule, 不能污染原函数的dispatch逻辑里需要的__stateModule
   const taggedReducerOriginal = tagReducerFn(reducerOriginal, newModule);
   if (reducer) Object.assign(taggedReducerOriginal, tagReducerFn(reducer, newModule));
 

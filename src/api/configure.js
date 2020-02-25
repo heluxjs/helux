@@ -18,12 +18,12 @@ const { isPlainJsonObject } = util;
  * @param {string} module
  * @param {{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean}} config
  */
-export default function(module, config) {
-  if (!ccContext.isCcAlreadyStartup) {
-    throw new Error('cc.configure must be called after cc.run!');
+export default function (module, config) {
+  if (!ccContext.isStartup) {
+    throw new Error('configure must be called after run!');
   }
   if (!isPlainJsonObject(config)) {
-    throw new Error(`[[configure]] config ${NOT_A_JSON}`);
+    throw new Error(`param config ${NOT_A_JSON}`);
   }
   if (module === MODULE_GLOBAL) {
     throw new Error('configuring global module is not allowed');
@@ -32,11 +32,11 @@ export default function(module, config) {
   const { state, reducer, computed, watch, init, isClassSingle } = config;
 
   if (reducer && !isPlainJsonObject(reducer)) {
-    throw new Error(`[[configure]] config.reducer ${NOT_A_JSON}`);
+    throw new Error(`config.reducer ${NOT_A_JSON}`);
   }
 
   initModuleState(module, state, true);
-  initModuleReducer(module, reducer, true);
+  initModuleReducer(module, reducer);
 
   computed && initModuleComputed(module, computed);
   watch && initModuleWatch(module, watch);

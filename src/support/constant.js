@@ -43,9 +43,10 @@ export const SYNC = 'sync';
 
 export const CATE_MODULE = 'module';
 export const CATE_REF = 'ref';
+export const FN_CU = 'computed';
+export const FN_WATCH = 'watch';
 
 export const ERR = {
-  CC_ALREADY_STARTUP: 1000,
   CC_MODULE_NAME_DUPLICATE: 1002,
   CC_MODULE_NOT_FOUND: 1012,
   CC_DISPATCH_STRING_INVALID: 1013,
@@ -59,24 +60,21 @@ export const ERR = {
   CC_STORED_KEYS_NEED_CCKEY: 1207,
 
   CC_REDUCER_NOT_A_FUNCTION: 1503,
-  CC_REDUCER_MODULE_NAME_DUPLICATE: 1511,
 }
 
 export const ERR_MESSAGE = {
-  [ERR.CC_ALREADY_STARTUP]: 'concent startup method con only be invoked one time, ignore this message if under hot reload mode',
   [ERR.CC_MODULE_NAME_DUPLICATE]: 'module name duplicate!',
   [ERR.CC_MODULE_NOT_FOUND]: `module not found!`,
-  [ERR.CC_DISPATCH_STRING_INVALID]: `when type param is string, it must be one of these format: (fnName)、(moduleName)/(fnName)、(moduleName)/(reducerModuleName)/(fnName)`,
+  [ERR.CC_DISPATCH_STRING_INVALID]: `when type param is string, it must be one of these format: (fnName)、(moduleName)/(fnName)`,
   [ERR.CC_DISPATCH_PARAM_INVALID]: `dispatch param type is invalid, it must be string or object`,
   [ERR.CC_MODULE_NOT_CONNECTED]: `module not been connected by ref`,
 
   [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `props.ccKey duplicate`,
-  [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: 'ccClass is declared as singleton, now cc found you are trying new another one instance! ',
-  [ERR.CC_STORED_KEYS_NEED_CCKEY]: 'you must explicitly specify a ccKey for ccInstance if you want to use storedKeys!',
+  [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: 'ccClass is declared as singleton, trying new another one instance is not allowed! ',
+  [ERR.CC_STORED_KEYS_NEED_CCKEY]: 'you must explicitly specify a ccKey for ccInstance when set storedKeys!',
 
-  [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate while you register a react class!  ',
+  [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate!',
 
-  [ERR.CC_REDUCER_MODULE_NAME_DUPLICATE]: `reducer module name duplicate!`,
   [ERR.CC_REDUCER_NOT_A_FUNCTION]: `reducer must be a function!`,
 
 }

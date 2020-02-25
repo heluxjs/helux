@@ -13,19 +13,22 @@ import { on, clearCbs } from '../plugin';
 
 const { isPlainJsonObject, okeys } = util;
 
+function checkObj(rootObj, tag) {
+  if (!isPlainJsonObject(rootObj)) {
+    throw new Error(`${tag} ${NOT_A_JSON}`);
+  }
+}
+
 /** 对已有的store.$$global状态追加新的state */
 // export function appendGlobalState(globalState) {
 //   // todo
 // }
 
 export function configStoreState(storeState) {
-  storeState[MODULE_VOID] = {};//force MODULE_VOID state as {}
+  checkObj(storeState, 'state');
 
-  if (!isPlainJsonObject(storeState)) {
-    throw new Error(`the storeState ${NOT_A_JSON}`);
-  }
-  const store = ccContext.store;
-  store.initStateDangerously(MODULE_CC, {});
+  delete storeState[MODULE_VOID];
+  delete storeState[MODULE_CC];
 
   if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
   if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
@@ -41,45 +44,32 @@ export function configStoreState(storeState) {
 
 /**
  * 
- * @param {{[reducerModuleName:string]:{[reducerFnType:string]:function}}} rootReducer 
+ * @param {{[moduleName:string]:{[reducerFnType:string]:function}}} rootReducer 
  */
 export function configRootReducer(rootReducer) {
+  checkObj(rootReducer, 'reducer');
   if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
   if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-  const moduleNames = okeys(rootReducer);
-
-  const len = moduleNames.length;
-  for (let i = 0; i < len; i++) {
-    const moduleName = moduleNames[i];
-    initModuleReducer(moduleName, rootReducer[moduleName]);
-  }
+  okeys(rootReducer).forEach(m => initModuleReducer(m, rootReducer[m]));
 }
 
-export function configRootComputed(computed) {
-  if (!isPlainJsonObject(computed)) {
-    throw new Error(`StartUpOption.computed ${NOT_A_JSON}`);
-  }
-  const moduleNames = okeys(computed);
-  moduleNames.forEach(m => initModuleComputed(m, computed[m]));
+export function configRootComputed(rootComputed) {
+  checkObj(rootComputed, 'computed');
+  okeys(rootComputed).forEach(m => initModuleComputed(m, rootComputed[m]));
 }
 
-export function configRootWatch(watch) {
-  if (!isPlainJsonObject(watch)) {
-    throw new Error(`StartUpOption.watch ${NOT_A_JSON}`);
-  }
-  const moduleNames = Object.keys(watch);
-  moduleNames.forEach(m => initModuleWatch(m, watch[m]));
+export function configRootWatch(rootWatch) {
+  checkObj(rootWatch, 'watch');
+  Object.keys(rootWatch).forEach(m => initModuleWatch(m, rootWatch[m]));
 }
 
 export function executeRootInit(init) {
   if (!init) return;
-
   if (!isPlainJsonObject(init)) {
-    throw new Error(`StartupOption.init ${NOT_A_JSON}`);
+    throw new Error(`init ${NOT_A_JSON}`);
   }
 
-  const moduleNames = okeys(init);
-  moduleNames.forEach(moduleName => {
+  okeys(init).forEach(moduleName => {
     checker.checkModuleName(moduleName, false);
     const initFn = init[moduleName];
     if (initFn) {

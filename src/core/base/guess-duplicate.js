@@ -1,5 +1,5 @@
-import { ERR } from '../../support/constant';
 import ccContext from '../../cc-context';
+import { ERR } from '../../support/constant';
 
 const keyWord = '.checkModuleNameAndState';
 
@@ -58,13 +58,10 @@ function getDupLocation(errStack) {
   return locationStr;
 }
 
-const module_dupLocation_ = {
-
-};
+const module_dupLocation_ = { };
 
 export default (err, module, tag) => {
-  const code = err.code;
-  if ([ERR.CC_MODULE_NAME_DUPLICATE, ERR.CC_REDUCER_MODULE_NAME_DUPLICATE].includes(code) && ccContext.isHotReloadMode()) {
+  if (err.code === ERR.CC_MODULE_NAME_DUPLICATE && ccContext.isHotReloadMode()) {
     const dupLocation = getDupLocation(err.stack);
     const key = `${tag}|--link--|${module}`;
     const prevLocation = module_dupLocation_[key];

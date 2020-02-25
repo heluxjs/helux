@@ -45,10 +45,9 @@ export default function (ref, params, liteLevel = 5) {
 
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
-    isSingle, ccClassKey, ccKey = '', module, reducerModule, type,
+    isSingle, ccClassKey, ccKey = '', module, type,
     state, storedKeys = [], persistStoredKeys = false, watchedKeys, connect = {}, tag = '', ccOption = {},
   } = params;
-  reducerModule = reducerModule || module;
   const stateModule = module;
 
   const refOption = {};
@@ -137,7 +136,6 @@ export default function (ref, params, liteLevel = 5) {
     type,
     isSingle,
     module,
-    reducerModule,
     ccClassKey,
     ccKey,
     ccUniqueKey,
@@ -213,12 +211,12 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
-  const dispatch = hf.makeDispatchHandler(ref, false, false, stateModule, stateModule);
+  const dispatch = hf.makeDispatchHandler(ref, false, false, stateModule);
   ctx.dispatch = dispatch;
 
   if (liteLevel > 1) {// level 2, assign these mod data api
-    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, false, stateModule, stateModule);
-    ctx.silentDispatch = hf.makeDispatchHandler(ref, false, true, stateModule, stateModule);
+    ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, false, stateModule);
+    ctx.silentDispatch = hf.makeDispatchHandler(ref, false, true, stateModule);
     ctx.dispatchLazy = ctx.lazyDispatch;// alias of lazyDispatch
     ctx.dispatchSilent = ctx.silentDispatch;// alias of silentDispatch
 

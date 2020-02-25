@@ -30,7 +30,6 @@ export default function register({
   connect = {},
   tag,
   lite,
-  reducerModule,
   isPropsProxy = false,
   isSingle = false,
   renderKeyClasses,
@@ -40,8 +39,8 @@ export default function register({
 } = {}, ccClassKey = '') {
   try {
 
-    const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS_PREFIX, inputWatchedKeys, storedKeys, connect, reducerModule, __checkStartUp, __calledBy
+    const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
+      module, ccClassKey, renderKeyClasses, CC_CLASS_PREFIX, inputWatchedKeys, storedKeys, connect,  __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {
@@ -66,7 +65,7 @@ export default function register({
 
             // props.ccOption
             const params = Object.assign({}, props, {
-              isSingle, module: _module, reducerModule: _reducerModule, tag, state: privState, type: CC_CLASS_PREFIX,
+              isSingle, module: _module, tag, state: privState, type: CC_CLASS_PREFIX,
               watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
             });
             buildRefCtx(this, params, lite);

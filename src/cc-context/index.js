@@ -2,7 +2,7 @@ import moduleName_stateKeys_ from './statekeys-map';
 import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
-import { MODULE_GLOBAL, MODULE_CC, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
@@ -64,33 +64,32 @@ const getStateVer = function (module) {
 const incStateVer = function (module, key) {
   _stateVer[module][key]++;
 }
+const getRootState = () => ({
+  [MODULE_CC]: {},
+  [MODULE_VOID]: {},
+  [MODULE_GLOBAL]: {},
+  [MODULE_DEFAULT]: {},
+})
+
 
 /** ccContext section */
-const _state = {};
-const _prevState = {};
+const _state = getRootState();
+const _prevState = getRootState();
 // record state version, to let ref effect avoid endless execute
 // 1 effect里的函数再次出发当前实例渲染，渲染完后检查prevModuleState curModuleState, 对应的key值还是不一样，又再次出发effect，造成死循环
 // 2 确保引用型值是基于原有引用修改某个属性的值时，也能触发effect
 const _stateVer = {};
+
 const ccContext = {
   getDispatcher,
   isHotReloadMode: function () {
     if (ccContext.isHot) return true;
-
-    let result = false;
-    if (window) {
-      if (window.webpackHotUpdate
-        || window.name === 'previewFrame' //for stackblitz
-        || window.__SANDBOX_DATA__ // for codesandbox
-        || window.BrowserFS // for codesandbox
-      ) {
-        result = true;
-      }
-    }
-    return result;
+    return window && (window.webpackHotUpdate || util.isOnlineEditor());
   },
   runtimeVar,
-  isCcAlreadyStartup: false,
+  isHot: false,
+  reComputed: true,
+  isStartup: false,
   //  cc allow multi react class register to a module by default, but if want to control some module 
   //  to only allow register one react class, flag the module name as true in this option object
   //  example:  {fooModule: true, barModule:true}
@@ -162,10 +161,6 @@ const ccContext = {
     getGlobalState: function () {
       return _state[MODULE_GLOBAL];
     },
-    //对state直接赋值，cc启动的时候某些场景需要调用此函数
-    initStateDangerously: (module, state) => {
-      _state[module] = state;
-    },
   },
   reducer: {
     _reducer: {
@@ -174,10 +169,10 @@ const ccContext = {
       [MODULE_CC]: {
       }
     },
-    _reducerCaller: {},
+    _caller: {},
     // _reducerRefCaller: {},//为实例准备的reducer caller
-    _reducerFnName_fullFnNames_: {},
-    _reducerModule_fnNames_: {}
+    _fnName_fullFnNames_: {},
+    _module_fnNames_: {}
   },
   computed,
   watch,
@@ -205,8 +200,10 @@ const ccContext = {
   refRetKey_fnUid_: {},// to avoid ref computed retKey dup
   refs,
   info: {
-    startupTime: Date.now(),
-    version: '1.5.151',
+    packageLoadTime: Date.now(),
+    firstStartupTime: '',
+    latestStartupTime: '',
+    version: '1.5.158',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

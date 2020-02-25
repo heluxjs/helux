@@ -10,28 +10,12 @@ import { getRegisterOptions } from '../support/util';
  * @param {Array<string>|string} [registerOption.watchedKeys] 
  * declare current cc class's any instance is concerned which state keys's state changing,
  * @param {{ [moduleName:string]: keys: string[] | '*' }} [registerOption.connect]
- * @param {string} [registerOption.reducerModule] default is equal as module if you don't declare it
- * if you call cc instance api $$dispatch without module and reducerMoudle like below
  * ```
  *    this.ctx.dispatch({type:'doStaff', payload:{foo:1, bar:2}});
  *    // or 
  *    this.ctx.dispatch('doStaff', {foo:1, bar:2});
- * ```
- * cc will find current cc class's reducerModule function named doStaff to execute 
- * and will change current cc class's moudle state,
- * so you don't have to write code like below if current cc class module is M1 
- * and if you always want to use R1 reducer function to generate new state, you can write like below
- * ```
- *    this.ctx.dispatch({module:'M1', reducerModule:'R1', type:'doStaff', payload:{foo:1, bar:2}});
- *    // or 
- *    this.ctx.dispatch('M1/R1/doStaff', {foo:1, bar:2});
- * ```
- * 
- * ============   !!!!!!  ============
- * note if you really want to change other module's state and use other reducer function, you must input module and reducerModule
- * in your $$dispatch method, or they will been replaced by current cc class's default module and default reducerModule
- * ```
- *    this.ctx.dispatch({module:'M2', reducerModule:'R2', type:'doStaff', payload:{foo:1, bar:2}});
+ *    // or
+ *    this.ctx.dispatch('moduleName/doStaff', {foo:1, bar:2});
  * ```
  * @param {string} [registerOption.isPropsProxy] default is false
  * cc alway use strategy of reverse inheritance to wrap your react class, that meas you can call cc instance method from `this` directly

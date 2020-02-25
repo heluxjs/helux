@@ -1,32 +1,31 @@
 import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
-import guessDuplicate from '../base/guess-duplicate';
 
-export default function(module, reducer, rootReducerCanNotContainInputModule = true, tag) {
+export default function (module, reducer) {
   if (!reducer) return;
 
-  try{
-    if (rootReducerCanNotContainInputModule) checker.checkReducerModuleName(module);
-    else checker.checkModuleNameBasically(module);
-  }catch(err){
-    guessDuplicate(err, module, 'reducer');
+  const tip = `module[${module}] reducer`;
+  if (!util.isPlainJsonObject(reducer)) {
+    throw new Error(`${tip} ${NOT_A_JSON}`);
   }
+  checker.checkModuleName(module, false, `${tip} is invalid`);
 
   const {
-    _reducer, _reducerCaller, _reducerFnName_fullFnNames_, _reducerModule_fnNames_,
+    _reducer, _caller, _fnName_fullFnNames_, _module_fnNames_,
     // _reducerRefCaller, _lazyReducerRefCaller,
   } = ccContext.reducer;
 
   // 防止同一个reducer被载入到不同模块时，setState附加逻辑不正确
   const newReducer = Object.assign({}, reducer);
   _reducer[module] = newReducer;
-  
-  const subReducerCaller = util.safeGetObjectFromObject(_reducerCaller, module);
+
+  const subReducerCaller = util.safeGetObjectFromObject(_caller, module);
   // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
 
-  const fnNames = util.safeGetArrayFromObject(_reducerModule_fnNames_, module);
+  const fnNames = util.safeGetArrayFromObject(_module_fnNames_, module);
 
   // 自动附加一个setState在reducer里
   if (!newReducer.setState) newReducer.setState = payload => payload;
@@ -38,10 +37,6 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     let fullFnName = `${module}/${name}`;
 
     subReducerCaller[name] = (payload, renderKeyOrOptions, delay) => dispatch(fullFnName, payload, renderKeyOrOptions, delay);
-
-    // function wrappedReducerFn(payload, delay, idt){
-    // }
-    // subReducerRefCaller[name] = wrappedReducerFn;
 
     const reducerFn = newReducer[name];
     if (typeof reducerFn !== 'function') {
@@ -55,7 +50,6 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
 
       targetFn.__fnName = name;//!!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
       targetFn.__stateModule = module;
-      targetFn.__reducerModule = module;
       // AsyncFunction GeneratorFunction Function
       targetFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
     }
@@ -63,7 +57,7 @@ export default function(module, reducer, rootReducerCanNotContainInputModule = t
     // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
     // reducerFn.stateModule = module;
 
-    const list = util.safeGetArrayFromObject(_reducerFnName_fullFnNames_, name);
+    const list = util.safeGetArrayFromObject(_fnName_fullFnNames_, name);
     // avoid hot reload
     if (!list.includes(fullFnName)) list.push(fullFnName);
   });

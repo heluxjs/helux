@@ -25,22 +25,21 @@ function _registerDumb(Dumb, regOpt) {
   return React.createElement(CcFragment, passProps);
 }
 
-// renderKeyClasses, isSingle, tag, mapProps, module = MODULE_DEFAULT, reducerModule,
+// renderKeyClasses, isSingle, tag, mapProps, module = MODULE_DEFAULT,
 // watchedKeys = '*', storedKeys, persistStoredKeys, render: Dumb,
 // connect = {}, state = {}, setup, bindCtxToMethod, compareProps, lite,
 // bindCtxToMethod
 export default function (registerOption, ccClassKey) {
   const _registerOption = util.getRegisterOptions(registerOption);
   const {
-    renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys, render: Dumb, connect = {},
+    renderKeyClasses, module, watchedKeys = '*', storedKeys, render: Dumb, connect = {},
   } = _registerOption;
   
   
-  const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-    module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
+  const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
+    module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, true
   );
   _registerOption.module = _module;
-  _registerOption.reducerModule = _reducerModule;
   _registerOption.watchedKeys = _watchedKeys;
   _registerOption.ccClassKey = _ccClassKey;
   _registerOption.connect = _connect;

@@ -19,7 +19,7 @@ class CcFragment extends React.Component {
     const registerOptions = getRegisterOptions(props.register);
     const {
       module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-      watchedKeys = '*', connect = {}, reducerModule, isSingle, storedKeys = []
+      watchedKeys = '*', connect = {}, isSingle, storedKeys = []
     } = registerOptions;
 
     let state = registerOptions.state || {};
@@ -29,17 +29,15 @@ class CcFragment extends React.Component {
   
     const { ccClassKey, ccKey, ccOption = {} } = props;
 
-    let target_reducerModule = reducerModule;
     let target_watchedKeys = watchedKeys;
     let target_ccClassKey = ccClassKey;
     let target_connect = connect;
 
     //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
     if (props.__$$regDumb !== true) {
-      const { _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
+      const {_watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
+        module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, true
       );
-      target_reducerModule = _reducerModule;
       target_watchedKeys = _watchedKeys;
       target_ccClassKey = _ccClassKey;
       target_connect = _connect;
@@ -47,7 +45,7 @@ class CcFragment extends React.Component {
     //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
 
     buildRefCtx(this, {
-      isSingle, ccKey, connect: target_connect, state, module, reducerModule: target_reducerModule,
+      isSingle, ccKey, connect: target_connect, state, module,
       storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT_PREFIX
     }, lite);
 

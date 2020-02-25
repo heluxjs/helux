@@ -9,7 +9,7 @@ const pError = label => {
 
 // option:
 // middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
-// autoCreateDispatcher, reducer, bindCtxToMethod,
+// autoCreateDispatcher, bindCtxToMethod,
 // computedCompare, watchCompare, watchImmediate, alwaysGiveState
 
 /**

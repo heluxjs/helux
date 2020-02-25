@@ -37,7 +37,7 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
 
     if (typeof action === 'string' && action.startsWith('*')) {
       const reducerModName = action.split('/').pop();
-      const fullFnNames = ccContext.reducer._reducerFnName_fullFnNames_[reducerModName];
+      const fullFnNames = ccContext.reducer._fnName_fullFnNames_[reducerModName];
       if (!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {

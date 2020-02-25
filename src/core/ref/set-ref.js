@@ -42,11 +42,10 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
 
   const isHot = ccContext.isHotReloadMode();
   if (ccKeys.includes(ccUniqueKey)) {
+    const dupErr = () => {
+      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
+    }
     if (isHot) {
-      const dupErr = () => {
-        throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
-      }
-
       // get existed ins count
       const insCount = getCcKeyInsCount(ccUniqueKey);
       if (isSingle && insCount > 0) throw me(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi(`ccClass:${ccClassKey}`));

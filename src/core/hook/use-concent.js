@@ -66,34 +66,42 @@ export default function useConcent(registerOption, ccClassKey){
   const isFirstRendered = nowCursor === cursor;
   const bindCtxToMethod = _registerOption.bindCtxToMethod;
   let hookRef;
-  if (isFirstRendered) {
+
+  const buildRef = ()=>{
     const {
-      renderKeyClasses, module, reducerModule, watchedKeys = '*', storedKeys = [],
+      renderKeyClasses, module, watchedKeys = '*', storedKeys = [],
       connect = {}, setup, lite,
     } = _registerOption;
 
     incCursor();
-    const { _module, _reducerModule, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, reducerModule, true
+    const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
+      module, ccClassKey, renderKeyClasses, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, true
     );
     hookRef = new CcHook(ccHookState, hookSetState, props);
 
     const params = Object.assign({}, _registerOption, {
-      module: _module, reducerModule: _reducerModule, watchedKeys: _watchedKeys, state: privState, type: CC_HOOK_PREFIX,
+      module: _module, watchedKeys: _watchedKeys, state: privState, type: CC_HOOK_PREFIX,
       ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
     });
 
     buildRefCtx(hookRef, params, lite);
     beforeMount(hookRef, setup, bindCtxToMethod);
     cursor_refKey_[nowCursor] = hookRef.ctx.ccUniqueKey;
+  }
+
+  if (isFirstRendered) {
+    buildRef();
   } else {
     const refKey = cursor_refKey_[nowCursor];
     hookRef = ccUkey_ref_[refKey];
-
-    const refCtx = hookRef.ctx;
-    // existing period, replace reactSetState and reactForceUpdate
-    refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
-    refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+    if (!hookRef && Date.now() - ccContext.info.latestStartupTime < 1000) {// single file demo in hot reload mode
+      buildRef();
+    } else {
+      const refCtx = hookRef.ctx;
+      // existing period, replace reactSetState and reactForceUpdate
+      refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
+      refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+    }
   }
   
   const refCtx = hookRef.ctx;

@@ -184,7 +184,7 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
     const retKeys = safeGetArrayFromObject(stateKey_retKeys_, sKey);
-    retKeys.push(retKey);
+    if (!retKeys.includes(retKey)) retKeys.push(retKey);
   });
 }
 

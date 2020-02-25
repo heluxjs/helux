@@ -232,10 +232,10 @@ declare function refCtxDispatch<Fn extends IReducerFn>
   (type: string, payload: (Parameters<Fn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<Fn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn>
   (type: RdFn, payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
+declare function refCtxDispatch<RdFn extends IReducerFn, FullState extends IAnyObj = {}>
+  (type: { module?: string, fn: RdFn, cb?: (state: FullState) => void }, payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn>
-  (type: { module: string, fn: RdFn, cb: (state: FullState) => void }, payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
-declare function refCtxDispatch<UserFn extends IReducerFn>
-  (type: [string, UserFn], payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
+  (type: [string, RdFn], payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
 
 declare function refCtxInvoke<UserFn extends IReducerFn>
   (fn: UserFn, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<UserFn>>;
@@ -266,7 +266,7 @@ declare function refCtxComputed(retKey: string, fnDesc: { fn: RefComputedFn<IFnC
 
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
   (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean): void;
-  // (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
+// (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
   (retKey: string, fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean }): void;
 
@@ -320,13 +320,13 @@ declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
 
 declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 
-type NoFullStatePassed = 'NoFullStatePassed';
+type NoFullState = 'NoFullState';
 declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj;
 // if module state is not equal full state, you need pass generic type FullState
-declare function syncCb<Val, ModuleState, FullState extends IAnyObj = NoFullStatePassed, RefCtx extends ICtxBase = ICtxBase>
+declare function syncCb<Val, ModuleState, FullState extends IAnyObj | NoFullState = NoFullState, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullStatePassed ? ModuleState : FullState, refCtx: RefCtx }
+    syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
   ): IAnyObj;
 
 //////////////////////////////////////////
@@ -345,7 +345,6 @@ export interface ICtxBase {
   // module: '$$default';
   readonly isSingle: boolean;
   readonly type: CC_CLASS_PREFIX | CC_FRAGMENT_PREFIX | CC_HOOK_PREFIX;
-  readonly reducerModule: string;
   readonly ccKey: string;
   readonly ccClassKey: string;
   readonly ccUniqueKey: string;
@@ -365,7 +364,7 @@ export interface ICtxBase {
   readonly stateKeys: string[];
 
   // readonly state: IAnyObj;
-  readonly extra: any;
+  extra: any;
   state: any;
   readonly prevState: any;
   readonly props: any;
@@ -432,7 +431,7 @@ export interface ICtxBase {
  */
 export interface IRefCtx<
   Props extends IAnyObj = {},
-  RefState extends IAnyObj = {},
+  PrivState extends IAnyObj = {},
   ModuleState extends IAnyObj = {},
   ModuleReducer extends IAnyObj = {},
   ModuleComputed extends IAnyObj = {},
@@ -447,8 +446,8 @@ export interface IRefCtx<
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
-  state: RefState & ModuleState;
-  readonly prevState: RefState & ModuleState;
+  state: PrivState & ModuleState;
+  readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
@@ -473,7 +472,7 @@ export interface ICtx
   RootReducer extends { [key in keyof RootState]?: any } = IRootBase,
   RootCu extends { [key in keyof RootState]?: any } = IRootBase,
   Props = {},
-  RefState = {},
+  PrivState = {},
   ModuleName extends keyof RootState = MODULE_DEFAULT,
   // ConnectedModules extends keyof IRootBase = MODULE_VOID,
   // !!! 配合下面的问题注释掉
@@ -481,13 +480,15 @@ export interface ICtx
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   Mapped extends IAnyObj = {},
+  Extra = any,
   >
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
-  state: RootState[ModuleName] & RefState;
-  readonly prevState: RootState[ModuleName] & RefState;
+  extra: Extra;
+  state: RootState[ModuleName] & PrivState;
+  readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
@@ -512,12 +513,12 @@ export interface ICtx
 
 export interface ICtxCommon<
   Props = {},
-  RefState extends IAnyObj = {},
+  PrivState extends IAnyObj = {},
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   RootState extends IRootBase = IRootBase,
   > extends ICtx<
-  RootState, {}, {}, Props, RefState,
+  RootState, {}, {}, Props, PrivState,
   MODULE_DEFAULT, MODULE_VOID, Settings, RefComputed, {}
   > { }
 
@@ -529,7 +530,7 @@ export interface ICtxDefault
   RootReducer extends { [key in keyof RootState]?: any } = IRootBase,
   RootCu extends { [key in keyof RootState]?: any } = IRootBase,
   Props = {},
-  RefState extends IAnyObj = {},
+  PrivState extends IAnyObj = {},
   ModuleName extends Required<MODULE_DEFAULT> = MODULE_DEFAULT,
   ConnectedModules extends keyof RootState = MODULE_VOID,
   Settings extends IAnyObj = {},
@@ -538,7 +539,7 @@ export interface ICtxDefault
   >
   extends ICtx
   <
-  RootState, RootReducer, RootCu, Props, RefState,
+  RootState, RootReducer, RootCu, Props, PrivState,
   ModuleName, ConnectedModules, Settings, RefComputed, Mapped
   > {
   // __key_as_hint_your_ctx_is_not_default__: 'your component is belong to $$default module by default, but you give a type Ctx which not belong to $$default module',
@@ -587,6 +588,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   module?: PropKey;
   props?: P;
   state?: IAnyFnReturnObj | IAnyObj;
+  extra?: any,// work for useConcent only
   watchedKeys?: string[];
   storedKeys?: any;
   connect?: any;
@@ -594,7 +596,6 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   persistStoredKeys?: boolean;
   lite?: 1 | 2 | 3 | 4;
   layoutEffect?: boolean;// work for useConcent only
-  reducerModule?: string;// defuault equal ${module}
   isPropsProxy?: boolean;// work for register only, default false
   isSingle?: boolean; //default false
   renderKeyClasses?: string[];
@@ -646,21 +647,21 @@ interface RegisterOptionsSt<
   P extends IAnyObj,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState,
+  PrivState extends FnState,
   ICtx extends ICtxBase = ICtxBase
   >
-  extends RegisterOptions<P, RootState, ModuleName, RefState, ICtx> {
-  state: RefState;
+  extends RegisterOptions<P, RootState, ModuleName, PrivState, ICtx> {
+  state: PrivState;
 }
 // only module required
 interface RegisterOptionsMo<
   P extends IAnyObj,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState,
+  PrivState extends FnState,
   ICtx extends ICtxBase = ICtxBase
   >
-  extends RegisterOptions<P, RootState, ModuleName, RefState, ICtx> {
+  extends RegisterOptions<P, RootState, ModuleName, PrivState, ICtx> {
   module: ModuleName,
 }
 // both module、state required
@@ -668,12 +669,12 @@ interface RegisterOptionsMoSt<
   P extends IAnyObj,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState,
+  PrivState extends FnState,
   ICtx extends ICtxBase = ICtxBase
   >
-  extends RegisterOptions<P, RootState, ModuleName, RefState, ICtx> {
+  extends RegisterOptions<P, RootState, ModuleName, PrivState, ICtx> {
   module: ModuleName,
-  state: RefState;
+  state: PrivState;
 }
 
 //user decide it is FnCtx or FnCtxConnect
@@ -690,7 +691,6 @@ type WatchFnDesc = {
 
 type TypeDesc = {
   module?: string;
-  reducerModule?: string;
   type: string;
   cb?: Function;
 };
@@ -733,6 +733,8 @@ interface RunOptions {
   computedCompare?: boolean;// default is true
   watchCompare?: boolean;// default is true
   watchImmediate?: boolean;// default is false
+  reComputed?: boolean;// default is true
+  alwaysGiveState?: boolean;// default is true
 }
 
 export interface IActionCtxBase {
@@ -790,12 +792,12 @@ export function register<
   Props extends IAnyObj,
   RootState extends IRootBase = IRootBase,
   ModuleName extends keyof RootState = MODULE_DEFAULT,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
-    RefState extends NoRefState ?
+    PrivState extends NoPrivState ?
     (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}> : RegisterOptionsMo<Props, RootState, ModuleName, {}>) :
-    (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>>),
+    (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>>),
   ccClassKey?: string,
 ): (ReactComp: typeof Component) => ComponentClass<Props>;
 
@@ -804,14 +806,14 @@ export function register<
 export function connect<
   Props extends IAnyObj = {},
   RootState extends IRootBase = IRootBase,
->(
-  connectSpec: ConnectSpec<RootState>,
-  ccClassKey?: string,
+  >(
+    connectSpec: ConnectSpec<RootState>,
+    ccClassKey?: string,
 ): (ReactComp: typeof Component) => ComponentClass<Props>;
 
 
 export type NoMap = 'NoMap';
-type NoRefState = 'NoRefState';
+type NoPrivState = 'NoPrivState';
 type TMap = IAnyObj | NoMap;
 
 export function registerHookComp<Props extends IAnyObj, RefCtx extends ICtxBase = ICtxBase>(
@@ -825,10 +827,10 @@ export function registerHookComp<
   Props extends IAnyObj,
   RefCtx extends ICtxDefault = ICtxDefault,
   T extends TMap = NoMap,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   // 用IRegBaseSt来约束只有state无module传入
-  registerOptions: (RefState extends NoRefState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<RefState, NoRefState>>)
+  registerOptions: (PrivState extends NoPrivState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<PrivState, NoPrivState>>)
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; })
     & { render: (props: T extends NoMap ? RefCtx : T) => ReactNode },
   ccClassKey?: string,
@@ -839,13 +841,13 @@ export function registerHookComp<
   T extends TMap,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
     // 约束state，module是否必需传入
-    (RefState extends NoRefState ?
+    (PrivState extends NoPrivState ?
       (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}, RefCtx> : RegisterOptionsMo<Props, RootState, ModuleName, {}, RefCtx>) :
-      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx>)
+      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx>)
     )
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; })
     & { render: (props: T extends NoMap ? RefCtx : T) => ReactNode },
@@ -858,11 +860,11 @@ export function registerHookComp<
   Props extends IAnyObj,
   RefCtx extends ICtxDefault = ICtxDefault, // RefCtx约束为ICtxDefault
   T extends TMap = NoMap,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   // 用IRegBaseSt来约束只有state无module传入
   registerOptions:
-    (RefState extends NoRefState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<RefState, NoRefState>>)
+    (PrivState extends NoPrivState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<PrivState, NoPrivState>>)
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; }),
   ccClassKey?: string,
 ): (render: (props: T extends NoMap ? RefCtx : T) => ReactNode) => FC<Props>;//有mapProp时，render函数的参数类型就是mapProps返回类型
@@ -872,13 +874,13 @@ export function registerHookComp<
   T extends TMap,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
     // 约束state，module是否必需传入
-    (RefState extends NoRefState ?
+    (PrivState extends NoPrivState ?
       (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}, RefCtx> : RegisterOptionsMo<Props, RootState, ModuleName, {}, RefCtx>) :
-      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx>)
+      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx>)
     )
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; }),
   ccClassKey?: string,
@@ -898,10 +900,10 @@ export function registerDumb<
   Props extends IAnyObj,
   RefCtx extends ICtxDefault = ICtxDefault, // RefCtx约束为ICtxDefault
   T extends TMap = NoMap,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   // 用IRegBaseSt来约束只有state无module传入
-  registerOptions: (RefState extends NoRefState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<RefState, NoRefState>>)
+  registerOptions: (PrivState extends NoPrivState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<PrivState, NoPrivState>>)
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; })
     & { render: (props: T extends NoMap ? RefCtx : T) => ReactNode },
   ccClassKey?: string,
@@ -912,13 +914,13 @@ export function registerDumb<
   T extends TMap,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
     // 约束state，module是否必需传入
-    (RefState extends NoRefState ?
+    (PrivState extends NoPrivState ?
       (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}, RefCtx> : RegisterOptionsMo<Props, RootState, ModuleName, {}, RefCtx>) :
-      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx>)
+      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx>)
     )
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; })
     & { render: (props: T extends NoMap ? RefCtx : T) => ReactNode },
@@ -931,10 +933,10 @@ export function registerDumb<
   Props extends IAnyObj,
   RefCtx extends ICtxDefault = ICtxDefault, // RefCtx约束为ICtxDefault
   T extends TMap = NoMap,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   // 用IRegBaseSt来约束只有state无module传入
-  registerOptions: (RefState extends NoRefState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<RefState, NoRefState>>)
+  registerOptions: (PrivState extends NoPrivState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<PrivState, NoPrivState>>)
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; }),
   ccClassKey?: string,
 ): (render: (props: T extends NoMap ? RefCtx : T) => ReactNode) => ComponentClass<Props>;//有mapProp时，render函数的参数类型就是mapProps返回类型
@@ -944,13 +946,13 @@ export function registerDumb<
   T extends TMap,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
     // 约束state，module是否必需传入
-    (RefState extends NoRefState ?
+    (PrivState extends NoPrivState ?
       (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}, RefCtx> : RegisterOptionsMo<Props, RootState, ModuleName, {}, RefCtx>) :
-      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx>)
+      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx>)
     )
     & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; }),
   ccClassKey?: string,
@@ -970,11 +972,11 @@ export function useConcent<
   Props extends IAnyObj,
   RefCtx extends ICtxBase,
   T extends IAnyObj | NoMap,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
-    (RefState extends NoRefState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<RefState, NoRefState>>)
-    & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; props?: Props }),
+    (PrivState extends NoPrivState ? IRegBase<Props, RefCtx> : IRegBaseSt<Props, RefCtx, Exclude<PrivState, NoPrivState>>)
+    & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T }),
   ccClassKey?: string,
 ): RefCtx;
 export function useConcent<
@@ -983,17 +985,17 @@ export function useConcent<
   T extends IAnyObj | NoMap,
   RootState extends IRootBase,
   ModuleName extends keyof RootState,
-  RefState extends FnState | NoRefState = NoRefState
+  PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
     // 约束state，module是否必需传入
-    (RefState extends NoRefState ?
+    (PrivState extends NoPrivState ?
       (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}, RefCtx> : RegisterOptionsMo<Props, RootState, ModuleName, {}, RefCtx>) :
-      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<RefState, NoRefState>, RefCtx>)
+      (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>, RefCtx>)
       // 下面写法是不对的，需要如上使用Exclude排除掉
-      // (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, RefState, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, RefState, RefCtx>)
+      // (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, PrivState, RefCtx> : RegisterOptionsMoSt<Props, RootState, ModuleName, PrivState, RefCtx>)
     )
-    & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T; props?: Props }),
+    & (T extends NoMap ? {} : { mapProps: (refCtx: RefCtx) => T }),
   ccClassKey?: string,
 ): RefCtx;
 

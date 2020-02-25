@@ -1,5 +1,5 @@
 import ccContext from '../cc-context';
 
-const _reducerCaller = ccContext.reducer._reducerCaller;
+const _caller = ccContext.reducer._caller;
 
-export default _reducerCaller;
+export default _caller;

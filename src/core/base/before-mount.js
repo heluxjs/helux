@@ -3,7 +3,7 @@ import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 
 const { safeGetObjectFromObject, okeys, justWarning } = util;
-const { reducer: { _reducerModule_fnNames_, _reducerCaller }, runtimeVar } = ccContext;
+const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
@@ -29,12 +29,12 @@ export default function (ref, setup, bindCtxToMethod) {
       reducerObj = safeGetObjectFromObject(connectedReducer, m);
     }
 
-    const fnNames = _reducerModule_fnNames_[m] || [];
+    const fnNames = _module_fnNames_[m] || [];
     fnNames.forEach(fnName => {
       reducerObj[fnName] = (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
     });
   });
-  ctx.reducer = _reducerCaller;
+  ctx.reducer = _caller;
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {

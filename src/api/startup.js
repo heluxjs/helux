@@ -1,12 +1,60 @@
 import * as util from '../support/util';
-import { ERR, CC_DISPATCHER } from '../support/constant';
+import { CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
 import appendDispatcher from '../core/base/append-dispatcher';
 import clearContextIfHot from './clear-context-if-hot';
 
-const { justTip, bindToWindow, makeError } = util;
+const { justTip, bindToWindow } = util;
+let cachedLocation = '';
+
+function checkStartup(err) {
+  const errStack = err.stack;
+  const info = ccContext.info;
+  const arr = errStack.split('\n');
+  const len = arr.length;
+  let curLocation = '';
+
+  const tryGetLocation = (keyword, offset) => {
+    for (let i = 0; i < len; i++) {
+      if (arr[i].includes(keyword)) {
+        curLocation = arr[i + offset];
+        break;
+      }
+    }
+  }
+  
+  tryGetLocation('startup', 2);//向下2句找触发run的文件
+  if (!curLocation) tryGetLocation('runConcent', 0);
+
+  const letRunOk = () => {
+    ccContext.isHot = true;
+    clearContextIfHot(true);
+  }
+
+  const now = Date.now();
+  if (!cachedLocation) {
+    cachedLocation = curLocation;
+    info.firstStartupTime = now;
+    info.latestStartupTime = now;
+  } else if (cachedLocation !== curLocation) {
+    const tip = `invalid run api call!(it can only be called once, changing 'call run' line location in HMR will cause this error also, 
+    try refresh browser to reload your app to avoid this tip)`
+    if(now - info.latestStartupTime < 1000){
+      throw new Error(tip);
+    }else{
+      if(util.isOnlineEditor()){
+        letRunOk(); 
+        cachedLocation = curLocation;
+      }else{
+        util.strictWarning(tip);
+      }
+    }
+  } else {
+    letRunOk();
+  }
+}
 
 export default function (
   {
@@ -23,32 +71,26 @@ export default function (
     isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
     isDebug = false,
     errorHandler = null,
-    isHot = false,
-    autoCreateDispatcher = true,
+    isHot,
+    // autoCreateDispatcher = true,
     bindCtxToMethod = false,
     computedCompare = true,
     watchCompare = true,
     watchImmediate = false,
     alwaysGiveState = true,
-    reducer: optionReducer,
+    reComputed = true,
   } = {}) {
   try {
+    throw new Error();
+  } catch (err) {
+    checkStartup(err);
+  }
+  if (isHot !== undefined) ccContext.isHot = isHot;
+  ccContext.reComputed = reComputed;
 
-    if (optionReducer) {
-      if (!util.isPlainJsonObject(optionReducer)) throw new Error(`option.reducer not a plain json object`);
-      util.okeys(optionReducer).forEach(reducerModule => {
-        if (reducer[reducerModule]) throw new Error(`reducerModule[${reducerModule}] has been declared in store`);
-        const reducerFns = optionReducer[reducerModule];
-        util.okeys(reducerFns).forEach(k => {
-          reducerFns[k].__reducerModule = reducerModule;// tag reducer fn
-        });
-        reducer[reducerModule] = reducerFns;
-      });
-    }
-
+  try {
     console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
     justTip(`cc version ${ccContext.info.version}`);
-    ccContext.isHot = isHot;
     ccContext.errorHandler = errorHandler;
     const rv = ccContext.runtimeVar;
     rv.alwaysGiveState = alwaysGiveState;
@@ -59,9 +101,6 @@ export default function (
     rv.watchImmediate = watchImmediate;
     rv.bindCtxToMethod = bindCtxToMethod;
 
-    const err = makeError(ERR.CC_ALREADY_STARTUP);
-    clearContextIfHot(true, err);
-
     boot.configModuleSingleClass(moduleSingleClass);
     boot.configStoreState(store);
     boot.configRootReducer(reducer);
@@ -70,16 +109,9 @@ export default function (
     boot.executeRootInit(init);
     boot.configMiddlewares(middlewares);
 
-    if (autoCreateDispatcher) {
-      if (!ccContext.refs[CC_DISPATCHER]) {
-        const Dispatcher = createDispatcher();
-        appendDispatcher(Dispatcher);
-        justTip(`[[startUp]]: cc create a CcDispatcher automatically`);
-      } else {
-        justTip(`[[startUp]]: CcDispatcher already existed`);
-      }
-    } else {
-      throw new Error('customizing Dispatcher is not allowed in current version Concent');
+    if (!ccContext.refs[CC_DISPATCHER]) {
+      const Dispatcher = createDispatcher();
+      appendDispatcher(Dispatcher);
     }
 
     const bindOthers = (bindTarget) => {
@@ -96,7 +128,7 @@ export default function (
       bindOthers();
     }
 
-    ccContext.isCcAlreadyStartup = true;
+    ccContext.isStartup = true;
     //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
     boot.configPlugins(plugins);
   } catch (err) {

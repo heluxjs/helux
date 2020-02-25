@@ -1,3 +1,9 @@
+#### 2020-02-24
+1.5.156 发布
+* optimize: 删除额外reducer配置和reducerModule相关逻辑（invoke可替代它的功能且对ts更友好）
+* optimize: 添加智能检测run接口调用次数, 优化clearContextIfHot逻辑
+* optimize: 删除autoCreateDispatcher参数
+
 #### 2020-02-19
 1.5.149 发布
 * optimize: 简化configure, 不再允许传入option参数配置global相关的东西

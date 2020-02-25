@@ -10,30 +10,24 @@ import pickDepFns from '../base/pick-dep-fns';
 const { safeGetObjectFromObject, isPlainJsonObject } = util;
 const callInfo = { payload: null, renderKey: '', delay: -1 };
 
-export default function (module, computed, append = false, configureDep = true) {
+export default function (module, computed) {
+  if(!computed) return;
+
+  const tip = `module[${module}] computed`;
   if (!isPlainJsonObject(computed)) {
-    throw new Error(`StartUpOption.computed.${module}'s value ${NOT_A_JSON}`);
+    throw new Error(`${tip} ${NOT_A_JSON}`);
   }
-  checker.checkModuleName(module, false, `computed.${module} is invalid`);
+  checker.checkModuleName(module, false, `${tip} is invalid`);
+
   const ccComputed = ccContext.computed;
   const rootState = ccContext.store.getState();
   const rootComputedValue = ccComputed.getRootComputedValue();
   const rootComputedDep = ccComputed.getRootComputedDep();
   const rootComputedRaw = ccComputed.getRootComputedRaw();
 
-  if (append) {
-    const ori = rootComputedRaw[module];
-    if (ori) Object.assign(ori, computed);
-    else rootComputedRaw[module] = computed;
-  } else {
-    rootComputedRaw[module] = computed;
-  }
-
+  rootComputedRaw[module] = computed;
   const moduleState = rootState[module];
-
-  if(configureDep === true){
-    configureDepFns(CATE_MODULE, { module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
-  }
+  configureDepFns(CATE_MODULE, { module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
 
   const d = ccContext.getDispatcher();
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
