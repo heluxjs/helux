@@ -24,7 +24,7 @@ function checkStartup(err) {
       }
     }
   }
-  
+
   tryGetLocation('startup', 2);//向下2句找触发run的文件
   if (!curLocation) tryGetLocation('runConcent', 0);
 
@@ -41,19 +41,21 @@ function checkStartup(err) {
   } else if (cachedLocation !== curLocation) {
     const tip = `invalid run api call!(it can only be called once, changing 'call run' line location in HMR will cause this error also, 
     try refresh browser to reload your app to avoid this tip)`
-    if(now - info.latestStartupTime < 1000){
+    if (now - info.latestStartupTime < 1000) {
       throw new Error(tip);
-    }else{
-      if(util.isOnlineEditor()){
-        letRunOk(); 
+    } else {
+      if (util.isOnlineEditor()) {
+        letRunOk();
         cachedLocation = curLocation;
-      }else{
+      } else {
         util.strictWarning(tip);
+        return false;
       }
     }
   } else {
     letRunOk();
   }
+  return true;
 }
 
 export default function (
@@ -80,17 +82,19 @@ export default function (
     alwaysGiveState = true,
     reComputed = true,
   } = {}) {
+  let canStartup = true;
   try {
     throw new Error();
   } catch (err) {
-    checkStartup(err);
+    canStartup = checkStartup(err);
   }
-  if (isHot !== undefined) ccContext.isHot = isHot;
-  ccContext.reComputed = reComputed;
+  if (!canStartup) return;
 
   try {
     console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
     justTip(`cc version ${ccContext.info.version}`);
+    if (isHot !== undefined) ccContext.isHot = isHot;
+    ccContext.reComputed = reComputed;
     ccContext.errorHandler = errorHandler;
     const rv = ccContext.runtimeVar;
     rv.alwaysGiveState = alwaysGiveState;
