@@ -66,7 +66,8 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 
 
 ## 🖥Online experience
-- simple quick start project:
+- simple quick start project:   
+**here you can have a quick look on concent's powerful features!!**
 <p>
 <a href="https://codesandbox.io/s/green-tdd-g2mcr" rel="nofollow">
 <img src="https://camo.githubusercontent.com/416c7a7433e9d81b4e430b561d92f22ac4f15988/68747470733a2f2f636f646573616e64626f782e696f2f7374617469632f696d672f706c61792d636f646573616e64626f782e737667" alt="Edit" data-canonical-src="https://codesandbox.io/static/img/play-codesandbox.svg" style="max-width:100%;"></a></p>
@@ -132,6 +133,7 @@ $ yarn add concent
 
 ### Replace App.js file content with the code below
 > you can also review the [online example](https://codesandbox.io/s/green-tdd-g2mcr).
+
 ```javascript
 import React, { Component } from 'react';
 import { register, run, useConcent } from 'concent';
@@ -183,6 +185,7 @@ export default function App() {
 
 ## 🔨Examples with some advanced features
 - run concent，load model configuration
+
 ```js
 import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';

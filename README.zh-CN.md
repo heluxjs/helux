@@ -66,7 +66,8 @@
 
 
 ## 🖥在线体验
-- 快速开始:
+- 快速开始:   
+**快速了解和上手concent的强大特性!!**
 <p>
 <a href="https://codesandbox.io/s/green-tdd-g2mcr" rel="nofollow">
 <img src="https://camo.githubusercontent.com/416c7a7433e9d81b4e430b561d92f22ac4f15988/68747470733a2f2f636f646573616e64626f782e696f2f7374617469632f696d672f706c61792d636f646573616e64626f782e737667" alt="Edit" data-canonical-src="https://codesandbox.io/static/img/play-codesandbox.svg" style="max-width:100%;"></a></p>
@@ -131,6 +132,7 @@ $ yarn add concent
 ```
 ### 将`App.js`文件的内容全部替换为以下代码
 > 你也可以[点击这里在线编辑](https://codesandbox.io/s/green-tdd-g2mcr).
+
 ```javascript
 import React, { Component } from 'react';
 import { register, run, useConcent } from 'concent';
@@ -181,6 +183,7 @@ export default function App() {
 
 ## 🔨Examples with some advanced features
 - 运行concent，载入模块配置
+
 ```javascript
 import React, { Component, Fragment } from 'react';
 import { register, run } from 'concent';
