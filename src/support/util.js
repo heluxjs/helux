@@ -23,13 +23,13 @@ export function isObjectNull(object) {
 // const _toString = Object.prototype.toString;
 //_toString.call(obj) === '[object Object]'; //judge plain json object
 export function isPlainJsonObject(obj, canBeArray = false) {
-  if (obj === null) return false;
-  if (typeof obj === 'object') {
-    if (Array.isArray(obj)) {
-      if (canBeArray) return true;
-      else return false;
-    }
-    return true;
+  // null undefined 0 false ''
+  if (!obj) return false;
+
+  const isObj = (typeof obj) === 'object';
+  if (isObj) {
+    const isArr = Array.isArray(obj);
+    return canBeArray ? isArr : (isObj && !isArr);
   } else {
     return false;
   }

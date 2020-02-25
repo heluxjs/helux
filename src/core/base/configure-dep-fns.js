@@ -1,4 +1,4 @@
-import { okeys, safeGetObjectFromObject, safeGetArrayFromObject, makeError, verboseInfo, isPlainJsonObject } from '../../support/util';
+import { okeys, safeGetObjectFromObject, safeGetArrayFromObject, makeError, verboseInfo, isPlainJsonObject, justWarning, justTip } from '../../support/util';
 import { ERR, CATE_REF } from '../../support/constant';
 import ccContext from '../../cc-context';
 import uuid from './uuid';
@@ -42,15 +42,18 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
 
   let _descObj;
   if (itype === 'string') {// retKey
-    if (typeof handler === 'object') _descObj = { [item]: handler };
+    if (isPlainJsonObject(handler)) _descObj = { [item]: handler };
     else _descObj = { [item]: { fn: handler, depKeys, compare, immediate } };
-  } else if (itype === 'object') {
+  } else if (isPlainJsonObject(item)) {
     _descObj = item;
   } else if (itype === 'function') {
     _descObj = item(confMeta.refCtx);
     if (!isPlainJsonObject(_descObj)) throw new Error(`type of ${confMeta.type} callback result must be an object`);
   }
-  if (!_descObj) return;
+  if (!_descObj) {
+    justWarning(`${cate} ${confMeta.type} param type error`);
+    return;
+  }
 
   _parseDescObj(cate, confMeta, _descObj);
 };
@@ -70,7 +73,7 @@ function _parseDescObj(cate, confMeta, descObj) {
       targetItem = { fn: val }
     }
 
-    if (typeof targetItem === 'object') {
+    if (isPlainJsonObject(targetItem)) {
       const { fn, depKeys, immediate = watchImmediate, compare = defaultCompare } = targetItem;
       const fnUid = uuid('mark');
 
@@ -127,6 +130,8 @@ function _parseDescObj(cate, confMeta, descObj) {
           });
         }
       }
+    }else{
+      justWarning(`retKey[${retKey}] item type error`);
     }
 
   });

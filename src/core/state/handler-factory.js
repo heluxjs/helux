@@ -8,8 +8,9 @@ import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 import catchCcError from '../base/catch-cc-error';
 import {
-  getChainId, setChainState, setAllChainState, setAndGetChainStateList, exitChain, getChainStateMap, getAllChainStateMap,
-  removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
+  getChainId, setChainState, setAllChainState, setAndGetChainStateList, 
+  // exitChain, getChainStateMap, 
+  getAllChainStateMap, removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
 } from '../chain';
 import { send } from '../plugin';
 import * as checker from '../checker';
@@ -18,7 +19,7 @@ import setState from './set-state';
 import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import extractStateByKeys from './extract-state-by-keys';
 
-const { verboseInfo, makeError, justWarning } = util;
+const { verboseInfo, makeError, justWarning, isPlainJsonObject } = util;
 const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer }, 
@@ -171,7 +172,7 @@ export function makeInvokeHandler(callerRef, { chainId, oriChainId, isLazy, dela
     let _isLazy = isLazy, _isSilent = isSilent;
     let _renderKey = '', _delay = inputDelay != undefined ? inputDelay : delay;
 
-    if (inputRKey && typeof inputRKey === 'object') {
+    if (isPlainJsonObject(inputRKey)) {
       const { lazy, silent, renderKey, delay } = inputRKey;
       lazy !== undefined && (_isLazy = lazy);
       silent !== undefined && (_isSilent = silent);
@@ -389,17 +390,17 @@ export function makeDispatchHandler(
 ) {
   return (paramObj = {}, payload, userInputRKey, userInputDelay) => {
     let isLazy = in_isLazy, isSilent = in_isSilent;
-    let _renderKey;
+    let _renderKey = '';
     let _delay = userInputDelay || delay;
 
-    if (typeof userInputRKey === 'object') {
+    if (isPlainJsonObject(userInputRKey)) {
       _renderKey = defaultRenderKey;
       const { lazy, silent, renderKey, delay } = userInputRKey;
       lazy !== undefined && (isLazy = lazy);
       silent !== undefined && (isSilent = silent);
       renderKey !== undefined && (_renderKey = renderKey);
       delay !== undefined && (_delay = delay);
-    }else{
+    } else {
       _renderKey = userInputRKey || defaultRenderKey;
     }
 
