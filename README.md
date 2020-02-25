@@ -66,7 +66,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 
 
 ## 🖥Online experience
-- simple quick start project:
+- simple quick start project:   
 **here you can have a quick look on concent's powerful features!!**
 <p>
 <a href="https://codesandbox.io/s/green-tdd-g2mcr" rel="nofollow">
