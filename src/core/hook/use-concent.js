@@ -90,7 +90,7 @@ export default function useConcent(registerOption, ccClassKey){
 
     const refCtx = hookRef.ctx;
     // rewrite useRef for CcHook
-    refCtx.useRef = function (refName) {
+    refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
       const ref = React.useRef(null);
       refCtx.refs[refName] = ref;
       return ref;
