@@ -1,5 +1,6 @@
 import React from 'react';
 import { CC_HOOK_PREFIX } from '../../support/constant';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
 import mapRegistrationInfo from '../base/map-registration-info';
@@ -150,7 +151,7 @@ export default function useConcent(registerOption, ccClassKey){
   if (mapProps) {
     const mapped = mapProps(refCtx);
     if (!isPlainJsonObject(mapped)) {
-      throw new Error('mapProps must return an plain json object')
+      throw new Error(`mapProps ret ${NOT_A_JSON}`)
     }
     refCtx.mapped = mapped;
   }
