@@ -1167,7 +1167,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.162',
+      version: '1.5.163',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1583,19 +1583,6 @@
         ccUniqueKey = _targetRef$ctx.ccUniqueKey,
         ccKey = _targetRef$ctx.ccKey;
     var stateFor = getStateFor(module, refModule);
-    var passToMiddleware = {
-      calledBy: calledBy,
-      type: type,
-      payload: payload,
-      renderKey: renderKey,
-      delay: delay,
-      ccKey: ccKey,
-      ccUniqueKey: ccUniqueKey,
-      state: state,
-      refModule: refModule,
-      module: module,
-      fnName: fnName
-    };
     var callInfo = {
       payload: payload,
       renderKey: renderKey,
@@ -1610,7 +1597,21 @@
       refCtx: passedCtx,
       callInfo: callInfo
     });
-    Object.assign(state, sharedState); // source ref will receive the whole committed state 
+    Object.assign(state, sharedState);
+    var passToMiddleware = {
+      calledBy: calledBy,
+      type: type,
+      payload: payload,
+      renderKey: renderKey,
+      delay: delay,
+      ccKey: ccKey,
+      ccUniqueKey: ccUniqueKey,
+      committedState: state,
+      refModule: refModule,
+      module: module,
+      fnName: fnName,
+      sharedState: sharedState
+    }; // source ref will receive the whole committed state 
 
     triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, function (renderType, committedState) {
       if (renderType === RENDER_NO_OP$1 && !sharedState) ; else {

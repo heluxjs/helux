@@ -44,7 +44,11 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
         } else {
           const middlewareFn = middlewares[index];
           index++;
-          middlewareFn(passToMiddleware, next);
+          if(typeof middlewareFn === 'function')middlewareFn(passToMiddleware, next);
+          else {
+            justWarning(`found one middleware is not a function`);
+            next();
+          }
         }
       }
       next();
@@ -84,7 +88,7 @@ export default function (state, {
   Object.assign(state, sharedState);
   const passToMiddleware = {
     calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
-    committedState: state, refModule, stateModule: module, fnName, sharedState
+    committedState: state, refModule, module, fnName, sharedState
   };
 
   // source ref will receive the whole committed state 
