@@ -10,7 +10,7 @@ import { send } from '../plugin';
 
 const { isPJO, justWarning, isObjectNotNull, computeFeature, okeys, removeArrElements } = util;
 const {
-  STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
+  FOR_ONE_INS_FIRSTLY, FOR_ALL_INS_OF_A_MOD,
   FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
@@ -20,9 +20,9 @@ const {
   connectedModuleName_ccClassKeys_, refStore, moduleName_stateKeys_, ccUkey_ref_, renderKey_ccUkeys_,
 } = ccContext;
 
-//触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE
+//触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
 function getStateFor(targetModule, refModule) {
-  return targetModule === refModule ? STATE_FOR_ONE_CC_INSTANCE_FIRSTLY : STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE;
+  return targetModule === refModule ? FOR_ONE_INS_FIRSTLY : FOR_ALL_INS_OF_A_MOD;
 }
 
 function getActionType(calledBy, type) {
@@ -83,7 +83,7 @@ export default function (state, {
   
   //在triggerReactSetState之前把状态存储到store，
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-  const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
+  const passedCtx = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef.ctx : null;
   const sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
   Object.assign(state, sharedState);
   const passToMiddleware = {
@@ -110,7 +110,7 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   const { state: refState, ctx: refCtx } = targetRef;
   if (
     targetRef.__$$isUnmounted === true ||
-    stateFor !== STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ||
+    stateFor !== FOR_ONE_INS_FIRSTLY ||
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE && !isObjectNotNull(state)
   ) {
@@ -189,7 +189,7 @@ function updateRefs(ccUkeys, moduleName, partialSharedState, callInfo) {
     const refModule = ref.ctx.module;
     if (refModule === moduleName) {
       //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
-      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
     } else {
       // consider this is a redundant render behavior .....
       // ref.__$$ccForceUpdate();
@@ -207,9 +207,9 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   const targetClassContext = ccClassKey_ccClassContext_[ccClassKey];
   const renderKeyClasses = targetClassContext.renderKeyClasses;
 
-  // if stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
+  // if stateFor === FOR_ONE_INS_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
   // so flag ignoreCurrentCcUkey as true;
-  const ignoreCurrentCcUkey = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY;
+  const ignoreCurrentCcUkey = stateFor === FOR_ONE_INS_FIRSTLY;
   
   // these ccClass are watching the same module's state
   let ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
@@ -256,7 +256,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
       const ref = ccUkey_ref_[ccKey];
       if (ref) {
         // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-        triggerReactSetState(ref, callInfo, null, 'broadcastState', sharedStateForCurrentCcClass, STATE_FOR_ONE_CC_INSTANCE_FIRSTLY);
+        triggerReactSetState(ref, callInfo, null, 'broadcastState', sharedStateForCurrentCcClass, FOR_ONE_INS_FIRSTLY);
       }
     });
   }

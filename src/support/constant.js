@@ -5,9 +5,9 @@ export const MODULE_CC = '$$cc';
 export const MODULE_VOID = '$$concent_void_module_624313307';
 export const MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
 
-export const CC_CLASS_PREFIX = '$$CcClass';
-export const CC_FRAGMENT_PREFIX = '$$CcFrag';
-export const CC_HOOK_PREFIX = '$$CcHook';
+export const CC_CLASS = '$$CcClass';
+export const CC_FRAGMENT = '$$CcFrag';
+export const CC_HOOK = '$$CcHook';
 export const CC_PREFIX = '$$Cc';
 
 export const CC_DISPATCHER = '$$Dispatcher';
@@ -28,8 +28,8 @@ export const RENDER_NO_OP = 1;
 export const RENDER_BY_KEY = 2;
 export const RENDER_BY_STATE = 3;
 
-export const STATE_FOR_ONE_CC_INSTANCE_FIRSTLY = 1;
-export const STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE = 2;
+export const FOR_ONE_INS_FIRSTLY = 1;
+export const FOR_ALL_INS_OF_A_MOD = 2;
 
 export const EFFECT_AVAILABLE = 1;
 export const EFFECT_STOPPED = 0;
@@ -85,6 +85,6 @@ export default {
   MODULE_CC,
   ERR,
   ERR_MESSAGE,
-  STATE_FOR_ONE_CC_INSTANCE_FIRSTLY,
-  STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
+  FOR_ONE_INS_FIRSTLY,
+  FOR_ALL_INS_OF_A_MOD,
 }

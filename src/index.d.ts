@@ -1,8 +1,8 @@
 import { Component, ReactNode, ComponentClass, FC } from 'react';
 
-type CC_CLASS_PREFIX = '$$CcClass';
-type CC_FRAGMENT_PREFIX = '$$CcFrag';
-type CC_HOOK_PREFIX = '$$CcHook';
+type CC_CLASS = '$$CcClass';
+type CC_FRAGMENT = '$$CcFrag';
+type CC_HOOK = '$$CcHook';
 
 export type MODULE_GLOBAL = '$$global';
 export type MODULE_DEFAULT = '$$default';
@@ -17,9 +17,9 @@ type CcCst = {
   MODULE_VOID: MODULE_VOID;
   MODULE_CC_ROUTER: '$$CONCENT_ROUTER';
 
-  CC_CLASS_PREFIX: CC_CLASS_PREFIX;
-  CC_FRAGMENT_PREFIX: CC_FRAGMENT_PREFIX;
-  CC_HOOK_PREFIX: CC_HOOK_PREFIX;
+  CC_CLASS: CC_CLASS;
+  CC_FRAGMENT: CC_FRAGMENT;
+  CC_HOOK: CC_HOOK;
   CC_PREFIX: '$$Cc';
 
   CC_DISPATCHER: '$$Dispatcher';
@@ -40,8 +40,8 @@ type CcCst = {
   RENDER_BY_KEY: 2;
   RENDER_BY_STATE: 3;
 
-  STATE_FOR_ONE_CC_INSTANCE_FIRSTLY: 1;
-  STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE: 2;
+  FOR_ONE_INS_FIRSTLY: 1;
+  FOR_ALL_INS_OF_A_MOD: 2;
 
   EFFECT_AVAILABLE: 1;
   EFFECT_STOPPED: 0;
@@ -93,6 +93,8 @@ export type ComputedValType<T> = {
 }
 
 export type SettingsType<SetupFn extends (...args: any) => any> = ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>;
+
+export type StateType<S> = S extends IAnyFn ? ReturnType<IAnyFn> : S;
 
 interface IDispatchOptions {
   silent?: boolean;
@@ -344,7 +346,7 @@ export interface ICtxBase {
   readonly module: PropKey;
   // module: '$$default';
   readonly isSingle: boolean;
-  readonly type: CC_CLASS_PREFIX | CC_FRAGMENT_PREFIX | CC_HOOK_PREFIX;
+  readonly type: CC_CLASS | CC_FRAGMENT | CC_HOOK;
   readonly ccKey: string;
   readonly ccClassKey: string;
   readonly ccUniqueKey: string;

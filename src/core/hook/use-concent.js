@@ -1,5 +1,5 @@
 import React from 'react';
-import { CC_HOOK_PREFIX } from '../../support/constant';
+import { CC_HOOK } from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
@@ -58,12 +58,12 @@ function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, 
 
   incCursor();
   const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-    module, ccClassKey, renderKeyClasses, CC_HOOK_PREFIX, watchedKeys, storedKeys, connect, true
+    module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, storedKeys, connect, true
   );
   const hookRef = new CcHook(ccHookState, hookSetState, props);
 
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK_PREFIX,
+    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK,
     ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
   });
 

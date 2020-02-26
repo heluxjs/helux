@@ -2,7 +2,7 @@
 import {
   MODULE_GLOBAL, ERR, 
   SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR,
-  DISPATCH,  INVOKE, CC_HOOK_PREFIX,
+  DISPATCH,  INVOKE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -139,7 +139,7 @@ export function makeCcSetStateHandler(ref, containerRef) {
     if (containerRef) containerRef.state = newFullState;
     
     // 只有Hook实例，才能直接更新ref.state
-    if (refCtx.type === CC_HOOK_PREFIX) {
+    if (refCtx.type === CC_HOOK) {
       ref.state = newFullState;
     }
 
@@ -150,7 +150,7 @@ export function makeCcSetStateHandler(ref, containerRef) {
     }else{
       //对与class实例来说，视图虽然没有更新，但是state要合并进来，让下一次即将到来的更新里能拿到之前的状态
       //否则watch启用的return false优化会造成状态丢失
-      if(refCtx.type !== CC_HOOK_PREFIX){
+      if(refCtx.type !== CC_HOOK){
         Object.assign(ref.state, state);
       }
     }

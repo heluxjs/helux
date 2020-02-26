@@ -3,7 +3,7 @@ import React from 'react';
 import CcFragment from '../component/CcFragment';
 import mapRegistrationInfo from '../core/base/map-registration-info';
 import * as util from '../support/util';
-import { CC_FRAGMENT_PREFIX } from '../support/constant';
+import { CC_FRAGMENT } from '../support/constant';
 
 function _registerDumb(Dumb, regOpt) {
   const { ccClassKey, mapProps, props = {} } = regOpt;
@@ -37,7 +37,7 @@ export default function (registerOption, ccClassKey) {
   
   
   const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-    module, ccClassKey, renderKeyClasses, CC_FRAGMENT_PREFIX, watchedKeys, storedKeys, connect, true
+    module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true
   );
   _registerOption.module = _module;
   _registerOption.watchedKeys = _watchedKeys;

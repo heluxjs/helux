@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import { CC_DISPATCHER, MODULE_DEFAULT, CC_FRAGMENT_PREFIX } from '../../support/constant';
+import { CC_DISPATCHER, MODULE_DEFAULT, CC_FRAGMENT } from '../../support/constant';
 
 /****
  * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
@@ -27,7 +27,7 @@ export default function(module, mustBelongToModule = false) {
     }
 
     if (module === MODULE_DEFAULT) {
-      ccKeys = ccKeys.filter(key => !key.startsWith(CC_FRAGMENT_PREFIX));
+      ccKeys = ccKeys.filter(key => !key.startsWith(CC_FRAGMENT));
     }
     if (ccKeys.length === 0) {
       if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];

@@ -1,7 +1,7 @@
 import React from 'react';
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
-  MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS_PREFIX
+  MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -40,7 +40,7 @@ export default function register({
   try {
 
     const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS_PREFIX, inputWatchedKeys, storedKeys, connect,  __checkStartUp, __calledBy
+      module, ccClassKey, renderKeyClasses, CC_CLASS, inputWatchedKeys, storedKeys, connect,  __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {
@@ -65,7 +65,7 @@ export default function register({
 
             // props.ccOption
             const params = Object.assign({}, props, {
-              isSingle, module: _module, tag, state: privState, type: CC_CLASS_PREFIX,
+              isSingle, module: _module, tag, state: privState, type: CC_CLASS,
               watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
             });
             buildRefCtx(this, params, lite);
