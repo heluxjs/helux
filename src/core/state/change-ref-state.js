@@ -80,25 +80,25 @@ export default function (state, {
   //在triggerReactSetState之前把状态存储到store，
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
   const passedCtx = stateFor === STATE_FOR_ONE_CC_INSTANCE_FIRSTLY ? targetRef.ctx : null;
-  const moduleState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
-  Object.assign(state, moduleState);
+  const sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
+  Object.assign(state, sharedState);
   const passToMiddleware = {
     calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
-    state, refModule, module, fnName, moduleState
+    committedState: state, refModule, stateModule: module, fnName, sharedState
   };
 
   // source ref will receive the whole committed state 
   triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, (renderType, committedState) => {
 
-    if (renderType === RENDER_NO_OP && !moduleState) {
+    if (renderType === RENDER_NO_OP && !sharedState) {
     } else {
       send(SIG_STATE_CHANGED, {
-        committedState, sharedState: moduleState,
+        committedState, sharedState,
         module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
       });
     }
 
-    if (moduleState) triggerBroadcastState(callInfo, targetRef, moduleState, stateFor, module, renderKey, delay);
+    if (sharedState) triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
   }, skipMiddleware, passToMiddleware);
 }
 

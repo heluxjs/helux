@@ -203,7 +203,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '1.5.162',
+    version: '1.5.163',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

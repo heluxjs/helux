@@ -720,8 +720,10 @@ interface StoreConfig {
 }
 
 type StateInfo = {
-  committedState: object, sharedState: object, module: string,
-  type: string, ccUniqueKey: string, renderKey: string,
+  calledBy: string, type: string, payload: any,
+  renderKey: string, delay: number, ccKey: string, ccUniqueKey: string,
+  committedState: object, sharedState: object | null,
+  refModule: string, stateModule: string, fnName: string
 };
 type PluginOn = (sig: string | string[], callback: (data: { sig: string, payload: any }) => void) => void;
 interface Plugin {
