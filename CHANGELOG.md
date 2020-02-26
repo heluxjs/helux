@@ -1,3 +1,11 @@
+#### 2020-02-27
+1.5.165 发布
+* feature: useConcent传入state函数时，只会触发一次函数调用
+* feature: 模块config配置里支持传入state函数
+* break-change: cloneModule接口调用的目标模块state必须提供state函数
+* fix: 再次实例化一个携带ccKey的实例是，报错retKey重复
+* optimize: 简化一些常量的长度
+
 #### 2020-02-26
 1.5.164 发布
 * optimize: 补充middleware stateInfo字段
