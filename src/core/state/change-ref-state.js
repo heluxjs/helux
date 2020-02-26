@@ -79,7 +79,7 @@ export default function (state, {
     calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
     state, refModule, module, fnName
   };
-  const callInfo = { payload, renderKey, ccKey };
+  const callInfo = { payload, renderKey, ccKey, module, fnName };
 
   //在triggerReactSetState之前把状态存储到store，
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state

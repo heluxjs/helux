@@ -8,7 +8,6 @@ import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
 const { isPlainJsonObject, safeGetObjectFromObject, okeys } = util;
-const callInfo = { payload: null, renderKey: '', delay: -1 };
 
 /**
  * 设置watch值，过滤掉一些无效的key
@@ -45,7 +44,7 @@ export default function (module, moduleWatch, append = false) {
   
   findDepFnsToExecute(
     d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns,
-    moduleState, moduleState, deltaCommittedState, callInfo, true,
+    moduleState, moduleState, deltaCommittedState, util.makeCallInfo(module), true,
     'watch', CATE_MODULE, moduleComputedValue,
   );
 

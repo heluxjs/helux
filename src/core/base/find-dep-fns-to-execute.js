@@ -43,7 +43,10 @@ export default (
     const { commit, getFnCommittedState } = makeCommitHandler();
     const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
     pickedFns.forEach(({ retKey, fn, depKeys }) => {
-      const fnCtx = { retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, stateModule, refModule, oldState, committedState: curToBeComputedState, refCtx };
+      const fnCtx = {
+        retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
+        stateModule, refModule, oldState, committedState: curToBeComputedState, refCtx
+      };
       const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
 
       if (fnType === 'computed') {

@@ -8,7 +8,6 @@ import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
 const { safeGetObjectFromObject, isPlainJsonObject } = util;
-const callInfo = { payload: null, renderKey: '', delay: -1 };
 
 export default function (module, computed) {
   if(!computed) return;
@@ -36,7 +35,7 @@ export default function (module, computed) {
 
   findDepFnsToExecute(
     d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns,
-    moduleState, moduleState, deltaCommittedState, callInfo, true,
+    moduleState, moduleState, deltaCommittedState, util.makeCallInfo(module), true,
     'computed', CATE_MODULE, moduleComputedValue,
   );
 

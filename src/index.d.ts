@@ -363,9 +363,8 @@ export interface ICtxBase {
   readonly mapped: IAnyObj;
   readonly stateKeys: string[];
 
-  // readonly state: IAnyObj;
   extra: any;
-  state: any;
+  readonly state: any;
   readonly prevState: any;
   readonly props: any;
   readonly prevProps: any;
@@ -444,11 +443,13 @@ export interface IRefCtx<
   ConnectedState extends IAnyObj = {},
   ConnectedReducer extends IAnyObj = {},
   ConnectedComputed extends IAnyObj = {},
+  Extra extends any = any,
   >
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
-  state: PrivState & ModuleState;
+  readonly state: PrivState & ModuleState;
+  extra: Extra;
   readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
@@ -482,14 +483,14 @@ export interface ICtx
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   Mapped extends IAnyObj = {},
-  Extra = any,
+  Extra extends any = any,
   >
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
   extra: Extra;
-  state: RootState[ModuleName] & PrivState;
+  readonly state: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
@@ -519,9 +520,10 @@ export interface ICtxCommon<
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   RootState extends IRootBase = IRootBase,
+  Extra extends any = any,
   > extends ICtx<
   RootState, {}, {}, Props, PrivState,
-  MODULE_DEFAULT, MODULE_VOID, Settings, RefComputed, {}
+  MODULE_DEFAULT, MODULE_VOID, Settings, RefComputed, {}, Extra
   > { }
 
 // this kind of ctx must belong to $$default module
@@ -538,11 +540,12 @@ export interface ICtxDefault
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   Mapped extends IAnyObj = {},
+  Extra extends any = any,
   >
   extends ICtx
   <
   RootState, RootReducer, RootCu, Props, PrivState,
-  ModuleName, ConnectedModules, Settings, RefComputed, Mapped
+  ModuleName, ConnectedModules, Settings, RefComputed, Mapped, Extra
   > {
   // __key_as_hint_your_ctx_is_not_default__: 'your component is belong to $$default module by default, but you give a type Ctx which not belong to $$default module',
 }
@@ -555,7 +558,7 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 export interface IFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
-  callInfo: { payload: IAnyObj, renderKey: string, delay: number };
+  callInfo: { payload: IAnyObj, renderKey: string, delay: number, module:string, fnName:string };
   commit: GetFnCtxCommit<any>;
   commitCu: GetFnCtxCommitCu<any>;
   setted: string[];
@@ -1040,12 +1043,12 @@ export function appendState(moduleName: string, state: IAnyObj): void;
 
 export function defComputedVal<CuRet>(ret: CuRet, compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
 
-export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>(fn: (oldState: V, newState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
-export function defComputed<CuRet>(fn: (oldState: IAnyObj, newState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
+export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>(fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
+export function defComputed<CuRet>(fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
 
-export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (oldState: V, newState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
 
-export function defWatchImmediate<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (oldState: V, newState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean): WatchFnDesc;
+export function defWatchImmediate<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean): WatchFnDesc;
 
 export declare const cst: CcCst;
 

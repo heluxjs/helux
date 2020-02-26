@@ -66,10 +66,10 @@ export default function (
     computed = {},
     watch = {},
     moduleSingleClass = {},
-    middlewares = [],
   } = {},
   {
     plugins = [],
+    middlewares = [],
     isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
     isDebug = false,
     errorHandler = null,

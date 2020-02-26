@@ -321,3 +321,7 @@ export function isOnlineEditor() {
   }
   return result;
 }
+
+export function makeCallInfo(module) {
+  return { payload: null, renderKey: '', delay: -1, module, fnName: '' }
+};

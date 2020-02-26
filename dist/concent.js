@@ -148,14 +148,13 @@
       canBeArray = false;
     }
 
-    if (obj === null) return false;
+    // null undefined 0 false ''
+    if (!obj) return false;
+    var isObj = typeof obj === 'object';
 
-    if (typeof obj === 'object') {
-      if (Array.isArray(obj)) {
-        if (canBeArray) return true;else return false;
-      }
-
-      return true;
+    if (isObj) {
+      var isArr = Array.isArray(obj);
+      return canBeArray ? isArr : isObj && !isArr;
     } else {
       return false;
     }
@@ -481,6 +480,15 @@
     }
 
     return result;
+  }
+  function makeCallInfo(module) {
+    return {
+      payload: null,
+      renderKey: '',
+      delay: -1,
+      module: module,
+      fnName: ''
+    };
   }
 
   /**
@@ -927,7 +935,8 @@
         }
 
         if (ignoredStateKeys.length) {
-          justWarning("these state keys[" + ignoredStateKeys.join(',') + "] are invalid");
+          var reason = "they are not " + (sourceType === CATE_REF ? 'private' : 'module') + ", fn is " + sourceType + " " + fnType;
+          justWarning("these state keys[" + ignoredStateKeys.join(',') + "] are invalid, " + reason);
         }
       } // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
       // 对于实例里的computed回调里调用committedCu来说，是refComputed结果容器
@@ -1158,7 +1167,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.160',
+      version: '1.5.161',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1590,7 +1599,9 @@
     var callInfo = {
       payload: payload,
       renderKey: renderKey,
-      ccKey: ccKey
+      ccKey: ccKey,
+      module: module,
+      fnName: fnName
     }; //在triggerReactSetState之前把状态存储到store，
     //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
 
@@ -1967,7 +1978,8 @@
   // import hoistNonReactStatic from 'hoist-non-react-statics';
   var verboseInfo$1 = verboseInfo,
       makeError$2 = makeError,
-      justWarning$2 = justWarning;
+      justWarning$2 = justWarning,
+      isPlainJsonObject$2 = isPlainJsonObject;
   var _ccContext$store$1 = ccContext.store,
       getState = _ccContext$store$1.getState,
       storeSetState = _ccContext$store$1.setState,
@@ -2169,7 +2181,7 @@
       var _renderKey = '',
           _delay = inputDelay != undefined ? inputDelay : delay;
 
-      if (inputRKey && typeof inputRKey === 'object') {
+      if (isPlainJsonObject$2(inputRKey)) {
         var lazy = inputRKey.lazy,
             silent = inputRKey.silent,
             renderKey = inputRKey.renderKey,
@@ -2489,12 +2501,11 @@
 
       var isLazy = in_isLazy,
           isSilent = in_isSilent;
-
-      var _renderKey;
+      var _renderKey = '';
 
       var _delay = userInputDelay || delay;
 
-      if (typeof userInputRKey === 'object') {
+      if (isPlainJsonObject$2(userInputRKey)) {
         _renderKey = defaultRenderKey;
         var lazy = userInputRKey.lazy,
             silent = userInputRKey.silent,
@@ -2639,14 +2650,14 @@
   // export function makeCommitHandler(module, refCtx) {}
 
   var okeys$3 = okeys,
-      isPlainJsonObject$2 = isPlainJsonObject;
+      isPlainJsonObject$3 = isPlainJsonObject;
   var _state$1 = ccContext.store._state;
   /**
    * 根据connect,watchedKeys算出ccClassKey值和connectedModuleKeyMapping值
    */
 
   function getFeatureStrAndCmkMapping (connectSpec, watchedKeys, belongModule, compTypePrefix) {
-    if (!isPlainJsonObject$2(connectSpec)) {
+    if (!isPlainJsonObject$3(connectSpec)) {
       throw new Error("CcFragment or CcClass's prop connect type error, it " + NOT_A_JSON);
     }
 
@@ -3226,20 +3237,23 @@
       var _descObj2, _descObj3;
 
       // retKey
-      if (typeof handler === 'object') _descObj = (_descObj2 = {}, _descObj2[item] = handler, _descObj2);else _descObj = (_descObj3 = {}, _descObj3[item] = {
+      if (isPlainJsonObject(handler)) _descObj = (_descObj2 = {}, _descObj2[item] = handler, _descObj2);else _descObj = (_descObj3 = {}, _descObj3[item] = {
         fn: handler,
         depKeys: depKeys,
         compare: compare,
         immediate: immediate
       }, _descObj3);
-    } else if (itype === 'object') {
+    } else if (isPlainJsonObject(item)) {
       _descObj = item;
     } else if (itype === 'function') {
       _descObj = item(confMeta.refCtx);
       if (!isPlainJsonObject(_descObj)) throw new Error("type of " + confMeta.type + " callback result must be an object");
     }
 
-    if (!_descObj) return;
+    if (!_descObj) {
+      justWarning(cate + " " + confMeta.type + " param type error");
+      return;
+    }
 
     _parseDescObj(cate, confMeta, _descObj);
   }
@@ -3262,7 +3276,7 @@
         };
       }
 
-      if (typeof targetItem === 'object') {
+      if (isPlainJsonObject(targetItem)) {
         var _targetItem = targetItem,
             fn = _targetItem.fn,
             depKeys = _targetItem.depKeys,
@@ -3350,6 +3364,8 @@
             });
           }
         }
+      } else {
+        justWarning("retKey[" + retKey + "] item type error");
       }
     });
   }
@@ -4240,11 +4256,6 @@
   }
 
   var getState$4 = ccContext.store.getState;
-  var callInfo = {
-    payload: null,
-    renderKey: '',
-    delay: -1
-  };
   /** 由首次render触发 */
 
   function triggerComputedAndWatch (ref) {
@@ -4253,6 +4264,7 @@
         hasWatchFn = ctx.hasWatchFn,
         connect = ctx.connect,
         refModule = ctx.module;
+    var callInfo = makeCallInfo(refModule);
     var connectedModules = okeys(connect);
     var refState = ctx.state;
 
@@ -4260,7 +4272,8 @@
       computeValueForRef(ctx, refModule, refState, refState, callInfo, true, true);
       connectedModules.forEach(function (m) {
         var mState = getState$4(m);
-        computeValueForRef(ctx, m, mState, mState, callInfo, true, true);
+        var tmpCallInfo = makeCallInfo(m);
+        computeValueForRef(ctx, m, mState, mState, tmpCallInfo, true, true);
       });
     }
 
@@ -4268,7 +4281,8 @@
       watchKeyForRef(ctx, refModule, refState, refState, callInfo, true, true);
       connectedModules.forEach(function (m) {
         var mState = getState$4(m);
-        watchKeyForRef(ctx, m, mState, mState, callInfo, true, true);
+        var tmpCallInfo = makeCallInfo(m);
+        watchKeyForRef(ctx, m, mState, mState, tmpCallInfo, true, true);
       });
     }
   }
@@ -5067,14 +5081,9 @@
     });
   }
 
-  var isPlainJsonObject$3 = isPlainJsonObject,
+  var isPlainJsonObject$4 = isPlainJsonObject,
       safeGetObjectFromObject$2 = safeGetObjectFromObject,
       okeys$8 = okeys;
-  var callInfo$1 = {
-    payload: null,
-    renderKey: '',
-    delay: -1
-  };
   /**
    * 设置watch值，过滤掉一些无效的key
    */
@@ -5087,7 +5096,7 @@
     if (!moduleWatch) return;
     var tip = "module[" + module + "] watch";
 
-    if (!isPlainJsonObject$3(moduleWatch)) {
+    if (!isPlainJsonObject$4(moduleWatch)) {
       throw new Error(tip + " " + NOT_A_JSON);
     }
 
@@ -5118,21 +5127,16 @@
     };
 
     var moduleComputedValue = safeGetObjectFromObject$2(rootComputedValue, module);
-    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, callInfo$1, true, 'watch', CATE_MODULE, moduleComputedValue);
+    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'watch', CATE_MODULE, moduleComputedValue);
   }
 
   var safeGetObjectFromObject$3 = safeGetObjectFromObject,
-      isPlainJsonObject$4 = isPlainJsonObject;
-  var callInfo$2 = {
-    payload: null,
-    renderKey: '',
-    delay: -1
-  };
+      isPlainJsonObject$5 = isPlainJsonObject;
   function initModuleComputed (module, computed) {
     if (!computed) return;
     var tip = "module[" + module + "] computed";
 
-    if (!isPlainJsonObject$4(computed)) {
+    if (!isPlainJsonObject$5(computed)) {
       throw new Error(tip + " " + NOT_A_JSON);
     }
 
@@ -5157,14 +5161,14 @@
 
     var deltaCommittedState = Object.assign({}, moduleState);
     var moduleComputedValue = safeGetObjectFromObject$3(rootComputedValue, module);
-    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, callInfo$2, true, 'computed', CATE_MODULE, moduleComputedValue);
+    findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'computed', CATE_MODULE, moduleComputedValue);
   }
 
-  var isPlainJsonObject$5 = isPlainJsonObject,
+  var isPlainJsonObject$6 = isPlainJsonObject,
       okeys$9 = okeys;
 
   function checkObj(rootObj, tag) {
-    if (!isPlainJsonObject$5(rootObj)) {
+    if (!isPlainJsonObject$6(rootObj)) {
       throw new Error(tag + " " + NOT_A_JSON);
     }
   }
@@ -5217,7 +5221,7 @@
   function executeRootInit(init) {
     if (!init) return;
 
-    if (!isPlainJsonObject$5(init)) {
+    if (!isPlainJsonObject$6(init)) {
       throw new Error("init " + NOT_A_JSON);
     }
 
@@ -5234,7 +5238,7 @@
     ccContext.init._init = init;
   }
   function configModuleSingleClass(moduleSingleClass) {
-    if (!isPlainJsonObject$5(moduleSingleClass)) {
+    if (!isPlainJsonObject$6(moduleSingleClass)) {
       throw new Error("StartupOption.moduleSingleClass " + NOT_A_JSON);
     }
 
@@ -5587,7 +5591,7 @@
     }
   }
 
-  var isPlainJsonObject$6 = isPlainJsonObject;
+  var isPlainJsonObject$7 = isPlainJsonObject;
   /**
    * @description configure module、state、option to cc
    * @author zzk
@@ -5601,7 +5605,7 @@
       throw new Error('configure must be called after run!');
     }
 
-    if (!isPlainJsonObject$6(config)) {
+    if (!isPlainJsonObject$7(config)) {
       throw new Error("param config " + NOT_A_JSON);
     }
 
@@ -5616,7 +5620,7 @@
         init = config.init,
         isClassSingle = config.isClassSingle;
 
-    if (reducer && !isPlainJsonObject$6(reducer)) {
+    if (reducer && !isPlainJsonObject$7(reducer)) {
       throw new Error("config.reducer " + NOT_A_JSON);
     }
 
@@ -5698,7 +5702,7 @@
     configure(newModule, confObj);
   });
 
-  var isPlainJsonObject$7 = isPlainJsonObject,
+  var isPlainJsonObject$8 = isPlainJsonObject,
       okeys$a = okeys,
       isObjectNull$2 = isObjectNull;
 
@@ -5725,8 +5729,8 @@
       option = {};
     }
 
-    if (!isPlainJsonObject$7(store)) pError('store');
-    if (!isPlainJsonObject$7(option)) pError('option');
+    if (!isPlainJsonObject$8(store)) pError('store');
+    if (!isPlainJsonObject$8(option)) pError('option');
     var storeConf = {
       store: {},
       reducer: {},
