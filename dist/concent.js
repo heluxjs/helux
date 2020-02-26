@@ -1167,7 +1167,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.163',
+      version: '1.5.164',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1534,7 +1534,10 @@
           } else {
             var middlewareFn = middlewares[index];
             index++;
-            middlewareFn(passToMiddleware, next);
+            if (typeof middlewareFn === 'function') middlewareFn(passToMiddleware, next);else {
+              justWarning$1("found one middleware is not a function");
+              next();
+            }
           }
         };
 
