@@ -33,9 +33,9 @@ export default function (store = {}, option = {}) {
 
   // traversal moduleNames
   okeys(store).forEach(m => {
-    const config = store[m];
-    const { state, reducer, watch, computed, init, isClassSingle } = config;
-    if (state) storeConf.store[m] = evalState(state);
+    const moduleConf = store[m];
+    const { state, reducer, watch, computed, init, isClassSingle } = moduleConf;
+    storeConf.store[m] = evalState(state);
     if (reducer) storeConf.reducer[m] = reducer;
     if (watch) storeConf.watch[m] = watch;
     if (computed) storeConf.computed[m] = computed;

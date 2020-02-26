@@ -1,4 +1,3 @@
-import _startup from './api/startup';
 import _cloneModule from './api/clone-module';
 import _run from './api/run';
 import _connect from './api/connect';
@@ -31,7 +30,6 @@ import _useConcent from './api/use-concent';
 import * as _cst from './support/constant';
 import * as util from './support/util';
 
-export const startup = _startup;
 export const cloneModule = _cloneModule;
 export const run = _run;
 export const connect = _connect;
@@ -79,7 +77,6 @@ const defaultExport = {
   registerHookComp,
   configure,
   dispatch,
-  startup,
   run,
   setGlobalState,
   setState,
