@@ -14,7 +14,7 @@ import didMount from './did-mount';
 import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
 
-const { ccClassDisplayName, styleStr, color, okeys, shallowDiffers } = util;
+const { ccClassDisplayName, styleStr, color, okeys, shallowDiffers, evalState } = util;
 const { runtimeVar } = ccContext;
 const cl = color;
 const ss = styleStr;
@@ -57,7 +57,7 @@ export default function register({
         constructor(props, context) {
           try {
             super(props, context);
-            const optState = typeof state === 'function' ? state() : state;
+            const optState = evalState(state);
             const thisState = this.state || {};
             const privState  = Object.assign(thisState, optState);
 

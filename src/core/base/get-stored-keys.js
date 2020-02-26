@@ -7,6 +7,7 @@ export default function (refPrivState, moduleStateKeys, ccOptionStoredKeys, regi
   }
 
   if (targetStoredKeys === '*') {
+    // refPrivState里可能含有moduleStateKey，需要进一步过滤
     return Object.keys(refPrivState).filter(k => !moduleStateKeys.includes(k));
   } else {
     checker.checkStoredKeys(moduleStateKeys, targetStoredKeys);

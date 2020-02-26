@@ -8,9 +8,8 @@ import didMount from '../core/base/did-mount';
 import didUpdate from '../core/base/did-update';
 import buildRefCtx from '../core/ref/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
-import ccContext from '../cc-context';
 
-const { shallowDiffers, getRegisterOptions } = util;
+const { shallowDiffers, getRegisterOptions, evalState } = util;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
 class CcFragment extends React.Component {
@@ -22,11 +21,7 @@ class CcFragment extends React.Component {
       watchedKeys = '*', connect = {}, isSingle, storedKeys = []
     } = registerOptions;
 
-    let state = registerOptions.state || {};
-    if (typeof state === 'function') {
-      state = state();
-    }
-  
+    const state = evalState(registerOptions.state);
     const { ccClassKey, ccKey, ccOption = {} } = props;
 
     let target_watchedKeys = watchedKeys;

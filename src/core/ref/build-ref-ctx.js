@@ -4,6 +4,7 @@ import {
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
+import { NOT_A_JSON } from '../../support/priv-constant';
 import setRef from './set-ref';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
@@ -36,7 +37,7 @@ function getEId() {
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 
 /**
- * 构建refCtx，附加到ref.cc上
+ * 构建refCtx，附加到ref上
  * liteLevel 越小，绑定的方法越少
  */
 export default function (ref, params, liteLevel = 5) {

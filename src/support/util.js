@@ -1,5 +1,6 @@
 
 import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
+import { NOT_A_JSON } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
 export function isValueNotNull(value) {
@@ -325,3 +326,11 @@ export function isOnlineEditor() {
 export function makeCallInfo(module) {
   return { payload: null, renderKey: '', delay: -1, module, fnName: '' }
 };
+
+export function evalState(state = {}) {
+  const ret = typeof state === 'function' ? state() : state;
+  if (!isPlainJsonObject(ret)) {
+    throw new Error(`state ${NOT_A_JSON}`);
+  }
+  return ret;
+}
