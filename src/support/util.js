@@ -23,7 +23,8 @@ export function isObjectNull(object) {
 
 // const _toString = Object.prototype.toString;
 //_toString.call(obj) === '[object Object]'; //judge plain json object
-export function isPlainJsonObject(obj, canBeArray = false) {
+// isPJO is short of isPlainJsonObject
+export function isPJO(obj, canBeArray = false) {
   // null undefined 0 false ''
   if (!obj) return false;
 
@@ -84,7 +85,7 @@ export function isModuleNameCcLike(moduleName) {
 }
 
 export function isModuleStateValid(state) {
-  return isPlainJsonObject(state);
+  return isPJO(state);
 }
 
 export function verboseInfo(info) {
@@ -328,8 +329,8 @@ export function makeCallInfo(module) {
 };
 
 export function evalState(state = {}) {
-  const ret = typeof state === 'function' ? state() : state;
-  if (!isPlainJsonObject(ret)) {
+  constisPJOte === 'function' ? state() : state;
+  if (!isPJO(ret)) {
     throw new Error(`state ${NOT_A_JSON}`);
   }
   return ret;

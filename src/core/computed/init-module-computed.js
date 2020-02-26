@@ -7,13 +7,13 @@ import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { safeGetObjectFromObject, isPlainJsonObject } = util;
+const { safeGetObjectFromObject, isPJO } = util;
 
 export default function (module, computed) {
   if(!computed) return;
 
   const tip = `module[${module}] computed`;
-  if (!isPlainJsonObject(computed)) {
+  if (!isPJO(computed)) {
     throw new Error(`${tip} ${NOT_A_JSON}`);
   }
   checker.checkModuleName(module, false, `${tip} is invalid`);

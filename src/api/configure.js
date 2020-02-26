@@ -9,7 +9,7 @@ import initModuleWatch from '../core/watch/init-module-watch';
 import { send } from '../core/plugin';
 import { makeSetStateHandler } from '../core/state/handler-factory';
 
-const { isPlainJsonObject } = util;
+const { isPJO } = util;
 
 /**
  * @description configure module、state、option to cc
@@ -22,7 +22,7 @@ export default function (module, config) {
   if (!ccContext.isStartup) {
     throw new Error('configure must be called after run!');
   }
-  if (!isPlainJsonObject(config)) {
+  if (!isPJO(config)) {
     throw new Error(`param config ${NOT_A_JSON}`);
   }
   if (module === MODULE_GLOBAL) {
@@ -31,7 +31,7 @@ export default function (module, config) {
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
 
-  if (reducer && !isPlainJsonObject(reducer)) {
+  if (reducer && !isPJO(reducer)) {
     throw new Error(`config.reducer ${NOT_A_JSON}`);
   }
 

@@ -11,10 +11,10 @@ import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
 import { on, clearCbs } from '../plugin';
 
-const { isPlainJsonObject, okeys } = util;
+const { isPJO, okeys } = util;
 
 function checkObj(rootObj, tag) {
-  if (!isPlainJsonObject(rootObj)) {
+  if (!isPJO(rootObj)) {
     throw new Error(`${tag} ${NOT_A_JSON}`);
   }
 }
@@ -65,7 +65,7 @@ export function configRootWatch(rootWatch) {
 
 export function executeRootInit(init) {
   if (!init) return;
-  if (!isPlainJsonObject(init)) {
+  if (!isPJO(init)) {
     throw new Error(`init ${NOT_A_JSON}`);
   }
 
@@ -83,7 +83,7 @@ export function executeRootInit(init) {
 
 
 export function configModuleSingleClass(moduleSingleClass) {
-  if (!isPlainJsonObject(moduleSingleClass)) {
+  if (!isPJO(moduleSingleClass)) {
     throw new Error(`StartupOption.moduleSingleClass ${NOT_A_JSON}`);
   }
   util.safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);

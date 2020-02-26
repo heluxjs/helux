@@ -2,7 +2,7 @@ import startup from './startup';
 import * as util from '../support/util';
 import { NOT_A_JSON } from '../support/priv-constant';
 
-const { isPlainJsonObject, okeys, isObjectNull } = util;
+const { isPJO, okeys, isObjectNull } = util;
 const pError = label => {
   throw new Error(`[[run]]: param error, ${label} ${NOT_A_JSON}`);
 }
@@ -19,8 +19,8 @@ const pError = label => {
  */
 
 export default function (store = {}, option = {}) {
-  if (!isPlainJsonObject(store)) pError('store');
-  if (!isPlainJsonObject(option)) pError('option');
+  if (!isPJO(store)) pError('store');
+  if (!isPJO(option)) pError('option');
 
   const storeConf = {
     store: {},

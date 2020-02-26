@@ -2,14 +2,14 @@ import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 
-const { okeys, isPlainJsonObject } = util;
+const { okeys, isPJO } = util;
 const { store: { _state } } = ccContext;
 
 /**
  * 根据connect,watchedKeys算出ccClassKey值和connectedModuleKeyMapping值
  */
 export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) {
-  if (!isPlainJsonObject(connectSpec)) {
+  if (!isPJO(connectSpec)) {
     throw new Error(`CcFragment or CcClass's prop connect type error, it ${NOT_A_JSON}`);
   }
 

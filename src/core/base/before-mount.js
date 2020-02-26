@@ -41,7 +41,7 @@ export default function (ref, setup, bindCtxToMethod) {
     if (typeof setup !== 'function') throw new Error('type of setup must be function');
 
     const settingsObj = setup(ctx) || {};
-    if (!util.isPlainJsonObject(settingsObj)) throw new Error('type of setup return result must be an plain json object');
+    if (!util.isPJO(settingsObj)) throw new Error('type of setup return result must be an plain json object');
 
     //优先读自己的，再读全局的
     if (bindCtxToMethod === true || (runtimeVar.bindCtxToMethod === true && bindCtxToMethod !== false)) {

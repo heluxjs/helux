@@ -19,7 +19,7 @@ import setState from './set-state';
 import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import extractStateByKeys from './extract-state-by-keys';
 
-const { verboseInfo, makeError, justWarning, isPlainJsonObject } = util;
+const { verboseInfo, makeError, justWarning, isPJO } = util;
 const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer }, 
@@ -172,7 +172,7 @@ export function makeInvokeHandler(callerRef, { chainId, oriChainId, isLazy, dela
     let _isLazy = isLazy, _isSilent = isSilent;
     let _renderKey = '', _delay = inputDelay != undefined ? inputDelay : delay;
 
-    if (isPlainJsonObject(inputRKey)) {
+    if (isPJO(inputRKey)) {
       const { lazy, silent, renderKey, delay } = inputRKey;
       lazy !== undefined && (_isLazy = lazy);
       silent !== undefined && (_isSilent = silent);
@@ -393,7 +393,7 @@ export function makeDispatchHandler(
     let _renderKey = '';
     let _delay = userInputDelay || delay;
 
-    if (isPlainJsonObject(userInputRKey)) {
+    if (isPJO(userInputRKey)) {
       _renderKey = defaultRenderKey;
       const { lazy, silent, renderKey, delay } = userInputRKey;
       lazy !== undefined && (isLazy = lazy);

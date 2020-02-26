@@ -1,4 +1,4 @@
-import { isPlainJsonObject, okeys, removeArrElements } from '../../support/util';
+import { isPJO, okeys, removeArrElements } from '../../support/util';
 
 // set成功则返回true
 function setPartialState(partialState, state, key) {
@@ -12,7 +12,7 @@ function setPartialState(partialState, state, key) {
 
 export default function (state, stateKeys = [], returnNullIfEmpty = false, needIgnored = false) {
   let partialState = {}, ignoredStateKeys = [];
-  if (!isPlainJsonObject(state)) {
+  if (!isPJO(state)) {
     return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true, ignoredStateKeys };
   }
   let isStateEmpty = true;

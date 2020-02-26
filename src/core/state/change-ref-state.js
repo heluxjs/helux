@@ -8,7 +8,7 @@ import watchKeyForRef from '../watch/watch-key-for-ref';
 import computeValueForRef from '../computed/compute-value-for-ref';
 import { send } from '../plugin';
 
-const { isPlainJsonObject, justWarning, isObjectNotNull, computeFeature, okeys, removeArrElements } = util;
+const { isPJO, justWarning, isObjectNotNull, computeFeature, okeys, removeArrElements } = util;
 const {
   STATE_FOR_ONE_CC_INSTANCE_FIRSTLY, STATE_FOR_ALL_CC_INSTANCES_OF_ONE_MODULE,
   FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC,
@@ -72,7 +72,7 @@ export default function (state, {
 ) {
   if (state === undefined) return;
 
-  if (!isPlainJsonObject(state)) {
+  if (!isPJO(state)) {
     justWarning(`your committed state ${NOT_A_JSON}`);
     return;
   }

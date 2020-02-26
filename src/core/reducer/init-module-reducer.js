@@ -8,7 +8,7 @@ export default function (module, reducer) {
   if (!reducer) return;
 
   const tip = `module[${module}] reducer`;
-  if (!util.isPlainJsonObject(reducer)) {
+  if (!util.isPJO(reducer)) {
     throw new Error(`${tip} ${NOT_A_JSON}`);
   }
   checker.checkModuleName(module, false, `${tip} is invalid`);

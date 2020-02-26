@@ -7,7 +7,7 @@ import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { isPlainJsonObject, safeGetObjectFromObject, okeys } = util;
+const { isPJO, safeGetObjectFromObject, okeys } = util;
 
 /**
  * 设置watch值，过滤掉一些无效的key
@@ -16,7 +16,7 @@ export default function (module, moduleWatch, append = false) {
   if(!moduleWatch) return;
 
   const tip = `module[${module}] watch`;
-  if (!isPlainJsonObject(moduleWatch)) {
+  if (!isPJO(moduleWatch)) {
     throw new Error(`${tip} ${NOT_A_JSON}`);
   }
   checker.checkModuleName(module, false, `${tip} is invalid`);
