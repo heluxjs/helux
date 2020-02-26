@@ -1,6 +1,7 @@
 import startup from './startup';
 import * as util from '../support/util';
 import { NOT_A_JSON } from '../support/priv-constant';
+import ccContext from '../cc-context';
 
 const { isPJO, okeys, isObjectNull, evalState } = util;
 const pError = label => {
@@ -14,13 +15,13 @@ const pError = label => {
 
 /**
  * run will call startup
- * @param {{ [moduleName:string]: config:{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean} }} store
- * @param {{isStrict:boolean}} option
+ * @param {{ [moduleName:string]: config:{state:object|()=>object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean} }} store
+ * @param {{isStrict:boolean}} options
  */
 
-export default function (store = {}, option = {}) {
+export default function (store = {}, options = {}) {
   if (!isPJO(store)) pError('store');
-  if (!isPJO(option)) pError('option');
+  if (!isPJO(options)) pError('options');
 
   const storeConf = {
     store: {},
@@ -36,6 +37,8 @@ export default function (store = {}, option = {}) {
     const moduleConf = store[m];
     const { state, reducer, watch, computed, init, isClassSingle } = moduleConf;
     storeConf.store[m] = evalState(state);
+    if (typeof state === 'function') ccContext.moduleName_stateFn[m] = state;
+
     if (reducer) storeConf.reducer[m] = reducer;
     if (watch) storeConf.watch[m] = watch;
     if (computed) storeConf.computed[m] = computed;
@@ -45,5 +48,5 @@ export default function (store = {}, option = {}) {
 
   if (isObjectNull(storeConf.init)) storeConf.init = null;
 
-  startup(storeConf, option);
+  startup(storeConf, options);
 }

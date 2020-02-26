@@ -95,6 +95,8 @@ const ccContext = {
   //  example:  {fooModule: true, barModule:true}
   moduleSingleClass: {
   },
+  moduleName_stateFn: {
+  },
   moduleName_ccClassKeys_: {
   },
   // 映射好模块的状态所有key并缓存住，用于提高性能
