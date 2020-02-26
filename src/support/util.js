@@ -84,10 +84,6 @@ export function isModuleNameCcLike(moduleName) {
   return name === MODULE_CC;
 }
 
-export function isModuleStateValid(state) {
-  return isPJO(state);
-}
-
 export function verboseInfo(info) {
   return info ? ` --verbose-info: ${info}` : '';
 }
