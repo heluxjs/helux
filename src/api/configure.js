@@ -9,7 +9,7 @@ import initModuleWatch from '../core/watch/init-module-watch';
 import { send } from '../core/plugin';
 import { makeSetStateHandler } from '../core/state/handler-factory';
 
-const { isPJO } = util;
+const { isPJO, evalState } = util;
 
 /**
  * @description configure module、state、option to cc
@@ -30,12 +30,13 @@ export default function (module, config) {
   }
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
+  const eState = evalState(state);
 
   if (reducer && !isPJO(reducer)) {
     throw new Error(`config.reducer ${NOT_A_JSON}`);
   }
 
-  initModuleState(module, state, true);
+  initModuleState(module, eState, true);
   initModuleReducer(module, reducer);
 
   computed && initModuleComputed(module, computed);

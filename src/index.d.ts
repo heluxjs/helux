@@ -88,7 +88,7 @@ interface IReducerFn {
 // !!!use infer
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
-export type ComputeValType<T> = {
+export type ComputedValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> : (T[K] extends IComputedFnSimpleDesc ? ReturnType<T[K]['fn']> : never);
 }
 

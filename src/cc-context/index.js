@@ -95,7 +95,7 @@ const ccContext = {
   //  example:  {fooModule: true, barModule:true}
   moduleSingleClass: {
   },
-  moduleName_stateFn: {
+  moduleName_stateFn_: {
   },
   moduleName_ccClassKeys_: {
   },

@@ -94,10 +94,6 @@ export function ccClassDisplayName(className) {
   return `CC(${className})`
 }
 
-export function clone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
-
 export function verifyKeys(keys1, keys2) {
   let duplicate = false, notArray = false, keyElementNotString = false;
   if (!Array.isArray(keys1)) return { duplicate, notArray: true, keyElementNotString };

@@ -37,7 +37,7 @@ export default function (store = {}, options = {}) {
     const moduleConf = store[m];
     const { state, reducer, watch, computed, init, isClassSingle } = moduleConf;
     storeConf.store[m] = evalState(state);
-    if (typeof state === 'function') ccContext.moduleName_stateFn[m] = state;
+    if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
 
     if (reducer) storeConf.reducer[m] = reducer;
     if (watch) storeConf.watch[m] = watch;

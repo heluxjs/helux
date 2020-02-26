@@ -1,6 +1,6 @@
 import configure from './configure';
 import ccContext from '../cc-context';
-import { clone, okeys } from '../support/util';
+import { evalState, okeys } from '../support/util';
 import * as checker from '../core/checker';
 
 function tagReducerFn(reducerFns, moduleName) {
@@ -26,9 +26,12 @@ export default (newModule, existingModule, { state, reducer, computed, watch, in
   checker.checkModuleNameBasically(newModule);
   checker.checkModuleName(existingModule, false);
 
-  const mState = ccContext.store.getState(existingModule);
-  let stateCopy = clone(mState);
-  if (state) Object.assign(stateCopy, state);
+  const stateFn = ccContext.moduleName_stateFn_[existingModule];
+  if (!stateFn){
+    throw new Error(`target module state must be a function`);
+  }
+  let stateCopy = stateFn();
+  Object.assign(stateCopy, evalState(state));
 
   let reducerOriginal = ccContext.reducer._reducer[existingModule] || {};
   // attach  __fnName  __stateModule, 不能污染原函数的dispatch逻辑里需要的__stateModule
