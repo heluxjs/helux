@@ -1167,7 +1167,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.161',
+      version: '1.5.162',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -5503,13 +5503,13 @@
         _ref$watch = _ref.watch,
         watch = _ref$watch === void 0 ? {} : _ref$watch,
         _ref$moduleSingleClas = _ref.moduleSingleClass,
-        moduleSingleClass = _ref$moduleSingleClas === void 0 ? {} : _ref$moduleSingleClas,
-        _ref$middlewares = _ref.middlewares,
-        middlewares = _ref$middlewares === void 0 ? [] : _ref$middlewares;
+        moduleSingleClass = _ref$moduleSingleClas === void 0 ? {} : _ref$moduleSingleClas;
 
     var _ref2 = _temp2 === void 0 ? {} : _temp2,
         _ref2$plugins = _ref2.plugins,
         plugins = _ref2$plugins === void 0 ? [] : _ref2$plugins,
+        _ref2$middlewares = _ref2.middlewares,
+        middlewares = _ref2$middlewares === void 0 ? [] : _ref2$middlewares,
         _ref2$isStrict = _ref2.isStrict,
         isStrict = _ref2$isStrict === void 0 ? false : _ref2$isStrict,
         _ref2$isDebug = _ref2.isDebug,
