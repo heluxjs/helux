@@ -3,6 +3,8 @@ import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
 import { NOT_A_JSON } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
+const cer = console.error;
+
 export function isValueNotNull(value) {
   return !(value === null || value === undefined);
 }
@@ -11,7 +13,7 @@ export function isObjectNotNull(object) {
   if (object === null || object === undefined) {
     return false;
   }
-  if (Object.keys(object).length > 0) {
+  if (okeys(object).length > 0) {
     return true;
   }
   return false;
@@ -133,12 +135,12 @@ export function styleStr(str) {
 
 const tipStart = (str) => `------------ CC ${str} ------------`;
 export function justWarning(err) {
-  console.error(tipStart('WARNING'));
+  cer(tipStart('WARNING'));
   if (err instanceof Error) {
-    console.error(err.message);
-    console.error(err.stack);
+    cer(err.message);
+    cer(err.stack);
   }
-  else console.error(err);
+  else cer(err);
 }
 
 export function justTip(msg) {
@@ -147,8 +149,8 @@ export function justTip(msg) {
 }
 
 export function strictWarning(err) {
-  console.error(tipStart('WARNING'));
-  console.error(err);
+  cer(tipStart('WARNING'));
+  cer(err);
   if (runtimeVar.isStrict) {
     throw err;
   }
@@ -325,7 +327,7 @@ export function makeCallInfo(module) {
 };
 
 export function evalState(state = {}) {
-  constisPJOte === 'function' ? state() : state;
+  const ret = typeof state === 'function' ? state() : state;
   if (!isPJO(ret)) {
     throw new Error(`state ${NOT_A_JSON}`);
   }

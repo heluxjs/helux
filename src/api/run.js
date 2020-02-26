@@ -2,7 +2,7 @@ import startup from './startup';
 import * as util from '../support/util';
 import { NOT_A_JSON } from '../support/priv-constant';
 
-const { isPJO, okeys, isObjectNull } = util;
+const { isPJO, okeys, isObjectNull, evalState } = util;
 const pError = label => {
   throw new Error(`[[run]]: param error, ${label} ${NOT_A_JSON}`);
 }
@@ -35,7 +35,7 @@ export default function (store = {}, option = {}) {
   okeys(store).forEach(m => {
     const config = store[m];
     const { state, reducer, watch, computed, init, isClassSingle } = config;
-    if (state) storeConf.store[m] = state;
+    if (state) storeConf.store[m] = evalState(state);
     if (reducer) storeConf.reducer[m] = reducer;
     if (watch) storeConf.watch[m] = watch;
     if (computed) storeConf.computed[m] = computed;
