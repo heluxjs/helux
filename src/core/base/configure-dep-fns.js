@@ -3,7 +3,7 @@ import { ERR, CATE_REF } from '../../support/constant';
 import ccContext from '../../cc-context';
 import uuid from './uuid';
 
-const { moduleName_stateKeys_, refRetKey_fnUid_, runtimeVar } = ccContext;
+const { moduleName_stateKeys_, runtimeVar } = ccContext;
 
 /**
 computed('foo/firstName', ()=>{});
@@ -138,15 +138,15 @@ function _parseDescObj(cate, confMeta, descObj) {
 }
 
 function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
-  if(cate === CATE_REF){
-    const ccUniqueKey = confMeta.refCtx.ccUniqueKey;
+  if (cate === CATE_REF) {
+    const { ccUniqueKey, retKey_fnUid_ } = confMeta.refCtx;
     const type = confMeta.type;
-    const keyedRetKey = `${ccUniqueKey}_${type}_${retKey}`;
-    const mappedFn = refRetKey_fnUid_[keyedRetKey];
-    if(mappedFn){
+    const typedRetKey = `${type}_${retKey}`;
+    const mappedFn = retKey_fnUid_[typedRetKey];
+    if (mappedFn) {
       throw new Error(`ccUKey[${ccUniqueKey}], retKey[${retKey}] duplicate in ref ${type}`);
-    }else{
-      refRetKey_fnUid_[keyedRetKey] = fnUid;
+    } else {
+      retKey_fnUid_[typedRetKey] = fnUid;
     }
   }
 }

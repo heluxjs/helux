@@ -48,7 +48,7 @@ function CcHook(ccHookState, hookSetState, props) {
 // rState: resolvedState, iState: initialState
 function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, ccClassKey) {
   // when single file demo in hmr mode trigger buildRef, rState is null
-  state = rState || evalState(iState);
+  const state = rState || evalState(iState);
   const bindCtxToMethod = regOpt.bindCtxToMethod;
 
   const {

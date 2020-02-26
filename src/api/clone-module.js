@@ -28,7 +28,7 @@ export default (newModule, existingModule, { state, reducer, computed, watch, in
 
   const stateFn = ccContext.moduleName_stateFn_[existingModule];
   if (!stateFn){
-    throw new Error(`target module state must be a function`);
+    throw new Error(`target module[${existingModule}] state must be a function when use cloneModule`);
   }
   let stateCopy = stateFn();
   Object.assign(stateCopy, evalState(state));

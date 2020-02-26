@@ -188,6 +188,7 @@ export default function (ref, params, liteLevel = 5) {
     execute: null,
     auxMap,// auxiliary method map
     effectMeta,
+    retKey_fnUid_: {},
 
     // api
     reactSetState,

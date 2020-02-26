@@ -199,13 +199,12 @@ const ccContext = {
   // when component unmounted, its handler will been removed
   handlerKey_handler_: {},
   renderKey_ccUkeys_: {},
-  refRetKey_fnUid_: {},// to avoid ref computed retKey dup
   refs,
   info: {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '1.5.164',
+    version: '1.5.165',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',
