@@ -162,7 +162,8 @@ export default function (ref, params, liteLevel = 5) {
     moduleState,
     globalState,
     connectedState,
-    extra: {},
+    extra: {},// can pass value to extra in every render period
+    staticExtra: {},// only can be assign value in setup block
 
     // computed
     refComputed: {},

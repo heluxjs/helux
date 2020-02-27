@@ -366,6 +366,7 @@ export interface ICtxBase {
   readonly stateKeys: string[];
 
   extra: any;
+  staticExtra: any;
   readonly state: any;
   readonly prevState: any;
   readonly props: any;
@@ -425,6 +426,9 @@ export interface ICtxBase {
   readonly settings: IAnyObj;
 }
 
+type ExtraType = [any, any];
+// export interface ExtraType<> type ExtraType = [any=any, any=any];
+
 /**
  * IRefCtx series is simple than ICtx series, it is a loose mode check,
  * so it is more easy to use when your coding environment is js^_^
@@ -445,13 +449,14 @@ export interface IRefCtx<
   ConnectedState extends IAnyObj = {},
   ConnectedReducer extends IAnyObj = {},
   ConnectedComputed extends IAnyObj = {},
-  Extra extends any = any,
+  ExtraType extends [any, any] | [any] = [any, any],
   >
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   readonly state: PrivState & ModuleState;
-  extra: Extra;
+  extra: ExtraType[0];
+  staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
@@ -485,13 +490,14 @@ export interface ICtx
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   Mapped extends IAnyObj = {},
-  Extra extends any = any,
+  ExtraType extends [any, any] | [any] = [any, any],
   >
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
-  extra: Extra;
+  extra: ExtraType[0];
+  staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly state: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
@@ -611,19 +617,12 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   // render?: (ctxOrMapped: any) => ReactNode;// work for useConcent, registerHookComp, registerDumb only
 }
 
-// 不把render? 写在IRegBase里，会导致registerHookComp接口里的联合类型render函数类型失效
+// 不把render写在IRegBase里，会导致registerHookComp接口里的联合类型render函数类型失效
 // 所以这里单独为CcFrag单独写一个接口
 interface IRegBaseFrag<P extends IAnyObj, ICtx extends ICtxBase> extends IRegBase<P, ICtx> {
   render?: (ctxOrMapped: any) => ReactNode;// work for useConcent, registerHookComp, registerDumb only
 }
 
-interface IRegBaseMo<P extends IAnyObj, ICtx extends ICtxBase> extends IRegBase<P, ICtx> {
-  module: PropKey; // module required
-}
-interface IRegBaseMoSt<P extends IAnyObj, ICtx extends ICtxBase> extends IRegBase<P, ICtx> {
-  module: PropKey; // module required
-  state: FnState; // state required
-}
 interface IRegBaseSt<P extends IAnyObj, ICtx extends ICtxBase, FnState = {}> extends IRegBase<P, ICtx> {
   state: FnState; // state required
 }
@@ -1028,6 +1027,7 @@ export function getGlobalComputed<T>(): T;
 
 export function set(keyPath: string, value: any, renderKey?: string, delay?: number): void;
 
+// only work for top api cc.dispatch
 interface IDispatchExtra {
   ccClassKey?: string;
   ccKey?: string;

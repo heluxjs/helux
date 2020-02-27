@@ -46,7 +46,7 @@ function CcHook(ccHookState, hookSetState, props) {
 }
 
 // rState: resolvedState, iState: initialState
-function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, ccClassKey) {
+function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, extra, ccClassKey) {
   // when single file demo in hmr mode trigger buildRef, rState is null
   const state = rState || evalState(iState);
   const bindCtxToMethod = regOpt.bindCtxToMethod;
@@ -67,11 +67,15 @@ function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, 
     ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
   });
 
-  buildRefCtx(hookRef, params, lite);
+  hookRef.props = props;// keep shape same as class
+  buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
+  const refCtx = hookRef.ctx;
+  refCtx.props = props;// attach props to ctx
+  refCtx.extra = extra;// attach extra before setup process
   beforeMount(hookRef, setup, bindCtxToMethod);
+
   cursor_refKey_[curCursor] = hookRef.ctx.ccUniqueKey;
 
-  const refCtx = hookRef.ctx;
   // rewrite useRef for CcHook
   refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
     const ref = React.useRef(null);
@@ -86,6 +90,7 @@ const tip = 'react version is LTE 16.8';
 //写为具名函数，防止react devtoo里显示.default
 export default function useConcent(registerOption, ccClassKey){
   const _registerOption = getRegisterOptions(registerOption);
+  // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
 
   const reactUseState = React.useState;
@@ -100,7 +105,7 @@ export default function useConcent(registerOption, ccClassKey){
   const state = isFirstRendered ? evalState(iState) : 0;
   const [ccHookState, hookSetState] = reactUseState(state);
 
-  const cref = () => buildRef(curCursor, state, iState, _registerOption, ccHookState, hookSetState, props, ccClassKey);
+  const cref = () => buildRef(curCursor, state, iState, _registerOption, ccHookState, hookSetState, props, extra, ccClassKey);
   let hookRef;
 
   if (isFirstRendered) {
@@ -115,16 +120,14 @@ export default function useConcent(registerOption, ccClassKey){
       // existing period, replace reactSetState and reactForceUpdate
       refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
       refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+      refCtx.prevProps = refCtx.props;
+      hookRef.props = refCtx.props = props;
+      refCtx.extra = extra;
     }
   }
-  
-  const refCtx = hookRef.ctx;
-  refCtx.prevProps = refCtx.props;
-  hookRef.props = refCtx.props = props;// keep shape same as class
-  refCtx.extra = extra;
 
+  const refCtx = hookRef.ctx; 
   // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
-
   const effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect;
   //after every render
   effectHandler(() => {
