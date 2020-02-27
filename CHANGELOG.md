@@ -1,3 +1,9 @@
+#### 2020-02-28
+1.5.165 发布
+* feature: 添加`ctx.staticExtra`参数，用户静态的在`setup`体内初始化一些额外的数据
+> 注`ctx.extra`在`useConcent`接口每次都会传入最新的
+* fix: 没有在beforeMount之前对`ctx.extra`赋值
+
 #### 2020-02-27
 1.5.165 发布
 * feature: useConcent传入state函数时，只会触发一次函数调用

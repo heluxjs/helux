@@ -1181,7 +1181,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.165',
+      version: '1.5.166',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4471,6 +4471,9 @@
       globalState: globalState,
       connectedState: connectedState,
       extra: {},
+      // can pass value to extra in every render period
+      staticExtra: {},
+      // only can be assign value in setup block
       // computed
       refComputed: {},
       moduleComputed: moduleComputed,
@@ -6091,7 +6094,7 @@
   } // rState: resolvedState, iState: initialState
 
 
-  function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, ccClassKey) {
+  function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, extra, ccClassKey) {
     // when single file demo in hmr mode trigger buildRef, rState is null
     var state = rState || evalState(iState);
     var bindCtxToMethod = regOpt.bindCtxToMethod;
@@ -6123,10 +6126,17 @@
       connect: _connect,
       ccOption: props.ccOption
     });
-    buildRefCtx(hookRef, params, lite);
+    hookRef.props = props; // keep shape same as class
+
+    buildRefCtx(hookRef, params, lite); // in buildRefCtx cc will assign hookRef.props to ctx.prevProps
+
+    var refCtx = hookRef.ctx;
+    refCtx.props = props; // attach props to ctx
+
+    refCtx.extra = extra; // attach extra before setup process
+
     beforeMount(hookRef, setup, bindCtxToMethod);
-    cursor_refKey_[curCursor] = hookRef.ctx.ccUniqueKey;
-    var refCtx = hookRef.ctx; // rewrite useRef for CcHook
+    cursor_refKey_[curCursor] = hookRef.ctx.ccUniqueKey; // rewrite useRef for CcHook
 
     refCtx.useRef = function useR(refName) {
       //give named function to avoid eslint error
@@ -6141,7 +6151,8 @@
   var tip$1 = 'react version is LTE 16.8'; //写为具名函数，防止react devtoo里显示.default
 
   function useConcent(registerOption, ccClassKey) {
-    var _registerOption = getRegisterOptions(registerOption);
+    var _registerOption = getRegisterOptions(registerOption); // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
+
 
     var _registerOption$state = _registerOption.state,
         iState = _registerOption$state === void 0 ? {} : _registerOption$state,
@@ -6171,7 +6182,7 @@
         hookSetState = _reactUseState2[1];
 
     var cref = function cref() {
-      return buildRef(curCursor, state, iState, _registerOption, ccHookState, hookSetState, props, ccClassKey);
+      return buildRef(curCursor, state, iState, _registerOption, ccHookState, hookSetState, props, extra, ccClassKey);
     };
 
     var hookRef;
@@ -6190,14 +6201,13 @@
 
         _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
         _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+        _refCtx.prevProps = _refCtx.props;
+        hookRef.props = _refCtx.props = props;
+        _refCtx.extra = extra;
       }
     }
 
-    var refCtx = hookRef.ctx;
-    refCtx.prevProps = refCtx.props;
-    hookRef.props = refCtx.props = props; // keep shape same as class
-
-    refCtx.extra = extra; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
+    var refCtx = hookRef.ctx; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
     var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; //after every render
 
