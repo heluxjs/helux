@@ -141,7 +141,7 @@ $ yarn add concent
 ```
 
 ### Replace App.js file content with the code below
-> you can also review the [online example](https://codesandbox.io/s/green-tdd-g2mcr).
+> you can also review the [online example](https://codesandbox.io/s/green-tdd-g2mcr)'s file `App1-module-state.js` content, and copy it to file `App.js` to see the effect.
 
 ```javascript
 import React, { Component } from 'react';
@@ -315,7 +315,7 @@ const setup = ctx => {
   */
 
   ctx.effectProps(() => {
-    // write effect handler to props value change，it is different with ctx.effect which works for state value changing
+    // write effect handler for props value change，it is different with ctx.effect which works for state value changing
     const curTag = ctx.props.tag;
     if (curTag !== ctx.prevProps.tag) ctx.setState({ tag: curTag });
   }, ["tag"]);//only pass props key
