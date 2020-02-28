@@ -37,6 +37,15 @@ computed(ctx=>{ return cuDesc}
 
 // cate: module | ref
 export default function (cate, confMeta, item, handler, depKeys, compare, immediate) {
+  const ctx = confMeta.refCtx;
+  const type = confMeta.type;
+  if (cate === CATE_REF) {
+    if (!ctx.__$$isBSe) {
+      justWarning(`${cate} ${type} must be been called in setup block`);
+      return;
+    }
+  }
+
   if (!item) return;
   const itype = typeof item;
 
@@ -48,10 +57,10 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
     _descObj = item;
   } else if (itype === 'function') {
     _descObj = item(confMeta.refCtx);
-    if (!isPJO(_descObj)) throw new Error(`type of ${confMeta.type} callback result must be an object`);
+    if (!isPJO(_descObj)) throw new Error(`type of ${type} callback result must be an object`);
   }
   if (!_descObj) {
-    justWarning(`${cate} ${confMeta.type} param type error`);
+    justWarning(`${cate} ${type} param type error`);
     return;
   }
 

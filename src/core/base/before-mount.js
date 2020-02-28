@@ -8,6 +8,7 @@ const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
 export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
   ref.__$$isBF = true;// isBeforeFirstRender
+  ref.__$$isBSe = true;// isBeforeSetup
 
   const ctx = ref.ctx;
   const { connectedReducer, moduleReducer, dispatch, connect, module } = ctx;
@@ -52,6 +53,7 @@ export default function (ref, setup, bindCtxToMethod) {
     }
     ctx.settings = settingsObj;
   }
+  ref.__$$isBSe = false;
 
   triggerComputedAndWatch(ref);
 }
