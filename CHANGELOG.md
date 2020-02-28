@@ -1,4 +1,8 @@
 #### 2020-02-28
+1.5.167 发布
+* fix: 无reducer定时时, actionCtx.setState报错
+
+#### 2020-02-28
 1.5.165 发布
 * feature: 添加`ctx.staticExtra`参数，用户静态的在`setup`体内初始化一些额外的数据
 > 注`ctx.extra`在`useConcent`接口每次都会传入最新的

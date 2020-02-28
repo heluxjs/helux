@@ -1181,7 +1181,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.166',
+      version: '1.5.167',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1523,7 +1523,10 @@
   }
 
   function initModuleReducer (module, reducer) {
-    if (!reducer) return;
+    if (reducer === void 0) {
+      reducer = {};
+    }
+
     var tip = "module[" + module + "] reducer";
 
     if (!isPJO(reducer)) {
@@ -5771,14 +5774,15 @@
     okeys$a(store).forEach(function (m) {
       var moduleConf = store[m];
       var state = moduleConf.state,
-          reducer = moduleConf.reducer,
+          _moduleConf$reducer = moduleConf.reducer,
+          reducer = _moduleConf$reducer === void 0 ? {} : _moduleConf$reducer,
           watch = moduleConf.watch,
           computed = moduleConf.computed,
           init = moduleConf.init,
           isClassSingle = moduleConf.isClassSingle;
       storeConf.store[m] = evalState$3(state);
       if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
-      if (reducer) storeConf.reducer[m] = reducer;
+      storeConf.reducer[m] = reducer;
       if (watch) storeConf.watch[m] = watch;
       if (computed) storeConf.computed[m] = computed;
       if (init) storeConf.init[m] = init;
