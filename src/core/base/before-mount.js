@@ -7,7 +7,7 @@ const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;
-  ref.__$$isBeforeFirstRender = true;
+  ref.__$$isBF = true;// isBeforeFirstRender
 
   const ctx = ref.ctx;
   const { connectedReducer, moduleReducer, dispatch, connect, module } = ctx;

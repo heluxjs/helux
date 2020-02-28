@@ -212,7 +212,7 @@ export default function (ref, params, liteLevel = 5) {
 
   // allow user have a chance to define state in setup block;
   ctx.initState = (initState) => {
-    if (!ref.__$$isBeforeFirstRender) {
+    if (!ref.__$$isBF) {
       return justWarning(`ctx.initState can only been called before first render period!`);
     }
     if (!util.isPJO(state)) {
