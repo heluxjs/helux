@@ -56,7 +56,7 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
   } else if (isPJO(item)) {
     _descObj = item;
   } else if (itype === 'function') {
-    _descObj = item(confMeta.refCtx);
+    _descObj = item(ctx);
     if (!isPJO(_descObj)) throw new Error(`type of ${type} callback result must be an object`);
   }
   if (!_descObj) {
