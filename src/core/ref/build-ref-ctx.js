@@ -26,7 +26,7 @@ const {
   renderKey_ccUkeys_,
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject, justWarning } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -212,8 +212,12 @@ export default function (ref, params, liteLevel = 5) {
 
   // allow user have a chance to define state in setup block;
   ctx.initState = (initState) => {
-    if (!ref.__$$isBeforeFirstRender) throw new Error(`ctx.initState can only been called before first render period!`);
-    if (!util.isPJO(state)) throw new Error(`state must be a plain json object!`);
+    if (!ref.__$$isBeforeFirstRender) {
+      return justWarning(`ctx.initState can only been called before first render period!`);
+    }
+    if (!util.isPJO(state)) {
+      return justWarning(`state ${NOT_A_JSON}`);
+    }
     ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
     ctx.prevState = ctx.state = ref.state;
   }
