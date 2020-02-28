@@ -35,11 +35,10 @@ export default function (store = {}, options = {}) {
   // traversal moduleNames
   okeys(store).forEach(m => {
     const moduleConf = store[m];
-    const { state, reducer, watch, computed, init, isClassSingle } = moduleConf;
+    const { state, reducer = {}, watch, computed, init, isClassSingle } = moduleConf;
     storeConf.store[m] = evalState(state);
     if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
-
-    if (reducer) storeConf.reducer[m] = reducer;
+    storeConf.reducer[m] = reducer;
     if (watch) storeConf.watch[m] = watch;
     if (computed) storeConf.computed[m] = computed;
     if (init) storeConf.init[m] = init;

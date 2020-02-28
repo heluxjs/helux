@@ -4,8 +4,7 @@ import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
 
-export default function (module, reducer) {
-  if (!reducer) return;
+export default function (module, reducer = {}) {
 
   const tip = `module[${module}] reducer`;
   if (!util.isPJO(reducer)) {
