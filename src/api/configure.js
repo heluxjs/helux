@@ -1,4 +1,5 @@
 import ccContext from '../cc-context';
+import pendingModules from '../cc-context/pending-modules';
 import {  MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
 import { NOT_A_JSON } from '../support/priv-constant';
 import * as util from '../support/util';
@@ -20,7 +21,9 @@ const { isPJO, evalState } = util;
  */
 export default function (module, config) {
   if (!ccContext.isStartup) {
-    throw new Error('configure must be called after run!');
+    pendingModules.push({ module, config });
+    return;
+    // throw new Error('configure must be called after run!');
   }
   if (!isPJO(config)) {
     throw new Error(`param config ${NOT_A_JSON}`);

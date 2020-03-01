@@ -2,6 +2,7 @@ import startup from './startup';
 import * as util from '../support/util';
 import { NOT_A_JSON } from '../support/priv-constant';
 import ccContext from '../cc-context';
+import pendingModules from '../cc-context/pending-modules';
 
 const { isPJO, okeys, isObjectNull, evalState } = util;
 const pError = label => {
@@ -32,10 +33,12 @@ export default function (store = {}, options = {}) {
     moduleSingleClass: {},
   }
 
-  // traversal moduleNames
-  okeys(store).forEach(m => {
-    const moduleConf = store[m];
+  const buildStoreConf = (m, moduleConf)=>{
     const { state, reducer = {}, watch, computed, init, isClassSingle } = moduleConf;
+    if(storeConf.store[m]){
+      throw new Error(`run api error: module${m} duplicate`);
+    }
+
     storeConf.store[m] = evalState(state);
     if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
     storeConf.reducer[m] = reducer;
@@ -43,7 +46,18 @@ export default function (store = {}, options = {}) {
     if (computed) storeConf.computed[m] = computed;
     if (init) storeConf.init[m] = init;
     storeConf.moduleSingleClass[m] = isClassSingle === true;
+  }
+
+  // traversal moduleNames
+  okeys(store).forEach(m => buildStoreConf(m, store[m]));
+
+  // push by configure api
+  pendingModules.forEach(({ module, config }) => {
+    util.justTip(`configure pending module[${module}]`);
+    buildStoreConf(module, config)
   });
+
+  pendingModules.length = 0;// clear pending modules
 
   if (isObjectNull(storeConf.init)) storeConf.init = null;
 
