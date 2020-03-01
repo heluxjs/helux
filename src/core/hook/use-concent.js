@@ -3,7 +3,6 @@ import { CC_HOOK } from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
-import cursor_setter_ from '../../cc-context/cursor-setter-map';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
 import didMount from '../base/did-mount';
@@ -49,8 +48,6 @@ function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, 
   } = regOpt;
 
   incCursor();
-  //cache the setter, to let component ins can still re-render when open react-dev-tool and click the dom in its panel 
-  cursor_setter_[cursor] = hookSetter;
   const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
     module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, storedKeys, connect, true
   );
@@ -65,7 +62,7 @@ function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, 
   buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
   hookRef.ctx.reactSetState = hf.makeRefSetState(hookRef);
   hookRef.ctx.reactForceUpdate = hf.makeRefForceUpdate(hookRef);
-  
+
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
   refCtx.extra = extra;// attach extra before setup process

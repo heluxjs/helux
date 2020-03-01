@@ -1181,7 +1181,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.171',
+      version: '1.5.172',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2768,46 +2768,23 @@
     return function (state, cb, shouldCurrentRefUpdate) {
       var refCtx = ref.ctx;
       /** start update state */
-      // let containerRefState = containerRef ? containerRef.state : null;
-      // const refState = ref.state;
-      // const refCtxState = refCtx.state;
-      // //采用okeys写法，让用户结构出来的state总是指向同一个引用
-      // okeys(state).forEach(k => {
-      //   const val = state[k];
-      //   refState[k] = val;
-      //   refCtxState[k] = val;
-      //   if (containerRefState) containerRefState[k] = val;//让代理模式下的容器组件state也总是保持最新的
-      // });
-
-      /** start update state */
       // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state,
       // 注意这里赋值也是取refCtx.state取做合并，因为频繁进入此函数时，ref.state可能还不是最新的
+      // refCtx.state = newFullState;
 
-      var newFullState = Object.assign({}, refCtx.state, state);
-      refCtx.state = newFullState;
-      if (containerRef) containerRef.state = newFullState;
-      var isHook = refCtx.type === CC_HOOK; // 只有Hook实例，才能直接更新ref.state
-
-      if (isHook) {
-        ref.state = newFullState;
+      if (containerRef) {
+        var newFullState = Object.assign({}, refCtx.state, state);
+        containerRef.state = newFullState;
       }
       /** start update ui */
 
 
       if (shouldCurrentRefUpdate) {
         refCtx.renderCount += 1;
-        if (!isHook) refCtx.reactSetState(state, cb);else {
-          //对于function组件来说，一定要用最新的setter，否则当打开dev-tool面板点击了dom时，会照成界面更新失败
-          var setter = refCtx.__setter2 || refCtx.__setter1;
-          setter(newFullState);
-          if (cb) cb(newFullState); // 和class setState(partialState, cb); 保持一致
-        }
+        refCtx.reactSetState(state, cb);
       } else {
-        //对与class实例来说，视图虽然没有更新，但是state要合并进来，让下一次即将到来的更新里能拿到之前的状态
-        //否则watch启用的return false优化会造成状态丢失
-        if (!isHook) {
-          Object.assign(ref.state, state);
-        }
+        Object.assign(ref.state, state);
+        refCtx.state = ref.state;
       }
     };
   }
@@ -3303,6 +3280,47 @@
       }
     };
   }
+  var makeRefSetState = function makeRefSetState(ref) {
+    return function (partialState, cb) {
+      var ctx = ref.ctx;
+      var newState = Object.assign({}, ref.state, partialState);
+
+      if (ctx.type === CC_HOOK) {
+        ref.state = ctx.state = newState;
+
+        ctx.__boundSetState(newState);
+
+        if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+      } else {
+        ctx.state = newState; // don't assign newState to ref.state before didMount
+        // it will cause
+        // Warning: Expected CC(SomeComp) state to match memoized state before processing the update queue
+
+        if (ref.__$$isBF) {
+          Object.assign(ref.state, partialState);
+        } else {
+          ref.state = newState;
+        }
+
+        ctx.__boundSetState(newState, cb);
+      }
+    };
+  };
+  var makeRefForceUpdate = function makeRefForceUpdate(ref) {
+    return function (cb) {
+      var ctx = ref.ctx;
+
+      if (ctx.type === CC_HOOK) {
+        var newState = Object.assign({}, ref.state);
+
+        ctx.__boundSetState(newState);
+
+        if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+      } else {
+        ctx.__boundForceUpdate(cb);
+      }
+    };
+  };
   /** avoid  Circular dependency, move this fn to util */
   // export function makeCommitHandler(module, refCtx) {}
 
@@ -4335,7 +4353,9 @@
   function getEId() {
     idSeq++;
     return Symbol("__autoGen_" + idSeq + "__");
-  } //调用buildFragmentRefCtx 之前，props参数已被处理过
+  }
+
+  var noop = function noop() {}; //调用buildFragmentRefCtx 之前，props参数已被处理过
 
   /**
    * 构建refCtx，附加到ref上
@@ -4350,9 +4370,7 @@
       liteLevel = 5;
     }
 
-    var reactSetState = ref.setState.bind(ref);
-    var reactForceUpdate = ref.forceUpdate.bind(ref); // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
-
+    // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
     var isSingle = params.isSingle,
         ccClassKey = params.ccClassKey,
         _params$ccKey = params.ccKey,
@@ -4372,6 +4390,14 @@
         _params$ccOption = params.ccOption,
         ccOption = _params$ccOption === void 0 ? {} : _params$ccOption;
     var stateModule = module;
+    var __boundSetState = ref.setState,
+        __boundForceUpdate = ref.forceUpdate;
+
+    if (type !== CC_HOOK) {
+      __boundSetState = ref.setState.bind(ref);
+      __boundForceUpdate = ref.forceUpdate.bind(ref);
+    }
+
     var refOption = {};
     refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined ? persistStoredKeys : ccOption.persistStoredKeys;
     refOption.tag = ccOption.tag || tag; // pick ref defined tag first, register tag second
@@ -4502,13 +4528,13 @@
       moduleReducer: {},
       connectedReducer: {},
       reducer: {}
-    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.__setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.__forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
+    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = noop, _ctx.__boundSetState = __boundSetState, _ctx.reactForceUpdate = noop, _ctx.__boundForceUpdate = __boundForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
       return function (ref) {
         return refs[refName] = {
           current: ref
         };
       }; // keep the same shape with hook useRef
-    }, _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx);
+    }, _ctx.__$$ccSetState = makeCcSetStateHandler(ref), _ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(ref), _ctx);
     ref.ctx = ctx;
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
@@ -5183,6 +5209,8 @@
                 persistStoredKeys: persistStoredKeys
               });
               buildRefCtx(_assertThisInitialized(_this), params, lite);
+              _this.ctx.reactSetState = makeRefSetState(_assertThisInitialized(_this));
+              _this.ctx.reactForceUpdate = makeRefForceUpdate(_assertThisInitialized(_this));
 
               if (setup && (_this.$$setup || staticSetup)) {
                 throw setupErr('ccUniqueKey ' + _this.ctx.ccUniqueKey);
@@ -5944,6 +5972,8 @@
         ccOption: ccOption,
         type: CC_FRAGMENT
       }, lite);
+      _this.ctx.reactSetState = makeRefSetState(_assertThisInitialized(_this));
+      _this.ctx.reactForceUpdate = makeRefForceUpdate(_assertThisInitialized(_this));
       _this.__$$compareProps = compareProps; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
       //无需在将要给废弃的componentWillMount里调用beforeMount
 
@@ -6090,8 +6120,6 @@
   var ccUkey_ref_$4 = ccContext.ccUkey_ref_;
   var refCursor = 1;
   var cursor_refKey_ = {};
-  var ss$2 = '__setState';
-  var fu = '__forceUpdate';
 
   function getUsableCursor() {
     return refCursor;
@@ -6101,34 +6129,20 @@
     refCursor = refCursor + 1;
   }
 
-  var makeSetState = function makeSetState(ccHookState, hookSetState) {
-    return function (partialState, cb) {
-      var newHookState = Object.assign({}, ccHookState, partialState);
-      hookSetState(newHookState); // 和class setState(partialState, cb); 保持一致
-
-      if (cb) cb(newHookState);
-    };
-  };
-
-  var makeForceUpdate = function makeForceUpdate(ccHookState, hookSetState) {
-    return function (cb) {
-      var newHookState = Object.assign({}, ccHookState);
-      hookSetState(newHookState);
-      if (cb) cb(newHookState);
-    };
-  };
-
-  function CcHook(ccHookState, hookSetState, props) {
-    this.setState = makeSetState(ccHookState, hookSetState);
-    this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
-    this.state = ccHookState;
+  function CcHook(state, hookSetter, props) {
+    //new CcHook时，这里锁定的hookSetter就是后面一直可以用的setter
+    //如果存在期一直替换hookSetter，反倒会造成打开react-dev-tool，点击面板里的dom后，视图便不再更新的bug
+    this.setState = hookSetter;
+    this.forceUpdate = hookSetter;
+    this.state = state;
     this.isFirstRendered = true;
     this.props = props;
   } // rState: resolvedState, iState: initialState
 
 
-  function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, extra, ccClassKey) {
-    // when single file demo in hmr mode trigger buildRef, rState is null
+  function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
+    // when single file demo in hmr mode trigger buildRef, rState is 0 
+    // so here call evalState again
     var state = rState || evalState(iState);
     var bindCtxToMethod = regOpt.bindCtxToMethod;
     var renderKeyClasses = regOpt.renderKeyClasses,
@@ -6149,12 +6163,13 @@
         _ccClassKey = _mapRegistrationInfo._ccClassKey,
         _connect = _mapRegistrationInfo._connect;
 
-    var hookRef = new CcHook(ccHookState, hookSetState, props);
+    var hookRef = new CcHook(hookState, hookSetter, props);
     var params = Object.assign({}, regOpt, {
       module: _module,
       watchedKeys: _watchedKeys,
       state: state,
       type: CC_HOOK,
+      cursor: cursor,
       ccClassKey: _ccClassKey,
       connect: _connect,
       ccOption: props.ccOption
@@ -6163,13 +6178,15 @@
 
     buildRefCtx(hookRef, params, lite); // in buildRefCtx cc will assign hookRef.props to ctx.prevProps
 
+    hookRef.ctx.reactSetState = makeRefSetState(hookRef);
+    hookRef.ctx.reactForceUpdate = makeRefForceUpdate(hookRef);
     var refCtx = hookRef.ctx;
     refCtx.props = props; // attach props to ctx
 
     refCtx.extra = extra; // attach extra before setup process
 
     beforeMount(hookRef, setup, bindCtxToMethod);
-    cursor_refKey_[curCursor] = hookRef.ctx.ccUniqueKey; // rewrite useRef for CcHook
+    cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey; // rewrite useRef for CcHook
 
     refCtx.useRef = function useR(refName) {
       //give named function to avoid eslint error
@@ -6211,11 +6228,11 @@
     var state = isFirstRendered ? evalState(iState) : 0;
 
     var _reactUseState2 = reactUseState(state),
-        ccHookState = _reactUseState2[0],
-        hookSetState = _reactUseState2[1];
+        hookState = _reactUseState2[0],
+        hookSetter = _reactUseState2[1];
 
     var cref = function cref() {
-      return buildRef(curCursor, state, iState, _registerOption, ccHookState, hookSetState, props, extra, ccClassKey);
+      return buildRef(curCursor, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
     };
 
     var hookRef;
@@ -6230,19 +6247,14 @@
         // single file demo in hot reload mode
         hookRef = cref();
       } else {
-        var _refCtx = hookRef.ctx; // existing period, replace reactSetState and reactForceUpdate
-
-        _refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
-        _refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
+        var _refCtx = hookRef.ctx;
         _refCtx.prevProps = _refCtx.props;
         hookRef.props = _refCtx.props = props;
         _refCtx.extra = extra;
       }
     }
 
-    var refCtx = hookRef.ctx;
-    refCtx.setState = makeCtxSetState(hookRef, hookSetState, ss$2);
-    refCtx.forceUpdate = makeCtxSetState(hookRef, hookSetState, fu); // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
+    var refCtx = hookRef.ctx; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
     var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; //after every render
 
@@ -6251,9 +6263,6 @@
         // mock componentDidUpdate
         didUpdate(hookRef);
       }
-
-      refCtx.setState = makeCtxSetState(hookRef, hookSetState, ss$2);
-      refCtx.forceUpdate = makeCtxSetState(hookRef, hookSetState, fu);
     }); //after first render
 
     effectHandler(function () {
@@ -6289,19 +6298,6 @@
     }
 
     return refCtx;
-  }
-
-  function makeCtxSetState(ref, setter, method) {
-    //两次赋值都不能少
-    //第一次是为了被广播更新时__setter已存在
-    //第二次是为了能在dev-tool点击dom后依然能够正常更新视图
-    ref.ctx.__setter1 = setter;
-    ref.ctx.__setter2 = null;
-    return function () {
-      ref.ctx.__setter2 = setter;
-      ref.ctx.__setter1 = null;
-      ref.ctx[method].apply(null, arguments);
-    };
   }
 
   function registerHookComp(options, ccClassKey) {

@@ -1,3 +1,8 @@
+#### 2020-02-31
+1.5.172 发布
+* refactor: 重新整理数据更新流程，ctx新增内置接口__boundSetState __boundForceUpdate，解决function组件在react-dev-tool里点击dom后不再重渲染的bug
+> see https://github.com/facebook/react/issues/18190，关键点是锁住setter即可
+
 #### 2020-02-28
 1.5.167 发布
 * fix: 无reducer定时时, actionCtx.setState报错
