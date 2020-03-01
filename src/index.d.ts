@@ -100,7 +100,7 @@ interface IDispatchOptions {
   silent?: boolean;
   lazy?: boolean;
   renderKey?: string;
-  delay?: number;
+  delay?: number;// pick this delay first if user pass
 }
 type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
@@ -1032,6 +1032,7 @@ interface IDispatchExtra {
   ccClassKey?: string;
   ccKey?: string;
   throwError?: boolean;
+  refModule?: string;
 }
 export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
 

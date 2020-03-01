@@ -29,11 +29,14 @@ export default function (module, reducer = {}) {
   // 自动附加一个setState在reducer里
   if (!newReducer.setState) newReducer.setState = payload => payload;
 
-  const reducerNames = util.okeys(newReducer);
-  reducerNames.forEach(name => {
+  const reducerFnNames = util.okeys(newReducer);
+  reducerFnNames.forEach(name => {
     // avoid hot reload
     if (!fnNames.includes(name)) fnNames.push(name);
     let fullFnName = `${module}/${name}`;
+    const list = util.safeGetArrayFromObject(_fnName_fullFnNames_, name);
+    // avoid hot reload
+    if (!list.includes(fullFnName)) list.push(fullFnName);
 
     subReducerCaller[name] = (payload, renderKeyOrOptions, delay) => dispatch(fullFnName, payload, renderKeyOrOptions, delay);
 
@@ -56,8 +59,5 @@ export default function (module, reducer = {}) {
     // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
     // reducerFn.stateModule = module;
 
-    const list = util.safeGetArrayFromObject(_fnName_fullFnNames_, name);
-    // avoid hot reload
-    if (!list.includes(fullFnName)) list.push(fullFnName);
   });
 }

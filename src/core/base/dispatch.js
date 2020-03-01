@@ -3,41 +3,54 @@ import ccContext from '../../cc-context';
 import pickOneRef from '../../core/ref/pick-one-ref';
 
 const { makeUniqueCcKey, justWarning } = util;
+const resolve = () => Promise.resolve();
 
-export default function (action, payLoadWhenActionIsString, rkOrOptions = '', delay, { ccClassKey, ccKey, throwError, isSilent = false } = {}) {
+export default function (action, payLoadWhenActionIsString, rkOrOptions = '', delay, { ccClassKey, ccKey, throwError, refModule = '' } = {}) {
   if (action === undefined && payLoadWhenActionIsString === undefined) {
-    throw new Error(`api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload`);
+    throw new Error(`params type error`);
   }
 
-  let dispatchFn;
+  let dispatchFn, module = '', fnName = '';
   try {
     if (ccClassKey && ccKey) {
       const uKey = makeUniqueCcKey(ccClassKey, ccKey);
       const targetRef = ccContext.refs[uKey];
       if (!targetRef) {
-        throw new Error(`no ref found for uniqueCcKey:${uKey}!`);
+        justWarning(`no ref found for ccUniqueKey:${uKey}!`);
+        return resolve();
       } else {
         dispatchFn = targetRef.ctx.dispatch;
       }
     } else {
-      let module = '';
-      if (typeof action == 'string' && action.includes('/')) {
-        module = action.split('/')[0];
+      if (typeof action == 'string') {
+        if (action.includes('/')) {
+          const [m, name] = action.split('/');
+          module = m;
+          fnName = name;
+        } else {
+          fnName = action;
+        }
       }
 
       let ref;
-      if (module !== '*') {
+      if (module && module !== '*') {
         ref = pickOneRef(module);
+      } else if (refModule) {
+        ref = pickOneRef(refModule);
       } else {
         ref = pickOneRef();
+      }
+
+      if (!ref) {
+        justWarning(`no ref found`);
+        return resolve();
       }
 
       dispatchFn = ref.ctx.dispatch;
     }
 
-    if (typeof action === 'string' && action.startsWith('*')) {
-      const reducerModName = action.split('/').pop();
-      const fullFnNames = ccContext.reducer._fnName_fullFnNames_[reducerModName];
+    if (module === '*') {
+      const fullFnNames = ccContext.reducer._fnName_fullFnNames_[fnName];
       if (!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {
@@ -49,6 +62,10 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
     }
   } catch (err) {
     if (throwError) throw err;
-    else justWarning(err.message);
+    else {
+      justWarning(err.message);
+      return resolve();
+    }
   }
+
 }

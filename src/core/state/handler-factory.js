@@ -7,6 +7,7 @@ import {
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 import catchCcError from '../base/catch-cc-error';
+import ccDispatch from '../base/dispatch';
 import {
   getChainId, setChainState, setAllChainState, setAndGetChainStateList, 
   // exitChain, getChainStateMap, 
@@ -443,7 +444,11 @@ export function makeDispatchHandler(
     }
 
     if (_module === '*') {
-      return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
+      return ccDispatch(`*/${_type}`, payload,
+        { silent: isSilent, lazy: isLazy, renderKey: _renderKey },
+        _delay,
+        { refModule: callerRef.ctx.module }, // in name of refModule to call dispatch handler
+      );
     }
 
     const p = new Promise((resolve, reject) => {

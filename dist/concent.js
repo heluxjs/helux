@@ -1456,7 +1456,7 @@
 
   var makeUniqueCcKey$1 = makeUniqueCcKey,
       justWarning$1 = justWarning;
-  function dispatch (action, payLoadWhenActionIsString, rkOrOptions, delay, _temp) {
+  function ccDispatch (action, payLoadWhenActionIsString, rkOrOptions, delay, _temp) {
     if (rkOrOptions === void 0) {
       rkOrOptions = '';
     }
@@ -1465,13 +1465,16 @@
         ccClassKey = _ref.ccClassKey,
         ccKey = _ref.ccKey,
         throwError = _ref.throwError,
-        _ref$isSilent = _ref.isSilent;
+        _ref$refModule = _ref.refModule,
+        refModule = _ref$refModule === void 0 ? '' : _ref$refModule;
 
     if (action === undefined && payLoadWhenActionIsString === undefined) {
-      throw new Error("api doc: cc.dispatch(action:Action|String, payload?:any, delay?:number, idt?:string), when action is String, second param means payload");
+      throw new Error("params type error");
     }
 
-    var dispatchFn;
+    var dispatchFn,
+        module = '',
+        fnName = '';
 
     try {
       if (ccClassKey && ccKey) {
@@ -1479,34 +1482,52 @@
         var targetRef = ccContext.refs[uKey];
 
         if (!targetRef) {
-          throw new Error("no ref found for uniqueCcKey:" + uKey + "!");
+          justWarning$1("no ref found for ccUniqueKey:" + uKey + "!");
+          return;
         } else {
           dispatchFn = targetRef.ctx.dispatch;
         }
       } else {
-        var module = '';
+        if (typeof action == 'string') {
+          if (action.includes('/')) {
+            var _action$split = action.split('/'),
+                m = _action$split[0],
+                name = _action$split[1];
 
-        if (typeof action == 'string' && action.includes('/')) {
-          module = action.split('/')[0];
+            module = m;
+            fnName = name;
+          } else {
+            fnName = action;
+          }
         }
 
         var ref;
 
-        if (module !== '*') {
+        if (module && module !== '*') {
           ref = pickOneRef(module);
+        } else if (refModule) {
+          ref = pickOneRef(refModule);
         } else {
           ref = pickOneRef();
+        }
+
+        if (!ref) {
+          justWarning$1("no ref found");
+          return;
         }
 
         dispatchFn = ref.ctx.dispatch;
       }
 
-      if (typeof action === 'string' && action.startsWith('*')) {
-        var reducerModName = action.split('/').pop();
-        var fullFnNames = ccContext.reducer._fnName_fullFnNames_[reducerModName];
+      if (module === '*') {
+        var fullFnNames = ccContext.reducer._fnName_fullFnNames_[fnName];
         if (!fullFnNames) return;
         var tasks = [];
         fullFnNames.forEach(function (fullFnName) {
+          var _fullFnName$split = fullFnName.split('/'),
+              fnModule = _fullFnName$split[0];
+
+          if (excludeModules.includes(fnModule)) return;
           tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, rkOrOptions, delay));
         });
         return Promise.all(tasks);
@@ -1514,12 +1535,15 @@
         return dispatchFn(action, payLoadWhenActionIsString, rkOrOptions, delay);
       }
     } catch (err) {
-      if (throwError) throw err;else justWarning$1(err.message);
+      if (throwError) throw err;else {
+        justWarning$1(err.message);
+        return Promise.resolve();
+      }
     }
   }
 
-  function dispatch$1 (action, payLoadWhenActionIsString, rkOrOptions, delay, extra) {
-    return dispatch(action, payLoadWhenActionIsString, rkOrOptions, delay, extra);
+  function dispatch (action, payLoadWhenActionIsString, rkOrOptions, delay, extra) {
+    return ccDispatch(action, payLoadWhenActionIsString, rkOrOptions, delay, extra);
   }
 
   function initModuleReducer (module, reducer) {
@@ -1549,14 +1573,17 @@
     if (!newReducer.setState) newReducer.setState = function (payload) {
       return payload;
     };
-    var reducerNames = okeys(newReducer);
-    reducerNames.forEach(function (name) {
+    var reducerFnNames = okeys(newReducer);
+    reducerFnNames.forEach(function (name) {
       // avoid hot reload
       if (!fnNames.includes(name)) fnNames.push(name);
       var fullFnName = module + "/" + name;
+      var list = safeGetArrayFromObject(_fnName_fullFnNames_, name); // avoid hot reload
+
+      if (!list.includes(fullFnName)) list.push(fullFnName);
 
       subReducerCaller[name] = function (payload, renderKeyOrOptions, delay) {
-        return dispatch$1(fullFnName, payload, renderKeyOrOptions, delay);
+        return dispatch(fullFnName, payload, renderKeyOrOptions, delay);
       };
 
       var reducerFn = newReducer[name];
@@ -1584,10 +1611,6 @@
       // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
       // reducerFn.stateModule = module;
 
-
-      var list = safeGetArrayFromObject(_fnName_fullFnNames_, name); // avoid hot reload
-
-      if (!list.includes(fullFnName)) list.push(fullFnName);
     });
   }
 
@@ -3068,7 +3091,7 @@
       });
     });
   }
-  function dispatch$2(_temp2) {
+  function dispatch$1(_temp2) {
     var _ref2 = _temp2 === void 0 ? {} : _temp2,
         callerRef = _ref2.callerRef,
         inputModule = _ref2.module,
@@ -3229,11 +3252,18 @@
       }
 
       if (_module === '*') {
-        return Promise.reject('cc instance api dispatch do not support multi dispatch, please use top api[cc.dispatch] instead!');
+        return ccDispatch("*/" + _type, payload, {
+          silent: isSilent,
+          lazy: isLazy,
+          renderKey: _renderKey
+        }, _delay, {
+          refModule: callerRef.ctx.module
+        } // in name of refModule to call dispatch handler
+        );
       }
 
       var p = new Promise(function (resolve, reject) {
-        dispatch$2({
+        dispatch$1({
           callerRef: callerRef,
           module: _module,
           type: _type,
@@ -6530,7 +6560,7 @@
   var getComputed = _getComputed;
   var emit = _emit;
   var off = _off;
-  var dispatch$3 = dispatch$1;
+  var dispatch$2 = dispatch;
   var ccContext$1 = ccContext;
   var createDispatcher$1 = createDispatcher;
   var execute = _execute;
@@ -6588,7 +6618,7 @@
     registerDumb: registerDumb$1,
     registerHookComp: registerHookComp$1,
     configure: configure$1,
-    dispatch: dispatch$3,
+    dispatch: dispatch$2,
     run: run,
     setGlobalState: setGlobalState$1,
     setState: setState$2,
@@ -6682,7 +6712,7 @@
   exports.getComputed = getComputed;
   exports.emit = emit;
   exports.off = off;
-  exports.dispatch = dispatch$3;
+  exports.dispatch = dispatch$2;
   exports.ccContext = ccContext$1;
   exports.createDispatcher = createDispatcher$1;
   exports.execute = execute;
