@@ -1,6 +1,6 @@
 import {
   MODULE_GLOBAL, ERR, CCSYNC_KEY,
-  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE,
+  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -34,6 +34,8 @@ function getEId() {
   return Symbol(`__autoGen_${idSeq}__`);
 }
 
+const noop = ()=>{};
+
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 
 /**
@@ -41,15 +43,19 @@ function getEId() {
  * liteLevel 越小，绑定的方法越少
  */
 export default function (ref, params, liteLevel = 5) {
-  const reactSetState = ref.setState.bind(ref);
-  const reactForceUpdate = ref.forceUpdate.bind(ref);
-
+  
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
     isSingle, ccClassKey, ccKey = '', module, type,
     state, storedKeys = [], persistStoredKeys = false, watchedKeys, connect = {}, tag = '', ccOption = {},
   } = params;
   const stateModule = module;
+
+  let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
+  if (type !== CC_HOOK) {
+    __boundSetState = ref.setState.bind(ref);
+    __boundForceUpdate = ref.forceUpdate.bind(ref);
+  }
 
   const refOption = {};
   refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined ? persistStoredKeys : ccOption.persistStoredKeys;
@@ -192,8 +198,10 @@ export default function (ref, params, liteLevel = 5) {
     retKey_fnUid_: {},
 
     // api
-    reactSetState,
-    reactForceUpdate,
+    reactSetState: noop,//等待重写
+    __boundSetState,
+    reactForceUpdate: noop,//等待重写
+    __boundForceUpdate,
     setState,
     setModuleState,
     forceUpdate,
@@ -203,8 +211,9 @@ export default function (ref, params, liteLevel = 5) {
       return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
     },
 
-    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),// not expose in d.ts
+    // only can be called by cc
     __$$ccSetState: hf.makeCcSetStateHandler(ref),// not expose in d.ts
+    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),// not expose in d.ts
   };
   ref.ctx = ctx;
   ref.setState = setState;

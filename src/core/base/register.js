@@ -69,6 +69,8 @@ export default function register({
               watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
             });
             buildRefCtx(this, params, lite);
+            this.ctx.reactSetState = hf.makeRefSetState(this);
+            this.ctx.reactForceUpdate = hf.makeRefForceUpdate(this);
 
             if (setup && (this.$$setup || staticSetup)) {
               throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);

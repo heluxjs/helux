@@ -1181,7 +1181,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.167',
+      version: '1.5.171',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1648,6 +1648,16 @@
   // cate: module | ref
 
   function configureDepFns (cate, confMeta, item, handler, depKeys, compare, immediate) {
+    var ctx = confMeta.refCtx;
+    var type = confMeta.type;
+
+    if (cate === CATE_REF) {
+      if (!ctx.__$$isBSe) {
+        justWarning(cate + " " + type + " must be been called in setup block");
+        return;
+      }
+    }
+
     if (!item) return;
     var itype = typeof item;
 
@@ -1666,12 +1676,12 @@
     } else if (isPJO(item)) {
       _descObj = item;
     } else if (itype === 'function') {
-      _descObj = item(confMeta.refCtx);
-      if (!isPJO(_descObj)) throw new Error("type of " + confMeta.type + " callback result must be an object");
+      _descObj = item(ctx);
+      if (!isPJO(_descObj)) throw new Error("type of " + type + " callback result must be an object");
     }
 
     if (!_descObj) {
-      justWarning(cate + " " + confMeta.type + " param type error");
+      justWarning(cate + " " + type + " param type error");
       return;
     }
 
@@ -2775,9 +2785,10 @@
 
       var newFullState = Object.assign({}, refCtx.state, state);
       refCtx.state = newFullState;
-      if (containerRef) containerRef.state = newFullState; // 只有Hook实例，才能直接更新ref.state
+      if (containerRef) containerRef.state = newFullState;
+      var isHook = refCtx.type === CC_HOOK; // 只有Hook实例，才能直接更新ref.state
 
-      if (refCtx.type === CC_HOOK) {
+      if (isHook) {
         ref.state = newFullState;
       }
       /** start update ui */
@@ -2785,11 +2796,16 @@
 
       if (shouldCurrentRefUpdate) {
         refCtx.renderCount += 1;
-        refCtx.reactSetState(state, cb);
+        if (!isHook) refCtx.reactSetState(state, cb);else {
+          //对于function组件来说，一定要用最新的setter，否则当打开dev-tool面板点击了dom时，会照成界面更新失败
+          var setter = refCtx.__setter2 || refCtx.__setter1;
+          setter(newFullState);
+          if (cb) cb(newFullState); // 和class setState(partialState, cb); 保持一致
+        }
       } else {
         //对与class实例来说，视图虽然没有更新，但是state要合并进来，让下一次即将到来的更新里能拿到之前的状态
         //否则watch启用的return false优化会造成状态丢失
-        if (refCtx.type !== CC_HOOK) {
+        if (!isHook) {
           Object.assign(ref.state, state);
         }
       }
@@ -4312,7 +4328,8 @@
   var okeys$5 = okeys,
       me$4 = makeError,
       vbi$4 = verboseInfo,
-      safeGetArrayFromObject$2 = safeGetArrayFromObject;
+      safeGetArrayFromObject$2 = safeGetArrayFromObject,
+      justWarning$7 = justWarning;
   var idSeq = 0;
 
   function getEId() {
@@ -4485,7 +4502,7 @@
       moduleReducer: {},
       connectedReducer: {},
       reducer: {}
-    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
+    }, _ctx["mapped"] = {}, _ctx.prevModuleStateVer = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = reactSetState, _ctx.reactForceUpdate = reactForceUpdate, _ctx.setState = setState, _ctx.__setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.__forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
       return function (ref) {
         return refs[refName] = {
           current: ref
@@ -4497,8 +4514,14 @@
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
 
     ctx.initState = function (initState) {
-      if (!ref.__$$isBeforeFirstRender) throw new Error("ctx.initState can only been called before first render period!");
-      if (!isPJO(state)) throw new Error("state must be a plain json object!");
+      if (!ref.__$$isBF) {
+        return justWarning$7("ctx.initState can only been called before first render period!");
+      }
+
+      if (!isPJO(state)) {
+        return justWarning$7("state " + NOT_A_JSON);
+      }
+
       ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
       ctx.prevState = ctx.state = ref.state;
     }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
@@ -4761,15 +4784,18 @@
 
   var safeGetObjectFromObject$3 = safeGetObjectFromObject,
       okeys$6 = okeys,
-      justWarning$7 = justWarning;
+      justWarning$8 = justWarning;
   var _ccContext$reducer = ccContext.reducer,
       _module_fnNames_ = _ccContext$reducer._module_fnNames_,
       _caller = _ccContext$reducer._caller,
       runtimeVar$3 = ccContext.runtimeVar;
   function beforeMount (ref, setup, bindCtxToMethod) {
     ref.__$$isUnmounted = false;
-    ref.__$$isBeforeFirstRender = true;
+    ref.__$$isBF = true; // isBeforeFirstRender
+
     var ctx = ref.ctx;
+    ctx.__$$isBSe = true; // isBeforeSetup
+
     var connectedReducer = ctx.connectedReducer,
         moduleReducer = ctx.moduleReducer,
         dispatch = ctx.dispatch,
@@ -4778,7 +4804,7 @@
     var connectedModules = okeys$6(connect);
     var allModules = connectedModules.slice();
     if (!allModules.includes(module)) allModules.push(module);else {
-      justWarning$7("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
+      justWarning$8("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
     } //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
     //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
 
@@ -4815,6 +4841,7 @@
       ctx.settings = settingsObj;
     }
 
+    ctx.__$$isBSe = false;
     triggerComputedAndWatch(ref);
   }
 
@@ -4977,7 +5004,7 @@
   }
 
   function didMount (ref) {
-    ref.__$$isBeforeFirstRender = false;
+    ref.__$$isBF = false;
     var _ref$ctx = ref.ctx,
         module = _ref$ctx.module,
         ccClassKey = _ref$ctx.ccClassKey,
@@ -6063,6 +6090,8 @@
   var ccUkey_ref_$4 = ccContext.ccUkey_ref_;
   var refCursor = 1;
   var cursor_refKey_ = {};
+  var ss$2 = '__setState';
+  var fu = '__forceUpdate';
 
   function getUsableCursor() {
     return refCursor;
@@ -6211,7 +6240,9 @@
       }
     }
 
-    var refCtx = hookRef.ctx; // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
+    var refCtx = hookRef.ctx;
+    refCtx.setState = makeCtxSetState(hookRef, hookSetState, ss$2);
+    refCtx.forceUpdate = makeCtxSetState(hookRef, hookSetState, fu); // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
 
     var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; //after every render
 
@@ -6220,6 +6251,9 @@
         // mock componentDidUpdate
         didUpdate(hookRef);
       }
+
+      refCtx.setState = makeCtxSetState(hookRef, hookSetState, ss$2);
+      refCtx.forceUpdate = makeCtxSetState(hookRef, hookSetState, fu);
     }); //after first render
 
     effectHandler(function () {
@@ -6255,6 +6289,19 @@
     }
 
     return refCtx;
+  }
+
+  function makeCtxSetState(ref, setter, method) {
+    //两次赋值都不能少
+    //第一次是为了被广播更新时__setter已存在
+    //第二次是为了能在dev-tool点击dom后依然能够正常更新视图
+    ref.ctx.__setter1 = setter;
+    ref.ctx.__setter2 = null;
+    return function () {
+      ref.ctx.__setter2 = setter;
+      ref.ctx.__setter1 = null;
+      ref.ctx[method].apply(null, arguments);
+    };
   }
 
   function registerHookComp(options, ccClassKey) {

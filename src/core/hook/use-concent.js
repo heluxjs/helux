@@ -3,11 +3,13 @@ import { CC_HOOK } from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
+import cursor_setter_ from '../../cc-context/cursor-setter-map';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
 import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
+import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState } from '../../support/util';
 import setRef from '../ref/set-ref';
 
@@ -23,31 +25,21 @@ function incCursor() {
   refCursor = refCursor + 1;
 }
 
-const makeSetState = (ccHookState, hookSetState) => (partialState, cb) => {
-  const newHookState = Object.assign({}, ccHookState, partialState);
-  hookSetState(newHookState);
-
-  // 和class setState(partialState, cb); 保持一致
-  if (cb) cb(newHookState);
-}
-
-const makeForceUpdate = (ccHookState, hookSetState) => cb => {
-  const newHookState = Object.assign({}, ccHookState);
-  hookSetState(newHookState);
-  if (cb) cb(newHookState);
-}
-
-function CcHook(ccHookState, hookSetState, props) {
-  this.setState = makeSetState(ccHookState, hookSetState);
-  this.forceUpdate = makeForceUpdate(ccHookState, hookSetState);
-  this.state = ccHookState;
+function CcHook(state, hookSetter, props) {
+  //new CcHook时，这里锁定的hookSetter就是后面一直可以用的setter
+  //如果存在期一直替换hookSetter，反倒会造成打开react-dev-tool，点击面板里的dom后，视图便不再更新的bug
+  this.setState = hookSetter;
+  this.forceUpdate = hookSetter;
+  this.state = state;
   this.isFirstRendered = true;
   this.props = props;
 }
 
 // rState: resolvedState, iState: initialState
-function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, props, extra, ccClassKey) {
-  // when single file demo in hmr mode trigger buildRef, rState is null
+function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
+
+  // when single file demo in hmr mode trigger buildRef, rState is 0 
+  // so here call evalState again
   const state = rState || evalState(iState);
   const bindCtxToMethod = regOpt.bindCtxToMethod;
 
@@ -57,24 +49,29 @@ function buildRef(curCursor, rState, iState, regOpt, ccHookState, hookSetState, 
   } = regOpt;
 
   incCursor();
+  //cache the setter, to let component ins can still re-render when open react-dev-tool and click the dom in its panel 
+  cursor_setter_[cursor] = hookSetter;
   const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
     module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, storedKeys, connect, true
   );
-  const hookRef = new CcHook(ccHookState, hookSetState, props);
-
+  const hookRef = new CcHook(hookState, hookSetter, props);
+  
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK,
+    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK, cursor,
     ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
   });
-
+  
   hookRef.props = props;// keep shape same as class
   buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
+  hookRef.ctx.reactSetState = hf.makeRefSetState(hookRef);
+  hookRef.ctx.reactForceUpdate = hf.makeRefForceUpdate(hookRef);
+  
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
   refCtx.extra = extra;// attach extra before setup process
   beforeMount(hookRef, setup, bindCtxToMethod);
 
-  cursor_refKey_[curCursor] = hookRef.ctx.ccUniqueKey;
+  cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
 
   // rewrite useRef for CcHook
   refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
@@ -103,9 +100,9 @@ export default function useConcent(registerOption, ccClassKey){
   const isFirstRendered = curCursor === cursor;
 
   const state = isFirstRendered ? evalState(iState) : 0;
-  const [ccHookState, hookSetState] = reactUseState(state);
+  const [hookState, hookSetter] = reactUseState(state);
 
-  const cref = () => buildRef(curCursor, state, iState, _registerOption, ccHookState, hookSetState, props, extra, ccClassKey);
+  const cref = () => buildRef(curCursor, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
   let hookRef;
 
   if (isFirstRendered) {
@@ -117,9 +114,6 @@ export default function useConcent(registerOption, ccClassKey){
       hookRef = cref();
     } else {
       const refCtx = hookRef.ctx;
-      // existing period, replace reactSetState and reactForceUpdate
-      refCtx.reactSetState = makeSetState(ccHookState, hookSetState);
-      refCtx.reactForceUpdate = makeForceUpdate(ccHookState, hookSetState);
       refCtx.prevProps = refCtx.props;
       hookRef.props = refCtx.props = props;
       refCtx.extra = extra;

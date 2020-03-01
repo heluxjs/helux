@@ -2,7 +2,7 @@
 import {
   MODULE_GLOBAL, ERR, 
   SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR,
-  DISPATCH,  INVOKE, CC_HOOK,
+  DISPATCH, INVOKE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -118,29 +118,14 @@ function __invoke(userLogicFn, option, payload){
 export function makeCcSetStateHandler(ref, containerRef) {
   return (state, cb, shouldCurrentRefUpdate) => {
     const refCtx = ref.ctx;
-    
-    /** start update state */
-    // let containerRefState = containerRef ? containerRef.state : null;
-    // const refState = ref.state;
-    // const refCtxState = refCtx.state;
-    // //采用okeys写法，让用户结构出来的state总是指向同一个引用
-    // okeys(state).forEach(k => {
-    //   const val = state[k];
-    //   refState[k] = val;
-    //   refCtxState[k] = val;
-    //   if (containerRefState) containerRefState[k] = val;//让代理模式下的容器组件state也总是保持最新的
-    // });
 
     /** start update state */
     // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state,
     // 注意这里赋值也是取refCtx.state取做合并，因为频繁进入此函数时，ref.state可能还不是最新的
-    const newFullState = Object.assign({}, refCtx.state, state);
-    refCtx.state = newFullState;
-    if (containerRef) containerRef.state = newFullState;
-    
-    // 只有Hook实例，才能直接更新ref.state
-    if (refCtx.type === CC_HOOK) {
-      ref.state = newFullState;
+    // refCtx.state = newFullState;
+    if (containerRef) {
+      const newFullState = Object.assign({}, refCtx.state, state);
+      containerRef.state = newFullState;
     }
 
     /** start update ui */
@@ -148,11 +133,8 @@ export function makeCcSetStateHandler(ref, containerRef) {
       refCtx.renderCount += 1;
       refCtx.reactSetState(state, cb);
     }else{
-      //对与class实例来说，视图虽然没有更新，但是state要合并进来，让下一次即将到来的更新里能拿到之前的状态
-      //否则watch启用的return false优化会造成状态丢失
-      if(refCtx.type !== CC_HOOK){
-        Object.assign(ref.state, state);
-      }
+      Object.assign(ref.state, state);
+      refCtx.state = ref.state;
     }
   }
 }
@@ -500,6 +482,40 @@ export function makeSetStateHandler(module) {
     }
   }
 }
+
+export const makeRefSetState = (ref) => (partialState, cb) => {
+  const ctx = ref.ctx;
+  const newState = Object.assign({}, ref.state, partialState);
+  
+  if (ctx.type === CC_HOOK) {
+    ref.state = ctx.state = newState;
+    ctx.__boundSetState(newState);
+    if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+  } else {
+    ctx.state = newState;
+    // don't assign newState to ref.state before didMount
+    // it will cause
+    // Warning: Expected CC(SomeComp) state to match memoized state before processing the update queue
+    if(ref.__$$isBF){
+      Object.assign(ref.state, partialState);
+    }else{
+      ref.state = newState;
+    }
+    ctx.__boundSetState(newState, cb);
+  }
+}
+
+export const makeRefForceUpdate = (ref) => (cb) => {
+  const ctx = ref.ctx;
+  if (ctx.type === CC_HOOK) {
+    const newState = Object.assign({}, ref.state);
+    ctx.__boundSetState(newState);
+    if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+  } else {
+    ctx.__boundForceUpdate(cb);
+  }
+}
+
 
 /** avoid  Circular dependency, move this fn to util */
 // export function makeCommitHandler(module, refCtx) {}

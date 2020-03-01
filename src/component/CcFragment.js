@@ -8,6 +8,7 @@ import didMount from '../core/base/did-mount';
 import didUpdate from '../core/base/did-update';
 import buildRefCtx from '../core/ref/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
+import * as hf from '../core/state/handler-factory';
 
 const { shallowDiffers, getRegisterOptions, evalState } = util;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
@@ -43,6 +44,8 @@ class CcFragment extends React.Component {
       isSingle, ccKey, connect: target_connect, state, module,
       storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT
     }, lite);
+    this.ctx.reactSetState = hf.makeRefSetState(this);
+    this.ctx.reactForceUpdate = hf.makeRefForceUpdate(this);
 
     this.__$$compareProps = compareProps;
     //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
