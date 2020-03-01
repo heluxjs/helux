@@ -1181,7 +1181,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.172',
+      version: '1.5.173',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1208,6 +1208,11 @@
       }
     }
   }
+
+  /**
+   * private variable, not bind in ccContext
+   */
+  var pendingModules = [];
 
   var isModuleNameCcLike$1 = isModuleNameCcLike,
       isModuleNameValid$1 = isModuleNameValid,
@@ -1456,6 +1461,11 @@
 
   var makeUniqueCcKey$1 = makeUniqueCcKey,
       justWarning$1 = justWarning;
+
+  var resolve = function resolve() {
+    return Promise.resolve();
+  };
+
   function ccDispatch (action, payLoadWhenActionIsString, rkOrOptions, delay, _temp) {
     if (rkOrOptions === void 0) {
       rkOrOptions = '';
@@ -1483,7 +1493,7 @@
 
         if (!targetRef) {
           justWarning$1("no ref found for ccUniqueKey:" + uKey + "!");
-          return;
+          return resolve();
         } else {
           dispatchFn = targetRef.ctx.dispatch;
         }
@@ -1513,7 +1523,7 @@
 
         if (!ref) {
           justWarning$1("no ref found");
-          return;
+          return resolve();
         }
 
         dispatchFn = ref.ctx.dispatch;
@@ -1524,10 +1534,6 @@
         if (!fullFnNames) return;
         var tasks = [];
         fullFnNames.forEach(function (fullFnName) {
-          var _fullFnName$split = fullFnName.split('/'),
-              fnModule = _fullFnName$split[0];
-
-          if (excludeModules.includes(fnModule)) return;
           tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, rkOrOptions, delay));
         });
         return Promise.all(tasks);
@@ -1537,7 +1543,7 @@
     } catch (err) {
       if (throwError) throw err;else {
         justWarning$1(err.message);
-        return Promise.resolve();
+        return resolve();
       }
     }
   }
@@ -3366,7 +3372,11 @@
 
   function configure (module, config) {
     if (!ccContext.isStartup) {
-      throw new Error('configure must be called after run!');
+      pendingModules.push({
+        module: module,
+        config: config
+      });
+      return; // throw new Error('configure must be called after run!');
     }
 
     if (!isPJO$5(config)) {
@@ -5853,11 +5863,10 @@
       watch: {},
       computed: {},
       init: {},
-      moduleSingleClass: {} // traversal moduleNames
-
+      moduleSingleClass: {}
     };
-    okeys$a(store).forEach(function (m) {
-      var moduleConf = store[m];
+
+    var buildStoreConf = function buildStoreConf(m, moduleConf) {
       var state = moduleConf.state,
           _moduleConf$reducer = moduleConf.reducer,
           reducer = _moduleConf$reducer === void 0 ? {} : _moduleConf$reducer,
@@ -5865,6 +5874,11 @@
           computed = moduleConf.computed,
           init = moduleConf.init,
           isClassSingle = moduleConf.isClassSingle;
+
+      if (storeConf.store[m]) {
+        throw new Error("run api error: module" + m + " duplicate");
+      }
+
       storeConf.store[m] = evalState$3(state);
       if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
       storeConf.reducer[m] = reducer;
@@ -5872,7 +5886,21 @@
       if (computed) storeConf.computed[m] = computed;
       if (init) storeConf.init[m] = init;
       storeConf.moduleSingleClass[m] = isClassSingle === true;
+    }; // traversal moduleNames
+
+
+    okeys$a(store).forEach(function (m) {
+      return buildStoreConf(m, store[m]);
+    }); // push by configure api
+
+    pendingModules.forEach(function (_ref) {
+      var module = _ref.module,
+          config = _ref.config;
+      justTip("configure pending module[" + module + "]");
+      buildStoreConf(module, config);
     });
+    pendingModules.length = 0; // clear pending modules
+
     if (isObjectNull$2(storeConf.init)) storeConf.init = null;
     startup(storeConf, options);
   }

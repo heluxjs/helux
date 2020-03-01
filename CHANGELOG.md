@@ -1,3 +1,8 @@
+#### 2020-03-01
+1.5.173 发布
+* feature: 支持实例api `ctx.dispatch`调用`*/{fnName}`来命中所有模块的同名函数
+* feature: 支持全局api `cc.configure`在`cc.run`之前调用，配置模块会有放入`pending-modules`里，等待`run`函数启动时来配置模块
+
 #### 2020-02-31
 1.5.172 发布
 * refactor: 重新整理数据更新流程，ctx新增内置接口__boundSetState __boundForceUpdate，解决function组件在react-dev-tool里点击dom后不再重渲染的bug
