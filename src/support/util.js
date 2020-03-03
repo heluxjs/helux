@@ -329,3 +329,17 @@ export function evalState(state = {}) {
   }
   return ret;
 }
+
+function _getValue(obj, keys, lastKeyIndex, keyIndex) {
+  const key = keys[keyIndex];
+  if (lastKeyIndex === keyIndex) {
+    return obj[key];
+  } else {
+    return _getValue(obj[key], keys, lastKeyIndex, ++keyIndex);
+  }
+}
+export function getValueByKeyPath(obj, keyPath) {
+  const [_, pureKeyPath] = keyPath.split('/');
+  const keys = pureKeyPath.split('.');
+  return _getValue(obj, keys, keys.length - 1, 0);
+}

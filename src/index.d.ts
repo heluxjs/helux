@@ -432,8 +432,8 @@ export interface ICtxBase {
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;
   sync: (string: string, value?: typeof syncCb | any, renderKey?: string, delay?: string) => SyncReturn;
-  syncBool: (string: string, renderKey?: string, delay?: string) => SyncReturn;
-  syncInt: (string: string, renderKey?: string, delay?: string) => SyncReturn;
+  syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: string, delay?: string) => SyncReturn;
+  syncInt: (string: string, value?: typeof syncCb | number, renderKey?: string, delay?: string) => SyncReturn;
   set: (string: string, value: any, renderKey?: string, delay?: string) => void;
   setBool: (string: string, renderKey?: string, delay?: string) => void;
   readonly settings: IAnyObj;

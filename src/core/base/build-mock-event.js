@@ -1,5 +1,5 @@
 import { CCSYNC_KEY, MOCKE_KEY } from '../../support/constant';
-import { convertToStandardEvent, justWarning } from '../../support/util';
+import { convertToStandardEvent, justWarning, getValueByKeyPath } from '../../support/util';
 import ccContext from '../../cc-context';
 
 const { store: { getState } } = ccContext;
@@ -20,19 +20,24 @@ export default (spec, e, refCtx) => {
   const type = spec.type;
   let hasSyncCb = false;
 
-  if (syncKey !== undefined) {//来自sync生成的setter函数调用
+  if (syncKey !== undefined) {//来自sync生成的setter函数调用 即 sync('xxxKey')
     ccsync = syncKey;
     ccdelay = spec.delay;
     ccrkey = spec.rkey;
-    if (type === 'val' || type === 'int') {//set value
+    if (['bool', 'val', 'int'].includes(type)) {
       ccint = type === 'int';//convert to int
+      isToggleBool = type === 'bool';
 
       //优先从spec里取，取不到的话，从e里面分析并提取
+      value = type === 'bool' ? !getValueByKeyPath(refState, ccsync) : getValFromEvent(e);
+      
       const val = spec.val;
       if (val === undefined) {
-        value = getValFromEvent(e);
+        // do nothing
       } else {
         if (typeof val === 'function') {
+          // 布尔值需要对原来的值取反
+
           let keyPath, fullKeyPath, module;
           if (ccsync.includes('/')) {
             const [_module, _keyPath] = ccsync.split('/');
@@ -45,8 +50,7 @@ export default (spec, e, refCtx) => {
             module = refModule;
           }
 
-          const syncRet = val(getValFromEvent(e), keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
-
+          const syncRet = val(value, keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
           if (syncRet != undefined) {
             const retType = typeof syncRet;
             if (retType === 'boolean') {
@@ -65,9 +69,7 @@ export default (spec, e, refCtx) => {
           value = val;
         }
       }
-    } else if (type === 'bool') {//toggle bool
-      isToggleBool = true;
-    } else return null;
+    }else return null;
   } else {//来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
     const se = convertToStandardEvent(e);
     if (se) {// e is event

@@ -254,8 +254,8 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   if (liteLevel > 2) {// level 3, assign async api
-    ctx.syncBool = (e, rkey = '', delay = -1) => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', delay, rkey }, ref);
+    ctx.syncBool = (e, val, rkey = '', delay = -1) => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', val, delay, rkey }, ref);
       __sync({ type: 'bool' }, e, ref);
     };
     ctx.sync = (e, val, rkey = '', delay = -1) => {
@@ -268,8 +268,8 @@ export default function (ref, params, liteLevel = 5) {
     ctx.setBool = (ccsync, rkey = '', delay = -1) => {
       __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, rkey }, ref);
     };
-    ctx.syncInt = (e, rkey = '', delay = -1) => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', delay, rkey }, ref);
+    ctx.syncInt = (e, val, rkey = '', delay = -1) => {
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', val, delay, rkey }, ref);
       __sync({ type: 'int' }, ref, e);
     };
   }
