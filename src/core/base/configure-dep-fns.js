@@ -83,7 +83,7 @@ function _parseDescObj(cate, confMeta, descObj) {
     }
 
     if (isPJO(targetItem)) {
-      const { fn, depKeys, immediate = watchImmediate, compare = defaultCompare } = targetItem;
+      const { fn, depKeys, immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
       const fnUid = uuid('mark');
 
       if (depKeys === '*') {
@@ -91,7 +91,7 @@ function _parseDescObj(cate, confMeta, descObj) {
         if (!isStateKey) throw new Error(`retKey[${retKey}] is not a state key of module[${callerModule}]`);
         _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
         // when retKey is '/xxxx', here need pass xxxx, so pass stateKey as retKey
-        _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare);
+        _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy);
       } else {// ['foo/b1', 'bar/b1'] or null or undefined
         if (depKeys && !Array.isArray(depKeys)) throw new Error('depKeys must an string array or *');
 
@@ -102,7 +102,7 @@ function _parseDescObj(cate, confMeta, descObj) {
             targetDepKeys = [stateKey];// regenerate depKeys
           }
           _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
-          _mapDepDesc(cate, confMeta, module, stateKey, fn, targetDepKeys, immediate, compare);
+          _mapDepDesc(cate, confMeta, module, stateKey, fn, targetDepKeys, immediate, compare, lazy);
         } else {
           let stateKeyModule = '', targetRetKey = retKey;
           if (retKey.includes('/')) {
@@ -135,7 +135,8 @@ function _parseDescObj(cate, confMeta, descObj) {
           });
 
           okeys(module_depKeys_).forEach(m => {
-            _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, true);// 指向同一个fn，允许重复
+            // 指向同一个fn，允许重复
+            _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, lazy);
           });
         }
       }
@@ -161,24 +162,27 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
 }
 
 // 映射依赖描述对象
-function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare) {
+function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy) {
   const dep = confMeta.dep;
   const moduleDepDesc = safeGetObjectFromObject(dep, module,
-    { retKey_fn_: {}, stateKey_retKeys_: {}, fnCount: 0 }
+    { retKey_fn_: {}, retKey_lazy_: {}, stateKey_retKeys_: {}, fnCount: 0 }
   );
-  const { retKey_fn_, stateKey_retKeys_ } = moduleDepDesc;
+  const { retKey_fn_, stateKey_retKeys_, retKey_lazy_ } = moduleDepDesc;
 
   const fnDesc = { fn, immediate, compare, depKeys };
   // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
   if (retKey_fn_[retKey]) {
     if (cate !== CATE_REF) {// 因为热加载，对于module computed 定义总是赋值最新的，
       retKey_fn_[retKey] = fnDesc;
+      retKey_lazy_[retKey] = confMeta.isLazyComputed || lazy;
     }
     // do nothing
   } else {
     retKey_fn_[retKey] = fnDesc;
+    retKey_lazy_[retKey] = confMeta.isLazyComputed || lazy;
     moduleDepDesc.fnCount++;
   }
+
 
   let _depKeys = depKeys
   if (depKeys === '*') {

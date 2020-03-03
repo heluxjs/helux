@@ -1,24 +1,27 @@
 import { makeCommitHandler, okeys, justWarning } from '../../support/util';
-import { FN_CU, FN_WATCH, CATE_MODULE, CATE_REF } from '../../support/constant';
+import { FN_WATCH, CATE_REF } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
+import makeLazyComputedHandler, { CLEAR } from '../computed/make-lazy-computed-handler';
 import cuMap from '../../cc-context/computed-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import runtimeVar from '../../cc-context/runtime-var';
 
-export function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
-  let computedValue;
+function getCuWaParams(retKey, depKeys, newState, oldState) {
   if (runtimeVar.alwaysGiveState) {
-    computedValue = fn(newState, oldState, fnCtx);
+    return [newState, oldState];
   } else {
     const firstDepKey = depKeys[0];
     if (depKeys.length === 1 && firstDepKey !== '*' && firstDepKey === retKey) {
-      computedValue = fn(newState[firstDepKey], oldState[firstDepKey], fnCtx);
+      return [newState[firstDepKey], oldState[firstDepKey]];
     } else {
-      computedValue = fn(newState, oldState, fnCtx);
+      return [newState, oldState];
     }
   }
+}
 
-  return computedValue;
+export function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
+  const [n, o] = getCuWaParams(retKey, depKeys, newState, oldState);
+  return fn(n, o, fnCtx);
 }
 
 // fnType: computed watch
@@ -42,16 +45,29 @@ export default (
 
     const { commit, getFnCommittedState } = makeCommitHandler();
     const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
-    pickedFns.forEach(({ retKey, fn, depKeys }) => {
+    pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
       const fnCtx = {
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
         stateModule, refModule, oldState, committedState: curToBeComputedState, refCtx
       };
-      const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
-
+      
       if (fnType === 'computed') {
-        computedContainer[retKey] = computedValueOrRet;
+        if(isLazy){
+          const cuFn = computedContainer[retKey];//让计算函数始终指向同一个引用
+
+          // lazyComputed 不再暴露这两个接口，以隔绝副作用
+          delete fnCtx.commit;
+          delete fnCtx.commitCu;
+          const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
+
+          if(cuFn)cuFn(CLEAR, n, o, fnCtx);
+          else computedContainer[retKey] = makeLazyComputedHandler(fn, n, o, fnCtx);
+        }else{
+          const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+          computedContainer[retKey] = computedValueOrRet;
+        }
       } else {// watch
+        const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
         //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
         if (computedValueOrRet === false) shouldCurrentRefUpdate = false;
       }

@@ -100,6 +100,7 @@ const defaultExport = {
   useConcent,
   bindCcToMcc,
   defComputed,
+  defLazyComputed,
   defComputedVal,
   defWatch,
   defWatchImmediate,

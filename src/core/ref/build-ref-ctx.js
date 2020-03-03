@@ -34,7 +34,8 @@ function getEId() {
   return Symbol(`__autoGen_${idSeq}__`);
 }
 
-const noop = ()=>{};
+const noop = () => { };
+const eType = (th) => `type of defineEffect ${th} param must be`;
 
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 
@@ -310,11 +311,12 @@ export default function (ref, params, liteLevel = 5) {
     }
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
+    ctx.lazyComputed = getDefineComputedHandler(ctx, true);
 
     const makeEffectHandler = targetEffectItems => (fn, depKeys, immediate = true, eId) => {
-      if (typeof fn !== 'function') throw new Error('type of defineEffect first param must be function');
+      if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
       if (depKeys !== null && depKeys !== undefined) {
-        if (!Array.isArray(depKeys)) throw new Error('type of defineEffect second param must be one of them(array, null, undefined)');
+        if (!Array.isArray(depKeys)) throw new Error(`${eType('second')} one of them(array, null, undefined)`);
       }
       const _eId = eId || getEId();
       // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };

@@ -7,7 +7,7 @@ import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { safeGetObjectFromObject, isPJO } = util;
+const { safeGetObjectFromObject, isPJO, okeys } = util;
 
 export default function (module, computed) {
   if(!computed) return;

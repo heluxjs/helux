@@ -396,6 +396,7 @@ export interface ICtxBase {
   readonly reducer: IAnyFnInObj;
 
   computed: typeof refCtxComputed;
+  lazyComputed: typeof refCtxComputed;
   watch: typeof refCtxWatch;
   effect: typeof refCtxEffect;
   effectProps: typeof refCtxEffect;
