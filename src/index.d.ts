@@ -335,13 +335,13 @@ declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
 declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 
 type NoFullState = 'NoFullState';
-declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj;
+declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
 // if module state is not equal full state, you need pass generic type FullState
 declare function syncCb<Val, ModuleState, FullState extends IAnyObj | NoFullState = NoFullState, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
     syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
-  ): IAnyObj;
+  ): IAnyObj | boolean;
 
 //////////////////////////////////////////
 // exposed interface
