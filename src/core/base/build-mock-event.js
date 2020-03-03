@@ -1,4 +1,4 @@
-import { CCSYNC_KEY, MOCKE_KEY } from '../../support/constant';
+import { CCSYNC_KEY } from '../../support/constant';
 import { convertToStandardEvent, justWarning, getValueByKeyPath } from '../../support/util';
 import ccContext from '../../cc-context';
 
@@ -24,52 +24,59 @@ export default (spec, e, refCtx) => {
     ccsync = syncKey;
     ccdelay = spec.delay;
     ccrkey = spec.rkey;
-    if (['bool', 'val', 'int'].includes(type)) {
-      ccint = type === 'int';//convert to int
-      isToggleBool = type === 'bool';
 
-      //优先从spec里取，取不到的话，从e里面分析并提取
-      value = type === 'bool' ? !getValueByKeyPath(refState, ccsync) : getValFromEvent(e);
-      
-      const val = spec.val;
-      if (val === undefined) {
-        // do nothing
-      } else {
-        if (typeof val === 'function') {
-          // 布尔值需要对原来的值取反
+    // type 'bool', 'val', 'int', 'as'
+    ccint = type === 'int';//convert to int
+    isToggleBool = type === 'bool';
 
-          let keyPath, fullKeyPath, module;
-          if (ccsync.includes('/')) {
-            const [_module, _keyPath] = ccsync.split('/');
-            keyPath = _keyPath;
-            fullKeyPath = ccsync;
-            module = _module;
-          } else {
-            keyPath = ccsync;
-            fullKeyPath = `${refModule}/${keyPath}`;
-            module = refModule;
-          }
+    let keyPath, fullKeyPath, module;
+    if (ccsync.includes('/')) {
+      const [_module, _keyPath] = ccsync.split('/');
+      keyPath = _keyPath;
+      fullKeyPath = ccsync;
+      module = _module;
+    } else {
+      keyPath = ccsync;
+      fullKeyPath = `${refModule}/${keyPath}`;
+      module = refModule;
+    }
 
-          const syncRet = val(value, keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
-          if (syncRet != undefined) {
+    // 布尔值需要对原来的值取反
+    const fullState = module !== refModule ? getState(module) : refState;
+    value = type === 'bool' ? !getValueByKeyPath(fullState, keyPath) : getValFromEvent(e);
+
+    //优先从spec里取，取不到的话，从e里面分析并提取
+    const val = spec.val;
+    if (val === undefined) {
+      // do nothing
+    } else {
+      if (typeof val === 'function') {
+        const syncRet = val(value, keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
+
+        if (syncRet != undefined) {
+          if (type === 'as') value = syncRet;// value is what cb returns;
+          else {
             const retType = typeof syncRet;
             if (retType === 'boolean') {
               // if return true, let hasSyncCb = false, so this cb will not block state update, and cc will extract partial state automatically
               // if return false, let hasSyncCb = true, but now extraState is still null, so this cb will block state update
-              hasSyncCb = !retType;
-            }else if(retType === 'object'){
+              hasSyncCb = !syncRet;
+            } else if (retType === 'object') {
               hasSyncCb = true;
               extraState = syncRet;
-            }else{
+            } else {
               justWarning(`syncKey[${syncKey}] cb result type error.`);
             }
           }
-
-        } else {
-          value = val;
+        }else{
+          if (type === 'as') hasSyncCb = true;// if syncAs return undefined, will block update
+          // else continue update and value is just extracted above
         }
+
+      } else {
+        value = val;
       }
-    }else return null;
+    }
   } else {//来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
     const se = convertToStandardEvent(e);
     if (se) {// e is event
@@ -96,5 +103,5 @@ export default (spec, e, refCtx) => {
     }
   }
 
-  return { [MOCKE_KEY]: 1, currentTarget: { value, extraState, hasSyncCb, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
+  return { currentTarget: { value, extraState, hasSyncCb, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
 }

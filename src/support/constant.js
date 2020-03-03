@@ -14,8 +14,6 @@ export const CC_DISPATCHER = '$$Dispatcher';
 export const CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
 
 export const  CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
-export const  MOCKE_KEY = Symbol('__for_mock_event__');
-export const  LAZY_KEY = Symbol('__lazy_handle_state__');
 
 export const SIG_FN_START = 10;
 export const SIG_FN_END = 11;

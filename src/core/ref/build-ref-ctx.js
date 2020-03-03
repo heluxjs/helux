@@ -254,23 +254,21 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   if (liteLevel > 2) {// level 3, assign async api
-    ctx.syncBool = (e, val, rkey = '', delay = -1) => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'bool', val, delay, rkey }, ref);
-      __sync({ type: 'bool' }, e, ref);
-    };
-    ctx.sync = (e, val, rkey = '', delay = -1) => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'val', val, delay, rkey }, ref);
+    const doSync = (e, val, rkey, delay, type)=>{
+      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
       __sync({ type: 'val' }, ref, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
-    };
+    }
+
+    ctx.sync = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'val');
+    ctx.syncBool = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'bool');
+    ctx.syncInt = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'int');
+    ctx.syncAs = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'as');
+
     ctx.set = (ccsync, val, rkey = '', delay = -1) => {
       __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, rkey }, ref);
     };
     ctx.setBool = (ccsync, rkey = '', delay = -1) => {
       __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, rkey }, ref);
-    };
-    ctx.syncInt = (e, val, rkey = '', delay = -1) => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type: 'int', val, delay, rkey }, ref);
-      __sync({ type: 'int' }, ref, e);
     };
   }
 

@@ -339,7 +339,6 @@ function _getValue(obj, keys, lastKeyIndex, keyIndex) {
   }
 }
 export function getValueByKeyPath(obj, keyPath) {
-  const [_, pureKeyPath] = keyPath.split('/');
-  const keys = pureKeyPath.split('.');
+  const keys = keyPath.split('.');
   return _getValue(obj, keys, keys.length - 1, 0);
 }

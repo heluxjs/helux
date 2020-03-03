@@ -26,8 +26,6 @@ type CcCst = {
   CC_DISPATCHER_BOX: '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
 
   CCSYNC_KEY: typeof Symbol;
-  MOCKE_KEY: typeof Symbol;
-  LAZY_KEY: typeof Symbol;
 
   SIG_FN_START: 10;
   SIG_FN_END: 11;
@@ -341,7 +339,15 @@ declare function syncCb<Val, ModuleState, FullState extends IAnyObj | NoFullStat
   (
     value: Val, keyPath: string,
     syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
-  ): IAnyObj | boolean;
+  ): any;
+
+declare function asCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
+// if module state is not equal full state, you need pass generic type FullState
+declare function asCb<Val, ModuleState, FullState extends IAnyObj | NoFullState = NoFullState, RefCtx extends ICtxBase = ICtxBase>
+  (
+    value: Val, keyPath: string,
+    syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
+  ): any;
 
 //////////////////////////////////////////
 // exposed interface
@@ -434,6 +440,7 @@ export interface ICtxBase {
   sync: (string: string, value?: typeof syncCb | any, renderKey?: string, delay?: string) => SyncReturn;
   syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: string, delay?: string) => SyncReturn;
   syncInt: (string: string, value?: typeof syncCb | number, renderKey?: string, delay?: string) => SyncReturn;
+  syncAs: (string: string, value?: typeof asCb | any, renderKey?: string, delay?: string) => SyncReturn;
   set: (string: string, value: any, renderKey?: string, delay?: string) => void;
   setBool: (string: string, renderKey?: string, delay?: string) => void;
   readonly settings: IAnyObj;

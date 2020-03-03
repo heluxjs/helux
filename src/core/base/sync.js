@@ -1,6 +1,6 @@
 
 import ccContext from '../../cc-context';
-import { MOCKE_KEY, SYNC } from '../../support/constant';
+import { SYNC } from '../../support/constant';
 import buildMockEvent from './build-mock-event';
 import extractStateByCcsync from '../state/extract-state-by-ccsync';
 import changeRefState from '../state/change-ref-state';
@@ -12,14 +12,8 @@ export default function (spec, ref, e) {
   const refCtx = ref.ctx;
   const refModule = refCtx.module;
 
-  let mockE = null;
-  if (spec[MOCKE_KEY]) {
-    mockE = spec;
-  } else {//可能是来自$$sync生成的setter调用
-    mockE = buildMockEvent(spec, e, refCtx);
-  }
-
-  if (!mockE) return;//参数无效
+  let mockE = buildMockEvent(spec, e, refCtx);
+  if (!mockE) return;//参数无效 例如 <input onChange={this.sync}/> 导致
 
   const currentTarget = mockE.currentTarget;
   const { dataset, value, extraState, hasSyncCb } = currentTarget;
