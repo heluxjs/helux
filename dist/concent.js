@@ -1254,7 +1254,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.176-test14',
+      version: '1.5.177',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -5780,6 +5780,13 @@
       okeys$b = okeys;
   var cachedLocation = '';
   var clearShadowRefTimer = 0;
+  var shawRefExpireTime = 10000; // ms
+
+  /** 以防用户长时间打开debugger调试照成clearShadowRef误判，给用户已给重写shawRefExpireTime的机会 */
+
+  function setShawRefExpireTime(t) {
+    shawRefExpireTime = t;
+  }
 
   function tryClearShadowRef(clearShadowRef) {
     if (clearShadowRef && !clearShadowRefTimer) {
@@ -5792,7 +5799,7 @@
             // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
             // 利用double-invoking并不会触发didMount的特性，来做此检测
 
-            if (!ref.__$$isMounted && now - ref.ctx.initTime > 10000) {
+            if (!ref.__$$isMounted && now - ref.ctx.initTime > shawRefExpireTime) {
               beforeUnmount(ref);
               justTip$1("shadow ref" + ref.ctx.ccUniqueKey + " was cleared");
             }
@@ -5894,7 +5901,9 @@
         _ref2$reComputed = _ref2.reComputed,
         reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed,
         _ref2$clearShadowRef = _ref2.clearShadowRef,
-        clearShadowRef = _ref2$clearShadowRef === void 0 ? true : _ref2$clearShadowRef;
+        clearShadowRef = _ref2$clearShadowRef === void 0 ? true : _ref2$clearShadowRef,
+        _ref2$shawRefExpireTi = _ref2.shawRefExpireTime,
+        shawRefExpireTime = _ref2$shawRefExpireTi === void 0 ? 10000 : _ref2$shawRefExpireTi;
 
     var canStartup = true;
 
@@ -5952,6 +5961,7 @@
       ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
 
       configPlugins(plugins);
+      setShawRefExpireTime(shawRefExpireTime);
       tryClearShadowRef(clearShadowRef);
     } catch (err) {
       if (errorHandler) errorHandler(err);else throw err;
