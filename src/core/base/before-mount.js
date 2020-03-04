@@ -5,18 +5,20 @@ import ccContext from '../../cc-context';
 const { safeGetObjectFromObject, okeys, justWarning } = util;
 const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
 
-export default function (ref, setup, bindCtxToMethod) {
-  ref.__$$isUnmounted = false;
-  ref.__$$isBF = true;// isBeforeFirstRender
-  
+export default function (ref, setup, bindCtxToMethod, isMounted = false) {
   const ctx = ref.ctx;
+
+  ref.__$$isUnmounted = false;// 未卸载不代表已挂载，在willMount时机才置为true
+  ref.__$$isMounted = isMounted;// 未挂载，在didMount时机才置为true, 默认初始值是false
+  ref.__$$isBF = true;// isBeforeFirstRender
+
   ctx.__$$isBSe = true;// isBeforeSetup
   const { connectedReducer, moduleReducer, dispatch, connect, module } = ctx;
   const connectedModules = okeys(connect);
 
   const allModules = connectedModules.slice();
   if (!allModules.includes(module)) allModules.push(module);
-  else{
+  else {
     justWarning(`module[${module}] is in belongTo and connect both, it will cause redundant render.`);
   }
 
@@ -24,9 +26,9 @@ export default function (ref, setup, bindCtxToMethod) {
   //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
     let reducerObj;
-    if(m === module){
+    if (m === module) {
       reducerObj = moduleReducer;
-    }else{
+    } else {
       reducerObj = safeGetObjectFromObject(connectedReducer, m);
     }
 

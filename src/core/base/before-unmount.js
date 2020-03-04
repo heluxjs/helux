@@ -19,12 +19,17 @@ export default function (ref) {
   //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
   ref.__$$isUnmounted = true;
   const ctx = ref.ctx;
-  const { eid_effectReturnCb_, eid_effectPropsReturnCb_ } = ctx.effectMeta;
-
-  executeClearCb(eid_effectReturnCb_, ctx);
-  executeClearCb(eid_effectPropsReturnCb_, ctx);
-
   const { ccUniqueKey, ccClassKey, renderKey } = ctx;
-  ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
+
+  // 配合startup里tryClearShadowRef逻辑，正常情况下只有挂载了组件才会有effect等相关定义
+  // shawRef的卸载可能会走到这里
+  if (ref.__$$isMounted) {
+    const { eid_effectReturnCb_, eid_effectPropsReturnCb_ } = ctx.effectMeta;
+  
+    executeClearCb(eid_effectReturnCb_, ctx);
+    executeClearCb(eid_effectPropsReturnCb_, ctx);
+  
+    ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
+  }
   unsetRef(ccClassKey, ccUniqueKey, renderKey);
 }

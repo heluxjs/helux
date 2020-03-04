@@ -808,6 +808,8 @@ interface RunOptions {
   watchImmediate?: boolean;// default is false
   reComputed?: boolean;// default is true
   alwaysGiveState?: boolean;// default is true
+  clearShadowRef?: boolean;// default is true, but this will not effect when in production mode
+  shawRefExpireTime?: number;// default is 10000
 }
 
 export interface IActionCtxBase {

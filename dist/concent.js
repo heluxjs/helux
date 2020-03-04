@@ -1254,7 +1254,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.176',
+      version: '1.5.176-test14',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2443,7 +2443,9 @@
     var refState = targetRef.state,
         refCtx = targetRef.ctx;
 
-    if (targetRef.__$$isUnmounted === true || stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
+    if (targetRef.__$$isUnmounted === true || // 已卸载
+    targetRef.__$$isMounted === false || // 还未挂载上
+    stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
       if (reactCallback) reactCallback(refState);
       return next && next(RENDER_NO_OP$1, state);
@@ -4953,11 +4955,18 @@
       _module_fnNames_ = _ccContext$reducer._module_fnNames_,
       _caller = _ccContext$reducer._caller,
       runtimeVar$3 = ccContext.runtimeVar;
-  function beforeMount (ref, setup, bindCtxToMethod) {
-    ref.__$$isUnmounted = false;
-    ref.__$$isBF = true; // isBeforeFirstRender
+  function beforeMount (ref, setup, bindCtxToMethod, isMounted) {
+    if (isMounted === void 0) {
+      isMounted = false;
+    }
 
     var ctx = ref.ctx;
+    ref.__$$isUnmounted = false; // 未卸载不代表已挂载，在willMount时机才置为true
+
+    ref.__$$isMounted = isMounted; // 未挂载，在didMount时机才置为true, 默认初始值是false
+
+    ref.__$$isBF = true; // isBeforeFirstRender
+
     ctx.__$$isBSe = true; // isBeforeSetup
 
     var connectedReducer = ctx.connectedReducer,
@@ -5169,6 +5178,7 @@
 
   function didMount (ref) {
     ref.__$$isBF = false;
+    ref.__$$isMounted = true;
     var _ref$ctx = ref.ctx,
         module = _ref$ctx.module,
         ccClassKey = _ref$ctx.ccClassKey,
@@ -5245,15 +5255,20 @@
     //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
     ref.__$$isUnmounted = true;
     var ctx = ref.ctx;
-    var _ctx$effectMeta = ctx.effectMeta,
-        eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_,
-        eid_effectPropsReturnCb_ = _ctx$effectMeta.eid_effectPropsReturnCb_;
-    executeClearCb(eid_effectReturnCb_, ctx);
-    executeClearCb(eid_effectPropsReturnCb_, ctx);
     var ccUniqueKey = ctx.ccUniqueKey,
         ccClassKey = ctx.ccClassKey,
-        renderKey = ctx.renderKey;
-    offEventHandlersByCcUniqueKey(ccUniqueKey);
+        renderKey = ctx.renderKey; // 配合startup里tryClearShadowRef逻辑，正常情况下只有挂载了组件才会有effect等相关定义
+    // shawRef的卸载可能会走到这里
+
+    if (ref.__$$isMounted) {
+      var _ctx$effectMeta = ctx.effectMeta,
+          eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_,
+          eid_effectPropsReturnCb_ = _ctx$effectMeta.eid_effectPropsReturnCb_;
+      executeClearCb(eid_effectReturnCb_, ctx);
+      executeClearCb(eid_effectPropsReturnCb_, ctx);
+      offEventHandlersByCcUniqueKey(ccUniqueKey);
+    }
+
     unsetRef(ccClassKey, ccUniqueKey, renderKey);
   }
 
@@ -5761,8 +5776,31 @@
   }
 
   var justTip$1 = justTip,
-      bindToWindow$1 = bindToWindow;
+      bindToWindow$1 = bindToWindow,
+      okeys$b = okeys;
   var cachedLocation = '';
+  var clearShadowRefTimer = 0;
+
+  function tryClearShadowRef(clearShadowRef) {
+    if (clearShadowRef && !clearShadowRefTimer) {
+      if (process && process.env && "development" === 'production') ; else {
+        clearShadowRefTimer = setInterval(function () {
+          var now = Date.now();
+          var refs = ccContext.refs;
+          okeys$b(refs).forEach(function (key) {
+            var ref = refs[key]; // 初始化后，大于10秒没有挂载的组件，当作是strict-mode下的双调用导致产生的一个多余的ref
+            // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
+            // 利用double-invoking并不会触发didMount的特性，来做此检测
+
+            if (!ref.__$$isMounted && now - ref.ctx.initTime > 10000) {
+              beforeUnmount(ref);
+              justTip$1("shadow ref" + ref.ctx.ccUniqueKey + " was cleared");
+            }
+          });
+        }, 5000);
+      }
+    }
+  }
 
   function checkStartup(err) {
     var errStack = err.stack;
@@ -5854,7 +5892,9 @@
         _ref2$alwaysGiveState = _ref2.alwaysGiveState,
         alwaysGiveState = _ref2$alwaysGiveState === void 0 ? true : _ref2$alwaysGiveState,
         _ref2$reComputed = _ref2.reComputed,
-        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed;
+        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed,
+        _ref2$clearShadowRef = _ref2.clearShadowRef,
+        clearShadowRef = _ref2$clearShadowRef === void 0 ? true : _ref2$clearShadowRef;
 
     var canStartup = true;
 
@@ -5912,13 +5952,14 @@
       ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
 
       configPlugins(plugins);
+      tryClearShadowRef(clearShadowRef);
     } catch (err) {
       if (errorHandler) errorHandler(err);else throw err;
     }
   }
 
   var isPJO$8 = isPJO,
-      okeys$b = okeys,
+      okeys$c = okeys,
       isObjectNull$2 = isObjectNull,
       evalState$3 = evalState;
 
@@ -5979,7 +6020,7 @@
     }; // traversal moduleNames
 
 
-    okeys$b(store).forEach(function (m) {
+    okeys$c(store).forEach(function (m) {
       return buildStoreConf(m, store[m]);
     }); // push by configure api
 
@@ -6311,9 +6352,12 @@
         _connect = _mapRegistrationInfo._connect;
 
     var hookRef;
+    var isMounted = false;
 
     if (ref) {
       //重利用此ref
+      isMounted = true; //此处设置为true!!! 防止clearShadowRef误清理
+
       var _ref$ctx = ref.ctx,
           isSingle = _ref$ctx.isSingle,
           ccKey = _ref$ctx.ccKey,
@@ -6344,7 +6388,7 @@
 
     refCtx.extra = extra; // attach extra before setup process
 
-    beforeMount(hookRef, setup, bindCtxToMethod); // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
+    beforeMount(hookRef, setup, bindCtxToMethod, isMounted); // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
 
     refKeyContainer.current = hookRef.ctx.ccUniqueKey; // rewrite useRef for CcHook
 
@@ -6404,7 +6448,7 @@
     } else {
       hookRef = ccUkey_ref_$4[refKeyContainer.current];
 
-      if (!hookRef && Date.now() - ccContext.info.latestStartupTime < 1000) {
+      if (!hookRef) {
         // single file demo in hot reload mode
         hookRef = cref();
       } else {

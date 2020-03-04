@@ -51,12 +51,13 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   );
 
   let hookRef;
+  let isMounted = false;
   if (ref) {//重利用此ref
+    isMounted = true;//此处设置为true!!! 防止clearShadowRef误清理
     const { isSingle, ccKey, ccUniqueKey } = ref.ctx;
     setRef(ref, isSingle, _ccClassKey, ccKey, ccUniqueKey);//单独调用一下此接口记录ref
     hookRef = ref;
   } else {
-
     hookRef = new CcHook(hookState, hookSetter, props);
 
     const params = Object.assign({}, regOpt, {
@@ -74,7 +75,7 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
   refCtx.extra = extra;// attach extra before setup process
-  beforeMount(hookRef, setup, bindCtxToMethod);
+  beforeMount(hookRef, setup, bindCtxToMethod, isMounted);
 
   // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
   refKeyContainer.current = hookRef.ctx.ccUniqueKey;
@@ -117,7 +118,7 @@ export default function useConcent(registerOption, ccClassKey){
     hookRef = cref();
   } else {
     hookRef = ccUkey_ref_[refKeyContainer.current];
-    if (!hookRef && Date.now() - ccContext.info.latestStartupTime < 1000) {// single file demo in hot reload mode
+    if (!hookRef) {// single file demo in hot reload mode
       hookRef = cref();
     } else {
       const refCtx = hookRef.ctx;

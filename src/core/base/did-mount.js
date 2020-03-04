@@ -3,6 +3,7 @@ import triggerSetupEffect from './trigger-setup-effect';
 
 export default function (ref) {
   ref.__$$isBF = false;
+  ref.__$$isMounted = true;
 
   const { module, ccClassKey, ccUniqueKey, onEvents } = ref.ctx;
 

@@ -8,6 +8,7 @@ const {
 } = ccContext;
 
 export default function (ccClassKey, ccUniqueKey, renderKey) {
+
   if (runtimeVar.isDebug) {
     console.log(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
   }
