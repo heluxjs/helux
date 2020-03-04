@@ -74,7 +74,7 @@ interface IComputedFnDesc<Fn extends typeof computedFn> {
   depKeys?: string[];
 }
 // 不在IComputedFnDesc扩展 lazy?:boolean, 新增一个ILazyComputedFnDesc， 以方便ComputedValType推到具体的计算字段对应在容器里的值类型
-interface ILazyComputedFnDesc<Fn extends typeof computedFn> {
+interface ILazyComputedFnDesc<Fn extends typeof lazyComputedFn> {
   fn: Fn;
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
   compare?: boolean;
@@ -148,21 +148,37 @@ type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 type RefComputedFn<FnCtx extends IFnCtxBase, CuRet, RefFullState extends IAnyObj = {}> = (
   oldState: RefFullState,
   newState: RefFullState,
-  fnCtx: FnCtx,//user decide it is IFnCtx or IFnCtxM
+  fnCtx: FnCtx,
 ) => CuRet;
 
 type RefWatchFn<FnCtx extends IFnCtxBase, RefFullState extends IAnyObj = {}> = (
   oldState: RefFullState,
   newState: RefFullState,
-  fnCtx: FnCtx,//user decide it is IFnCtx or IFnCtxBase
+  fnCtx: FnCtx,
 ) => boolean | void;
 
 declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
   oldVal: any,
   newVal: any,
-  fnCtx: FnCtx,//user decide it is IFnCtx or IFnCtxM
+  fnCtx: FnCtx,
 ): any;
 type GetComputedFn<T> = <FnCtx extends IFnCtxBase = IFnCtxBase>(
+  oldVal: any,
+  newVal: any,
+  fnCtx: FnCtx,
+) => T;
+
+type RefLazyComputedFn<FnCtx extends ILazyFnCtxBase, CuRet, RefFullState extends IAnyObj = {}> = (
+  oldState: RefFullState,
+  newState: RefFullState,
+  fnCtx: FnCtx,
+) => CuRet;
+declare function lazyComputedFn<FnCtx extends ILazyFnCtxBase = ILazyFnCtxBase>(
+  oldVal: any,
+  newVal: any,
+  fnCtx: FnCtx,
+): any;
+type GetLazyComputedFn<T> = <FnCtx extends ILazyFnCtxBase = ILazyFnCtxBase>(
   oldVal: any,
   newVal: any,
   fnCtx: FnCtx,
@@ -304,6 +320,23 @@ type MultiComputed = {
 declare function refCtxComputed(multiComputed: MultiComputed): void;
 declare function refCtxComputed(multiFn: (ctx: ICtxBase) => MultiComputed): void;
 
+
+declare function refCtxLazyComputed(retKey: string, fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean): void;
+declare function refCtxLazyComputed(retKey: string, fnDesc: { fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean }): void;
+declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>
+  (retKey: string, fn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean): void;
+declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>
+  (retKey: string, fnDesc: { computedFn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean }): void;
+type MultiLazyComputed = {
+  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: ILazyFnCtxBase) => any) | {
+    fn: (oldVal: any, newVal: any, fnCtx: ILazyFnCtxBase) => any,
+    depKeys?: string[],
+    compare?: boolean,
+  }
+}
+declare function refCtxLazyComputed(multiComputed: MultiLazyComputed): void;
+declare function refCtxLazyComputed(multiFn: (ctx: ICtxBase) => MultiLazyComputed): void;
+
 type VorB = void | boolean;
 /**
  * 
@@ -411,7 +444,7 @@ export interface ICtxBase {
   readonly reducer: IAnyFnInObj;
 
   computed: typeof refCtxComputed;
-  lazyComputed: typeof refCtxComputed;
+  lazyComputed: typeof refCtxLazyComputed;
   watch: typeof refCtxWatch;
   effect: typeof refCtxEffect;
   effectProps: typeof refCtxEffect;
@@ -591,12 +624,9 @@ export interface ICtxDefault
 type GetFnCtxCommit<ModuleState> = <PS extends Partial<ModuleState>>(partialState: PS) => void;
 type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
 
-// to constrain IFnCtx interface series shape
-export interface IFnCtxBase {
+export interface ILazyFnCtxBase{
   retKey: string;
   isFirstCall: boolean;
-  callInfo: { payload: IAnyObj, renderKey: string, delay: number, module:string, fnName:string };
-  commit: GetFnCtxCommit<any>;
   commitCu: GetFnCtxCommitCu<any>;
   setted: string[];
   changed: string[];
@@ -605,6 +635,12 @@ export interface IFnCtxBase {
   oldState: any;
   committedState: IAnyObj;
   refCtx: ICtxBase;
+}
+
+// to constrain IFnCtx interface series shape
+export interface IFnCtxBase extends ILazyFnCtxBase{
+  commit: GetFnCtxCommit<any>;
+  commitCu: GetFnCtxCommitCu<any>;
 }
 // M, means need module associate generic type
 export interface IFnCtx<RefCtx extends ICtxBase = ICtxBase, FullState = {}, Computed = {}> extends IFnCtxBase {
@@ -1082,10 +1118,10 @@ export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFn
 export function defComputed<CuRet>
 (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
 
-export function defLazyComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
-(fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean): ILazyComputedFnDesc<GetComputedFn<CuRet>>;
+export function defLazyComputed<V extends IAnyObj, CuRet, F extends ILazyFnCtxBase = ILazyFnCtxBase>
+(fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
 export function defLazyComputed<CuRet>
-(fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): ILazyComputedFnDesc<GetComputedFn<CuRet>>;
+(fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: ILazyFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
 
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
 
