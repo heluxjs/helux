@@ -1,3 +1,50 @@
+#### 2020-03-03
+1.5.174 发布
+* feature: 新增全局api `defLazyComputed` 和实例api`ctx.lazyComputed`
+```js
+// 区别于defComputed，defLazyComputed定义的函数只有在用到的时候才会触发计算
+
+// code in models/foo/computed
+const normalOne = defComputed(({name})=>{
+  return `name_`+Date.now();
+}, ['name']);//当name变化时，触发计算
+
+const lazyOne = defLazyComputed(({name})=>{
+  return `name_`+Date.now();
+}, ['name']);//当name变化时，只是标记需要重计算，但并不会真正触发计算
+
+
+// code in pages/SomeView.js
+function View(){
+  const ctx = useConcent('login');
+  const { moduleComputed } = ctx;
+  const normalOne = moduleComputed.normalOne;//可以直接取到
+  const lazyOne = moduleComputed.lazyOne();//是一个函数，必需调用一下
+}
+```
+* feature: 新增实例api `ctx.syncAs`
+```js
+  //绑定一个固定的值
+  <input value={user.name} onChange={syncAs("login/user.name", 'xxxx')} />
+
+  //绑定一个函数，对输入值做处理并返回
+  const asCb = (value)=> `${value}_suffix`;
+  <input value={user.name} onChange={syncAs("login/user.name", asCb)} />
+  // ---注意sync的cb如果需要对具体值做处理，必需返回完整的对象
+   const syncCb = (value, keyPath, syncCtx)=> {
+     const user = syncCtx.state.user;
+     user.name =  `${value}_suffix`;
+     return { user };
+   };
+  <input value={user.name} onChange={sync("login/user.name", asCb)} />
+
+  //特别地当返回值为undefined，则不会触发渲染
+  const asCb = (value)=> {
+    if(value === '666')return undefined;
+    else return `${value}_suffix`;
+  }
+```
+
 #### 2020-03-01
 1.5.173 发布
 * feature: 支持实例api `ctx.dispatch`调用`*/{fnName}`来命中所有模块的同名函数

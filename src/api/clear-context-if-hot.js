@@ -1,4 +1,4 @@
-import { clearObject, okeys } from '../support/util';
+import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
@@ -52,12 +52,12 @@ function _clearInsAssociation(recomputed = false) {
       if (m === MODULE_CC) return;
       if (computedValue[m]) {
         // !!!先清除之前建立好的依赖关系
-        ccContext.computed._computedDep[m] = { retKey_fn_: {}, stateKey_retKeys_: {}, fnCount: 0 };
+        ccContext.computed._computedDep[m] = makeCuDepDesc();
         initModuleComputed(m, computed._computedRaw[m]);
       }
       if (watchDep[m]) {
         // !!!先清除之前建立好的依赖关系
-        watchDep[m] = { retKey_fn_: {}, stateKey_retKeys_: {}, fnCount: 0 };
+        watchDep[m] = makeCuDepDesc();
         initModuleWatch(m, watch._watchRaw[m]);
       }
     });

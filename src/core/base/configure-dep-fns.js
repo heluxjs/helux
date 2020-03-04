@@ -1,4 +1,4 @@
-import { okeys, safeGetObjectFromObject, safeGetArrayFromObject, makeError, verboseInfo, isPJO, justWarning, justTip } from '../../support/util';
+import { okeys, safeGetObjectFromObject, safeGetArrayFromObject, makeError, verboseInfo, isPJO, justWarning, makeCuDepDesc } from '../../support/util';
 import { ERR, CATE_REF } from '../../support/constant';
 import ccContext from '../../cc-context';
 import uuid from './uuid';
@@ -164,9 +164,7 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
 // 映射依赖描述对象
 function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy) {
   const dep = confMeta.dep;
-  const moduleDepDesc = safeGetObjectFromObject(dep, module,
-    { retKey_fn_: {}, retKey_lazy_: {}, stateKey_retKeys_: {}, fnCount: 0 }
-  );
+  const moduleDepDesc = safeGetObjectFromObject(dep, module, makeCuDepDesc());
   const { retKey_fn_, stateKey_retKeys_, retKey_lazy_ } = moduleDepDesc;
 
   const fnDesc = { fn, immediate, compare, depKeys };

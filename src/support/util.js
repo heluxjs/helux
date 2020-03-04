@@ -52,6 +52,10 @@ export function makeError(code, extraMessage) {
   return error;
 }
 
+export function makeCuDepDesc(){
+  return { retKey_fn_: {}, retKey_lazy_:{}, stateKey_retKeys_: {}, fnCount: 0 };
+}
+
 /** make ccClassContext */
 export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys) {
   return {

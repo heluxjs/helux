@@ -41,8 +41,9 @@ export default (spec, e, refCtx) => {
       module = refModule;
     }
 
+    const mState = getState(module);
     // 布尔值需要对原来的值取反
-    const fullState = module !== refModule ? getState(module) : refState;
+    const fullState = module !== refModule ? mState : refState;
     value = type === 'bool' ? !getValueByKeyPath(fullState, keyPath) : getValFromEvent(e);
 
     //优先从spec里取，取不到的话，从e里面分析并提取
@@ -51,7 +52,8 @@ export default (spec, e, refCtx) => {
       // do nothing
     } else {
       if (typeof val === 'function') {
-        const syncRet = val(value, keyPath, { moduleState: getState(module), fullKeyPath, state: refState, refCtx });
+        // moduleState指的是所修改的目标模块的state
+        const syncRet = val(value, keyPath, { moduleState: mState, fullKeyPath, state: refState, refCtx });
 
         if (syncRet != undefined) {
           if (type === 'as') value = syncRet;// value is what cb returns;

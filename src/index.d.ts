@@ -85,6 +85,13 @@ interface IComputedFnSimpleDesc {
   compare?: boolean;
   depKeys?: string[];
 }
+interface ILazyComputedFnSimpleDesc{
+  fn: IAnyFn;
+  lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
+  compare?: boolean;
+  depKeys?: string[];
+}
+
 interface IReducerFn {
   // let configure works well, set actionCtx generic type any
   (payload: any, moduleState: any, actionCtx: IActionCtx<any, any, any, any, any>): any | Promise<any>;
@@ -97,7 +104,9 @@ export type ComputedValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> :
   (
     T[K] extends IComputedFnSimpleDesc ? (
-      T[K]['lazy'] extends true ? () => ReturnType<T[K]['fn']> : ReturnType<T[K]['fn']>
+      T[K] extends ILazyComputedFnSimpleDesc ? (
+        T[K]['lazy'] extends true ? () => ReturnType<T[K]['fn']> : ReturnType<T[K]['fn']>
+      ): ReturnType<T[K]['fn']>
     ) : never
   );
 }
@@ -341,7 +350,7 @@ declare function syncCb<Val, ModuleState, FullState extends IAnyObj | NoFullStat
     syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
   ): any;
 
-declare function asCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
+declare function asCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): any;
 // if module state is not equal full state, you need pass generic type FullState
 declare function asCb<Val, ModuleState, FullState extends IAnyObj | NoFullState = NoFullState, RefCtx extends ICtxBase = ICtxBase>
   (
@@ -432,8 +441,8 @@ export interface ICtxBase {
   reactForceUpdate: (callback?: () => void) => void;
   initState: (state: IAnyObj) => void;
   setState: typeof refCtxSetState;
-  refs: { [key: PropKey]: { current: any } };
-  useRef: (refName: PropKey) => any;//for class return ref=>{...}, for function return hookRef
+  refs: { [key: string]: { current: any } };
+  useRef: (refName: string) => any;//for class return ref=>{...}, for function return hookRef
   forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;
@@ -548,7 +557,7 @@ export interface ICtxCommon<
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   RootState extends IRootBase = IRootBase,
-  Extra extends any = any,
+  Extra extends [any, any] | [any] = [any, any],
   > extends ICtx<
   RootState, {}, {}, Props, PrivState,
   MODULE_DEFAULT, MODULE_VOID, Settings, RefComputed, {}, Extra
@@ -568,7 +577,7 @@ export interface ICtxDefault
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
   Mapped extends IAnyObj = {},
-  Extra extends any = any,
+  Extra extends [any, any] | [any] = [any, any],
   >
   extends ICtx
   <

@@ -28,8 +28,6 @@
   var CC_DISPATCHER = '$$Dispatcher';
   var CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
   var CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
-  var MOCKE_KEY = Symbol('__for_mock_event__');
-  var LAZY_KEY = Symbol('__lazy_handle_state__');
   var SIG_FN_START = 10;
   var SIG_FN_END = 11;
   var SIG_FN_QUIT = 12;
@@ -89,8 +87,6 @@
     CC_DISPATCHER: CC_DISPATCHER,
     CC_DISPATCHER_BOX: CC_DISPATCHER_BOX,
     CCSYNC_KEY: CCSYNC_KEY,
-    MOCKE_KEY: MOCKE_KEY,
-    LAZY_KEY: LAZY_KEY,
     SIG_FN_START: SIG_FN_START,
     SIG_FN_END: SIG_FN_END,
     SIG_FN_QUIT: SIG_FN_QUIT,
@@ -545,6 +541,21 @@
     }
 
     return ret;
+  }
+
+  function _getValue(obj, keys, lastKeyIndex, keyIndex) {
+    var key = keys[keyIndex];
+
+    if (lastKeyIndex === keyIndex) {
+      return obj[key];
+    } else {
+      return _getValue(obj[key], keys, lastKeyIndex, ++keyIndex);
+    }
+  }
+
+  function getValueByKeyPath(obj, keyPath) {
+    var keys = keyPath.split('.');
+    return _getValue(obj, keys, keys.length - 1, 0);
   }
 
   function getCacheDataContainer() {
@@ -1235,7 +1246,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.173',
+      version: '1.5.174',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4171,15 +4182,13 @@
   }
 
   var buildMockEvent = (function (spec, e, refCtx) {
-    var _ref;
-
     var refModule = refCtx.module,
         refState = refCtx.state;
     var ccint = false,
         ccsync = '',
         ccrkey = '',
         value = '',
-        extraState = undefined,
+        extraState = null,
         ccdelay = -1,
         isToggleBool = false;
     var syncKey = spec[CCSYNC_KEY];
@@ -4187,53 +4196,69 @@
     var hasSyncCb = false;
 
     if (syncKey !== undefined) {
-      //来自sync生成的setter函数调用
+      //来自sync生成的setter函数调用 即 sync('xxxKey')
       ccsync = syncKey;
       ccdelay = spec.delay;
-      ccrkey = spec.rkey;
+      ccrkey = spec.rkey; // type 'bool', 'val', 'int', 'as'
 
-      if (type === 'val' || type === 'int') {
-        //set value
-        ccint = type === 'int'; //convert to int
-        //优先从spec里取，取不到的话，从e里面分析并提取
+      ccint = type === 'int'; //convert to int
 
-        var val = spec.val;
+      isToggleBool = type === 'bool';
+      var keyPath, fullKeyPath, module;
 
-        if (val === undefined) {
-          value = getValFromEvent(e);
-        } else {
-          if (typeof val === 'function') {
-            var keyPath, fullKeyPath, module;
+      if (ccsync.includes('/')) {
+        var _ccsync$split = ccsync.split('/'),
+            _module = _ccsync$split[0],
+            _keyPath = _ccsync$split[1];
 
-            if (ccsync.includes('/')) {
-              var _ccsync$split = ccsync.split('/'),
-                  _module = _ccsync$split[0],
-                  _keyPath = _ccsync$split[1];
+        keyPath = _keyPath;
+        fullKeyPath = ccsync;
+        module = _module;
+      } else {
+        keyPath = ccsync;
+        fullKeyPath = refModule + "/" + keyPath;
+        module = refModule;
+      } // 布尔值需要对原来的值取反
 
-              keyPath = _keyPath;
-              fullKeyPath = ccsync;
-              module = _module;
-            } else {
-              keyPath = ccsync;
-              fullKeyPath = refModule + "/" + keyPath;
-              module = refModule;
-            }
 
-            hasSyncCb = true;
-            extraState = val(getValFromEvent(e), keyPath, {
-              moduleState: getState$1(module),
-              fullKeyPath: fullKeyPath,
-              state: refState,
-              refCtx: refCtx
-            });
+      var fullState = module !== refModule ? getState$1(module) : refState;
+      value = type === 'bool' ? !getValueByKeyPath(fullState, keyPath) : getValFromEvent(e); //优先从spec里取，取不到的话，从e里面分析并提取
+
+      var val = spec.val;
+
+      if (val === undefined) ; else {
+        if (typeof val === 'function') {
+          var syncRet = val(value, keyPath, {
+            moduleState: getState$1(module),
+            fullKeyPath: fullKeyPath,
+            state: refState,
+            refCtx: refCtx
+          });
+
+          if (syncRet != undefined) {
+            if (type === 'as') value = syncRet; // value is what cb returns;
+            else {
+                var retType = typeof syncRet;
+
+                if (retType === 'boolean') {
+                  // if return true, let hasSyncCb = false, so this cb will not block state update, and cc will extract partial state automatically
+                  // if return false, let hasSyncCb = true, but now extraState is still null, so this cb will block state update
+                  hasSyncCb = !syncRet;
+                } else if (retType === 'object') {
+                  hasSyncCb = true;
+                  extraState = syncRet;
+                } else {
+                  justWarning("syncKey[" + syncKey + "] cb result type error.");
+                }
+              }
           } else {
-            value = val;
+            if (type === 'as') hasSyncCb = true; // if syncAs return undefined, will block update
+            // else continue update and value is just extracted above
           }
+        } else {
+          value = val;
         }
-      } else if (type === 'bool') {
-        //toggle bool
-        isToggleBool = true;
-      } else return null;
+      }
     } else {
       //来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
       var se = convertToStandardEvent(e);
@@ -4260,17 +4285,20 @@
       }
     }
 
-    return _ref = {}, _ref[MOCKE_KEY] = 1, _ref.currentTarget = {
-      value: value,
-      extraState: extraState,
-      hasSyncCb: hasSyncCb,
-      dataset: {
-        ccsync: ccsync,
-        ccint: ccint,
-        ccdelay: ccdelay,
-        ccrkey: ccrkey
-      }
-    }, _ref.isToggleBool = isToggleBool, _ref;
+    return {
+      currentTarget: {
+        value: value,
+        extraState: extraState,
+        hasSyncCb: hasSyncCb,
+        dataset: {
+          ccsync: ccsync,
+          ccint: ccint,
+          ccdelay: ccdelay,
+          ccrkey: ccrkey
+        }
+      },
+      isToggleBool: isToggleBool
+    };
   });
 
   function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool) {
@@ -4368,16 +4396,8 @@
   function __sync (spec, ref, e) {
     var refCtx = ref.ctx;
     var refModule = refCtx.module;
-    var mockE = null;
-
-    if (spec[MOCKE_KEY]) {
-      mockE = spec;
-    } else {
-      //可能是来自$$sync生成的setter调用
-      mockE = buildMockEvent(spec, e, refCtx);
-    }
-
-    if (!mockE) return; //参数无效
+    var mockE = buildMockEvent(spec, e, refCtx);
+    if (!mockE) return; //参数无效 例如 <input onChange={this.sync}/> 导致
 
     var currentTarget = mockE.currentTarget;
     var dataset = currentTarget.dataset,
@@ -4691,41 +4711,63 @@
 
     if (liteLevel > 2) {
       // level 3, assign async api
-      ctx.syncBool = function (e, rkey, delay) {
+      var doSync = function doSync(e, val, rkey, delay, type) {
         var _sync$bind;
 
-        if (rkey === void 0) {
-          rkey = '';
-        }
-
-        if (delay === void 0) {
-          delay = -1;
-        }
-
-        if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = 'bool', _sync$bind.delay = delay, _sync$bind.rkey = rkey, _sync$bind), ref);
-
-        __sync({
-          type: 'bool'
-        }, e, ref);
-      };
-
-      ctx.sync = function (e, val, rkey, delay) {
-        var _sync$bind2;
-
-        if (rkey === void 0) {
-          rkey = '';
-        }
-
-        if (delay === void 0) {
-          delay = -1;
-        }
-
-        if (typeof e === 'string') return __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = 'val', _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.rkey = rkey, _sync$bind2), ref);
+        if (typeof e === 'string') return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = type, _sync$bind.val = val, _sync$bind.delay = delay, _sync$bind.rkey = rkey, _sync$bind), ref);
 
         __sync({
           type: 'val'
         }, ref, e); //allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
 
+      };
+
+      ctx.sync = function (e, val, rkey, delay) {
+        if (rkey === void 0) {
+          rkey = '';
+        }
+
+        if (delay === void 0) {
+          delay = -1;
+        }
+
+        return doSync(e, val, rkey, delay, 'val');
+      };
+
+      ctx.syncBool = function (e, val, rkey, delay) {
+        if (rkey === void 0) {
+          rkey = '';
+        }
+
+        if (delay === void 0) {
+          delay = -1;
+        }
+
+        return doSync(e, val, rkey, delay, 'bool');
+      };
+
+      ctx.syncInt = function (e, val, rkey, delay) {
+        if (rkey === void 0) {
+          rkey = '';
+        }
+
+        if (delay === void 0) {
+          delay = -1;
+        }
+
+        return doSync(e, val, rkey, delay, 'int');
+      };
+
+      ctx.syncAs = function (e, val, rkey, delay) {
+        if (rkey === void 0) {
+          rkey = '';
+        }
+
+        if (delay === void 0) {
+          delay = -1;
+        }
+
+        return doSync(e, val, rkey, delay, 'as');
       };
 
       ctx.set = function (ccsync, val, rkey, delay) {
@@ -4754,24 +4796,6 @@
         }
 
         __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'bool', _sync2.delay = delay, _sync2.rkey = rkey, _sync2), ref);
-      };
-
-      ctx.syncInt = function (e, rkey, delay) {
-        var _sync$bind3;
-
-        if (rkey === void 0) {
-          rkey = '';
-        }
-
-        if (delay === void 0) {
-          delay = -1;
-        }
-
-        if (typeof e === 'string') return __sync.bind(null, (_sync$bind3 = {}, _sync$bind3[CCSYNC_KEY] = e, _sync$bind3.type = 'int', _sync$bind3.delay = delay, _sync$bind3.rkey = rkey, _sync$bind3), ref);
-
-        __sync({
-          type: 'int'
-        }, ref, e);
       };
     }
 
