@@ -15,7 +15,6 @@ import setRef from '../ref/set-ref';
 const { ccUkey_ref_ } = ccContext;
 
 let refCursor = 1;
-const cursor_refKey_ = {};
 
 function getUsableCursor() {
   return refCursor;
@@ -35,8 +34,7 @@ function CcHook(state, hookSetter, props) {
 }
 
 // rState: resolvedState, iState: initialState
-function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
-
+function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
   // when single file demo in hmr mode trigger buildRef, rState is 0 
   // so here call evalState again
   const state = rState || evalState(iState);
@@ -51,15 +49,25 @@ function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, 
   const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
     module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, storedKeys, connect, true
   );
-  const hookRef = new CcHook(hookState, hookSetter, props);
-  
-  const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK, cursor,
-    ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
-  });
-  
-  hookRef.props = props;// keep shape same as class
-  buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
+
+  let hookRef;
+  if (ref) {//重利用此ref
+    const { isSingle, ccKey, ccUniqueKey } = ref.ctx;
+    setRef(ref, isSingle, _ccClassKey, ccKey, ccUniqueKey);//单独调用一下此接口记录ref
+    hookRef = ref;
+  } else {
+
+    hookRef = new CcHook(hookState, hookSetter, props);
+
+    const params = Object.assign({}, regOpt, {
+      module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK,
+      ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
+    });
+    hookRef.props = props;// keep shape same as class
+    buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
+  }
+
+
   hookRef.ctx.reactSetState = hf.makeRefSetState(hookRef);
   hookRef.ctx.reactForceUpdate = hf.makeRefForceUpdate(hookRef);
 
@@ -68,7 +76,8 @@ function buildRef(cursor, rState, iState, regOpt, hookState, hookSetter, props, 
   refCtx.extra = extra;// attach extra before setup process
   beforeMount(hookRef, setup, bindCtxToMethod);
 
-  cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
+  // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
+  refKeyContainer.current = hookRef.ctx.ccUniqueKey;
 
   // rewrite useRef for CcHook
   refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
@@ -93,20 +102,21 @@ export default function useConcent(registerOption, ccClassKey){
   }
 
   const cursor = getUsableCursor();
-  const [curCursor] = reactUseState(cursor);
-  const isFirstRendered = curCursor === cursor;
+  const [lockedCursor] = reactUseState(cursor);
+  const isFirstRendered = lockedCursor === cursor;
 
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
 
-  const cref = () => buildRef(curCursor, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
+  const refKeyContainer = React.useRef(null);
+
+  const cref = (ref) => buildRef(ref, refKeyContainer, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
   let hookRef;
 
   if (isFirstRendered) {
     hookRef = cref();
   } else {
-    const refKey = cursor_refKey_[curCursor];
-    hookRef = ccUkey_ref_[refKey];
+    hookRef = ccUkey_ref_[refKeyContainer.current];
     if (!hookRef && Date.now() - ccContext.info.latestStartupTime < 1000) {// single file demo in hot reload mode
       hookRef = cref();
     } else {
@@ -125,15 +135,16 @@ export default function useConcent(registerOption, ccClassKey){
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       didUpdate(hookRef);
     }
+    refCtx.__boundSetState = hookSetter;
+    refCtx.__boundForceUpdate = hookSetter;
   });
 
   //after first render
   effectHandler(() => {// mock componentDidMount
-    // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为
+    // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为，此前已走了一次beforeUnmount
+    // 需要走重新初始化当前组件的整个流程，只是不需要再次创建ref
     if (hookRef.isFirstRendered === false) {
-      // 记录一下丢失的ref，因为上面不再会走buildRefCtx beforeMount流程
-      const { isSingle, ccClassKey, ccKey, ccUniqueKey } = hookRef.ctx;
-      setRef(hookRef, isSingle, ccClassKey, ccKey, ccUniqueKey);
+      cref(hookRef);
     } else {
       hookRef.isFirstRendered = false;
       didMount(hookRef);
