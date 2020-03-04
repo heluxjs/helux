@@ -212,6 +212,14 @@
     error.code = code;
     return error;
   }
+  function makeCuDepDesc() {
+    return {
+      retKey_fn_: {},
+      retKey_lazy_: {},
+      stateKey_retKeys_: {},
+      fnCount: 0
+    };
+  }
   /** make ccClassContext */
 
   function makeCcClassContext(module, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys) {
@@ -1246,7 +1254,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.174',
+      version: '1.5.175',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1915,12 +1923,7 @@
 
   function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy) {
     var dep = confMeta.dep;
-    var moduleDepDesc = safeGetObjectFromObject(dep, module, {
-      retKey_fn_: {},
-      retKey_lazy_: {},
-      stateKey_retKeys_: {},
-      fnCount: 0
-    });
+    var moduleDepDesc = safeGetObjectFromObject(dep, module, makeCuDepDesc());
     var retKey_fn_ = moduleDepDesc.retKey_fn_,
         stateKey_retKeys_ = moduleDepDesc.stateKey_retKeys_,
         retKey_lazy_ = moduleDepDesc.retKey_lazy_;
@@ -4218,18 +4221,20 @@
         keyPath = ccsync;
         fullKeyPath = refModule + "/" + keyPath;
         module = refModule;
-      } // 布尔值需要对原来的值取反
+      }
 
+      var mState = getState$1(module); // 布尔值需要对原来的值取反
 
-      var fullState = module !== refModule ? getState$1(module) : refState;
+      var fullState = module !== refModule ? mState : refState;
       value = type === 'bool' ? !getValueByKeyPath(fullState, keyPath) : getValFromEvent(e); //优先从spec里取，取不到的话，从e里面分析并提取
 
       var val = spec.val;
 
       if (val === undefined) ; else {
         if (typeof val === 'function') {
+          // moduleState指的是所修改的目标模块的state
           var syncRet = val(value, keyPath, {
-            moduleState: getState$1(module),
+            moduleState: mState,
             fullKeyPath: fullKeyPath,
             state: refState,
             refCtx: refCtx
@@ -5680,21 +5685,13 @@
 
         if (computedValue[m]) {
           // !!!先清除之前建立好的依赖关系
-          ccContext.computed._computedDep[m] = {
-            retKey_fn_: {},
-            stateKey_retKeys_: {},
-            fnCount: 0
-          };
+          ccContext.computed._computedDep[m] = makeCuDepDesc();
           initModuleComputed(m, computed._computedRaw[m]);
         }
 
         if (watchDep[m]) {
           // !!!先清除之前建立好的依赖关系
-          watchDep[m] = {
-            retKey_fn_: {},
-            stateKey_retKeys_: {},
-            fnCount: 0
-          };
+          watchDep[m] = makeCuDepDesc();
           initModuleWatch(m, watch._watchRaw[m]);
         }
       });

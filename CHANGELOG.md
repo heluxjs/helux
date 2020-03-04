@@ -1,3 +1,7 @@
+#### 2020-03-04
+1.5.175 发布
+* fix: 在线IDE热加载时，模块依赖描述对象里丢失`retKey_lazy_`属性
+
 #### 2020-03-03
 1.5.174 发布
 * feature: 新增全局api `defLazyComputed` 和实例api`ctx.lazyComputed`
