@@ -407,8 +407,9 @@ function HookCounter(){
 ```
 
 ## ⚖️在线比较
-* [基于hook的计算器](https://codesandbox.io/s/react-calculator-84f2m) **vs** [基于concent的计算器](https://codesandbox.io/s/react-calculator-8hvqw)
-* [基于hook的查询列表](https://codesandbox.io/s/elastic-dhawan-qw7m4) **vs** [基于concent的查询列表](https://codesandbox.io/s/query-react-list-00mkd)& [基于concent的共享状态查询列表](https://codesandbox.io/s/query-react-list-shared-state-l3fhb)
+* [concent代办列表mvc](https://codesandbox.io/s/todoapp-react-concent-fvgvc) **vs** [redux&hook代办列表mvc](https://codesandbox.io/s/github/blacksonic/todoapp-react-hooks)
+* [基于concent的计算器](https://codesandbox.io/s/react-calculator-8hvqw) **vs**  [基于hook的计算器](https://codesandbox.io/s/react-calculator-84f2m)
+* [基于concent的查询列表](https://codesandbox.io/s/query-react-list-00mkd)& [基于concent的共享状态查询列表](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [基于hook的查询列表](https://codesandbox.io/s/elastic-dhawan-qw7m4)
 
 
 ## 💻在线示例

@@ -412,8 +412,9 @@ function HookCounter(){
 ```
 
 ## ⚖️Some online comparative examples
-* [traditional hook calculator](https://codesandbox.io/s/react-calculator-84f2m) **vs** [concent calculator](https://codesandbox.io/s/react-calculator-8hvqw)
-* [traditional hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4) **vs** [concent query list](https://codesandbox.io/s/query-react-list-00mkd)& [concent shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb)
+* [concent todo mvc](https://codesandbox.io/s/todoapp-react-concent-fvgvc) **vs** [redux&hook todo mvc](https://codesandbox.io/s/github/blacksonic/todoapp-react-hooks)
+* [concent calculator](https://codesandbox.io/s/react-calculator-8hvqw) **vs** [traditional hook calculator](https://codesandbox.io/s/react-calculator-84f2m)
+* [concent query list](https://codesandbox.io/s/query-react-list-00mkd)& [concent shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [traditional hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
 
 
 ## 💻Some online examples
