@@ -1254,7 +1254,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.177',
+      version: '1.5.178',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4837,36 +4837,24 @@
         });
       };
 
-      var on = function on(inputEvent, handler, delayToDidMount) {
-        if (delayToDidMount === void 0) {
-          delayToDidMount = true;
-        }
-
+      ctx.on = function (inputEvent, handler) {
         //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
         var _ev$getEventItem2 = getEventItem(inputEvent),
             event = _ev$getEventItem2.name,
             _ev$getEventItem2$ide = _ev$getEventItem2.identity,
             identity = _ev$getEventItem2$ide === void 0 ? null : _ev$getEventItem2$ide;
 
-        if (delayToDidMount) {
-          //cache to onEvents firstly, cc will bind them in didMount life cycle
-          onEvents.push({
-            event: event,
-            handler: handler,
-            identity: identity
-          });
-          return;
-        }
-
-        bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
-      };
-
-      ctx.on = on; // on handler been effective in didMount by default, so user can call it in setup safely
-      // but if user want [on-op] been effective immediately, user can call onDirectly, but it may be dangerous!
-      // or on(ev, fn, rkey, false)
-
-      ctx.onDirectly = function (event, handler) {
-        on(event, handler, false);
+        onEvents.push({
+          event: event,
+          handler: handler,
+          identity: identity
+        }); // 不再支持delayToDidMount参数，考虑异步渲染的安全性，一定是didMount阶段开始监听
+        // if (delayToDidMount) {
+        //   onEvents.push({ event, handler, identity });
+        //   //cache to onEvents firstly, cc will bind them in didMount life cycle
+        //   return;
+        // }
+        // ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
       };
     }
 
@@ -5790,22 +5778,23 @@
 
   function tryClearShadowRef(clearShadowRef) {
     if (clearShadowRef && !clearShadowRefTimer) {
-      if (process && process.env && "development" === 'production') ; else {
-        clearShadowRefTimer = setInterval(function () {
-          var now = Date.now();
-          var refs = ccContext.refs;
-          okeys$b(refs).forEach(function (key) {
-            var ref = refs[key]; // 初始化后，大于10秒没有挂载的组件，当作是strict-mode下的双调用导致产生的一个多余的ref
-            // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
-            // 利用double-invoking并不会触发didMount的特性，来做此检测
+      // if (process && process.env && "development" === 'production') {
+      //   // no need to run this timer in production mode
+      // } else { }
+      clearShadowRefTimer = setInterval(function () {
+        var now = Date.now();
+        var refs = ccContext.refs;
+        okeys$b(refs).forEach(function (key) {
+          var ref = refs[key]; // 初始化后，大于10秒没有挂载的组件，当作是strict-mode下的双调用导致产生的一个多余的ref
+          // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
+          // 利用double-invoking并不会触发didMount的特性，来做此检测
 
-            if (!ref.__$$isMounted && now - ref.ctx.initTime > shawRefExpireTime) {
-              beforeUnmount(ref);
-              justTip$1("shadow ref" + ref.ctx.ccUniqueKey + " was cleared");
-            }
-          });
-        }, 5000);
-      }
+          if (!ref.__$$isMounted && now - ref.ctx.initTime > shawRefExpireTime) {
+            beforeUnmount(ref);
+            justTip$1("shadow ref" + ref.ctx.ccUniqueKey + " was cleared");
+          }
+        });
+      }, 5000);
     }
   }
 
