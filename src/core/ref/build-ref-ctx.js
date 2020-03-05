@@ -5,7 +5,6 @@ import {
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
-import setRef from './set-ref';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
 import changeRefState from '../state/change-ref-state';
@@ -95,9 +94,6 @@ export default function (ref, params, liteLevel = 5) {
   const mergedState = Object.assign({}, state, refStoredState, moduleState);
   ref.state = mergedState;
   const stateKeys = okeys(mergedState);
-
-  // record ref
-  setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
 
   // record ccClassKey
   const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, module);

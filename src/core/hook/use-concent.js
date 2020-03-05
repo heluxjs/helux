@@ -10,7 +10,6 @@ import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState } from '../../support/util';
-import setRef from '../ref/set-ref';
 
 const { ccUkey_ref_ } = ccContext;
 
@@ -51,11 +50,7 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   );
 
   let hookRef;
-  let isMounted = false;
   if (ref) {//重利用此ref
-    isMounted = true;//此处设置为true!!! 防止clearShadowRef误清理
-    const { isSingle, ccKey, ccUniqueKey } = ref.ctx;
-    setRef(ref, isSingle, _ccClassKey, ccKey, ccUniqueKey);//单独调用一下此接口记录ref
     hookRef = ref;
   } else {
     hookRef = new CcHook(hookState, hookSetter, props);
@@ -75,7 +70,7 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
   refCtx.extra = extra;// attach extra before setup process
-  beforeMount(hookRef, setup, bindCtxToMethod, isMounted);
+  beforeMount(hookRef, setup, bindCtxToMethod);
 
   // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
   refKeyContainer.current = hookRef.ctx.ccUniqueKey;
@@ -144,13 +139,15 @@ export default function useConcent(registerOption, ccClassKey){
   effectHandler(() => {// mock componentDidMount
     // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为，此前已走了一次beforeUnmount
     // 需要走重新初始化当前组件的整个流程，只是不需要再次创建ref
-    if (hookRef.isFirstRendered === false) {
-      cref(hookRef);
-    } else {
-      hookRef.isFirstRendered = false;
-      didMount(hookRef);
-    }
-
+    // if (hookRef.isFirstRendered === false) {
+    //   cref(hookRef);
+    // } else {
+    //   hookRef.isFirstRendered = false;
+    //   didMount(hookRef);
+    // }
+    
+    hookRef.isFirstRendered = false;
+    didMount(hookRef);
     return () => {// mock componentWillUnmount
       beforeUnmount(hookRef);
     }

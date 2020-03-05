@@ -5,11 +5,11 @@ import ccContext from '../../cc-context';
 const { safeGetObjectFromObject, okeys, justWarning } = util;
 const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
 
-export default function (ref, setup, bindCtxToMethod, isMounted = false) {
+export default function (ref, setup, bindCtxToMethod) {
   const ctx = ref.ctx;
 
   ref.__$$isUnmounted = false;// 未卸载不代表已挂载，在willMount时机才置为true
-  ref.__$$isMounted = isMounted;// 未挂载，在didMount时机才置为true, 默认初始值是false
+  ref.__$$isMounted = false;// 未挂载，在didMount时机才置为true,
   ref.__$$isBF = true;// isBeforeFirstRender
 
   ctx.__$$isBSe = true;// isBeforeSetup
