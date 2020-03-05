@@ -1254,7 +1254,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.0.19',
+      version: '1.5.179',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4134,7 +4134,7 @@
         isToggleBool = false;
     var syncKey = spec[CCSYNC_KEY];
     var type = spec.type;
-    var hasSyncCb = false;
+    var noAutoExtract = false;
 
     if (syncKey !== undefined) {
       //来自sync生成的setter函数调用 即 sync('xxxKey')
@@ -4172,6 +4172,7 @@
         if (typeof val === 'function') {
           // moduleState指的是所修改的目标模块的state
           var syncRet = val(value, keyPath, {
+            module: module,
             moduleState: mState,
             fullKeyPath: fullKeyPath,
             state: refState,
@@ -4184,18 +4185,18 @@
                 var retType = typeof syncRet;
 
                 if (retType === 'boolean') {
-                  // if return true, let hasSyncCb = false, so this cb will not block state update, and cc will extract partial state automatically
-                  // if return false, let hasSyncCb = true, but now extraState is still null, so this cb will block state update
-                  hasSyncCb = !syncRet;
+                  // if return true, let noAutoExtract = false, so this cb will not block state update, and cc will extract partial state automatically
+                  // if return false, let noAutoExtract = true, but now extraState is still null, so this cb will block state update
+                  noAutoExtract = !syncRet;
                 } else if (retType === 'object') {
-                  hasSyncCb = true;
+                  noAutoExtract = true;
                   extraState = syncRet;
                 } else {
                   justWarning("syncKey[" + syncKey + "] cb result type error.");
                 }
               }
           } else {
-            if (type === 'as') hasSyncCb = true; // if syncAs return undefined, will block update
+            if (type === 'as') noAutoExtract = true; // if syncAs return undefined, will block update
             // else continue update and value is just extracted above
           }
         } else {
@@ -4232,7 +4233,7 @@
       currentTarget: {
         value: value,
         extraState: extraState,
-        hasSyncCb: hasSyncCb,
+        noAutoExtract: noAutoExtract,
         dataset: {
           ccsync: ccsync,
           ccint: ccint,
@@ -4346,7 +4347,7 @@
     var dataset = currentTarget.dataset,
         value = currentTarget.value,
         extraState = currentTarget.extraState,
-        hasSyncCb = currentTarget.hasSyncCb;
+        noAutoExtract = currentTarget.noAutoExtract;
     if (e && e.stopPropagation) e.stopPropagation();
     var ccsync = dataset.ccsync,
         ccint = dataset.ccint,
@@ -4364,7 +4365,7 @@
       var ccKey = refCtx.ccKey,
           ccUniqueKey = refCtx.ccUniqueKey;
 
-      if (hasSyncCb) {
+      if (noAutoExtract) {
         if (extraState) changeRefState(extraState, {
           calledBy: SYNC,
           ccKey: ccKey,
@@ -4391,7 +4392,7 @@
       }, ref);
     } else {
       //调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
-      if (hasSyncCb) {
+      if (noAutoExtract) {
         if (extraState) ref.setState(extraState, null, ccrkey, ccdelay);
         return;
       }
