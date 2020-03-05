@@ -18,7 +18,7 @@ export default (spec, e, refCtx) => {
   let ccint = false, ccsync = '', ccrkey = '', value = '', extraState = null, ccdelay = -1, isToggleBool = false;
   const syncKey = spec[CCSYNC_KEY];
   const type = spec.type;
-  let hasSyncCb = false;
+  let noAutoExtract = false;
 
   if (syncKey !== undefined) {//来自sync生成的setter函数调用 即 sync('xxxKey')
     ccsync = syncKey;
@@ -53,25 +53,25 @@ export default (spec, e, refCtx) => {
     } else {
       if (typeof val === 'function') {
         // moduleState指的是所修改的目标模块的state
-        const syncRet = val(value, keyPath, { moduleState: mState, fullKeyPath, state: refState, refCtx });
+        const syncRet = val(value, keyPath, { module, moduleState: mState, fullKeyPath, state: refState, refCtx });
 
         if (syncRet != undefined) {
           if (type === 'as') value = syncRet;// value is what cb returns;
           else {
             const retType = typeof syncRet;
             if (retType === 'boolean') {
-              // if return true, let hasSyncCb = false, so this cb will not block state update, and cc will extract partial state automatically
-              // if return false, let hasSyncCb = true, but now extraState is still null, so this cb will block state update
-              hasSyncCb = !syncRet;
+              // if return true, let noAutoExtract = false, so this cb will not block state update, and cc will extract partial state automatically
+              // if return false, let noAutoExtract = true, but now extraState is still null, so this cb will block state update
+              noAutoExtract = !syncRet;
             } else if (retType === 'object') {
-              hasSyncCb = true;
+              noAutoExtract = true;
               extraState = syncRet;
             } else {
               justWarning(`syncKey[${syncKey}] cb result type error.`);
             }
           }
         }else{
-          if (type === 'as') hasSyncCb = true;// if syncAs return undefined, will block update
+          if (type === 'as') noAutoExtract = true;// if syncAs return undefined, will block update
           // else continue update and value is just extracted above
         }
 
@@ -105,5 +105,5 @@ export default (spec, e, refCtx) => {
     }
   }
 
-  return { currentTarget: { value, extraState, hasSyncCb, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
+  return { currentTarget: { value, extraState, noAutoExtract, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
 }

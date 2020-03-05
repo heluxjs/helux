@@ -369,25 +369,26 @@ declare function refCtxWatch(multiFn: (ctx: ICtxBase) => MultiWatch): void;
 type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
+  (cb: (refCtx: RefCtx, isAfterFirstRender: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?:boolean, immediate?: boolean): void;
+declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isAfterFirstRender: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
 declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 
-type NoFullState = 'NoFullState';
-declare function syncCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
+declare function syncCb(value: any, keyPath: string, syncContext: { module:string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
 // if module state is not equal full state, you need pass generic type FullState
-declare function syncCb<Val, ModuleState, FullState extends IAnyObj | NoFullState = NoFullState, RefCtx extends ICtxBase = ICtxBase>
+declare function syncCb<Val, ModuleState, RefState = {}, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
+    syncContext: { module:string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
-declare function asCb(value: any, keyPath: string, syncContext: { moduleState: object, fullKeyPath: string, state: object, refCtx: object }): any;
+declare function asCb(value: any, keyPath: string, syncContext: { module:string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): any;
 // if module state is not equal full state, you need pass generic type FullState
-declare function asCb<Val, ModuleState, FullState extends IAnyObj | NoFullState = NoFullState, RefCtx extends ICtxBase = ICtxBase>
+declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { moduleState: ModuleState, fullKeyPath: string, state: FullState extends NoFullState ? ModuleState : Exclude<FullState, NoFullState>, refCtx: RefCtx }
+    syncContext: { module:string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
 //////////////////////////////////////////
@@ -446,7 +447,7 @@ export interface ICtxBase {
   lazyComputed: typeof refCtxLazyComputed;
   watch: typeof refCtxWatch;
   effect: typeof refCtxEffect;
-  effectProps: typeof refCtxEffect;
+  effectProps: typeof refCtxEffectProps;
   aux: typeof refCtxAux;
   execute: (handler: IAnyFnPromise) => void;
 

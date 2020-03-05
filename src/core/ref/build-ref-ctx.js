@@ -213,7 +213,6 @@ export default function (ref, params, liteLevel = 5) {
     __$$settedList: [],//[{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
   };
-  ref.ctx = ctx;
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
 
@@ -329,5 +328,9 @@ export default function (ref, params, liteLevel = 5) {
     ctx.effect = makeEffectHandler(effectItems, false);
     ctx.effectProps = makeEffectHandler(effectPropsItems, true);
   }
+
+  if (!ref.ctx) ref.ctx = ctx;
+  // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
+  else Object.assign(ref.ctx, ctx);
 
 }

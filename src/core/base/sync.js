@@ -16,7 +16,7 @@ export default function (spec, ref, e) {
   if (!mockE) return;//参数无效 例如 <input onChange={this.sync}/> 导致
 
   const currentTarget = mockE.currentTarget;
-  const { dataset, value, extraState, hasSyncCb } = currentTarget;
+  const { dataset, value, extraState, noAutoExtract } = currentTarget;
 
   if (e && e.stopPropagation) e.stopPropagation();
 
@@ -31,7 +31,7 @@ export default function (spec, ref, e) {
     checker.checkModuleName(targetModule, false);
 
     const { ccKey, ccUniqueKey } = refCtx;
-    if (hasSyncCb) {
+    if (noAutoExtract) {
       if (extraState) changeRefState(extraState, { calledBy: SYNC, ccKey, ccUniqueKey, module: targetModule, renderKey: ccrkey, delay: ccdelay }, ref);
       return;
     }
@@ -41,7 +41,7 @@ export default function (spec, ref, e) {
     const { state } = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool);
     changeRefState(state, { calledBy: SYNC, ccKey, ccUniqueKey: ccUniqueKey, module: targetModule, renderKey: ccrkey, delay: ccdelay }, ref);
   } else {//调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
-    if (hasSyncCb) {
+    if (noAutoExtract) {
       if (extraState) ref.setState(extraState, null, ccrkey, ccdelay);
       return;
     }

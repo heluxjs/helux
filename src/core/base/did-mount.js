@@ -5,6 +5,7 @@ import setRef from '../ref/set-ref';
 export default function (ref) {
   ref.__$$isBF = false;
   ref.__$$isMounted = true;
+  ref.__$$isUnmounted = false;
   const { module, isSingle, ccClassKey, ccKey, ccUniqueKey, onEvents } = ref.ctx;
   setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
 

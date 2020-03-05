@@ -7,38 +7,8 @@ import beforeUnmount from '../core/base/before-unmount';
 import appendDispatcher from '../core/base/append-dispatcher';
 import clearContextIfHot from './clear-context-if-hot';
 
-const { justTip, bindToWindow, okeys } = util;
+const { justTip, bindToWindow } = util;
 let cachedLocation = '';
-let clearShadowRefTimer = 0;
-let shawRefExpireTime = 10000; // ms
-
-/** 以防用户长时间打开debugger调试照成clearShadowRef误判，给用户已给重写shawRefExpireTime的机会 */
-function setShawRefExpireTime(t) {
-  shawRefExpireTime = t;
-}
-
-function tryClearShadowRef(clearShadowRef) {
-  if (clearShadowRef && !clearShadowRefTimer) {
-    // if (process && process.env && process.env.NODE_ENV === 'production') {
-    //   // no need to run this timer in production mode
-    // } else { }
-
-    clearShadowRefTimer = setInterval(() => {
-      const now = Date.now();
-      const refs = ccContext.refs;
-      okeys(refs).forEach(key => {
-        const ref = refs[key];
-        // 初始化后，大于10秒没有挂载的组件，当作是strict-mode下的双调用导致产生的一个多余的ref
-        // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
-        // 利用double-invoking并不会触发didMount的特性，来做此检测
-        if (!ref.__$$isMounted && now - ref.ctx.initTime > shawRefExpireTime) {
-          beforeUnmount(ref);
-          justTip(`shadow ref${ref.ctx.ccUniqueKey} was cleared`)
-        }
-      });
-    }, 5000);
-  }
-}
 
 function checkStartup(err) {
   const errStack = err.stack;
@@ -112,8 +82,6 @@ export default function (
     watchImmediate = false,
     alwaysGiveState = true,
     reComputed = true,
-    clearShadowRef = true, // 默认开启，如果是非异步渲染模式或者非React.Strict模式，可以关闭此清理标记
-    shawRefExpireTime = 10000,
   } = {}) {
   let canStartup = true;
   try {
@@ -168,9 +136,6 @@ export default function (
     ccContext.isStartup = true;
     //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
     boot.configPlugins(plugins);
-
-    setShawRefExpireTime(shawRefExpireTime);
-    tryClearShadowRef(clearShadowRef);
   } catch (err) {
     if (errorHandler) errorHandler(err);
     else throw err;

@@ -49,20 +49,14 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
     module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, storedKeys, connect, true
   );
 
-  let hookRef;
-  if (ref) {//重利用此ref
-    hookRef = ref;
-  } else {
-    hookRef = new CcHook(hookState, hookSetter, props);
+  const hookRef = ref || new CcHook(hookState, hookSetter, props);
 
-    const params = Object.assign({}, regOpt, {
-      module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK,
-      ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
-    });
-    hookRef.props = props;// keep shape same as class
-    buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
-  }
-
+  const params = Object.assign({}, regOpt, {
+    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK,
+    ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
+  });
+  hookRef.props = props;// keep shape same as class
+  buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
 
   hookRef.ctx.reactSetState = hf.makeRefSetState(hookRef);
   hookRef.ctx.reactForceUpdate = hf.makeRefForceUpdate(hookRef);
@@ -83,6 +77,11 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   }
 
   return hookRef;
+}
+
+function replaceSetter(ctx, hookSetter){
+  ctx.__boundSetState = hookSetter;
+  ctx.__boundForceUpdate = hookSetter;
 }
 
 const tip = 'react version is LTE 16.8';
@@ -131,23 +130,21 @@ export default function useConcent(registerOption, ccClassKey){
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       didUpdate(hookRef);
     }
-    refCtx.__boundSetState = hookSetter;
-    refCtx.__boundForceUpdate = hookSetter;
+    replaceSetter(refCtx, hookSetter);
   });
 
   //after first render
   effectHandler(() => {// mock componentDidMount
     // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为，此前已走了一次beforeUnmount
-    // 需要走重新初始化当前组件的整个流程，只是不需要再次创建ref
-    // if (hookRef.isFirstRendered === false) {
-    //   cref(hookRef);
-    // } else {
-    //   hookRef.isFirstRendered = false;
-    //   didMount(hookRef);
-    // }
-    
-    hookRef.isFirstRendered = false;
+    // 需要走重新初始化当前组件的整个流程，否则热加载时的setup等参数将无效，只是不需要再次创建ref
+    if (hookRef.isFirstRendered === false) {
+      cref(hookRef);
+    } else {
+      hookRef.isFirstRendered = false;
+    }
+    replaceSetter(refCtx, hookSetter);
     didMount(hookRef);
+    
     return () => {// mock componentWillUnmount
       beforeUnmount(hookRef);
     }
