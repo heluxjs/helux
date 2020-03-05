@@ -20,7 +20,7 @@ import setState from './set-state';
 import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import extractStateByKeys from './extract-state-by-keys';
 
-const { verboseInfo, makeError, justWarning, isPJO } = util;
+const { verboseInfo, makeError, justWarning, isPJO, okeys } = util;
 const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer }, 

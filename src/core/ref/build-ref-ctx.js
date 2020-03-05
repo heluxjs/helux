@@ -186,7 +186,6 @@ export default function (ref, params, liteLevel = 5) {
     mapped: {},
 
     // api meta data
-    prevModuleStateVer: {},
     stateKeys,
     onEvents,
     computedDep,
@@ -197,7 +196,7 @@ export default function (ref, params, liteLevel = 5) {
     auxMap,// auxiliary method map
     effectMeta,
     retKey_fnUid_: {},
-
+    
     // api
     reactSetState: noop,//等待重写
     __boundSetState,
@@ -211,10 +210,12 @@ export default function (ref, params, liteLevel = 5) {
     useRef: (refName) => {
       return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
     },
-
-    // only can be called by cc
-    __$$ccSetState: hf.makeCcSetStateHandler(ref),// not expose in d.ts
-    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),// not expose in d.ts
+    
+    // below only can be called by cc or updated by cc in existed period, not expose in d.ts
+    __$$ccSetState: hf.makeCcSetStateHandler(ref),
+    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
+    __$$settedList: [],//[{module:string, keys:string[]}, ...]
+    __$$prevMoStateVer: {},
   };
   ref.ctx = ctx;
   ref.setState = setState;
@@ -307,19 +308,30 @@ export default function (ref, params, liteLevel = 5) {
     ctx.computed = getDefineComputedHandler(ctx);
     ctx.lazyComputed = getDefineComputedHandler(ctx, true);
 
-    const makeEffectHandler = targetEffectItems => (fn, depKeys, immediate = true, eId) => {
+    const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeys, compare = true, immediate = true) => {
       if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
+      let _depKeys = depKeys;
+      //对于effectProps 第三位参数就是immediate
+      let _immediate = isProp ? compare : immediate;
+
       if (depKeys !== null && depKeys !== undefined) {
         if (!Array.isArray(depKeys)) throw new Error(`${eType('second')} one of them(array, null, undefined)`);
+      } else {
+        _depKeys = [];
       }
-      const _eId = eId || getEId();
-      // const effectItem = { fn: _fn, depKeys, status: EFFECT_AVAILABLE, eId: _eId, immediate };
-      const effectItem = { fn, depKeys, eId: _eId, depKeys, immediate };
+
+      const moDepKeys = [];
+      !isProp && _depKeys.forEach(depKey => {
+        if (depKey.includes('/')) moDepKeys.push(depKey);
+        else moDepKeys.push(`${stateModule}/${depKey}`);
+      });
+      // 对于effectProps来说是不会读取compare属性来用的
+      const effectItem = { fn, isProp, depKeys: _depKeys, moDepKeys, eId: getEId(), compare, immediate: _immediate };
       targetEffectItems.push(effectItem);
     };
 
-    ctx.effect = makeEffectHandler(effectItems);
-    ctx.effectProps = makeEffectHandler(effectPropsItems);
+    ctx.effect = makeEffectHandler(effectItems, false);
+    ctx.effectProps = makeEffectHandler(effectPropsItems, true);
   }
 
 }

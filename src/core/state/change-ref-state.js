@@ -144,7 +144,12 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   let deltaCommittedState = computeValueForRef(refCtx, stateModule, refState, state, callInfo);
   const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
 
-  const ccSetState = () => refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+  const ccSetState = () => {
+     // 记录stateKeys，方便triggerRefEffect之用
+    refCtx.__$$settedList.push({ module: stateModule, keys: okeys(deltaCommittedState) });
+    refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+  }
+
   if (next) {
     passToMiddleware.state = deltaCommittedState;
     callMiddlewares(skipMiddleware, passToMiddleware, () => {
@@ -301,6 +306,10 @@ function updateConnectedState(targetClassContext, targetModule, sharedState, sha
           const refCtx = ref.ctx;
           computeValueForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
           const shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
+
+          // 记录sharedStateKeys，方便triggerRefEffect之用
+          refCtx.__$$settedList.push({ module: targetModule, keys: sharedStateKeys });
+
           if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
         }
       });

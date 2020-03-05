@@ -8,27 +8,34 @@ const {
 
 const warn = (key, frag) => util.justWarning(`effect: key[${key}] is invalid, its ${frag} has not been declared in' store!`);
 
+function mapSettedList(settedList) {
+  return settedList.reduce((map, { module, keys }) => {
+    keys.forEach(key => map[`${module}/${key}`] = 1);
+    return map;
+  }, {})
+}
+
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
   const {
     effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_,
   } = ctx.effectMeta;
-  const { prevModuleStateVer } = ctx;
+  const { __$$prevMoStateVer, __$$settedList, module: refModule } = ctx;
 
-  const makeItemHandler = (eid_cleanCb_, isDidMount, needJudgeImmediate) => item => {
+  const makeItemHandler = (eid_cleanCb_, isFirstCall, needJudgeImmediate) => item => {
     const { fn, eId, immediate } = item;
     if (needJudgeImmediate) {
       if (immediate === false) return;
     }
     const prevCb = eid_cleanCb_[eId];
-    const cb = fn(ctx, isDidMount);
+    const cb = fn(ctx, isFirstCall);
 
     if (cb) eid_cleanCb_[eId] = cb;
     if (prevCb) prevCb(ctx);// let ctx.effect have the totally same behavior with useEffect
   };
 
   if (callByDidMount) {
-    // flag isDidMount as true
+    // flag isFirstCall as true
     effectItems.forEach(makeItemHandler(eid_effectReturnCb_, true, true));
     effectPropsItems.forEach(makeItemHandler(eid_effectPropsReturnCb_, true, true));
   } else {// callByDidUpdate
@@ -43,24 +50,35 @@ export default function (ref, callByDidMount) {
       // if (status === EFFECT_STOPPED) return;
 
       // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
-
-      const { depKeys, fn, eId } = item;
-      if (depKeys) {
-        const keysLen = depKeys.length;
+      const { moDepKeys, compare, fn, eId } = item;
+      if (moDepKeys) {
+        const keysLen = moDepKeys.length;
         if (keysLen === 0) return;
+
+        const mappedSettedKey = mapSettedList(__$$settedList);
         let shouldEffectExecute = false;
+
         for (let i = 0; i < keysLen; i++) {
-          const key = depKeys[i];
+          const key = moDepKeys[i];
+          if (!compare) {
+            if (mappedSettedKey[key]) {
+              shouldEffectExecute = true;
+              break;
+            }else{
+              continue;
+            }
+          }
+
           let targetCurState, targetPrevState, targetKey;
-          if (key.includes('/')) {
-            const [module, unmoduledKey] = key.split('/');
+          const [module, unmoduledKey] = key.split('/');
+          if (module !== refModule) {
             const prevState = getPrevState(module);
             const moduleStateVer = getStateVer(module);
 
-            if (prevModuleStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
+            if (__$$prevMoStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
               continue;
             } else {
-              ctx.prevModuleStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
+              __$$prevMoStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
             }
 
             if (!prevState) {
@@ -94,7 +112,7 @@ export default function (ref, callByDidMount) {
       }
     });
     
-    // flag isDidMount as false, means effect triggered in didUpdate period
+    // flag isFirstCall as false, start to run state effect fns
     toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false));
 
      // start handle effect meta data of props keys
@@ -103,7 +121,7 @@ export default function (ref, callByDidMount) {
     const toBeExecutedPropFns = [];
     effectPropsItems.forEach(item=>{
       const { depKeys, fn, eId } = item;
-      if (depKeys) {
+      if (depKeys) {// prop dep key
         const keysLen = depKeys.length;
         if (keysLen === 0) return;
         let shouldEffectExecute = false;
@@ -120,6 +138,11 @@ export default function (ref, callByDidMount) {
       }
     });
 
+    // flag isFirstCall as false, start to run prop effect fns
     toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
+
+    // clear settedList
+    __$$settedList.length = 0;
   }
+
 }
