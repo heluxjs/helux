@@ -1,3 +1,17 @@
+#### 2020-03-05
+1.5.179 发布
+* feature: 支持`ctx.effect`设置compare标记，默认是true
+> effect(fn:function, depKeys?:string[], compare?:boolean, immediate?:boolean)
+```js
+const setup = ctx=>{
+  // user is object
+  ctx.effect(()=>{
+    console.log('user changed');
+  }, ['user'], false);
+}
+```
+* refactor: 将`setRef`步骤调整到`didMount`阶段，以便更好的适应`async rendering`
+
 #### 2020-03-04
 1.5.175 发布
 * fix: 在线IDE热加载时，模块依赖描述对象里丢失`retKey_lazy_`属性
