@@ -19,24 +19,24 @@ function setShawRefExpireTime(t) {
 
 function tryClearShadowRef(clearShadowRef) {
   if (clearShadowRef && !clearShadowRefTimer) {
-    if (process && process.env && process.env.NODE_ENV === 'production') {
-      // no need to run this timer in production mode
-    } else {
-      clearShadowRefTimer = setInterval(() => {
-        const now = Date.now();
-        const refs = ccContext.refs;
-        okeys(refs).forEach(key => {
-          const ref = refs[key];
-          // 初始化后，大于10秒没有挂载的组件，当作是strict-mode下的双调用导致产生的一个多余的ref
-          // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
-          // 利用double-invoking并不会触发didMount的特性，来做此检测
-          if (!ref.__$$isMounted && now - ref.ctx.initTime > shawRefExpireTime) {
-            beforeUnmount(ref);
-            justTip(`shadow ref${ref.ctx.ccUniqueKey} was cleared`)
-          }
-        });
-      }, 5000);
-    }
+    // if (process && process.env && process.env.NODE_ENV === 'production') {
+    //   // no need to run this timer in production mode
+    // } else { }
+
+    clearShadowRefTimer = setInterval(() => {
+      const now = Date.now();
+      const refs = ccContext.refs;
+      okeys(refs).forEach(key => {
+        const ref = refs[key];
+        // 初始化后，大于10秒没有挂载的组件，当作是strict-mode下的双调用导致产生的一个多余的ref
+        // https://reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects
+        // 利用double-invoking并不会触发didMount的特性，来做此检测
+        if (!ref.__$$isMounted && now - ref.ctx.initTime > shawRefExpireTime) {
+          beforeUnmount(ref);
+          justTip(`shadow ref${ref.ctx.ccUniqueKey} was cleared`)
+        }
+      });
+    }, 5000);
   }
 }
 
@@ -112,7 +112,7 @@ export default function (
     watchImmediate = false,
     alwaysGiveState = true,
     reComputed = true,
-    clearShadowRef = true,
+    clearShadowRef = true, // 默认开启，如果是非异步渲染模式或者非React.Strict模式，可以关闭此清理标记
     shawRefExpireTime = 10000,
   } = {}) {
   let canStartup = true;

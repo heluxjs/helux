@@ -282,23 +282,19 @@ export default function (ref, params, liteLevel = 5) {
       const { name, identity } = ev.getEventItem(event);
       ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
     }
-    const on = (inputEvent, handler, delayToDidMount = true) => {
+    ctx.on = (inputEvent, handler) => {
       //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
       const { name: event, identity = null } = ev.getEventItem(inputEvent);
-      if (delayToDidMount) {
-        //cache to onEvents firstly, cc will bind them in didMount life cycle
-        onEvents.push({ event, handler, identity });
-        return;
-      }
-      ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+      onEvents.push({ event, handler, identity });
+
+      // 不再支持delayToDidMount参数，考虑异步渲染的安全性，一定是didMount阶段开始监听
+      // if (delayToDidMount) {
+      //   onEvents.push({ event, handler, identity });
+      //   //cache to onEvents firstly, cc will bind them in didMount life cycle
+      //   return;
+      // }
+      // ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
     };
-    ctx.on = on;
-    // on handler been effective in didMount by default, so user can call it in setup safely
-    // but if user want [on-op] been effective immediately, user can call onDirectly, but it may be dangerous!
-    // or on(ev, fn, rkey, false)
-    ctx.onDirectly = (event, handler) => {
-      on(event, handler, false);
-    }
   }
 
   if (liteLevel > 4) {// level 5, assign enhance api
