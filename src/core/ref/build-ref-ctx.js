@@ -172,8 +172,9 @@ export default function (ref, params, liteLevel = 5) {
     extra: {},// can pass value to extra in every render period
     staticExtra: {},// only can be assign value in setup block
 
-    // computed
+    // computed result containers
     refComputed: {},
+    refComputedOri: {},// 未代理的计算值容器
     moduleComputed,
     globalComputed,
     connectedComputed,
@@ -313,17 +314,19 @@ export default function (ref, params, liteLevel = 5) {
       //对于effectProps 第三位参数就是immediate
       let _immediate = isProp ? compare : immediate;
 
+      // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
       if (depKeys !== null && depKeys !== undefined) {
         if (!Array.isArray(depKeys)) throw new Error(`${eType('second')} one of them(array, null, undefined)`);
-      } else {
-        _depKeys = [];
       }
 
-      const moDepKeys = [];
-      !isProp && _depKeys.forEach(depKey => {
-        if (depKey.includes('/')) moDepKeys.push(depKey);
-        else moDepKeys.push(`${stateModule}/${depKey}`);
-      });
+      let moDepKeys = null;
+      if (!isProp && _depKeys) {
+        moDepKeys = [];
+        _depKeys.forEach(depKey => {
+          if (depKey.includes('/')) moDepKeys.push(depKey);
+          else moDepKeys.push(`${stateModule}/${depKey}`);
+        });
+      }
       // 对于effectProps来说是不会读取compare属性来用的
       const effectItem = { fn, isProp, depKeys: _depKeys, moDepKeys, eId: getEId(), compare, immediate: _immediate };
       targetEffectItems.push(effectItem);

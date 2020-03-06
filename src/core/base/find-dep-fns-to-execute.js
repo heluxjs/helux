@@ -1,7 +1,6 @@
-import { makeCommitHandler, okeys, justWarning } from '../../support/util';
+import { makeCommitHandler, okeys, justWarning, makeCuObValue } from '../../support/util';
 import { FN_WATCH, CATE_REF } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
-import makeLazyComputedHandler, { CLEAR } from '../computed/make-lazy-computed-handler';
 import cuMap from '../../cc-context/computed-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import runtimeVar from '../../cc-context/runtime-var';
@@ -53,18 +52,15 @@ export default (
       
       if (fnType === 'computed') {
         if(isLazy){
-          const cuFn = computedContainer[retKey];//让计算函数始终指向同一个引用
-
           // lazyComputed 不再暴露这两个接口，以隔绝副作用
           delete fnCtx.commit;
           delete fnCtx.commitCu;
           const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
-
-          if(cuFn)cuFn(CLEAR, n, o, fnCtx);
-          else computedContainer[retKey] = makeLazyComputedHandler(fn, n, o, fnCtx);
+          computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, n, o, fnCtx);
         }else{
           const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
-          computedContainer[retKey] = computedValueOrRet;
+          // computedContainer[retKey] = computedValueOrRet;
+          computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
         }
       } else {// watch
         const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
@@ -145,7 +141,8 @@ export default (
       if (retKey_fn_) {
         okeys(committedCu).forEach(retKey => {
           if (!retKey_fn_[retKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${retKey}] for moduleComputed`);
-          else computedContainer[retKey] = committedCu[retKey];
+          // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
+          else computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);;
         });
       }
     }

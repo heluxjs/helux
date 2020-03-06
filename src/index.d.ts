@@ -103,11 +103,7 @@ export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never
 export type ComputedValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> :
   (
-    T[K] extends IComputedFnSimpleDesc ? (
-      T[K] extends ILazyComputedFnSimpleDesc ? (
-        T[K]['lazy'] extends true ? () => ReturnType<T[K]['fn']> : ReturnType<T[K]['fn']>
-      ): ReturnType<T[K]['fn']>
-    ) : never
+    T[K] extends IComputedFnSimpleDesc ? ReturnType<T[K]['fn']> : never
   );
 }
 
