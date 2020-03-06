@@ -1,3 +1,7 @@
+#### 2020-03-06
+1.5.180 发布
+* feature: 支持`CcFragment`在热加载模式下实时刷新
+
 #### 2020-03-05
 1.5.179 发布
 * feature: 支持`ctx.effect`设置compare标记，默认是true
