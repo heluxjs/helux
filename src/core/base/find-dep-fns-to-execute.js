@@ -142,7 +142,7 @@ export default (
         okeys(committedCu).forEach(retKey => {
           if (!retKey_fn_[retKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${retKey}] for moduleComputed`);
           // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
-          else computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);;
+          else computedContainer[retKey] = makeCuObValue(false, committedCu[retKey]);;
         });
       }
     }
