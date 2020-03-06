@@ -933,17 +933,16 @@
 
             computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, n, o, fnCtx);
           } else {
-            var _computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); // computedContainer[retKey] = computedValueOrRet;
+            var computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); // computedContainer[retKey] = computedValueOrRet;
 
-
-            computedContainer[retKey] = makeCuObValue(false, _computedValueOrRet);
+            computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
           }
         } else {
           // watch
-          var _computedValueOrRet2 = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
+          var _computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
 
 
-          if (_computedValueOrRet2 === false) shouldCurrentRefUpdate = false;
+          if (_computedValueOrRet === false) shouldCurrentRefUpdate = false;
         }
       });
       curToBeComputedState = getFnCommittedState();
@@ -1035,7 +1034,7 @@
         if (retKey_fn_) {
           okeys(committedCu).forEach(function (retKey) {
             if (!retKey_fn_[retKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + retKey + "] for moduleComputed"); // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
-            else computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
+            else computedContainer[retKey] = makeCuObValue(false, committedCu[retKey]);
           });
         }
       }
@@ -1244,7 +1243,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.0',
+      version: '2.0.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
