@@ -6,9 +6,8 @@ import { CATE_MODULE } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
-import makeObCuContainer from '../computed/make-cu-ob-container';
 
-const { safeGetObjectFromObject, isPJO } = util;
+const { safeGetObjectFromObject, isPJO, okeys } = util;
 
 export default function (module, computed) {
   if(!computed) return;
@@ -32,10 +31,7 @@ export default function (module, computed) {
   const d = ccContext.getDispatcher();
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
   const deltaCommittedState = Object.assign({}, moduleState);
-
-  const cuOri = safeGetObjectFromObject(ccComputed._computedValueOri, module);
-  rootComputedValue[module] = makeObCuContainer(computed, cuOri);
-  const moduleComputedValue = rootComputedValue[module];
+  const moduleComputedValue = safeGetObjectFromObject(rootComputedValue, module);
 
   findDepFnsToExecute(
     d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns,

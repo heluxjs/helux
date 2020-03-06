@@ -1,6 +1,6 @@
 
 import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
-import { NOT_A_JSON, CU_KEY } from './priv-constant';
+import { NOT_A_JSON } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
 const cer = console.error;
@@ -50,10 +50,6 @@ export function makeError(code, extraMessage) {
   const error = new Error(message);
   error.code = code;
   return error;
-}
-
-export function makeCuObValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx, ) {
-  return { [CU_KEY]: 1, needCompute, fn, newState, oldState, fnCtx, isLazy, result };
 }
 
 export function makeCuDepDesc(){

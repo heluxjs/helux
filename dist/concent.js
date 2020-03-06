@@ -115,16 +115,13 @@
     default: constant
   });
 
-  var _computedValue2, _computedValueOri2;
+  var _computedValue2;
 
   var _computedValue = (_computedValue2 = {}, _computedValue2[MODULE_GLOBAL] = {}, _computedValue2[MODULE_DEFAULT] = {}, _computedValue2[MODULE_CC] = {}, _computedValue2);
-
-  var _computedValueOri = (_computedValueOri2 = {}, _computedValueOri2[MODULE_GLOBAL] = {}, _computedValueOri2[MODULE_DEFAULT] = {}, _computedValueOri2[MODULE_CC] = {}, _computedValueOri2);
 
   var _computedDep = {};
   var _computedRaw = {};
   var cuMap = {
-    _computedValueOri: _computedValueOri,
     _computedValue: _computedValue,
     _computedRaw: _computedRaw,
     _computedDep: _computedDep,
@@ -167,7 +164,6 @@
     bindCtxToMethod: false
   };
 
-  var CU_KEY = Symbol('cuk');
   var NOT_A_JSON = 'is not a plain json object!';
   var STR_ARR_OR_STAR = 'should be an string array or *!';
 
@@ -215,11 +211,6 @@
     var error = new Error(message);
     error.code = code;
     return error;
-  }
-  function makeCuObValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx) {
-    var _ref;
-
-    return _ref = {}, _ref[CU_KEY] = 1, _ref.needCompute = needCompute, _ref.fn = fn, _ref.newState = newState, _ref.oldState = oldState, _ref.fnCtx = fnCtx, _ref.isLazy = isLazy, _ref.result = result, _ref;
   }
   function makeCuDepDesc() {
     return {
@@ -852,6 +843,35 @@
     };
   }
 
+  var CLEAR = Symbol('clear');
+  function makeLazyComputedHandler (fn, newState, oldState, fnCtx) {
+    var _needCompute = true;
+    var _cachedRet = null;
+    var _fn = fn;
+    var _newState = newState;
+    var _oldState = oldState;
+    var _fnCtx = fnCtx;
+    return function (cmd, newState, oldState, fnCtx) {
+      if (cmd === CLEAR) {
+        // can only been called by cc
+        _newState = newState;
+        _oldState = oldState;
+        _fnCtx = fnCtx;
+        _needCompute = true;
+        return;
+      }
+
+      if (_needCompute) {
+        var ret = _fn(_newState, _oldState, _fnCtx);
+
+        _cachedRet = ret;
+        _needCompute = false;
+      }
+
+      return _cachedRet;
+    };
+  }
+
   function getCuWaParams(retKey, depKeys, newState, oldState) {
     if (runtimeVar.alwaysGiveState) {
       return [newState, oldState];
@@ -923,7 +943,9 @@
 
         if (fnType === 'computed') {
           if (isLazy) {
+            var cuFn = computedContainer[retKey]; //让计算函数始终指向同一个引用
             // lazyComputed 不再暴露这两个接口，以隔绝副作用
+
             delete fnCtx.commit;
             delete fnCtx.commitCu;
 
@@ -931,19 +953,17 @@
                 n = _getCuWaParams2[0],
                 o = _getCuWaParams2[1];
 
-            computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, n, o, fnCtx);
+            if (cuFn) cuFn(CLEAR, n, o, fnCtx);else computedContainer[retKey] = makeLazyComputedHandler(fn, n, o, fnCtx);
           } else {
-            var _computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); // computedContainer[retKey] = computedValueOrRet;
-
-
-            computedContainer[retKey] = makeCuObValue(false, _computedValueOrRet);
+            var computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+            computedContainer[retKey] = computedValueOrRet;
           }
         } else {
           // watch
-          var _computedValueOrRet2 = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
+          var _computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
 
 
-          if (_computedValueOrRet2 === false) shouldCurrentRefUpdate = false;
+          if (_computedValueOrRet === false) shouldCurrentRefUpdate = false;
         }
       });
       curToBeComputedState = getFnCommittedState();
@@ -1034,8 +1054,7 @@
 
         if (retKey_fn_) {
           okeys(committedCu).forEach(function (retKey) {
-            if (!retKey_fn_[retKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + retKey + "] for moduleComputed"); // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
-            else computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
+            if (!retKey_fn_[retKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + retKey + "] for moduleComputed");else computedContainer[retKey] = committedCu[retKey];
           });
         }
       }
@@ -1244,7 +1263,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '1.5.179',
+      version: '1.5.181',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -1999,60 +2018,6 @@
     };
   }
 
-  function makeObCuContainer (computed, originalCuContainer) {
-    var moduleComputedValue = {};
-    okeys(computed).forEach(function (key) {
-      //避免get无限递归，用这个对象来存其他信息
-      originalCuContainer[key] = makeCuObValue();
-      Object.defineProperty(moduleComputedValue, key, {
-        get: function get() {
-          var value = originalCuContainer[key] || {}; //防止用户传入未定义的key
-
-          var needCompute = value.needCompute,
-              fn = value.fn,
-              newState = value.newState,
-              oldState = value.oldState,
-              fnCtx = value.fnCtx,
-              isLazy = value.isLazy,
-              result = value.result;
-
-          if (!isLazy) {
-            return result;
-          }
-
-          if (isLazy && needCompute) {
-            var ret = fn(newState, oldState, fnCtx);
-            value.result = ret;
-            value.needCompute = false;
-          }
-
-          return value.result;
-        },
-        set: function set(input) {
-          var value = originalCuContainer[key];
-
-          if (!input[CU_KEY]) {
-            justWarning("computed value can not been changed manually");
-            return;
-          }
-
-          if (input.isLazy) {
-            value.isLazy = true;
-            value.needCompute = true;
-            value.newState = input.newState;
-            value.oldState = input.oldState;
-            value.fn = input.fn;
-            value.fnCtx = input.fnCtx;
-          } else {
-            value.isLazy = false;
-            value.result = input.result;
-          }
-        }
-      });
-    });
-    return moduleComputedValue;
-  }
-
   var safeGetObjectFromObject$1 = safeGetObjectFromObject,
       isPJO$1 = isPJO;
   function initModuleComputed (module, computed) {
@@ -2083,15 +2048,13 @@
     };
 
     var deltaCommittedState = Object.assign({}, moduleState);
-    var cuOri = safeGetObjectFromObject$1(ccComputed._computedValueOri, module);
-    rootComputedValue[module] = makeObCuContainer(computed, cuOri);
-    var moduleComputedValue = rootComputedValue[module];
+    var moduleComputedValue = safeGetObjectFromObject$1(rootComputedValue, module);
     findDepFnsToExecute(d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'computed', CATE_MODULE, moduleComputedValue);
   }
 
   var isPJO$2 = isPJO,
       safeGetObjectFromObject$2 = safeGetObjectFromObject,
-      okeys$2 = okeys;
+      okeys$3 = okeys;
   /**
    * 设置watch值，过滤掉一些无效的key
    */
@@ -2124,7 +2087,7 @@
     var moduleState = getState(module);
     configureDepFns(CATE_MODULE, {
       module: module,
-      stateKeys: okeys$2(moduleState),
+      stateKeys: okeys$3(moduleState),
       dep: rootWatchDep
     }, moduleWatch);
     var d = ccContext.getDispatcher();
@@ -2336,7 +2299,7 @@
       justWarning$2 = justWarning,
       isObjectNotNull$1 = isObjectNotNull,
       computeFeature$1 = computeFeature,
-      okeys$3 = okeys,
+      okeys$4 = okeys,
       removeArrElements$1 = removeArrElements;
   var FOR_ONE_INS_FIRSTLY$1 = FOR_ONE_INS_FIRSTLY,
       FOR_ALL_INS_OF_A_MOD$1 = FOR_ALL_INS_OF_A_MOD,
@@ -2537,7 +2500,7 @@
       // 记录stateKeys，方便triggerRefEffect之用
       refCtx.__$$settedList.push({
         module: stateModule,
-        keys: okeys$3(deltaCommittedState)
+        keys: okeys$4(deltaCommittedState)
       });
 
       refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
@@ -2680,7 +2643,7 @@
   }
 
   function broadcastConnectedState(commitModule, sharedState, callInfo) {
-    var sharedStateKeys = okeys$3(sharedState); //提前把sharedStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
+    var sharedStateKeys = okeys$4(sharedState); //提前把sharedStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
 
     var ccClassKeys = connectedModuleName_ccClassKeys_[commitModule] || [];
     ccClassKeys.forEach(function (ccClassKey) {
@@ -3629,7 +3592,7 @@
     return self;
   }
 
-  var okeys$5 = okeys,
+  var okeys$6 = okeys,
       isPJO$6 = isPJO;
   var _state$1 = ccContext.store._state;
   /**
@@ -3647,7 +3610,7 @@
       return invalidConnect + " module[" + m + "]'s value must be * or array of string";
     };
 
-    var moduleNames = okeys$5(connectSpec);
+    var moduleNames = okeys$6(connectSpec);
     moduleNames.sort();
     var featureStrs = [];
     var connectedModuleKeyMapping = {};
@@ -3664,7 +3627,7 @@
       if (typeof val === 'string') {
         if (val !== '*') throw new Error(invalidConnectItem(m));else {
           featureStrs.push(feature + "*");
-          okeys$5(moduleState).forEach(function (sKey) {
+          okeys$6(moduleState).forEach(function (sKey) {
             return connectedModuleKeyMapping[m + "/" + sKey] = sKey;
           });
         }
@@ -4457,7 +4420,7 @@
       moduleName_ccClassKeys_$2 = ccContext.moduleName_ccClassKeys_,
       _computedValue$4 = ccContext.computed._computedValue,
       renderKey_ccUkeys_$1 = ccContext.renderKey_ccUkeys_;
-  var okeys$6 = okeys,
+  var okeys$7 = okeys,
       me$3 = makeError,
       vbi$3 = verboseInfo,
       safeGetArrayFromObject$2 = safeGetArrayFromObject,
@@ -4548,12 +4511,12 @@
     var globalComputed = _computedValue$4[MODULE_GLOBAL] || {};
     var globalState = getState$3(MODULE_GLOBAL); // extract privStateKeys
 
-    var privStateKeys = removeArrElements(okeys$6(state), moduleName_stateKeys_$4[stateModule]); // recover ref state
+    var privStateKeys = removeArrElements(okeys$7(state), moduleName_stateKeys_$4[stateModule]); // recover ref state
 
     var refStoredState = refStore$1._state[ccUniqueKey] || {};
     var mergedState = Object.assign({}, state, refStoredState, moduleState);
     ref.state = mergedState;
-    var stateKeys = okeys$6(mergedState); // record ccClassKey
+    var stateKeys = okeys$7(mergedState); // record ccClassKey
 
     var ccClassKeys = safeGetArrayFromObject(moduleName_ccClassKeys_$2, module);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // declare cc state series api
@@ -4641,10 +4604,8 @@
       // can pass value to extra in every render period
       staticExtra: {},
       // only can be assign value in setup block
-      // computed result containers
+      // computed
       refComputed: {},
-      refComputedOri: {},
-      // 未代理的计算值容器
       moduleComputed: moduleComputed,
       globalComputed: globalComputed,
       connectedComputed: connectedComputed,
@@ -4873,18 +4834,23 @@
           if (typeof fn !== 'function') throw new Error(eType('first') + " function");
           var _depKeys = depKeys; //对于effectProps 第三位参数就是immediate
 
-          var _immediate = isProp ? compare : immediate;
+          var _immediate = isProp ? compare : immediate; // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
+
 
           if (depKeys !== null && depKeys !== undefined) {
             if (!Array.isArray(depKeys)) throw new Error(eType('second') + " one of them(array, null, undefined)");
-          } else {
-            _depKeys = [];
           }
 
-          var moDepKeys = [];
-          !isProp && _depKeys.forEach(function (depKey) {
-            if (depKey.includes('/')) moDepKeys.push(depKey);else moDepKeys.push(stateModule + "/" + depKey);
-          }); // 对于effectProps来说是不会读取compare属性来用的
+          var moDepKeys = null;
+
+          if (!isProp && _depKeys) {
+            moDepKeys = [];
+
+            _depKeys.forEach(function (depKey) {
+              if (depKey.includes('/')) moDepKeys.push(depKey);else moDepKeys.push(stateModule + "/" + depKey);
+            });
+          } // 对于effectProps来说是不会读取compare属性来用的
+
 
           var effectItem = {
             fn: fn,
@@ -4940,7 +4906,7 @@
   }
 
   var safeGetObjectFromObject$3 = safeGetObjectFromObject,
-      okeys$7 = okeys,
+      okeys$8 = okeys,
       justWarning$7 = justWarning;
   var _ccContext$reducer = ccContext.reducer,
       _module_fnNames_ = _ccContext$reducer._module_fnNames_,
@@ -4961,7 +4927,7 @@
         dispatch = ctx.dispatch,
         connect = ctx.connect,
         module = ctx.module;
-    var connectedModules = okeys$7(connect);
+    var connectedModules = okeys$8(connect);
     var allModules = connectedModules.slice();
     if (!allModules.includes(module)) allModules.push(module);else {
       justWarning$7("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
@@ -4992,7 +4958,7 @@
       if (!isPJO(settingsObj)) throw new Error('type of setup return result must be an plain json object'); //优先读自己的，再读全局的
 
       if (bindCtxToMethod === true || runtimeVar$2.bindCtxToMethod === true && bindCtxToMethod !== false) {
-        okeys$7(settingsObj).forEach(function (name) {
+        okeys$8(settingsObj).forEach(function (name) {
           var settingValue = settingsObj[name];
           if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
         });
@@ -5001,9 +4967,7 @@
       ctx.settings = settingsObj;
     }
 
-    ctx.__$$isBSe = false; //!!! 赋值拦截了setter getter的计算结果容器
-
-    ctx.refComputed = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
+    ctx.__$$isBSe = false;
     triggerComputedAndWatch(ref);
   }
 
@@ -5335,7 +5299,7 @@
     }
   }
 
-  var okeys$8 = okeys;
+  var okeys$9 = okeys;
 
   function executeClearCb(cbMap, ctx) {
     var execute = function execute(key) {
@@ -5345,7 +5309,7 @@
     };
 
     Object.getOwnPropertySymbols(cbMap).forEach(execute);
-    okeys$8(cbMap).forEach(execute);
+    okeys$9(cbMap).forEach(execute);
   }
 
   function beforeUnmount (ref) {
@@ -5373,7 +5337,7 @@
   var ccClassDisplayName$1 = ccClassDisplayName,
       styleStr$1 = styleStr,
       color$1 = color,
-      okeys$9 = okeys,
+      okeys$a = okeys,
       shallowDiffers$1 = shallowDiffers,
       evalState$2 = evalState;
   var runtimeVar$5 = ccContext.runtimeVar;
@@ -5516,7 +5480,7 @@
             ctx.state = newState; //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
             // this.state = newState; // bad writing
 
-            okeys$9(newState).forEach(function (key) {
+            okeys$a(newState).forEach(function (key) {
               return thisState[key] = newState[key];
             });
             if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
@@ -5613,7 +5577,7 @@
   }
 
   var isPJO$7 = isPJO,
-      okeys$a = okeys;
+      okeys$b = okeys;
 
   function checkObj(rootObj, tag) {
     if (!isPJO$7(rootObj)) {
@@ -5632,7 +5596,7 @@
     delete storeState[MODULE_CC];
     if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
     if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$a(storeState);
+    var moduleNames = okeys$b(storeState);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -5650,13 +5614,13 @@
     checkObj(rootReducer, 'reducer');
     if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
     if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
-    okeys$a(rootReducer).forEach(function (m) {
+    okeys$b(rootReducer).forEach(function (m) {
       return initModuleReducer(m, rootReducer[m]);
     });
   }
   function configRootComputed(rootComputed) {
     checkObj(rootComputed, 'computed');
-    okeys$a(rootComputed).forEach(function (m) {
+    okeys$b(rootComputed).forEach(function (m) {
       return initModuleComputed(m, rootComputed[m]);
     });
   }
@@ -5673,7 +5637,7 @@
       throw new Error("init " + NOT_A_JSON);
     }
 
-    okeys$a(init).forEach(function (moduleName) {
+    okeys$b(init).forEach(function (moduleName) {
       checkModuleName(moduleName, false);
       var initFn = init[moduleName];
 
@@ -6139,7 +6103,7 @@
   }
 
   var isPJO$8 = isPJO,
-      okeys$b = okeys,
+      okeys$c = okeys,
       isObjectNull$2 = isObjectNull,
       evalState$4 = evalState;
 
@@ -6200,7 +6164,7 @@
     }; // traversal moduleNames
 
 
-    okeys$b(store).forEach(function (m) {
+    okeys$c(store).forEach(function (m) {
       return buildStoreConf(m, store[m]);
     }); // push by configure api
 

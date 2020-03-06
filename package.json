@@ -1,6 +1,6 @@
 {
-  "_from": "concent-test",
-  "_id": "concent-test@1.0.38",
+  "_from": "concent",
+  "_id": "concent@1.5.181",
   "_inBundle": false,
   "_integrity": "sha512-YuakaB+lTidx3v4cMrObLoKISm+26UVRqtD6qXscHQ3gWR6SQTVBnKxv+JdiJ+06GMmgIY6e8816TqLkcSw1Pg==",
   "_location": "/concent",
@@ -19,6 +19,10 @@
     "#USER",
     "/"
   ],
+  "_resolved": "https://registry.npmjs.org/concent/-/concent-1.5.181.tgz",
+  "_shasum": "0263218dcab09c31aa321e615b11060426cb6ac0",
+  "_spec": "concent",
+  "_where": "/Users/fancy/Desktop/code/my-open-source/cc-demo",
   "author": {
     "name": "fantasticsoul",
     "email": "624313307@qq.com",
@@ -99,7 +103,7 @@
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "module": "es/index.js",
-  "name": "concent-test",
+  "name": "concent",
   "npmFileMap": [
     {
       "basePath": "/dist/",
@@ -108,7 +112,7 @@
       ]
     }
   ],
-  "npmName": "concent-test",
+  "npmName": "concent",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/concentjs/concent.git"
@@ -123,5 +127,5 @@
     "test": "jest"
   },
   "unpkg": "dist/concent.js",
-  "version": "1.0.38"
+  "version": "1.5.181"
 }
