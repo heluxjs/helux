@@ -1,7 +1,7 @@
 import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
-import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER } from '../support/constant';
+import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
 import initModuleWatch from '../core/watch/init-module-watch';
 import createDispatcher from './create-dispatcher';
@@ -30,18 +30,29 @@ function _checkDispatcher() {
   }
 }
 
-function _clearInsAssociation(recomputed = false) {
+function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
   clearObject(ccContext.renderKey_ccUkeys_);
   const cct = ccContext.ccClassKey_ccClassContext_;
+
+  const ccUkey_ref_ = ccContext.ccUkey_ref_;
   Object.keys(cct).forEach(ccClassKey => {
     const ctx = cct[ccClassKey];
-    clearObject(ctx.ccKeys);
+    const ccKeys = ctx.ccKeys;
+    const tmpExclude = [];
+    if (otherExcludeKeys.length > 0 ) {
+      ccKeys.forEach(ccKey => {
+        if(otherExcludeKeys.includes(ccKey) ){
+          tmpExclude.push(ccKey);
+        }
+      })
+    }
+    clearObject(ctx.ccKeys, tmpExclude);
   });
   clearObject(ccContext.handlerKey_handler_);
-  clearObject(ccContext.ccUkey_ref_, [CC_DISPATCHER]);
-  clearObject(ccContext.refs, [CC_DISPATCHER]);
+  clearObject(ccUkey_ref_, [CC_DISPATCHER].concat(otherExcludeKeys));
+
 
   if (recomputed) {
     const { computed, watch } = ccContext;
@@ -64,6 +75,24 @@ function _clearInsAssociation(recomputed = false) {
   }
 }
 
+// 这些CcFragIns随后需要被恢复
+function _pickCcFragIns() {
+  const ccUkey_ref_ = ccContext.ccUkey_ref_;
+  const ccFragKeys = [];
+  okeys(ccUkey_ref_).forEach(ccKey => {
+    const ref = ccUkey_ref_[ccKey];
+    if (ref
+      && ref.ctx.type === CC_FRAGMENT
+      && ref.props.__$$regDumb !== true // 直接<CcFragment>实例化的
+      && ref.__$$isMounted === true // 已挂载
+      && ref.__$$isUnmounted == false // 未卸载
+    ) {
+      ccFragKeys.push(ccKey);
+    }
+  })
+  return ccFragKeys;
+}
+
 function _clearAll() {
   clearObject(ccContext.globalStateKeys);
 
@@ -78,44 +107,46 @@ function _clearAll() {
   clearObject(ccContext.watch._watchDep, toExcludedModules);
   clearObject(ccContext.middlewares);
   clearCachedData();
-  _clearInsAssociation();
-}
-
-function _prepareClear(cb) {
-  if (ccContext.isStartup) {
-    if (ccContext.isHotReloadMode()) {
-      cb();
-    } else {
-      console.warn(`clear failed because of not running under hot reload mode!`);
-    }
-  }else{
-    //还没有启动过，泽只是标记justCalledByStartUp为true
-    justCalledByStartUp = true;
-  }
+  const ccFragKeys = _pickCcFragIns();
+  _clearInsAssociation(false, ccFragKeys);
+  return ccFragKeys;
 }
 
 export default function (clearAll = false) {
   ccContext.info.latestStartupTime = Date.now();
-  _prepareClear(() => {
-    if (clearAll) {
-      console.warn(`attention: make sure [[clearContextIfHot]] been called before app rendered!`);
-      justCalledByStartUp = true;
-      _clearAll();
-    } else {
-      // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
-      // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命令单独放置在一个脚本里，
-      // 如果用户修改了启动相关文件, 则会触发 runConcent renderApp，
-      // runConcent调用清理把justCalledByStartUp置为true，则renderApp这里再次触发clear时就可以不用执行了(注意确保renderApp之前，调用了clearContextIfHot)
-      // 而随后只是改了某个component文件时，则只会触发 renderApp，
-      // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
-      if (justCalledByStartUp) {
-        justCalledByStartUp = false;
-        return;
+  let ccFragKeys = [];
+  if (ccContext.isStartup) {
+    if (ccContext.isHotReloadMode()) {
+      if (clearAll) {
+        console.warn(`attention: make sure [[clearContextIfHot]] been called before app rendered!`);
+        justCalledByStartUp = true;
+        ccFragKeys = _clearAll(clearAll);
+        return ccFragKeys;
+      } else {
+        // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
+        // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命令单独放置在一个脚本里，
+        // 如果用户修改了启动相关文件, 则会触发 runConcent renderApp，
+        // runConcent调用清理把justCalledByStartUp置为true，则renderApp这里再次触发clear时就可以不用执行了(注意确保renderApp之前，调用了clearContextIfHot)
+        // 而随后只是改了某个component文件时，则只会触发 renderApp，
+        // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
+        if (justCalledByStartUp) {
+          justCalledByStartUp = false;
+          return ccFragKeys;
+        }
+  
+        _checkDispatcher();
+        ccFragKeys = _pickCcFragIns();
+        // !!!重计算各个模块的computed结果
+        _clearInsAssociation(ccContext.reComputed, ccFragKeys);
+        return ccFragKeys;
       }
-
-      _checkDispatcher();
-      // !!!重计算各个模块的computed结果
-      _clearInsAssociation(ccContext.reComputed);
+    } else {
+      console.warn(`clear failed because of not running under hot reload mode!`);
+      return ccFragKeys;
     }
-  });
+  }else{
+    //还没有启动过，泽只是标记justCalledByStartUp为true
+    justCalledByStartUp = true;
+    return ccFragKeys;
+  }
 }

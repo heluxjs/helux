@@ -50,9 +50,13 @@ export default function (ref, params, liteLevel = 5) {
     state, storedKeys = [], persistStoredKeys = false, watchedKeys, connect = {}, tag = '', ccOption = {},
   } = params;
   const stateModule = module;
+  const existedCtx = ref.ctx;
 
   let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
-  if (type !== CC_HOOK) {
+  if (existedCtx) {//如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+    __boundSetState = existedCtx.__boundSetState;
+    __boundForceUpdate = existedCtx.__boundForceUpdate;
+  } else if (type !== CC_HOOK) {
     __boundSetState = ref.setState.bind(ref);
     __boundForceUpdate = ref.forceUpdate.bind(ref);
   }
@@ -329,7 +333,7 @@ export default function (ref, params, liteLevel = 5) {
     ctx.effectProps = makeEffectHandler(effectPropsItems, true);
   }
 
-  if (!ref.ctx) ref.ctx = ctx;
+  if (!existedCtx) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
   else Object.assign(ref.ctx, ctx);
 

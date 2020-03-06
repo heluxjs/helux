@@ -383,7 +383,16 @@
       excludeKeys = [];
     }
 
-    if (Array.isArray(object)) object.length = 0;else Object.keys(object).forEach(function (key) {
+    if (Array.isArray(object)) {
+      var retainKeys = [];
+      excludeKeys.forEach(function (key) {
+        if (object.includes(key)) retainKeys.push(key);
+      });
+      object.length = 0;
+      retainKeys.forEach(function (key) {
+        return object.push(key);
+      });
+    } else Object.keys(object).forEach(function (key) {
       if (excludeKeys.includes(key)) ; else {
         if (reset) object[key] = reset;else delete object[key];
       }
@@ -4462,10 +4471,15 @@
         _params$ccOption = params.ccOption,
         ccOption = _params$ccOption === void 0 ? {} : _params$ccOption;
     var stateModule = module;
+    var existedCtx = ref.ctx;
     var __boundSetState = ref.setState,
         __boundForceUpdate = ref.forceUpdate;
 
-    if (type !== CC_HOOK) {
+    if (existedCtx) {
+      //如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+      __boundSetState = existedCtx.__boundSetState;
+      __boundForceUpdate = existedCtx.__boundForceUpdate;
+    } else if (type !== CC_HOOK) {
       __boundSetState = ref.setState.bind(ref);
       __boundForceUpdate = ref.forceUpdate.bind(ref);
     }
@@ -4850,7 +4864,7 @@
       ctx.effectProps = makeEffectHandler(effectPropsItems, true);
     }
 
-    if (!ref.ctx) ref.ctx = ctx; // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
+    if (!existedCtx) ref.ctx = ctx; // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
     else Object.assign(ref.ctx, ctx);
   }
 
@@ -4895,9 +4909,9 @@
       runtimeVar$2 = ccContext.runtimeVar;
   function beforeMount (ref, setup, bindCtxToMethod) {
     var ctx = ref.ctx;
-    ref.__$$isUnmounted = false; // 未卸载不代表已挂载，在willMount时机才置为true
+    ref.__$$isUnmounted = false; // false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
 
-    ref.__$$isMounted = false; // 未挂载，在didMount时机才置为true,
+    ref.__$$isMounted = false; // 未挂载，在didMount时机才置为true，表示已挂载
 
     ref.__$$isBF = true; // isBeforeFirstRender
 
@@ -5715,7 +5729,7 @@
     }
   }
 
-  function _clearInsAssociation(recomputed) {
+  function _clearInsAssociation(recomputed, otherExcludeKeys) {
     if (recomputed === void 0) {
       recomputed = false;
     }
@@ -5724,13 +5738,24 @@
     clearObject(ccContext.ccUKey_handlerKeys_);
     clearObject(ccContext.renderKey_ccUkeys_);
     var cct = ccContext.ccClassKey_ccClassContext_;
+    var ccUkey_ref_ = ccContext.ccUkey_ref_;
     Object.keys(cct).forEach(function (ccClassKey) {
       var ctx = cct[ccClassKey];
-      clearObject(ctx.ccKeys);
+      var ccKeys = ctx.ccKeys;
+      var tmpExclude = [];
+
+      if (otherExcludeKeys.length > 0) {
+        ccKeys.forEach(function (ccKey) {
+          if (otherExcludeKeys.includes(ccKey)) {
+            tmpExclude.push(ccKey);
+          }
+        });
+      }
+
+      clearObject(ctx.ccKeys, tmpExclude);
     });
     clearObject(ccContext.handlerKey_handler_);
-    clearObject(ccContext.ccUkey_ref_, [CC_DISPATCHER]);
-    clearObject(ccContext.refs, [CC_DISPATCHER]);
+    clearObject(ccUkey_ref_, [CC_DISPATCHER].concat(otherExcludeKeys));
 
     if (recomputed) {
       var computed = ccContext.computed,
@@ -5754,6 +5779,23 @@
         }
       });
     }
+  } // 这些CcFragIns随后需要被恢复
+
+
+  function _pickCcFragIns() {
+    var ccUkey_ref_ = ccContext.ccUkey_ref_;
+    var ccFragKeys = [];
+    okeys(ccUkey_ref_).forEach(function (ccKey) {
+      var ref = ccUkey_ref_[ccKey];
+
+      if (ref && ref.ctx.type === CC_FRAGMENT && ref.props.__$$regDumb !== true // 直接<CcFragment>实例化的
+      && ref.__$$isMounted === true // 已挂载
+      && ref.__$$isUnmounted == false // 未卸载
+      ) {
+          ccFragKeys.push(ccKey);
+        }
+    });
+    return ccFragKeys;
   }
 
   function _clearAll() {
@@ -5769,20 +5811,11 @@
     clearObject(ccContext.middlewares);
     clearCachedData();
 
-    _clearInsAssociation();
-  }
+    var ccFragKeys = _pickCcFragIns();
 
-  function _prepareClear(cb) {
-    if (ccContext.isStartup) {
-      if (ccContext.isHotReloadMode()) {
-        cb();
-      } else {
-        console.warn("clear failed because of not running under hot reload mode!");
-      }
-    } else {
-      //还没有启动过，泽只是标记justCalledByStartUp为true
-      justCalledByStartUp = true;
-    }
+    _clearInsAssociation(false, ccFragKeys);
+
+    return ccFragKeys;
   }
 
   function clearContextIfHot (clearAll) {
@@ -5791,31 +5824,106 @@
     }
 
     ccContext.info.latestStartupTime = Date.now();
+    var ccFragKeys = [];
 
-    _prepareClear(function () {
-      if (clearAll) {
-        console.warn("attention: make sure [[clearContextIfHot]] been called before app rendered!");
-        justCalledByStartUp = true;
+    if (ccContext.isStartup) {
+      if (ccContext.isHotReloadMode()) {
+        if (clearAll) {
+          console.warn("attention: make sure [[clearContextIfHot]] been called before app rendered!");
+          justCalledByStartUp = true;
+          ccFragKeys = _clearAll(clearAll);
+          return ccFragKeys;
+        } else {
+          // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
+          // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命令单独放置在一个脚本里，
+          // 如果用户修改了启动相关文件, 则会触发 runConcent renderApp，
+          // runConcent调用清理把justCalledByStartUp置为true，则renderApp这里再次触发clear时就可以不用执行了(注意确保renderApp之前，调用了clearContextIfHot)
+          // 而随后只是改了某个component文件时，则只会触发 renderApp，
+          // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
+          if (justCalledByStartUp) {
+            justCalledByStartUp = false;
+            return ccFragKeys;
+          }
 
-        _clearAll();
-      } else {
-        // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
-        // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命令单独放置在一个脚本里，
-        // 如果用户修改了启动相关文件, 则会触发 runConcent renderApp，
-        // runConcent调用清理把justCalledByStartUp置为true，则renderApp这里再次触发clear时就可以不用执行了(注意确保renderApp之前，调用了clearContextIfHot)
-        // 而随后只是改了某个component文件时，则只会触发 renderApp，
-        // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
-        if (justCalledByStartUp) {
-          justCalledByStartUp = false;
-          return;
+          _checkDispatcher();
+
+          ccFragKeys = _pickCcFragIns(); // !!!重计算各个模块的computed结果
+
+          _clearInsAssociation(ccContext.reComputed, ccFragKeys);
+
+          return ccFragKeys;
         }
-
-        _checkDispatcher(); // !!!重计算各个模块的computed结果
-
-
-        _clearInsAssociation(ccContext.reComputed);
+      } else {
+        console.warn("clear failed because of not running under hot reload mode!");
+        return ccFragKeys;
       }
-    });
+    } else {
+      //还没有启动过，泽只是标记justCalledByStartUp为true
+      justCalledByStartUp = true;
+      return ccFragKeys;
+    }
+  }
+
+  var getRegisterOptions$1 = getRegisterOptions,
+      evalState$3 = evalState;
+  function initCcFrag (ref) {
+    var props = ref.props;
+    var registerOptions = getRegisterOptions$1(props.register);
+    var module = registerOptions.module,
+        renderKeyClasses = registerOptions.renderKeyClasses,
+        tag = registerOptions.tag,
+        lite = registerOptions.lite,
+        _registerOptions$comp = registerOptions.compareProps,
+        compareProps = _registerOptions$comp === void 0 ? true : _registerOptions$comp,
+        setup = registerOptions.setup,
+        bindCtxToMethod = registerOptions.bindCtxToMethod,
+        _registerOptions$watc = registerOptions.watchedKeys,
+        watchedKeys = _registerOptions$watc === void 0 ? '*' : _registerOptions$watc,
+        _registerOptions$conn = registerOptions.connect,
+        connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
+        isSingle = registerOptions.isSingle,
+        _registerOptions$stor = registerOptions.storedKeys,
+        storedKeys = _registerOptions$stor === void 0 ? [] : _registerOptions$stor;
+    var state = evalState$3(registerOptions.state);
+    var ccClassKey = props.ccClassKey,
+        ccKey = props.ccKey,
+        _props$ccOption = props.ccOption,
+        ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
+    var target_watchedKeys = watchedKeys;
+    var target_ccClassKey = ccClassKey;
+    var target_connect = connect; //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
+
+    if (props.__$$regDumb !== true) {
+      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true),
+          _watchedKeys = _mapRegistrationInfo._watchedKeys,
+          _ccClassKey = _mapRegistrationInfo._ccClassKey,
+          _connect = _mapRegistrationInfo._connect;
+
+      target_watchedKeys = _watchedKeys;
+      target_ccClassKey = _ccClassKey;
+      target_connect = _connect;
+    } //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
+
+
+    buildRefCtx(ref, {
+      isSingle: isSingle,
+      ccKey: ccKey,
+      connect: target_connect,
+      state: state,
+      module: module,
+      storedKeys: storedKeys,
+      watchedKeys: target_watchedKeys,
+      tag: tag,
+      ccClassKey: target_ccClassKey,
+      ccOption: ccOption,
+      type: CC_FRAGMENT
+    }, lite);
+    ref.ctx.reactSetState = makeRefSetState(ref);
+    ref.ctx.reactForceUpdate = makeRefForceUpdate(ref);
+    ref.__$$compareProps = compareProps; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
+    //无需在将要给废弃的componentWillMount里调用beforeMount
+
+    beforeMount(ref, setup, bindCtxToMethod);
   }
 
   var justTip$1 = justTip,
@@ -5844,10 +5952,12 @@
 
     var letRunOk = function letRunOk() {
       ccContext.isHot = true;
-      clearContextIfHot(true);
+      return clearContextIfHot(true);
     };
 
     var now = Date.now();
+    var ccFragKeys = [],
+        canStartup = true;
 
     if (!cachedLocation) {
       cachedLocation = curLocation;
@@ -5860,18 +5970,21 @@
         throw new Error(tip);
       } else {
         if (isOnlineEditor()) {
-          letRunOk();
+          ccFragKeys = letRunOk();
           cachedLocation = curLocation;
         } else {
           strictWarning(tip);
-          return false;
+          canStartup = false;
         }
       }
     } else {
-      letRunOk();
+      ccFragKeys = letRunOk();
     }
 
-    return true;
+    return {
+      canStartup: canStartup,
+      ccFragKeys: ccFragKeys
+    };
   }
 
   function startup (_temp, _temp2) {
@@ -5914,71 +6027,80 @@
         _ref2$reComputed = _ref2.reComputed,
         reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed;
 
-    var canStartup = true;
-
     try {
       throw new Error();
     } catch (err) {
-      canStartup = checkStartup(err);
-    }
+      var _checkStartup = checkStartup(err),
+          canStartup = _checkStartup.canStartup,
+          ccFragKeys = _checkStartup.ccFragKeys;
 
-    if (!canStartup) return;
+      if (!canStartup) return;
 
-    try {
-      console.log("%c window.name:" + window.name, 'color:green;border:1px solid green');
-      justTip$1("cc version " + ccContext.info.version);
-      if (isHot !== undefined) ccContext.isHot = isHot;
-      ccContext.reComputed = reComputed;
-      ccContext.errorHandler = errorHandler;
-      var rv = ccContext.runtimeVar;
-      rv.alwaysGiveState = alwaysGiveState;
-      rv.isStrict = isStrict;
-      rv.isDebug = isDebug;
-      rv.computedCompare = computedCompare;
-      rv.watchCompare = watchCompare;
-      rv.watchImmediate = watchImmediate;
-      rv.bindCtxToMethod = bindCtxToMethod;
-      configModuleSingleClass(moduleSingleClass);
-      configStoreState(store);
-      configRootReducer(reducer);
-      configRootComputed(computed);
-      configRootWatch(watch);
-      executeRootInit(init);
-      configMiddlewares(middlewares);
+      try {
+        console.log("%c window.name:" + window.name, 'color:green;border:1px solid green');
+        justTip$1("cc version " + ccContext.info.version);
+        if (isHot !== undefined) ccContext.isHot = isHot;
+        ccContext.reComputed = reComputed;
+        ccContext.errorHandler = errorHandler;
+        var rv = ccContext.runtimeVar;
+        rv.alwaysGiveState = alwaysGiveState;
+        rv.isStrict = isStrict;
+        rv.isDebug = isDebug;
+        rv.computedCompare = computedCompare;
+        rv.watchCompare = watchCompare;
+        rv.watchImmediate = watchImmediate;
+        rv.bindCtxToMethod = bindCtxToMethod;
+        configModuleSingleClass(moduleSingleClass);
+        configStoreState(store);
+        configRootReducer(reducer);
+        configRootComputed(computed);
+        configRootWatch(watch);
+        executeRootInit(init);
+        configMiddlewares(middlewares);
 
-      if (!ccContext.refs[CC_DISPATCHER]) {
-        var Dispatcher = createDispatcher();
-        appendDispatcher(Dispatcher);
+        if (!ccContext.refs[CC_DISPATCHER]) {
+          var Dispatcher = createDispatcher();
+          appendDispatcher(Dispatcher);
+        }
+
+        var bindOthers = function bindOthers(bindTarget) {
+          bindToWindow$1('CC_CONTEXT', ccContext, bindTarget);
+          bindToWindow$1('ccc', ccContext, bindTarget);
+          bindToWindow$1('cccc', ccContext.computed._computedValue, bindTarget);
+          bindToWindow$1('sss', ccContext.store._state, bindTarget);
+        };
+
+        if (window.mcc) {
+          setTimeout(function () {
+            //延迟绑定，等待ccns的输入
+            bindOthers(window.mcc[getCcNamespace()]);
+          }, 1200);
+        } else {
+          bindOthers();
+        }
+
+        ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+
+        configPlugins(plugins); // 可以理解为类似useConcent里处理double - invoking 以及 async rendering的过程
+        // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
+        // 防止在线IDE热加载后，ui和store不同步的问题
+
+        ccFragKeys.forEach(function (key) {
+          var ref = ccContext.ccUkey_ref_[key];
+          beforeUnmount(ref);
+          initCcFrag(ref);
+          didMount(ref);
+        });
+      } catch (err) {
+        if (errorHandler) errorHandler(err);else throw err;
       }
-
-      var bindOthers = function bindOthers(bindTarget) {
-        bindToWindow$1('CC_CONTEXT', ccContext, bindTarget);
-        bindToWindow$1('ccc', ccContext, bindTarget);
-        bindToWindow$1('cccc', ccContext.computed._computedValue, bindTarget);
-        bindToWindow$1('sss', ccContext.store._state, bindTarget);
-      };
-
-      if (window.mcc) {
-        setTimeout(function () {
-          //延迟绑定，等待ccns的输入
-          bindOthers(window.mcc[getCcNamespace()]);
-        }, 1200);
-      } else {
-        bindOthers();
-      }
-
-      ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
-
-      configPlugins(plugins);
-    } catch (err) {
-      if (errorHandler) errorHandler(err);else throw err;
     }
   }
 
   var isPJO$8 = isPJO,
       okeys$c = okeys,
       isObjectNull$2 = isObjectNull,
-      evalState$3 = evalState;
+      evalState$4 = evalState;
 
   var pError = function pError(label) {
     throw new Error("[[run]]: param error, " + label + " " + NOT_A_JSON);
@@ -6027,7 +6149,7 @@
         throw new Error("run api error: module" + m + " duplicate");
       }
 
-      storeConf.store[m] = evalState$3(state);
+      storeConf.store[m] = evalState$4(state);
       if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
       storeConf.reducer[m] = reducer;
       if (watch) storeConf.watch[m] = watch;
@@ -6110,9 +6232,7 @@
     }, ccClassKey);
   }
 
-  var shallowDiffers$2 = shallowDiffers,
-      getRegisterOptions$1 = getRegisterOptions,
-      evalState$4 = evalState;
+  var shallowDiffers$2 = shallowDiffers;
   var nullSpan = React.createElement('span', {
     style: {
       display: 'none'
@@ -6128,62 +6248,7 @@
       var _this;
 
       _this = _React$Component.call(this, props, context) || this;
-      var registerOptions = getRegisterOptions$1(props.register);
-      var module = registerOptions.module,
-          renderKeyClasses = registerOptions.renderKeyClasses,
-          tag = registerOptions.tag,
-          lite = registerOptions.lite,
-          _registerOptions$comp = registerOptions.compareProps,
-          compareProps = _registerOptions$comp === void 0 ? true : _registerOptions$comp,
-          setup = registerOptions.setup,
-          bindCtxToMethod = registerOptions.bindCtxToMethod,
-          _registerOptions$watc = registerOptions.watchedKeys,
-          watchedKeys = _registerOptions$watc === void 0 ? '*' : _registerOptions$watc,
-          _registerOptions$conn = registerOptions.connect,
-          connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
-          isSingle = registerOptions.isSingle,
-          _registerOptions$stor = registerOptions.storedKeys,
-          storedKeys = _registerOptions$stor === void 0 ? [] : _registerOptions$stor;
-      var state = evalState$4(registerOptions.state);
-      var ccClassKey = props.ccClassKey,
-          ccKey = props.ccKey,
-          _props$ccOption = props.ccOption,
-          ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
-      var target_watchedKeys = watchedKeys;
-      var target_ccClassKey = ccClassKey;
-      var target_connect = connect; //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
-
-      if (props.__$$regDumb !== true) {
-        var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true),
-            _watchedKeys = _mapRegistrationInfo._watchedKeys,
-            _ccClassKey = _mapRegistrationInfo._ccClassKey,
-            _connect = _mapRegistrationInfo._connect;
-
-        target_watchedKeys = _watchedKeys;
-        target_ccClassKey = _ccClassKey;
-        target_connect = _connect;
-      } //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
-
-
-      buildRefCtx(_assertThisInitialized(_this), {
-        isSingle: isSingle,
-        ccKey: ccKey,
-        connect: target_connect,
-        state: state,
-        module: module,
-        storedKeys: storedKeys,
-        watchedKeys: target_watchedKeys,
-        tag: tag,
-        ccClassKey: target_ccClassKey,
-        ccOption: ccOption,
-        type: CC_FRAGMENT
-      }, lite);
-      _this.ctx.reactSetState = makeRefSetState(_assertThisInitialized(_this));
-      _this.ctx.reactForceUpdate = makeRefForceUpdate(_assertThisInitialized(_this));
-      _this.__$$compareProps = compareProps; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
-      //无需在将要给废弃的componentWillMount里调用beforeMount
-
-      beforeMount(_assertThisInitialized(_this), setup, bindCtxToMethod);
+      initCcFrag(_assertThisInitialized(_this));
       return _this;
     }
 

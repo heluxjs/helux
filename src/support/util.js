@@ -190,8 +190,14 @@ export function randomNumber(lessThan = 52) {
 }
 
 export function clearObject(object, excludeKeys = [], reset) {
-  if (Array.isArray(object)) object.length = 0;
-  else Object.keys(object).forEach(key => {
+  if (Array.isArray(object)) {
+    const retainKeys = [];
+    excludeKeys.forEach(key => {
+      if (object.includes(key)) retainKeys.push(key);
+    });
+    object.length = 0;
+    retainKeys.forEach(key => object.push(key));
+  } else Object.keys(object).forEach(key => {
     if (excludeKeys.includes(key)) {
     } else {
       if (reset) object[key] = reset;

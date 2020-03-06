@@ -1,56 +1,18 @@
 import React from 'react';
-import { CC_FRAGMENT } from '../support/constant';
 import * as util from '../support/util';
-import mapRegistrationInfo from '../core/base/map-registration-info';
 import beforeUnmount from '../core/base/before-unmount';
-import beforeMount from '../core/base/before-mount';
 import didMount from '../core/base/did-mount';
 import didUpdate from '../core/base/did-update';
-import buildRefCtx from '../core/ref/build-ref-ctx';
 import getOutProps from '../core/base/get-out-props';
-import * as hf from '../core/state/handler-factory';
+import initCcFrag from '../core/ref/init-cc-frag';
 
-const { shallowDiffers, getRegisterOptions, evalState } = util;
+const { shallowDiffers } = util;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
 class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
-    const registerOptions = getRegisterOptions(props.register);
-    const {
-      module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-      watchedKeys = '*', connect = {}, isSingle, storedKeys = []
-    } = registerOptions;
-
-    const state = evalState(registerOptions.state);
-    const { ccClassKey, ccKey, ccOption = {} } = props;
-
-    let target_watchedKeys = watchedKeys;
-    let target_ccClassKey = ccClassKey;
-    let target_connect = connect;
-
-    //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
-    if (props.__$$regDumb !== true) {
-      const {_watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-        module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true
-      );
-      target_watchedKeys = _watchedKeys;
-      target_ccClassKey = _ccClassKey;
-      target_connect = _connect;
-    }
-    //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
-
-    buildRefCtx(this, {
-      isSingle, ccKey, connect: target_connect, state, module,
-      storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT
-    }, lite);
-    this.ctx.reactSetState = hf.makeRefSetState(this);
-    this.ctx.reactForceUpdate = hf.makeRefForceUpdate(this);
-
-    this.__$$compareProps = compareProps;
-    //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
-    //无需在将要给废弃的componentWillMount里调用beforeMount
-    beforeMount(this, setup, bindCtxToMethod);
+    initCcFrag(this);
   }
 
   componentDidMount() {

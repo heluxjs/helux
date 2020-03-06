@@ -3,9 +3,11 @@ import { CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
-import beforeUnmount from '../core/base/before-unmount';
 import appendDispatcher from '../core/base/append-dispatcher';
 import clearContextIfHot from './clear-context-if-hot';
+import didMount from '../core/base/did-mount';
+import beforeUnmount from '../core/base/before-unmount';
+import initCcFrag from '../core/ref/init-cc-frag';
 
 const { justTip, bindToWindow } = util;
 let cachedLocation = '';
@@ -31,10 +33,11 @@ function checkStartup(err) {
 
   const letRunOk = () => {
     ccContext.isHot = true;
-    clearContextIfHot(true);
+    return clearContextIfHot(true);
   }
 
   const now = Date.now();
+  let ccFragKeys = [], canStartup = true;
   if (!cachedLocation) {
     cachedLocation = curLocation;
     info.firstStartupTime = now;
@@ -46,17 +49,17 @@ function checkStartup(err) {
       throw new Error(tip);
     } else {
       if (util.isOnlineEditor()) {
-        letRunOk();
+        ccFragKeys = letRunOk();
         cachedLocation = curLocation;
       } else {
         util.strictWarning(tip);
-        return false;
+        canStartup = false;
       }
     }
   } else {
-    letRunOk();
+    ccFragKeys = letRunOk();
   }
-  return true;
+  return { canStartup, ccFragKeys };
 }
 
 export default function (
@@ -83,61 +86,70 @@ export default function (
     alwaysGiveState = true,
     reComputed = true,
   } = {}) {
-  let canStartup = true;
   try {
     throw new Error();
   } catch (err) {
-    canStartup = checkStartup(err);
-  }
-  if (!canStartup) return;
+    const { canStartup, ccFragKeys } = checkStartup(err);
+    if (!canStartup) return;
 
-  try {
-    console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
-    justTip(`cc version ${ccContext.info.version}`);
-    if (isHot !== undefined) ccContext.isHot = isHot;
-    ccContext.reComputed = reComputed;
-    ccContext.errorHandler = errorHandler;
-    const rv = ccContext.runtimeVar;
-    rv.alwaysGiveState = alwaysGiveState;
-    rv.isStrict = isStrict;
-    rv.isDebug = isDebug;
-    rv.computedCompare = computedCompare;
-    rv.watchCompare = watchCompare;
-    rv.watchImmediate = watchImmediate;
-    rv.bindCtxToMethod = bindCtxToMethod;
+    try {
+      console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
+      justTip(`cc version ${ccContext.info.version}`);
+      if (isHot !== undefined) ccContext.isHot = isHot;
+      ccContext.reComputed = reComputed;
+      ccContext.errorHandler = errorHandler;
+      const rv = ccContext.runtimeVar;
+      rv.alwaysGiveState = alwaysGiveState;
+      rv.isStrict = isStrict;
+      rv.isDebug = isDebug;
+      rv.computedCompare = computedCompare;
+      rv.watchCompare = watchCompare;
+      rv.watchImmediate = watchImmediate;
+      rv.bindCtxToMethod = bindCtxToMethod;
 
-    boot.configModuleSingleClass(moduleSingleClass);
-    boot.configStoreState(store);
-    boot.configRootReducer(reducer);
-    boot.configRootComputed(computed);
-    boot.configRootWatch(watch);
-    boot.executeRootInit(init);
-    boot.configMiddlewares(middlewares);
+      boot.configModuleSingleClass(moduleSingleClass);
+      boot.configStoreState(store);
+      boot.configRootReducer(reducer);
+      boot.configRootComputed(computed);
+      boot.configRootWatch(watch);
+      boot.executeRootInit(init);
+      boot.configMiddlewares(middlewares);
 
-    if (!ccContext.refs[CC_DISPATCHER]) {
-      const Dispatcher = createDispatcher();
-      appendDispatcher(Dispatcher);
+      if (!ccContext.refs[CC_DISPATCHER]) {
+        const Dispatcher = createDispatcher();
+        appendDispatcher(Dispatcher);
+      }
+
+      const bindOthers = (bindTarget) => {
+        bindToWindow('CC_CONTEXT', ccContext, bindTarget);
+        bindToWindow('ccc', ccContext, bindTarget);
+        bindToWindow('cccc', ccContext.computed._computedValue, bindTarget);
+        bindToWindow('sss', ccContext.store._state, bindTarget);
+      }
+      if (window.mcc) {
+        setTimeout(() => {//延迟绑定，等待ccns的输入
+          bindOthers(window.mcc[util.getCcNamespace()]);
+        }, 1200);
+      } else {
+        bindOthers();
+      }
+
+      ccContext.isStartup = true;
+      //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+      boot.configPlugins(plugins);
+
+      // 可以理解为类似useConcent里处理double - invoking 以及 async rendering的过程
+      // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
+      // 防止在线IDE热加载后，ui和store不同步的问题
+      ccFragKeys.forEach(key => {
+        const ref = ccContext.ccUkey_ref_[key];
+        beforeUnmount(ref);
+        initCcFrag(ref);
+        didMount(ref);
+      });
+    } catch (err) {
+      if (errorHandler) errorHandler(err);
+      else throw err;
     }
-
-    const bindOthers = (bindTarget) => {
-      bindToWindow('CC_CONTEXT', ccContext, bindTarget);
-      bindToWindow('ccc', ccContext, bindTarget);
-      bindToWindow('cccc', ccContext.computed._computedValue, bindTarget);
-      bindToWindow('sss', ccContext.store._state, bindTarget);
-    }
-    if (window.mcc) {
-      setTimeout(() => {//延迟绑定，等待ccns的输入
-        bindOthers(window.mcc[util.getCcNamespace()]);
-      }, 1200);
-    } else {
-      bindOthers();
-    }
-
-    ccContext.isStartup = true;
-    //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
-    boot.configPlugins(plugins);
-  } catch (err) {
-    if (errorHandler) errorHandler(err);
-    else throw err;
   }
 }
