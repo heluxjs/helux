@@ -1243,7 +1243,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.1',
+      version: '2.0.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -4460,7 +4460,8 @@
       me$3 = makeError,
       vbi$3 = verboseInfo,
       safeGetArrayFromObject$2 = safeGetArrayFromObject,
-      justWarning$6 = justWarning;
+      justWarning$6 = justWarning,
+      isObjectNull$2 = isObjectNull;
   var idSeq = 0;
 
   function getEId() {
@@ -4509,10 +4510,10 @@
     var stateModule = module;
     var existedCtx = ref.ctx;
     var __boundSetState = ref.setState,
-        __boundForceUpdate = ref.forceUpdate;
+        __boundForceUpdate = ref.forceUpdate; // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+    // 做个保护判断，防止 ctx = {}
 
-    if (existedCtx) {
-      //如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+    if (!isObjectNull$2(existedCtx) && ctx.ccUniqueKey) {
       __boundSetState = existedCtx.__boundSetState;
       __boundForceUpdate = existedCtx.__boundForceUpdate;
     } else if (type !== CC_HOOK) {
@@ -6144,7 +6145,7 @@
 
   var isPJO$8 = isPJO,
       okeys$b = okeys,
-      isObjectNull$2 = isObjectNull,
+      isObjectNull$3 = isObjectNull,
       evalState$4 = evalState;
 
   var pError = function pError(label) {
@@ -6216,7 +6217,7 @@
     });
     pendingModules.length = 0; // clear pending modules
 
-    if (isObjectNull$2(storeConf.init)) storeConf.init = null;
+    if (isObjectNull$3(storeConf.init)) storeConf.init = null;
     startup(storeConf, options);
   }
 

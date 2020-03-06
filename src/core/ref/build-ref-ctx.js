@@ -25,7 +25,7 @@ const {
   renderKey_ccUkeys_,
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject, justWarning } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject, justWarning, isObjectNull } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -53,7 +53,10 @@ export default function (ref, params, liteLevel = 5) {
   const existedCtx = ref.ctx;
 
   let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
-  if (existedCtx) {//如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+
+  // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+  // 做个保护判断，防止 ctx = {}
+  if (!isObjectNull(existedCtx) && existedCtx.ccUniqueKey) {
     __boundSetState = existedCtx.__boundSetState;
     __boundForceUpdate = existedCtx.__boundForceUpdate;
   } else if (type !== CC_HOOK) {
