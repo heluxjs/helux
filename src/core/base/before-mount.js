@@ -1,6 +1,7 @@
 import * as util from '../../support/util';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
+import makeObCuContainer from '../computed/make-cu-ob-container';
 
 const { safeGetObjectFromObject, okeys, justWarning } = util;
 const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
@@ -56,6 +57,9 @@ export default function (ref, setup, bindCtxToMethod) {
     ctx.settings = settingsObj;
   }
   ctx.__$$isBSe = false;
+
+  //!!! 赋值拦截了setter getter的计算结果容器
+  ctx.refComputed = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
 
   triggerComputedAndWatch(ref);
 }

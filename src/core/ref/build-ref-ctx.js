@@ -172,8 +172,9 @@ export default function (ref, params, liteLevel = 5) {
     extra: {},// can pass value to extra in every render period
     staticExtra: {},// only can be assign value in setup block
 
-    // computed
+    // computed result containers
     refComputed: {},
+    refComputedOri: {},// 未代理的计算值容器
     moduleComputed,
     globalComputed,
     connectedComputed,
