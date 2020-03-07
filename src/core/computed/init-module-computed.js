@@ -8,7 +8,7 @@ import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 import makeObCuContainer from '../computed/make-cu-ob-container';
 
-const { safeGetObjectFromObject, isPJO } = util;
+const { safeGetObject, isPJO } = util;
 
 export default function (module, computed) {
   if(!computed) return;
@@ -33,7 +33,7 @@ export default function (module, computed) {
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
   const deltaCommittedState = Object.assign({}, moduleState);
 
-  const cuOri = safeGetObjectFromObject(ccComputed._computedValueOri, module);
+  const cuOri = safeGetObject(ccComputed._computedValueOri, module);
   rootComputedValue[module] = makeObCuContainer(computed, cuOri);
   const moduleComputedValue = rootComputedValue[module];
 

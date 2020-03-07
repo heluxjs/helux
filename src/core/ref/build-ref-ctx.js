@@ -4,10 +4,11 @@ import {
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { NOT_A_JSON, END } from '../../support/priv-constant';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
 import changeRefState from '../state/change-ref-state';
+import makeObState from '../state/make-ob-state';
 import getDefineWatchHandler from '../watch/get-define-watch-handler';
 import getDefineComputedHandler from '../computed/get-define-computed-handler';
 import computeCcUniqueKey from '../base/compute-cc-unique-key';
@@ -16,16 +17,16 @@ import getStoredKeys from '../base/get-stored-keys';
 import __sync from '../base/sync';
 
 const {
+  reducer: { _module_fnNames_, _caller },
   refStore,
   ccClassKey_ccClassContext_,
   moduleName_stateKeys_,
   store: { getState },
   moduleName_ccClassKeys_,
   computed: { _computedValue },
-  renderKey_ccUkeys_,
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi, safeGetArrayFromObject, justWarning, isObjectNull } = util;
+const { okeys, makeError: me, clone, verboseInfo: vbi, safeGetArray, safeGetObject, justWarning, isObjectNull } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -43,7 +44,7 @@ const eType = (th) => `type of defineEffect ${th} param must be`;
  * liteLevel 越小，绑定的方法越少
  */
 export default function (ref, params, liteLevel = 5) {
-  
+
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
     isSingle, ccClassKey, ccKey = '', module, type,
@@ -71,8 +72,6 @@ export default function (ref, params, liteLevel = 5) {
   // pick ref defined tag first, register tag second
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
   refOption.renderKey = ccOption.renderKey || ccUniqueKey;// 没有设定renderKey的话，默认ccUniqueKey就是renderKey
-  const ccUkeys = safeGetArrayFromObject(renderKey_ccUkeys_, refOption.renderKey);
-  ccUkeys.push(ccUniqueKey);
 
   refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_[stateModule], ccOption.storedKeys, storedKeys);
 
@@ -86,8 +85,10 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
+  const classConnectedState = classCtx.connectedState;
+  const connectedModules = okeys(connect);
   const connectedComputed = classCtx.connectedComputed || {};
-  const connectedState = classCtx.connectedState || {};
+  const connectedState = {};
   const moduleState = getState(module);
   const moduleComputed = _computedValue[module] || {};
   const globalComputed = _computedValue[MODULE_GLOBAL] || {};
@@ -103,7 +104,7 @@ export default function (ref, params, liteLevel = 5) {
   const stateKeys = okeys(mergedState);
 
   // record ccClassKey
-  const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, module);
+  const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // declare cc state series api
@@ -141,7 +142,7 @@ export default function (ref, params, liteLevel = 5) {
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
-  
+
   const props = getOutProps(ref.props);
   const ctx = {
     // static params
@@ -156,7 +157,16 @@ export default function (ref, params, liteLevel = 5) {
     watchedKeys,
     privStateKeys,
     connect,
-    
+    connectedModules,
+
+    // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
+    __$$hasModuleState: moduleName_stateKeys_[module].length > 0,
+    __$$renderStatus: END,
+    __$$preparedWatchedKeys: [],
+    __$$collectingWatchedKeys_: {}, // for performance, init as map
+    __$$preparedModuleWatchedKeys_: {},// key: module, value: watchedKeyMap
+    __$$collectingModuleWatchedKeys_: {}, // key: module, value: watchedKeyMap
+
     persistStoredKeys: refOption.persistStoredKeys,
     storedKeys: refOption.storedKeys,
     renderKey: refOption.renderKey,
@@ -164,7 +174,7 @@ export default function (ref, params, liteLevel = 5) {
 
     prevProps: props,
     props,
-    mapped:{},
+    mapped: {},
 
     prevState: mergedState,
     // state
@@ -200,7 +210,7 @@ export default function (ref, params, liteLevel = 5) {
     auxMap,// auxiliary method map
     effectMeta,
     retKey_fnUid_: {},
-    
+
     // api
     reactSetState: noop,//等待重写
     __boundSetState,
@@ -214,7 +224,7 @@ export default function (ref, params, liteLevel = 5) {
     useRef: (refName) => {
       return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
     },
-    
+
     // below only can be called by cc or updated by cc in existed period, not expose in d.ts
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
@@ -258,7 +268,7 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   if (liteLevel > 2) {// level 3, assign async api
-    const doSync = (e, val, rkey, delay, type)=>{
+    const doSync = (e, val, rkey, delay, type) => {
       if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
       __sync({ type: 'val' }, ref, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
     }
@@ -339,8 +349,70 @@ export default function (ref, params, liteLevel = 5) {
     ctx.effectProps = makeEffectHandler(effectPropsItems, true);
   }
 
+  // 构造完毕ctx后，开始创建reducer，和可观察connectedState
+  const { moduleReducer, connectedReducer, __$$collectingModuleWatchedKeys_ } = ctx;
+  const allModules = connectedModules.slice();
+  if (!allModules.includes(module)) allModules.push(module);
+  else {
+    justWarning(`module[${module}] is in belongTo and connect both, it will cause redundant render.`);
+  }
+
+  let __$$noAutoWatch = true;
+  //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
+  //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
+  allModules.forEach(m => {
+    let reducerObj;
+    if (m === module) {
+      reducerObj = moduleReducer;
+    } else {
+      reducerObj = safeGetObject(connectedReducer, m);
+    }
+
+    if (connectedModules.includes(m)) {
+      if (connect[m] === '-') {
+        __$$noAutoWatch = false;
+        __$$collectingModuleWatchedKeys_[m] = {};
+        connectedState[m] = makeObState(ref, classConnectedState[m], m);
+      } else {
+        connectedState[m] = classConnectedState[m];
+      }
+    }
+
+    const fnNames = _module_fnNames_[m] || [];
+    fnNames.forEach(fnName => {
+      reducerObj[fnName] = (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
+    });
+  });
+
+  ctx.reducer = _caller;
+
+  if (watchedKeys === '-') {
+    __$$noAutoWatch = false;
+  }
+  ctx.__$$noAutoWatch = __$$noAutoWatch;
+
+  if (!__$$noAutoWatch) {
+    ctx.__$$emptyCMWKeys = clone(__$$collectingModuleWatchedKeys_);
+    ctx.__$$getEmptyCMWKeys = () => clone(ctx.__$$emptyCMWKeys);
+  }
+
+  ctx.__$$reInjectConnObState = () => {
+    const connectedState = {};
+    if (Array.isArray(connect)) {
+      connectedModules.forEach(m => {
+        connectedState[m] = makeObState(ref, classConnectedState[m], m);
+      });
+    } else {
+      connectedModules.forEach(m => {
+        const waKeys = connect[m];
+        if (waKeys === '-') connectedState[m] = makeObState(ref, classConnectedState[m], m);
+        else connectedState[m] = classConnectedState[m];
+      });
+    }
+    ctx.connectedState = connectedState;
+  };
+
   if (!existedCtx) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
   else Object.assign(ref.ctx, ctx);
-
 }

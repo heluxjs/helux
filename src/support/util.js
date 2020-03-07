@@ -60,6 +60,10 @@ export function makeCuDepDesc(){
   return { retKey_fn_: {}, retKey_lazy_:{}, stateKey_retKeys_: {}, fnCount: 0 };
 }
 
+export function makeMoCcUKeysDesc(){
+  return { ver: 1, keys: [] };
+}
+
 /** make ccClassContext */
 export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys) {
   return {
@@ -160,7 +164,7 @@ export function strictWarning(err) {
   }
 }
 
-export function safeGetObjectFromObject(object, key, defaultVal = {}) {
+export function safeGetObject(object, key, defaultVal = {}) {
   let childrenObject = object[key];
   if (!childrenObject) {
     childrenObject = object[key] = defaultVal;
@@ -168,7 +172,7 @@ export function safeGetObjectFromObject(object, key, defaultVal = {}) {
   return childrenObject;
 }
 
-export function safeGetArrayFromObject(object, key) {
+export function safeGetArray(object, key) {
   let childrenArray = object[key];
   if (!childrenArray) {
     childrenArray = object[key] = [];
@@ -355,4 +359,13 @@ function _getValue(obj, keys, lastKeyIndex, keyIndex) {
 export function getValueByKeyPath(obj, keyPath) {
   const keys = keyPath.split('.');
   return _getValue(obj, keys, keys.length - 1, 0);
+}
+
+export function clone(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
+
+export function getPassToMapWaKeys(watchedKeys) {
+  if (watchedKeys === '-') return '*';
+  else return watchedKeys;
 }

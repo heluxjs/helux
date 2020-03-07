@@ -1,8 +1,8 @@
 import * as util from '../../support/util';
 import ccContext from '../../cc-context';
 
-const { event_handlers_, handlerKey_handler_, ccUKey_handlerKeys_, ccUkey_ref_} = ccContext;
-const { makeHandlerKey, safeGetArrayFromObject, justWarning } = util;
+const { event_handlers_, handlerKey_handler_, ccUKey_handlerKeys_, ccUKey_ref_} = ccContext;
+const { makeHandlerKey, safeGetArray, justWarning } = util;
 
 function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity = null) {
   const handlers = event_handlers_[event];
@@ -52,13 +52,13 @@ function _deleteEventHandlers(handlers) {
 
 
 export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler) {
-  const handlers = safeGetArrayFromObject(event_handlers_, event);
+  const handlers = safeGetArray(event_handlers_, event);
   if (typeof handler !== 'function') {
     return justWarning(`event ${event}'s handler is not a function!`);
   }
 
   const handlerKey = makeHandlerKey(ccUniqueKey, event, identity);
-  const handlerKeys = safeGetArrayFromObject(ccUKey_handlerKeys_, ccUniqueKey);
+  const handlerKeys = safeGetArray(ccUKey_handlerKeys_, ccUniqueKey);
   const targetHandlerIndex = handlers.findIndex(v => v.handlerKey === handlerKey);
   // user call ctx.on for a same event in a same instance more than once
   const handlerItem = { event, module, ccClassKey, ccUniqueKey, identity, handlerKey, fn: handler };
@@ -86,7 +86,7 @@ export function findEventHandlersToPerform(event, ...args) {
 
   const handlers = _findEventHandlers(_event, _module, _ccClassKey, _ccUniqueKey, _identity);
   handlers.forEach(({ ccUniqueKey, handlerKey }) => {
-    if (ccUkey_ref_[ccUniqueKey] && handlerKey) {//  confirm the instance is mounted and handler is not been offed
+    if (ccUKey_ref_[ccUniqueKey] && handlerKey) {//  confirm the instance is mounted and handler is not been offed
       const handler = handlerKey_handler_[handlerKey];
       if (handler) handler.fn(...args);
     }

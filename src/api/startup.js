@@ -142,7 +142,7 @@ export default function (
       // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
       // 防止在线IDE热加载后，ui和store不同步的问题
       ccFragKeys.forEach(key => {
-        const ref = ccContext.ccUkey_ref_[key];
+        const ref = ccContext.ccUKey_ref_[key];
         beforeUnmount(ref);
         initCcFrag(ref);
         didMount(ref);

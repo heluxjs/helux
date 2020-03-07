@@ -21,10 +21,10 @@ export default function (module, reducer = {}) {
   const newReducer = Object.assign({}, reducer);
   _reducer[module] = newReducer;
 
-  const subReducerCaller = util.safeGetObjectFromObject(_caller, module);
-  // const subReducerRefCaller = util.safeGetObjectFromObject(_reducerRefCaller, module);
+  const subReducerCaller = util.safeGetObject(_caller, module);
+  // const subReducerRefCaller = util.safeGetObject(_reducerRefCaller, module);
 
-  const fnNames = util.safeGetArrayFromObject(_module_fnNames_, module);
+  const fnNames = util.safeGetArray(_module_fnNames_, module);
 
   // 自动附加一个setState在reducer里
   if (!newReducer.setState) newReducer.setState = payload => payload;
@@ -34,7 +34,7 @@ export default function (module, reducer = {}) {
     // avoid hot reload
     if (!fnNames.includes(name)) fnNames.push(name);
     let fullFnName = `${module}/${name}`;
-    const list = util.safeGetArrayFromObject(_fnName_fullFnNames_, name);
+    const list = util.safeGetArray(_fnName_fullFnNames_, name);
     // avoid hot reload
     if (!list.includes(fullFnName)) list.push(fullFnName);
 

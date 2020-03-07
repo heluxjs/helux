@@ -12,7 +12,7 @@ export default function (ref) {
   const registerOptions = getRegisterOptions(props.register);
   const {
     module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-    watchedKeys = '*', connect = {}, isSingle, storedKeys = []
+    watchedKeys = '-', connect = {}, isSingle, storedKeys = []
   } = registerOptions;
 
   const state = evalState(registerOptions.state);
@@ -24,10 +24,10 @@ export default function (ref) {
 
   //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
   if (props.__$$regDumb !== true) {
-    const { _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true
+    const { _ccClassKey, _connect } = mapRegistrationInfo(
+      module, ccClassKey, renderKeyClasses, CC_FRAGMENT, util.getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
     );
-    target_watchedKeys = _watchedKeys;
+    target_watchedKeys = watchedKeys;
     target_ccClassKey = _ccClassKey;
     target_connect = _connect;
   }

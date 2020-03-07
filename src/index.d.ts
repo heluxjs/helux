@@ -135,6 +135,7 @@ export interface EvMapBase {
 }
 
 export type TStar = '*';
+export type TAuto = '-';
 
 // type EvSyncReturn = (event: React.ChangeEvent<HTMLInputElement>) => void;
 type SyncReturn = (...args: any) => void;
@@ -408,9 +409,9 @@ export interface ICtxBase {
   readonly ccUniqueKey: string;
   readonly initTime: number;
   readonly renderCount: number;
-  readonly watchedKeys: string[];
+  readonly watchedKeys: string[] | TStar | TAuto;
   readonly privStateKeys: string[];
-  readonly connect: { [key: string]: string[] | TStar };
+  readonly connect: { [key: string]: string[] | TStar | TAuto };
 
   // ref can rewrite these 4 props by ccOption
   readonly persistStoredKeys: boolean;
@@ -663,7 +664,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   props?: P;
   state?: IAnyFnReturnObj | IAnyObj;
   extra?: any,// work for useConcent only
-  watchedKeys?: string[];
+  watchedKeys?: string[] | TStar | TAuto;
   storedKeys?: any;
   connect?: any;
   tag?: string;
@@ -691,7 +692,7 @@ interface IRegBaseSt<P extends IAnyObj, ICtx extends ICtxBase, FnState = {}> ext
 type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] |
   // !!! currently I do not know how to pass ${moduleName} to evaluate target type in object value
   // something like (keyof RootState[moduleName] )[] but it is wrong writing
-  { [moduleName in (keyof RootState)]?: TStar | string[] };
+  { [moduleName in (keyof RootState)]?: TStar | TAuto | string[] };
 export interface RegisterOptions<
   P extends IAnyObj,
   RootState extends IRootBase,
@@ -702,7 +703,7 @@ export interface RegisterOptions<
   extends IRegBase<P, ICtx> {
   module?: ModuleName,
   state?: PrivState,
-  watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[];
+  watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[] | TStar | TAuto;
   storedKeys?: PrivState extends IAnyFn ? (keyof ReturnType<PrivState>)[] : (keyof PrivState)[]
   connect?: ConnectSpec<RootState>,
   setup?: (refCtx: ICtx) => IAnyObj | void;

@@ -3,8 +3,8 @@ import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 import makeObCuContainer from '../computed/make-cu-ob-container';
 
-const { safeGetObjectFromObject, okeys, justWarning } = util;
-const { reducer: { _module_fnNames_, _caller }, runtimeVar } = ccContext;
+const { okeys } = util;
+const { runtimeVar } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
   const ctx = ref.ctx;
@@ -13,32 +13,8 @@ export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isMounted = false;// 未挂载，在didMount时机才置为true，表示已挂载
   ref.__$$isBF = true;// isBeforeFirstRender
 
-  ctx.__$$isBSe = true;// isBeforeSetup
-  const { connectedReducer, moduleReducer, dispatch, connect, module } = ctx;
-  const connectedModules = okeys(connect);
-
-  const allModules = connectedModules.slice();
-  if (!allModules.includes(module)) allModules.push(module);
-  else {
-    justWarning(`module[${module}] is in belongTo and connect both, it will cause redundant render.`);
-  }
-
-  //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
-  //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
-  allModules.forEach(m => {
-    let reducerObj;
-    if (m === module) {
-      reducerObj = moduleReducer;
-    } else {
-      reducerObj = safeGetObjectFromObject(connectedReducer, m);
-    }
-
-    const fnNames = _module_fnNames_[m] || [];
-    fnNames.forEach(fnName => {
-      reducerObj[fnName] = (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
-    });
-  });
-  ctx.reducer = _caller;
+  // flag before setup
+  ctx.__$$isBSe = true;
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
@@ -56,9 +32,12 @@ export default function (ref, setup, bindCtxToMethod) {
     }
     ctx.settings = settingsObj;
   }
+
+  // flag after setup
   ctx.__$$isBSe = false;
 
-  //!!! 赋值拦截了setter getter的计算结果容器
+  //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
+  // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
   ctx.refComputed = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
 
   triggerComputedAndWatch(ref);

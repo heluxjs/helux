@@ -1,4 +1,4 @@
-import { clearObject, okeys, makeCuDepDesc } from '../support/util';
+import { clearObject, okeys, makeCuDepDesc, makeMoCcUKeysDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT } from '../support/constant';
@@ -33,10 +33,10 @@ function _checkDispatcher() {
 function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
-  clearObject(ccContext.renderKey_ccUkeys_);
+  clearObject(ccContext.module_ccUKeys_, [], makeMoCcUKeysDesc());
   const cct = ccContext.ccClassKey_ccClassContext_;
 
-  const ccUkey_ref_ = ccContext.ccUkey_ref_;
+  const ccUKey_ref_ = ccContext.ccUKey_ref_;
   Object.keys(cct).forEach(ccClassKey => {
     const ctx = cct[ccClassKey];
     const ccKeys = ctx.ccKeys;
@@ -51,7 +51,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
     clearObject(ctx.ccKeys, tmpExclude);
   });
   clearObject(ccContext.handlerKey_handler_);
-  clearObject(ccUkey_ref_, [CC_DISPATCHER].concat(otherExcludeKeys));
+  clearObject(ccUKey_ref_, [CC_DISPATCHER].concat(otherExcludeKeys));
 
 
   if (recomputed) {
@@ -77,10 +77,10 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
 
 // 这些CcFragIns随后需要被恢复
 function _pickCcFragIns() {
-  const ccUkey_ref_ = ccContext.ccUkey_ref_;
+  const ccUKey_ref_ = ccContext.ccUKey_ref_;
   const ccFragKeys = [];
-  okeys(ccUkey_ref_).forEach(ccKey => {
-    const ref = ccUkey_ref_[ccKey];
+  okeys(ccUKey_ref_).forEach(ccKey => {
+    const ref = ccUKey_ref_[ccKey];
     if (ref
       && ref.ctx.type === CC_FRAGMENT
       && ref.props.__$$regDumb !== true // 直接<CcFragment>实例化的

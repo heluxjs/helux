@@ -31,7 +31,7 @@ export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) 
     const val = connectSpec[m];
 
     if (typeof val === 'string') {
-      if (val !== '*') throw new Error(invalidConnectItem(m));
+      if (val !== '*' && val !== '-') throw new Error(invalidConnectItem(m));
       else {
         featureStrs.push(`${feature}*`);
         okeys(moduleState).forEach(sKey => connectedModuleKeyMapping[`${m}/${sKey}`] = sKey);

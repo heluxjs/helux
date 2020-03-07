@@ -13,8 +13,9 @@ import beforeMount from './before-mount';
 import didMount from './did-mount';
 import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
+import injectObState from '../ref/inject-ob-state';
 
-const { ccClassDisplayName, styleStr, color, okeys, shallowDiffers, evalState } = util;
+const { ccClassDisplayName, styleStr, color, getPassToMapWaKeys, shallowDiffers, evalState } = util;
 const { runtimeVar } = ccContext;
 const cl = color;
 const ss = styleStr;
@@ -23,7 +24,7 @@ const setupErr = info => new Error('can not defined setup both in register optio
 export default function register({
   module = MODULE_DEFAULT,
   state = {},
-  watchedKeys: inputWatchedKeys = '*',
+  watchedKeys = '-',
   storedKeys = [],
   setup = null,
   persistStoredKeys,
@@ -39,8 +40,8 @@ export default function register({
 } = {}, ccClassKey = '') {
   try {
 
-    const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS, inputWatchedKeys, storedKeys, connect,  __checkStartUp, __calledBy
+    const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
+      module, ccClassKey, renderKeyClasses, CC_CLASS, getPassToMapWaKeys(watchedKeys), storedKeys, connect,  __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {
@@ -66,7 +67,7 @@ export default function register({
             // props.ccOption
             const params = Object.assign({}, props, {
               isSingle, module: _module, tag, state: privState, type: CC_CLASS,
-              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
+              watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
             });
             buildRefCtx(this, params, lite);
             this.ctx.reactSetState = hf.makeRefSetState(this);
@@ -76,8 +77,13 @@ export default function register({
               throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);
             }
 
-            if (this.$$setup) this.$$setup = this.$$setup .bind(this);
-            beforeMount(this, setup || this.$$setup || staticSetup, false);
+            
+            if (!isPropsProxy) {
+              if (this.$$setup) this.$$setup = this.$$setup.bind(this);
+              beforeMount(this, setup || this.$$setup || staticSetup, false);
+            }
+            // isPropsProxy为true时，延迟到$$attach里执行beforeMount
+
           } catch (err) {
             catchCcError(err);
           }
@@ -114,16 +120,16 @@ export default function register({
           ctx.__$$ccSetState = hf.makeCcSetStateHandler(childRef, this);
           ctx.__$$ccForceUpdate = hf.makeCcForceUpdateHandler(childRef);
 
-          let childRefState = childRef.state;
+          if (!childRef.state) childRef.state = {};
+          const childRefState = childRef.state;
           const thisState = this.state;
-          if(!childRefState) childRefState = childRef.state = {};
-          const newState = Object.assign({}, childRefState, thisState);
-          childRef.state = newState;//在childRef进入首次render流程前，提前赋值
-          ctx.state = newState;
+          Object.assign(childRefState, thisState);
+          injectObState(childRef);
           
           //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
+          // const newState = Object.assign({}, childRefState, thisState);
           // this.state = newState; // bad writing
-          okeys(newState).forEach(key => thisState[key] = newState[key]);
+          // okeys(newState).forEach(key => thisState[key] = newState[key]);
 
           if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
           if (setup && (childRef.$$setup || staticSetup)) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
@@ -157,6 +163,7 @@ export default function register({
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }
           if (isPropsProxy === false) {
+            if (this.ctx.watchedKeys === '-') injectObState(this);
             //now cc class extends ReactClass, call super.render()
             return super.render();
           } else {

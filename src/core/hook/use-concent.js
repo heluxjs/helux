@@ -9,9 +9,10 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
-import { isPJO, getRegisterOptions, evalState } from '../../support/util';
+import { isPJO, getRegisterOptions, evalState, getPassToMapWaKeys } from '../../support/util';
+import injectObState from '../ref/inject-ob-state';
 
-const { ccUkey_ref_ } = ccContext;
+const { ccUKey_ref_ } = ccContext;
 
 let refCursor = 1;
 
@@ -40,19 +41,19 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   const bindCtxToMethod = regOpt.bindCtxToMethod;
 
   const {
-    renderKeyClasses, module, watchedKeys = '*', storedKeys = [],
+    renderKeyClasses, module, watchedKeys = '-', storedKeys = [],
     connect = {}, setup, lite,
   } = regOpt;
 
   incCursor();
-  const { _module, _watchedKeys, _ccClassKey, _connect } = mapRegistrationInfo(
-    module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, storedKeys, connect, true
+  const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
+    module, ccClassKey, renderKeyClasses, CC_HOOK, getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
   );
 
   const hookRef = ref || new CcHook(hookState, hookSetter, props);
 
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK,
+    module: _module, watchedKeys, state, type: CC_HOOK,
     ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
   });
   hookRef.props = props;// keep shape same as class
@@ -111,7 +112,7 @@ export default function useConcent(registerOption, ccClassKey){
   if (isFirstRendered) {
     hookRef = cref();
   } else {
-    hookRef = ccUkey_ref_[refKeyContainer.current];
+    hookRef = ccUKey_ref_[refKeyContainer.current];
     if (!hookRef) {// single file demo in hot reload mode
       hookRef = cref();
     } else {
@@ -159,5 +160,6 @@ export default function useConcent(registerOption, ccClassKey){
     refCtx.mapped = mapped;
   }
 
+  injectObState(hookRef);
   return refCtx;
 }

@@ -9,7 +9,6 @@ import { ERR, MODULE_DEFAULT } from '../../support/constant';
 const {
   moduleName_stateKeys_, moduleName_ccClassKeys_,
   moduleSingleClass, ccClassKey_ccClassContext_,
-  connectedModuleName_ccClassKeys_,
   computed: { _computedValue },
 } = ccContext;
 const { verifyKeys, makeError: me, verboseInfo: vbi } = util;
@@ -35,7 +34,7 @@ function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
 }
 
 function mapModuleToCcClassKeys(moduleName, ccClassKey) {
-  const ccClassKeys = util.safeGetArrayFromObject(moduleName_ccClassKeys_, moduleName);
+  const ccClassKeys = util.safeGetArray(moduleName_ccClassKeys_, moduleName);
 
   if (moduleSingleClass[moduleName] === true && ccClassKeys.length >= 1) {
     throw new Error(`module[${moduleName}] is declared as single, only on ccClassKey can been registered to it, and now a ccClassKey[${ccClassKeys[0]}] has been registered!`);
@@ -65,10 +64,6 @@ function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName,
       connectedState[m] = _state[m];
       connectedComputed[m] = _computedValue[m];
       connectedModule[m] = 1;//记录连接的模块
-
-      //记录当前某个被连接的模块下，有哪些ccClassKeys连接到了此模块，方便broadcastConnectedState之用
-      const ccClassKeys = util.safeGetArrayFromObject(connectedModuleName_ccClassKeys_, m);
-      if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
     });
 
     ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
@@ -93,7 +88,7 @@ export default function (
   let _connect = connect;
   if (Array.isArray(connect)) {
     _connect = {};
-    connect.forEach(m => _connect[m] = '*');
+    connect.forEach(m => _connect[m] = '-');//标识自动收集观察依赖
   }
 
   const _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);

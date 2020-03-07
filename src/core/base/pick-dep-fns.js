@@ -1,4 +1,4 @@
-import { differStateKeys, safeGetObjectFromObject, okeys } from '../../support/util';
+import { differStateKeys, safeGetObject, okeys } from '../../support/util';
 
 function getCacheDataContainer(){
   return {
@@ -66,7 +66,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
 
   // 要求用户必须在setup里静态的定义完computed & watch，动态的调用computed & watch的回调因为缓存原因不会被触发
   const tmpNode = cacheArea_pickedRetKeys_[cate][type];
-  const cachePool = cUkey ? safeGetObjectFromObject(tmpNode, cUkey) : tmpNode;
+  const cachePool = cUkey ? safeGetObject(tmpNode, cUkey) : tmpNode;
   const cachedPickedRetKeys = cachePool[cacheKey];
 
   if (cachedPickedRetKeys) {

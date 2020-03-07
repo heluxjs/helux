@@ -2,14 +2,27 @@ import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
-const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
-const { runtimeVar, ccClassKey_ccClassContext_, ccUkey_ref_ } = ccContext;
+const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl, okeys } = util;
+const { runtimeVar, ccClassKey_ccClassContext_, ccUKey_ref_, module_ccUKeys_ } = ccContext;
 const ccUKey_insCount = {};
+
+function updateModuleCcUKeys(module, ccUniqueKey) {
+  const uKeys = module_ccUKeys_[module];
+  if(!uKeys.keys.includes(ccUniqueKey)){
+    uKeys.ver++;
+    uKeys.keys.push(ccUniqueKey);
+  }
+}
 
 function setCcInstanceRef(ccUniqueKey, ref, ccKeys, delayMs) {
   function setRef() {
-    ccUkey_ref_[ccUniqueKey] = ref;
+    ccUKey_ref_[ccUniqueKey] = ref;
     ccKeys.push(ccUniqueKey);
+
+    // start update module_ccUKeys_ mapping
+    const { module, connect } = ref.ctx;
+    updateModuleCcUKeys(module, ccUniqueKey);
+    okeys(connect).forEach(m => updateModuleCcUKeys(m, ccUniqueKey));
   }
   incCcKeyInsCount(ccUniqueKey);
   if (delayMs) {

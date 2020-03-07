@@ -104,10 +104,6 @@ const ccContext = {
   // 记录模块是不是通过configure配置的
   moduleName_isConfigured_: {
   },
-  // 记录某个模块作为其他被哪些ccClass连接
-  connectedModuleName_ccClassKeys_: {
-
-  },
   /**
     ccClassContext:{
       module,
@@ -134,7 +130,7 @@ const ccContext = {
   //store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     appendState: function (module, state) {
-      const stateKeys = util.safeGetArrayFromObject(moduleName_stateKeys_, module);
+      const stateKeys = util.safeGetArray(moduleName_stateKeys_, module);
       util.okeys(state).forEach(k => {
         if (!stateKeys.includes(k)) {
           stateKeys.push(k);
@@ -190,7 +186,7 @@ const ccContext = {
   init: {
     _init: {}
   },
-  ccUkey_ref_: refs,
+  ccUKey_ref_: refs,
   //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
   event_handlers_: {},
   ccUKey_handlerKeys_: {},
@@ -198,13 +194,13 @@ const ccContext = {
   // it is a ref that towards ccUniqueKeyEvent_handler_'s key
   // when component unmounted, its handler will been removed
   handlerKey_handler_: {},
-  renderKey_ccUkeys_: {},
+  module_ccUKeys_: {},
   refs,
   info: {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.0.2',
+    version: '2.1.5',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'destiny',

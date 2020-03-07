@@ -1,6 +1,8 @@
 import triggerSetupEffect from './trigger-setup-effect';
+import resetWatchedKeys from '../ref/reset-watched-keys';
 
 export default function (ref) {
+  resetWatchedKeys(ref);
   triggerSetupEffect(ref);
 
   //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用

@@ -1,3 +1,44 @@
+#### 2020-03-08
+2.1.0 发布
+* feature: 支持动态依赖收集`watchedKeys`
+```
+// in 1.5.*
+function Comp(){
+   // the watchedKeys will be ['f1', 'f2', 'hidden'] in every render
+  const ctx = useConcent({module:'foo', watchedKeys:['f1', 'f2', 'hidden']})
+  const {f1, f2} = ctx.state;
+}
+
+// in 2.1.*
+function Comp(){
+  const ctx = useConcent({module:'foo'})
+
+ 
+  if(ctx.state.hidden){
+    // the watchedKeys will be ['f1','hidden'] in this render
+    const {f1} = ctx.state;
+  }else{
+    // the watchedKeys will be ['f2','hidden'] in this render
+    const {f2} = ctx.state;
+  }
+
+  // is nextuser write like this, the watchedKeys will be ['f1', 'f2']
+  const {f1, f2} = ctx.state;
+}
+```
+
+
+#### 2020-03-07
+2.0.0 发布
+* feature: 利用`defineProperty`改造`defLazyComputed`
+```
+// in 1.5.*, if xxx is lazyComputed, user must get value by call function
+const xxx = ctx.moduleComputed.xxx()
+
+// in 2.*, if xxx is lazyComputed, user get get value by property directly
+const xxx = ctx.moduleComputed.xxx
+```
+
 #### 2020-03-06
 1.5.180 发布
 * feature: 支持`CcFragment`在热加载模式下实时刷新

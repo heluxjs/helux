@@ -6,9 +6,10 @@ import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import watchKeyForRef from '../watch/watch-key-for-ref';
 import computeValueForRef from '../computed/compute-value-for-ref';
+import findUpdateRefs from '../ref/find-update-refs';
 import { send } from '../plugin';
 
-const { isPJO, justWarning, isObjectNotNull, computeFeature, okeys, removeArrElements } = util;
+const { isPJO, justWarning, isObjectNotNull, computeFeature, okeys } = util;
 const {
   FOR_ONE_INS_FIRSTLY, FOR_ALL_INS_OF_A_MOD,
   FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC,
@@ -16,8 +17,8 @@ const {
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
 const {
-  store: { setState, getPrevState }, middlewares, moduleName_ccClassKeys_, ccClassKey_ccClassContext_,
-  connectedModuleName_ccClassKeys_, refStore, moduleName_stateKeys_, ccUkey_ref_, renderKey_ccUkeys_,
+  store: { setState, getPrevState }, middlewares, ccClassKey_ccClassContext_,
+  refStore, moduleName_stateKeys_
 } = ccContext;
 
 //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
@@ -189,131 +190,44 @@ function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, modul
   }
 }
 
-function updateRefs(ccUkeys, moduleName, partialSharedState, callInfo) {
-  ccUkeys.forEach(ukey => {
-    const ref = ccUkey_ref_[ukey];
-    const refModule = ref.ctx.module;
-    if (refModule === moduleName) {
-      //这里不对各个ukey对应的class查其watchedKeys然后提取partialSharedState了，此时renderKey优先级高于watchedKeys
-      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
-    } else {
-      // consider this is a redundant render behavior .....
-      // ref.__$$ccForceUpdate();
-      util.justTip(`although ref's renderKey matched but its module ${refModule} mismatch target module ${moduleName}, cc will ignore trigger it re-render`);
-    }
-  });
-}
-
 function broadcastState(callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
   if (!partialSharedState) {// null
     return;
   }
 
-  const { ccUniqueKey: currentCcUkey, ccClassKey } = targetRef.ctx;
-  const targetClassContext = ccClassKey_ccClassContext_[ccClassKey];
-  const renderKeyClasses = targetClassContext.renderKeyClasses;
+  const { ccUniqueKey: currentCcUKey, ccClassKey } = targetRef.ctx;
+  const renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
 
   // if stateFor === FOR_ONE_INS_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
   // so flag ignoreCurrentCcUkey as true;
-  const ignoreCurrentCcUkey = stateFor === FOR_ONE_INS_FIRSTLY;
-  
-  // these ccClass are watching the same module's state
-  let ccClassKeys = moduleName_ccClassKeys_[moduleName] || [];
-  let toExcludeUkeys = [];
+  const ignoreCurrentCcUKey = stateFor === FOR_ONE_INS_FIRSTLY;
 
-  if (renderKey) {//调用发起者传递了renderKey
-    // 此时renderType一定是 RENDER_BY_KEY or RENDER_NO_OP
-    if (renderKeyClasses === '*') {
-      // renderKey规则在同一个模块下没有类范围约束，所有renderKey属性为传入的{renderKey}的实例都会被触发渲染
-      // 这里人工设置ccClassKeys为[]，让下面的遍历ccClassKeys找目标渲染被跳过，走renderKey匹配渲染规则
-      ccClassKeys = [];
-    } else {
-      ccClassKeys = removeArrElements(ccClassKeys, renderKeyClasses);//移除掉指定的类
-    }
+  const {
+    sharedStateKeys, result: { belong: belongRefs, connect: connectRefs }
+  } = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses);
 
-    const ccUkeysOri = renderKey_ccUkeys_[renderKey] || [];
-    // targetRef刚刚可能已被触发过渲染，这里排除掉currentCcUkey, 这里使用excludeArrStringItem比removeArrElements效率更高
-    const ccUkeys = util.excludeArrStringItem(ccUkeysOri, currentCcUkey);
-    toExcludeUkeys = ccUkeys;
-    updateRefs(ccUkeys, moduleName, partialSharedState, callInfo);
-  }
-
-  const keysLen = ccClassKeys.length;
-  for (let i = 0; i < keysLen; i++) {
-    const ccClassKey = ccClassKeys[i];
-
-    const classContext = ccClassKey_ccClassContext_[ccClassKey];
-    const { ccKeys, watchedKeys, originalWatchedKeys } = classContext;
-    if (ccKeys.length === 0) continue;
-    if (watchedKeys.length === 0) continue;
-
-    let sharedStateForCurrentCcClass;
-    if (originalWatchedKeys === '*') {
-      sharedStateForCurrentCcClass = partialSharedState;
-    } else {
-      const { partialState, isStateEmpty } = extractStateByKeys(partialSharedState, watchedKeys, true);
-      if (isStateEmpty) continue;
-      sharedStateForCurrentCcClass = partialState;
-    }
-
-    ccKeys.forEach(ccKey => {
-      if (toExcludeUkeys.includes(ccKey)) return;
-      if (ccKey === currentCcUkey && ignoreCurrentCcUkey) return;
-      const ref = ccUkey_ref_[ccKey];
-      if (ref) {
-        // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-        triggerReactSetState(ref, callInfo, null, 'broadcastState', sharedStateForCurrentCcClass, FOR_ONE_INS_FIRSTLY);
-      }
-    });
-  }
-
-  broadcastConnectedState(moduleName, partialSharedState, callInfo);
-}
-
-function broadcastConnectedState(commitModule, sharedState, callInfo) {
-  const sharedStateKeys = okeys(sharedState);//提前把sharedStateKeys拿到，省去了在updateConnectedState内部的多次获取过程
-
-  const ccClassKeys = connectedModuleName_ccClassKeys_[commitModule] || [];
-  ccClassKeys.forEach(ccClassKey => {
-    const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-    updateConnectedState(ccClassContext, commitModule, sharedState, sharedStateKeys, callInfo);
+  belongRefs.forEach(ref => {
+    if (ignoreCurrentCcUKey && ref.ccUniqueKey === currentCcUKey) return;
+    // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
+    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
   });
-}
 
-function updateConnectedState(targetClassContext, targetModule, sharedState, sharedStateKeys, callInfo) {
-  const { connectedModuleKeyMapping, connectedModule } = targetClassContext;
-  if (connectedModule[targetModule] === 1) {
+  const prevModuleState = getPrevState(moduleName);
+  connectRefs.forEach(ref => {
+    if (ref.__$$isUnmounted !== true) {
+      const refCtx = ref.ctx;
+      computeValueForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
+      const shouldCurrentRefUpdate = watchKeyForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
 
-    const { ccKeys } = targetClassContext;
-    let isSetConnectedStateTriggered = false;
-    const len = sharedStateKeys.length;
-    for (let i = 0; i < len; i++) {
-      const moduledStateKey = `${targetModule}/${sharedStateKeys[i]}`;
-      if (connectedModuleKeyMapping[moduledStateKey]) {
-        isSetConnectedStateTriggered = true;
-        break;
-        //只要感知到有一个key发生变化，就可以跳出循环了，
-        //因为connectedState指向的是store里state的引用，更新动作在store里修改时就已完成
+      // 记录sharedStateKeys，方便triggerRefEffect之用
+      refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
+
+      if (shouldCurrentRefUpdate) {
+        refCtx.__$$reInjectConnObState();
+        refCtx.__$$ccForceUpdate();
       }
     }
+  });
 
-    //针对targetClassContext，遍历完提交的state key，触发了更新connectedState的行为，把targetClassContext对应的cc实例都强制刷新一遍
-    if (isSetConnectedStateTriggered === true) {
-      const prevModuleState = getPrevState(targetModule);
-      ccKeys.forEach(ccUniKey => {
-        const ref = ccUkey_ref_[ccUniKey];
-        if (ref && ref.__$$isUnmounted !== true) {
-          const refCtx = ref.ctx;
-          computeValueForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
-          const shouldCurrentRefUpdate = watchKeyForRef(refCtx, targetModule, prevModuleState, sharedState, callInfo);
-
-          // 记录sharedStateKeys，方便triggerRefEffect之用
-          refCtx.__$$settedList.push({ module: targetModule, keys: sharedStateKeys });
-
-          if (shouldCurrentRefUpdate) refCtx.__$$ccForceUpdate();
-        }
-      });
-    }
-
-  }
 }
+
