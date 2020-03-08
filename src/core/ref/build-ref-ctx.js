@@ -37,6 +37,35 @@ function getEId() {
 const noop = () => { };
 const eType = (th) => `type of defineEffect ${th} param must be`;
 
+const getWatchedKeys = (ctx) => {
+  if (ctx.watchedKeys === '-') return ctx.__$$preparedWatchedKeys;
+  else return ctx.watchedKeys;
+}
+
+const getConnectWatchedKeys = (ctx, module) => {
+  const { connect, connectedModules } = ctx;
+  const isConnectArr = Array.isArray(connect);
+
+  const getWKeys = (module) => {
+    if (isConnectArr) {// auto observe connect modules
+      return ctx.__$$preparedConnectWatchedKeys_[module];
+    } else {
+      const waKeys = connect[module];
+      if (waKeys === '*') return moduleName_stateKeys_[module];
+      else if (waKeys === '-') return ctx.__$$preparedConnectWatchedKeys_[module];
+      else return waKeys;
+    }
+  }
+
+  if (module) return getWKeys(module);
+  else {
+    const cKeys = {};
+    connectedModules.forEach(m => cKeys[m] = getWKeys(m));
+    return cKeys;
+  }
+}
+
+
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 
 /**
@@ -164,7 +193,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$renderStatus: END,
     __$$preparedWatchedKeys: [],
     __$$collectingWatchedKeys_: {}, // for performance, init as map
-    __$$preparedModuleWatchedKeys_: {},// key: module, value: watchedKeyMap
+    __$$preparedConnectWatchedKeys_: {},// key: module, value: watchedKeyMap
     __$$collectingModuleWatchedKeys_: {}, // key: module, value: watchedKeyMap
 
     persistStoredKeys: refOption.persistStoredKeys,
@@ -411,6 +440,9 @@ export default function (ref, params, liteLevel = 5) {
     }
     ctx.connectedState = connectedState;
   };
+
+  ctx.getWatchedKeys = () => getWatchedKeys(ctx);
+  ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ctx, module);
 
   if (!existedCtx) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可

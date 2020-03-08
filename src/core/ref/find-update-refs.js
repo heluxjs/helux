@@ -3,23 +3,7 @@ import ccContext from '../../cc-context';
 import * as cache from './_cache';
 
 const { okeys } = util;
-const { ccUKey_ref_, module_ccUKeys_, moduleName_stateKeys_ } = ccContext;
-
-const getBelongWatchedKeys = (ctx) => {
-  if (ctx.watchedKeys === '-') return ctx.__$$preparedWatchedKeys;
-  else return ctx.watchedKeys;
-}
-const getConnectWatchedKeys  = (ctx, module) => {
-  const connect = ctx.connect;
-  if (Array.isArray(connect)) {// auto observe connect modules
-    return ctx.__$$preparedModuleWatchedKeys_[module];
-  } else {
-    const waKeys = connect[module];
-    if (waKeys === '*') return moduleName_stateKeys_[module];
-    else if (waKeys === '-') return ctx.__$$preparedModuleWatchedKeys_[module];
-    else return waKeys;
-  }
-}
+const { ccUKey_ref_, module_ccUKeys_ } = ccContext;
 
 
 export default function (moduleName, partialSharedState, renderKey, renderKeyClasses) {
@@ -108,12 +92,12 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
     const isConnect = refConnect[moduleName] ? true : false;
 
     if (isBelong) {
-      tryMatch(ref, getBelongWatchedKeys(refCtx), true);
+      tryMatch(ref, refCtx.getWatchedKeys(), true);
     }
-    // 一个实例可能既属于也连接了某个某个模块，这是不推荐的，在buildCtx里面已给出警告
+    // 一个实例如果既属于模块x同时也连接了模块x，这是不推荐的，在buildCtx里面已给出警告
     // 会造成冗余的渲染
     if (isConnect) {
-      tryMatch(ref, getConnectWatchedKeys(refCtx, moduleName), false);
+      tryMatch(ref, refCtx.getConnectWatchedKeys(moduleName), false);
     }
   });
 

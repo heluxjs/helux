@@ -23,7 +23,7 @@ export default function (ref) {
   }
 
   // cmwMap的值取出来逐个转为list
-  const oldPrepared = ctx.__$$preparedModuleWatchedKeys_;
+  const oldPrepared = ctx.__$$preparedConnectWatchedKeys_;
   const cmwMap = ctx.__$$collectingModuleWatchedKeys_;
   const newMap = {};
   connectedModules.forEach(m=>{
@@ -40,7 +40,7 @@ export default function (ref) {
 
     newMap[m] = newWaKeys;
   });
-  ctx.__$$preparedModuleWatchedKeys_ = newMap;
+  ctx.__$$preparedConnectWatchedKeys_ = newMap;
   
   //清空
   ctx.__$$collectingModuleWatchedKeys_ = ctx.__$$getEmptyCMWKeys();
