@@ -1244,7 +1244,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.1.5',
+      version: '2.1.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2360,25 +2360,7 @@
 
   var okeys$3 = okeys;
   var ccUKey_ref_ = ccContext.ccUKey_ref_,
-      module_ccUKeys_ = ccContext.module_ccUKeys_,
-      moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_;
-
-  var getBelongWatchedKeys = function getBelongWatchedKeys(ctx) {
-    if (ctx.watchedKeys === '-') return ctx.__$$preparedWatchedKeys;else return ctx.watchedKeys;
-  };
-
-  var getConnectWatchedKeys = function getConnectWatchedKeys(ctx, module) {
-    var connect = ctx.connect;
-
-    if (Array.isArray(connect)) {
-      // auto observe connect modules
-      return ctx.__$$preparedModuleWatchedKeys_[module];
-    } else {
-      var waKeys = connect[module];
-      if (waKeys === '*') return moduleName_stateKeys_$2[module];else if (waKeys === '-') return ctx.__$$preparedModuleWatchedKeys_[module];else return waKeys;
-    }
-  };
-
+      module_ccUKeys_ = ccContext.module_ccUKeys_;
   function findUpdateRefs (moduleName, partialSharedState, renderKey, renderKeyClasses) {
     var _module_ccUKeys_$modu = module_ccUKeys_[moduleName],
         ver = _module_ccUKeys_$modu.ver,
@@ -2461,13 +2443,13 @@
       var isConnect = refConnect[moduleName] ? true : false;
 
       if (isBelong) {
-        tryMatch(ref, getBelongWatchedKeys(refCtx), true);
-      } // 一个实例可能既属于也连接了某个某个模块，这是不推荐的，在buildCtx里面已给出警告
+        tryMatch(ref, refCtx.getWatchedKeys(), true);
+      } // 一个实例如果既属于模块x同时也连接了模块x，这是不推荐的，在buildCtx里面已给出警告
       // 会造成冗余的渲染
 
 
       if (isConnect) {
-        tryMatch(ref, getConnectWatchedKeys(refCtx, moduleName), false);
+        tryMatch(ref, refCtx.getConnectWatchedKeys(moduleName), false);
       }
     });
     var result = {
@@ -2506,7 +2488,7 @@
       middlewares = ccContext.middlewares,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       refStore = ccContext.refStore,
-      moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_; //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
+      moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_; //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
 
   function getStateFor(targetModule, refModule) {
     return targetModule === refModule ? FOR_ONE_INS_FIRSTLY$1 : FOR_ALL_INS_OF_A_MOD$1;
@@ -2702,7 +2684,7 @@
   }
 
   function syncCommittedStateToStore(moduleName, committedState, options) {
-    var stateKeys = moduleName_stateKeys_$3[moduleName]; // extract shared state
+    var stateKeys = moduleName_stateKeys_$2[moduleName]; // extract shared state
 
     var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys, true),
         partialState = _extractStateByKeys3.partialState; // save state to store
@@ -3799,7 +3781,7 @@
     return classKey;
   }
 
-  var moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_,
+  var moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
       moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_,
       moduleSingleClass = ccContext.moduleSingleClass,
       ccClassKey_ccClassContext_$2 = ccContext.ccClassKey_ccClassContext_,
@@ -3817,7 +3799,7 @@
     if (!inputWatchedKeys) return [];
 
     if (inputWatchedKeys === '*') {
-      return moduleName_stateKeys_$4[module];
+      return moduleName_stateKeys_$3[module];
     }
 
     var _verifyKeys = verifyKeys$1(inputWatchedKeys, []),
@@ -3884,7 +3866,7 @@
     if (__checkStartUp === true) checkCcStartupOrNot();
     var allowNamingDispatcher = __calledBy === 'cc';
     checkModuleName(module, false, "module[" + module + "] is not configured in store");
-    checkStoredKeys(moduleName_stateKeys_$4[module], inputStoredKeys);
+    checkStoredKeys(moduleName_stateKeys_$3[module], inputStoredKeys);
     var _connect = connect;
 
     if (Array.isArray(connect)) {
@@ -4521,7 +4503,7 @@
       _caller = _ccContext$reducer._caller,
       refStore$1 = ccContext.refStore,
       ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
-      moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_,
+      moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_,
       getState$3 = ccContext.store.getState,
       moduleName_ccClassKeys_$1 = ccContext.moduleName_ccClassKeys_,
       _computedValue$4 = ccContext.computed._computedValue;
@@ -4544,6 +4526,34 @@
 
   var eType = function eType(th) {
     return "type of defineEffect " + th + " param must be";
+  };
+
+  var getWatchedKeys = function getWatchedKeys(ctx) {
+    if (ctx.watchedKeys === '-') return ctx.__$$preparedWatchedKeys;else return ctx.watchedKeys;
+  };
+
+  var getConnectWatchedKeys = function getConnectWatchedKeys(ctx, module) {
+    var connect = ctx.connect,
+        connectedModules = ctx.connectedModules;
+    var isConnectArr = Array.isArray(connect);
+
+    var getWKeys = function getWKeys(module) {
+      if (isConnectArr) {
+        // auto observe connect modules
+        return ctx.__$$preparedConnectWatchedKeys_[module];
+      } else {
+        var waKeys = connect[module];
+        if (waKeys === '*') return moduleName_stateKeys_$4[module];else if (waKeys === '-') return ctx.__$$preparedConnectWatchedKeys_[module];else return waKeys;
+      }
+    };
+
+    if (module) return getWKeys(module);else {
+      var cKeys = {};
+      connectedModules.forEach(function (m) {
+        return cKeys[m] = getWKeys(m);
+      });
+      return cKeys;
+    }
   }; //调用buildFragmentRefCtx 之前，props参数已被处理过
 
   /**
@@ -4599,7 +4609,7 @@
     var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
     refOption.renderKey = ccOption.renderKey || ccUniqueKey; // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
 
-    refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_$5[stateModule], ccOption.storedKeys, storedKeys); //用户使用ccKey属性的话，必需显示的指定ccClassKey
+    refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_$4[stateModule], ccOption.storedKeys, storedKeys); //用户使用ccKey属性的话，必需显示的指定ccClassKey
 
     if (ccKey && !ccClassKey) {
       throw new Error("missing ccClassKey while init a cc ins with ccKey[" + ccKey + "]");
@@ -4619,7 +4629,7 @@
     var globalComputed = _computedValue$4[MODULE_GLOBAL] || {};
     var globalState = getState$3(MODULE_GLOBAL); // extract privStateKeys
 
-    var privStateKeys = removeArrElements(okeys$7(state), moduleName_stateKeys_$5[stateModule]); // recover ref state
+    var privStateKeys = removeArrElements(okeys$7(state), moduleName_stateKeys_$4[stateModule]); // recover ref state
 
     var refStoredState = refStore$1._state[ccUniqueKey] || {};
     var mergedState = Object.assign({}, state, refStoredState, moduleState);
@@ -4697,12 +4707,12 @@
       connect: connect,
       connectedModules: connectedModules,
       // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
-      __$$hasModuleState: moduleName_stateKeys_$5[module].length > 0,
+      __$$hasModuleState: moduleName_stateKeys_$4[module].length > 0,
       __$$renderStatus: END,
       __$$preparedWatchedKeys: [],
       __$$collectingWatchedKeys_: {},
       // for performance, init as map
-      __$$preparedModuleWatchedKeys_: {},
+      __$$preparedConnectWatchedKeys_: {},
       // key: module, value: watchedKeyMap
       __$$collectingModuleWatchedKeys_: {},
       // key: module, value: watchedKeyMap
@@ -5060,6 +5070,14 @@
       ctx.connectedState = connectedState;
     };
 
+    ctx.getWatchedKeys = function () {
+      return getWatchedKeys(ctx);
+    };
+
+    ctx.getConnectWatchedKeys = function (module) {
+      return getConnectWatchedKeys(ctx, module);
+    };
+
     if (!existedCtx) ref.ctx = ctx; // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
     else Object.assign(ref.ctx, ctx);
   }
@@ -5132,7 +5150,7 @@
     triggerComputedAndWatch(ref);
   }
 
-  var moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_,
+  var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_,
       _ccContext$store$2 = ccContext.store,
       getPrevState$1 = _ccContext$store$2.getPrevState,
       getState$5 = _ccContext$store$2.getState,
@@ -5242,7 +5260,7 @@
                 continue;
               }
 
-              if (!moduleName_stateKeys_$6[module].includes(unmoduledKey)) {
+              if (!moduleName_stateKeys_$5[module].includes(unmoduledKey)) {
                 warn(key, "unmoduledKey[" + unmoduledKey + "]");
                 continue;
               }
@@ -5436,7 +5454,7 @@
     } // cmwMap的值取出来逐个转为list
 
 
-    var oldPrepared = ctx.__$$preparedModuleWatchedKeys_;
+    var oldPrepared = ctx.__$$preparedConnectWatchedKeys_;
     var cmwMap = ctx.__$$collectingModuleWatchedKeys_;
     var newMap = {};
     connectedModules.forEach(function (m) {
@@ -5455,7 +5473,7 @@
 
       newMap[m] = newWaKeys;
     });
-    ctx.__$$preparedModuleWatchedKeys_ = newMap; //清空
+    ctx.__$$preparedConnectWatchedKeys_ = newMap; //清空
 
     ctx.__$$collectingModuleWatchedKeys_ = ctx.__$$getEmptyCMWKeys();
     ctx.__$$collectingWatchedKeys_ = {};
