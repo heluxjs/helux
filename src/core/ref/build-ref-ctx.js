@@ -121,16 +121,12 @@ export default function (ref, params, liteLevel = 5) {
     if (!ccKey) throw me(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi(`ccClassKey[${ccClassKey}]`));
   }
 
-  // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
-  if(!connect[MODULE_GLOBAL]){
-    connect[MODULE_GLOBAL] = '-';
-  }
-
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
   const classConnectedState = classCtx.connectedState;
   const connectedModules = okeys(connect);
   const connectedComputed = classCtx.connectedComputed || {};
   const connectedState = {};
+  const cstate = {};
   const moduleState = getState(module);
   const moduleComputed = _computedValue[module] || {};
   const globalComputed = _computedValue[MODULE_GLOBAL] || {};
@@ -234,7 +230,7 @@ export default function (ref, params, liteLevel = 5) {
     globalState,
     gstate: globalState,// always be latest in auto watch mode
     connectedState,
-    cstate: {},// always be latest in auto watch mode
+    cstate,// always be latest in auto watch mode
     extra: {},// can pass value to extra in every render period
     staticExtra: {},// only can be assign value in setup block
 
@@ -463,7 +459,7 @@ export default function (ref, params, liteLevel = 5) {
     if (Array.isArray(connect)) {
       connectedState[module] = makeObState(ref, classConnectedState[module], module);
     } else {
-      const waKeys = connect[m];
+      const waKeys = connect[module];
       if (waKeys === '-') connectedState[module] = makeObState(ref, classConnectedState[module], module);
       // else do nothing
     }

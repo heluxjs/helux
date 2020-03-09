@@ -168,7 +168,7 @@
   };
 
   var CU_KEY = Symbol('cuk');
-  var START = '1';
+  var START$1 = '1';
   var END = '2';
   var NOT_A_JSON = 'is not a plain json object!';
   var STR_ARR_OR_STAR = 'should be an string array or *!';
@@ -1236,7 +1236,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.1.6',
+      version: '2.2.0-test',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'destiny'
@@ -2722,7 +2722,7 @@
         });
 
         if (shouldCurrentRefUpdate) {
-          refCtx.__$$reInjectConnObState();
+          refCtx.__$$reInjectConnObState(moduleName);
 
           refCtx.__$$ccForceUpdate();
         }
@@ -3846,7 +3846,10 @@
       connect.forEach(function (m) {
         return _connect[m] = '-';
       }); //标识自动收集观察依赖
-    }
+    } // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
+    else if (!connect[MODULE_GLOBAL]) {
+        connect[MODULE_GLOBAL] = '-';
+      }
 
     var _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);
 
@@ -4088,7 +4091,7 @@
       get: function get(target, key) {
         var refCtx = ref.ctx;
 
-        if (refCtx.__$$renderStatus === START) {
+        if (refCtx.__$$renderStatus === START$1) {
           var ccUniqueKey = refCtx.ccUniqueKey;
 
           if (module) {
@@ -4542,7 +4545,9 @@
   };
 
   var getWatchedKeys = function getWatchedKeys(ctx) {
-    if (ctx.watchedKeys === '-') return okeys$7(ctx.__$$curWaKeys);else return ctx.watchedKeys;
+    if (ctx.watchedKeys === '-') {
+      if (ctx.__$$renderStatus === START) return okeys$7(ctx.__$$compareWaKeys);else return okeys$7(ctx.__$$curWaKeys);
+    } else return ctx.watchedKeys;
   };
 
   var getConnectWatchedKeys = function getConnectWatchedKeys(ctx, module) {
@@ -4550,13 +4555,17 @@
         connectedModules = ctx.connectedModules;
     var isConnectArr = Array.isArray(connect);
 
+    var getModuleWaKeys = function getModuleWaKeys(m) {
+      if (ctx.__$$renderStatus === START) return okeys$7(ctx.__$$compareConnWaKeys[m]);else return okeys$7(ctx.__$$curConnWaKeys[m]);
+    };
+
     var getWKeys = function getWKeys(module) {
       if (isConnectArr) {
         // auto observe connect modules
-        return okeys$7(ctx.__$$curConnWaKeys[module]);
+        return getModuleWaKeys(module);
       } else {
         var waKeys = connect[module];
-        if (waKeys === '*') return moduleName_stateKeys_$4[module];else if (waKeys === '-') return okeys$7(ctx.__$$curConnWaKeys[module]);else return waKeys;
+        if (waKeys === '*') return moduleName_stateKeys_$4[module];else if (waKeys === '-') return getModuleWaKeys(module);else return waKeys;
       }
     };
 
@@ -4637,6 +4646,7 @@
     var connectedModules = okeys$7(connect);
     var connectedComputed = classCtx.connectedComputed || {};
     var connectedState = {};
+    var cstate = {};
     var moduleState = getState$3(module);
     var moduleComputed = _computedValue$4[module] || {};
     var globalComputed = _computedValue$4[MODULE_GLOBAL] || {};
@@ -4744,8 +4754,14 @@
       // state
       state: mergedState,
       moduleState: moduleState,
+      mstate: moduleState,
+      // always be latest in auto watch mode
       globalState: globalState,
+      gstate: globalState,
+      // always be latest in auto watch mode
       connectedState: connectedState,
+      cstate: cstate,
+      // always be latest in auto watch mode
       extra: {},
       // can pass value to extra in every render period
       staticExtra: {},
@@ -5029,7 +5045,7 @@
     if (!allModules.includes(module)) allModules.push(module);else {
       justWarning$6("module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
     }
-    var __$$noAutoWatch = true; //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
+    var __$$autoWatch = false; //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
     //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
 
     allModules.forEach(function (m) {
@@ -5045,10 +5061,11 @@
 
       if (connectDesc) {
         var mConnectedState = classConnectedState[m];
+        cstate[m] = mConnectedState; // let cstate always be latest in every re-render period
 
         if (connectDesc === '-') {
           // auto watch
-          __$$noAutoWatch = false;
+          __$$autoWatch = true;
           __$$curConnWaKeys[m] = {};
           __$$compareConnWaKeys[m] = {};
           __$$compareConnWaKeyCount[m] = 0;
@@ -5070,26 +5087,23 @@
     ctx.reducer = _caller;
 
     if (watchedKeys === '-') {
-      __$$noAutoWatch = false;
+      __$$autoWatch = true;
     }
 
-    ctx.__$$noAutoWatch = __$$noAutoWatch;
+    ctx.__$$autoWatch = __$$autoWatch;
 
-    ctx.__$$reInjectConnObState = function () {
-      var connectedState = {};
+    ctx.__$$reInjectConnObState = function (module) {
+      var connectedState = ctx.connectedState;
 
       if (Array.isArray(connect)) {
-        connectedModules.forEach(function (m) {
-          connectedState[m] = makeObState(ref, classConnectedState[m], m);
-        });
+        connectedState[module] = makeObState(ref, classConnectedState[module], module);
       } else {
-        connectedModules.forEach(function (m) {
-          var waKeys = connect[m];
-          if (waKeys === '-') connectedState[m] = makeObState(ref, classConnectedState[m], m);else connectedState[m] = classConnectedState[m];
-        });
-      }
+        var waKeys = connect[module];
+        if (waKeys === '-') connectedState[module] = makeObState(ref, classConnectedState[module], module); // else do nothing
+      } // 总是将connectedState.globalState指向ctx.globalState
 
-      ctx.connectedState = connectedState;
+
+      ctx.globalState = connectedState[MODULE_GLOBAL];
     };
 
     ctx.getWatchedKeys = function () {
@@ -5482,7 +5496,7 @@
         ccUniqueKey = ctx.ccUniqueKey;
     ctx.__$$renderStatus = END; // 不存在自动收集行为
 
-    if (ctx.__$$noAutoWatch) {
+    if (!ctx.__$$autoWatch) {
       return;
     }
 
@@ -5593,12 +5607,13 @@
 
   function beforeRender (ref) {
     var ctx = ref.ctx;
-    ctx.__$$renderStatus = START;
+    ctx.__$$renderStatus = START$1; // 处于收集观察依赖
 
-    if (!ctx.__$$noAutoWatch) {
+    if (ctx.__$$autoWatch) {
       if (ctx.__$$hasModuleState) {
         ref.state = makeObState(ref, ref.state);
         ctx.state = ref.state;
+        ctx.moduleState = makeObState(ref, ctx.mstate);
         ctx.__$$curWaKeys = {};
         ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;
         ctx.__$$compareWaKeyCount = ctx.__$$nextCompareWaKeyCount; // 渲染期间再次收集

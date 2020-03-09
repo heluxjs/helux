@@ -2,7 +2,7 @@ import { START } from '../../support/priv-constant';
 import { justWarning } from '../../support/util';
 import ccContext from '../../cc-context';
 
-const { waKey_uKeyMap_ } = ccContext;
+const { waKey_uKeyMap_, moduleName_stateKeys_ } = ccContext;
 
 // before render
 // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
@@ -44,8 +44,13 @@ export default function (ref, state, module) {
             __$$nextCompareConnWaKeyCount[module]++;
           }
         }else{
-          if(!refCtx.privStateKeys.includes(key)){
-            const waKey = `${refCtx.module}/${key}`;
+          const refModule = refCtx.module;
+          // 此处不能用privStateKeys来判断，用户有可能动态的写入新的key
+          // if(!refCtx.privStateKeys.includes(key)){
+
+          // 这个key是模块的key
+          if (moduleName_stateKeys_[refModule].includes(key)) {
+            const waKey = `${refModule}/${key}`;
             const {
               __$$curWaKeys,
               __$$compareWaKeys,

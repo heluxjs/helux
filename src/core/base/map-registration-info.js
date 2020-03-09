@@ -4,7 +4,7 @@ import getCcClassKey from './get-cc-classkey';
 import * as checker from '../checker';
 import * as util from '../../support/util';
 import { STR_ARR_OR_STAR } from '../../support/priv-constant';
-import { ERR, MODULE_DEFAULT } from '../../support/constant';
+import { MODULE_GLOBAL, MODULE_DEFAULT } from '../../support/constant';
 
 const {
   moduleName_stateKeys_, moduleName_ccClassKeys_,
@@ -89,6 +89,10 @@ export default function (
   if (Array.isArray(connect)) {
     _connect = {};
     connect.forEach(m => _connect[m] = '-');//标识自动收集观察依赖
+  } 
+  // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
+  else if (!connect[MODULE_GLOBAL]) {
+    connect[MODULE_GLOBAL] = '-';
   }
 
   const _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);

@@ -81,7 +81,8 @@ export default (
         Object.assign(initDeltaCommittedState, curToBeComputedState);
       }
 
-      // !!!确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
+      // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
+      // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
       const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
       const { partialState, ignoredStateKeys } = extractStateByKeys(curToBeComputedState, stateKeys, true, true);
 
