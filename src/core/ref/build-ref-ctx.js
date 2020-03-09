@@ -448,20 +448,15 @@ export default function (ref, params, liteLevel = 5) {
   }
   ctx.__$$noAutoWatch = __$$noAutoWatch;
 
-  ctx.__$$reInjectConnObState = () => {
-    const connectedState = {};
+  ctx.__$$reInjectConnObState = (module) => {
+    const connectedState = ctx.connectedState;
     if (Array.isArray(connect)) {
-      connectedModules.forEach(m => {
-        connectedState[m] = makeObState(ref, classConnectedState[m], m);
-      });
+      connectedState[module] = makeObState(ref, classConnectedState[module], module);
     } else {
-      connectedModules.forEach(m => {
-        const waKeys = connect[m];
-        if (waKeys === '-') connectedState[m] = makeObState(ref, classConnectedState[m], m);
-        else connectedState[m] = classConnectedState[m];
-      });
+      const waKeys = connect[m];
+      if (waKeys === '-') connectedState[module] = makeObState(ref, classConnectedState[module], module);
+      // else do nothing
     }
-    ctx.connectedState = connectedState;
   };
 
   ctx.getWatchedKeys = () => getWatchedKeys(ctx);

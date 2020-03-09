@@ -223,7 +223,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
       refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
 
       if (shouldCurrentRefUpdate) {
-        refCtx.__$$reInjectConnObState();
+        refCtx.__$$reInjectConnObState(moduleName);
         refCtx.__$$ccForceUpdate();
       }
     }
