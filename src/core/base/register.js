@@ -13,7 +13,7 @@ import beforeMount from './before-mount';
 import didMount from './did-mount';
 import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
-import injectObState from '../ref/inject-ob-state';
+import beforeRender from '../ref/before-render';
 
 const { ccClassDisplayName, styleStr, color, getPassToMapWaKeys, shallowDiffers, evalState } = util;
 const { runtimeVar } = ccContext;
@@ -124,7 +124,7 @@ export default function register({
           const childRefState = childRef.state;
           const thisState = this.state;
           Object.assign(childRefState, thisState);
-          injectObState(childRef);
+          beforeRender(childRef);
           
           //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
           // const newState = Object.assign({}, childRefState, thisState);
@@ -163,7 +163,7 @@ export default function register({
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }
           if (isPropsProxy === false) {
-            if (this.ctx.watchedKeys === '-') injectObState(this);
+            if (this.ctx.watchedKeys === '-') beforeRender(this);
             //now cc class extends ReactClass, call super.render()
             return super.render();
           } else {

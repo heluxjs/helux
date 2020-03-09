@@ -5,7 +5,7 @@ import didMount from '../core/base/did-mount';
 import didUpdate from '../core/base/did-update';
 import getOutProps from '../core/base/get-out-props';
 import initCcFrag from '../core/ref/init-cc-frag';
-import injectObState from '../core/ref/inject-ob-state';
+import beforeRender from '../core/ref/before-render';
 
 const { shallowDiffers } = util;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
@@ -45,7 +45,7 @@ class CcFragment extends React.Component {
     const view = render || children;
 
     if (typeof view === 'function') {
-      injectObState(this);
+      beforeRender(this);
       const { __$$regDumb, register = {} } = thisProps;
       const ctx = this.ctx;
 

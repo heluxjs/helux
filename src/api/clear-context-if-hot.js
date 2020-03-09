@@ -1,4 +1,4 @@
-import { clearObject, okeys, makeCuDepDesc, makeMoCcUKeysDesc } from '../support/util';
+import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT } from '../support/constant';
@@ -33,7 +33,6 @@ function _checkDispatcher() {
 function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
-  clearObject(ccContext.module_ccUKeys_, [], makeMoCcUKeysDesc());
   const cct = ccContext.ccClassKey_ccClassContext_;
 
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
@@ -106,6 +105,7 @@ function _clearAll() {
   clearObject(ccContext.computed._computedValue, toExcludedModules);
   clearObject(ccContext.watch._watchDep, toExcludedModules);
   clearObject(ccContext.middlewares);
+  clearObject(ccContext.waKey_uKeyMap_);
   clearCachedData();
   const ccFragKeys = _pickCcFragIns();
   _clearInsAssociation(false, ccFragKeys);

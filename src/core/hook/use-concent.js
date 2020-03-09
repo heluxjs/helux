@@ -10,7 +10,7 @@ import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState, getPassToMapWaKeys } from '../../support/util';
-import injectObState from '../ref/inject-ob-state';
+import beforeRender from '../ref/before-render';
 
 const { ccUKey_ref_ } = ccContext;
 
@@ -160,6 +160,6 @@ export default function useConcent(registerOption, ccClassKey){
     refCtx.mapped = mapped;
   }
 
-  injectObState(hookRef);
+  beforeRender(hookRef);
   return refCtx;
 }

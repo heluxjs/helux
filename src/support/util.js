@@ -60,10 +60,6 @@ export function makeCuDepDesc(){
   return { retKey_fn_: {}, retKey_lazy_:{}, stateKey_retKeys_: {}, fnCount: 0 };
 }
 
-export function makeMoCcUKeysDesc(){
-  return { ver: 1, keys: [] };
-}
-
 /** make ccClassContext */
 export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys) {
   return {
@@ -359,10 +355,6 @@ function _getValue(obj, keys, lastKeyIndex, keyIndex) {
 export function getValueByKeyPath(obj, keyPath) {
   const keys = keyPath.split('.');
   return _getValue(obj, keys, keys.length - 1, 0);
-}
-
-export function clone(obj){
-  return JSON.parse(JSON.stringify(obj));
 }
 
 export function getPassToMapWaKeys(watchedKeys) {

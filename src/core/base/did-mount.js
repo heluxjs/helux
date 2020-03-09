@@ -1,10 +1,10 @@
 import * as ev from '../event';
 import triggerSetupEffect from './trigger-setup-effect';
 import setRef from '../ref/set-ref';
-import resetWatchedKeys from '../ref/reset-watched-keys';
+import afterRender from '../ref/after-render';
 
 export default function (ref) {
-  resetWatchedKeys(ref);
+  afterRender(ref);
 
   ref.__$$isBF = false;
   ref.__$$isMounted = true;

@@ -26,7 +26,7 @@ const {
   computed: { _computedValue },
 } = ccContext;
 
-const { okeys, makeError: me, clone, verboseInfo: vbi, safeGetArray, safeGetObject, justWarning, isObjectNull } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGetObject, justWarning, isObjectNull } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -38,7 +38,10 @@ const noop = () => { };
 const eType = (th) => `type of defineEffect ${th} param must be`;
 
 const getWatchedKeys = (ctx) => {
-  if (ctx.watchedKeys === '-') return ctx.__$$preparedWatchedKeys;
+  if (ctx.watchedKeys === '-') {
+    if (ctx.__$$renderStatus === START) return okeys(ctx.__$$compareWaKeys);
+    else return okeys(ctx.__$$curWaKeys);
+  }
   else return ctx.watchedKeys;
 }
 
@@ -46,13 +49,18 @@ const getConnectWatchedKeys = (ctx, module) => {
   const { connect, connectedModules } = ctx;
   const isConnectArr = Array.isArray(connect);
 
+  const getModuleWaKeys = (m) => {
+    if (ctx.__$$renderStatus === START) return okeys(ctx.__$$compareConnWaKeys[m]);
+    else return okeys(ctx.__$$curConnWaKeys[m]);
+  }
+
   const getWKeys = (module) => {
     if (isConnectArr) {// auto observe connect modules
-      return ctx.__$$preparedConnectWatchedKeys_[module];
+      return getModuleWaKeys(module);
     } else {
       const waKeys = connect[module];
       if (waKeys === '*') return moduleName_stateKeys_[module];
-      else if (waKeys === '-') return ctx.__$$preparedConnectWatchedKeys_[module];
+      else if (waKeys === '-') return getModuleWaKeys(module);
       else return waKeys;
     }
   }
@@ -191,10 +199,18 @@ export default function (ref, params, liteLevel = 5) {
     // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
     __$$hasModuleState: moduleName_stateKeys_[module].length > 0,
     __$$renderStatus: END,
-    __$$preparedWatchedKeys: [],
-    __$$collectingWatchedKeys_: {}, // for performance, init as map
-    __$$preparedConnectWatchedKeys_: {},// key: module, value: watchedKeyMap
-    __$$collectingModuleWatchedKeys_: {}, // key: module, value: watchedKeyMap
+
+    __$$curWaKeys: {},
+    __$$compareWaKeys: {},
+    __$$compareWaKeyCount: 0,//write before render
+    __$$nextCompareWaKeys: {},
+    __$$nextCompareWaKeyCount: 0,
+
+    __$$curConnWaKeys: {},
+    __$$compareConnWaKeys: {},
+    __$$compareConnWaKeyCount: {},
+    __$$nextCompareConnWaKeys: {},
+    __$$nextCompareConnWaKeyCount: {},
 
     persistStoredKeys: refOption.persistStoredKeys,
     storedKeys: refOption.storedKeys,
@@ -379,7 +395,11 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   // 构造完毕ctx后，开始创建reducer，和可观察connectedState
-  const { moduleReducer, connectedReducer, __$$collectingModuleWatchedKeys_ } = ctx;
+  const { 
+    moduleReducer, connectedReducer, 
+    __$$curConnWaKeys, __$$compareConnWaKeys, __$$compareConnWaKeyCount,
+    __$$nextCompareConnWaKeys, __$$nextCompareConnWaKeyCount,
+  } = ctx;
   const allModules = connectedModules.slice();
   if (!allModules.includes(module)) allModules.push(module);
   else {
@@ -397,14 +417,22 @@ export default function (ref, params, liteLevel = 5) {
       reducerObj = safeGetObject(connectedReducer, m);
     }
 
-    if (connectedModules.includes(m)) {
-      if (connect[m] === '-') {
+    const connectDesc = connect[m];
+    if (connectDesc) {
+      let mConnectedState = classConnectedState[m];
+      if (connectDesc === '-') {// auto watch
         __$$noAutoWatch = false;
-        __$$collectingModuleWatchedKeys_[m] = {};
-        connectedState[m] = makeObState(ref, classConnectedState[m], m);
-      } else {
-        connectedState[m] = classConnectedState[m];
-      }
+
+        __$$curConnWaKeys[m] = {};
+        __$$compareConnWaKeys[m] = {};
+        __$$compareConnWaKeyCount[m] = 0;
+        __$$nextCompareConnWaKeys[m] = {};
+        __$$nextCompareConnWaKeyCount[m] = 0;
+
+        mConnectedState = makeObState(ref, mConnectedState, m);
+      } 
+
+      connectedState[m] = mConnectedState;
     }
 
     const fnNames = _module_fnNames_[m] || [];
@@ -419,11 +447,6 @@ export default function (ref, params, liteLevel = 5) {
     __$$noAutoWatch = false;
   }
   ctx.__$$noAutoWatch = __$$noAutoWatch;
-
-  if (!__$$noAutoWatch) {
-    ctx.__$$emptyCMWKeys = clone(__$$collectingModuleWatchedKeys_);
-    ctx.__$$getEmptyCMWKeys = () => clone(ctx.__$$emptyCMWKeys);
-  }
 
   ctx.__$$reInjectConnObState = () => {
     const connectedState = {};

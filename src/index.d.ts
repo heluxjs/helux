@@ -286,6 +286,9 @@ declare function refCtxSetGlobalState<GlobalState = {}>(state: Partial<GlobalSta
 
 declare function refCtxSetModuleState<RootState, T extends keyof RootState>(moduleName: T, state: Partial<RootState[T]>, cb?: (newFullState: RootState[T]) => void, renderKey?: string, delay?: number): void;
 
+declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
+declare function refCtxGetConnectWatchedKeys(module: string): string[];
+
 type Rfn<T> = <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => T;
 /**
  * <V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
@@ -457,6 +460,9 @@ export interface ICtxBase {
   dispatchSilent: typeof refCtxDispatch;
   lazyDispatch: typeof refCtxDispatch;
   silentDispatch: typeof refCtxDispatch;
+
+  getWatchedKeys: () => string[];
+  getConnectWatchedKeys: typeof refCtxGetConnectWatchedKeys;
 
   invoke: typeof refCtxInvoke;
   invokeLazy: typeof refCtxInvoke;

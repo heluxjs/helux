@@ -3,30 +3,24 @@ import ccContext from '../../cc-context';
 import * as cache from './_cache';
 
 const { okeys } = util;
-const { ccUKey_ref_, module_ccUKeys_ } = ccContext;
-
+const { ccUKey_ref_, waKey_uKeyMap_ } = ccContext;
 
 export default function (moduleName, partialSharedState, renderKey, renderKeyClasses) {
 
-  const { ver, keys } = module_ccUKeys_[moduleName];
   const sharedStateKeys = okeys(partialSharedState);
   const cacheKey = cache.getCacheKey(moduleName, sharedStateKeys, renderKey, renderKeyClasses);
   const cachedResult = cache.getCache(moduleName, cacheKey);
   if (cachedResult) {
-    if (cachedResult.ver === ver) {
-      // console.log(`%c hit cache`, 'color:red');
-      // console.log(cachedResult.result);
-      return { sharedStateKeys, result: cachedResult.result };
-    } else {
-      cache.setCache(moduleName, cacheKey, null);
-    }
+    return { sharedStateKeys, result: cachedResult };
   }
 
-  const sharedStateKeyMap = sharedStateKeys.reduce((map, curKey) => {
-    map[curKey] = 1;
-    return map;
-  }, {});
-
+  const targetUKeyMap = {};
+  sharedStateKeys.forEach(stateKey => {
+    const waKey = `${moduleName}/${stateKey}`;
+    //利用assign不停的去重
+    Object.assign(targetUKeyMap, waKey_uKeyMap_[waKey]);
+  });
+  const uKeys = okeys(targetUKeyMap);
   const belongRefs = [];
   const connectRefs = [];
 
@@ -34,56 +28,43 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
     isBelong ? belongRefs.push(ref) : connectRefs.push(ref);
   }
 
-  const tryMatch = (ref, preparedWatchedKeys, toBelong) => {
-    const len = preparedWatchedKeys.length;
+  const tryMatch = (ref, toBelong) => {
     const {
       renderKey: refRenderKey, ccClassKey: refCcClassKey,
     } = ref.ctx;
 
-    for (let i = 0; i < len; i++) {
-      const watchedKey = preparedWatchedKeys[i];
+    // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
+    if (renderKey) {
+      const isRenderKeyMatched = refRenderKey === renderKey;
 
-      //命中一个观察Key即可跳出
-      if (sharedStateKeyMap[watchedKey]) {
-
-        // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
-        if (renderKey) {
-          const isRenderKeyMatched = refRenderKey === renderKey;
-
-          // 所有的类实例都受renderKey匹配机制影响
-          if (renderKeyClasses === '*') {
-            if (isRenderKeyMatched) {
-              putRef(toBelong, ref);
-              break;
-            }
-          }
-          else {
-            // 这些指定类实例受renderKey机制影响
-            if (renderKeyClasses.includes(refCcClassKey)) {
-              if (isRenderKeyMatched) {
-                putRef(toBelong, ref);
-                break;
-              }
-            }
-            // 这些实例则不受renderKey机制影响
-            else {
-              putRef(toBelong, ref);
-              break;
-            }
-          }
-        } else {
+      // 所有的类实例都受renderKey匹配机制影响
+      if (renderKeyClasses === '*') {
+        if (isRenderKeyMatched) {
           putRef(toBelong, ref);
-          break;
         }
-
       }
+      else {
+        // 这些指定类实例受renderKey机制影响
+        if (renderKeyClasses.includes(refCcClassKey)) {
+          if (isRenderKeyMatched) {
+            putRef(toBelong, ref);
+          }
+        }
+        // 这些实例则不受renderKey机制影响
+        else {
+          putRef(toBelong, ref);
+        }
+      }
+    } else {
+      putRef(toBelong, ref);
     }
+
   }
 
-  keys.forEach(key => {
+  uKeys.forEach(key => {
     const ref = ccUKey_ref_[key];
     if (!ref) return;
-    
+
     const refCtx = ref.ctx;
     const {
       module: refModule, connect: refConnect,
@@ -92,12 +73,12 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
     const isConnect = refConnect[moduleName] ? true : false;
 
     if (isBelong) {
-      tryMatch(ref, refCtx.getWatchedKeys(), true);
+      tryMatch(ref, true);
     }
     // 一个实例如果既属于模块x同时也连接了模块x，这是不推荐的，在buildCtx里面已给出警告
     // 会造成冗余的渲染
     if (isConnect) {
-      tryMatch(ref, refCtx.getConnectWatchedKeys(moduleName), false);
+      tryMatch(ref, false);
     }
   });
 
@@ -105,7 +86,7 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
     belong: belongRefs,
     connect: connectRefs,
   };
-  cache.setCache(moduleName, cacheKey, { ver, result });
+  cache.setCache(moduleName, cacheKey, result);
 
   return { sharedStateKeys, result };
 }

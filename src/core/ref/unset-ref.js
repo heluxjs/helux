@@ -1,32 +1,17 @@
 import ccContext from '../../cc-context';
 import { decCcKeyInsCount } from './set-ref';
-import { styleStr, color, okeys } from '../../support/util';
+import { styleStr, color } from '../../support/util';
 
 const {
-  ccUKey_ref_, ccUKey_handlerKeys_, runtimeVar, module_ccUKeys_,
+  ccUKey_ref_, ccUKey_handlerKeys_, runtimeVar,
   ccClassKey_ccClassContext_, handlerKey_handler_,
 } = ccContext;
-
-function updateModuleCcUKeys(module, ccUniqueKey) {
-  const uKeys = module_ccUKeys_[module];
-  uKeys.ver++;
-  const idx = uKeys.keys.indexOf(ccUniqueKey);
-  if (idx > 0) uKeys.keys.splice(idx, 1)
-}
 
 export default function (ccClassKey, ccUniqueKey) {
 
   if (runtimeVar.isDebug) {
     console.log(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
   }
-  const ref = ccUKey_ref_[ccUniqueKey];
-  if (ref) {
-    // start update module_ccUKeys_ mapping
-    const { module, connect } = ref.ctx;
-    updateModuleCcUKeys(module, ccUniqueKey);
-    okeys(connect).forEach(m => updateModuleCcUKeys(m, ccUniqueKey));
-  }
-
 
   delete ccUKey_ref_[ccUniqueKey];
 
