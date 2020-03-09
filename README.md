@@ -1,7 +1,12 @@
 English | [简体中文](./README.zh-CN.md)
 
 ## [concent](https://concentjs.github.io/concent-doc)
-a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency mark**、**ref collection** and **state broadcast**，power you react!   
+a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency collection&mark**、**ref collection** and **state broadcast**，power you react!   
+
+
+## v2 Released Now🎊 🎉🎊 🎉🎊 🎉
+support **dependency collection** & **lazy computed**
+[more details about v2](./V2Details.md)
 
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 

@@ -1237,10 +1237,10 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.0-test',
+      version: '2.2.0',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-      tag: 'destiny'
+      tag: 'yuna'
     },
     // fragment association
     fragmentNameCount: 0,
@@ -4529,7 +4529,8 @@
       moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_,
       getState$3 = ccContext.store.getState,
       moduleName_ccClassKeys_$1 = ccContext.moduleName_ccClassKeys_,
-      _computedValue$4 = ccContext.computed._computedValue;
+      _computedValue$4 = ccContext.computed._computedValue,
+      waKey_uKeyMap_$3 = ccContext.waKey_uKeyMap_;
   var okeys$7 = okeys,
       me$3 = makeError,
       vbi$3 = verboseInfo,
@@ -5078,7 +5079,13 @@
           __$$nextCompareConnWaKeys[m] = {};
           __$$nextCompareConnWaKeyCount[m] = 0;
           mConnectedState = makeObState(ref, mConnectedState, m);
-        }
+        } // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
+        else {
+            var waKeys = connectDesc === '*' ? moduleName_stateKeys_$5[m] : connectDesc;
+            waKeys.forEach(function (waKey) {
+              waKey_uKeyMap_$3[m + "/" + waKey][ccUniqueKey] = 1;
+            });
+          }
 
         connectedState[m] = mConnectedState;
       }
@@ -5455,7 +5462,7 @@
     return classContext;
   }
 
-  var waKey_uKeyMap_$3 = ccContext.waKey_uKeyMap_; // before render
+  var waKey_uKeyMap_$4 = ccContext.waKey_uKeyMap_; // before render
   // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
   // rendering input
@@ -5480,7 +5487,7 @@
       if (compareWaKeys[waKey] === 2) {
         //这个key在这轮渲染结束后没有命中，说明视图不再对它有依赖
         shouldLetCacheExpire = true;
-        delete waKey_uKeyMap_$3[module + "/" + waKey][ccUniqueKey];
+        delete waKey_uKeyMap_$4[module + "/" + waKey][ccUniqueKey];
       }
     });
 
@@ -5497,21 +5504,24 @@
 
   function afterRender (ref) {
     var ctx = ref.ctx;
-    var refModule = ctx.module,
-        connectedModules = ctx.connectedModules,
-        ccUniqueKey = ctx.ccUniqueKey;
     ctx.__$$renderStatus = END; // 不存在自动收集行为
 
     if (!ctx.__$$autoWatch) {
       return;
     }
 
-    var __$$compareWaKeys = ctx.__$$compareWaKeys,
+    var refModule = ctx.module,
+        connectedModules = ctx.connectedModules,
+        connect = ctx.connect,
+        ccUniqueKey = ctx.ccUniqueKey,
+        __$$compareWaKeys = ctx.__$$compareWaKeys,
         __$$compareWaKeyCount = ctx.__$$compareWaKeyCount,
         __$$compareConnWaKeys = ctx.__$$compareConnWaKeys,
         __$$compareConnWaKeyCount = ctx.__$$compareConnWaKeyCount;
     delDep(__$$compareWaKeys, __$$compareWaKeyCount, refModule, ccUniqueKey);
     connectedModules.forEach(function (m) {
+      // 非自动收集，不用处理
+      if (connect[m] !== '-') return;
       var __$$compareWaKeys = __$$compareConnWaKeys[m];
       var __$$compareWaKeyCount = __$$compareConnWaKeyCount[m];
       delDep(__$$compareWaKeys, __$$compareWaKeyCount, m, ccUniqueKey);
@@ -5628,7 +5638,11 @@
         ctx.__$$nextCompareWaKeyCount = 0;
       }
 
-      ctx.connectedModules.forEach(function (m) {
+      var connectedModules = ctx.connectedModules,
+          connect = ctx.connect;
+      connectedModules.forEach(function (m) {
+        // 非自动收集，在make-ob-state里不会触发get，这里直接跳出
+        if (connect[m] !== '-') return;
         ctx.__$$curConnWaKeys[m] = {};
         ctx.__$$compareConnWaKeys[m] = ctx.__$$nextCompareConnWaKeys[m];
         ctx.__$$compareConnWaKeyCount[m] = ctx.__$$nextCompareConnWaKeyCount[m]; // 渲染期间再次收集

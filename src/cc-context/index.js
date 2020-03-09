@@ -201,10 +201,10 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.2.0-test',
+    version: '2.2.0',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-    tag: 'destiny',
+    tag: 'yuna',
   },
 
   // fragment association

@@ -1,3 +1,7 @@
+#### 2020-03-09
+2.2.0 发布
+* refactor: 重构依赖收集运行机制，从`module_ccUKeys_`映射替换为`waKey_uKeyMap_`映射
+
 #### 2020-03-08
 2.1.0 发布
 * feature: 支持动态依赖收集`watchedKeys`
