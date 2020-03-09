@@ -24,6 +24,7 @@ const {
   store: { getState },
   moduleName_ccClassKeys_,
   computed: { _computedValue },
+  waKey_uKeyMap_,
 } = ccContext;
 
 const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGetObject, justWarning, isObjectNull } = util;
@@ -436,6 +437,13 @@ export default function (ref, params, liteLevel = 5) {
         __$$nextCompareConnWaKeyCount[m] = 0;
 
         mConnectedState = makeObState(ref, mConnectedState, m);
+      }
+      // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
+      else{
+        const waKeys = connectDesc === '*' ? moduleName_stateKeys_[m] : connectDesc;
+        waKeys.forEach(waKey => {
+          waKey_uKeyMap_[`${m}/${waKey}`][ccUniqueKey] = 1;
+        });
       } 
 
       connectedState[m] = mConnectedState;

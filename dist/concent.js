@@ -956,7 +956,8 @@
 
           Object.assign(initNewState, curToBeComputedState);
           Object.assign(initDeltaCommittedState, curToBeComputedState);
-        }; // !!!确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
+        }; // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
+        // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
 
 
         var stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
@@ -4071,7 +4072,8 @@
     getEventItem: getEventItem
   });
 
-  var waKey_uKeyMap_$2 = ccContext.waKey_uKeyMap_; // before render
+  var waKey_uKeyMap_$2 = ccContext.waKey_uKeyMap_,
+      moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_; // before render
   // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
   // rendering input
@@ -4110,8 +4112,12 @@
               __$$nextCompareConnWaKeyCount[module]++;
             }
           } else {
-            if (!refCtx.privStateKeys.includes(key)) {
-              var _waKey = refCtx.module + "/" + key;
+            var refModule = refCtx.module; // 此处不能用privStateKeys来判断，用户有可能动态的写入新的key
+            // if(!refCtx.privStateKeys.includes(key)){
+            // 这个key是模块的key
+
+            if (moduleName_stateKeys_$4[refModule].includes(key)) {
+              var _waKey = refModule + "/" + key;
 
               var __$$curWaKeys = refCtx.__$$curWaKeys,
                   __$$compareWaKeys = refCtx.__$$compareWaKeys,
@@ -4520,7 +4526,7 @@
       _caller = _ccContext$reducer._caller,
       refStore$1 = ccContext.refStore,
       ccClassKey_ccClassContext_$3 = ccContext.ccClassKey_ccClassContext_,
-      moduleName_stateKeys_$4 = ccContext.moduleName_stateKeys_,
+      moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_,
       getState$3 = ccContext.store.getState,
       moduleName_ccClassKeys_$1 = ccContext.moduleName_ccClassKeys_,
       _computedValue$4 = ccContext.computed._computedValue;
@@ -4565,7 +4571,7 @@
         return getModuleWaKeys(module);
       } else {
         var waKeys = connect[module];
-        if (waKeys === '*') return moduleName_stateKeys_$4[module];else if (waKeys === '-') return getModuleWaKeys(module);else return waKeys;
+        if (waKeys === '*') return moduleName_stateKeys_$5[module];else if (waKeys === '-') return getModuleWaKeys(module);else return waKeys;
       }
     };
 
@@ -4631,7 +4637,7 @@
     var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
     refOption.renderKey = ccOption.renderKey || ccUniqueKey; // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
 
-    refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_$4[stateModule], ccOption.storedKeys, storedKeys); //用户使用ccKey属性的话，必需显示的指定ccClassKey
+    refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_$5[stateModule], ccOption.storedKeys, storedKeys); //用户使用ccKey属性的话，必需显示的指定ccClassKey
 
     if (ccKey && !ccClassKey) {
       throw new Error("missing ccClassKey while init a cc ins with ccKey[" + ccKey + "]");
@@ -4652,7 +4658,7 @@
     var globalComputed = _computedValue$4[MODULE_GLOBAL] || {};
     var globalState = getState$3(MODULE_GLOBAL); // extract privStateKeys
 
-    var privStateKeys = removeArrElements(okeys$7(state), moduleName_stateKeys_$4[stateModule]); // recover ref state
+    var privStateKeys = removeArrElements(okeys$7(state), moduleName_stateKeys_$5[stateModule]); // recover ref state
 
     var refStoredState = refStore$1._state[ccUniqueKey] || {};
     var mergedState = Object.assign({}, state, refStoredState, moduleState);
@@ -4730,7 +4736,7 @@
       connect: connect,
       connectedModules: connectedModules,
       // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
-      __$$hasModuleState: moduleName_stateKeys_$4[module].length > 0,
+      __$$hasModuleState: moduleName_stateKeys_$5[module].length > 0,
       __$$renderStatus: END,
       __$$curWaKeys: {},
       __$$compareWaKeys: {},
@@ -5186,7 +5192,7 @@
     triggerComputedAndWatch(ref);
   }
 
-  var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_,
+  var moduleName_stateKeys_$6 = ccContext.moduleName_stateKeys_,
       _ccContext$store$2 = ccContext.store,
       getPrevState$1 = _ccContext$store$2.getPrevState,
       getState$5 = _ccContext$store$2.getState,
@@ -5296,7 +5302,7 @@
                 continue;
               }
 
-              if (!moduleName_stateKeys_$5[module].includes(unmoduledKey)) {
+              if (!moduleName_stateKeys_$6[module].includes(unmoduledKey)) {
                 warn(key, "unmoduledKey[" + unmoduledKey + "]");
                 continue;
               }
