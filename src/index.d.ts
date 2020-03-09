@@ -432,11 +432,14 @@ export interface ICtxBase {
   readonly props: any;
   readonly prevProps: any;
   readonly moduleState: any;
-  readonly globalState: IAnyObj;
+  readonly mstate: any;
+  readonly globalState: any;
+  readonly gstate: any;
   readonly connectedState: any;
-  readonly refComputed: IAnyObj;
+  readonly cstate: any;
+  readonly refComputed: any;
   readonly moduleComputed: any;
-  readonly globalComputed: IAnyObj;
+  readonly globalComputed: any;
   readonly connectedComputed: any;
 
   readonly moduleReducer: any;
@@ -524,6 +527,7 @@ export interface IRefCtx<
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
+  readonly mstate: ModuleState;
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
   readonly settings: Settings;
@@ -531,6 +535,7 @@ export interface IRefCtx<
   readonly refComputed: RefComputed;
   // when connect other modules
   readonly connectedState: ConnectedState;
+  readonly cstate: ConnectedState;
   readonly connectedReducer: ConnectedReducer;
   readonly connectedComputed: ConnectedComputed;
 }
@@ -561,11 +566,13 @@ export interface ICtx
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
+  readonly gstate: RootState[MODULE_GLOBAL];
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly state: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
+  readonly mstate: RootState[ModuleName];
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
@@ -575,9 +582,10 @@ export interface ICtx
   readonly refComputed: RefComputed;
   readonly mapped: Mapped;
   // overwrite connectedState , connectedComputed
-  connectedState: Pick<RootState, ConnectedModules>;
-  connectedReducer: Pick<RootReducer, ConnectedModules>;
-  connectedComputed: Pick<RootCu, ConnectedModules>;
+  readonly connectedState: Pick<RootState, ConnectedModules>;
+  readonly cstate: Pick<RootState, ConnectedModules>;
+  readonly connectedReducer: Pick<RootReducer, ConnectedModules>;
+  readonly connectedComputed: Pick<RootCu, ConnectedModules>;
 
   // !!! 目前这样写有问题，例如连接是foo,bar, 
   // 外面推导出的是 Pick<RootReducer, "foo"> | Pick<RootReducer, "bar">
