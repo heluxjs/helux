@@ -17,7 +17,6 @@ import { send } from '../plugin';
 import * as checker from '../checker';
 import changeRefState from '../state/change-ref-state';
 import setState from './set-state';
-import getAndStoreValidGlobalState from './get-and-store-valid-global-state';
 import extractStateByKeys from './extract-state-by-keys';
 
 const { verboseInfo, makeError, justWarning, isPJO, okeys } = util;
@@ -470,17 +469,16 @@ export function makeSetStateHandler(module) {
     try {
       setState(module, state);
     } catch (err) {
-      if (module === MODULE_GLOBAL) {
-        getAndStoreValidGlobalState(state, module);
-      } else {
-        const moduleState = getState(module);
-        if (!moduleState) {
-          return util.justWarning(`invalid module ${module}`);
-        }
+      const moduleState = getState(module);
+      if (!moduleState) {
+        return justWarning(`invalid module ${module}`);
+      }
 
-        const keys = util.okeys(moduleState);
-        const { partialState, isStateEmpty } = extractStateByKeys(state, keys);
-        if (!isStateEmpty) storeSetState(module, partialState);//store this valid state;
+      const keys = okeys(moduleState);
+      const { partialState, isStateEmpty, ignoredStateKeys } = extractStateByKeys(state, keys, false, true);
+      if (!isStateEmpty) storeSetState(module, partialState);//store this valid state;
+      if (ignoredStateKeys.length > 0) {
+        justWarning(`invalid keys:${ignoredStateKeys.join(',')}, their value is undefined or they are not declared in module${module}`);
       }
 
       util.justTip(`no ccInstance found for module[${module}] currently, cc will just store it, lately ccInstance will pick this state to render`);
