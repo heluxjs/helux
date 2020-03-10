@@ -7,7 +7,6 @@ export default function (ref) {
   ctx.__$$renderStatus = START;
 
   // 在buildRefCtx阶段已完成相关的obState注入，这里不再需要
-  // 否则会引起 warning: Expected *** state to match memoized state before processing the update queue.
   if (ctx.renderCount === 1) {
     return;
   }
@@ -16,7 +15,9 @@ export default function (ref) {
   if (ctx.__$$autoWatch) {
 
     if (ctx.__$$hasModuleState) {
-      ref.state = makeObState(ref, ref.state);
+      // 这里也不需要再次转换为obState，在buildRefCtx阶段阶段转换过一次就始终是可观察对象了
+      // ref.state = makeObState(ref, ref.state);
+
       ctx.state = ref.state;
       ctx.moduleState = makeObState(ref, ctx.mstate);
 

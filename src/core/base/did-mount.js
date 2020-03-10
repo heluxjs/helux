@@ -6,7 +6,6 @@ import afterRender from '../ref/after-render';
 export default function (ref) {
   afterRender(ref);
 
-  ref.__$$isBF = false;
   ref.__$$isMounted = true;
   ref.__$$isUnmounted = false;
   const { module, isSingle, ccClassKey, ccKey, ccUniqueKey, onEvents } = ref.ctx;

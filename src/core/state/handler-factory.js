@@ -499,9 +499,9 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
     // don't assign newState to ref.state before didMount
     // it will cause
     // Warning: Expected CC(SomeComp) state to match memoized state before processing the update queue
-    if(ref.__$$isBF){
+    if (!ref.__$$isMounted) {
       Object.assign(ref.state, partialState);
-    }else{
+    } else {
       ref.state = newState;
     }
     ctx.__boundSetState(newState, cb);

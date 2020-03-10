@@ -74,6 +74,12 @@ const getConnectWatchedKeys = (ctx, module) => {
   }
 }
 
+function recordDep(ccUniqueKey, module, watchedKeys) {
+  const waKeys = watchedKeys === '*' ? moduleName_stateKeys_[module] : watchedKeys;
+  waKeys.forEach(waKey => {
+    waKey_uKeyMap_[`${module}/${waKey}`][ccUniqueKey] = 1;
+  });
+}
 
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 
@@ -286,7 +292,8 @@ export default function (ref, params, liteLevel = 5) {
 
   // allow user have a chance to define state in setup block;
   ctx.initState = (initState) => {
-    if (!ref.__$$isBF) {
+    // 已挂载则不让用户在调用initState
+    if (ref.__$$isMounted) {
       return justWarning(`ctx.initState can only been called before first render period!`);
     }
     if (!util.isPJO(state)) {
@@ -440,10 +447,7 @@ export default function (ref, params, liteLevel = 5) {
       }
       // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
       else{
-        const waKeys = connectDesc === '*' ? moduleName_stateKeys_[m] : connectDesc;
-        waKeys.forEach(waKey => {
-          waKey_uKeyMap_[`${m}/${waKey}`][ccUniqueKey] = 1;
-        });
+        recordDep(ccUniqueKey, module, connectDesc);
       } 
 
       connectedState[m] = mConnectedState;
@@ -459,9 +463,11 @@ export default function (ref, params, liteLevel = 5) {
 
   if (watchedKeys === '-') {
     __$$autoWatch = true;
-    // avoid warning: Expected *** state to match memoized state before processing the update queue.
     ref.state = makeObState(ref, mergedState);
     ctx.state = ref.state;
+  }else{
+    //开始记录依赖
+    recordDep(ccUniqueKey, module, watchedKeys);
   }
   ctx.__$$autoWatch = __$$autoWatch;
 

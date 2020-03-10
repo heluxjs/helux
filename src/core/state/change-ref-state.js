@@ -110,8 +110,10 @@ export default function (state, {
 function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next, skipMiddleware, passToMiddleware) {
   const { state: refState, ctx: refCtx } = targetRef;
   if (
+    // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
+    // targetRef.__$$isMounted === false || // 还未挂载上
+
     targetRef.__$$isUnmounted === true || // 已卸载
-    targetRef.__$$isMounted === false || // 还未挂载上
     stateFor !== FOR_ONE_INS_FIRSTLY ||
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE && !isObjectNotNull(state)

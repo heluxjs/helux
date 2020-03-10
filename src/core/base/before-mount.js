@@ -11,7 +11,6 @@ export default function (ref, setup, bindCtxToMethod) {
 
   ref.__$$isUnmounted = false;// false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
   ref.__$$isMounted = false;// 未挂载，在didMount时机才置为true，表示已挂载
-  ref.__$$isBF = true;// isBeforeFirstRender
 
   // flag before setup
   ctx.__$$isBSe = true;
