@@ -70,7 +70,9 @@ export default function (ref, state, module) {
       return target[key];
     },
     set: function (target, key) {
-      justWarning(`warnning: state can not been changed manually, use api setState or dispatch instead`);
+      // 这个warning暂时关闭，因为buildRefCtx阶段就生成了obState, refComputed里可能会调用commit向obState写入新的state
+      // justWarning(`warning: state key[${key}] can not been changed manually, use api setState or dispatch instead`);
+
       target[key] = target[key];
       // avoid Uncaught TypeError: 'set' on proxy: trap returned falsish for property '***'
       return true;

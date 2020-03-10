@@ -33,6 +33,7 @@ export default (
   let whileCount = 0;
   let curToBeComputedState = toBeComputedState;
   let shouldCurrentRefUpdate = true;
+  let hasDelta = false;
 
   while (curToBeComputedState) {
     whileCount++;
@@ -79,6 +80,7 @@ export default (
         }
         Object.assign(initNewState, curToBeComputedState);
         Object.assign(initDeltaCommittedState, curToBeComputedState);
+        hasDelta = true;
       }
 
       // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
@@ -151,5 +153,5 @@ export default (
     if (whileCount > 10) throw new Error('fnCtx.commit may goes endless loop, please check your code');
   }
 
-  return shouldCurrentRefUpdate;
+  return { shouldCurrentRefUpdate, hasDelta };
 }

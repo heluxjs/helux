@@ -459,6 +459,9 @@ export default function (ref, params, liteLevel = 5) {
 
   if (watchedKeys === '-') {
     __$$autoWatch = true;
+    // avoid warning: Expected *** state to match memoized state before processing the update queue.
+    ref.state = makeObState(ref, mergedState);
+    ctx.state = ref.state;
   }
   ctx.__$$autoWatch = __$$autoWatch;
 

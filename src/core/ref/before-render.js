@@ -6,6 +6,12 @@ export default function (ref) {
   const ctx = ref.ctx;
   ctx.__$$renderStatus = START;
 
+  // 在buildRefCtx阶段已完成相关的obState注入，这里不再需要
+  // 否则会引起 warning: Expected *** state to match memoized state before processing the update queue.
+  if (ctx.renderCount === 1) {
+    return;
+  }
+
   // 处于收集观察依赖
   if (ctx.__$$autoWatch) {
 

@@ -12,13 +12,13 @@ export default function (refCtx, stateModule, oldState, committedState, callInfo
 
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
   // 触发有stateKey依赖列表相关的watch函数
-  const shouldCurrentRefUpdate = findDepFnsToExecute(
+  const { shouldCurrentRefUpdate, hasDelta } = findDepFnsToExecute(
     refCtx, stateModule, refModule, oldState, curDepComputedFns,
     committedState, newState, deltaCommittedState, callInfo, isBeforeMount,
     'watch', CATE_REF, refComputed,
   );
 
-  if (autoMergeDeltaToCommitted) {
+  if (autoMergeDeltaToCommitted && hasDelta) {
     Object.assign(committedState, deltaCommittedState);
   }
 
