@@ -4,7 +4,7 @@ import {
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { NOT_A_JSON, END } from '../../support/priv-constant';
+import { NOT_A_JSON, END, START } from '../../support/priv-constant';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
 import changeRefState from '../state/change-ref-state';

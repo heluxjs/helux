@@ -137,8 +137,10 @@ export default function register({
         }
 
         componentDidMount() {
-          if (super.componentDidMount) super.componentDidMount();
+          // 一定要先于super.componentDidMount，里面会标记ref是否已挂载
+          // 如果放在super.componentDidMount之后，super.componentDidMount里的setState会失效
           didMount(this);
+          if (super.componentDidMount) super.componentDidMount();
           // 代理模式不再强制检查$$attach是否给调用
           // if (isPropsProxy === true && !this.ctx.childRef) {
           //   throw new Error('you forgot to call this.props.$$attach(this) in constructor, you must call it after state assign expression next line!');

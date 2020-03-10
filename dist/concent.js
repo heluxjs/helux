@@ -2751,48 +2751,12 @@
     }
   }
 
-  var ccStoreSetState = ccContext.store.setState;
-  var ccGlobalStateKeys = ccContext.globalStateKeys;
-  var tip = "note! you are trying set state for global module, but the state you commit include some invalid keys which is not declared in cc's global state, \ncc will ignore them, but if this result is not as you expected, please check your committed global state!";
-  function getAndStoreValidGlobalState (globalState, tipModule, tipCcClassKey) {
-    if (tipModule === void 0) {
-      tipModule = '';
-    }
-
-    if (tipCcClassKey === void 0) {
-      tipCcClassKey = '';
-    }
-
-    var _extractStateByKeys = extractStateByKeys(globalState, ccGlobalStateKeys),
-        validGlobalState = _extractStateByKeys.partialState,
-        isStateEmpty = _extractStateByKeys.isStateEmpty;
-
-    var vKeys = okeys(validGlobalState);
-    var allKeys = okeys(globalState);
-
-    if (vKeys.length < allKeys.length) {
-      //??? need strict?
-      var invalidKeys = allKeys.filter(function (k) {
-        return !vKeys.includes(k);
-      });
-      justWarning(tip + ',invalid keys: ' + invalidKeys.join(',') + ', make sure the keys is invalid and their values are not undefined');
-      console.log(globalState);
-      if (tipModule) justWarning('module is ' + tipModule);
-      if (tipCcClassKey) justWarning('ccClassKey is ' + tipCcClassKey);
-    }
-
-    ccStoreSetState(MODULE_GLOBAL, validGlobalState);
-    return {
-      partialState: validGlobalState,
-      isStateEmpty: isStateEmpty
-    };
-  }
-
   // import hoistNonReactStatic from 'hoist-non-react-statics';
   var verboseInfo$1 = verboseInfo,
       makeError$2 = makeError,
       justWarning$3 = justWarning,
-      isPJO$4 = isPJO;
+      isPJO$4 = isPJO,
+      okeys$5 = okeys;
   var _ccContext$store$1 = ccContext.store,
       getState = _ccContext$store$1.getState,
       storeSetState = _ccContext$store$1.setState,
@@ -3427,22 +3391,23 @@
       try {
         setState$1(module, state);
       } catch (err) {
-        if (module === MODULE_GLOBAL) {
-          getAndStoreValidGlobalState(state, module);
-        } else {
-          var moduleState = getState(module);
+        var moduleState = getState(module);
 
-          if (!moduleState) {
-            return justWarning("invalid module " + module);
-          }
+        if (!moduleState) {
+          return justWarning$3("invalid module " + module);
+        }
 
-          var keys = okeys(moduleState);
+        var keys = okeys$5(moduleState);
 
-          var _extractStateByKeys = extractStateByKeys(state, keys),
-              partialState = _extractStateByKeys.partialState,
-              isStateEmpty = _extractStateByKeys.isStateEmpty;
+        var _extractStateByKeys = extractStateByKeys(state, keys, false, true),
+            partialState = _extractStateByKeys.partialState,
+            isStateEmpty = _extractStateByKeys.isStateEmpty,
+            ignoredStateKeys = _extractStateByKeys.ignoredStateKeys;
 
-          if (!isStateEmpty) storeSetState(module, partialState); //store this valid state;
+        if (!isStateEmpty) storeSetState(module, partialState); //store this valid state;
+
+        if (ignoredStateKeys.length > 0) {
+          justWarning$3("invalid keys:" + ignoredStateKeys.join(',') + ", their value is undefined or they are not declared in module" + module);
         }
 
         justTip("no ccInstance found for module[" + module + "] currently, cc will just store it, lately ccInstance will pick this state to render");
@@ -6796,7 +6761,7 @@
     ctx.__boundForceUpdate = hookSetter;
   }
 
-  var tip$1 = 'react version is LTE 16.8'; //写为具名函数，防止react devtoo里显示.default
+  var tip = 'react version is LTE 16.8'; //写为具名函数，防止react devtoo里显示.default
 
   function useConcent(registerOption, ccClassKey) {
     var _registerOption = getRegisterOptions(registerOption); // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
@@ -6814,7 +6779,7 @@
     var reactUseState = React.useState;
 
     if (!reactUseState) {
-      throw new Error(tip$1);
+      throw new Error(tip);
     }
 
     var cursor = getUsableCursor();
