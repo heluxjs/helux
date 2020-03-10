@@ -165,7 +165,7 @@ export default function register({
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }
           if (isPropsProxy === false) {
-            if (this.ctx.watchedKeys === '-') beforeRender(this);
+            beforeRender(this);
             //now cc class extends ReactClass, call super.render()
             return super.render();
           } else {
