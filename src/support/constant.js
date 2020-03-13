@@ -77,12 +77,3 @@ export const ERR_MESSAGE = {
 
 }
 
-export default {
-  MODULE_GLOBAL,
-  MODULE_DEFAULT,
-  MODULE_CC,
-  ERR,
-  ERR_MESSAGE,
-  FOR_ONE_INS_FIRSTLY,
-  FOR_ALL_INS_OF_A_MOD,
-}

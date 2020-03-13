@@ -64,15 +64,6 @@
     CC_REDUCER_NOT_A_FUNCTION: 1503
   };
   var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "when type param is string, it must be one of these format: (fnName)\u3001(moduleName)/(fnName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_MODULE_NOT_CONNECTED] = "module not been connected by ref", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "props.ccKey duplicate", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE] = 'ccClass is declared as singleton, trying new another one instance is not allowed! ', _ERR_MESSAGE[ERR.CC_STORED_KEYS_NEED_CCKEY] = 'you must explicitly specify a ccKey for ccInstance when set storedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate!', _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
-  var constant = {
-    MODULE_GLOBAL: MODULE_GLOBAL,
-    MODULE_DEFAULT: MODULE_DEFAULT,
-    MODULE_CC: MODULE_CC,
-    ERR: ERR,
-    ERR_MESSAGE: ERR_MESSAGE,
-    FOR_ONE_INS_FIRSTLY: FOR_ONE_INS_FIRSTLY,
-    FOR_ALL_INS_OF_A_MOD: FOR_ALL_INS_OF_A_MOD
-  };
 
   var _cst = /*#__PURE__*/Object.freeze({
     MODULE_GLOBAL: MODULE_GLOBAL,
@@ -111,8 +102,7 @@
     FN_CU: FN_CU,
     FN_WATCH: FN_WATCH,
     ERR: ERR,
-    ERR_MESSAGE: ERR_MESSAGE,
-    default: constant
+    ERR_MESSAGE: ERR_MESSAGE
   });
 
   var _computedValue2, _computedValueOri2;
@@ -1242,7 +1232,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.1',
+      version: '2.2.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -3984,11 +3974,19 @@
     handlers.forEach(function (_ref) {
       var ccUniqueKey = _ref.ccUniqueKey,
           handlerKey = _ref.handlerKey;
+      var ref = ccUKey_ref_$1[ccUniqueKey];
 
-      if (ccUKey_ref_$1[ccUniqueKey] && handlerKey) {
+      if (ref && handlerKey) {
         //  confirm the instance is mounted and handler is not been offed
         var handler = handlerKey_handler_[handlerKey];
-        if (handler) handler.fn.apply(handler, args);
+
+        if (handler) {
+          var fn = handler.fn;
+          if (ref.__$$isMounted) fn.apply(void 0, args);else ref.ctx.__$$onEvents.push({
+            fn: fn,
+            args: args
+          });
+        }
       }
     });
   }
@@ -4722,7 +4720,7 @@
       _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
     };
 
-    var onEvents = [];
+    var __$$onEvents = [];
     var effectItems = [],
         effectPropsItems = []; // {fn:function, status:0, eId:'', immediate:true}
 
@@ -4757,6 +4755,8 @@
       connect: connect,
       connectedModules: connectedModules,
       // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
+      __$$onEvents: __$$onEvents,
+      // 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
       __$$hasModuleState: moduleName_stateKeys_$5[module].length > 0,
       __$$renderStatus: END,
       __$$curWaKeys: {},
@@ -4803,7 +4803,7 @@
       moduleReducer: {},
       connectedReducer: {},
       reducer: {}
-    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.onEvents = onEvents, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = noop, _ctx.__boundSetState = __boundSetState, _ctx.reactForceUpdate = noop, _ctx.__boundForceUpdate = __boundForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
+    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = noop, _ctx.__boundSetState = __boundSetState, _ctx.reactForceUpdate = noop, _ctx.__boundForceUpdate = __boundForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
       return function (ref) {
         return refs[refName] = {
           current: ref
@@ -4984,17 +4984,7 @@
             _ev$getEventItem2$ide = _ev$getEventItem2.identity,
             identity = _ev$getEventItem2$ide === void 0 ? null : _ev$getEventItem2$ide;
 
-        onEvents.push({
-          event: event,
-          handler: handler,
-          identity: identity
-        }); // 不再支持delayToDidMount参数，考虑异步渲染的安全性，一定是didMount阶段开始监听
-        // if (delayToDidMount) {
-        //   onEvents.push({ event, handler, identity });
-        //   //cache to onEvents firstly, cc will bind them in didMount life cycle
-        //   return;
-        // }
-        // ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+        bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
       };
     }
 
@@ -5554,19 +5544,23 @@
     ref.__$$isMounted = true;
     ref.__$$isUnmounted = false;
     var _ref$ctx = ref.ctx,
-        module = _ref$ctx.module,
         isSingle = _ref$ctx.isSingle,
         ccClassKey = _ref$ctx.ccClassKey,
         ccKey = _ref$ctx.ccKey,
         ccUniqueKey = _ref$ctx.ccUniqueKey,
-        onEvents = _ref$ctx.onEvents;
-    setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
-    onEvents.forEach(function (_ref) {
-      var event = _ref.event,
-          identity = _ref.identity,
-          handler = _ref.handler;
-      bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler);
-    });
+        __$$onEvents = _ref$ctx.__$$onEvents;
+    setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey); // 这些事件是组件还未挂载时，就派发过来的，延迟到此刻执行，同时清空
+
+    if (__$$onEvents.length > 0) {
+      __$$onEvents.forEach(function (_ref) {
+        var fn = _ref.fn,
+            args = _ref.args;
+        return fn.apply(void 0, args);
+      });
+
+      __$$onEvents.length = 0;
+    }
+
     triggerSetupEffect(ref, true);
   }
 
