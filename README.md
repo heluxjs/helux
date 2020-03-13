@@ -8,6 +8,7 @@ a predictable、zero-cost-use、progressive、high performance's enhanced state 
 support **dependency collection** & **lazy computed**
 [more details about v2](./V2Details.md)
 
+## Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
 <p align="center">
