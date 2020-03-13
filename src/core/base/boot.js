@@ -118,6 +118,8 @@ export function configPlugins(plugins) {
         throw new Error('a plugin must export install handler!');
       }
     });
+    ccContext.pluginNameMap = pluginNameMap;
+    
   }
 }
 

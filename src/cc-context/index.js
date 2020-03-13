@@ -214,6 +214,7 @@ const ccContext = {
   errorHandler: null,
   middlewares: [],
   plugins: [],
+  pluginNameMap: {},
 }
 
 export function getCcContext() {

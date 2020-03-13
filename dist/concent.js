@@ -1253,7 +1253,8 @@
     userClassKey_featureStr_: {},
     errorHandler: null,
     middlewares: [],
-    plugins: []
+    plugins: [],
+    pluginNameMap: {}
   };
   var lsLen = localStorage.length;
   var _refStoreState = ccContext.refStore._state;
@@ -4570,6 +4571,38 @@
         justWarning$6("invalid watchedKey[" + waKey + "] of module[" + module + "]");
       }
     });
+  }
+  /** 映射插件提供的辅助方法 */
+
+
+  function aux(auxMap, prefixMethodName, handler) {
+    var auxKey = prefixMethodName,
+        pName = '';
+
+    if (Array.isArray(prefixMethodName)) {
+      var pluginName = prefixMethodName[0],
+          methodName = prefixMethodName[1];
+      auxKey = pluginName + "/" + methodName;
+      pName = pluginName;
+    } else if (typeof prefixMethodName === 'string') {
+      var _prefixMethodName$spl = prefixMethodName.split('/'),
+          _pluginName = _prefixMethodName$spl[0];
+
+      pName = _pluginName;
+    } else {
+      return justWarning$6("auxKey[" + prefixMethodName + "] invalid");
+    } // 这里pmap每次取最新的引用
+
+
+    var pmap = ccContext.pluginNameMap;
+
+    if (!pmap[pName]) {
+      return justWarning$6("pluginName[" + pName + "] invalid");
+    }
+
+    if (auxMap[auxKey]) {
+      justWarning$6("auxMethod[" + auxKey + "] dup!");
+    } else auxMap[auxKey] = handler;
   } //调用buildFragmentRefCtx 之前，props参数已被处理过
 
   /**
@@ -4969,11 +5002,11 @@
       // level 5, assign enhance api
       ctx.execute = function (handler) {
         return ctx.execute = handler;
-      };
+      }; // prefixMethodName : {pluginName}/{methodName}
 
-      ctx.aux = function (methodName, handler) {
-        if (auxMap[methodName]) throw new Error("auxMethod[" + methodName + "] already defined!");
-        auxMap[methodName] = handler;
+
+      ctx.aux = function (prefixMethodName, handler) {
+        return aux(auxMap, prefixMethodName, handler);
       };
 
       ctx.watch = getDefineWatchHandler(ctx);
@@ -6001,6 +6034,7 @@
           throw new Error('a plugin must export install handler!');
         }
       });
+      ccContext.pluginNameMap = pluginNameMap;
     }
   }
 

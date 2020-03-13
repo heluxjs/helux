@@ -86,8 +86,34 @@ function recordDep(ccUniqueKey, module, watchedKeys) {
   });
 }
 
-//调用buildFragmentRefCtx 之前，props参数已被处理过
+/** 映射插件提供的辅助方法 */
+function aux(auxMap, prefixMethodName, handler) {
+  let auxKey = prefixMethodName, pName = '';
+  if (Array.isArray(prefixMethodName)) {
+    const [pluginName, methodName] = prefixMethodName;
+    auxKey = `${pluginName}/${methodName}`;
+    pName = pluginName;
+  } else if (typeof prefixMethodName === 'string') {
+    const [pluginName] = prefixMethodName.split('/');
+    pName = pluginName;
+  } else {
+    return justWarning(`auxKey[${prefixMethodName}] invalid`);
+  }
 
+  // 这里pmap每次取最新的引用
+  const pmap = ccContext.pluginNameMap;
+  if (!pmap[pName]) {
+    return justWarning(`pluginName[${pName}] invalid`);
+  }
+
+  if (auxMap[auxKey]) {
+    justWarning(`auxMethod[${auxKey}] dup!`);
+  }
+  else auxMap[auxKey] = handler;
+}
+
+
+//调用buildFragmentRefCtx 之前，props参数已被处理过
 /**
  * 构建refCtx，附加到ref上
  * liteLevel 越小，绑定的方法越少
@@ -375,10 +401,9 @@ export default function (ref, params, liteLevel = 5) {
 
   if (liteLevel > 4) {// level 5, assign enhance api
     ctx.execute = handler => ctx.execute = handler;
-    ctx.aux = (methodName, handler) => {
-      if (auxMap[methodName]) throw new Error(`auxMethod[${methodName}] already defined!`);
-      auxMap[methodName] = handler;
-    }
+    // prefixMethodName : {pluginName}/{methodName}
+    ctx.aux = (prefixMethodName, handler) => aux(auxMap, prefixMethodName, handler);
+
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
     ctx.lazyComputed = getDefineComputedHandler(ctx, true);
