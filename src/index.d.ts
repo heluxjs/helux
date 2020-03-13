@@ -53,6 +53,12 @@ type CcCst = {
 
   CATE_MODULE: 'module';
   CATE_REF: 'ref';
+  FN_CU: 'computed';
+  FN_WATCH: 'watch';
+
+  DID_MOUNT: 1;
+  DID_UPDATE: 2;
+  WILL_UNMOUNT: 3;
 }
 
 
@@ -371,10 +377,12 @@ declare function refCtxWatch(multiFn: (ctx: ICtxBase) => MultiWatch): void;
 
 type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
+type ExecutePeriod = CcCst['DID_MOUNT'] | CcCst['DID_UPDATE'] | CcCst['WILL_UNMOUNT'];
+
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isAfterFirstRender: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?:boolean, immediate?: boolean): void;
+  (cb: (refCtx: RefCtx, executePeriod: ExecutePeriod) => ClearEffect, depKeys?: EffectDepKeys, compare?:boolean, immediate?: boolean): void;
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isAfterFirstRender: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
+  (cb: (refCtx: RefCtx, executePeriod: ExecutePeriod) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
 declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 

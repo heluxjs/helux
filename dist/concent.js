@@ -51,6 +51,9 @@
   var CATE_REF = 'ref';
   var FN_CU = 'computed';
   var FN_WATCH = 'watch';
+  var DID_MOUNT = 1;
+  var DID_UPDATE = 2;
+  var WILL_UNMOUNT = 3;
   var ERR = {
     CC_MODULE_NAME_DUPLICATE: 1002,
     CC_MODULE_NOT_FOUND: 1012,
@@ -101,6 +104,9 @@
     CATE_REF: CATE_REF,
     FN_CU: FN_CU,
     FN_WATCH: FN_WATCH,
+    DID_MOUNT: DID_MOUNT,
+    DID_UPDATE: DID_UPDATE,
+    WILL_UNMOUNT: WILL_UNMOUNT,
     ERR: ERR,
     ERR_MESSAGE: ERR_MESSAGE
   });
@@ -5253,7 +5259,8 @@
         }
 
         var prevCb = eid_cleanCb_[eId];
-        var cb = fn(ctx, isFirstCall);
+        var executePeriod = isFirstCall ? DID_MOUNT : DID_UPDATE;
+        var cb = fn(ctx, executePeriod);
         if (cb) eid_cleanCb_[eId] = cb;
         if (prevCb) prevCb(ctx); // let ctx.effect have the totally same behavior with useEffect
       };
@@ -5606,7 +5613,7 @@
     var execute = function execute(key) {
       // symbolKey or normalKey
       var cb = cbMap[key];
-      if (typeof cb === 'function') cb(ctx);
+      if (typeof cb === 'function') cb(ctx, WILL_UNMOUNT);
     };
 
     Object.getOwnPropertySymbols(cbMap).forEach(execute);
