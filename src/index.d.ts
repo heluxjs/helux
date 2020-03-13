@@ -56,11 +56,11 @@ type CcCst = {
   FN_CU: 'computed';
   FN_WATCH: 'watch';
 
+  // for renderPeriod
   DID_MOUNT: 1;
   DID_UPDATE: 2;
   WILL_UNMOUNT: 3;
 }
-
 
 export interface IAnyObj { [key: string]: any }
 export interface IAnyFn {

@@ -513,5 +513,31 @@ export default function (ref, params, liteLevel = 5) {
 
   if (!existedCtx) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
-  else Object.assign(ref.ctx, ctx);
+  else {
+    // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
+    const {
+      __$$curWaKeys,
+      __$$compareWaKeys,
+      __$$compareWaKeyCount,
+      __$$nextCompareWaKeys,
+      __$$nextCompareWaKeyCount,
+      __$$curConnWaKeys,
+      __$$compareConnWaKeys,
+      __$$compareConnWaKeyCount,
+      __$$nextCompareConnWaKeys,
+      __$$nextCompareConnWaKeyCount,
+    } = ref.ctx;
+    Object.assign(ref.ctx, ctx, {
+      __$$curWaKeys,
+      __$$compareWaKeys,
+      __$$compareWaKeyCount,
+      __$$nextCompareWaKeys,
+      __$$nextCompareWaKeyCount,
+      __$$curConnWaKeys,
+      __$$compareConnWaKeys,
+      __$$compareConnWaKeyCount,
+      __$$nextCompareConnWaKeys,
+      __$$nextCompareConnWaKeyCount,
+    });
+  }
 }
