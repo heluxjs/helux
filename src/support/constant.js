@@ -44,6 +44,10 @@ export const CATE_REF = 'ref';
 export const FN_CU = 'computed';
 export const FN_WATCH = 'watch';
 
+export const DID_MOUNT = 1;
+export const DID_UPDATE = 2;
+export const WILL_UNMOUNT = 3;
+
 export const ERR = {
   CC_MODULE_NAME_DUPLICATE: 1002,
   CC_MODULE_NOT_FOUND: 1012,
