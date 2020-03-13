@@ -208,7 +208,7 @@ export default function (ref, params, liteLevel = 5) {
   };
 
 
-  const onEvents = [];
+  const __$$onEvents = [];
   const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {}, eid_effectPropsReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ };
@@ -234,8 +234,10 @@ export default function (ref, params, liteLevel = 5) {
     privStateKeys,
     connect,
     connectedModules,
-
+    
     // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
+    __$$onEvents,// 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
+
     __$$hasModuleState: moduleName_stateKeys_[module].length > 0,
     __$$renderStatus: END,
 
@@ -244,7 +246,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$compareWaKeyCount: 0,//write before render
     __$$nextCompareWaKeys: {},
     __$$nextCompareWaKeyCount: 0,
-
+    
     __$$curConnWaKeys: {},
     __$$compareConnWaKeys: {},
     __$$compareConnWaKeyCount: {},
@@ -288,7 +290,6 @@ export default function (ref, params, liteLevel = 5) {
 
     // api meta data
     stateKeys,
-    onEvents,
     computedDep,
     computedRetKeyFns: {},//不按模块分类，映射的cuRetKey_fn_
     watchDep,
@@ -387,15 +388,7 @@ export default function (ref, params, liteLevel = 5) {
     ctx.on = (inputEvent, handler) => {
       //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
       const { name: event, identity = null } = ev.getEventItem(inputEvent);
-      onEvents.push({ event, handler, identity });
-
-      // 不再支持delayToDidMount参数，考虑异步渲染的安全性，一定是didMount阶段开始监听
-      // if (delayToDidMount) {
-      //   onEvents.push({ event, handler, identity });
-      //   //cache to onEvents firstly, cc will bind them in didMount life cycle
-      //   return;
-      // }
-      // ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+      ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
     };
   }
 
