@@ -77,7 +77,12 @@ const getConnectWatchedKeys = (ctx, module) => {
 function recordDep(ccUniqueKey, module, watchedKeys) {
   const waKeys = watchedKeys === '*' ? moduleName_stateKeys_[module] : watchedKeys;
   waKeys.forEach(waKey => {
-    waKey_uKeyMap_[`${module}/${waKey}`][ccUniqueKey] = 1;
+    const map = waKey_uKeyMap_[`${module}/${waKey}`];
+    if(map){
+      map[ccUniqueKey] = 1;
+    }else{
+      justWarning(`invalid watchedKey[${waKey}] of module[${module}]`)
+    }
   });
 }
 
@@ -447,7 +452,7 @@ export default function (ref, params, liteLevel = 5) {
       }
       // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
       else{
-        recordDep(ccUniqueKey, module, connectDesc);
+        recordDep(ccUniqueKey, m, connectDesc);
       } 
 
       connectedState[m] = mConnectedState;

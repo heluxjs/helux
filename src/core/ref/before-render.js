@@ -15,8 +15,8 @@ export default function (ref) {
   if (ctx.__$$autoWatch) {
 
     if (ctx.__$$hasModuleState) {
-      // 这里也不需要再次转换为obState，在buildRefCtx阶段阶段转换过一次就始终是可观察对象了
-      // ref.state = makeObState(ref, ref.state);
+      // 这里后期考虑结合handlerFactory.makeRefSetState优化，不用每次都生成代理对象
+      ref.state = makeObState(ref, ref.state);
 
       ctx.state = ref.state;
       ctx.moduleState = makeObState(ref, ctx.mstate);

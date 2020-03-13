@@ -1,3 +1,8 @@
+#### 2020-03-10
+2.2.1 发布
+* fix: 在`componentDidMount`里调用`setState`失效
+* refactor: 删除`register`的`render`块里多余的`watchedKeys=='*'`判断
+
 #### 2020-03-09
 2.2.0 发布
 * refactor: 重构依赖收集运行机制，从`module_ccUKeys_`映射替换为`waKey_uKeyMap_`映射

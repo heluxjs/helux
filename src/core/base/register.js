@@ -138,8 +138,6 @@ export default function register({
 
         componentDidMount() {
           if (super.componentDidMount) super.componentDidMount();
-          // 一定要先于super.componentDidMount，里面会标记ref是否已挂载
-          // 如果放在super.componentDidMount之后，super.componentDidMount里的setState会失效
           didMount(this);
 
 

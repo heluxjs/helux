@@ -243,6 +243,9 @@ declare function refCtxOff(eventDesc: [string, string?]): void;
 declare function refCtxOff(eventDesc: { name: string, identity?: string }): void;
 
 export type GetPromiseT<F extends (...args: any) => any> = F extends (...args: any) => Promise<infer T> ? T : ReturnType<F>;
+type MyReturnType<F extends (...args) => any> = ReturnType<F> extends Promise<infer T>
+  ? T
+  : ReturnType<F>
 
 /**
  * 
@@ -1201,3 +1204,4 @@ declare let defaultExport: DefaultExport;
 export default defaultExport;
 
 export as namespace cc;
+

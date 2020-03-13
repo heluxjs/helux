@@ -168,7 +168,7 @@
   };
 
   var CU_KEY = Symbol('cuk');
-  var START$1 = '1';
+  var START = '1';
   var END = '2';
   var NOT_A_JSON = 'is not a plain json object!';
   var STR_ARR_OR_STAR = 'should be an string array or *!';
@@ -873,6 +873,7 @@
     var whileCount = 0;
     var curToBeComputedState = toBeComputedState;
     var shouldCurrentRefUpdate = true;
+    var hasDelta = false;
 
     var _loop = function _loop() {
       whileCount++; // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
@@ -956,6 +957,7 @@
 
           Object.assign(initNewState, curToBeComputedState);
           Object.assign(initDeltaCommittedState, curToBeComputedState);
+          hasDelta = true;
         }; // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
         // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
 
@@ -1043,7 +1045,10 @@
       if (_ret === "break") break;
     }
 
-    return shouldCurrentRefUpdate;
+    return {
+      shouldCurrentRefUpdate: shouldCurrentRefUpdate,
+      hasDelta: hasDelta
+    };
   });
 
   var _reducer;
@@ -1237,7 +1242,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.0',
+      version: '2.2.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2309,9 +2314,11 @@
     }; // 触发有stateKey依赖列表相关的watch函数
 
 
-    var shouldCurrentRefUpdate = findDepFnsToExecute(refCtx, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'watch', CATE_REF, refComputed);
+    var _findDepFnsToExecute = findDepFnsToExecute(refCtx, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'watch', CATE_REF, refComputed),
+        shouldCurrentRefUpdate = _findDepFnsToExecute.shouldCurrentRefUpdate,
+        hasDelta = _findDepFnsToExecute.hasDelta;
 
-    if (autoMergeDeltaToCommitted) {
+    if (autoMergeDeltaToCommitted && hasDelta) {
       Object.assign(committedState, deltaCommittedState);
     }
 
@@ -2591,8 +2598,9 @@
     var refState = targetRef.state,
         refCtx = targetRef.ctx;
 
-    if (targetRef.__$$isUnmounted === true || // 已卸载
-    targetRef.__$$isMounted === false || // 还未挂载上
+    if ( // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
+    // targetRef.__$$isMounted === false || // 还未挂载上
+    targetRef.__$$isUnmounted === true || // 已卸载
     stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
       if (reactCallback) reactCallback(refState);
@@ -3430,7 +3438,7 @@
         // it will cause
         // Warning: Expected CC(SomeComp) state to match memoized state before processing the update queue
 
-        if (ref.__$$isBF) {
+        if (!ref.__$$isMounted) {
           Object.assign(ref.state, partialState);
         } else {
           ref.state = newState;
@@ -4058,7 +4066,7 @@
       get: function get(target, key) {
         var refCtx = ref.ctx;
 
-        if (refCtx.__$$renderStatus === START$1) {
+        if (refCtx.__$$renderStatus === START) {
           var ccUniqueKey = refCtx.ccUniqueKey;
 
           if (module) {
@@ -4102,7 +4110,8 @@
         return target[key];
       },
       set: function set(target, key) {
-        justWarning("warnning: state can not been changed manually, use api setState or dispatch instead");
+        // 这个warning暂时关闭，因为buildRefCtx阶段就生成了obState, refComputed里可能会调用commit向obState写入新的state
+        // justWarning(`warning: state key[${key}] can not been changed manually, use api setState or dispatch instead`);
         target[key] = target[key]; // avoid Uncaught TypeError: 'set' on proxy: trap returned falsish for property '***'
 
         return true;
@@ -4548,7 +4557,20 @@
       });
       return cKeys;
     }
-  }; //调用buildFragmentRefCtx 之前，props参数已被处理过
+  };
+
+  function recordDep(ccUniqueKey, module, watchedKeys) {
+    var waKeys = watchedKeys === '*' ? moduleName_stateKeys_$5[module] : watchedKeys;
+    waKeys.forEach(function (waKey) {
+      var map = waKey_uKeyMap_$3[module + "/" + waKey];
+
+      if (map) {
+        map[ccUniqueKey] = 1;
+      } else {
+        justWarning$6("invalid watchedKey[" + waKey + "] of module[" + module + "]");
+      }
+    });
+  } //调用buildFragmentRefCtx 之前，props参数已被处理过
 
   /**
    * 构建refCtx，附加到ref上
@@ -4759,7 +4781,8 @@
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
 
     ctx.initState = function (initState) {
-      if (!ref.__$$isBF) {
+      // 已挂载则不让用户在调用initState
+      if (ref.__$$isMounted) {
         return justWarning$6("ctx.initState can only been called before first render period!");
       }
 
@@ -5046,10 +5069,7 @@
           mConnectedState = makeObState(ref, mConnectedState, m);
         } // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
         else {
-            var waKeys = connectDesc === '*' ? moduleName_stateKeys_$5[m] : connectDesc;
-            waKeys.forEach(function (waKey) {
-              waKey_uKeyMap_$3[m + "/" + waKey][ccUniqueKey] = 1;
-            });
+            recordDep(ccUniqueKey, m, connectDesc);
           }
 
         connectedState[m] = mConnectedState;
@@ -5066,6 +5086,11 @@
 
     if (watchedKeys === '-') {
       __$$autoWatch = true;
+      ref.state = makeObState(ref, mergedState);
+      ctx.state = ref.state;
+    } else {
+      //开始记录依赖
+      recordDep(ccUniqueKey, module, watchedKeys);
     }
 
     ctx.__$$autoWatch = __$$autoWatch;
@@ -5135,8 +5160,6 @@
     ref.__$$isUnmounted = false; // false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
 
     ref.__$$isMounted = false; // 未挂载，在didMount时机才置为true，表示已挂载
-
-    ref.__$$isBF = true; // isBeforeFirstRender
     // flag before setup
 
     ctx.__$$isBSe = true; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
@@ -5495,7 +5518,6 @@
 
   function didMount (ref) {
     afterRender(ref);
-    ref.__$$isBF = false;
     ref.__$$isMounted = true;
     ref.__$$isUnmounted = false;
     var _ref$ctx = ref.ctx,
@@ -5588,10 +5610,16 @@
 
   function beforeRender (ref) {
     var ctx = ref.ctx;
-    ctx.__$$renderStatus = START$1; // 处于收集观察依赖
+    ctx.__$$renderStatus = START; // 在buildRefCtx阶段已完成相关的obState注入，这里不再需要
+
+    if (ctx.renderCount === 1) {
+      return;
+    } // 处于收集观察依赖
+
 
     if (ctx.__$$autoWatch) {
       if (ctx.__$$hasModuleState) {
+        // 这里后期考虑结合handlerFactory.makeRefSetState优化，不用每次都生成代理对象
         ref.state = makeObState(ref, ref.state);
         ctx.state = ref.state;
         ctx.moduleState = makeObState(ref, ctx.mstate);
@@ -5798,7 +5826,7 @@
             }
 
             if (isPropsProxy === false) {
-              if (this.ctx.watchedKeys === '-') beforeRender(this); //now cc class extends ReactClass, call super.render()
+              beforeRender(this); //now cc class extends ReactClass, call super.render()
 
               return _ToBeExtendedClass.prototype.render.call(this);
             } else {
