@@ -99,6 +99,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 source code see here：https://github.com/fantasticsoul/concent-guid-ts
 
 ## ✨Fetures
+* **support dependency collection**，use `Proxy`&`defineProperty` in v2.3+ to support dependency collection
 * **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component。
 * **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by `setState` directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
 * **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene。
