@@ -1,3 +1,13 @@
+#### 2020-03-14
+2.2.8 发布
+* refactor: 给事件描述对象添加`canPerform`参数，可以拿到将要执行事件回调的实例引用，控制是否要继续执行
+```js
+cc.emit({name:'someEvent', canPerform: ref=>{
+  return true;
+}}, 'value1', 'value2', 'value3')
+```
+* refactor: 删除`aux`相关
+
 #### 2020-03-10
 2.2.1 发布
 * fix: 在`componentDidMount`里调用`setState`失效
