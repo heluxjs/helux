@@ -269,7 +269,7 @@ class ClassComp extends React.Component{
   }
 }
 ```
-(online demo)[https://codesandbox.io/s/green-tdd-g2mcr] see file `seeDepCollection.js`;
+[online demo](https://codesandbox.io/s/green-tdd-g2mcr) see file `seeDepCollection.js`;
 
 ## 🔨Examples with some advanced features
 - run concent，load model configuration
