@@ -55,11 +55,6 @@ type CcCst = {
   CATE_REF: 'ref';
   FN_CU: 'computed';
   FN_WATCH: 'watch';
-
-  // for renderPeriod
-  DID_MOUNT: 1;
-  DID_UPDATE: 2;
-  WILL_UNMOUNT: 3;
 }
 
 export interface IAnyObj { [key: string]: any }
@@ -235,14 +230,15 @@ declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventN
 declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], cb: OnCallBack<EvMap[EvName]>): void;
 declare function refCtxOn<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, cb: OnCallBack<EvMap[EvName]>): void;
 
+type EventDesc = { name: string, identity?: string, canPerform?: (ctx: ICtxBase) => boolean, module?: string, ccClassKey?: string, ccUniqueKey?: string };
 declare function refCtxEmit<EventCbArgs extends any[] = any[]>(eventName: string, ...args: EventCbArgs): void;
 declare function refCtxEmit<EventCbArgs extends any[] = any[]>(eventDesc: [string, string?], ...args: EventCbArgs): void;
-declare function refCtxEmit<EventCbArgs extends any[] = any[]>(eventDesc: { name: string, identity?: string }, ...args: EventCbArgs): void;
+declare function refCtxEmit<EventCbArgs extends any[] = any[]>(eventDesc: EventDesc, ...args: EventCbArgs): void;
 
 // this way is better!!!
 declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventName: string, ...args: EvMap[EvName]): void;
 declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], ...args: EvMap[EvName]): void;
-declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: { name: string, identity?: string }, ...args: EvMap[EvName]): void;
+declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: EventDesc, ...args: EvMap[EvName]): void;
 
 declare function refCtxOff(eventName: string): void;
 declare function refCtxOff(eventDesc: [string, string?]): void;
@@ -377,12 +373,11 @@ declare function refCtxWatch(multiFn: (ctx: ICtxBase) => MultiWatch): void;
 
 type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
-type ExecutePeriod = CcCst['DID_MOUNT'] | CcCst['DID_UPDATE'] | CcCst['WILL_UNMOUNT'];
 
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, executePeriod: ExecutePeriod) => ClearEffect, depKeys?: EffectDepKeys, compare?:boolean, immediate?: boolean): void;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?:boolean, immediate?: boolean): void;
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, executePeriod: ExecutePeriod) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
 declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
 

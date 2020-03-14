@@ -507,9 +507,10 @@ export default function (ref, params, liteLevel = 5) {
     // 总是将connectedState.globalState指向ctx.globalState
     ctx.globalState = connectedState[MODULE_GLOBAL];
   };
-
-  ctx.getWatchedKeys = () => getWatchedKeys(ctx);
-  ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ctx, module);
+ 
+  //始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
+  ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
+  ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ref.ctx || ctx, module);
 
   if (!existedCtx) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可

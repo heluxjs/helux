@@ -1,6 +1,5 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { DID_MOUNT, DID_UPDATE } from '../../support/constant';
 
 const {
   moduleName_stateKeys_, 
@@ -29,11 +28,10 @@ export default function (ref, callByDidMount) {
       if (immediate === false) return;
     }
     const prevCb = eid_cleanCb_[eId];
-    const executePeriod = isFirstCall ? DID_MOUNT : DID_UPDATE;
-    const cb = fn(ctx, executePeriod);
-
-    if (cb) eid_cleanCb_[eId] = cb;
     if (prevCb) prevCb(ctx);// let ctx.effect have the totally same behavior with useEffect
+
+    const cb = fn(ctx, isFirstCall);
+    eid_cleanCb_[eId] = cb;//不管有没有返回，都要覆盖之前的结果
   };
 
   if (callByDidMount) {

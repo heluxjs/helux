@@ -51,9 +51,6 @@
   var CATE_REF = 'ref';
   var FN_CU = 'computed';
   var FN_WATCH = 'watch';
-  var DID_MOUNT = 1;
-  var DID_UPDATE = 2;
-  var WILL_UNMOUNT = 3;
   var ERR = {
     CC_MODULE_NAME_DUPLICATE: 1002,
     CC_MODULE_NOT_FOUND: 1012,
@@ -104,9 +101,6 @@
     CATE_REF: CATE_REF,
     FN_CU: FN_CU,
     FN_WATCH: FN_WATCH,
-    DID_MOUNT: DID_MOUNT,
-    DID_UPDATE: DID_UPDATE,
-    WILL_UNMOUNT: WILL_UNMOUNT,
     ERR: ERR,
     ERR_MESSAGE: ERR_MESSAGE
   });
@@ -1238,7 +1232,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.3',
+      version: '2.2.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -5136,18 +5130,44 @@
 
 
       ctx.globalState = connectedState[MODULE_GLOBAL];
-    };
+    }; //始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
+
 
     ctx.getWatchedKeys = function () {
-      return getWatchedKeys(ctx);
+      return getWatchedKeys(ref.ctx || ctx);
     };
 
     ctx.getConnectWatchedKeys = function (module) {
-      return getConnectWatchedKeys(ctx, module);
+      return getConnectWatchedKeys(ref.ctx || ctx, module);
     };
 
     if (!existedCtx) ref.ctx = ctx; // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
-    else Object.assign(ref.ctx, ctx);
+    else {
+        // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
+        var _ref$ctx = ref.ctx,
+            __$$curWaKeys = _ref$ctx.__$$curWaKeys,
+            __$$compareWaKeys = _ref$ctx.__$$compareWaKeys,
+            __$$compareWaKeyCount = _ref$ctx.__$$compareWaKeyCount,
+            __$$nextCompareWaKeys = _ref$ctx.__$$nextCompareWaKeys,
+            __$$nextCompareWaKeyCount = _ref$ctx.__$$nextCompareWaKeyCount,
+            _$$curConnWaKeys = _ref$ctx.__$$curConnWaKeys,
+            _$$compareConnWaKeys = _ref$ctx.__$$compareConnWaKeys,
+            _$$compareConnWaKeyCount = _ref$ctx.__$$compareConnWaKeyCount,
+            _$$nextCompareConnWaKeys = _ref$ctx.__$$nextCompareConnWaKeys,
+            _$$nextCompareConnWaKeyCount = _ref$ctx.__$$nextCompareConnWaKeyCount;
+        Object.assign(ref.ctx, ctx, {
+          __$$curWaKeys: __$$curWaKeys,
+          __$$compareWaKeys: __$$compareWaKeys,
+          __$$compareWaKeyCount: __$$compareWaKeyCount,
+          __$$nextCompareWaKeys: __$$nextCompareWaKeys,
+          __$$nextCompareWaKeyCount: __$$nextCompareWaKeyCount,
+          __$$curConnWaKeys: _$$curConnWaKeys,
+          __$$compareConnWaKeys: _$$compareConnWaKeys,
+          __$$compareConnWaKeyCount: _$$compareConnWaKeyCount,
+          __$$nextCompareConnWaKeys: _$$nextCompareConnWaKeys,
+          __$$nextCompareConnWaKeyCount: _$$nextCompareConnWaKeyCount
+        });
+      }
   }
 
   var getState$4 = ccContext.store.getState;
@@ -5259,10 +5279,10 @@
         }
 
         var prevCb = eid_cleanCb_[eId];
-        var executePeriod = isFirstCall ? DID_MOUNT : DID_UPDATE;
-        var cb = fn(ctx, executePeriod);
-        if (cb) eid_cleanCb_[eId] = cb;
         if (prevCb) prevCb(ctx); // let ctx.effect have the totally same behavior with useEffect
+
+        var cb = fn(ctx, isFirstCall);
+        eid_cleanCb_[eId] = cb; //不管有没有返回，都要覆盖之前的结果
       };
     };
 
@@ -5613,7 +5633,7 @@
     var execute = function execute(key) {
       // symbolKey or normalKey
       var cb = cbMap[key];
-      if (typeof cb === 'function') cb(ctx, WILL_UNMOUNT);
+      if (typeof cb === 'function') cb(ctx);
     };
 
     Object.getOwnPropertySymbols(cbMap).forEach(execute);

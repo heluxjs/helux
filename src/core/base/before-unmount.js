@@ -1,5 +1,4 @@
 import * as util from '../../support/util';
-import { WILL_UNMOUNT } from '../../support/constant';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
 
@@ -8,7 +7,7 @@ const okeys = util.okeys;
 function executeClearCb(cbMap, ctx) {
   const execute = key => {// symbolKey or normalKey
     const cb = cbMap[key];
-    if (typeof cb === 'function') cb(ctx, WILL_UNMOUNT);
+    if (typeof cb === 'function') cb(ctx);
   }
 
   Object.getOwnPropertySymbols(cbMap).forEach(execute);
