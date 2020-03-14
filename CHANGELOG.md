@@ -1,3 +1,49 @@
+#### 2020-03-15
+2.3.0 发布
+* feature: 支持computed&watch依赖收集
+对于computed&watch，默认开启依赖收集，除非人工设定依赖标记, 特别注意，对于watch来说只有设置immediate为true才会自动启用依赖收集
+```js
+//实例级别
+const setup = ctx => {
+  ctx.computed('show', (n)=>{
+    return n.show + n.cool + n.good;
+  });// 收集到的依赖为['show', 'cool', 'good']
+
+  // 等同于写为 ctx.computed('show', ()=>{...}, '-')
+  // depKeys设置为'-'表示启用依赖收集
+
+  ctx.computed('show2', (n)=>{
+    return n.show + '2222' + n.cool;
+  });// 收集到的依赖为['show', 'cool']
+};
+
+//模块级别
+run({
+  counter:{
+    state:{
+      modCount: 10,
+      modCountBak: 100,
+    },
+    computed:{
+      xxx(n){
+        return n.modCount + n.modCountBak;
+      },// 默认启用依赖收集
+      yyy(n){
+        return n.modCountBak;
+      },// 默认启用依赖收集
+    },
+    watch:{
+      xxx:{
+        fn(n){
+          console.log('---> trigger watch xxx', n);
+        },
+        immediate: true,//启用依赖收集
+      },
+    }
+  }
+});
+```
+
 #### 2020-03-14
 2.2.8 发布
 * refactor: 给事件描述对象添加`canPerform`参数，可以拿到将要执行事件回调的实例引用，控制是否要继续执行

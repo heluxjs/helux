@@ -83,14 +83,14 @@ function _parseDescObj(cate, confMeta, descObj) {
     }
 
     if (isPJO(targetItem)) {
-      const { fn, depKeys, immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
+      // 默认自动收集
+      const { fn, depKeys = '-', immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
       const fnUid = uuid('mark');
 
-      if (depKeys === '*') {
-        const { isStateKey, stateKey } = _resolveStateKey(confMeta, callerModule, retKey);
-        if (!isStateKey) throw new Error(`retKey[${retKey}] is not a state key of module[${callerModule}]`);
+      if (depKeys === '*' || depKeys === '-') {
+        const { stateKey } = _resolveStateKey(confMeta, callerModule, retKey);
         _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
-        // when retKey is '/xxxx', here need pass xxxx, so pass stateKey as retKey
+        // when retKey is '/xxxx', here need pass xxxx to pass stateKey as retKey
         _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy);
       } else {// ['foo/b1', 'bar/b1'] or null or undefined
         if (depKeys && !Array.isArray(depKeys)) throw new Error('depKeys must an string array or *');
@@ -180,23 +180,21 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
     retKey_lazy_[retKey] = confMeta.isLazyComputed || lazy;
     moduleDepDesc.fnCount++;
   }
-
-
-  let _depKeys = depKeys
-  if (depKeys === '*') {
-    _depKeys = ['*'];
-  }
-
+  
   if (cate === CATE_REF) {
     confMeta.retKeyFns[retKey] = retKey_fn_[retKey];
   }
-
+  
   const refCtx = confMeta.refCtx;
   if (refCtx) {
     if (confMeta.type === 'computed') refCtx.hasComputedFn = true;
     else refCtx.hasWatchFn = true;
   }
+  
+  //处于自动收集依赖状态，首次计算完之后再去写stateKey_retKeys_
+  if (depKeys === '-') return;
 
+  let _depKeys = depKeys === '*' ? ['*'] : depKeys;
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
     const retKeys = safeGetArray(stateKey_retKeys_, sKey);

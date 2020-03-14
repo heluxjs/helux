@@ -1,6 +1,7 @@
-import { makeCommitHandler, okeys, justWarning, makeCuObValue } from '../../support/util';
+import { makeCommitHandler, okeys, justWarning, makeCuObValue, safeGetObject, safeGetArray } from '../../support/util';
 import { FN_WATCH, CATE_REF } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
+import makeCuObState from '../computed/make-cu-ob-state';
 import cuMap from '../../cc-context/computed-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import runtimeVar from '../../cc-context/runtime-var';
@@ -18,7 +19,33 @@ function getCuWaParams(retKey, depKeys, newState, oldState) {
   }
 }
 
-export function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
+function getStateKeyRetKeysMap(refCtx, sourceType, stateModule) {
+  let modDep;
+  if (sourceType === CATE_REF) {
+    modDep = refCtx.computedDep[refCtx.module] || {};
+  } else {
+    modDep = cuMap._computedDep[stateModule] || {};
+  }
+  return modDep.stateKey_retKeys_;
+}
+
+function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, depKeys) {
+  if (depKeys.length === 0) return;
+  let modDep;
+  if (sourceType === CATE_REF) {
+    modDep = safeGetObject(refCtx.computedDep, refCtx.module);
+  } else {
+    modDep = safeGetObject(cuMap._computedDep, stateModule);
+  }
+  const stateKey_retKeys_ = safeGetObject(modDep, 'stateKey_retKeys_')
+
+  depKeys.forEach(sKey => {
+    const retKeys = safeGetArray(stateKey_retKeys_, sKey);
+    if (!retKeys.includes(retKey)) retKeys.push(retKey);
+  });
+}
+
+function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
   const [n, o] = getCuWaParams(retKey, depKeys, newState, oldState);
   return fn(n, o, fnCtx);
 }
@@ -27,20 +54,20 @@ export function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx)
 // sourceType: module ref
 export default (
   refCtx, stateModule, refModule, oldState, finder,
-  toBeComputedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
+  stateForComputeFn, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
   fnType, sourceType, computedContainer,
 ) => {
   let whileCount = 0;
-  let curToBeComputedState = toBeComputedState;
+  let curStateForComputeFn = stateForComputeFn;
   let shouldCurrentRefUpdate = true;
   let hasDelta = false;
 
-  while (curToBeComputedState) {
+  while (curStateForComputeFn) {
     whileCount++;
     // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
     // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
     const beforeMountFlag = whileCount === 1 ? isFirstCall : false;
-    const { pickedFns, setted, changed } = finder(curToBeComputedState, beforeMountFlag);
+    const { pickedFns, setted, changed } = finder(curStateForComputeFn, beforeMountFlag);
     if (!pickedFns.length) break;
 
     const { commit, getFnCommittedState } = makeCommitHandler();
@@ -48,59 +75,75 @@ export default (
     pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
       const fnCtx = {
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
-        stateModule, refModule, oldState, committedState: curToBeComputedState, refCtx
+        stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
       };
       
       if (fnType === 'computed') {
-        if(isLazy){
+        if (isLazy) {
           // lazyComputed 不再暴露这两个接口，以隔绝副作用
           delete fnCtx.commit;
           delete fnCtx.commitCu;
-          const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
-          computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, n, o, fnCtx);
-        }else{
-          const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
-          // computedContainer[retKey] = computedValueOrRet;
-          computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
         }
+
+         // 循环里的首次计算，注入代理对象，收集计算依赖
+        if (beforeMountFlag) {
+          const collectedDepKeys = [];
+          const obInitNewState = makeCuObState(initNewState, collectedDepKeys);
+          // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
+          const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, obInitNewState, obInitNewState, fnCtx);
+          computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
+          setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, collectedDepKeys);
+        } else {
+          if (isLazy) {
+            const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
+            computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, n, o, fnCtx);
+          } else {
+            const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+            computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
+          }
+        }
+
       } else {// watch
-        const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+        let computedValueOrRet, tmpInitNewState = initNewState, collectedDepKeys = [];
+        let tmpOldState = oldState;
+        // 循环里的首次计算，注入代理对象，收集watch依赖, 注：只有immediate为true的watch才有机会执行此代码块并收集到依赖
+        if (beforeMountFlag) {
+          tmpInitNewState = makeCuObState(initNewState, collectedDepKeys);
+          // 首次触发watch时，new 和 old是同一个对象，方便用于收集depKeys
+          tmpOldState = tmpInitNewState;
+        }
+
+        computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, tmpInitNewState, tmpOldState, fnCtx);
+        setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, collectedDepKeys);
         //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
         if (computedValueOrRet === false) shouldCurrentRefUpdate = false;
       }
     });
 
-    curToBeComputedState = getFnCommittedState();
-    if (curToBeComputedState) {
+    curStateForComputeFn = getFnCommittedState();
+    if (curStateForComputeFn) {
       const assignCuState = (toAssign, judgeEmpty = false) => {
-        curToBeComputedState = toAssign;
+        curStateForComputeFn = toAssign;
         if (judgeEmpty && okeys(toAssign).length === 0) {
-          curToBeComputedState = null;
+          curStateForComputeFn = null;
           return;
         }
-        Object.assign(initNewState, curToBeComputedState);
-        Object.assign(initDeltaCommittedState, curToBeComputedState);
+        Object.assign(initNewState, curStateForComputeFn);
+        Object.assign(initDeltaCommittedState, curStateForComputeFn);
         hasDelta = true;
       }
 
       // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
       // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
       const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
-      const { partialState, ignoredStateKeys } = extractStateByKeys(curToBeComputedState, stateKeys, true, true);
+      const { partialState, ignoredStateKeys } = extractStateByKeys(curStateForComputeFn, stateKeys, true, true);
 
       if (partialState) {
         if (fnType === FN_WATCH) {
-          let modDep;
-          if (sourceType === CATE_REF) {
-            modDep = refCtx.computedDep[refCtx.module] || {};
-          } else {
-            modDep = cuMap._computedDep[stateModule] || {};
-          }
-          const { stateKey_retKeys_ } = modDep;
-
+          const stateKey_retKeys_ = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
           if (stateKey_retKeys_) {
             // 确保watch函数里调用commit提交的state keys没有出现在computed函数的depKeys里
-            // 因为按照先执行computed，再执行watch的顺序，提交了这种stateKey，会照成computed函数返回结果过失的情况产生
+            // 因为按照先执行computed，再执行watch的顺序，提交了这种stateKey，会造成computed函数返回结果失效了的情况产生
             const ignoredStateKeysAsDepInCu = [], canAssignState = {};
             okeys(partialState).forEach(stateKey => {
               if (stateKey_retKeys_[stateKey]) {
@@ -150,7 +193,10 @@ export default (
       }
     }
 
-    if (whileCount > 10) throw new Error('fnCtx.commit may goes endless loop, please check your code');
+    if (whileCount > 10) {
+      justWarning('fnCtx.commit may goes endless loop, please check your code');
+      curStateForComputeFn = null;
+    }
   }
 
   return { shouldCurrentRefUpdate, hasDelta };
