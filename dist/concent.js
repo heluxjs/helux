@@ -1232,7 +1232,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.6',
+      version: '2.2.7',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -3959,6 +3959,8 @@
         _ccClassKey,
         _ccUniqueKey;
 
+    var canPerform = null;
+
     if (typeof event === 'string') {
       _event = event;
     } else {
@@ -3967,6 +3969,7 @@
       _module = event.module;
       _ccClassKey = event.ccClassKey;
       _ccUniqueKey = event.ccUniqueKey;
+      canPerform = event.canPerform;
     }
 
     var handlers = _findEventHandlers(_event, _module, _ccClassKey, _ccUniqueKey, _identity);
@@ -3978,9 +3981,14 @@
 
       if (ref && handlerKey) {
         //  confirm the instance is mounted and handler is not been offed
+        if (ref.__$$isUnmounted) return;
         var handler = handlerKey_handler_[handlerKey];
 
         if (handler) {
+          if (canPerform && !canPerform(ref)) {
+            return;
+          }
+
           var fn = handler.fn;
           if (ref.__$$isMounted) fn.apply(void 0, args);else ref.ctx.__$$onEvents.push({
             fn: fn,

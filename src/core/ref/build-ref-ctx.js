@@ -86,33 +86,6 @@ function recordDep(ccUniqueKey, module, watchedKeys) {
   });
 }
 
-/** 映射插件提供的辅助方法 */
-function aux(auxMap, prefixMethodName, handler) {
-  let auxKey = prefixMethodName, pName = '';
-  if (Array.isArray(prefixMethodName)) {
-    const [pluginName, methodName] = prefixMethodName;
-    auxKey = `${pluginName}/${methodName}`;
-    pName = pluginName;
-  } else if (typeof prefixMethodName === 'string') {
-    const [pluginName] = prefixMethodName.split('/');
-    pName = pluginName;
-  } else {
-    return justWarning(`auxKey[${prefixMethodName}] invalid`);
-  }
-
-  // 这里pmap每次取最新的引用
-  const pmap = ccContext.pluginNameMap;
-  if (!pmap[pName]) {
-    return justWarning(`pluginName[${pName}] invalid`);
-  }
-
-  if (auxMap[auxKey]) {
-    justWarning(`auxMethod[${auxKey}] dup!`);
-  }
-  else auxMap[auxKey] = handler;
-}
-
-
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 /**
  * 构建refCtx，附加到ref上
@@ -212,7 +185,6 @@ export default function (ref, params, liteLevel = 5) {
   const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}
   const eid_effectReturnCb_ = {}, eid_effectPropsReturnCb_ = {};// fn
   const effectMeta = { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ };
-  const auxMap = {};
   const refs = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
@@ -295,7 +267,6 @@ export default function (ref, params, liteLevel = 5) {
     watchDep,
     watchRetKeyFns: {},//不按模块分类，映射的watchRetKey_fn_
     execute: null,
-    auxMap,// auxiliary method map
     effectMeta,
     retKey_fnUid_: {},
 
@@ -394,8 +365,6 @@ export default function (ref, params, liteLevel = 5) {
 
   if (liteLevel > 4) {// level 5, assign enhance api
     ctx.execute = handler => ctx.execute = handler;
-    // prefixMethodName : {pluginName}/{methodName}
-    ctx.aux = (prefixMethodName, handler) => aux(auxMap, prefixMethodName, handler);
 
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);

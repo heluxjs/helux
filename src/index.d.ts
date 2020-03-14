@@ -379,8 +379,6 @@ declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
-declare function refCtxAux(auxMethodName: string, handler: IAnyFnPromise): void;
-
 declare function syncCb(value: any, keyPath: string, syncContext: { module:string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
 // if module state is not equal full state, you need pass generic type FullState
 declare function syncCb<Val, ModuleState, RefState = {}, RefCtx extends ICtxBase = ICtxBase>
@@ -457,7 +455,6 @@ export interface ICtxBase {
   watch: typeof refCtxWatch;
   effect: typeof refCtxEffect;
   effectProps: typeof refCtxEffectProps;
-  aux: typeof refCtxAux;
   execute: (handler: IAnyFnPromise) => void;
 
   on: typeof refCtxOn;
