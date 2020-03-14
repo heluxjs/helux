@@ -1232,7 +1232,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.7',
+      version: '2.2.8',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -4577,38 +4577,6 @@
         justWarning$6("invalid watchedKey[" + waKey + "] of module[" + module + "]");
       }
     });
-  }
-  /** 映射插件提供的辅助方法 */
-
-
-  function aux(auxMap, prefixMethodName, handler) {
-    var auxKey = prefixMethodName,
-        pName = '';
-
-    if (Array.isArray(prefixMethodName)) {
-      var pluginName = prefixMethodName[0],
-          methodName = prefixMethodName[1];
-      auxKey = pluginName + "/" + methodName;
-      pName = pluginName;
-    } else if (typeof prefixMethodName === 'string') {
-      var _prefixMethodName$spl = prefixMethodName.split('/'),
-          _pluginName = _prefixMethodName$spl[0];
-
-      pName = _pluginName;
-    } else {
-      return justWarning$6("auxKey[" + prefixMethodName + "] invalid");
-    } // 这里pmap每次取最新的引用
-
-
-    var pmap = ccContext.pluginNameMap;
-
-    if (!pmap[pName]) {
-      return justWarning$6("pluginName[" + pName + "] invalid");
-    }
-
-    if (auxMap[auxKey]) {
-      justWarning$6("auxMethod[" + auxKey + "] dup!");
-    } else auxMap[auxKey] = handler;
   } //调用buildFragmentRefCtx 之前，props参数已被处理过
 
   /**
@@ -4741,7 +4709,6 @@
       effectPropsItems: effectPropsItems,
       eid_effectPropsReturnCb_: eid_effectPropsReturnCb_
     };
-    var auxMap = {};
     var refs = {}; // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
     // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
 
@@ -4811,7 +4778,7 @@
       moduleReducer: {},
       connectedReducer: {},
       reducer: {}
-    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.auxMap = auxMap, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = noop, _ctx.__boundSetState = __boundSetState, _ctx.reactForceUpdate = noop, _ctx.__boundForceUpdate = __boundForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
+    }, _ctx["mapped"] = {}, _ctx.stateKeys = stateKeys, _ctx.computedDep = computedDep, _ctx.computedRetKeyFns = {}, _ctx.watchDep = watchDep, _ctx.watchRetKeyFns = {}, _ctx.execute = null, _ctx.effectMeta = effectMeta, _ctx.retKey_fnUid_ = {}, _ctx.reactSetState = noop, _ctx.__boundSetState = __boundSetState, _ctx.reactForceUpdate = noop, _ctx.__boundForceUpdate = __boundForceUpdate, _ctx.setState = setState, _ctx.setModuleState = setModuleState, _ctx.forceUpdate = forceUpdate, _ctx.changeState = changeState, _ctx.refs = refs, _ctx.useRef = function useRef(refName) {
       return function (ref) {
         return refs[refName] = {
           current: ref
@@ -5000,11 +4967,6 @@
       // level 5, assign enhance api
       ctx.execute = function (handler) {
         return ctx.execute = handler;
-      }; // prefixMethodName : {pluginName}/{methodName}
-
-
-      ctx.aux = function (prefixMethodName, handler) {
-        return aux(auxMap, prefixMethodName, handler);
       };
 
       ctx.watch = getDefineWatchHandler(ctx);
