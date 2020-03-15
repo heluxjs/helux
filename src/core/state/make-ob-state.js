@@ -35,7 +35,7 @@ export default function (ref, state, module) {
             __$$nextCompareConnWaKeyCount,
           } = refCtx;
 
-          waKey_uKeyMap_[waKey][ccUniqueKey] = 1;
+          waKey_uKeyMap_[waKey][ccUniqueKey] = 1;//处于依赖状态
           __$$curConnWaKeys[module][key] = 1;
           __$$compareConnWaKeys[module][key] = 1;
           const tmpMap = __$$nextCompareConnWaKeys[module];
@@ -69,11 +69,12 @@ export default function (ref, state, module) {
       }
       return target[key];
     },
-    set: function (target, key) {
+    set: function (target, key, value) {
       // 这个warning暂时关闭，因为buildRefCtx阶段就生成了obState, refComputed里可能会调用commit向obState写入新的state
       // justWarning(`warning: state key[${key}] can not been changed manually, use api setState or dispatch instead`);
 
-      target[key] = target[key];
+      // 允许赋最新值，否则silentUpdate状态合并会失效
+      target[key] = value;
       // avoid Uncaught TypeError: 'set' on proxy: trap returned falsish for property '***'
       return true;
     }

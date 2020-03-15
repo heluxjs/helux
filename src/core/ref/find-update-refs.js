@@ -15,14 +15,30 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
   }
 
   const targetUKeyMap = {};
+  const belongRefs = [];
+  const connectRefs = [];
+  const excludeMap = {};
+  const silentRefMap = {};// 不需要更新，但是需要暗暗的替换state
+
   sharedStateKeys.forEach(stateKey => {
     const waKey = `${moduleName}/${stateKey}`;
     //利用assign不停的去重
     Object.assign(targetUKeyMap, waKey_uKeyMap_[waKey]);
+
+    const uKeyMap = waKey_uKeyMap_[waKey];
+    okeys(uKeyMap).forEach(uKey => {
+      if (!excludeMap[uKey]) {//没排除过
+        if (uKeyMap[uKey] === 1) {//只要是1，就不用silent了
+          excludeMap[uKey] = 1;
+          delete silentRefMap[uKey];// 删除可能已加入silentRefMap的uKey
+        } else {// 2
+          silentRefMap[uKey] = 1;
+        }
+      }
+    });
+
   });
   const uKeys = okeys(targetUKeyMap);
-  const belongRefs = [];
-  const connectRefs = [];
 
   const putRef = (isBelong, ref) => {
     isBelong ? belongRefs.push(ref) : connectRefs.push(ref);
@@ -85,6 +101,7 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
   const result = {
     belong: belongRefs,
     connect: connectRefs,
+    silentRefMap,
   };
   cache.setCache(moduleName, cacheKey, result);
 

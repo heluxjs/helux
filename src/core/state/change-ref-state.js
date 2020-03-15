@@ -149,7 +149,7 @@ export default function (state, {
   );
 }
 
-function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next) {
+function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next, shouldUpdate=true) {
   const { state: refState, ctx: refCtx } = targetRef;
   if (
     // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
@@ -187,12 +187,13 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   }
 
   let deltaCommittedState = computeValueForRef(refCtx, stateModule, refState, state, callInfo);
-  const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
+  // const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
+  watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
 
   const ccSetState = () => {
      // 记录stateKeys，方便triggerRefEffect之用
     refCtx.__$$settedList.push({ module: stateModule, keys: okeys(deltaCommittedState) });
-    refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+    refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldUpdate);
   }
 
   if (next) {
@@ -242,13 +243,15 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   const ignoreCurrentCcUKey = stateFor === FOR_ONE_INS_FIRSTLY;
 
   const {
-    sharedStateKeys, result: { belong: belongRefs, connect: connectRefs }
+    sharedStateKeys, result: { belong: belongRefs, connect: connectRefs, silentRefMap }
   } = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses);
 
   belongRefs.forEach(ref => {
-    if (ignoreCurrentCcUKey && ref.ctx.ccUniqueKey === currentCcUKey) return;
+    const refUKey = ref.ctx.ccUniqueKey;
+    if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
+    const shouldUpdate = !(silentRefMap[refUKey] === 1);
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
-    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
+    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, null, null, shouldUpdate);
   });
 
   const prevModuleState = getPrevState(moduleName);
@@ -256,12 +259,16 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     if (ref.__$$isUnmounted !== true) {
       const refCtx = ref.ctx;
       computeValueForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
-      const shouldCurrentRefUpdate = watchKeyForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
+      // const shouldCurrentRefUpdate = watchKeyForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
+      watchKeyForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
 
       // 记录sharedStateKeys，方便triggerRefEffect之用
       refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
 
-      if (shouldCurrentRefUpdate) {
+      const refUKey = refCtx.ccUniqueKey;
+      const shouldUpdate = !(silentRefMap[refUKey] === 1);
+
+      if (shouldUpdate) {
         refCtx.__$$reInjectConnObState(moduleName);
         refCtx.__$$ccForceUpdate();
       }
