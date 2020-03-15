@@ -99,6 +99,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 source code see here：https://github.com/fantasticsoul/concent-guid-ts
 
 ## ✨Fetures
+* **support dependency collection**，use `Proxy`&`defineProperty` in v2.3+ to support dependency collection
 * **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component。
 * **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by `setState` directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
 * **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene。
@@ -197,6 +198,78 @@ export default function App() {
 }
 ```
 
+## ❤️Dependency collection
+concent use `Proxy`&`defineProperty` in `v2.3+` to support dependency collection
+### module level computed dependency collection
+```js
+run({
+  counter:{
+    state:{
+      modCount: 10,
+      modCountBak: 100,
+    },
+    computed:{
+      xxx(n){
+        return n.modCount + n.modCountBak;
+      },// for yyy retKey, the depKeys is ['modCount', 'modCountBak']
+      yyy(n){
+        return n.modCountBak;
+      },// for yyy retKey, the depKeys is ['modCountBak']
+    },
+    watch:{
+      xxx:{
+        fn(n){
+          console.log('---> trigger watch xxx', n.modCount);
+        },// for xxx retKey, the depKeys is ['modCount']
+        immediate: true,
+      },
+    }
+  }
+};
+```
+### ref level computed dependency collection
+```js
+const setup = ctx => {
+  ctx.computed('show', (n)=>{
+    return n.show + n.cool + n.good;
+  });// for show retKey, the depKeys is ['show', 'cool', 'good']
+
+  ctx.computed('show2', (n)=>{
+    return n.show + '2222' + n.cool;
+  });// for show2 retKey, the depKeys is ['show', 'cool', 'good']
+};
+```
+### state dependency collection
+```js
+import {register, useConcent} from 'concent';
+
+const iState = ()=>({show:true});
+function FnComp(){
+  const {state, syncBool} = useConcent({module:'counter', state:iState, setup});
+  return (
+    <div>
+      {/** if show is true, current ins's dependency is ['modCount']*/}
+      {state.show? <span>{state.modCount}</span> : ''}
+      <button onClick={syncBool('show')}>toggle</button>
+    </div>
+  );
+}
+
+@register({module:'counter', state:iState, setup})
+class ClassComp extends React.Component{
+  // state = iState(); //or write private state here
+  render(){
+     const {state, syncBool} = this.ctx;
+    return (
+      <div>
+        {/** if show is true, current ins's dependency is ['modCount']*/}
+        {state.show? <span>{state.modCount}</span> : ''}
+        <button onClick={syncBool('show')}>toggle</button>
+      </div>
+  }
+}
+```
+[online demo](https://codesandbox.io/s/green-tdd-g2mcr) see file `seeDepCollection.js`;
 
 ## 🔨Examples with some advanced features
 - run concent，load model configuration
