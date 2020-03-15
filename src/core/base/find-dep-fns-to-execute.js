@@ -43,7 +43,7 @@ function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, depKeys)
     const retKeys = safeGetArray(stateKey_retKeys_, sKey);
 
     // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
-    if (retKeys && !retKeys.includes(retKey)) retKeys.push(retKey);
+    if (Array.isArray(retKeys) && !retKeys.includes(retKey)) retKeys.push(retKey);
   });
 }
 
