@@ -17,7 +17,7 @@ const {
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
 const {
-  store: { setState, getPrevState }, middlewares, ccClassKey_ccClassContext_,
+  store: { setState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
   refStore, moduleName_stateKeys_
 } = ccContext;
 
@@ -35,13 +35,15 @@ function getActionType(calledBy, type) {
 }
 
 function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
+  let hasMid = false;
   if (skipMiddleware !== true) {
     const len = middlewares.length;
     if (len > 0) {
+      hasMid = true;
       let index = 0;
       const next = () => {
         if (index === len) {// all middlewares been executed
-          cb();
+          cb(hasMid);
         } else {
           const middlewareFn = middlewares[index];
           index++;
@@ -52,12 +54,12 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
           }
         }
       }
-      next();
+      next(hasMid);
     } else {
       cb();
     }
   } else {
-    cb();
+    cb(hasMid);
   }
 }
 
@@ -85,29 +87,69 @@ export default function (state, {
   //在triggerReactSetState之前把状态存储到store，
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
   const passedCtx = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef.ctx : null;
-  const sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo });
+  // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
+  const sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo, noSave: true });
+
   Object.assign(state, sharedState);
-  const passToMiddleware = {
-    calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
-    committedState: state, refModule, module, fnName, sharedState
-  };
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, (renderType, committedState) => {
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback,
+    // committedState means final committedState
+    (renderType, committedState, updateRef) => {
 
-    if (renderType === RENDER_NO_OP && !sharedState) {
-    } else {
-      send(SIG_STATE_CHANGED, {
-        committedState, sharedState,
-        module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
+      const passToMiddleware = {
+        calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
+        committedState, refModule, module, fnName,
+        sharedState: sharedState || {}, // 给一个空壳对象，防止用户直接用的时候报错null
+      };
+
+      // 修改或新增状态值
+      // 修改并不会再次触发compute&watch过程，请明确你要修改的目的
+      passToMiddleware.modState = (key, val) => {
+        passToMiddleware.committedState[key] = val;
+        passToMiddleware.sharedState[key] = val;
+      };
+
+      callMiddlewares(skipMiddleware, passToMiddleware, (hasMid) => {
+
+        // 到这里才触发调用updateRef更新调用实例
+        // 如果用户修改了passToMiddleware.committedState某些key的值，会影响到实例的更新结果
+        // 所以千万要小心并明确知道在中间件里修改committedState的后果
+        // 这里只能修改privStateKey并影响实例，
+        // 如果在committedState修改了moduleStateKey，记得在sharedState里也一同修改
+        // 推荐使用modState来修改
+        updateRef && updateRef();
+
+        let realShare = sharedState;
+        // 到这里才调用saveSharedState保持状态到store，
+        // 如果用户修改了passToMiddleware.sharedState里某些key的值, 会影响最终存到store的结果
+        // 同时记得在committedState也修改一下
+        // 所以千万要小心并明确知道在中间件里修改sharedState的后果
+        // 推荐使用modState来修改
+        if (hasMid) {
+          // 有中间件时，设置第三位参数为true，需再次提取一下sharedState, 防止用户扩展了sharedState上不存在于store的key
+          // 合并committedState是防止用户修改了committedState上的moduleStateKey
+          realShare = saveSharedState(module, passToMiddleware.sharedState, true);
+        } else {
+          sharedState && saveSharedState(module, sharedState);
+        }
+
+        if (renderType === RENDER_NO_OP && !realShare) {
+        } else {
+          send(SIG_STATE_CHANGED, {
+            committedState, sharedState: realShare,
+            module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
+          });
+        }
+
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay);
       });
-    }
 
-    if (sharedState) triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
-  }, skipMiddleware, passToMiddleware);
+    }
+  );
 }
 
-function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next, skipMiddleware, passToMiddleware) {
+function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next) {
   const { state: refState, ctx: refCtx } = targetRef;
   if (
     // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
@@ -154,11 +196,7 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   }
 
   if (next) {
-    passToMiddleware.state = deltaCommittedState;
-    callMiddlewares(skipMiddleware, passToMiddleware, () => {
-      ccSetState();
-      next(renderType, deltaCommittedState);
-    });
+    next(renderType, deltaCommittedState, ccSetState);
   } else {
     ccSetState();
   }
@@ -166,17 +204,16 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
 
 function syncCommittedStateToStore(moduleName, committedState, options) {
   const stateKeys = moduleName_stateKeys_[moduleName];
+
   // extract shared state
   const { partialState } = extractStateByKeys(committedState, stateKeys, true);
 
   // save state to store
   if (partialState) {
-    const mayChangedState = setState(moduleName, partialState, options);
-    Object.assign(partialState, mayChangedState);
-    return partialState;
+    return setState(moduleName, partialState, options);// {sharedState, saveSharedState}
   }
 
-  return partialState;
+  return  partialState ;
 }
 
 function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
@@ -209,7 +246,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   } = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses);
 
   belongRefs.forEach(ref => {
-    if (ignoreCurrentCcUKey && ref.ccUniqueKey === currentCcUKey) return;
+    if (ignoreCurrentCcUKey && ref.ctx.ccUniqueKey === currentCcUKey) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
     triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
   });

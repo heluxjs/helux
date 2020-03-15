@@ -6,13 +6,14 @@ import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, CC_
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
+import extractStateByKeys from '../core/state/extract-state-by-keys';
 
 const { _computedValue } = computed;
 const { okeys } = util;
 const refs = {};
 const getDispatcher = () => refs[CC_DISPATCHER];
 
-const setStateByModule = (module, committedState, { refCtx = null, callInfo = {} } = {}) => {
+const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}, noSave = false } = {}) => {
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
   const moduleComputedValue = _computedValue[module];
@@ -27,26 +28,44 @@ const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}
   const newState = Object.assign({}, moduleState, committedState);
 
   const deltaCommittedState = Object.assign({}, committedState);
-  let toComputedState = deltaCommittedState;
+  let stateForComputeFn = deltaCommittedState;
 
   findDepFnsToExecute(
     refCtx, module, refModule, moduleState, curDepComputedFns,
-    toComputedState, newState, deltaCommittedState, callInfo, false,
+    stateForComputeFn, newState, deltaCommittedState, callInfo, false,
     'computed', CATE_MODULE, moduleComputedValue,
   );
   findDepFnsToExecute(
     refCtx, module, refModule, moduleState, curDepWatchFns,
-    toComputedState, newState, deltaCommittedState, callInfo, false,
+    stateForComputeFn, newState, deltaCommittedState, callInfo, false,
     'watch', CATE_MODULE, moduleComputedValue,
   );
 
-  okeys(deltaCommittedState).forEach(key => {
-    prevModuleState[key] = moduleState[key];
-    incStateVer(module, key);
-    moduleState[key] = deltaCommittedState[key];
-  });
+  if (!noSave) {
+    saveSharedState(module, deltaCommittedState);
+  }
 
   return deltaCommittedState;
+}
+
+const saveSharedState = (module, toSave, needExtract = false) => {
+  let target = toSave;
+  if (needExtract) {
+    const { partialState } = extractStateByKeys(toSave, moduleName_stateKeys_[module], true);
+    target = partialState;
+  }
+
+  if (target) {
+    const moduleState = getState(module);
+    const prevModuleState = getPrevState(module);
+    okeys(target).forEach(key => {
+      prevModuleState[key] = moduleState[key];
+      incStateVer(module, key);
+      moduleState[key] = target[key];
+    });
+  }
+
+  return target;
 }
 
 const getState = (module) => {
@@ -156,6 +175,7 @@ const ccContext = {
     setGlobalState: function (partialGlobalState) {
       return setStateByModule(MODULE_GLOBAL, partialGlobalState);
     },
+    saveSharedState,
     getGlobalState: function () {
       return _state[MODULE_GLOBAL];
     },
@@ -201,7 +221,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.3.4',
+    version: '2.3.5',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

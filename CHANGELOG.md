@@ -1,3 +1,20 @@
+#### 2020-03-16
+2.3.5 发布
+* refactor: 重构中间件流程，支持`modState`
+修改或新增状态值并不会再次触发compute&watch过程，修改前请明确你要修改的目的，比如新增一些记录时间戳的行为是安全的
+```js
+run({
+  counter:{ state:{ modCount:1 } },
+},{
+  middlewares:[
+    (updateInfo, next)=>{
+      updateInfo.modState('modCount', 1000)
+      next();
+    }
+  ]
+})
+```
+
 #### 2020-03-15
 2.3.0 发布
 * feature: 支持computed&watch依赖收集

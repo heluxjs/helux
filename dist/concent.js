@@ -889,7 +889,7 @@
     depKeys.forEach(function (sKey) {
       var retKeys = safeGetArray(stateKey_retKeys_, sKey); // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
 
-      if (retKeys && !retKeys.includes(retKey)) retKeys.push(retKey);
+      if (Array.isArray(retKeys) && !retKeys.includes(retKey)) retKeys.push(retKey);
     });
   }
 
@@ -1119,7 +1119,9 @@
         _ref$refCtx = _ref.refCtx,
         refCtx = _ref$refCtx === void 0 ? null : _ref$refCtx,
         _ref$callInfo = _ref.callInfo,
-        callInfo = _ref$callInfo === void 0 ? {} : _ref$callInfo;
+        callInfo = _ref$callInfo === void 0 ? {} : _ref$callInfo,
+        _ref$noSave = _ref.noSave,
+        noSave = _ref$noSave === void 0 ? false : _ref$noSave;
 
     var moduleState = _getState(module);
 
@@ -1141,15 +1143,44 @@
     var refModule = refCtx ? refCtx.module : null;
     var newState = Object.assign({}, moduleState, committedState);
     var deltaCommittedState = Object.assign({}, committedState);
-    var toComputedState = deltaCommittedState;
-    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepComputedFns, toComputedState, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
-    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepWatchFns, toComputedState, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
-    okeys$1(deltaCommittedState).forEach(function (key) {
-      prevModuleState[key] = moduleState[key];
-      incStateVer(module, key);
-      moduleState[key] = deltaCommittedState[key];
-    });
+    var stateForComputeFn = deltaCommittedState;
+    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepComputedFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
+    findDepFnsToExecute(refCtx, module, refModule, moduleState, curDepWatchFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
+
+    if (!noSave) {
+      saveSharedState(module, deltaCommittedState);
+    }
+
     return deltaCommittedState;
+  };
+
+  var saveSharedState = function saveSharedState(module, toSave, needExtract) {
+    if (needExtract === void 0) {
+      needExtract = false;
+    }
+
+    var target = toSave;
+
+    if (needExtract) {
+      var _extractStateByKeys = extractStateByKeys(toSave, moduleName_stateKeys_[module], true),
+          partialState = _extractStateByKeys.partialState;
+
+      target = partialState;
+    }
+
+    if (target) {
+      var moduleState = _getState(module);
+
+      var prevModuleState = _getPrevState(module);
+
+      okeys$1(target).forEach(function (key) {
+        prevModuleState[key] = moduleState[key];
+        incStateVer(module, key);
+        moduleState[key] = target[key];
+      });
+    }
+
+    return target;
   };
 
   var _getState = function getState(module) {
@@ -1256,6 +1287,7 @@
       setGlobalState: function setGlobalState(partialGlobalState) {
         return setStateByModule(MODULE_GLOBAL, partialGlobalState);
       },
+      saveSharedState: saveSharedState,
       getGlobalState: function getGlobalState() {
         return _state[MODULE_GLOBAL];
       }
@@ -1296,7 +1328,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.3',
+      version: '2.3.5',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2518,6 +2550,7 @@
   var _ccContext$store = ccContext.store,
       setState = _ccContext$store.setState,
       getPrevState = _ccContext$store.getPrevState,
+      saveSharedState$1 = _ccContext$store.saveSharedState,
       middlewares = ccContext.middlewares,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       refStore = ccContext.refStore,
@@ -2536,16 +2569,19 @@
   }
 
   function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
+    var hasMid = false;
+
     if (skipMiddleware !== true) {
       var len = middlewares.length;
 
       if (len > 0) {
+        hasMid = true;
         var index = 0;
 
         var next = function next() {
           if (index === len) {
             // all middlewares been executed
-            cb();
+            cb(hasMid);
           } else {
             var middlewareFn = middlewares[index];
             index++;
@@ -2556,12 +2592,12 @@
           }
         };
 
-        next();
+        next(hasMid);
       } else {
         cb();
       }
     } else {
-      cb();
+      cb(hasMid);
     }
   }
   /**
@@ -2610,44 +2646,78 @@
     }; //在triggerReactSetState之前把状态存储到store，
     //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
 
-    var passedCtx = stateFor === FOR_ONE_INS_FIRSTLY$1 ? targetRef.ctx : null;
+    var passedCtx = stateFor === FOR_ONE_INS_FIRSTLY$1 ? targetRef.ctx : null; // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
+
     var sharedState = syncCommittedStateToStore(module, state, {
       refCtx: passedCtx,
-      callInfo: callInfo
+      callInfo: callInfo,
+      noSave: true
     });
-    Object.assign(state, sharedState);
-    var passToMiddleware = {
-      calledBy: calledBy,
-      type: type,
-      payload: payload,
-      renderKey: renderKey,
-      delay: delay,
-      ccKey: ccKey,
-      ccUniqueKey: ccUniqueKey,
-      committedState: state,
-      refModule: refModule,
-      module: module,
-      fnName: fnName,
-      sharedState: sharedState
-    }; // source ref will receive the whole committed state 
+    Object.assign(state, sharedState); // source ref will receive the whole committed state 
 
-    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, function (renderType, committedState) {
-      if (renderType === RENDER_NO_OP$1 && !sharedState) ; else {
-        send(SIG_STATE_CHANGED$1, {
-          committedState: committedState,
-          sharedState: sharedState,
-          module: module,
-          type: getActionType(calledBy, type),
-          ccUniqueKey: ccUniqueKey,
-          renderKey: renderKey
-        });
-      }
+    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, // committedState means final committedState
+    function (renderType, committedState, updateRef) {
+      var passToMiddleware = {
+        calledBy: calledBy,
+        type: type,
+        payload: payload,
+        renderKey: renderKey,
+        delay: delay,
+        ccKey: ccKey,
+        ccUniqueKey: ccUniqueKey,
+        committedState: committedState,
+        refModule: refModule,
+        module: module,
+        fnName: fnName,
+        sharedState: sharedState || {} // 给一个空壳对象，防止用户直接用的时候报错null
 
-      if (sharedState) triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, module, renderKey, delay);
-    }, skipMiddleware, passToMiddleware);
+      }; // 修改或新增状态值
+      // 修改并不会再次触发compute&watch过程，请明确你要修改的目的
+
+      passToMiddleware.modState = function (key, val) {
+        passToMiddleware.committedState[key] = val;
+        passToMiddleware.sharedState[key] = val;
+      };
+
+      callMiddlewares(skipMiddleware, passToMiddleware, function (hasMid) {
+        // 到这里才触发调用updateRef更新调用实例
+        // 如果用户修改了passToMiddleware.committedState某些key的值，会影响到实例的更新结果
+        // 所以千万要小心并明确知道在中间件里修改committedState的后果
+        // 这里只能修改privStateKey并影响实例，
+        // 如果在committedState修改了moduleStateKey，记得在sharedState里也一同修改
+        // 推荐使用modState来修改
+        updateRef && updateRef();
+        var realShare = sharedState; // 到这里才调用saveSharedState保持状态到store，
+        // 如果用户修改了passToMiddleware.sharedState里某些key的值, 会影响最终存到store的结果
+        // 同时记得在committedState也修改一下
+        // 所以千万要小心并明确知道在中间件里修改sharedState的后果
+        // 推荐使用modState来修改
+
+        if (hasMid) {
+          // 有中间件时，设置第三位参数为true，需再次提取一下sharedState, 防止用户扩展了sharedState上不存在于store的key
+          // 合并committedState是防止用户修改了committedState上的moduleStateKey
+          realShare = saveSharedState$1(module, passToMiddleware.sharedState, true);
+        } else {
+          sharedState && saveSharedState$1(module, sharedState);
+        }
+
+        if (renderType === RENDER_NO_OP$1 && !realShare) ; else {
+          send(SIG_STATE_CHANGED$1, {
+            committedState: committedState,
+            sharedState: realShare,
+            module: module,
+            type: getActionType(calledBy, type),
+            ccUniqueKey: ccUniqueKey,
+            renderKey: renderKey
+          });
+        }
+
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay);
+      });
+    });
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next, skipMiddleware, passToMiddleware) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next) {
     var refState = targetRef.state,
         refCtx = targetRef.ctx;
 
@@ -2707,11 +2777,7 @@
     };
 
     if (next) {
-      passToMiddleware.state = deltaCommittedState;
-      callMiddlewares(skipMiddleware, passToMiddleware, function () {
-        ccSetState();
-        next(renderType, deltaCommittedState);
-      });
+      next(renderType, deltaCommittedState, ccSetState);
     } else {
       ccSetState();
     }
@@ -2725,9 +2791,7 @@
 
 
     if (partialState) {
-      var mayChangedState = setState(moduleName, partialState, options);
-      Object.assign(partialState, mayChangedState);
-      return partialState;
+      return setState(moduleName, partialState, options); // {sharedState, saveSharedState}
     }
 
     return partialState;
@@ -2767,7 +2831,7 @@
         connectRefs = _findUpdateRefs$resul.connect;
 
     belongRefs.forEach(function (ref) {
-      if (ignoreCurrentCcUKey && ref.ccUniqueKey === currentCcUKey) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
+      if (ignoreCurrentCcUKey && ref.ctx.ccUniqueKey === currentCcUKey) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
 
       triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1);
     });
