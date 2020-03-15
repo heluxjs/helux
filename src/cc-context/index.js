@@ -15,7 +15,6 @@ const getDispatcher = () => refs[CC_DISPATCHER];
 
 const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}, noSave = false } = {}) => {
   const moduleState = getState(module);
-  const prevModuleState = getPrevState(module);
   const moduleComputedValue = _computedValue[module];
 
   const rootComputedDep = computed.getRootComputedDep();
@@ -221,7 +220,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.3.5',
+    version: '2.3.6',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

@@ -1125,8 +1125,6 @@
 
     var moduleState = _getState(module);
 
-    var prevModuleState = _getPrevState(module);
-
     var moduleComputedValue = _computedValue$1[module];
     var rootComputedDep = cuMap.getRootComputedDep();
 
@@ -1328,7 +1326,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.5',
+      version: '2.3.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -5235,9 +5233,10 @@
 
     ctx.getConnectWatchedKeys = function (module) {
       return getConnectWatchedKeys(ref.ctx || ctx, module);
-    };
+    }; // 防止是 {}
 
-    if (!existedCtx) ref.ctx = ctx; // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
+
+    if (isObjectNull$2(existedCtx)) ref.ctx = ctx; // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
     else {
         // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
         var _ref$ctx = ref.ctx,

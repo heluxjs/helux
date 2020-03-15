@@ -100,12 +100,13 @@ export default function (ref, params, liteLevel = 5) {
   } = params;
   const stateModule = module;
   const existedCtx = ref.ctx;
+  const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
 
   let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
 
   // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
   // 做个保护判断，防止 ctx = {}
-  if (!isObjectNull(existedCtx) && existedCtx.ccUniqueKey) {
+  if (!isCtxNull && existedCtx.ccUniqueKey) {
     __boundSetState = existedCtx.__boundSetState;
     __boundForceUpdate = existedCtx.__boundForceUpdate;
   } else if (type !== CC_HOOK) {
@@ -476,12 +477,12 @@ export default function (ref, params, liteLevel = 5) {
     // 总是将connectedState.globalState指向ctx.globalState
     ctx.globalState = connectedState[MODULE_GLOBAL];
   };
- 
+
   //始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
   ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ref.ctx || ctx, module);
 
-  if (!existedCtx) ref.ctx = ctx;
+  if (isCtxNull) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
   else {
     // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
