@@ -887,8 +887,9 @@
 
     var stateKey_retKeys_ = safeGetObject(modDep, 'stateKey_retKeys_');
     depKeys.forEach(function (sKey) {
-      var retKeys = safeGetArray(stateKey_retKeys_, sKey);
-      if (!retKeys.includes(retKey)) retKeys.push(retKey);
+      var retKeys = safeGetArray(stateKey_retKeys_, sKey); // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
+
+      if (retKeys && !retKeys.includes(retKey)) retKeys.push(retKey);
     });
   }
 
@@ -1295,7 +1296,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.2',
+      version: '2.3.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
