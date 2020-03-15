@@ -41,7 +41,9 @@ function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, depKeys)
 
   depKeys.forEach(sKey => {
     const retKeys = safeGetArray(stateKey_retKeys_, sKey);
-    if (!retKeys.includes(retKey)) retKeys.push(retKey);
+
+    // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
+    if (retKeys && !retKeys.includes(retKey)) retKeys.push(retKey);
   });
 }
 
@@ -78,16 +80,16 @@ export default (
         stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
       };
 
+      // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
+      // 注：只有immediate为true的watch才有机会执行此判断结构为true并收集到依赖
+      const canPassObState = beforeMountFlag && depKeys === '-';
+
       if (fnType === 'computed') {
         if (isLazy) {
           // lazyComputed 不再暴露这两个接口，以隔绝副作用
           delete fnCtx.commit;
           delete fnCtx.commitCu;
         }
-
-        // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
-        // 注：只有immediate为true的watch才有机会执行此判断结构为true并收集到依赖
-        const canPassObState = beforeMountFlag && depKeys === '-';
 
         if (canPassObState) {
           const collectedDepKeys = [];
