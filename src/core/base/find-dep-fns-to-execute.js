@@ -77,7 +77,7 @@ export default (
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
         stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
       };
-      
+
       if (fnType === 'computed') {
         if (isLazy) {
           // lazyComputed 不再暴露这两个接口，以隔绝副作用
@@ -85,8 +85,11 @@ export default (
           delete fnCtx.commitCu;
         }
 
-         // 循环里的首次计算，注入代理对象，收集计算依赖
-        if (beforeMountFlag) {
+        // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
+        // 注：只有immediate为true的watch才有机会执行此判断结构为true并收集到依赖
+        const canPassObState = beforeMountFlag && depKeys === '-';
+
+        if (canPassObState) {
           const collectedDepKeys = [];
           const obInitNewState = makeCuObState(initNewState, collectedDepKeys);
           // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
@@ -106,8 +109,7 @@ export default (
       } else {// watch
         let computedValueOrRet, tmpInitNewState = initNewState, collectedDepKeys = [];
         let tmpOldState = oldState;
-        // 循环里的首次计算，注入代理对象，收集watch依赖, 注：只有immediate为true的watch才有机会执行此代码块并收集到依赖
-        if (beforeMountFlag) {
+        if (canPassObState) {
           tmpInitNewState = makeCuObState(initNewState, collectedDepKeys);
           // 首次触发watch时，new 和 old是同一个对象，方便用于收集depKeys
           tmpOldState = tmpInitNewState;
