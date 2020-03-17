@@ -228,6 +228,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   if (!partialSharedState) {// null
     return;
   }
+  const ccUKey_ref_ = ccContext.ccUKey_ref_;
 
   const { ccUniqueKey: currentCcUKey, ccClassKey } = targetRef.ctx;
   const renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
@@ -237,18 +238,22 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   const ignoreCurrentCcUKey = stateFor === FOR_ONE_INS_FIRSTLY;
 
   const {
-    sharedStateKeys, result: { belong: belongRefs, connect: connectRefs }
+    sharedStateKeys, result: { belong: belongRefKeys, connect: connectRefKeys }
   } = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses);
 
-  belongRefs.forEach(ref => {
+  belongRefKeys.forEach(refKey => {
+    const ref = ccUKey_ref_[refKey];
     const refUKey = ref.ctx.ccUniqueKey;
+
     if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
     triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
   });
 
   const prevModuleState = getPrevState(moduleName);
-  connectRefs.forEach(ref => {
+  connectRefKeys.forEach(refKey => {
+    const ref = ccUKey_ref_[refKey];
+
     if (ref.__$$isUnmounted !== true) {
       const refCtx = ref.ctx;
       computeValueForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);

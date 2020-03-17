@@ -15,8 +15,8 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
   }
 
   const targetUKeyMap = {};
-  const belongRefs = [];
-  const connectRefs = [];
+  const belongRefKeys = [];
+  const connectRefKeys = [];
 
   sharedStateKeys.forEach(stateKey => {
     const waKey = `${moduleName}/${stateKey}`;
@@ -25,13 +25,13 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
   });
   const uKeys = okeys(targetUKeyMap);
 
-  const putRef = (isBelong, ref) => {
-    isBelong ? belongRefs.push(ref) : connectRefs.push(ref);
+  const putRef = (isBelong, ccUniqueKey) => {
+    isBelong ? belongRefKeys.push(ccUniqueKey) : connectRefKeys.push(ccUniqueKey);
   }
 
   const tryMatch = (ref, toBelong) => {
     const {
-      renderKey: refRenderKey, ccClassKey: refCcClassKey,
+      renderKey: refRenderKey, ccClassKey: refCcClassKey, ccUniqueKey,
     } = ref.ctx;
 
     // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
@@ -41,30 +41,34 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
       // 所有的类实例都受renderKey匹配机制影响
       if (renderKeyClasses === '*') {
         if (isRenderKeyMatched) {
-          putRef(toBelong, ref);
+          putRef(toBelong, ccUniqueKey);
         }
       }
       else {
         // 这些指定类实例受renderKey机制影响
         if (renderKeyClasses.includes(refCcClassKey)) {
           if (isRenderKeyMatched) {
-            putRef(toBelong, ref);
+            putRef(toBelong, ccUniqueKey);
           }
         }
         // 这些实例则不受renderKey机制影响
         else {
-          putRef(toBelong, ref);
+          putRef(toBelong, ccUniqueKey);
         }
       }
     } else {
-      putRef(toBelong, ref);
+      putRef(toBelong, ccUniqueKey);
     }
 
   }
 
+  let missRef = false;
   uKeys.forEach(key => {
     const ref = ccUKey_ref_[key];
-    if (!ref) return;
+    if (!ref) {
+      missRef = true;
+      return;
+    }
 
     const refCtx = ref.ctx;
     const {
@@ -84,10 +88,15 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
   });
 
   const result = {
-    belong: belongRefs,
-    connect: connectRefs,
+    belong: belongRefKeys,
+    connect: connectRefKeys,
   };
-  cache.setCache(moduleName, cacheKey, result);
+
+  // 没有miss的ref才存缓存，防止直接标记了watchedKeys的实例此时还没有记录ref，
+  // 但是此时刚好有变更状态的命令的话，如果这里缓存了查询结果，这这个实例挂上后，没有机会响应状态变更了
+  if (!missRef) {
+    cache.setCache(moduleName, cacheKey, result);
+  }
 
   return { sharedStateKeys, result };
 }

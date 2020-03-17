@@ -1353,7 +1353,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.8',
+      version: '2.3.10',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2494,8 +2494,8 @@
     }
 
     var targetUKeyMap = {};
-    var belongRefs = [];
-    var connectRefs = [];
+    var belongRefKeys = [];
+    var connectRefKeys = [];
     sharedStateKeys.forEach(function (stateKey) {
       var waKey = moduleName + "/" + stateKey; // 利用assign不停的去重
 
@@ -2503,41 +2503,48 @@
     });
     var uKeys = okeys$3(targetUKeyMap);
 
-    var putRef = function putRef(isBelong, ref) {
-      isBelong ? belongRefs.push(ref) : connectRefs.push(ref);
+    var putRef = function putRef(isBelong, ccUniqueKey) {
+      isBelong ? belongRefKeys.push(ccUniqueKey) : connectRefKeys.push(ccUniqueKey);
     };
 
     var tryMatch = function tryMatch(ref, toBelong) {
       var _ref$ctx = ref.ctx,
           refRenderKey = _ref$ctx.renderKey,
-          refCcClassKey = _ref$ctx.ccClassKey; // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
+          refCcClassKey = _ref$ctx.ccClassKey,
+          ccUniqueKey = _ref$ctx.ccUniqueKey; // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
 
       if (renderKey) {
         var isRenderKeyMatched = refRenderKey === renderKey; // 所有的类实例都受renderKey匹配机制影响
 
         if (renderKeyClasses === '*') {
           if (isRenderKeyMatched) {
-            putRef(toBelong, ref);
+            putRef(toBelong, ccUniqueKey);
           }
         } else {
           // 这些指定类实例受renderKey机制影响
           if (renderKeyClasses.includes(refCcClassKey)) {
             if (isRenderKeyMatched) {
-              putRef(toBelong, ref);
+              putRef(toBelong, ccUniqueKey);
             }
           } // 这些实例则不受renderKey机制影响
           else {
-              putRef(toBelong, ref);
+              putRef(toBelong, ccUniqueKey);
             }
         }
       } else {
-        putRef(toBelong, ref);
+        putRef(toBelong, ccUniqueKey);
       }
     };
 
+    var missRef = false;
     uKeys.forEach(function (key) {
       var ref = ccUKey_ref_[key];
-      if (!ref) return;
+
+      if (!ref) {
+        missRef = true;
+        return;
+      }
+
       var refCtx = ref.ctx;
       var refModule = refCtx.module,
           refConnect = refCtx.connect;
@@ -2555,10 +2562,15 @@
       }
     });
     var result = {
-      belong: belongRefs,
-      connect: connectRefs
-    };
-    setCache(moduleName, cacheKey, result);
+      belong: belongRefKeys,
+      connect: connectRefKeys
+    }; // 没有miss的ref才存缓存，防止直接标记了watchedKeys的实例此时还没有记录ref，
+    // 但是此时刚好有变更状态的命令的话，如果这里缓存了查询结果，这这个实例挂上后，没有机会响应状态变更了
+
+    if (!missRef) {
+      setCache(moduleName, cacheKey, result);
+    }
+
     return {
       sharedStateKeys: sharedStateKeys,
       result: result
@@ -2714,18 +2726,12 @@
       };
 
       callMiddlewares(skipMiddleware, passToMiddleware, function (hasMid) {
-        // 到这里才触发调用updateRef更新调用实例
-        // 如果用户修改了passToMiddleware.committedState某些key的值，会影响到实例的更新结果
-        // 所以千万要小心并明确知道在中间件里修改committedState的后果
-        // 这里只能修改privStateKey并影响实例，
-        // 如果在committedState修改了moduleStateKey，记得在sharedState里也一同修改
-        // 推荐使用modState来修改
-        updateRef && updateRef();
-        var realShare = sharedState; // 到这里才调用saveSharedState保持状态到store，
-        // 如果用户修改了passToMiddleware.sharedState里某些key的值, 会影响最终存到store的结果
-        // 同时记得在committedState也修改一下
-        // 所以千万要小心并明确知道在中间件里修改sharedState的后果
-        // 推荐使用modState来修改
+        // 到这里才触发调用saveSharedState存储模块状态和updateRef更新调用实例，注这两者前后顺序不能调换
+        // 因为updateRef里的beforeRender需要把最新的模块状态合进来
+        // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，且不会再触发computed&watch
+        // 调用此接口请明确知道后果,
+        // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
+        var realShare = sharedState;
 
         if (hasMid) {
           // 有中间件时，设置第三位参数为true，需再次提取一下sharedState, 防止用户扩展了sharedState上不存在于store的key
@@ -2734,6 +2740,8 @@
         } else {
           sharedState && saveSharedState$1(module, sharedState);
         }
+
+        updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP$1 && !realShare) ; else {
           send(SIG_STATE_CHANGED$1, {
@@ -2850,6 +2858,7 @@
       return;
     }
 
+    var ccUKey_ref_ = ccContext.ccUKey_ref_;
     var _targetRef$ctx2 = targetRef.ctx,
         currentCcUKey = _targetRef$ctx2.ccUniqueKey,
         ccClassKey = _targetRef$ctx2.ccClassKey;
@@ -2861,17 +2870,20 @@
     var _findUpdateRefs = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses),
         sharedStateKeys = _findUpdateRefs.sharedStateKeys,
         _findUpdateRefs$resul = _findUpdateRefs.result,
-        belongRefs = _findUpdateRefs$resul.belong,
-        connectRefs = _findUpdateRefs$resul.connect;
+        belongRefKeys = _findUpdateRefs$resul.belong,
+        connectRefKeys = _findUpdateRefs$resul.connect;
 
-    belongRefs.forEach(function (ref) {
+    belongRefKeys.forEach(function (refKey) {
+      var ref = ccUKey_ref_[refKey];
       var refUKey = ref.ctx.ccUniqueKey;
       if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
 
       triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1);
     });
     var prevModuleState = getPrevState(moduleName);
-    connectRefs.forEach(function (ref) {
+    connectRefKeys.forEach(function (refKey) {
+      var ref = ccUKey_ref_[refKey];
+
       if (ref.__$$isUnmounted !== true) {
         var refCtx = ref.ctx;
         computeValueForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
@@ -4240,7 +4252,6 @@
             __$$compareConnWaKeys = refCtx.__$$compareConnWaKeys,
             __$$nextCompareConnWaKeys = refCtx.__$$nextCompareConnWaKeys,
             __$$nextCompareConnWaKeyCount = refCtx.__$$nextCompareConnWaKeyCount;
-        console.log(waKey);
         waKey_uKeyMap_$2[waKey][ccUniqueKey] = 1; //处于依赖状态
 
         __$$curConnWaKeys[module][key] = 1;
