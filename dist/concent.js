@@ -582,14 +582,21 @@
   function _wrapFn(retKey, retKey_fn_, isLazy) {
     var _retKey_fn_$retKey = retKey_fn_[retKey],
         fn = _retKey_fn_$retKey.fn,
-        depKeys = _retKey_fn_$retKey.depKeys;
+        depKeys = _retKey_fn_$retKey.depKeys,
+        sort = _retKey_fn_$retKey.sort;
     return {
       retKey: retKey,
       fn: fn,
       depKeys: depKeys,
-      isLazy: isLazy
+      isLazy: isLazy,
+      sort: sort
     };
-  }
+  } // asc sort
+
+
+  var sortCb = function sortCb(o1, o2) {
+    return o1.sort - o2.sort;
+  };
 
   function clearCachedData() {
     cacheArea_pickedRetKeys_ = getCacheDataContainer();
@@ -622,7 +629,7 @@
         return {
           pickedFns: retKeys.map(function (retKey) {
             return _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey]);
-          }),
+          }).sort(sortCb),
           setted: _setted,
           changed: _changed
         };
@@ -633,13 +640,16 @@
         var _retKey_fn_$retKey2 = retKey_fn_[retKey],
             fn = _retKey_fn_$retKey2.fn,
             immediate = _retKey_fn_$retKey2.immediate,
-            depKeys = _retKey_fn_$retKey2.depKeys;
+            depKeys = _retKey_fn_$retKey2.depKeys,
+            sort = _retKey_fn_$retKey2.sort;
         if (immediate) pickedFns.push({
           retKey: retKey,
           fn: fn,
-          depKeys: depKeys
+          depKeys: depKeys,
+          sort: sort
         });
       });
+      pickedFns.sort(sortCb);
       return {
         pickedFns: pickedFns,
         setted: _setted,
@@ -700,12 +710,14 @@
         var _retKey_fn_$retKey3 = retKey_fn_[retKey],
             fn = _retKey_fn_$retKey3.fn,
             compare = _retKey_fn_$retKey3.compare,
-            depKeys = _retKey_fn_$retKey3.depKeys;
+            depKeys = _retKey_fn_$retKey3.depKeys,
+            sort = _retKey_fn_$retKey3.sort;
         var toPush = {
           retKey: retKey,
           fn: fn,
           depKeys: depKeys,
-          isLazy: retKey_lazy_[retKey]
+          isLazy: retKey_lazy_[retKey],
+          sort: sort
         };
 
         if (compare) {
@@ -734,7 +746,8 @@
               var _retKey_fn_$retKey4 = retKey_fn_[retKey],
                   fn = _retKey_fn_$retKey4.fn,
                   compare = _retKey_fn_$retKey4.compare,
-                  depKeys = _retKey_fn_$retKey4.depKeys;
+                  depKeys = _retKey_fn_$retKey4.depKeys,
+                  sort = _retKey_fn_$retKey4.sort;
               var canPick = true;
 
               if (compare && !changedStateKeys.includes(stateKey)) {
@@ -747,7 +760,8 @@
                   retKey: retKey,
                   fn: fn,
                   depKeys: depKeys,
-                  isLazy: retKey_lazy_[retKey]
+                  isLazy: retKey_lazy_[retKey],
+                  sort: sort
                 });
               }
             }
@@ -768,6 +782,8 @@
         }
       })();
     }
+
+    pickedFns.sort(sortCb);
   }
 
   function setPartialState(partialState, state, key) {
@@ -941,6 +957,7 @@
             fn = _ref.fn,
             depKeys = _ref.depKeys,
             isLazy = _ref.isLazy;
+        // 注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
         var fnCtx = {
           retKey: retKey,
           callInfo: callInfo,
@@ -949,6 +966,7 @@
           commitCu: commitCu,
           setted: setted,
           changed: changed,
+          cuVal: computedContainer,
           stateModule: stateModule,
           refModule: refModule,
           oldState: oldState,
@@ -1927,7 +1945,8 @@
             immediate = _targetItem$immediate === void 0 ? watchImmediate : _targetItem$immediate,
             _targetItem$compare = _targetItem.compare,
             compare = _targetItem$compare === void 0 ? defaultCompare : _targetItem$compare,
-            lazy = _targetItem.lazy;
+            lazy = _targetItem.lazy,
+            sort = _targetItem.sort;
         var fnUid = uuid('mark');
 
         if (depKeys === '*' || depKeys === '-') {
@@ -1937,7 +1956,7 @@
           _checkRetKeyDup(cate, confMeta, fnUid, stateKey); // when retKey is '/xxxx', here need pass xxxx to pass stateKey as retKey
 
 
-          _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy);
+          _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy, sort);
         } else {
           // ['foo/b1', 'bar/b1'] or null or undefined
           if (depKeys && !Array.isArray(depKeys)) throw new Error('depKeys must an string array or *');
@@ -1957,7 +1976,7 @@
 
             _checkRetKeyDup(cate, confMeta, fnUid, _stateKey2);
 
-            _mapDepDesc(cate, confMeta, module, _stateKey2, fn, targetDepKeys, immediate, compare, lazy);
+            _mapDepDesc(cate, confMeta, module, _stateKey2, fn, targetDepKeys, immediate, compare, lazy, sort);
           } else {
             var stateKeyModule = '',
                 targetRetKey = retKey;
@@ -2001,7 +2020,7 @@
             });
             okeys(module_depKeys_).forEach(function (m) {
               // 指向同一个fn，允许重复
-              _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, lazy);
+              _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, lazy, sort);
             });
           }
         }
@@ -2029,18 +2048,20 @@
   } // 映射依赖描述对象
 
 
-  function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy) {
+  function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy, sort) {
     var dep = confMeta.dep;
     var moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
     var retKey_fn_ = moduleDepDesc.retKey_fn_,
         stateKey_retKeys_ = moduleDepDesc.stateKey_retKeys_,
         retKey_lazy_ = moduleDepDesc.retKey_lazy_,
-        retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_;
+        retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_; // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
+
     var fnDesc = {
       fn: fn,
       immediate: immediate,
       compare: compare,
-      depKeys: depKeys
+      depKeys: depKeys,
+      sort: sort || confMeta.sort
     }; // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
 
     if (retKey_fn_[retKey]) {
@@ -2193,6 +2214,7 @@
     rootComputedRaw[module] = computed;
     var moduleState = rootState[module];
     configureDepFns(CATE_MODULE, {
+      sort: 0,
       module: module,
       stateKeys: okeys(moduleState),
       dep: rootComputedDep
@@ -4285,16 +4307,22 @@
     };
   }
 
+  var sortFactor = 1;
   function getDefineComputedHandler (refCtx, isLazyComputed) {
     if (isLazyComputed === void 0) {
       isLazyComputed = false;
     }
 
-    return function (computedItem, computedHandler, depKeys, compare) {
+    return function (computedItem, computedHandler, depKeys, compare, sort) {
+      // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
+      // sort param may in computedHandler when it is an object like {fn:()=>{}, sort:10}
+      var _sort = sort || sortFactor++;
+
       var confMeta = {
         type: 'computed',
         isLazyComputed: isLazyComputed,
         refCtx: refCtx,
+        sort: _sort,
         stateKeys: refCtx.stateKeys,
         retKeyFns: refCtx.computedRetKeyFns,
         module: refCtx.module,
@@ -7349,22 +7377,25 @@
   var cst = _cst;
   var appendState$1 = appendState;
   var useConcent$1 = useConcent;
-  var defComputed = function defComputed(fn, depKeys, compare) {
-    return {
-      fn: fn,
-      depKeys: depKeys,
-      compare: compare
-    };
-  };
-  var defLazyComputed = function defLazyComputed(fn, depKeys, compare) {
+  var sortFactor$1 = 1;
+  var defComputed = function defComputed(fn, depKeys, compare, sort) {
     return {
       fn: fn,
       depKeys: depKeys,
       compare: compare,
-      lazy: true
+      sort: sort || sortFactor$1++
     };
   };
-  var defComputedVal = function defComputedVal(val, compare) {
+  var defLazyComputed = function defLazyComputed(fn, depKeys, compare, sort) {
+    return {
+      fn: fn,
+      depKeys: depKeys,
+      compare: compare,
+      lazy: true,
+      sort: sort || sortFactor$1++
+    };
+  };
+  var defComputedVal = function defComputedVal(val, compare, sort) {
     if (compare === void 0) {
       compare = true;
     }
@@ -7374,23 +7405,26 @@
         return val;
       },
       depKeys: [],
-      compare: compare
+      compare: compare,
+      sort: sort || sortFactor$1++
     };
   };
-  var defWatch = function defWatch(fn, depKeys, compare, immediate) {
+  var defWatch = function defWatch(fn, depKeys, compare, immediate, sort) {
     return {
       fn: fn,
       depKeys: depKeys,
       compare: compare,
-      immediate: immediate
+      immediate: immediate,
+      sort: sort || sortFactor$1++
     };
   };
-  var defWatchImmediate = function defWatchImmediate(fn, depKeys, compare) {
+  var defWatchImmediate = function defWatchImmediate(fn, depKeys, compare, sort) {
     return {
       fn: fn,
       depKeys: depKeys,
       compare: compare,
-      immediate: true
+      immediate: true,
+      sort: sort || sortFactor$1++
     };
   };
   var defaultExport = {

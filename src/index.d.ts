@@ -638,7 +638,7 @@ export interface ICtxDefault
 type GetFnCtxCommit<ModuleState> = <PS extends Partial<ModuleState>>(partialState: PS) => void;
 type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
 
-export interface ILazyFnCtxBase{
+export interface ILazyFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
   commitCu: GetFnCtxCommitCu<any>;
@@ -648,6 +648,7 @@ export interface ILazyFnCtxBase{
   refModule: string;
   oldState: any;
   committedState: IAnyObj;
+  cuVal: any;
   refCtx: ICtxBase;
 }
 
@@ -661,6 +662,7 @@ export interface IFnCtx<RefCtx extends ICtxBase = ICtxBase, FullState = {}, Comp
   commit: GetFnCtxCommit<FullState>;// for module computed or watch definition, FullState equivalent ModuleState, Computed equivalent ModuleComputed
   commitCu: GetFnCtxCommitCu<Computed>;
   committedState: Partial<FullState>;
+  cuVal: Computed;
   oldState: FullState;
   refCtx: RefCtx;
   // __forCheckRefCtxAndCu__?: RefCtx['moduleComputed'] extends {} ? (

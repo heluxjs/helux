@@ -112,20 +112,13 @@ export default function (state, {
 
       callMiddlewares(skipMiddleware, passToMiddleware, (hasMid) => {
 
-        // 到这里才触发调用updateRef更新调用实例
-        // 如果用户修改了passToMiddleware.committedState某些key的值，会影响到实例的更新结果
-        // 所以千万要小心并明确知道在中间件里修改committedState的后果
-        // 这里只能修改privStateKey并影响实例，
-        // 如果在committedState修改了moduleStateKey，记得在sharedState里也一同修改
-        // 推荐使用modState来修改
-        updateRef && updateRef();
+        // 到这里才触发调用saveSharedState存储模块状态和updateRef更新调用实例，注这两者前后顺序不能调换
+        // 因为updateRef里的beforeRender需要把最新的模块状态合进来
+        // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，且不会再触发computed&watch
+        // 调用此接口请明确知道后果,
+        // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
 
         let realShare = sharedState;
-        // 到这里才调用saveSharedState保持状态到store，
-        // 如果用户修改了passToMiddleware.sharedState里某些key的值, 会影响最终存到store的结果
-        // 同时记得在committedState也修改一下
-        // 所以千万要小心并明确知道在中间件里修改sharedState的后果
-        // 推荐使用modState来修改
         if (hasMid) {
           // 有中间件时，设置第三位参数为true，需再次提取一下sharedState, 防止用户扩展了sharedState上不存在于store的key
           // 合并committedState是防止用户修改了committedState上的moduleStateKey
@@ -133,6 +126,8 @@ export default function (state, {
         } else {
           sharedState && saveSharedState(module, sharedState);
         }
+
+        updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP && !realShare) {
         } else {
