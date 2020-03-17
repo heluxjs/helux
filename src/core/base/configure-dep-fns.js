@@ -1,4 +1,4 @@
-import { okeys, safeGetObject, safeGetArray, makeError, verboseInfo, isPJO, justWarning, makeCuDepDesc } from '../../support/util';
+import { okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO, justWarning, makeCuDepDesc } from '../../support/util';
 import { ERR, CATE_REF } from '../../support/constant';
 import ccContext from '../../cc-context';
 import uuid from './uuid';
@@ -84,14 +84,14 @@ function _parseDescObj(cate, confMeta, descObj) {
 
     if (isPJO(targetItem)) {
       // 默认自动收集
-      const { fn, depKeys = '-', immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
+      const { fn, depKeys = '-', immediate = watchImmediate, compare = defaultCompare, lazy, sort } = targetItem;
       const fnUid = uuid('mark');
 
       if (depKeys === '*' || depKeys === '-') {
         const { stateKey } = _resolveStateKey(confMeta, callerModule, retKey);
         _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
         // when retKey is '/xxxx', here need pass xxxx to pass stateKey as retKey
-        _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy);
+        _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy, sort);
       } else {// ['foo/b1', 'bar/b1'] or null or undefined
         if (depKeys && !Array.isArray(depKeys)) throw new Error('depKeys must an string array or *');
 
@@ -102,7 +102,7 @@ function _parseDescObj(cate, confMeta, descObj) {
             targetDepKeys = [stateKey];// regenerate depKeys
           }
           _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
-          _mapDepDesc(cate, confMeta, module, stateKey, fn, targetDepKeys, immediate, compare, lazy);
+          _mapDepDesc(cate, confMeta, module, stateKey, fn, targetDepKeys, immediate, compare, lazy, sort);
         } else {
           let stateKeyModule = '', targetRetKey = retKey;
           if (retKey.includes('/')) {
@@ -136,7 +136,7 @@ function _parseDescObj(cate, confMeta, descObj) {
 
           okeys(module_depKeys_).forEach(m => {
             // 指向同一个fn，允许重复
-            _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, lazy);
+            _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, lazy, sort);
           });
         }
       }
@@ -162,12 +162,13 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
 }
 
 // 映射依赖描述对象
-function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy) {
+function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy, sort) {
   const dep = confMeta.dep;
-  const moduleDepDesc = safeGetObject(dep, module, makeCuDepDesc());
-  const { retKey_fn_, stateKey_retKeys_, retKey_lazy_ } = moduleDepDesc;
-
-  const fnDesc = { fn, immediate, compare, depKeys };
+  const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
+  const { retKey_fn_, stateKey_retKeys_, retKey_lazy_, retKey_stateKeys_ } = moduleDepDesc;
+  
+// if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
+  const fnDesc = { fn, immediate, compare, depKeys, sort: sort || confMeta.sort };
   // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
   if (retKey_fn_[retKey]) {
     if (cate !== CATE_REF) {// 因为热加载，对于module computed 定义总是赋值最新的，
@@ -191,10 +192,14 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
     else refCtx.hasWatchFn = true;
   }
   
-  //处于自动收集依赖状态，首次计算完之后再去写stateKey_retKeys_
+  //处于自动收集依赖状态，首次计算完之后再去写stateKey_retKeys_, retKey_stateKeys_
+  // in find-dep-fns-to-execute.js setStateKeyRetKeysMap
   if (depKeys === '-') return;
 
   let _depKeys = depKeys === '*' ? ['*'] : depKeys;
+
+  if (depKeys === '*') retKey_stateKeys_[retKey] = moduleName_stateKeys_[module];
+
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
     const retKeys = safeGetArray(stateKey_retKeys_, sKey);

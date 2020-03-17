@@ -2,6 +2,7 @@ import * as util from '../../support/util';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 import makeObCuContainer from '../computed/make-cu-ob-container';
+import makeObRefCuContainer from '../computed/make-cu-ref-ob-container';
 
 const { okeys } = util;
 const { runtimeVar } = ccContext;
@@ -37,7 +38,8 @@ export default function (ref, setup, bindCtxToMethod) {
 
   //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
   // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
-  ctx.refComputed = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
+  ctx.refComputedValue = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
+  ctx.refComputed = makeObRefCuContainer(ref, null, true, true);
 
   triggerComputedAndWatch(ref);
 }

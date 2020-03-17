@@ -60,11 +60,13 @@ export const CcFragment = _CcFragment;
 export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
-export const defComputed = (fn, depKeys, compare) => ({ fn, depKeys, compare });
-export const defLazyComputed = (fn, depKeys, compare) => ({ fn, depKeys, compare, lazy: true });
-export const defComputedVal = (val, compare = true) => ({ fn: () => val, depKeys: [], compare });
-export const defWatch = (fn, depKeys, compare, immediate) => ({ fn, depKeys, compare, immediate });
-export const defWatchImmediate = (fn, depKeys, compare) => ({ fn, depKeys, compare, immediate: true });
+
+let sortFactor = 1;
+export const defComputed = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, sort: (sort || sortFactor++) });
+export const defLazyComputed = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, lazy: true, sort: (sort || sortFactor++) });
+export const defComputedVal = (val, compare = true, sort) => ({ fn: () => val, depKeys: [], compare, sort: (sort || sortFactor++) });
+export const defWatch = (fn, depKeys, compare, immediate, sort) => ({ fn, depKeys, compare, immediate, sort: (sort || sortFactor++) });
+export const defWatchImmediate = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, immediate: true, sort: (sort || sortFactor++) });
 
 
 const defaultExport = {

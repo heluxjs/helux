@@ -57,7 +57,7 @@ export function makeCuObValue(isLazy, result, needCompute, fn, newState, oldStat
 }
 
 export function makeCuDepDesc(){
-  return { retKey_fn_: {}, retKey_lazy_:{}, stateKey_retKeys_: {}, fnCount: 0 };
+  return { retKey_fn_: {}, retKey_lazy_:{}, stateKey_retKeys_: {}, retKey_stateKeys_:{}, fnCount: 0 };
 }
 
 /** make ccClassContext */
@@ -160,7 +160,7 @@ export function strictWarning(err) {
   }
 }
 
-export function safeGetObject(object, key, defaultVal = {}) {
+export function safeGet(object, key, defaultVal = {}) {
   let childrenObject = object[key];
   if (!childrenObject) {
     childrenObject = object[key] = defaultVal;
@@ -169,11 +169,7 @@ export function safeGetObject(object, key, defaultVal = {}) {
 }
 
 export function safeGetArray(object, key) {
-  let childrenArray = object[key];
-  if (!childrenArray) {
-    childrenArray = object[key] = [];
-  }
-  return childrenArray;
+  return safeGet(object, key, []);
 }
 
 export function safeAssignObjectValue(assignTo, assignFrom) {

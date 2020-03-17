@@ -1,6 +1,10 @@
 import { START } from '../../support/priv-constant';
 import makeObState from '../state/make-ob-state';
+import ccContext from '../../cc-context';
 
+const {
+  store: { getState },
+} = ccContext;
 
 export default function (ref) {
   const ctx = ref.ctx;
@@ -15,11 +19,13 @@ export default function (ref) {
   if (ctx.__$$autoWatch) {
 
     if (ctx.__$$hasModuleState) {
-      // 这里后期考虑结合handlerFactory.makeRefSetState优化，不用每次都生成代理对象
-      ref.state = makeObState(ref, ref.state);
+      //每次渲染前都将最新的模块state合进来, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
+      Object.assign(ref.state, ctx.mstate);
 
+      // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
+      ref.state = makeObState(ref, ref.state, ctx.module, true);
       ctx.state = ref.state;
-      ctx.moduleState = makeObState(ref, ctx.mstate);
+      // ctx.moduleState = makeObState(ref, ctx.mstate, ctx.module, true);
 
       ctx.__$$curWaKeys = {};
       ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;

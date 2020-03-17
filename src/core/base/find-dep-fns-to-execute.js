@@ -1,4 +1,4 @@
-import { makeCommitHandler, okeys, justWarning, makeCuObValue, safeGetObject, safeGetArray } from '../../support/util';
+import { makeCommitHandler, okeys, justWarning, makeCuObValue, safeGet, safeGetArray } from '../../support/util';
 import { FN_WATCH, CATE_REF } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import makeCuObState from '../computed/make-cu-ob-state';
@@ -33,11 +33,12 @@ function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, depKeys)
   if (depKeys.length === 0) return;
   let modDep;
   if (sourceType === CATE_REF) {
-    modDep = safeGetObject(refCtx.computedDep, refCtx.module);
+    modDep = safeGet(refCtx.computedDep, refCtx.module);
   } else {
-    modDep = safeGetObject(cuMap._computedDep, stateModule);
+    modDep = safeGet(cuMap._computedDep, stateModule);
   }
-  const stateKey_retKeys_ = safeGetObject(modDep, 'stateKey_retKeys_')
+  const stateKey_retKeys_ = safeGet(modDep, 'stateKey_retKeys_');
+  const retKey_stateKeys_ = safeGet(modDep, 'retKey_stateKeys_');
 
   depKeys.forEach(sKey => {
     const retKeys = safeGetArray(stateKey_retKeys_, sKey);
@@ -45,6 +46,8 @@ function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, depKeys)
     // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
     if (Array.isArray(retKeys) && !retKeys.includes(retKey)) retKeys.push(retKey);
   });
+
+  retKey_stateKeys_[retKey] = depKeys;
 }
 
 function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
@@ -74,9 +77,12 @@ export default (
 
     const { commit, getFnCommittedState } = makeCommitHandler();
     const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
+
     pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
+
+      // 注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
       const fnCtx = {
-        retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
+        retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, cuVal: computedContainer,
         stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
       };
 

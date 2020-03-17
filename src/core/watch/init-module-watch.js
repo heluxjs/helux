@@ -7,7 +7,7 @@ import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
 
-const { isPJO, safeGetObject, okeys } = util;
+const { isPJO, safeGet, okeys } = util;
 
 /**
  * 设置watch值，过滤掉一些无效的key
@@ -40,7 +40,7 @@ export default function (module, moduleWatch, append = false) {
   const d = ccContext.getDispatcher();
   const deltaCommittedState = Object.assign({}, moduleState);
   const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
-  const moduleComputedValue = safeGetObject(rootComputedValue, module);
+  const moduleComputedValue = safeGet(rootComputedValue, module);
   
   findDepFnsToExecute(
     d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns,

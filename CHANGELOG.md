@@ -1,3 +1,7 @@
+#### 2020-03-18
+2.3.8 发布
+* fix: moduleComputed, effect 依赖未能正确更新
+
 #### 2020-03-16
 2.3.5 发布
 * refactor: 重构中间件流程，支持`modState`

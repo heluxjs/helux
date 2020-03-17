@@ -71,6 +71,7 @@ export interface IAnyFnInObj { [key: string]: IAnyFn }
 
 interface IComputedFnDesc<Fn extends typeof computedFn> {
   fn: Fn;
+  sort: number;
   compare?: boolean;
   depKeys?: string[];
 }
@@ -78,17 +79,20 @@ interface IComputedFnDesc<Fn extends typeof computedFn> {
 interface ILazyComputedFnDesc<Fn extends typeof lazyComputedFn> {
   fn: Fn;
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
+  sort: number;
   compare?: boolean;
   depKeys?: string[];
 }
 interface IComputedFnSimpleDesc {
   fn: IAnyFn;
+  sort: number;
   compare?: boolean;
   depKeys?: string[];
 }
 interface ILazyComputedFnSimpleDesc{
   fn: IAnyFn;
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
+  sort: number;
   compare?: boolean;
   depKeys?: string[];
 }
@@ -294,7 +298,6 @@ declare function refCtxSetModuleState<RootState, T extends keyof RootState>(modu
 declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
 declare function refCtxGetConnectWatchedKeys(module: string): string[];
 
-type Rfn<T> = <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx) => T;
 /**
  * <V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
  * @param retKey
@@ -302,14 +305,14 @@ type Rfn<T> = <FnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: FnCtx)
  * @param {string[]} depKeys
  * @param {boolean} compare default is true
  */
-declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean): void;
-declare function refCtxComputed(retKey: string, fnDesc: { fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean }): void;
+declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?:number): void;
+declare function refCtxComputed(retKey: string, fnDesc: { fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?:number }): void;
 
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean): void;
+  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?:number): void;
 // (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean }): void;
+  (retKey: string, fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?:number }): void;
 
 // !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
 // !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
@@ -319,23 +322,25 @@ type MultiComputed = {
     fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any,
     depKeys?: string[],
     compare?: boolean,
+    sort?: number,
   }
 }
 declare function refCtxComputed(multiComputed: MultiComputed): void;
 declare function refCtxComputed(multiFn: (ctx: ICtxBase) => MultiComputed): void;
 
 
-declare function refCtxLazyComputed(retKey: string, fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean): void;
-declare function refCtxLazyComputed(retKey: string, fnDesc: { fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean }): void;
+declare function refCtxLazyComputed(retKey: string, fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?:number): void;
+declare function refCtxLazyComputed(retKey: string, fnDesc: { fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?: number }): void;
 declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>
-  (retKey: string, fn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean): void;
+  (retKey: string, fn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?:number): void;
 declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>
-  (retKey: string, fnDesc: { computedFn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean }): void;
+  (retKey: string, fnDesc: { computedFn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?: number }): void;
 type MultiLazyComputed = {
   [retKey: string]: ((oldVal: any, newVal: any, fnCtx: ILazyFnCtxBase) => any) | {
     fn: (oldVal: any, newVal: any, fnCtx: ILazyFnCtxBase) => any,
     depKeys?: string[],
     compare?: boolean,
+    sort?: number,
   }
 }
 declare function refCtxLazyComputed(multiComputed: MultiLazyComputed): void;
@@ -438,9 +443,7 @@ export interface ICtxBase {
   readonly moduleState: any;
   readonly mstate: any;
   readonly globalState: any;
-  readonly gstate: any;
   readonly connectedState: any;
-  readonly cstate: any;
   readonly refComputed: any;
   readonly moduleComputed: any;
   readonly globalComputed: any;
@@ -538,7 +541,6 @@ export interface IRefCtx<
   readonly refComputed: RefComputed;
   // when connect other modules
   readonly connectedState: ConnectedState;
-  readonly cstate: ConnectedState;
   readonly connectedReducer: ConnectedReducer;
   readonly connectedComputed: ConnectedComputed;
 }
@@ -569,7 +571,6 @@ export interface ICtx
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
-  readonly gstate: RootState[MODULE_GLOBAL];
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly state: RootState[ModuleName] & PrivState;
@@ -586,7 +587,6 @@ export interface ICtx
   readonly mapped: Mapped;
   // overwrite connectedState , connectedComputed
   readonly connectedState: Pick<RootState, ConnectedModules>;
-  readonly cstate: Pick<RootState, ConnectedModules>;
   readonly connectedReducer: Pick<RootReducer, ConnectedModules>;
   readonly connectedComputed: Pick<RootCu, ConnectedModules>;
 

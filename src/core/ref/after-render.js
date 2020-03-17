@@ -28,7 +28,8 @@ function delDep(compareWaKeys, compareWaKeyCount, module, ccUniqueKey ){
     if(compareWaKeys[waKey] === 2 ){//这个key在这轮渲染结束后没有命中，说明视图不再对它有依赖
       shouldLetCacheExpire = true;
       const prefixedWaKey = `${module}/${waKey}`;
-      waKey_uKeyMap_[prefixedWaKey][ccUniqueKey] = 2;//处于非依赖状态
+      // waKey_uKeyMap_[prefixedWaKey][ccUniqueKey] = 2;//处于非依赖状态
+      delete waKey_uKeyMap_[prefixedWaKey][ccUniqueKey];
     }
   });
   if(waKeys.length > compareWaKeyCount){//大于最初记录的key数量，有新增

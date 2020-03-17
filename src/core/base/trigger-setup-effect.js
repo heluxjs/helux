@@ -69,7 +69,7 @@ export default function (ref, callByDidMount) {
             }
           }
 
-          let targetCurState, targetPrevState, targetKey;
+          let targetCurState, targetPrevState;
           const [module, unmoduledKey] = key.split('/');
           if (module !== refModule) {
             const prevState = getPrevState(module);
@@ -92,14 +92,12 @@ export default function (ref, callByDidMount) {
 
             targetCurState = getState(module);
             targetPrevState = prevState;
-            targetKey = unmoduledKey;
           } else {
             targetCurState = curState;
             targetPrevState = prevState;
-            targetKey = key;
           }
 
-          if (targetPrevState[targetKey] !== targetCurState[targetKey]) {
+          if (targetPrevState[unmoduledKey] !== targetCurState[unmoduledKey]) {
             shouldEffectExecute = true;
             break;
           }

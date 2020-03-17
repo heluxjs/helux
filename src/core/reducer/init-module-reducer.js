@@ -21,8 +21,8 @@ export default function (module, reducer = {}) {
   const newReducer = Object.assign({}, reducer);
   _reducer[module] = newReducer;
 
-  const subReducerCaller = util.safeGetObject(_caller, module);
-  // const subReducerRefCaller = util.safeGetObject(_reducerRefCaller, module);
+  const subReducerCaller = util.safeGet(_caller, module);
+  // const subReducerRefCaller = util.safeGet(_reducerRefCaller, module);
 
   const fnNames = util.safeGetArray(_module_fnNames_, module);
 

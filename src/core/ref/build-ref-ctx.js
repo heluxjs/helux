@@ -11,6 +11,7 @@ import changeRefState from '../state/change-ref-state';
 import makeObState from '../state/make-ob-state';
 import getDefineWatchHandler from '../watch/get-define-watch-handler';
 import getDefineComputedHandler from '../computed/get-define-computed-handler';
+import makeCuRefObContainer from '../computed/make-cu-ref-ob-container';
 import computeCcUniqueKey from '../base/compute-cc-unique-key';
 import getOutProps from '../base/get-out-props';
 import getStoredKeys from '../base/get-stored-keys';
@@ -23,11 +24,11 @@ const {
   moduleName_stateKeys_,
   store: { getState },
   moduleName_ccClassKeys_,
-  computed: { _computedValue },
-  waKey_uKeyMap_,
+  // computed: { _computedValueOri, _computedValue },
+  waKey_uKeyMap_, waKey_effectUKeyMap_,
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGetObject, justWarning, isObjectNull } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet, justWarning, isObjectNull } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -78,9 +79,9 @@ function recordDep(ccUniqueKey, module, watchedKeys) {
   const waKeys = watchedKeys === '*' ? moduleName_stateKeys_[module] : watchedKeys;
   waKeys.forEach(waKey => {
     const map = waKey_uKeyMap_[`${module}/${waKey}`];
-    if(map){
+    if (map) {
       map[ccUniqueKey] = 1;
-    }else{
+    } else {
       justWarning(`invalid watchedKey[${waKey}] of module[${module}]`)
     }
   });
@@ -133,25 +134,34 @@ export default function (ref, params, liteLevel = 5) {
     if (!ccKey) throw me(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi(`ccClassKey[${ccClassKey}]`));
   }
 
+  const mstate = getState(module);
+
+  // recover ref state
+  let refStoredState = refStore._state[ccUniqueKey] || {};
+  const mergedState = Object.assign({}, state, refStoredState, mstate);
+  ref.state = mergedState;
+  const stateKeys = okeys(mergedState);
+
   const classCtx = ccClassKey_ccClassContext_[ccClassKey];
   const classConnectedState = classCtx.connectedState;
   const connectedModules = okeys(connect);
-  const connectedComputed = classCtx.connectedComputed || {};
   const connectedState = {};
-  const cstate = {};
-  const moduleState = getState(module);
-  const moduleComputed = _computedValue[module] || {};
-  const globalComputed = _computedValue[MODULE_GLOBAL] || {};
-  const globalState = getState(MODULE_GLOBAL);
+
+  // const moduleState = getState(module);
+  const moduleState = makeObState(ref, mstate, module, true);
+
+  const connectedComputed = {};
+  connectedModules.forEach(m => connectedComputed[m] = makeCuRefObContainer(ref, m, false));
+  const moduleComputed = makeCuRefObContainer(ref, module);
+  const globalComputed = makeCuRefObContainer(ref, MODULE_GLOBAL);
+
+  // const globalState = getState(MODULE_GLOBAL);
+  const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
 
   // extract privStateKeys
   const privStateKeys = util.removeArrElements(okeys(state), moduleName_stateKeys_[stateModule]);
 
-  // recover ref state
-  let refStoredState = refStore._state[ccUniqueKey] || {};
-  const mergedState = Object.assign({}, state, refStoredState, moduleState);
-  ref.state = mergedState;
-  const stateKeys = okeys(mergedState);
+
 
   // record ccClassKey
   const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
@@ -207,7 +217,7 @@ export default function (ref, params, liteLevel = 5) {
     privStateKeys,
     connect,
     connectedModules,
-    
+
     // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
     __$$onEvents,// 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
 
@@ -219,7 +229,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$compareWaKeyCount: 0,//write before render
     __$$nextCompareWaKeys: {},
     __$$nextCompareWaKeyCount: 0,
-    
+
     __$$curConnWaKeys: {},
     __$$compareConnWaKeys: {},
     __$$compareConnWaKeyCount: {},
@@ -239,16 +249,15 @@ export default function (ref, params, liteLevel = 5) {
     // state
     state: mergedState,
     moduleState,
-    mstate: moduleState,// always be latest in auto watch mode
+    mstate,//用于before-render里避免merge moduleState而导致当然冗余触发get
     globalState,
-    gstate: globalState,// always be latest in auto watch mode
     connectedState,
-    cstate,// always be latest in auto watch mode
     extra: {},// can pass value to extra in every render period
     staticExtra: {},// only can be assign value in setup block
 
     // computed result containers
     refComputed: {},
+    refComputedValue: {}, // for lazy
     refComputedOri: {},// 未代理的计算值容器
     moduleComputed,
     globalComputed,
@@ -386,8 +395,13 @@ export default function (ref, params, liteLevel = 5) {
       if (!isProp && _depKeys) {
         moDepKeys = [];
         _depKeys.forEach(depKey => {
-          if (depKey.includes('/')) moDepKeys.push(depKey);
-          else moDepKeys.push(`${stateModule}/${depKey}`);
+          let modDepKey;
+          if (depKey.includes('/')) modDepKey = depKey;
+          else modDepKey = `${stateModule}/${depKey}`;
+
+          moDepKeys.push(modDepKey);
+          const map = safeGet(waKey_effectUKeyMap_, modDepKey);
+          map[ccUniqueKey] = 1;
         });
       }
       // 对于effectProps来说是不会读取compare属性来用的
@@ -400,8 +414,8 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   // 构造完毕ctx后，开始创建reducer，和可观察connectedState
-  const { 
-    moduleReducer, connectedReducer, 
+  const {
+    moduleReducer, connectedReducer,
     __$$curConnWaKeys, __$$compareConnWaKeys, __$$compareConnWaKeyCount,
     __$$nextCompareConnWaKeys, __$$nextCompareConnWaKeyCount,
   } = ctx;
@@ -419,14 +433,12 @@ export default function (ref, params, liteLevel = 5) {
     if (m === module) {
       reducerObj = moduleReducer;
     } else {
-      reducerObj = safeGetObject(connectedReducer, m);
+      reducerObj = safeGet(connectedReducer, m);
     }
 
     const connectDesc = connect[m];
     if (connectDesc) {
       let mConnectedState = classConnectedState[m];
-      cstate[m] = mConnectedState;// let cstate always be latest in every re-render period
-
       if (connectDesc === '-') {// auto watch
         __$$autoWatch = true;
 
@@ -439,9 +451,9 @@ export default function (ref, params, liteLevel = 5) {
         mConnectedState = makeObState(ref, mConnectedState, m);
       }
       // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
-      else{
+      else {
         recordDep(ccUniqueKey, m, connectDesc);
-      } 
+      }
 
       connectedState[m] = mConnectedState;
     }
@@ -456,27 +468,13 @@ export default function (ref, params, liteLevel = 5) {
 
   if (watchedKeys === '-') {
     __$$autoWatch = true;
-    ref.state = makeObState(ref, mergedState);
+    ref.state = makeObState(ref, mergedState, module, true);
     ctx.state = ref.state;
-  }else{
+  } else {
     //开始记录依赖
     recordDep(ccUniqueKey, module, watchedKeys);
   }
   ctx.__$$autoWatch = __$$autoWatch;
-
-  ctx.__$$reInjectConnObState = (module) => {
-    const connectedState = ctx.connectedState;
-    if (Array.isArray(connect)) {
-      connectedState[module] = makeObState(ref, classConnectedState[module], module);
-    } else {
-      const waKeys = connect[module];
-      if (waKeys === '-') connectedState[module] = makeObState(ref, classConnectedState[module], module);
-      // else do nothing
-    }
-
-    // 总是将connectedState.globalState指向ctx.globalState
-    ctx.globalState = connectedState[MODULE_GLOBAL];
-  };
 
   //始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
