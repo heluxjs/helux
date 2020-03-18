@@ -2,7 +2,7 @@ import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
-import { CATE_MODULE } from '../../support/constant';
+import { CATE_MODULE, FN_CU } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
@@ -27,7 +27,7 @@ export default function (module, computed) {
 
   rootComputedRaw[module] = computed;
   const moduleState = rootState[module];
-  configureDepFns(CATE_MODULE, { sort:0, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
+  configureDepFns(CATE_MODULE, { sort: 0, type: FN_CU, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
 
   const d = ccContext.getDispatcher();
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
