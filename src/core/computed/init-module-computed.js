@@ -38,7 +38,7 @@ export default function (module, computed) {
   const moduleComputedValue = rootComputedValue[module];
 
   findDepFnsToExecute(
-    d && d.ctx, module, d && d.ctx.module, moduleState, curDepComputedFns,
+    d, module, d && d.ctx.module, moduleState, curDepComputedFns,
     moduleState, moduleState, deltaCommittedState, util.makeCallInfo(module), true,
     'computed', CATE_MODULE, moduleComputedValue,
   );

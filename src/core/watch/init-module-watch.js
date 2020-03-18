@@ -43,7 +43,7 @@ export default function (module, moduleWatch, append = false) {
   const moduleComputedValue = safeGet(rootComputedValue, module);
   
   findDepFnsToExecute(
-    d && d.ctx, module, d && d.ctx.module, moduleState, curDepWatchFns,
+    d, module, d && d.ctx.module, moduleState, curDepWatchFns,
     moduleState, moduleState, deltaCommittedState, util.makeCallInfo(module), true,
     'watch', CATE_MODULE, moduleComputedValue,
   );

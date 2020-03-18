@@ -1,9 +1,9 @@
-import writeDep from '../ref/update-dep';
+import updateDep from '../ref/update-dep';
 
 export default function (ref, state, module, isForModule) {
   return new Proxy(state, {
     get: function (target, key) {
-      writeDep(ref, module, key, isForModule);
+      updateDep(ref, module, key, isForModule);
       return target[key];
     },
     set: function (target, key, value) {

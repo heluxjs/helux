@@ -157,11 +157,8 @@ export default function (ref, params, liteLevel = 5) {
 
   // const globalState = getState(MODULE_GLOBAL);
   const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
-
   // extract privStateKeys
   const privStateKeys = util.removeArrElements(okeys(state), moduleName_stateKeys_[stateModule]);
-
-
 
   // record ccClassKey
   const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
@@ -300,6 +297,9 @@ export default function (ref, params, liteLevel = 5) {
     __$$settedList: [],//[{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
   };
+  
+
+
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
 

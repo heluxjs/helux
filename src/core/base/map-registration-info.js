@@ -4,7 +4,7 @@ import getCcClassKey from './get-cc-classkey';
 import * as checker from '../checker';
 import * as util from '../../support/util';
 import { STR_ARR_OR_STAR } from '../../support/priv-constant';
-import { MODULE_GLOBAL, MODULE_DEFAULT } from '../../support/constant';
+import { MODULE_GLOBAL, MODULE_DEFAULT, CC_DISPATCHER } from '../../support/constant';
 
 const {
   moduleName_stateKeys_, moduleName_ccClassKeys_,
@@ -20,6 +20,8 @@ function checkCcStartupOrNot() {
 }
 
 function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
+  if (ccClassKey === CC_DISPATCHER) return [];
+
   if (!inputWatchedKeys) return [];
 
   if (inputWatchedKeys === '*') {

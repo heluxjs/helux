@@ -1,8 +1,10 @@
 import { makeCommitHandler, okeys, justWarning, makeCuObValue, safeGet, safeGetArray } from '../../support/util';
-import { FN_WATCH, CATE_REF } from '../../support/constant';
+import { FN_WATCH, CATE_REF, CC_DISPATCHER, FN_CU } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import makeCuObState from '../computed/make-cu-ob-state';
+import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
 import cuMap from '../../cc-context/computed-map';
+import waMap from '../../cc-context/watch-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import runtimeVar from '../../cc-context/runtime-var';
 
@@ -29,25 +31,48 @@ function getStateKeyRetKeysMap(refCtx, sourceType, stateModule) {
   return modDep.stateKey_retKeys_;
 }
 
-function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, depKeys) {
-  if (depKeys.length === 0) return;
-  let modDep;
-  if (sourceType === CATE_REF) {
-    modDep = safeGet(refCtx.computedDep, refCtx.module);
+function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, keys, isKeysDep = true) {
+  if (keys.length === 0) return;
+
+  let modDep, cuModDep;
+  if (sourceType === CATE_REF) {// 由ref发起调用，refCtx是肯定有值的
+    const computedDep = refCtx.computedDep;
+    const depDesc = fnType === FN_CU ? computedDep : refCtx.watchDep;
+
+    cuModDep = safeGet(computedDep, stateModule);
+    modDep = safeGet(depDesc, stateModule);
   } else {
-    modDep = safeGet(cuMap._computedDep, stateModule);
+    const cuDep = cuMap._computedDep;
+    const depDesc = fnType === FN_CU ? cuDep : waMap._watchDep;
+
+    cuModDep = safeGet(cuDep, stateModule);
+    modDep = safeGet(depDesc, stateModule);
   }
   const stateKey_retKeys_ = safeGet(modDep, 'stateKey_retKeys_');
   const retKey_stateKeys_ = safeGet(modDep, 'retKey_stateKeys_');
 
-  depKeys.forEach(sKey => {
-    const retKeys = safeGetArray(stateKey_retKeys_, sKey);
+  const updateRelationship = (depKeys) => {
+    const stateKeys = safeGetArray(retKey_stateKeys_, retKey);
+    depKeys.forEach(sKey => {
+      const retKeys = safeGetArray(stateKey_retKeys_, sKey);
 
-    // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
-    if (Array.isArray(retKeys) && !retKeys.includes(retKey)) retKeys.push(retKey);
-  });
+      // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
+      if (Array.isArray(retKeys) && !retKeys.includes(retKey)) retKeys.push(retKey);
 
-  retKey_stateKeys_[retKey] = depKeys;
+      if (!stateKeys.includes(sKey)) stateKeys.push(sKey);
+    });
+  }
+
+  if (isKeysDep) {// keys is depKeys
+    updateRelationship(keys);
+  } else {// keys is retKeys, 将retKeys里各自retKey的stateKeys转移给目标retKey
+    keys.forEach(sourceRetKey => {
+      // 这里取的是cu模块的retKey_stateKeys_
+      const retKey_stateKeys_ =  safeGet(cuModDep, 'retKey_stateKeys_');
+      const sourceStateKeys = retKey_stateKeys_[sourceRetKey] || [];
+      updateRelationship(sourceStateKeys);
+    });
+  }
 }
 
 function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
@@ -58,10 +83,11 @@ function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
 // fnType: computed watch
 // sourceType: module ref
 export default (
-  refCtx, stateModule, refModule, oldState, finder,
+  ref = {}, stateModule, refModule, oldState, finder,
   stateForComputeFn, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
   fnType, sourceType, computedContainer,
 ) => {
+  const refCtx = ref.ctx;
   let whileCount = 0;
   let curStateForComputeFn = stateForComputeFn;
   let shouldCurrentRefUpdate = true;
@@ -76,12 +102,12 @@ export default (
     if (!pickedFns.length) break;
 
     const { commit, getFnCommittedState } = makeCommitHandler();
-    const { commit: commitCu, getFnCommittedState: getFinalCu } = makeCommitHandler();
+    const { commit: commitCu, getFnCommittedState: getRetKeyCu, clear: clearCu } = makeCommitHandler();
 
     pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
 
-      // 注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
       const fnCtx = {
+        // 注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, cuVal: computedContainer,
         stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
       };
@@ -89,6 +115,11 @@ export default (
       // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
       // 注：只有immediate为true的watch才有机会执行此判断结构为true并收集到依赖
       const canPassObState = beforeMountFlag && depKeys === '-';
+
+      // 对于watch的cuVal，存在依赖收集行为
+      // ref触发了模块watch，先假设路径是通过触发了moduleComputed.*** 来勾起的收集行为
+      // todo, 加上调用此findDepFns的ref走的是connectedComputed 还是 moduleComputed
+      const collectedRetKeys = [];
 
       if (fnType === 'computed') {
         if (isLazy) {
@@ -103,7 +134,7 @@ export default (
           // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
           const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, obInitNewState, obInitNewState, fnCtx);
           computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
-          setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, collectedDepKeys);
+          setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, collectedDepKeys);
         } else {
           if (isLazy) {
             const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
@@ -115,6 +146,10 @@ export default (
         }
 
       } else {// watch
+        if (refCtx && refCtx.ccClassKey === CC_DISPATCHER) {// dispatcher调用时，替换为有依赖收集的cuVal
+        }
+        fnCtx.cuVal = getSimpleObContainer(stateModule, collectedRetKeys);
+
         let computedValueOrRet, tmpInitNewState = initNewState, collectedDepKeys = [];
         let tmpOldState = oldState;
         if (canPassObState) {
@@ -124,9 +159,40 @@ export default (
         }
 
         computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, tmpInitNewState, tmpOldState, fnCtx);
-        setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, collectedDepKeys);
         //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
         if (computedValueOrRet === false) shouldCurrentRefUpdate = false;
+        // watch函数本身的stateKey_retKeys_需要被更新
+        setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, collectedDepKeys);
+
+        // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
+        // 对于实例里的computed回调里调用committedCu来说，是refComputed结果容器
+        const committedCu = getRetKeyCu();
+        if (committedCu) {
+          let retKey_fn_;
+          if (sourceType === 'ref') {
+            retKey_fn_ = fnType === 'computed' ? refCtx.computedRetKeyFns : refCtx.watchRetKeyFns;
+          } else {
+            // commitCu提交的结果是存到moduleComputed里的，所以这里从始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
+            let moduleDep = cuMap.getRootComputedDep()[stateModule] || {};
+            retKey_fn_ = moduleDep.retKey_fn_ || null;
+          }
+
+          if (retKey_fn_) {
+            okeys(committedCu).forEach(cuRetKey => {
+              if (!retKey_fn_[cuRetKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${cuRetKey}] for moduleComputed`);
+              // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
+              else {
+                computedContainer[cuRetKey] = makeCuObValue(false, committedCu[cuRetKey]);
+
+                // 在watch里读取了cuVal里的retKey结果，要将这些retKey对应的stateKey依赖写回到watchDepDesc里
+                setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, collectedRetKeys, false);
+                // // 因调用commitCu而定位出的关联的stateKeys需要写回到watchDep依赖里，以确保watch能够被命中
+                // setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, cuStateKeys);
+              }
+            });
+          }
+          clearCu();
+        }
       }
     });
 
@@ -178,28 +244,6 @@ export default (
       if (ignoredStateKeys.length) {
         const reason = `they are not ${sourceType === CATE_REF ? 'private' : 'module'}, fn is ${sourceType} ${fnType}`;
         justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid, ${reason}`)
-      }
-    }
-
-    // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
-    // 对于实例里的computed回调里调用committedCu来说，是refComputed结果容器
-    const committedCu = getFinalCu();
-    if (committedCu) {
-      let retKey_fn_;
-      if (sourceType === 'ref') {
-        retKey_fn_ = fnType === 'computed' ? refCtx.computedRetKeyFns : refCtx.watchRetKeyFns;
-      } else {
-        // commitCu提交的结果是存到moduleComputed里的，所以这里从始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
-        let moduleDep = cuMap.getRootComputedDep()[stateModule] || {};
-        retKey_fn_ = moduleDep.retKey_fn_ || null;
-      }
-
-      if (retKey_fn_) {
-        okeys(committedCu).forEach(retKey => {
-          if (!retKey_fn_[retKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${retKey}] for moduleComputed`);
-          // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
-          else computedContainer[retKey] = makeCuObValue(false, committedCu[retKey]);;
-        });
       }
     }
 

@@ -2,6 +2,7 @@ import moduleName_stateKeys_ from './statekeys-map';
 import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
+import waKey_uKeyMap_ from './wakey-ukey-map';
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
@@ -13,7 +14,7 @@ const { okeys } = util;
 const refs = {};
 const getDispatcher = () => refs[CC_DISPATCHER];
 
-const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}, noSave = false } = {}) => {
+const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false } = {}) => {
   const moduleState = getState(module);
   const moduleComputedValue = _computedValue[module];
 
@@ -23,19 +24,19 @@ const setStateByModule = (module, committedState, { refCtx = null, callInfo = {}
   const rootWatchDep = watch.getRootWatchDep();
   const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
 
-  const refModule = refCtx ? refCtx.module : null;
+  const refModule = ref ? ref.ctx.module : null;
   const newState = Object.assign({}, moduleState, committedState);
 
   const deltaCommittedState = Object.assign({}, committedState);
   let stateForComputeFn = deltaCommittedState;
 
   findDepFnsToExecute(
-    refCtx, module, refModule, moduleState, curDepComputedFns,
+    ref, module, refModule, moduleState, curDepComputedFns,
     stateForComputeFn, newState, deltaCommittedState, callInfo, false,
     'computed', CATE_MODULE, moduleComputedValue,
   );
   findDepFnsToExecute(
-    refCtx, module, refModule, moduleState, curDepWatchFns,
+    ref, module, refModule, moduleState, curDepWatchFns,
     stateForComputeFn, newState, deltaCommittedState, callInfo, false,
     'watch', CATE_MODULE, moduleComputedValue,
   );
@@ -214,7 +215,7 @@ const ccContext = {
   // when component unmounted, its handler will been removed
   handlerKey_handler_: {},
   // { 'foo/f1': {ukey1: 1, ukey2:1 } }
-  waKey_uKeyMap_ : {},
+  waKey_uKeyMap_,
   // 由实例effect依赖列表定义的key记录到此处，写入时机是beforeMount时，是一个实例化完成就会固化的依赖
   // 由于effect的key较少，所以对waKey_effectUKeyMap_不采取一开始映射好全部waKey的形式，而是采用safeGet动态添加map映射
   waKey_effectUKeyMap_ : {},
@@ -223,7 +224,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.3.11',
+    version: '2.3.12',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

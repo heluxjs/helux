@@ -305,13 +305,16 @@ export function getWinCc() {
 
 export function makeCommitHandler() {
   let state = null;
-  const commit = partialState => {
+
+  const commit = (partialState) => {
     if (!state) state = {};
     Object.assign(state, partialState);
   }
 
+  const clear = () => state = null;
+
   const getFnCommittedState = () => state;
-  return { commit, getFnCommittedState }
+  return { commit, clear, getFnCommittedState }
 }
 
 export function isOnlineEditor() {

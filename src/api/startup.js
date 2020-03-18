@@ -107,6 +107,11 @@ export default function (
       rv.watchImmediate = watchImmediate;
       rv.bindCtxToMethod = bindCtxToMethod;
 
+      if (!ccContext.refs[CC_DISPATCHER]) {
+        const Dispatcher = createDispatcher();
+        appendDispatcher(Dispatcher);
+      }
+      
       boot.configModuleSingleClass(moduleSingleClass);
       boot.configStoreState(store);
       boot.configRootReducer(reducer);
@@ -115,10 +120,6 @@ export default function (
       boot.executeRootInit(init);
       boot.configMiddlewares(middlewares);
 
-      if (!ccContext.refs[CC_DISPATCHER]) {
-        const Dispatcher = createDispatcher();
-        appendDispatcher(Dispatcher);
-      }
 
       const bindOthers = (bindTarget) => {
         bindToWindow('CC_CONTEXT', ccContext, bindTarget);

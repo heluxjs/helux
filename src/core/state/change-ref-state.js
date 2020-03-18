@@ -86,9 +86,9 @@ export default function (state, {
   
   //在triggerReactSetState之前把状态存储到store，
   //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-  const passedCtx = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef.ctx : null;
+  // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
-  const sharedState = syncCommittedStateToStore(module, state, { refCtx: passedCtx, callInfo, noSave: true });
+  const sharedState = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true });
 
   Object.assign(state, sharedState);
 
@@ -181,8 +181,8 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
     }
   }
 
-  let deltaCommittedState = computeValueForRef(refCtx, stateModule, refState, state, callInfo);
-  const shouldCurrentRefUpdate = watchKeyForRef(refCtx, stateModule, refState, deltaCommittedState, callInfo, false, true);
+  let deltaCommittedState = computeValueForRef(targetRef, stateModule, refState, state, callInfo);
+  const shouldCurrentRefUpdate = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false, true);
 
   const ccSetState = () => {
      // 记录stateKeys，方便triggerRefEffect之用
@@ -256,8 +256,8 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
 
     if (ref.__$$isUnmounted !== true) {
       const refCtx = ref.ctx;
-      computeValueForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
-      const shouldCurrentRefUpdate = watchKeyForRef(refCtx, moduleName, prevModuleState, partialSharedState, callInfo);
+      computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
+      const shouldCurrentRefUpdate = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
 
       // 记录sharedStateKeys，方便triggerRefEffect之用
       refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
