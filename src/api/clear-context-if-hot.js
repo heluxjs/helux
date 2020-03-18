@@ -3,6 +3,7 @@ import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
+import { clearCuRefer } from '../core/base/find-dep-fns-to-execute';
 import initModuleWatch from '../core/watch/init-module-watch';
 import createDispatcher from './create-dispatcher';
 import appendDispatcher from '../core/base/append-dispatcher';
@@ -31,6 +32,7 @@ function _checkDispatcher() {
 }
 
 function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
+  clearCuRefer();
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
   const cct = ccContext.ccClassKey_ccClassContext_;

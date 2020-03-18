@@ -11,7 +11,9 @@
    * 为避免cc-context文件里调用的方法和自身产生循环引用，将moduleName_stateKeys_单独拆开放置到此文件
    * 如果还有别的类似循环引用产生，都可以像moduleName_stateKeys_一样单独拆出来放置为一个文件
    */
-  var moduleName_stateKeys_ = {}; // 映射好模块的状态所有key并缓存住，用于提高性能
+  var moduleName_stateKeys_ = {
+    '$$default': []
+  }; // 映射好模块的状态所有key并缓存住，用于提高性能
 
   var _ERR_MESSAGE;
 
@@ -113,7 +115,7 @@
 
   var _computedDep = {};
   var _computedRaw = {};
-  var cuMap = {
+  var computedMap = {
     _computedValueOri: _computedValueOri,
     _computedValue: _computedValue,
     _computedRaw: _computedRaw,
@@ -940,10 +942,9 @@
   /**
    * 为每一个实例单独建立了一个获取计算结果的观察容器，方便写入依赖
    */
-  var _ccContext$computed = ccContext.computed,
-      _computedValueOri$1 = _ccContext$computed._computedValueOri,
-      _computedValue$1 = _ccContext$computed._computedValue,
-      _computedDep$1 = _ccContext$computed._computedDep;
+  var _computedValueOri$1 = computedMap._computedValueOri,
+      _computedValue$1 = computedMap._computedValue,
+      _computedDep$1 = computedMap._computedDep;
 
   function writeRetKeyDep(moduleCuDep, ref, module, retKey, isForModule) {
     var retKey_stateKeys_ = moduleCuDep.retKey_stateKeys_;
@@ -951,11 +952,27 @@
     stateKeys.forEach(function (stateKey) {
       updateDep(ref, module, stateKey, isForModule);
     });
+  }
+  /** 仅用于辅助Dispatcher触发watch时收集retKey对应的stateKeys依赖 */
+
+
+  function getSimpleObContainer(module, retKeys) {
+    var oriCuContainer = _computedValueOri$1[module];
+    var oriCuObContainer = _computedValue$1[module]; // 为普通的计算结果容器建立代理对象
+
+    return new Proxy(oriCuContainer, {
+      get: function get(target, retKey) {
+        retKeys.push(retKey); // 从已定义defineProperty的计算结果容器里获取结果
+
+        return oriCuObContainer[retKey];
+      },
+      set: function set() {
+        return true;
+      }
+    });
   } // isForModule : true for module , false for connect
-  // refOrRefCtx 支持同时传ref or refCtx
 
-
-  function makeCuRefObContainer (ref, module, isForModule, isRefCu, retKeys) {
+  function makeCuRefObContainer (ref, module, isForModule, isRefCu) {
     if (isForModule === void 0) {
       isForModule = true;
     }
@@ -964,24 +981,23 @@
       isRefCu = false;
     }
 
-    if (!ref) return; // 注意isRefCu为true是，获取ref.ctx是安全的
-
+    // 注意isRefCu为true是，获取ref.ctx是安全的
     var oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri$1[module];
     var oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue$1[module];
     if (!oriCuContainer) return {}; // 为普通的计算结果容器建立代理对象
 
     return new Proxy(oriCuContainer, {
       get: function get(target, retKey) {
-        if (retKeys) retKeys.push(retKey);
-
+        // 由refComputed.{keyName}取值触发
         if (isRefCu) {
           var computedDep = ref.ctx.computedDep;
           Object.keys(computedDep).forEach(function (m) {
             writeRetKeyDep(computedDep[m], ref, m, retKey, isForModule);
           });
-        } else {
-          writeRetKeyDep(_computedDep$1[module], ref, module, retKey, isForModule);
-        } // 从已定义defineProperty的计算结果容器里获取结果
+        } // 由moduleComputed.{keyName} 或者 connectedComputed.{moduleName}.{keyName} 取值触发
+        else {
+            writeRetKeyDep(_computedDep$1[module], ref, module, retKey, isForModule);
+          } // 从已定义defineProperty的计算结果容器里获取结果
 
 
         return oriCuObContainer[retKey];
@@ -1013,25 +1029,33 @@
     if (sourceType === CATE_REF) {
       modDep = refCtx.computedDep[refCtx.module] || {};
     } else {
-      modDep = cuMap._computedDep[stateModule] || {};
+      modDep = computedMap._computedDep[stateModule] || {};
     }
 
     return modDep.stateKey_retKeys_;
   }
 
-  function setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, keys, isKeysDep) {
+  function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, keys, isKeysDep) {
     if (isKeysDep === void 0) {
       isKeysDep = true;
     }
 
-    if (!refCtx) return;
     if (keys.length === 0) return;
-    var modDep;
+    var modDep, cuModDep;
 
     if (sourceType === CATE_REF) {
-      modDep = safeGet(refCtx.computedDep, refCtx.module);
+      // 由ref发起调用，refCtx是肯定有值的
+      var computedDep = refCtx.computedDep;
+      var depDesc = fnType === FN_CU ? computedDep : refCtx.watchDep;
+      cuModDep = safeGet(computedDep, stateModule);
+      modDep = safeGet(depDesc, stateModule);
     } else {
-      modDep = safeGet(cuMap._computedDep, stateModule);
+      var cuDep = computedMap._computedDep;
+
+      var _depDesc = fnType === FN_CU ? cuDep : watch._watchDep;
+
+      cuModDep = safeGet(cuDep, stateModule);
+      modDep = safeGet(_depDesc, stateModule);
     }
 
     var stateKey_retKeys_ = safeGet(modDep, 'stateKey_retKeys_');
@@ -1053,6 +1077,8 @@
     } else {
       // keys is retKeys, 将retKeys里各自retKey的stateKeys转移给目标retKey
       keys.forEach(function (sourceRetKey) {
+        // 这里取的是cu模块的retKey_stateKeys_
+        var retKey_stateKeys_ = safeGet(cuModDep, 'retKey_stateKeys_');
         var sourceStateKeys = retKey_stateKeys_[sourceRetKey] || [];
         updateRelationship(sourceStateKeys);
       });
@@ -1108,6 +1134,7 @@
             depKeys = _ref.depKeys,
             isLazy = _ref.isLazy;
         var fnCtx = {
+          // 注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
           retKey: retKey,
           callInfo: callInfo,
           isFirstCall: isFirstCall,
@@ -1115,6 +1142,7 @@
           commitCu: commitCu,
           setted: setted,
           changed: changed,
+          cuVal: computedContainer,
           stateModule: stateModule,
           refModule: refModule,
           oldState: oldState,
@@ -1130,9 +1158,6 @@
         var collectedRetKeys = [];
 
         if (fnType === 'computed') {
-          // 对于computed的fnCtx来说，注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
-          fnCtx.cuVal = computedContainer;
-
           if (isLazy) {
             // lazyComputed 不再暴露这两个接口，以隔绝副作用
             delete fnCtx.commit;
@@ -1145,7 +1170,7 @@
 
             var computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, obInitNewState, obInitNewState, fnCtx);
             computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
-            setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, collectedDepKeys);
+            setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, collectedDepKeys);
           } else {
             if (isLazy) {
               var _getCuWaParams2 = getCuWaParams(retKey, depKeys, initNewState, oldState),
@@ -1161,7 +1186,8 @@
           }
         } else {
           // watch
-          fnCtx.cuVal = makeCuRefObContainer(ref, stateModule, true, true, collectedRetKeys);
+          // 替换cuVal，以便动态的收集到watch函数里对computed结果的相关依赖
+          fnCtx.cuVal = getSimpleObContainer(stateModule, collectedRetKeys);
 
           var _computedValueOrRet2,
               tmpInitNewState = initNewState,
@@ -1177,8 +1203,11 @@
 
           _computedValueOrRet2 = executeCuOrWatch(retKey, depKeys, fn, tmpInitNewState, tmpOldState, fnCtx); //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
 
-          if (_computedValueOrRet2 === false) shouldCurrentRefUpdate = false; // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
+          if (_computedValueOrRet2 === false) shouldCurrentRefUpdate = false; // watch函数本身retKey的stateKey_retKeys_需要被更新
+
+          setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, _collectedDepKeys); // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
           // 对于实例里的computed回调里调用committedCu来说，是refComputed结果容器
+          // 每一个retKey返回的committedCu都及时处理掉，因为下面setStateKeyRetKeysMap需要对此时的retKey写依赖
 
           var committedCu = getRetKeyCu();
 
@@ -1189,17 +1218,21 @@
               retKey_fn_ = fnType === 'computed' ? refCtx.computedRetKeyFns : refCtx.watchRetKeyFns;
             } else {
               // commitCu提交的结果是存到moduleComputed里的，所以这里从始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
-              var moduleDep = cuMap.getRootComputedDep()[stateModule] || {};
+              var moduleDep = computedMap.getRootComputedDep()[stateModule] || {};
               retKey_fn_ = moduleDep.retKey_fn_ || null;
             }
 
             if (retKey_fn_) {
-              okeys(committedCu).forEach(function (retKey) {
-                if (!retKey_fn_[retKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + retKey + "] for moduleComputed"); // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
+              okeys(committedCu).forEach(function (cuRetKey) {
+                if (!retKey_fn_[cuRetKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + cuRetKey + "] for moduleComputed"); // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
                 else {
-                    computedContainer[retKey] = makeCuObValue(false, committedCu[retKey]); // 在watch里读取了cuVal里的结果更新了cu里另外retKey的结果，就要有依赖产生
+                    computedContainer[cuRetKey] = makeCuObValue(false, committedCu[cuRetKey]); // 在watch里读取了cuVal里的retKey结果，要将这些retKey对应的stateKey依赖写回到watchDepDesc里，
+                    // 以便能够在相应stateKey值改变时，能够正确命中watch函数
 
-                    setStateKeyRetKeysMap(refCtx, sourceType, stateModule, retKey, collectedRetKeys, false);
+                    setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, collectedRetKeys, false); // 将这些retKey对应的stateKey依赖写回到目标cuRetKey的retKey_stateKeys_映射
+                    // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
+
+                    setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, cuRetKey, collectedRetKeys, false);
                   }
               });
             }
@@ -1207,7 +1240,8 @@
             clearCu();
           }
         }
-      });
+      }); // 这里一次性处理所有computed函数提交的state
+
       curStateForComputeFn = getFnCommittedState();
 
       if (curStateForComputeFn) {
@@ -1291,7 +1325,7 @@
   });
 
   var _reducer;
-  var _computedValue$2 = cuMap._computedValue;
+  var _computedValue$2 = computedMap._computedValue;
   var okeys$1 = okeys;
   var refs = {};
 
@@ -1311,7 +1345,7 @@
     var moduleState = _getState(module);
 
     var moduleComputedValue = _computedValue$2[module];
-    var rootComputedDep = cuMap.getRootComputedDep();
+    var rootComputedDep = computedMap.getRootComputedDep();
 
     var curDepComputedFns = function curDepComputedFns(committedState, isFirstCall) {
       return pickDepFns(isFirstCall, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
@@ -1482,7 +1516,7 @@
       _fnName_fullFnNames_: {},
       _module_fnNames_: {}
     },
-    computed: cuMap,
+    computed: computedMap,
     watch: watch,
     refStore: {
       _state: {},
@@ -1514,7 +1548,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.11',
+      version: '2.3.13',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2855,11 +2889,11 @@
       fnName: fnName
     }; //在triggerReactSetState之前把状态存储到store，
     //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-
-    var passedRef = stateFor === FOR_ONE_INS_FIRSTLY$1 ? targetRef : null; // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
+    // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
+    // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
 
     var sharedState = syncCommittedStateToStore(module, state, {
-      ref: passedRef,
+      ref: targetRef,
       callInfo: callInfo,
       noSave: true
     });
@@ -4068,6 +4102,7 @@
   }
 
   function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
+    if (ccClassKey === CC_DISPATCHER) return [];
     if (!inputWatchedKeys) return [];
 
     if (inputWatchedKeys === '*') {
@@ -6671,6 +6706,12 @@
         rv.watchCompare = watchCompare;
         rv.watchImmediate = watchImmediate;
         rv.bindCtxToMethod = bindCtxToMethod;
+
+        if (!ccContext.refs[CC_DISPATCHER]) {
+          var Dispatcher = createDispatcher();
+          appendDispatcher(Dispatcher);
+        }
+
         configModuleSingleClass(moduleSingleClass);
         configStoreState(store);
         configRootReducer(reducer);
@@ -6678,11 +6719,6 @@
         configRootWatch(watch);
         executeRootInit(init);
         configMiddlewares(middlewares);
-
-        if (!ccContext.refs[CC_DISPATCHER]) {
-          var Dispatcher = createDispatcher();
-          appendDispatcher(Dispatcher);
-        }
 
         var bindOthers = function bindOthers(bindTarget) {
           bindToWindow$1('CC_CONTEXT', ccContext, bindTarget);
