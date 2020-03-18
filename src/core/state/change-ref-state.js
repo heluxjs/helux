@@ -243,6 +243,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
 
   belongRefKeys.forEach(refKey => {
     const ref = ccUKey_ref_[refKey];
+    if (!ref) return;
     const refUKey = ref.ctx.ccUniqueKey;
 
     if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
@@ -253,7 +254,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   const prevModuleState = getPrevState(moduleName);
   connectRefKeys.forEach(refKey => {
     const ref = ccUKey_ref_[refKey];
-
+    if (!ref) return;
     if (ref.__$$isUnmounted !== true) {
       const refCtx = ref.ctx;
       computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
