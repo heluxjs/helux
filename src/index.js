@@ -61,7 +61,8 @@ export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
 
-let sortFactor = 1;
+// 假设用户直接定义的computed函数不超过1000个，让def***定义的computed函数全部在直接定义的computed函数执行后再执行
+let sortFactor = 1000;
 export const defComputed = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, sort: (sort || sortFactor++) });
 export const defLazyComputed = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, lazy: true, sort: (sort || sortFactor++) });
 export const defComputedVal = (val, compare = true, sort) => ({ fn: () => val, depKeys: [], compare, sort: (sort || sortFactor++) });

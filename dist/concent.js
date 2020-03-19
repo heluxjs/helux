@@ -1187,18 +1187,16 @@
             var computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, obInitNewState, obInitNewState, fnCtx); // 记录计算结果
 
             computedContainer[retKey] = makeCuObValue(false, computedValueOrRet); // 当前cuRetKey的函数里读取了其他cuRetKey时需要更新依赖
+            // 以便能够正确触发computed函数
 
-            if (needCollectDep) {
-              // 更新当前cuRetKey的依赖，以便能够正确触发computed函数
-              setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys); // 在computed里读取cuVal里的其他retKey结果, 要将这些retKey对应的stateKeys写到目标retKey的依赖列表上，
-              // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
+            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys); // 在computed里读取cuVal里的其他retKey结果, 要将这些retKey对应的stateKeys写到目标retKey的依赖列表上，
+            // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
 
-              setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
-              collectedCuRetKeys.forEach(function (referCuRetKey) {
-                var reKeys = safeGetArray(cuRetKey_referredByCuRetKeys_, referCuRetKey);
-                if (!reKeys.includes(retKey)) reKeys.push(retKey);
-              });
-            }
+            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
+            collectedCuRetKeys.forEach(function (referCuRetKey) {
+              var reKeys = safeGetArray(cuRetKey_referredByCuRetKeys_, referCuRetKey);
+              if (!reKeys.includes(retKey)) reKeys.push(retKey);
+            });
           } else {
             if (isLazy) {
               var _getCuWaParams2 = getCuWaParams(retKey, depKeys, initNewState, oldState),
@@ -1595,7 +1593,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.15',
+      version: '2.3.16',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2166,7 +2164,7 @@
 
     var defaultCompare = confMeta.type === 'computed' ? computedCompare : watchCompare;
     var callerModule = confMeta.module;
-    okeys(descObj).forEach(function (retKey) {
+    okeys(descObj).forEach(function (retKey, idx) {
       var val = descObj[retKey];
       var vType = typeof val;
       var targetItem = val;
@@ -2178,7 +2176,7 @@
       }
 
       if (isPJO(targetItem)) {
-        // 默认自动收集
+        // depKeys设置为默认自动收集
         var _targetItem = targetItem,
             fn = _targetItem.fn,
             _targetItem$depKeys = _targetItem.depKeys,
@@ -2187,8 +2185,13 @@
             immediate = _targetItem$immediate === void 0 ? watchImmediate : _targetItem$immediate,
             _targetItem$compare = _targetItem.compare,
             compare = _targetItem$compare === void 0 ? defaultCompare : _targetItem$compare,
-            lazy = _targetItem.lazy,
-            sort = _targetItem.sort;
+            lazy = _targetItem.lazy; // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
+        // !!!注意在一个文件里即写defComputed又写普通函数，这两类计算函数各自的执行顺序是和书写顺序一致的，
+        // 在自定义函数不超过一千个时，它们在一起时的执行顺序是总是执行完毕自定义函数再执行defComputed定义函数
+        // 超过一千个时，它们在一起时的执行顺序是不被保证的
+
+        var sort = targetItem.sort || confMeta.sort || idx; // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
+
         var fnUid = uuid('mark');
 
         if (depKeys === '*' || depKeys === '-') {
@@ -2296,14 +2299,13 @@
     var retKey_fn_ = moduleDepDesc.retKey_fn_,
         stateKey_retKeys_ = moduleDepDesc.stateKey_retKeys_,
         retKey_lazy_ = moduleDepDesc.retKey_lazy_,
-        retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_; // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
-
+        retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_;
     var fnDesc = {
       fn: fn,
       immediate: immediate,
       compare: compare,
       depKeys: depKeys,
-      sort: sort || confMeta.sort
+      sort: sort
     }; // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
 
     if (retKey_fn_[retKey]) {
@@ -2456,7 +2458,6 @@
     rootComputedRaw[module] = computed;
     var moduleState = rootState[module];
     configureDepFns(CATE_MODULE, {
-      sort: 0,
       type: FN_CU,
       module: module,
       stateKeys: okeys(moduleState),
@@ -7523,8 +7524,9 @@
   var CcFragment$1 = CcFragment;
   var cst = _cst;
   var appendState$1 = appendState;
-  var useConcent$1 = useConcent;
-  var sortFactor$1 = 1;
+  var useConcent$1 = useConcent; // 假设用户直接定义的computed函数不超过1000个，让def***定义的computed函数全部在直接定义的computed函数执行后再执行
+
+  var sortFactor$1 = 1000;
   var defComputed = function defComputed(fn, depKeys, compare, sort) {
     return {
       fn: fn,

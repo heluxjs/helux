@@ -24,19 +24,20 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
   const rootWatchDep = watch.getRootWatchDep();
   const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
 
-  const refModule = ref ? ref.ctx.module : null;
+  const callerRef = ref || getDispatcher();
+  const refModule = callerRef.module;
   const newState = Object.assign({}, moduleState, committedState);
 
   const deltaCommittedState = Object.assign({}, committedState);
   let stateForComputeFn = deltaCommittedState;
 
   findDepFnsToExecute(
-    ref, module, refModule, moduleState, curDepComputedFns,
+    callerRef, module, refModule, moduleState, curDepComputedFns,
     stateForComputeFn, newState, deltaCommittedState, callInfo, false,
     'computed', CATE_MODULE, moduleComputedValue,
   );
   findDepFnsToExecute(
-    ref, module, refModule, moduleState, curDepWatchFns,
+    callerRef, module, refModule, moduleState, curDepWatchFns,
     stateForComputeFn, newState, deltaCommittedState, callInfo, false,
     'watch', CATE_MODULE, moduleComputedValue,
   );
@@ -224,7 +225,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.3.15',
+    version: '2.3.16',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

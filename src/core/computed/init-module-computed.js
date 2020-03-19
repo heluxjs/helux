@@ -27,7 +27,7 @@ export default function (module, computed) {
 
   rootComputedRaw[module] = computed;
   const moduleState = rootState[module];
-  configureDepFns(CATE_MODULE, { sort: 0, type: FN_CU, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
+  configureDepFns(CATE_MODULE, { type: FN_CU, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
 
   const d = ccContext.getDispatcher();
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);

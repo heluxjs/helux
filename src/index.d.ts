@@ -71,7 +71,7 @@ export interface IAnyFnInObj { [key: string]: IAnyFn }
 
 interface IComputedFnDesc<Fn extends typeof computedFn> {
   fn: Fn;
-  sort: number;
+  sort?: number;
   compare?: boolean;
   depKeys?: string[];
 }
@@ -79,20 +79,20 @@ interface IComputedFnDesc<Fn extends typeof computedFn> {
 interface ILazyComputedFnDesc<Fn extends typeof lazyComputedFn> {
   fn: Fn;
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
-  sort: number;
+  sort?: number;
   compare?: boolean;
   depKeys?: string[];
 }
 interface IComputedFnSimpleDesc {
   fn: IAnyFn;
-  sort: number;
+  sort?: number;
   compare?: boolean;
   depKeys?: string[];
 }
 interface ILazyComputedFnSimpleDesc{
   fn: IAnyFn;
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
-  sort: number;
+  sort?: number;
   compare?: boolean;
   depKeys?: string[];
 }
@@ -1132,18 +1132,20 @@ export function appendState(moduleName: string, state: IAnyObj): void;
 export function defComputedVal<CuRet>(ret: CuRet, compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
-(fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): IComputedFnDesc<GetComputedFn<CuRet>>;
 export function defComputed<CuRet>
-(fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 export function defLazyComputed<V extends IAnyObj, CuRet, F extends ILazyFnCtxBase = ILazyFnCtxBase>
-(fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
 export function defLazyComputed<CuRet>
-(fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: ILazyFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: ILazyFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
 
-export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean): WatchFnDesc;
+export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
+  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean, sort?: number): WatchFnDesc;
 
-export function defWatchImmediate<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>(fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean): WatchFnDesc;
+export function defWatchImmediate<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
+  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, sort?: number): WatchFnDesc;
 
 export declare const cst: CcCst;
 

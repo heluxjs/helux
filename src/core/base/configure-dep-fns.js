@@ -73,7 +73,7 @@ function _parseDescObj(cate, confMeta, descObj) {
   const defaultCompare = confMeta.type === 'computed' ? computedCompare : watchCompare;
   const callerModule = confMeta.module;
 
-  okeys(descObj).forEach(retKey => {
+  okeys(descObj).forEach((retKey, idx) => {
     const val = descObj[retKey];
     const vType = typeof val;
 
@@ -83,8 +83,15 @@ function _parseDescObj(cate, confMeta, descObj) {
     }
 
     if (isPJO(targetItem)) {
-      // 默认自动收集
-      const { fn, depKeys = '-', immediate = watchImmediate, compare = defaultCompare, lazy, sort } = targetItem;
+      // depKeys设置为默认自动收集
+      const { fn, depKeys = '-', immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
+      // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
+      // !!!注意在一个文件里即写defComputed又写普通函数，这两类计算函数各自的执行顺序是和书写顺序一致的，
+      // 在自定义函数不超过一千个时，它们在一起时的执行顺序是总是执行完毕自定义函数再执行defComputed定义函数
+      // 超过一千个时，它们在一起时的执行顺序是不被保证的
+      const sort = targetItem.sort || confMeta.sort || idx;
+      // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
+
       const fnUid = uuid('mark');
 
       if (depKeys === '*' || depKeys === '-') {
@@ -167,8 +174,7 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
   const { retKey_fn_, stateKey_retKeys_, retKey_lazy_, retKey_stateKeys_ } = moduleDepDesc;
   
-// if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
-  const fnDesc = { fn, immediate, compare, depKeys, sort: sort || confMeta.sort };
+  const fnDesc = { fn, immediate, compare, depKeys, sort };
   // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
   if (retKey_fn_[retKey]) {
     if (cate !== CATE_REF) {// 因为热加载，对于module computed 定义总是赋值最新的，
