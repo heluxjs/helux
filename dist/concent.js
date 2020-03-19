@@ -1402,12 +1402,13 @@
       return pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
     };
 
-    var refModule = ref ? ref.ctx.module : null;
+    var callerRef = ref || getDispatcher();
+    var refModule = callerRef.module;
     var newState = Object.assign({}, moduleState, committedState);
     var deltaCommittedState = Object.assign({}, committedState);
     var stateForComputeFn = deltaCommittedState;
-    findDepFnsToExecute(ref, module, refModule, moduleState, curDepComputedFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
-    findDepFnsToExecute(ref, module, refModule, moduleState, curDepWatchFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
+    findDepFnsToExecute(callerRef, module, refModule, moduleState, curDepComputedFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
+    findDepFnsToExecute(callerRef, module, refModule, moduleState, curDepWatchFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
 
     if (!noSave) {
       saveSharedState(module, deltaCommittedState);
@@ -1593,7 +1594,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.16',
+      version: '2.3.17',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
