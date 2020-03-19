@@ -154,19 +154,17 @@ export default (
           computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
 
           // 当前cuRetKey的函数里读取了其他cuRetKey时需要更新依赖
-          if (needCollectDep) {
-            // 更新当前cuRetKey的依赖，以便能够正确触发computed函数
-            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys);
+          // 以便能够正确触发computed函数
+          setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys);
 
-            // 在computed里读取cuVal里的其他retKey结果, 要将这些retKey对应的stateKeys写到目标retKey的依赖列表上，
-            // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
-            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
+          // 在computed里读取cuVal里的其他retKey结果, 要将这些retKey对应的stateKeys写到目标retKey的依赖列表上，
+          // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
+          setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
 
-            collectedCuRetKeys.forEach(referCuRetKey => {
-              const reKeys = safeGetArray(cuRetKey_referredByCuRetKeys_, referCuRetKey);
-              if (!reKeys.includes(retKey)) reKeys.push(retKey);
-            })
-          }
+          collectedCuRetKeys.forEach(referCuRetKey => {
+            const reKeys = safeGetArray(cuRetKey_referredByCuRetKeys_, referCuRetKey);
+            if (!reKeys.includes(retKey)) reKeys.push(retKey);
+          })
         } else {
           if (isLazy) {
             const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
