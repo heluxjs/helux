@@ -91,10 +91,11 @@ export default function (
   if (Array.isArray(connect)) {
     _connect = {};
     connect.forEach(m => _connect[m] = '-');//标识自动收集观察依赖
-  } 
+  }
+
   // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
-  else if (!connect[MODULE_GLOBAL]) {
-    connect[MODULE_GLOBAL] = '-';
+  if (module !== MODULE_GLOBAL && !_connect[MODULE_GLOBAL]) {
+    _connect[MODULE_GLOBAL] = '-';
   }
 
   const _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);

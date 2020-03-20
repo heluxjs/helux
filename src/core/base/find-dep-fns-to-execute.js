@@ -1,36 +1,30 @@
 import { makeCommitHandler, okeys, justWarning, makeCuObValue, safeGet, safeGetArray } from '../../support/util';
-import { FN_WATCH, CATE_REF, FN_CU } from '../../support/constant';
+import { FN_WATCH, CATE_REF, FN_CU, CATE_MODULE } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import makeCuObState from '../computed/make-cu-ob-state';
 import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
 import cuMap from '../../cc-context/computed-map';
 import waMap from '../../cc-context/watch-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
+import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 import runtimeVar from '../../cc-context/runtime-var';
 
 // 记录某个计算retKey，被其他哪些计算retKey引用过
 // 方便watch里更新了这个retKey的依赖是，查找这些引用过这个retKey的其他retKey列表，并更新它们的依赖列表
-let cuRetKey_referredByCuRetKeys_ = {};
+let modCuRetKey_referredByCuRetKeys_ = {};
+let refCuRetKey_referredByCuRetKeys_ = {};
 
-function getCuRefer() {
-  return cuRetKey_referredByCuRetKeys_;
+function getCuRefer(sourceType, module, ccUniqueKey) {
+  if (sourceType == CATE_MODULE) {
+    return safeGet(modCuRetKey_referredByCuRetKeys_, module);
+  } else {
+    return safeGet(refCuRetKey_referredByCuRetKeys_, ccUniqueKey);
+  }
 }
 
 export function clearCuRefer() {
-  cuRetKey_referredByCuRetKeys_ = {};
-}
-
-function getCuWaParams(retKey, depKeys, newState, oldState) {
-  if (runtimeVar.alwaysGiveState) {
-    return [newState, oldState];
-  } else {
-    const firstDepKey = depKeys[0];
-    if (depKeys.length === 1 && firstDepKey !== '*' && firstDepKey === retKey) {
-      return [newState[firstDepKey], oldState[firstDepKey]];
-    } else {
-      return [newState, oldState];
-    }
-  }
+  modCuRetKey_referredByCuRetKeys_ = {};
+  refCuRetKey_referredByCuRetKeys_ = {};
 }
 
 function getStateKeyRetKeysMap(refCtx, sourceType, stateModule) {
@@ -87,11 +81,6 @@ function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, 
   }
 }
 
-function executeCuOrWatch(retKey, depKeys, fn, newState, oldState, fnCtx) {
-  const [n, o] = getCuWaParams(retKey, depKeys, newState, oldState);
-  return fn(n, o, fnCtx);
-}
-
 // fnType: computed watch
 // sourceType: module ref
 export default (
@@ -100,6 +89,8 @@ export default (
   fnType, sourceType, computedContainer,
 ) => {
   const refCtx = ref.ctx;
+  const ccUniqueKey = refCtx ? refCtx.ccUniqueKey : '';
+
   let whileCount = 0;
   let curStateForComputeFn = stateForComputeFn;
   let shouldCurrentRefUpdate = true;
@@ -117,11 +108,13 @@ export default (
     const { commit: commitCu, getFnCommittedState: getRetKeyCu, clear: clearCu } = makeCommitHandler();
 
     pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
-      const cuRetKey_referredByCuRetKeys_ = getCuRefer();
+      const cuRetKey_referredByCuRetKeys_ = getCuRefer(sourceType, stateModule, ccUniqueKey);
 
       const fnCtx = {
-        // 注意这里的computedContainer只是一个计算结果收集容器，没有收集依赖行为
-        retKey, callInfo, isFirstCall, commit, commitCu, setted, changed, cuVal: computedContainer,
+        retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
+        // 在sourceType为module时 
+        // 这里的computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
+        cuVal: computedContainer,
         stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
       };
       
@@ -133,10 +126,11 @@ export default (
       // 读取newState时，记录stateKeys，用于辅助下面计算依赖
       const collectedDepKeys = [];
 
-      // 注：只有immediate为true的watch才有机会执行此判断结构为true并收集到依赖
+      // 对于computed，首次计算时会替换为obContainer用于收集依赖
+      // !!!对于watch，immediate为true才有机会替换为obContainer收集到依赖
       if (needCollectDep) {
         // 替换cuVal，以便动态的收集到computed&watch函数里读取cuVal时计算相关依赖
-        fnCtx.cuVal = getSimpleObContainer(stateModule, collectedCuRetKeys);
+        fnCtx.cuVal = getSimpleObContainer(sourceType, stateModule, refCtx, collectedCuRetKeys);
       }
 
       if (fnType === 'computed') {
@@ -149,7 +143,7 @@ export default (
         if (needCollectDep) {
           const obInitNewState = makeCuObState(initNewState, collectedDepKeys);
           // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
-          const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, obInitNewState, obInitNewState, fnCtx);
+          const computedValueOrRet = fn(obInitNewState, obInitNewState, fnCtx);
           // 记录计算结果
           computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
 
@@ -167,10 +161,9 @@ export default (
           })
         } else {
           if (isLazy) {
-            const [n, o] = getCuWaParams(retKey, depKeys, initNewState, oldState);
-            computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, n, o, fnCtx);
+            computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
           } else {
-            const computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, initNewState, oldState, fnCtx);
+            const computedValueOrRet = fn(initNewState, oldState, fnCtx);
             computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
           }
         }
@@ -186,7 +179,8 @@ export default (
           tmpOldState = tmpInitNewState;
         }
 
-        computedValueOrRet = executeCuOrWatch(retKey, depKeys, fn, tmpInitNewState, tmpOldState, fnCtx);
+        computedValueOrRet = fn(tmpInitNewState, tmpOldState, fnCtx);
+
         //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
         if (computedValueOrRet === false) shouldCurrentRefUpdate = false;
 
@@ -194,39 +188,49 @@ export default (
         if (needCollectDep) {
           // 在watch里读取了newState的stateKey，需要将其记录到当前watch retKey的依赖列表上，以便watch能够被正确触发
           setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, collectedDepKeys);
-          // 在watch里读取了cuVal里的retKey结果，要将这些retKey对应的stateKey依赖到当前watch retKey的依赖列表上，
+          // 在watch里读取了cuVal里的retKey结果，要将这些retKey对应的stateKey依赖附加到当前watch retKey的依赖列表上，
           // 以便能够在相应stateKey值改变时，能够正确命中watch函数
           setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, collectedCuRetKeys, false);
+
+          // refWatch 里收集的到depKeys要记录为ref的静态依赖
+          if (sourceType === CATE_REF) {
+            collectedDepKeys.forEach(key => refCtx.__$$staticWaKeys[makeWaKey(stateModule, key)] = 1);
+            // 注：refWatch直接调用了moduleComputed 或者 connectedComputed时也收集到了依赖
+            // 逻辑在updateDep里判断__$$isBM来确定是不是首次触发
+          }
+
         }
 
         // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
         // 对于实例里的computed回调里调用committedCu来说，是refComputed结果容器
         // 每一个retKey返回的committedCu都及时处理掉，因为下面setStateKeyRetKeysMap需要对此时的retKey写依赖
         const committedCu = getRetKeyCu();
+        
         if (committedCu) {
           let retKey_fn_;
+
+          // 始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
           if (sourceType === 'ref') {
-            retKey_fn_ = fnType === 'computed' ? refCtx.computedRetKeyFns : refCtx.watchRetKeyFns;
+            retKey_fn_ = refCtx.computedRetKeyFns;
           } else {
-            // commitCu提交的结果是存到moduleComputed里的，所以这里从始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
-            let moduleDep = cuMap.getRootComputedDep()[stateModule] || {};
-            retKey_fn_ = moduleDep.retKey_fn_ || null;
+            let moduleDep = cuMap._computedDep[stateModule] || {};
+            retKey_fn_ = moduleDep.retKey_fn_ || {};
           }
 
-          if (retKey_fn_) {
-            okeys(committedCu).forEach(cuRetKey => {
-              if (!retKey_fn_[cuRetKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${cuRetKey}] for moduleComputed`);
-              // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
-              else {
-                computedContainer[cuRetKey] = makeCuObValue(false, committedCu[cuRetKey]);
+          okeys(committedCu).forEach(cuRetKey => {
+            // 模块计算函数里调用committedCu只能修改模块计算结果
+            // 实例计算函数里调用committedCu只能修改实例计算结果
+            if (!retKey_fn_[cuRetKey]) justWarning(`fnCtx.commitCu commit an invalid retKey[${cuRetKey}] for ${sourceType}Computed`);
+            // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
+            else {
+              computedContainer[cuRetKey] = makeCuObValue(false, committedCu[cuRetKey]);
 
-                if (needCollectDep) {
-                  // 等待处理依赖关系的cuRetKey
-                  if (!collectedCuRetKeys.includes(cuRetKey)) collectedCuRetKeys.push(cuRetKey);
-                }
+              if (needCollectDep) {
+                // 等待处理依赖关系的cuRetKey
+                if (!collectedCuRetKeys.includes(cuRetKey)) collectedCuRetKeys.push(cuRetKey);
               }
-            });
-          }
+            }
+          });
 
           clearCu();
         }
@@ -234,12 +238,12 @@ export default (
         // 当前waRetKey的函数里读取了其他cuRetKey时需要更新依赖
         if (needCollectDep) {
           collectedCuRetKeys.forEach(cuRetKey => {
-            // 在watch里读取了newState的stateKey，需要将其记录到结算结果cuRetKey的依赖列表上，
+            // 在watch里读取了newState的stateKey，需要将其记录到计算结果cuRetKey的依赖列表上，
             // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
             setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, cuRetKey, collectedDepKeys);
 
             // 在watch里读取cuVal里的retKey结果, 要将这些retKey对应的stateKeys写到目标cuRetKey的依赖列表上，
-            // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
+            // 以便实例里moduleComputed.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
             setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, cuRetKey, collectedCuRetKeys, false);
 
             const referredByCuRetKeys = cuRetKey_referredByCuRetKeys_[cuRetKey] || [];

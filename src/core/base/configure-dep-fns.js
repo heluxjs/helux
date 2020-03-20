@@ -1,6 +1,10 @@
-import { okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO, justWarning, makeCuDepDesc } from '../../support/util';
-import { ERR, CATE_REF } from '../../support/constant';
+import {
+  okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO, justWarning,
+  makeCuDepDesc, safeGetThenNoDupPush,
+} from '../../support/util';
+import { ERR, CATE_REF, FN_CU } from '../../support/constant';
 import ccContext from '../../cc-context';
+import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 import uuid from './uuid';
 
 const { moduleName_stateKeys_, runtimeVar } = ccContext;
@@ -40,7 +44,7 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
   const ctx = confMeta.refCtx;
   const type = confMeta.type;
   if (cate === CATE_REF) {
-    if (!ctx.__$$isBSe) {
+    if (!ctx.__$$inBM) {
       justWarning(`${cate} ${type} must be been called in setup block`);
       return;
     }
@@ -95,34 +99,33 @@ function _parseDescObj(cate, confMeta, descObj) {
       const fnUid = uuid('mark');
 
       if (depKeys === '*' || depKeys === '-') {
-        const { stateKey } = _resolveStateKey(confMeta, callerModule, retKey);
-        _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
-        // when retKey is '/xxxx', here need pass xxxx to pass stateKey as retKey
-        _mapDepDesc(cate, confMeta, callerModule, stateKey, fn, depKeys, immediate, compare, lazy, sort);
+        const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey);
+        _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+        // when retKey is '/xxxx', here need pass xxxx as retKey
+        _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
       } else {// ['foo/b1', 'bar/b1'] or null or undefined
         if (depKeys && !Array.isArray(depKeys)) throw new Error('depKeys must an string array or *');
 
         if (!depKeys || depKeys.length === 0) {
-          const { isStateKey, stateKey, module } = _resolveStateKey(confMeta, callerModule, retKey); //consume retKey is stateKey
+          const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, retKey); //consume retKey is stateKey
           let targetDepKeys = [];
           if (!depKeys && isStateKey) {
-            targetDepKeys = [stateKey];// regenerate depKeys
+            targetDepKeys = [pureKey];// regenerate depKeys
           }
-          _checkRetKeyDup(cate, confMeta, fnUid, stateKey);
-          _mapDepDesc(cate, confMeta, module, stateKey, fn, targetDepKeys, immediate, compare, lazy, sort);
+          _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+          _mapDepDesc(cate, confMeta, module, pureKey, fn, targetDepKeys, immediate, compare, lazy, sort);
         } else {
-          let stateKeyModule = '', targetRetKey = retKey;
-          if (retKey.includes('/')) {
-            const [m, r] = retKey.split('/');
-            stateKeyModule = m;
-            targetRetKey = r;
-          }
-          _checkRetKeyDup(cate, confMeta, fnUid, targetRetKey);
+          const { pureKey, moduleOfKey } = _resolveKey(confMeta, callerModule, retKey);
+          const stateKeyModule = moduleOfKey;
+          _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
 
-          // 给depKeys按module分类，此时它们都指向同一个retKey，同一个fn
+          // 给depKeys按module分类，此时它们都指向同一个retKey，同一个fn，但是会被分配ctx.computedDep或者watchDep的不同映射里
           const module_depKeys_ = {};
+          // ['foo/b1', 'bar/b1']
           depKeys.forEach(depKey => {
-            const { isStateKey, stateKey, module } = _resolveStateKey(confMeta, callerModule, depKey); //consume depKey is stateKey
+            // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为
+            // 映射同名依赖仅发生在传入retKey的时候
+            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey, false); //consume depKey is stateKey
 
             // ok: retKey: 'xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2'], some stateKey belong to foo, some belong to bar
             // ok: retKey: 'foo/xxxx' depKeys:['f1', 'f2'], all stateKey belong to foo
@@ -136,14 +139,19 @@ function _parseDescObj(cate, confMeta, descObj) {
             }
             const depKeys = safeGetArray(module_depKeys_, module);
             if (!isStateKey) {
-              throw new Error(`depKey[${depKey}] invalid, module[${module}] doesn't include its stateKey[${stateKey}]`);
+              throw new Error(`depKey[${depKey}] invalid, module[${module}] doesn't include its stateKey[${pureKey}]`);
+            }else{
+              // 当一个实例里 ctx.computed ctx.watch 的depKeys里显示的标记了依赖时
+              // 在这里需要立即记录依赖了
+              _mapIns(confMeta, module, pureKey);
             }
-            depKeys.push(stateKey);
+
+            depKeys.push(pureKey);
           });
 
           okeys(module_depKeys_).forEach(m => {
             // 指向同一个fn，允许重复
-            _mapDepDesc(cate, confMeta, m, targetRetKey, fn, module_depKeys_[m], immediate, compare, lazy, sort);
+            _mapDepDesc(cate, confMeta, m, pureKey, fn, module_depKeys_[m], immediate, compare, lazy, sort);
           });
         }
       }
@@ -168,12 +176,37 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
   }
 }
 
-// 映射依赖描述对象
+function _mapSameNameRetKey(confMeta, module, retKey, isModuleStateKey) {
+  const dep = confMeta.dep;
+  const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
+  const { stateKey_retKeys_, retKey_stateKeys_ } = moduleDepDesc;
+  
+  // !!!由实例调用computed或者watch，监听同名的retKey，这一刻就要更新 stateKey与retKey的关系映射
+  if (
+    (confMeta.type === FN_CU && runtimeVar.computedRetKeyDep) ||
+    runtimeVar.watchRetKeyDep
+    ) {
+      safeGetThenNoDupPush(stateKey_retKeys_, retKey, retKey);
+      safeGetThenNoDupPush(retKey_stateKeys_, retKey, retKey);
+    }
+    
+  // 记录依赖
+  isModuleStateKey && _mapIns(confMeta, module, retKey)
+}
+
+function _mapIns(confMeta, module, retKey) {
+  const ctx = confMeta.refCtx;
+  if (ctx) {
+    ctx.__$$staticWaKeys[makeWaKey(module, retKey)] = 1;
+  }
+}
+
+// 映射依赖描述对象, module即是取的dep里的key
 function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy, sort) {
   const dep = confMeta.dep;
   const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
   const { retKey_fn_, stateKey_retKeys_, retKey_lazy_, retKey_stateKeys_ } = moduleDepDesc;
-  
+
   const fnDesc = { fn, immediate, compare, depKeys, sort };
   // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
   if (retKey_fn_[retKey]) {
@@ -197,45 +230,54 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
     if (confMeta.type === 'computed') refCtx.hasComputedFn = true;
     else refCtx.hasWatchFn = true;
   }
-  
-  //处于自动收集依赖状态，首次计算完之后再去写stateKey_retKeys_, retKey_stateKeys_
+
+  //处于自动收集依赖状态，首次遍历完计算函数后之后再去写stateKey_retKeys_, retKey_stateKeys_
   // in find-dep-fns-to-execute.js setStateKeyRetKeysMap
   if (depKeys === '-') return;
 
   let _depKeys = depKeys === '*' ? ['*'] : depKeys;
-
   if (depKeys === '*') retKey_stateKeys_[retKey] = moduleName_stateKeys_[module];
 
   _depKeys.forEach(sKey => {
     //一个依赖key列表里的stateKey会对应着多个结果key
-    const retKeys = safeGetArray(stateKey_retKeys_, sKey);
-    if (!retKeys.includes(retKey)) retKeys.push(retKey);
+    safeGetThenNoDupPush(stateKey_retKeys_, sKey, retKey);
   });
 }
 
+// 分析retKey或者depKey是不是stateKey,
+// 返回的是净化后的key
+function _resolveKey(confMeta, module, retKey, mapSameName = true) {
+  let targetModule = module, targetRetKey = retKey, moduleOfKey = '';
 
-function _resolveStateKey(confMeta, module, stateKey) {
-  let targetModule = module, targetStateKey = stateKey;
-  if (stateKey.includes('/')) {
-    const [_module, _stateKey] = stateKey.split('/');
-    if (_module) targetModule = _module; // '/name' 支持这种申明方式
-    targetStateKey = _stateKey;
+  if (retKey.includes('/')) {
+    const [_module, _stateKey] = retKey.split('/');
+    if (_module) {
+      moduleOfKey = _module;
+      targetModule = _module; // '/name' 支持这种申明方式
+    }
+    targetRetKey = _stateKey;
   }
 
   let stateKeys;
+  const moduleStateKeys = moduleName_stateKeys_[targetModule];
   if (targetModule === confMeta.module) {
     // 此时computed & watch观察的是对象的所有stateKeys
     stateKeys = confMeta.stateKeys;
   } else {
     // 对于属于bar的ref 配置key 'foo/a'时，会走入到此块
-    stateKeys = moduleName_stateKeys_[targetModule];
+    stateKeys = moduleStateKeys;
     if (!stateKeys) {
       throw makeError(ERR.CC_MODULE_NOT_FOUND, verboseInfo(`module[${targetModule}]`));
     }
     if (!confMeta.connect[targetModule]) {
-      throw makeError(ERR.CC_MODULE_NOT_CONNECTED, verboseInfo(`module[${targetModule}], stateKey[${targetStateKey}]`));
+      throw makeError(ERR.CC_MODULE_NOT_CONNECTED, verboseInfo(`module[${targetModule}], retKey[${targetRetKey}]`));
     }
-  } 
+  }
 
-  return { isStateKey: stateKeys.includes(targetStateKey), stateKey: targetStateKey, module: targetModule };
+  const isStateKey = stateKeys.includes(targetRetKey);
+  if (mapSameName && isStateKey) {
+    _mapSameNameRetKey(confMeta, targetModule, targetRetKey, moduleStateKeys.includes(targetRetKey));
+  }
+
+  return { isStateKey, pureKey: targetRetKey, module: targetModule, moduleOfKey };
 }

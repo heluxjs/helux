@@ -56,8 +56,15 @@ export function makeCuObValue(isLazy, result, needCompute, fn, newState, oldStat
   return { [CU_KEY]: 1, needCompute, fn, newState, oldState, fnCtx, isLazy, result };
 }
 
-export function makeCuDepDesc(){
-  return { retKey_fn_: {}, retKey_lazy_:{}, stateKey_retKeys_: {}, retKey_stateKeys_:{}, fnCount: 0 };
+export function makeCuDepDesc() {
+  return {
+    retKey_fn_: {},
+    retKey_lazy_: {},
+    stateKey_retKeys_: {},
+    // 用于辅助依赖收集系统更新依赖之用，render逻辑书写 refCompute.*** moduleCompted.*** connectedCompute.yy.** 时触发
+    retKey_stateKeys_: {},
+    fnCount: 0
+  };
 }
 
 /** make ccClassContext */
@@ -170,6 +177,15 @@ export function safeGet(object, key, defaultVal = {}) {
 
 export function safeGetArray(object, key) {
   return safeGet(object, key, []);
+}
+
+export function noDupPush(arr, strItem) {
+  if (!arr.includes(strItem)) arr.push(strItem);
+}
+
+export function safeGetThenNoDupPush(object, key, strItem) {
+  const arr = safeGetArray(object, key);
+  noDupPush(arr, strItem)
 }
 
 export function safeAssignObjectValue(assignTo, assignFrom) {

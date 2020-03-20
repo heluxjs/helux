@@ -1,6 +1,8 @@
 import * as util from '../../support/util';
+import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
+
 
 const okeys = util.okeys;
 
@@ -19,10 +21,9 @@ export default function (ref) {
   //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
   ref.__$$isUnmounted = true;
   const ctx = ref.ctx;
-  const { ccUniqueKey, ccClassKey, renderKey } = ctx;
+  const { ccUniqueKey, ccClassKey, renderKey, module, __$$staticWaKeyList } = ctx;
 
-  // 配合startup里tryClearShadowRef逻辑，正常情况下只有挂载了组件才会有effect等相关定义
-  // shawRef的卸载可能会走到这里
+  // 正常情况下只有挂载了组件才会有effect等相关定义
   if (ref.__$$isMounted) {
     const { eid_effectReturnCb_, eid_effectPropsReturnCb_ } = ctx.effectMeta;
   
@@ -31,5 +32,19 @@ export default function (ref) {
   
     ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
   }
+
+
+  // 删除记录的动态依赖
+  const waKeys = ctx.getWatchedKeys();// no module prefix
+  waKeys.forEach(k => delIns(module, k, ccUniqueKey));
+  const connWaKeys = ctx.getConnectWatchedKeys();
+  util.okeys(connWaKeys).map(m => {
+    const waKeys = connWaKeys[m];
+    waKeys.forEach(k => delIns(m, k, ccUniqueKey));
+  })
+
+  // 删除记录的静态依赖
+  __$$staticWaKeyList.forEach(modStateKey => delStaticInsM(modStateKey, ccUniqueKey));
+
   unsetRef(ccClassKey, ccUniqueKey, renderKey);
 }

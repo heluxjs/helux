@@ -33,7 +33,7 @@ import { getRegisterOptions } from '../support/util';
  *        this.props.$$dispatch('form/getInitData');
  *      }
  *      render(){
- *        const {regularFormSubmitting} = this.props.$$connectedState.from;
+ *        const {regularFormSubmitting} = this.props.ctx.connectedState.from;
  *      }
  *    }
  * ```

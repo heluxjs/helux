@@ -1,3 +1,21 @@
+#### 2020-03-20
+2.3.18 发布
+* fix: computed&watch静态依赖未记录
+新增`waKey_staticUKeyMap_`记录静态依赖
+* feature: 支持 computed&watch 同名字段结果key自动记录静态依赖
+```js
+// for ref
+ctx.watch('name', ()=>{
+  console.log('when name changed, trigger this');
+})
+
+// for module
+export function name(){
+  console.log('when name changed, trigger this');
+}
+```
+* refactor: del StartOption.alwaysGiveState param
+
 #### 2020-03-18
 2.3.8 发布
 * fix: moduleComputed, effect 依赖未能正确更新

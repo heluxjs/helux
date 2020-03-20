@@ -13,8 +13,8 @@ export default function (ref, setup, bindCtxToMethod) {
   ref.__$$isUnmounted = false;// false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
   ref.__$$isMounted = false;// 未挂载，在didMount时机才置为true，表示已挂载
 
-  // flag before setup
-  ctx.__$$isBSe = true;
+  // flag is in before mount setup
+  ctx.__$$inBM = true;
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
@@ -33,13 +33,12 @@ export default function (ref, setup, bindCtxToMethod) {
     ctx.settings = settingsObj;
   }
 
-  // flag after setup
-  ctx.__$$isBSe = false;
-
   //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
   // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
   ctx.refComputedValue = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
   ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
-
+  
   triggerComputedAndWatch(ref);
+
+  ctx.__$$inBM = false;
 }

@@ -3,6 +3,7 @@ import {
   SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
+import { mapIns } from '../../cc-context/wakey-ukey-map';
 import * as util from '../../support/util';
 import { NOT_A_JSON, END, START } from '../../support/priv-constant';
 import * as ev from '../event';
@@ -25,7 +26,6 @@ const {
   store: { getState },
   moduleName_ccClassKeys_,
   // computed: { _computedValueOri, _computedValue },
-  waKey_uKeyMap_, waKey_effectUKeyMap_,
 } = ccContext;
 
 const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet, justWarning, isObjectNull } = util;
@@ -77,14 +77,7 @@ const getConnectWatchedKeys = (ctx, module) => {
 
 function recordDep(ccUniqueKey, module, watchedKeys) {
   const waKeys = watchedKeys === '*' ? moduleName_stateKeys_[module] : watchedKeys;
-  waKeys.forEach(waKey => {
-    const map = waKey_uKeyMap_[`${module}/${waKey}`];
-    if (map) {
-      map[ccUniqueKey] = 1;
-    } else {
-      justWarning(`invalid watchedKey[${waKey}] of module[${module}]`)
-    }
-  });
+  waKeys.forEach(stateKey => mapIns(module, stateKey, ccUniqueKey));
 }
 
 //调用buildFragmentRefCtx 之前，props参数已被处理过
@@ -102,6 +95,7 @@ export default function (ref, params, liteLevel = 5) {
   const stateModule = module;
   const existedCtx = ref.ctx;
   const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
+  const modStateKeys = moduleName_stateKeys_[stateModule];
 
   let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
 
@@ -123,7 +117,7 @@ export default function (ref, params, liteLevel = 5) {
   const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
   refOption.renderKey = ccOption.renderKey || ccUniqueKey;// 没有设定renderKey的话，默认ccUniqueKey就是renderKey
 
-  refOption.storedKeys = getStoredKeys(state, moduleName_stateKeys_[stateModule], ccOption.storedKeys, storedKeys);
+  refOption.storedKeys = getStoredKeys(state, modStateKeys, ccOption.storedKeys, storedKeys);
 
   //用户使用ccKey属性的话，必需显示的指定ccClassKey
   if (ccKey && !ccClassKey) {
@@ -148,17 +142,20 @@ export default function (ref, params, liteLevel = 5) {
   const connectedState = {};
 
   // const moduleState = getState(module);
-  const moduleState = makeObState(ref, mstate, module, true);
-
+  
   const connectedComputed = {};
   connectedModules.forEach(m => connectedComputed[m] = makeCuRefObContainer(ref, m, false));
   const moduleComputed = makeCuRefObContainer(ref, module);
   const globalComputed = makeCuRefObContainer(ref, MODULE_GLOBAL);
-
+  
   // const globalState = getState(MODULE_GLOBAL);
   const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
   // extract privStateKeys
-  const privStateKeys = util.removeArrElements(okeys(state), moduleName_stateKeys_[stateModule]);
+  const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
+
+  let moduleState;
+  if (stateModule === MODULE_GLOBAL) moduleState = globalState;
+  else moduleState = makeObState(ref, mstate, module, true);
 
   // record ccClassKey
   const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
@@ -187,7 +184,6 @@ export default function (ref, params, liteLevel = 5) {
   const forceUpdate = (reactCallback, renderKey, delay) => {
     _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
   };
-
 
   const __$$onEvents = [];
   const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}
@@ -218,7 +214,7 @@ export default function (ref, params, liteLevel = 5) {
     // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
     __$$onEvents,// 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
 
-    __$$hasModuleState: moduleName_stateKeys_[module].length > 0,
+    __$$hasModuleState: modStateKeys.length > 0,
     __$$renderStatus: END,
 
     __$$curWaKeys: {},
@@ -232,6 +228,9 @@ export default function (ref, params, liteLevel = 5) {
     __$$compareConnWaKeyCount: {},
     __$$nextCompareConnWaKeys: {},
     __$$nextCompareConnWaKeyCount: {},
+
+    __$$staticWaKeys: {},// 用于快速的去重记录
+    __$$staticWaKeyList: [],// 在实例didMount时由__$$staticWaKeys计算得出，用于辅助清理依赖映射
 
     persistStoredKeys: refOption.persistStoredKeys,
     storedKeys: refOption.storedKeys,
@@ -253,9 +252,9 @@ export default function (ref, params, liteLevel = 5) {
     staticExtra: {},// only can be assign value in setup block
 
     // computed result containers
-    refComputed: {},
-    refComputedValue: {}, // for lazy
-    refComputedOri: {},// 未代理的计算值容器
+    refComputed: {},// 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换
+    refComputedValue: {}, // 包裹了defineProperty后的结果容器
+    refComputedOri: {},// 原始的计算结果容器，在beforeMount时对refComputedValue包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
     moduleComputed,
     globalComputed,
     connectedComputed,
@@ -396,12 +395,20 @@ export default function (ref, params, liteLevel = 5) {
         moDepKeys = [];
         _depKeys.forEach(depKey => {
           let modDepKey;
-          if (depKey.includes('/')) modDepKey = depKey;
-          else modDepKey = `${stateModule}/${depKey}`;
+          if (depKey.includes('/')) {
+            modDepKey = depKey;
+            const [m] = depKey.split('/');
+            if(!ctx.connect[m]){
+              throw me(ERR.CC_MODULE_NOT_CONNECTED, vbi(`depKey[${depKey}]`));
+            }
+          }else{
+            modDepKey = `${stateModule}/${depKey}`
+          }
 
           moDepKeys.push(modDepKey);
-          const map = safeGet(waKey_effectUKeyMap_, modDepKey);
-          map[ccUniqueKey] = 1;
+
+          // 先暂时保持起来，组件挂载时才映射依赖
+          ctx.__$$staticWaKeys[modDepKey] = 1;
         });
       }
       // 对于effectProps来说是不会读取compare属性来用的
@@ -422,7 +429,7 @@ export default function (ref, params, liteLevel = 5) {
   const allModules = connectedModules.slice();
   if (!allModules.includes(module)) allModules.push(module);
   else {
-    justWarning(`module[${module}] is in belongTo and connect both, it will cause redundant render.`);
+    justWarning(`[${ccUniqueKey}]'s module[${module}] is in belongTo and connect both, it will cause redundant render.`);
   }
 
   let __$$autoWatch = false;
@@ -448,13 +455,13 @@ export default function (ref, params, liteLevel = 5) {
         __$$nextCompareConnWaKeys[m] = {};
         __$$nextCompareConnWaKeyCount[m] = 0;
 
-        mConnectedState = makeObState(ref, mConnectedState, m);
+        if (m === MODULE_GLOBAL) mConnectedState = ctx.globalState;
+        else mConnectedState = makeObState(ref, mConnectedState, m);
       }
       // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
       else {
         recordDep(ccUniqueKey, m, connectDesc);
       }
-
       connectedState[m] = mConnectedState;
     }
 
@@ -468,15 +475,13 @@ export default function (ref, params, liteLevel = 5) {
 
   if (watchedKeys === '-') {
     __$$autoWatch = true;
-    ref.state = makeObState(ref, mergedState, module, true);
-    ctx.state = ref.state;
   } else {
-    //开始记录依赖
+    // 开始记录依赖
     recordDep(ccUniqueKey, module, watchedKeys);
   }
   ctx.__$$autoWatch = __$$autoWatch;
 
-  //始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
+  // 始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
   ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ref.ctx || ctx, module);
 

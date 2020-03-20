@@ -3,7 +3,7 @@ import ccContext from '../../cc-context';
 import * as cache from './_cache';
 
 const { okeys } = util;
-const { ccUKey_ref_, waKey_uKeyMap_, waKey_effectUKeyMap_ } = ccContext;
+const { ccUKey_ref_, waKey_uKeyMap_, waKey_staticUKeyMap_ } = ccContext;
 
 export default function (moduleName, partialSharedState, renderKey, renderKeyClasses) {
 
@@ -21,7 +21,7 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
   sharedStateKeys.forEach(stateKey => {
     const waKey = `${moduleName}/${stateKey}`;
     // 利用assign不停的去重
-    Object.assign(targetUKeyMap, waKey_uKeyMap_[waKey], waKey_effectUKeyMap_[waKey]);
+    Object.assign(targetUKeyMap, waKey_uKeyMap_[waKey], waKey_staticUKeyMap_[waKey]);
   });
   const uKeys = okeys(targetUKeyMap);
 

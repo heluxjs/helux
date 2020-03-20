@@ -5,8 +5,6 @@ import * as checker from '../checker';
 import guessDuplicate from '../base/guess-duplicate';
 import * as refCache from '../ref/_cache';
 
-const { waKey_uKeyMap_ } = ccContext;
-
 export default function (module, mState, moduleMustNotExisted = true) {
   refCache.createModuleNode(module);
   //force MODULE_VOID state as {}
@@ -25,7 +23,6 @@ export default function (module, mState, moduleMustNotExisted = true) {
   rootState[module] = state;
   prevRootState[module] = Object.assign({}, state);
   rootStateVer[module] = util.okeys(state).reduce((map, key) => {
-    waKey_uKeyMap_[`${module}/${key}`] = {};
     map[key] = 1;
     return map;
   }, {});

@@ -10,14 +10,8 @@ export default function (ref) {
   const ctx = ref.ctx;
   ctx.__$$renderStatus = START;
 
-  // 在buildRefCtx阶段已完成相关的obState注入，这里不再需要
-  if (ctx.renderCount === 1) {
-    return;
-  }
-
   // 处于收集观察依赖
   if (ctx.__$$autoWatch) {
-
     if (ctx.__$$hasModuleState) {
       //每次渲染前都将最新的模块state合进来, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
       Object.assign(ref.state, ctx.mstate);
