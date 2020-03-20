@@ -211,16 +211,16 @@ run({
     computed:{
       xxx(n){
         return n.modCount + n.modCountBak;
-      },// for yyy retKey, the depKeys is ['modCount', 'modCountBak']
+      },// for xxx computed retKey, the depKeys is ['modCount', 'modCountBak']
       yyy(n){
         return n.modCountBak;
-      },// for yyy retKey, the depKeys is ['modCountBak']
+      },// for yyy computed retKey, the depKeys is ['modCountBak']
     },
     watch:{
       xxx:{
         fn(n){
           console.log('---> trigger watch xxx', n.modCount);
-        },// for xxx retKey, the depKeys is ['modCount']
+        },// for xxx watch retKey, the depKeys is ['modCount']
         immediate: true,
       },
     }
