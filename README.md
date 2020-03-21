@@ -207,6 +207,7 @@ run({
     state:{
       modCount: 10,
       modCountBak: 100,
+      factor: 1,
     },
     computed:{
       xxx(n){
@@ -215,6 +216,9 @@ run({
       yyy(n){
         return n.modCountBak;
       },// for yyy computed retKey, the depKeys is ['modCountBak']
+      zzz(n, o, f){// n means newState, o means oldState, f means fnCtx
+        return f.cuVal.xxx + n.factor;
+      },// for zzz computed retKey, the depKeys is ['factor', 'modCount', 'modCountBak']
     },
     watch:{
       xxx:{
@@ -225,7 +229,7 @@ run({
       },
     }
   }
-};
+});
 ```
 ### ref level computed dependency collection
 ```js
@@ -269,7 +273,7 @@ class ClassComp extends React.Component{
   }
 }
 ```
-[online demo](https://codesandbox.io/s/green-tdd-g2mcr) see file `seeDepCollection.js`;
+**[edit this demo on CodeSandbox](https://codesandbox.io/s/condescending-satoshi-p5e5dr)**
 
 ## 🔨Examples with some advanced features
 - run concent，load model configuration
