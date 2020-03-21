@@ -88,7 +88,9 @@ function _parseDescObj(cate, confMeta, descObj) {
 
     if (isPJO(targetItem)) {
       // depKeys设置为默认自动收集
-      const { fn, depKeys = '-', immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
+      const { fn, immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
+      const depKeys = targetItem.depKeys || '-';
+
       // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
       // !!!注意在一个文件里即写defComputed又写普通函数，这两类计算函数各自的执行顺序是和书写顺序一致的，
       // 在自定义函数不超过一千个时，它们在一起时的执行顺序是总是执行完毕自定义函数再执行defComputed定义函数
@@ -97,9 +99,12 @@ function _parseDescObj(cate, confMeta, descObj) {
       // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
 
       const fnUid = uuid('mark');
-
+      
       if (depKeys === '*' || depKeys === '-') {
-        const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey);
+        // 处于依赖收集时才设置同名依赖
+        const mapSameName = depKeys === '-';
+        const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey, mapSameName);
+
         _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
         // when retKey is '/xxxx', here need pass xxxx as retKey
         _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
@@ -125,7 +130,7 @@ function _parseDescObj(cate, confMeta, descObj) {
           depKeys.forEach(depKey => {
             // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为
             // 映射同名依赖仅发生在传入retKey的时候
-            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey, false); //consume depKey is stateKey
+            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey); //consume depKey is stateKey
 
             // ok: retKey: 'xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2'], some stateKey belong to foo, some belong to bar
             // ok: retKey: 'foo/xxxx' depKeys:['f1', 'f2'], all stateKey belong to foo
@@ -176,20 +181,15 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
   }
 }
 
+// !!!由实例调用computed或者watch，监听同名的retKey，更新stateKey与retKey的关系映射
 function _mapSameNameRetKey(confMeta, module, retKey, isModuleStateKey) {
   const dep = confMeta.dep;
   const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
   const { stateKey_retKeys_, retKey_stateKeys_ } = moduleDepDesc;
-  
-  // !!!由实例调用computed或者watch，监听同名的retKey，这一刻就要更新 stateKey与retKey的关系映射
-  if (
-    (confMeta.type === FN_CU && runtimeVar.computedRetKeyDep) ||
-    runtimeVar.watchRetKeyDep
-    ) {
-      safeGetThenNoDupPush(stateKey_retKeys_, retKey, retKey);
-      safeGetThenNoDupPush(retKey_stateKeys_, retKey, retKey);
-    }
-    
+
+  safeGetThenNoDupPush(stateKey_retKeys_, retKey, retKey);
+  safeGetThenNoDupPush(retKey_stateKeys_, retKey, retKey);
+
   // 记录依赖
   isModuleStateKey && _mapIns(confMeta, module, retKey)
 }
@@ -246,7 +246,7 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
 
 // 分析retKey或者depKey是不是stateKey,
 // 返回的是净化后的key
-function _resolveKey(confMeta, module, retKey, mapSameName = true) {
+function _resolveKey(confMeta, module, retKey, mapSameName = false) {
   let targetModule = module, targetRetKey = retKey, moduleOfKey = '';
 
   if (retKey.includes('/')) {

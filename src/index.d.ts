@@ -823,8 +823,6 @@ interface RunOptions {
   watchCompare?: boolean;// default is true
   watchImmediate?: boolean;// default is false
   reComputed?: boolean;// default is true
-  computedRetKeyDep?: boolean;
-  watchRetKeyDep?: boolean;
 }
 
 export interface IActionCtxBase {

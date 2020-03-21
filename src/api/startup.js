@@ -84,8 +84,6 @@ export default function (
     watchCompare = true,
     watchImmediate = false,
     reComputed = true,
-    computedRetKeyDep = true,
-    watchRetKeyDep = true,
   } = {}) {
   try {
     throw new Error();
@@ -106,8 +104,6 @@ export default function (
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;
       rv.bindCtxToMethod = bindCtxToMethod;
-      rv.computedRetKeyDep = computedRetKeyDep;
-      rv.watchRetKeyDep = watchRetKeyDep;
 
       if (!ccContext.refs[CC_DISPATCHER]) {
         const Dispatcher = createDispatcher();

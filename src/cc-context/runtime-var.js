@@ -10,6 +10,4 @@ export default {
   watchCompare: true,
   watchImmediate: false,
   bindCtxToMethod: false,
-  computedRetKeyDep: true,
-  watchRetKeyDep: true,
 }
