@@ -155,9 +155,7 @@
     computedCompare: true,
     watchCompare: true,
     watchImmediate: false,
-    bindCtxToMethod: false,
-    computedRetKeyDep: true,
-    watchRetKeyDep: true
+    bindCtxToMethod: false
   };
 
   var CU_KEY = Symbol('cuk');
@@ -1047,7 +1045,7 @@
    */
 
 
-  function getSimpleObContainer(sourceType, module, refCtx, retKeys) {
+  function getSimpleObContainer(retKey, sourceType, fnType, module, refCtx, retKeys) {
     var oriCuContainer, oriCuObContainer;
 
     if (CATE_MODULE === sourceType) {
@@ -1060,16 +1058,17 @@
 
 
     return new Proxy(oriCuContainer, {
-      get: function get(target, retKey) {
-        // 防止用户从 cuVal读取不存在的key
-        if (oriCuContainer.hasOwnProperty(retKey)) {
-          retKeys.push(retKey);
+      get: function get(target, otherRetKey) {
+        // 1 防止用户从 cuVal读取不存在的key
+        // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，强制用户要注意计算函数的书写顺序
+        if (oriCuContainer.hasOwnProperty(otherRetKey)) {
+          retKeys.push(otherRetKey);
         } else {
-          justWarning("get cuVal invalid retKey[" + retKey + "]");
+          justWarning(sourceType + " " + fnType + " retKey[" + retKey + "] get cuVal invalid retKey[" + otherRetKey + "]");
         } // 从已定义defineProperty的计算结果容器里获取结果
 
 
-        return oriCuObContainer[retKey];
+        return oriCuObContainer[otherRetKey];
       },
       set: function set() {
         return true;
@@ -1117,34 +1116,31 @@
     });
   }
 
-  // 方便watch里更新了这个retKey的依赖是，查找这些引用过这个retKey的其他retKey列表，并更新它们的依赖列表
+  // 直接引用或者间接引用过staticCuRetKey都会记录在列表内
 
-  var modCuRetKey_referredByCuRetKeys_ = {};
-  var refCuRetKey_referredByCuRetKeys_ = {};
+  var modCuRetKey_referStaticCuRetKeys_ = {};
+  var refCuRetKey_referStaticCuRetKeys_ = {};
 
-  function getCuRefer(sourceType, module, ccUniqueKey) {
+  function getCuRetKeyRSListMap(sourceType, module, ccUniqueKey) {
     if (sourceType == CATE_MODULE) {
-      return safeGet(modCuRetKey_referredByCuRetKeys_, module);
+      return safeGet(modCuRetKey_referStaticCuRetKeys_, module);
     } else {
-      return safeGet(refCuRetKey_referredByCuRetKeys_, ccUniqueKey);
+      return safeGet(refCuRetKey_referStaticCuRetKeys_, ccUniqueKey);
     }
+  }
+
+  function getCuRetKeyRSList(cuRetKey, sourceType, module, ccUniqueKey) {
+    var map = getCuRetKeyRSListMap(sourceType, module, ccUniqueKey);
+    return safeGetArray(map, cuRetKey);
   }
 
   function clearCuRefer() {
-    modCuRetKey_referredByCuRetKeys_ = {};
-    refCuRetKey_referredByCuRetKeys_ = {};
+    modCuRetKey_referStaticCuRetKeys_ = {};
+    refCuRetKey_referStaticCuRetKeys_ = {};
   }
 
-  function getStateKeyRetKeysMap(refCtx, sourceType, stateModule) {
-    var modDep;
-
-    if (sourceType === CATE_REF) {
-      modDep = refCtx.computedDep[refCtx.module] || {};
-    } else {
-      modDep = computedMap._computedDep[stateModule] || {};
-    }
-
-    return modDep.stateKey_retKeys_;
+  function getCuDep(refCtx, sourceType) {
+    return sourceType === CATE_REF ? refCtx.computedDep : computedMap._computedDep;
   }
 
   function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, keys, isKeysDep) {
@@ -1195,11 +1191,41 @@
         updateRelationship(sourceStateKeys);
       });
     }
+  }
+
+  function getRetKeyFnMap(refCtx, sourceType, stateModule) {
+    // 始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
+    if (sourceType === CATE_REF) {
+      return refCtx.computedRetKeyFns;
+    } else {
+      var moduleDep = computedMap._computedDep[stateModule] || {};
+      return moduleDep.retKey_fn_ || {};
+    }
+  }
+
+  function mapRSList(cuRetKey, referCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule) {
+    var cuRetKey_referStaticCuRetKeys_ = getCuRetKeyRSListMap(cuRetKey, sourceType, stateModule, ccUniqueKey);
+    var retKey_fn_ = getRetKeyFnMap(refCtx, sourceType, stateModule);
+    var referStaticCuRetKeys = safeGetArray(cuRetKey_referStaticCuRetKeys_, cuRetKey);
+    referCuRetKeys.forEach(function (referCuRetKey) {
+      var fnDesc = retKey_fn_[referCuRetKey]; // 直接引用
+
+      if (fnDesc.isStatic) {
+        referStaticCuRetKeys.push(referCuRetKey);
+      } else {
+        var tmpRSList = safeGetArray(cuRetKey_referStaticCuRetKeys_, referCuRetKey); // 把引用的referCuRetKey对应的staticCuRetKey列表记录到当前cuRetKey的staticCuRetKey列表记录上
+        // 因为computed函数是严格按需执行的，所以此逻辑能够成立
+
+        tmpRSList.forEach(function (staticCuRetKey) {
+          return noDupPush(referStaticCuRetKeys, staticCuRetKey);
+        });
+      }
+    });
   } // fnType: computed watch
   // sourceType: module ref
 
 
-  var findDepFnsToExecute = (function (ref, stateModule, refModule, oldState, finder, stateForComputeFn, initNewState, initDeltaCommittedState, callInfo, isFirstCall, fnType, sourceType, computedContainer) {
+  function executeDepFns(ref, stateModule, refModule, oldState, finder, stateForComputeFn, initNewState, initDeltaCommittedState, callInfo, isFirstCall, fnType, sourceType, computedContainer) {
     if (ref === void 0) {
       ref = {};
     }
@@ -1238,7 +1264,6 @@
             fn = _ref.fn,
             depKeys = _ref.depKeys,
             isLazy = _ref.isLazy;
-        var cuRetKey_referredByCuRetKeys_ = getCuRefer(sourceType, stateModule, ccUniqueKey);
         var fnCtx = {
           retKey: retKey,
           callInfo: callInfo,
@@ -1266,7 +1291,7 @@
 
         if (needCollectDep) {
           // 替换cuVal，以便动态的收集到computed&watch函数里读取cuVal时计算相关依赖
-          fnCtx.cuVal = getSimpleObContainer(sourceType, stateModule, refCtx, collectedCuRetKeys);
+          fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys);
         }
 
         if (fnType === 'computed') {
@@ -1281,17 +1306,14 @@
 
             var computedValueOrRet = fn(obInitNewState, obInitNewState, fnCtx); // 记录计算结果
 
-            computedContainer[retKey] = makeCuObValue(false, computedValueOrRet); // 当前cuRetKey的函数里读取了其他cuRetKey时需要更新依赖
-            // 以便能够正确触发computed函数
+            computedContainer[retKey] = makeCuObValue(false, computedValueOrRet); // 在computed函数里读取了newState的stateKey，需要将其记录到当前retKey的依赖列表上
+            // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
 
-            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys); // 在computed里读取cuVal里的其他retKey结果, 要将这些retKey对应的stateKeys写到目标retKey的依赖列表上，
-            // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
+            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys); // 在computed里读取cuVal里的其他retKey结果, 要将其他retKey对应的stateKeys写到当前retKey的依赖列表上，
+            // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
 
             setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
-            collectedCuRetKeys.forEach(function (referCuRetKey) {
-              var reKeys = safeGetArray(cuRetKey_referredByCuRetKeys_, referCuRetKey);
-              if (!reKeys.includes(retKey)) reKeys.push(retKey);
-            });
+            mapRSList(retKey, collectedCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule);
           } else {
             if (isLazy) {
               computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
@@ -1319,69 +1341,55 @@
           if (_computedValueOrRet2 === false) shouldCurrentRefUpdate = false; // 首次触发watch时, 才记录依赖
 
           if (needCollectDep) {
-            // 在watch里读取了newState的stateKey，需要将其记录到当前watch retKey的依赖列表上，以便watch能够被正确触发
+            // 在watch函数里读取了newState的stateKey，需要将其记录到当前watch retKey的依赖列表上
+            // 以便能够在相应stateKey值改变时，能够正确命中该watch函数
             setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, collectedDepKeys); // 在watch里读取了cuVal里的retKey结果，要将这些retKey对应的stateKey依赖附加到当前watch retKey的依赖列表上，
-            // 以便能够在相应stateKey值改变时，能够正确命中watch函数
+            // 以便能够在相应stateKey值改变时，能够正确命中该watch函数
 
-            setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, collectedCuRetKeys, false); // refWatch 里收集的到depKeys要记录为ref的静态依赖
-
-            if (sourceType === CATE_REF) {
-              collectedDepKeys.forEach(function (key) {
-                return refCtx.__$$staticWaKeys[makeWaKey(stateModule, key)] = 1;
-              }); // 注：refWatch直接调用了moduleComputed 或者 connectedComputed时也收集到了依赖
-              // 逻辑在updateDep里判断__$$isBM来确定是不是首次触发
-            }
-          } // computedContainer对于模块里的computed回调里调用committedCu，是moduleComputed结果容器，
-          // 对于实例里的computed回调里调用committedCu来说，是refComputed结果容器
-          // 每一个retKey返回的committedCu都及时处理掉，因为下面setStateKeyRetKeysMap需要对此时的retKey写依赖
-
-
-          var committedCu = getRetKeyCu();
-
-          if (committedCu) {
-            var retKey_fn_; // 始终从_computedDep 取retKey_fn_，来判断commitCu提交的retKey是否合法
-
-            if (sourceType === 'ref') {
-              retKey_fn_ = refCtx.computedRetKeyFns;
-            } else {
-              var moduleDep = computedMap._computedDep[stateModule] || {};
-              retKey_fn_ = moduleDep.retKey_fn_ || {};
-            }
-
-            okeys(committedCu).forEach(function (cuRetKey) {
-              // 模块计算函数里调用committedCu只能修改模块计算结果
-              // 实例计算函数里调用committedCu只能修改实例计算结果
-              if (!retKey_fn_[cuRetKey]) justWarning("fnCtx.commitCu commit an invalid retKey[" + cuRetKey + "] for " + sourceType + "Computed"); // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
-              else {
-                  computedContainer[cuRetKey] = makeCuObValue(false, committedCu[cuRetKey]);
-
-                  if (needCollectDep) {
-                    // 等待处理依赖关系的cuRetKey
-                    if (!collectedCuRetKeys.includes(cuRetKey)) collectedCuRetKeys.push(cuRetKey);
-                  }
-                }
-            });
-            clearCu();
-          } // 当前waRetKey的函数里读取了其他cuRetKey时需要更新依赖
-
-
-          if (needCollectDep) {
-            collectedCuRetKeys.forEach(function (cuRetKey) {
-              // 在watch里读取了newState的stateKey，需要将其记录到计算结果cuRetKey的依赖列表上，
-              // 以便实例里moduleCompute.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
-              setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, cuRetKey, collectedDepKeys); // 在watch里读取cuVal里的retKey结果, 要将这些retKey对应的stateKeys写到目标cuRetKey的依赖列表上，
-              // 以便实例里moduleComputed.YYY or connectedComputed.**.YYY 能够正确收集到实例对YYY的依赖
-
-              setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, cuRetKey, collectedCuRetKeys, false);
-              var referredByCuRetKeys = cuRetKey_referredByCuRetKeys_[cuRetKey] || []; // 被其他cuRetKey引用过，则需要更新它们的依赖
-
-              referredByCuRetKeys.forEach(function (reCuRetKey) {
-                setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, reCuRetKey, [cuRetKey], false);
-              });
-            });
+            setStateKeyRetKeysMap(refCtx, sourceType, FN_WATCH, stateModule, retKey, collectedCuRetKeys, false);
           }
+        } // refCompute&refWatch 里获取state、moduleState、connectedState的值收集到的depKeys要记录为ref的静态依赖
+
+
+        if (needCollectDep && sourceType === CATE_REF) {
+          collectedDepKeys.forEach(function (key) {
+            return refCtx.__$$staticWaKeys[makeWaKey(stateModule, key)] = 1;
+          }); // 注：refWatch直接读取了moduleComputed 或者 connectedComputed的值时也收集到了依赖
+          // 逻辑在updateDep里判断__$$isBM来确定是不是首次触发
+        } // computedContainer对于module computed fn里调用committedCu，是moduleComputed结果容器，
+        // 对于ref computed fn里调用committedCu来说，是refComputed结果容器
+        // 每一个retKey返回的committedCu都及时处理掉，因为下面setStateKeyRetKeysMap需要对此时的retKey写依赖
+
+
+        var committedCuRet = getRetKeyCu();
+
+        if (committedCuRet) {
+          var retKey_fn_ = getRetKeyFnMap(refCtx, sourceType, stateModule);
+          okeys(committedCuRet).forEach(function (cuRetKey) {
+            // 模块计算函数里调用commitCu只能修改模块计算retKey
+            // 实例计算函数里调用commitCu只能修改实例计算retKey
+            var fnDesc = retKey_fn_[cuRetKey];
+            var tip = "commitCu: " + sourceType + " " + fnType + " retKey[" + retKey + "] can't";
+            if (!fnDesc) justWarning(tip + " commit [" + cuRetKey + "], it is not defined"); // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
+            else {
+                // 检查提交目标只能是静态的cuRetKey
+                if (fnDesc.isStatic) {
+                  var RSList = getCuRetKeyRSList(cuRetKey, sourceType, stateModule, ccUniqueKey);
+
+                  if (RSList.includes(cuRetKey)) {
+                    // 直接或间接引用了这个cuRetKey，就不能去改变它，以避免死循环
+                    justWarning(tip + " change [" + cuRetKey + "], [" + retKey + "] referred [" + cuRetKey + "]");
+                  } else {
+                    computedContainer[cuRetKey] = makeCuObValue(false, committedCuRet[cuRetKey]);
+                  }
+                } else {
+                  justWarning(tip + " change [" + cuRetKey + "], it must have zero dep keys");
+                }
+              }
+          });
+          clearCu();
         }
-      }); // 这里一次性处理所有computed函数提交的state
+      }); // 这里一次性处理所有computed函数提交了然后合并后的state
 
       curStateForComputeFn = getFnCommittedState();
 
@@ -1407,47 +1415,34 @@
 
         var stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
 
-        var _extractStateByKeys = extractStateByKeys(curStateForComputeFn, stateKeys, true, true),
+        var _extractStateByKeys = extractStateByKeys(curStateForComputeFn, stateKeys, true),
             partialState = _extractStateByKeys.partialState,
             ignoredStateKeys = _extractStateByKeys.ignoredStateKeys;
-
-        if (partialState) {
-          if (fnType === FN_WATCH) {
-            var stateKey_retKeys_ = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
-
-            if (stateKey_retKeys_) {
-              // 确保watch函数里调用commit提交的state keys没有出现在computed函数的depKeys里
-              // 因为按照先执行computed，再执行watch的顺序，提交了这种stateKey，会造成computed函数返回结果失效了的情况产生
-              var ignoredStateKeysAsDepInCu = [],
-                  canAssignState = {};
-              okeys(partialState).forEach(function (stateKey) {
-                if (stateKey_retKeys_[stateKey]) {
-                  ignoredStateKeysAsDepInCu.push(stateKey);
-                } else {
-                  canAssignState[stateKey] = partialState[stateKey];
-                }
-              });
-
-              if (ignoredStateKeysAsDepInCu.length > 0) {
-                justWarning("these state keys[" + ignoredStateKeysAsDepInCu.join(',') + "] will been ignored, cause they are also appeared in computed depKeys,\n              cc suggest you move the logic to computed file.");
-              }
-
-              assignCuState(canAssignState, true);
-            } else {
-              assignCuState(partialState);
-            }
-          } else {
-            assignCuState(partialState);
-          }
-        }
 
         if (ignoredStateKeys.length) {
           var reason = "they are not " + (sourceType === CATE_REF ? 'private' : 'module') + ", fn is " + sourceType + " " + fnType;
           justWarning("these state keys[" + ignoredStateKeys.join(',') + "] are invalid, " + reason);
         }
+
+        if (partialState) {
+          // watch里提交了新的片段state，再次过一遍computed函数
+          if (fnType === FN_WATCH) {
+            // const stateKey_retKeys_ = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
+            var computedDep = getCuDep(refCtx, sourceType, stateModule);
+
+            var _finder2 = function _finder2(committedState, isBeforeMount) {
+              return pickDepFns(isBeforeMount, sourceType, FN_CU, computedDep, stateModule, oldState, committedState, ccUniqueKey);
+            };
+
+            executeDepFns(ref, stateModule, refModule, oldState, _finder2, partialState, initNewState, initDeltaCommittedState, callInfo, false, // 再次由watch发起的computed函数查找调用，irFirstCall，一定是false
+            FN_CU, sourceType, computedContainer);
+          } else {
+            assignCuState(partialState);
+          }
+        }
       }
 
-      if (whileCount > 10) {
+      if (whileCount > 2) {
         justWarning('fnCtx.commit may goes endless loop, please check your code');
         curStateForComputeFn = null;
       }
@@ -1463,7 +1458,7 @@
       shouldCurrentRefUpdate: shouldCurrentRefUpdate,
       hasDelta: hasDelta
     };
-  });
+  }
 
   var _reducer;
   var _computedValue$2 = computedMap._computedValue;
@@ -1503,8 +1498,8 @@
     var newState = Object.assign({}, moduleState, committedState);
     var deltaCommittedState = Object.assign({}, committedState);
     var stateForComputeFn = deltaCommittedState;
-    findDepFnsToExecute(callerRef, module, refModule, moduleState, curDepComputedFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
-    findDepFnsToExecute(callerRef, module, refModule, moduleState, curDepWatchFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
+    executeDepFns(callerRef, module, refModule, moduleState, curDepComputedFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue);
+    executeDepFns(callerRef, module, refModule, moduleState, curDepWatchFns, stateForComputeFn, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue);
 
     if (!noSave) {
       saveSharedState(module, deltaCommittedState);
@@ -1688,7 +1683,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.18',
+      version: '2.3.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2272,13 +2267,14 @@
         // depKeys设置为默认自动收集
         var _targetItem = targetItem,
             fn = _targetItem.fn,
-            _targetItem$depKeys = _targetItem.depKeys,
-            depKeys = _targetItem$depKeys === void 0 ? '-' : _targetItem$depKeys,
             _targetItem$immediate = _targetItem.immediate,
             immediate = _targetItem$immediate === void 0 ? watchImmediate : _targetItem$immediate,
             _targetItem$compare = _targetItem.compare,
             compare = _targetItem$compare === void 0 ? defaultCompare : _targetItem$compare,
-            lazy = _targetItem.lazy; // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
+            lazy = _targetItem.lazy,
+            _targetItem$retKeyDep = _targetItem.retKeyDep,
+            retKeyDep = _targetItem$retKeyDep === void 0 ? true : _targetItem$retKeyDep;
+        var depKeys = targetItem.depKeys || '-'; // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
         // !!!注意在一个文件里即写defComputed又写普通函数，这两类计算函数各自的执行顺序是和书写顺序一致的，
         // 在自定义函数不超过一千个时，它们在一起时的执行顺序是总是执行完毕自定义函数再执行defComputed定义函数
         // 超过一千个时，它们在一起时的执行顺序是不被保证的
@@ -2288,7 +2284,10 @@
         var fnUid = uuid('mark');
 
         if (depKeys === '*' || depKeys === '-') {
-          var _resolveKey2 = _resolveKey(confMeta, callerModule, retKey),
+          // 处于依赖收集，且用户没有显式的通过设置retKeyDep为false来关闭同名依赖规则时，会自动设置同名依赖
+          var mapSameName = depKeys === '-' && retKeyDep;
+
+          var _resolveKey2 = _resolveKey(confMeta, callerModule, retKey, mapSameName),
               pureKey = _resolveKey2.pureKey,
               module = _resolveKey2.module;
 
@@ -2331,7 +2330,7 @@
             depKeys.forEach(function (depKey) {
               // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为
               // 映射同名依赖仅发生在传入retKey的时候
-              var _resolveKey5 = _resolveKey(confMeta, callerModule, depKey, false),
+              var _resolveKey5 = _resolveKey(confMeta, callerModule, depKey),
                   isStateKey = _resolveKey5.isStateKey,
                   pureKey = _resolveKey5.pureKey,
                   module = _resolveKey5.module; //consume depKey is stateKey
@@ -2385,19 +2384,16 @@
         retKey_fnUid_[typedRetKey] = fnUid;
       }
     }
-  }
+  } // !!!由实例调用computed或者watch，监听同名的retKey，更新stateKey与retKey的关系映射
+
 
   function _mapSameNameRetKey(confMeta, module, retKey, isModuleStateKey) {
     var dep = confMeta.dep;
     var moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
     var stateKey_retKeys_ = moduleDepDesc.stateKey_retKeys_,
-        retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_; // !!!由实例调用computed或者watch，监听同名的retKey，这一刻就要更新 stateKey与retKey的关系映射
-
-    if (confMeta.type === FN_CU && runtimeVar$1.computedRetKeyDep || runtimeVar$1.watchRetKeyDep) {
-      safeGetThenNoDupPush(stateKey_retKeys_, retKey, retKey);
-      safeGetThenNoDupPush(retKey_stateKeys_, retKey, retKey);
-    } // 记录依赖
-
+        retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_;
+    safeGetThenNoDupPush(stateKey_retKeys_, retKey, retKey);
+    safeGetThenNoDupPush(retKey_stateKeys_, retKey, retKey); // 记录依赖
 
     isModuleStateKey && _mapIns$1(confMeta, module, retKey);
   }
@@ -2418,12 +2414,23 @@
         stateKey_retKeys_ = moduleDepDesc.stateKey_retKeys_,
         retKey_lazy_ = moduleDepDesc.retKey_lazy_,
         retKey_stateKeys_ = moduleDepDesc.retKey_stateKeys_;
+    var isStatic = Array.isArray(depKeys) && depKeys.length === 0; // 确保static computed优先优先执行
+
+    var targetSort = sort;
+
+    if (isStatic) {
+      targetSort = -1;
+    } else {
+      if (sort < 0) targetSort = 0;
+    }
+
     var fnDesc = {
       fn: fn,
       immediate: immediate,
       compare: compare,
       depKeys: depKeys,
-      sort: sort
+      sort: targetSort,
+      isStatic: isStatic
     }; // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
 
     if (retKey_fn_[retKey]) {
@@ -2467,7 +2474,7 @@
 
   function _resolveKey(confMeta, module, retKey, mapSameName) {
     if (mapSameName === void 0) {
-      mapSameName = true;
+      mapSameName = false;
     }
 
     var targetModule = module,
@@ -2608,7 +2615,7 @@
     var cuOri = safeGet$1(ccComputed._computedValueOri, module);
     rootComputedValue[module] = makeObCuContainer(computed, cuOri);
     var moduleComputedValue = rootComputedValue[module];
-    findDepFnsToExecute(d, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'computed', CATE_MODULE, moduleComputedValue);
+    executeDepFns(d, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'computed', CATE_MODULE, moduleComputedValue);
   }
 
   var isPJO$2 = isPJO,
@@ -2657,7 +2664,7 @@
     };
 
     var moduleComputedValue = safeGet$2(rootComputedValue, module);
-    findDepFnsToExecute(d, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'watch', CATE_MODULE, moduleComputedValue);
+    executeDepFns(d, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'watch', CATE_MODULE, moduleComputedValue);
   }
 
   var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED];
@@ -2793,45 +2800,41 @@
     }, delay);
   });
 
-  function watchKeyForRef (ref, stateModule, oldState, committedState, callInfo, isBeforeMount, autoMergeDeltaToCommitted) {
-    if (autoMergeDeltaToCommitted === void 0) {
-      autoMergeDeltaToCommitted = false;
-    }
-
+  function watchKeyForRef (ref, stateModule, oldState, committedState, callInfo, isBeforeMount) {
     var refCtx = ref.ctx;
-    if (!refCtx.hasWatchFn) return true;
+    if (!refCtx.hasWatchFn) return {
+      shouldCurrentRefUpdate: true
+    };
     var deltaCommittedState = Object.assign({}, committedState);
     var watchDep = refCtx.watchDep,
         refModule = refCtx.module,
-        ccUniqueKey = refCtx.ccUniqueKey,
-        refComputed = refCtx.refComputed;
+        ccUniqueKey = refCtx.ccUniqueKey;
+    var computedContainer = refCtx.refComputed;
+
+    if (stateModule !== refModule) {
+      // 由changeRefState/broadcastState触发的connectedRefs 触发的watch
+      computedContainer = refCtx.connectedComputed[stateModule];
+    }
+
     var newState = Object.assign({}, oldState, committedState);
 
     var curDepComputedFns = function curDepComputedFns(committedState, isBeforeMount) {
-      return pickDepFns(isBeforeMount, 'ref', 'watch', watchDep, stateModule, oldState, committedState, ccUniqueKey);
+      return pickDepFns(isBeforeMount, CATE_REF, FN_WATCH, watchDep, stateModule, oldState, committedState, ccUniqueKey);
     }; // 触发有stateKey依赖列表相关的watch函数
 
 
-    var _findDepFnsToExecute = findDepFnsToExecute(ref, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'watch', CATE_REF, refComputed),
-        shouldCurrentRefUpdate = _findDepFnsToExecute.shouldCurrentRefUpdate,
-        hasDelta = _findDepFnsToExecute.hasDelta;
-
-    if (autoMergeDeltaToCommitted && hasDelta) {
-      Object.assign(committedState, deltaCommittedState);
-    }
-
-    return shouldCurrentRefUpdate;
+    return executeDepFns(ref, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, FN_WATCH, CATE_REF, computedContainer);
   }
 
   // stateModule表示状态所属的模块
 
-  function computeValueForRef (ref, stateModule, oldState, committedState, callInfo, isBeforeMount, autoMergeDeltaToCommitted) {
+  function computeValueForRef (ref, stateModule, oldState, committedState, callInfo, isBeforeMount, mergeDeltaToCommitted) {
     if (isBeforeMount === void 0) {
       isBeforeMount = false;
     }
 
-    if (autoMergeDeltaToCommitted === void 0) {
-      autoMergeDeltaToCommitted = false;
+    if (mergeDeltaToCommitted === void 0) {
+      mergeDeltaToCommitted = false;
     }
 
     var refCtx = ref.ctx;
@@ -2839,8 +2842,14 @@
     if (!refCtx.hasComputedFn) return deltaCommittedState;
     var computedDep = refCtx.computedDep,
         refModule = refCtx.module,
-        refComputed = refCtx.refComputed,
-        ccUniqueKey = refCtx.ccUniqueKey; // const moduleState = ccContext.store.getState(stateModule);
+        ccUniqueKey = refCtx.ccUniqueKey;
+    var computedContainer = refCtx.refComputed;
+
+    if (stateModule !== refModule) {
+      // 由changeRefState/broadcastState触发的connectedRefs 触发的计算
+      computedContainer = refCtx.connectedComputed[stateModule];
+    } // const moduleState = ccContext.store.getState(stateModule);
+
 
     var newState = Object.assign({}, oldState, committedState);
 
@@ -2849,9 +2858,9 @@
     }; // 触发依赖stateKeys相关的computed函数
 
 
-    findDepFnsToExecute(ref, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'computed', CATE_REF, refComputed);
+    executeDepFns(ref, stateModule, refModule, oldState, curDepComputedFns, committedState, newState, deltaCommittedState, callInfo, isBeforeMount, 'computed', CATE_REF, computedContainer);
 
-    if (autoMergeDeltaToCommitted) {
+    if (mergeDeltaToCommitted) {
       Object.assign(committedState, deltaCommittedState);
     }
 
@@ -3187,7 +3196,9 @@
     }
 
     var deltaCommittedState = computeValueForRef(targetRef, stateModule, refState, state, callInfo);
-    var shouldCurrentRefUpdate = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false, true);
+
+    var _watchKeyForRef = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false),
+        shouldCurrentRefUpdate = _watchKeyForRef.shouldCurrentRefUpdate;
 
     var ccSetState = function ccSetState() {
       // 记录stateKeys，方便triggerRefEffect之用
@@ -3269,15 +3280,18 @@
 
       if (ref.__$$isUnmounted !== true) {
         var refCtx = ref.ctx;
-        computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
-        var shouldCurrentRefUpdate = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo); // 记录sharedStateKeys，方便triggerRefEffect之用
+        var deltaState = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
 
-        refCtx.__$$settedList.push({
-          module: moduleName,
-          keys: sharedStateKeys
-        });
+        var _watchKeyForRef2 = watchKeyForRef(ref, moduleName, prevModuleState, deltaState, callInfo),
+            shouldCurrentRefUpdate = _watchKeyForRef2.shouldCurrentRefUpdate;
 
         if (shouldCurrentRefUpdate) {
+          // 记录sharedStateKeys，方便triggerRefEffect之用
+          refCtx.__$$settedList.push({
+            module: moduleName,
+            keys: sharedStateKeys
+          });
+
           refCtx.__$$ccForceUpdate();
         }
       }
@@ -5503,10 +5517,10 @@
             if (!Array.isArray(depKeys)) throw new Error(eType('second') + " one of them(array, null, undefined)");
           }
 
-          var moDepKeys = null;
+          var modDepKeys = null;
 
           if (!isProp && _depKeys) {
-            moDepKeys = [];
+            modDepKeys = [];
 
             _depKeys.forEach(function (depKey) {
               var modDepKey;
@@ -5521,10 +5535,11 @@
                   throw me$3(ERR.CC_MODULE_NOT_CONNECTED, vbi$3("depKey[" + depKey + "]"));
                 }
               } else {
+                // 这里要注意， 私有的key
                 modDepKey = stateModule + "/" + depKey;
               }
 
-              moDepKeys.push(modDepKey); // 先暂时保持起来，组件挂载时才映射依赖
+              modDepKeys.push(modDepKey); // 先暂时保持起来，组件挂载时才映射依赖
 
               ctx.__$$staticWaKeys[modDepKey] = 1;
             });
@@ -5535,7 +5550,7 @@
             fn: fn,
             isProp: isProp,
             depKeys: _depKeys,
-            moDepKeys: moDepKeys,
+            modDepKeys: modDepKeys,
             eId: getEId(),
             compare: compare,
             immediate: _immediate
@@ -5774,19 +5789,19 @@
         // const { status, depKeys, fn, eId } = item;
         // if (status === EFFECT_STOPPED) return;
         // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
-        var moDepKeys = item.moDepKeys,
+        var modDepKeys = item.modDepKeys,
             compare = item.compare,
             fn = item.fn,
             eId = item.eId;
 
-        if (moDepKeys) {
-          var keysLen = moDepKeys.length;
+        if (modDepKeys) {
+          var keysLen = modDepKeys.length;
           if (keysLen === 0) return;
           var mappedSettedKey = mapSettedList(__$$settedList);
           var shouldEffectExecute = false;
 
           for (var i = 0; i < keysLen; i++) {
-            var key = moDepKeys[i];
+            var key = modDepKeys[i];
 
             if (!compare) {
               if (mappedSettedKey[key]) {
@@ -6893,11 +6908,7 @@
         _ref2$watchImmediate = _ref2.watchImmediate,
         watchImmediate = _ref2$watchImmediate === void 0 ? false : _ref2$watchImmediate,
         _ref2$reComputed = _ref2.reComputed,
-        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed,
-        _ref2$computedRetKeyD = _ref2.computedRetKeyDep,
-        computedRetKeyDep = _ref2$computedRetKeyD === void 0 ? true : _ref2$computedRetKeyD,
-        _ref2$watchRetKeyDep = _ref2.watchRetKeyDep,
-        watchRetKeyDep = _ref2$watchRetKeyDep === void 0 ? true : _ref2$watchRetKeyDep;
+        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed;
 
     try {
       throw new Error();
@@ -6921,8 +6932,6 @@
         rv.watchCompare = watchCompare;
         rv.watchImmediate = watchImmediate;
         rv.bindCtxToMethod = bindCtxToMethod;
-        rv.computedRetKeyDep = computedRetKeyDep;
-        rv.watchRetKeyDep = watchRetKeyDep;
 
         if (!ccContext.refs[CC_DISPATCHER]) {
           var Dispatcher = createDispatcher();
@@ -7693,53 +7702,67 @@
   var useConcent$1 = useConcent; // 假设用户直接定义的computed函数不超过1000个，让def***定义的computed函数全部在直接定义的computed函数执行后再执行
 
   var sortFactor$1 = 1000;
-  var defComputed = function defComputed(fn, depKeys, compare, sort) {
-    return {
-      fn: fn,
-      depKeys: depKeys,
-      compare: compare,
-      sort: sort || sortFactor$1++
-    };
-  };
-  var defLazyComputed = function defLazyComputed(fn, depKeys, compare, sort) {
-    return {
-      fn: fn,
-      depKeys: depKeys,
-      compare: compare,
-      lazy: true,
-      sort: sort || sortFactor$1++
-    };
-  };
-  var defComputedVal = function defComputedVal(val, compare, sort) {
-    if (compare === void 0) {
-      compare = true;
+  var defComputed = function defComputed(fn, depKeys, defOptions) {
+    if (defOptions === void 0) {
+      defOptions = {};
     }
 
+    return {
+      fn: fn,
+      depKeys: depKeys,
+      compare: defOptions.compare,
+      sort: defOptions.sort || sortFactor$1++,
+      retKeyDep: defOptions.retKeyDep
+    };
+  };
+  var defLazyComputed = function defLazyComputed(fn, depKeys, defOptions) {
+    if (defOptions === void 0) {
+      defOptions = {};
+    }
+
+    return {
+      fn: fn,
+      depKeys: depKeys,
+      lazy: true,
+      compare: defOptions.compare,
+      sort: defOptions.sort || sortFactor$1++,
+      retKeyDep: defOptions.retKeyDep
+    };
+  };
+  var defComputedVal = function defComputedVal(val) {
     return {
       fn: function fn() {
         return val;
       },
-      depKeys: [],
-      compare: compare,
-      sort: sort || sortFactor$1++
+      depKeys: []
     };
   };
-  var defWatch = function defWatch(fn, depKeys, compare, immediate, sort) {
+  var defWatch = function defWatch(fn, depKeys, defOptions) {
+    if (defOptions === void 0) {
+      defOptions = {};
+    }
+
     return {
       fn: fn,
       depKeys: depKeys,
-      compare: compare,
-      immediate: immediate,
-      sort: sort || sortFactor$1++
+      immediate: defOptions.immediate,
+      compare: defOptions.compare,
+      sort: defOptions.sort || sortFactor$1++,
+      retKeyDep: defOptions.retKeyDep
     };
   };
-  var defWatchImmediate = function defWatchImmediate(fn, depKeys, compare, sort) {
+  var defWatchImmediate = function defWatchImmediate(fn, depKeys, defOptions) {
+    if (defOptions === void 0) {
+      defOptions = {};
+    }
+
     return {
       fn: fn,
       depKeys: depKeys,
-      compare: compare,
       immediate: true,
-      sort: sort || sortFactor$1++
+      compare: defOptions.compare,
+      sort: defOptions.sort || sortFactor$1++,
+      retKeyDep: defOptions.retKeyDep
     };
   };
   var defaultExport = {

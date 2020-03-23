@@ -88,7 +88,7 @@ function _parseDescObj(cate, confMeta, descObj) {
 
     if (isPJO(targetItem)) {
       // depKeys设置为默认自动收集
-      const { fn, immediate = watchImmediate, compare = defaultCompare, lazy } = targetItem;
+      const { fn, immediate = watchImmediate, compare = defaultCompare, lazy, retKeyDep = true } = targetItem;
       const depKeys = targetItem.depKeys || '-';
 
       // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
@@ -101,8 +101,8 @@ function _parseDescObj(cate, confMeta, descObj) {
       const fnUid = uuid('mark');
       
       if (depKeys === '*' || depKeys === '-') {
-        // 处于依赖收集时才设置同名依赖
-        const mapSameName = depKeys === '-';
+        // 处于依赖收集，且用户没有显式的通过设置retKeyDep为false来关闭同名依赖规则时，会自动设置同名依赖
+        const mapSameName = depKeys === '-' && retKeyDep;
         const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey, mapSameName);
 
         _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
@@ -207,7 +207,17 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
   const { retKey_fn_, stateKey_retKeys_, retKey_lazy_, retKey_stateKeys_ } = moduleDepDesc;
 
-  const fnDesc = { fn, immediate, compare, depKeys, sort };
+  const isStatic = Array.isArray(depKeys) && depKeys.length === 0;
+
+  // 确保static computed优先优先执行
+  let targetSort = sort;
+  if (isStatic) {
+    targetSort = -1;
+  } else {
+    if (sort < 0) targetSort = 0;
+  }
+
+  const fnDesc = { fn, immediate, compare, depKeys, sort: targetSort, isStatic };
   // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
   if (retKey_fn_[retKey]) {
     if (cate !== CATE_REF) {// 因为热加载，对于module computed 定义总是赋值最新的，

@@ -45,7 +45,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
     if (type === 'computed') {
       return {
         pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey])).sort(sortCb), 
-        setted, changed
+        setted, changed,
       };
     }
     

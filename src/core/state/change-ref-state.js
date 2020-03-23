@@ -182,7 +182,7 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   }
 
   let deltaCommittedState = computeValueForRef(targetRef, stateModule, refState, state, callInfo);
-  const shouldCurrentRefUpdate = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false, true);
+  const { shouldCurrentRefUpdate } = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false);
 
   const ccSetState = () => {
      // 记录stateKeys，方便triggerRefEffect之用
@@ -257,15 +257,15 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     if (!ref) return;
     if (ref.__$$isUnmounted !== true) {
       const refCtx = ref.ctx;
-      computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
-      const shouldCurrentRefUpdate = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
-
-      // 记录sharedStateKeys，方便triggerRefEffect之用
-      refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
-
+      const deltaState = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
+      const { shouldCurrentRefUpdate } = watchKeyForRef(ref, moduleName, prevModuleState, deltaState, callInfo);
+      
       if (shouldCurrentRefUpdate) {
+        // 记录sharedStateKeys，方便triggerRefEffect之用
+        refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
         refCtx.__$$ccForceUpdate();
       }
+
     }
   });
 

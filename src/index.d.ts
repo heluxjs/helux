@@ -73,7 +73,8 @@ interface IComputedFnDesc<Fn extends typeof computedFn> {
   fn: Fn;
   sort?: number;
   compare?: boolean;
-  depKeys?: string[];
+  depKeys?: DepKeys;
+  retKeyDep?: boolean;
 }
 // 不在IComputedFnDesc扩展 lazy?:boolean, 新增一个ILazyComputedFnDesc， 以方便ComputedValType推到具体的计算字段对应在容器里的值类型
 interface ILazyComputedFnDesc<Fn extends typeof lazyComputedFn> {
@@ -81,20 +82,23 @@ interface ILazyComputedFnDesc<Fn extends typeof lazyComputedFn> {
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
   sort?: number;
   compare?: boolean;
-  depKeys?: string[];
+  depKeys?: DepKeys;
+  retKeyDep?: boolean;
 }
 interface IComputedFnSimpleDesc {
   fn: IAnyFn;
   sort?: number;
   compare?: boolean;
-  depKeys?: string[];
+  depKeys?: DepKeys;
+  retKeyDep?: boolean;
 }
 interface ILazyComputedFnSimpleDesc{
   fn: IAnyFn;
   lazy: true;// 这里必需写为true，以便T[K]['lazy'] extends true 成立
   sort?: number;
   compare?: boolean;
-  depKeys?: string[];
+  depKeys?: DepKeys;
+  retKeyDep?: boolean;
 }
 
 interface IReducerFn {
@@ -141,6 +145,7 @@ export interface EvMapBase {
 
 export type TStar = '*';
 export type TAuto = '-';
+export type DepKeys = string[] | TStar | TAuto;
 
 // type EvSyncReturn = (event: React.ChangeEvent<HTMLInputElement>) => void;
 type SyncReturn = (...args: any) => void;
@@ -300,19 +305,25 @@ declare function refCtxGetConnectWatchedKeys(module: string): string[];
 
 /**
  * <V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
- * @param retKey
- * @param computedFn
- * @param {string[]} depKeys
- * @param {boolean} compare default is true
+ * @param retKey 
+ * @param fn 
+ * @param {DepKeys} depKeys 
+ * @param compare 
+ * @param sort 
  */
-declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?:number): void;
-declare function refCtxComputed(retKey: string, fnDesc: { fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?:number }): void;
+declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number): void;
+declare function refCtxComputed(
+  retKey: string,
+  fnDesc: { fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
+): void;
 
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?:number): void;
+  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?:number): void;
 // (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
-declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?:number }): void;
+declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>(
+  retKey: string,
+  fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
+): void;
 
 // !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
 // !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
@@ -320,27 +331,34 @@ declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase 
 type MultiComputed = {
   [retKey: string]: ((oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any) | {
     fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any,
-    depKeys?: string[],
+    depKeys?: DepKeys,
     compare?: boolean,
     sort?: number,
+    retKeyDep?: boolean,
   }
 }
 declare function refCtxComputed(multiComputed: MultiComputed): void;
 declare function refCtxComputed(multiFn: (ctx: ICtxBase) => MultiComputed): void;
 
 
-declare function refCtxLazyComputed(retKey: string, fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?:number): void;
-declare function refCtxLazyComputed(retKey: string, fnDesc: { fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: string[], compare?: boolean, sort?: number }): void;
+declare function refCtxLazyComputed(retKey: string, fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number): void;
+declare function refCtxLazyComputed(
+  retKey: string,
+  fnDesc: { fn: RefLazyComputedFn<ILazyFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
+): void;
 declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>
-  (retKey: string, fn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?:number): void;
-declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>
-  (retKey: string, fnDesc: { computedFn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: string[], compare?: boolean, sort?: number }): void;
+  (retKey: string, fn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number): void;
+declare function refCtxLazyComputed<RefFullState, CuRet = any, F extends ILazyFnCtxBase = ILazyFnCtxBase>(
+  retKey: string,
+  fnDesc: { computedFn: RefLazyComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
+): void;
 type MultiLazyComputed = {
   [retKey: string]: ((oldVal: any, newVal: any, fnCtx: ILazyFnCtxBase) => any) | {
     fn: (oldVal: any, newVal: any, fnCtx: ILazyFnCtxBase) => any,
-    depKeys?: string[],
+    depKeys?: DepKeys,
     compare?: boolean,
     sort?: number,
+    retKeyDep?: boolean,
   }
 }
 declare function refCtxLazyComputed(multiComputed: MultiLazyComputed): void;
@@ -351,26 +369,27 @@ type VorB = void | boolean;
  * 
  * @param retKey 
  * @param watchFn 
- * @param {string[]} depKeys 
+ * @param {DepKeys} depKeys 
  * @param {boolean} compare defalut is true
  * @param {boolean} immediate defalut is false
  */
-declare function refCtxWatch(retKey: string, fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
-declare function refCtxWatch(retKey: string, fnDesc: { fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: string[], compare?: boolean, immediate?: boolean }): void;
+declare function refCtxWatch(retKey: string, fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean): void;
+declare function refCtxWatch(retKey: string, fnDesc: { fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean, retKeyDep?: boolean }): void;
 
 declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefWatchFn<F, RefFullState>, depKeys?: string[], compare?: boolean, immediate?: boolean): void;
+  (retKey: string, fn: RefWatchFn<F, RefFullState>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean): void;
 declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fnDesc: { fn: RefWatchFn<F, RefFullState>, depKeys?: string[], compare?: boolean, immediate?: boolean }): void;
+  (retKey: string, fnDesc: { fn: RefWatchFn<F, RefFullState>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean, retKeyDep?: boolean }): void;
 
 // !!! 写成  <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => VorB 暂时无法约束值类型
 // 先写为如下方式
 type MultiWatch = {
   [retKey: string]: ((oldVal: any, newVal: any, fnCtx: IFnCtxBase) => VorB) | {
     fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => VorB,
-    depKeys?: string[],
+    depKeys?: DepKeys,
     compare?: boolean,
     immediate?: boolean,
+    retKeyDep?: boolean,
   }
 }
 declare function refCtxWatch(multiWatch: MultiWatch): void;
@@ -771,9 +790,10 @@ interface WatchFn {
 // declare function watchFn<IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void;
 type WatchFnDesc = {
   fn: WatchFn,
-  compare?: boolean,
-  immediate?: boolean,
-  depKeys?: string[],
+  compare?: boolean,// default is runtimeVar.watchCompare
+  immediate?: boolean,// default is runtimeVar.watchImmediate
+  depKeys?: DepKeys,// default is '-'
+  retKeyDep?: boolean,// default is true
 }
 
 type TypeDesc = {
@@ -1126,23 +1146,25 @@ export function executeAll(...args: any): void;
 
 export function appendState(moduleName: string, state: IAnyObj): void;
 
-export function defComputedVal<CuRet>(ret: CuRet, compare?: boolean): IComputedFnDesc<GetComputedFn<CuRet>>;
+export function defComputedVal<CuRet>(ret: CuRet): IComputedFnDesc<GetComputedFn<CuRet>>;
 
+type DefOptions = { compare?: boolean, sort?: number, retKeyDep?: boolean };
 export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: DepKeys, defOptions: DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 export function defComputed<CuRet>
-  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, depKeys?: DepKeys, defOptions: DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 export function defLazyComputed<V extends IAnyObj, CuRet, F extends ILazyFnCtxBase = ILazyFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, depKeys?: DepKeys, defOptions: DefOptions): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
 export function defLazyComputed<CuRet>
-  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: ILazyFnCtxBase) => CuRet, depKeys?: string[], compare?: boolean, sort?: number): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: ILazyFnCtxBase) => CuRet, depKeys?: DepKeys, defOptions: DefOptions): ILazyComputedFnDesc<GetLazyComputedFn<CuRet>>;
 
+type DefImmediateOptions = { immediate?: boolean, compare?: boolean, sort?: number, retKeyDep?: boolean };
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, immediate?: boolean, sort?: number): WatchFnDesc;
+  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: DepKeys, defOptions?: DefImmediateOptions): WatchFnDesc;
 
 export function defWatchImmediate<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: string[], compare?: boolean, sort?: number): WatchFnDesc;
+  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, depKeys?: DepKeys, defOptions: DefOptions): WatchFnDesc;
 
 export declare const cst: CcCst;
 

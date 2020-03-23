@@ -63,11 +63,16 @@ export const useConcent = _useConcent;
 
 // 假设用户直接定义的computed函数不超过1000个，让def***定义的computed函数全部在直接定义的computed函数执行后再执行
 let sortFactor = 1000;
-export const defComputed = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, sort: (sort || sortFactor++) });
-export const defLazyComputed = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, lazy: true, sort: (sort || sortFactor++) });
-export const defComputedVal = (val, compare = true, sort) => ({ fn: () => val, depKeys: [], compare, sort: (sort || sortFactor++) });
-export const defWatch = (fn, depKeys, compare, immediate, sort) => ({ fn, depKeys, compare, immediate, sort: (sort || sortFactor++) });
-export const defWatchImmediate = (fn, depKeys, compare, sort) => ({ fn, depKeys, compare, immediate: true, sort: (sort || sortFactor++) });
+export const defComputed = (fn, depKeys, defOptions = {}) =>
+  ({ fn, depKeys, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
+export const defLazyComputed = (fn, depKeys, defOptions = {}) =>
+  ({ fn, depKeys, lazy: true, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
+export const defComputedVal = (val) =>
+  ({ fn: () => val, depKeys: [] });
+export const defWatch = (fn, depKeys, defOptions = {}) =>
+  ({ fn, depKeys, immediate: defOptions.immediate, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
+export const defWatchImmediate = (fn, depKeys, defOptions = {}) =>
+  ({ fn, depKeys, immediate: true, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
 
 
 const defaultExport = {

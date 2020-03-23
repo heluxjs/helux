@@ -151,6 +151,8 @@ export default function useConcent(registerOption, ccClassKey){
     }
   }, []);
 
+  beforeRender(hookRef);
+  
   // before every render
   if (mapProps) {
     const mapped = mapProps(refCtx);
@@ -160,6 +162,5 @@ export default function useConcent(registerOption, ccClassKey){
     refCtx.mapped = mapped;
   }
 
-  beforeRender(hookRef);
   return refCtx;
 }

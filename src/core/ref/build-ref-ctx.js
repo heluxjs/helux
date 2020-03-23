@@ -390,9 +390,9 @@ export default function (ref, params, liteLevel = 5) {
         if (!Array.isArray(depKeys)) throw new Error(`${eType('second')} one of them(array, null, undefined)`);
       }
 
-      let moDepKeys = null;
+      let modDepKeys = null;
       if (!isProp && _depKeys) {
-        moDepKeys = [];
+        modDepKeys = [];
         _depKeys.forEach(depKey => {
           let modDepKey;
           if (depKey.includes('/')) {
@@ -402,17 +402,18 @@ export default function (ref, params, liteLevel = 5) {
               throw me(ERR.CC_MODULE_NOT_CONNECTED, vbi(`depKey[${depKey}]`));
             }
           }else{
-            modDepKey = `${stateModule}/${depKey}`
+            // 这里要注意， 私有的key
+            modDepKey = `${stateModule}/${depKey}`;
           }
 
-          moDepKeys.push(modDepKey);
+          modDepKeys.push(modDepKey);
 
           // 先暂时保持起来，组件挂载时才映射依赖
           ctx.__$$staticWaKeys[modDepKey] = 1;
         });
       }
       // 对于effectProps来说是不会读取compare属性来用的
-      const effectItem = { fn, isProp, depKeys: _depKeys, moDepKeys, eId: getEId(), compare, immediate: _immediate };
+      const effectItem = { fn, isProp, depKeys: _depKeys, modDepKeys, eId: getEId(), compare, immediate: _immediate };
       targetEffectItems.push(effectItem);
     };
 

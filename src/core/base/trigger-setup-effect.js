@@ -50,16 +50,16 @@ export default function (ref, callByDidMount) {
       // if (status === EFFECT_STOPPED) return;
 
       // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
-      const { moDepKeys, compare, fn, eId } = item;
-      if (moDepKeys) {
-        const keysLen = moDepKeys.length;
+      const { modDepKeys, compare, fn, eId } = item;
+      if (modDepKeys) {
+        const keysLen = modDepKeys.length;
         if (keysLen === 0) return;
 
         const mappedSettedKey = mapSettedList(__$$settedList);
         let shouldEffectExecute = false;
 
         for (let i = 0; i < keysLen; i++) {
-          const key = moDepKeys[i];
+          const key = modDepKeys[i];
           if (!compare) {
             if (mappedSettedKey[key]) {
               shouldEffectExecute = true;
@@ -102,6 +102,7 @@ export default function (ref, callByDidMount) {
             break;
           }
         }
+        
         if (shouldEffectExecute) {
           toBeExecutedFns.push({ fn, eId });
         }
