@@ -1156,6 +1156,7 @@ declare type DefaultExport = {
   executeAll: typeof executeAll,
   appendState: typeof appendState,
   defComputed: typeof defComputed,
+  defLazyComputed: typeof defLazyComputed,
   defComputedVal: typeof defComputedVal,
   defWatch: typeof defWatch,
   cst: typeof cst,
