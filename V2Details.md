@@ -2,7 +2,7 @@
 ### dependency collection
 In concent `v2`, support dependency collection automatically, so now there are two ways to let concent know your component dependency.
 
-- Specify it with param `watchedKeys` when your declare a component
+- Specify param `watchedKeys` when your declare a component
 ```js
 import { register, useConcent } from 'concent';
 
