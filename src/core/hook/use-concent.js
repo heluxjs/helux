@@ -152,7 +152,7 @@ export default function useConcent(registerOption, ccClassKey){
   }, []);
 
   beforeRender(hookRef);
-  
+
   // before every render
   if (mapProps) {
     const mapped = mapProps(refCtx);

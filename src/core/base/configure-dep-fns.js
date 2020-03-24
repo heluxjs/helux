@@ -1,13 +1,15 @@
 import {
   okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO, justWarning,
-  makeCuDepDesc, safeGetThenNoDupPush,
+  makeCuDepDesc, safeGetThenNoDupPush, makeFnDesc,
 } from '../../support/util';
 import { ERR, CATE_REF, FN_CU } from '../../support/constant';
+import { FUNCTION } from '../../support/priv-constant';
 import ccContext from '../../cc-context';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 import uuid from './uuid';
 
 const { moduleName_stateKeys_, runtimeVar } = ccContext;
+let sortFactor = 1;
 
 /**
 computed('foo/firstName', ()=>{});
@@ -40,7 +42,7 @@ computed(ctx=>{ return cuDesc}
 */
 
 // cate: module | ref
-export default function (cate, confMeta, item, handler, depKeys, compare, immediate) {
+export default function (cate, confMeta, item, handler, depKeysOrOpt) {
   const ctx = confMeta.refCtx;
   const type = confMeta.type;
   if (cate === CATE_REF) {
@@ -56,13 +58,14 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
   let _descObj;
   if (itype === 'string') {// retKey
     if (isPJO(handler)) _descObj = { [item]: handler };
-    else _descObj = { [item]: { fn: handler, depKeys, compare, immediate } };
+    else if (typeof handler === FUNCTION) _descObj = { [item]: makeFnDesc(handler, depKeysOrOpt) };
   } else if (isPJO(item)) {
     _descObj = item;
-  } else if (itype === 'function') {
+  } else if (itype === FUNCTION) {
     _descObj = item(ctx);
     if (!isPJO(_descObj)) throw new Error(`type of ${type} callback result must be an object`);
   }
+
   if (!_descObj) {
     justWarning(`${cate} ${type} param type error`);
     return;
@@ -74,7 +77,7 @@ export default function (cate, confMeta, item, handler, depKeys, compare, immedi
 function _parseDescObj(cate, confMeta, descObj) {
   const { computedCompare, watchCompare, watchImmediate } = runtimeVar;
   //读全局的默认值
-  const defaultCompare = confMeta.type === 'computed' ? computedCompare : watchCompare;
+  const defaultCompare = confMeta.type === FN_CU ? computedCompare : watchCompare;
   const callerModule = confMeta.module;
 
   okeys(descObj).forEach((retKey, idx) => {
@@ -82,21 +85,19 @@ function _parseDescObj(cate, confMeta, descObj) {
     const vType = typeof val;
 
     let targetItem = val;
-    if (vType === 'function') {
-      targetItem = { fn: val }
+    if (vType === FUNCTION) {
+      targetItem = { fn: val };
     }
 
     if (isPJO(targetItem)) {
       // depKeys设置为默认自动收集
       const { fn, immediate = watchImmediate, compare = defaultCompare, lazy, retKeyDep = true } = targetItem;
+
+      // 确保用户显示的传递null、undefined、0、都置为依赖收集状态
       const depKeys = targetItem.depKeys || '-';
 
-      // 对于module computed以一个文件暴露出来一堆计算函数集合且没有使用defComputed时，使用key下标作为sort值
-      // !!!注意在一个文件里即写defComputed又写普通函数，这两类计算函数各自的执行顺序是和书写顺序一致的，
-      // 在自定义函数不超过一千个时，它们在一起时的执行顺序是总是执行完毕自定义函数再执行defComputed定义函数
-      // 超过一千个时，它们在一起时的执行顺序是不被保证的
-      const sort = targetItem.sort || confMeta.sort || idx;
       // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
+      const sort = targetItem.sort || sortFactor++;
 
       const fnUid = uuid('mark');
       
@@ -108,18 +109,19 @@ function _parseDescObj(cate, confMeta, descObj) {
         _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
         // when retKey is '/xxxx', here need pass xxxx as retKey
         _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
-      } else {// ['foo/b1', 'bar/b1'] or null or undefined
-        if (depKeys && !Array.isArray(depKeys)) throw new Error('depKeys must an string array or *');
+      } else {
+        if (depKeys.length === 0) {
+          const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey); //consume retKey is stateKey
 
-        if (!depKeys || depKeys.length === 0) {
-          const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, retKey); //consume retKey is stateKey
-          let targetDepKeys = [];
-          if (!depKeys && isStateKey) {
-            targetDepKeys = [pureKey];// regenerate depKeys
-          }
+          // 这段逻辑对于将来的1.6版本有效，即没有指定depKeys，启用同名键规则
+          // let targetDepKeys = [];
+          // if (!depKeys && isStateKey) {
+          //   targetDepKeys = [pureKey];// regenerate depKeys
+          // }
+
           _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
-          _mapDepDesc(cate, confMeta, module, pureKey, fn, targetDepKeys, immediate, compare, lazy, sort);
-        } else {
+          _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
+        } else {// ['foo/b1', 'bar/b1'] or ['b1', 'b2']
           const { pureKey, moduleOfKey } = _resolveKey(confMeta, callerModule, retKey);
           const stateKeyModule = moduleOfKey;
           _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
@@ -212,7 +214,7 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   // 确保static computed优先优先执行
   let targetSort = sort;
   if (isStatic) {
-    targetSort = -1;
+    if (targetSort >= 0) targetSort = -1;
   } else {
     if (sort < 0) targetSort = 0;
   }
@@ -222,12 +224,12 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   if (retKey_fn_[retKey]) {
     if (cate !== CATE_REF) {// 因为热加载，对于module computed 定义总是赋值最新的，
       retKey_fn_[retKey] = fnDesc;
-      retKey_lazy_[retKey] = confMeta.isLazyComputed || lazy;
+      retKey_lazy_[retKey] = lazy;
     }
     // do nothing
   } else {
     retKey_fn_[retKey] = fnDesc;
-    retKey_lazy_[retKey] = confMeta.isLazyComputed || lazy;
+    retKey_lazy_[retKey] = lazy;
     moduleDepDesc.fnCount++;
   }
   

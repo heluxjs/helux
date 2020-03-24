@@ -263,7 +263,7 @@ export default function (ref, params, liteLevel = 5) {
     connectedReducer: {},
     reducer: {},
 
-    //collect mapProps result
+    //collected mapProps result
     mapped: {},
 
     // api meta data
@@ -377,7 +377,6 @@ export default function (ref, params, liteLevel = 5) {
 
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
-    ctx.lazyComputed = getDefineComputedHandler(ctx, true);
 
     const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeys, compare = true, immediate = true) => {
       if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
@@ -441,6 +440,7 @@ export default function (ref, params, liteLevel = 5) {
     if (m === module) {
       reducerObj = moduleReducer;
     } else {
+      // todo: 如果connectedReducer不在意调用者是谁，该属性可以删掉或者不用直接指向reducer，节省初始化refCtx的开销
       reducerObj = safeGet(connectedReducer, m);
     }
 

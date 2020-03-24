@@ -376,3 +376,22 @@ export function getPassToMapWaKeys(watchedKeys) {
   if (watchedKeys === '-') return '*';
   else return watchedKeys;
 }
+
+export function isDepKeysValid(depKeys) {
+  return Array.isArray(depKeys) || depKeys === '-' || depKeys === '*';
+}
+
+export function checkDepKeys(depKeys) {
+  if (depKeys && !isDepKeysValid(depKeys)) {
+    throw new Error(`depKeys must an array , '*' or '-'`);
+  }
+}
+
+export function makeFnDesc(fn, depKeysOrOpt, check = true) {
+  // 防止显式的传递null
+  const _depKeysOrOpt = depKeysOrOpt || {};
+  const desc = { fn };
+  const assignFrom = isDepKeysValid(_depKeysOrOpt) ? { depKeys: _depKeysOrOpt } : _depKeysOrOpt;
+  check && checkDepKeys(assignFrom.depKeys)
+  return Object.assign(desc, assignFrom);
+}

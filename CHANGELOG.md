@@ -1,3 +1,22 @@
+#### 2020-03-21
+2.3.19 发布
+* refactor: 新增`retKeyDep`来关闭同名结果键的依赖收集规则
+```js
+// code in models/foo/reducer.js
+export function firstName(n){
+  console.log('trigger this when firstName or lastName changed');
+  return n.lastName + Date.now();
+}
+
+// ----------> 改为如下形式，则不再对firstName有依赖
+import { defComputed } from 'concent';
+
+export const firstName = defComputed((n)=>{
+  console.log('trigger this only when lastName changed');
+  return n.lastName + Date.now();
+}, '-', {retKeyDep:true});
+```
+
 #### 2020-03-20
 2.3.18 发布
 * fix: computed&watch静态依赖未记录

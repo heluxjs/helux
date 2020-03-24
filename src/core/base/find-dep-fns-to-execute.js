@@ -9,6 +9,8 @@ import waMap from '../../cc-context/watch-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 
+const noOp = (tip) => justWarning(`${tip} call commit or commitCu as it is lazy`);
+
 // 记录某个cuRetKey引用过哪些staticCuRetKeys
 // 直接引用或者间接引用过staticCuRetKey都会记录在列表内
 let modCuRetKey_referStaticCuRetKeys_ = {};
@@ -138,6 +140,7 @@ export default function executeDepFns(
     const { commit: commitCu, getFnCommittedState: getRetKeyCu, clear: clearCu } = makeCommitHandler();
 
     pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
+      const tip = `${sourceType} ${fnType} retKey[${retKey}] can't`;
 
       const fnCtx = {
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
@@ -162,11 +165,11 @@ export default function executeDepFns(
         fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys);
       }
 
-      if (fnType === 'computed') {
+      if (fnType === FN_CU) {
         if (isLazy) {
-          // lazyComputed 不再暴露这两个接口，以隔绝副作用
-          delete fnCtx.commit;
-          delete fnCtx.commitCu;
+          // lazyComputed 不能调用commit commitCu，以隔绝副作用
+          fnCtx.commit = () => noOp(tip);
+          fnCtx.commitCu = fnCtx.commit;
         }
 
         if (needCollectDep) {
@@ -242,9 +245,7 @@ export default function executeDepFns(
           // 实例计算函数里调用commitCu只能修改实例计算retKey
           
           const fnDesc = retKey_fn_[cuRetKey];
-          const tip = `commitCu: ${sourceType} ${fnType} retKey[${retKey}] can't`;
-          
-          if (!fnDesc) justWarning(`${tip} commit [${cuRetKey}], it is not defined`);
+          if (!fnDesc) justWarning(`commitCu:${tip} commit [${cuRetKey}], it is not defined`);
           // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
           else {
             // 检查提交目标只能是静态的cuRetKey
@@ -252,12 +253,12 @@ export default function executeDepFns(
               const RSList = getCuRetKeyRSList(cuRetKey, sourceType, stateModule, ccUniqueKey);
               if (RSList.includes(cuRetKey)) {
                 // 直接或间接引用了这个cuRetKey，就不能去改变它，以避免死循环
-                justWarning(`${tip} change [${cuRetKey}], [${retKey}] referred [${cuRetKey}]`);
+                justWarning(`commitCu:${tip} change [${cuRetKey}], [${retKey}] referred [${cuRetKey}]`);
               } else {
                 computedContainer[cuRetKey] = makeCuObValue(false, committedCuRet[cuRetKey]);
               }
             } else {
-              justWarning(`${tip} change [${cuRetKey}], it must have zero dep keys`);
+              justWarning(`commitCu:${tip} change [${cuRetKey}], it must have zero dep keys`);
             }
           }
         });
@@ -269,8 +270,8 @@ export default function executeDepFns(
 
     // 这里一次性处理所有computed函数提交了然后合并后的state
     curStateForComputeFn = getFnCommittedState();
-    if (curStateForComputeFn) {
 
+    if (curStateForComputeFn) {
       const assignCuState = (toAssign, judgeEmpty = false) => {
         curStateForComputeFn = toAssign;
         if (judgeEmpty && okeys(toAssign).length === 0) {

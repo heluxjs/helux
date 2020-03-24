@@ -61,19 +61,9 @@ export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
 
-// 假设用户直接定义的computed函数不超过1000个，让def***定义的computed函数全部在直接定义的computed函数执行后再执行
-let sortFactor = 1000;
-export const defComputed = (fn, depKeys, defOptions = {}) =>
-  ({ fn, depKeys, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
-export const defLazyComputed = (fn, depKeys, defOptions = {}) =>
-  ({ fn, depKeys, lazy: true, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
-export const defComputedVal = (val) =>
-  ({ fn: () => val, depKeys: [] });
-export const defWatch = (fn, depKeys, defOptions = {}) =>
-  ({ fn, depKeys, immediate: defOptions.immediate, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
-export const defWatchImmediate = (fn, depKeys, defOptions = {}) =>
-  ({ fn, depKeys, immediate: true, compare: defOptions.compare, sort: (defOptions.sort || sortFactor++), retKeyDep: defOptions.retKeyDep });
-
+export const defComputed = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
+export const defComputedVal = (val) => ({ fn: () => val, depKeys: [] });
+export const defWatch = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
 
 const defaultExport = {
   cloneModule,
@@ -108,10 +98,8 @@ const defaultExport = {
   useConcent,
   bindCcToMcc,
   defComputed,
-  defLazyComputed,
   defComputedVal,
   defWatch,
-  defWatchImmediate,
 }
 
 export function bindCcToMcc(name) {
