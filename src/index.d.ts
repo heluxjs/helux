@@ -1094,6 +1094,13 @@ export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFn
 export function defComputed<CuRet>
   (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions: DepKeys | DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
+type DefLazyOptions = { depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean };
+
+export function defLazyComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, defOptions: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
+export function defLazyComputed<CuRet>
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
+
 type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
 
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>

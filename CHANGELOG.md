@@ -1,3 +1,21 @@
+#### 2020-03-24
+2.3.21 发布
+* refactor: 精简`defComputed`、`defWatch`，删除top接口`defLazyComputed`,`defImmediateWatch`
+```js
+// old:  defComputed(fn, depKeys: DepKeys, options: DefOptions)
+// new:  defComputed(fn, depKeys: DepKeys | DefOptions )
+
+// 定义lazy computed
+export const fullName = defComputed(()=>{
+  // code here
+}, {lazy:true})
+
+// 定义immediate watch
+export const fullName = defWatch(()=>{
+  // code here
+}, {immediate:true})
+```
+
 #### 2020-03-21
 2.3.19 发布
 * refactor: 新增`retKeyDep`来关闭同名结果键的依赖收集规则

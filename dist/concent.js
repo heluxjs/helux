@@ -590,12 +590,15 @@
       check = true;
     }
 
+    // 防止显式的传递null
+    var _depKeysOrOpt = depKeysOrOpt || {};
+
     var desc = {
       fn: fn
     };
-    var assignFrom = isDepKeysValid(depKeysOrOpt) ? {
-      depKeys: depKeysOrOpt
-    } : depKeysOrOpt;
+    var assignFrom = isDepKeysValid(_depKeysOrOpt) ? {
+      depKeys: _depKeysOrOpt
+    } : _depKeysOrOpt;
     check && checkDepKeys(assignFrom.depKeys);
     return Object.assign(desc, assignFrom);
   }
@@ -1713,7 +1716,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.20',
+      version: '2.3.21',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -7711,6 +7714,11 @@
   var defComputed = function defComputed(fn, defOptions) {
     return makeFnDesc(fn, defOptions);
   };
+  var defLazyComputed = function defLazyComputed(fn, defOptions) {
+    var desc = makeFnDesc(fn, defOptions);
+    desc.lazy = true;
+    return desc;
+  };
   var defComputedVal = function defComputedVal(val) {
     return {
       fn: function fn() {
@@ -7755,6 +7763,7 @@
     useConcent: useConcent$1,
     bindCcToMcc: bindCcToMcc,
     defComputed: defComputed,
+    defLazyComputed: defLazyComputed,
     defComputedVal: defComputedVal,
     defWatch: defWatch
   };
@@ -7838,6 +7847,7 @@
   exports.appendState = appendState$1;
   exports.useConcent = useConcent$1;
   exports.defComputed = defComputed;
+  exports.defLazyComputed = defLazyComputed;
   exports.defComputedVal = defComputedVal;
   exports.defWatch = defWatch;
   exports.bindCcToMcc = bindCcToMcc;

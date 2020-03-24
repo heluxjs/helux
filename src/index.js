@@ -62,6 +62,11 @@ export const appendState = _appendState;
 export const useConcent = _useConcent;
 
 export const defComputed = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
+export const defLazyComputed = (fn, defOptions) => {
+  const desc = util.makeFnDesc(fn, defOptions);
+  desc.lazy = true;
+  return desc;
+}
 export const defComputedVal = (val) => ({ fn: () => val, depKeys: [] });
 export const defWatch = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
 
@@ -98,6 +103,7 @@ const defaultExport = {
   useConcent,
   bindCcToMcc,
   defComputed,
+  defLazyComputed,
   defComputedVal,
   defWatch,
 }
