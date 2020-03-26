@@ -41,6 +41,7 @@ export default function (store = {}, options = {}) {
 
     storeConf.store[m] = evalState(state);
     if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
+    
     storeConf.reducer[m] = reducer;
     if (watch) storeConf.watch[m] = watch;
     if (computed) storeConf.computed[m] = computed;

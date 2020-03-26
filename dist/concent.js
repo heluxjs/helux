@@ -1716,7 +1716,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.22',
+      version: '2.3.24',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -4081,6 +4081,7 @@
         init = config.init,
         isClassSingle = config.isClassSingle;
     var eState = evalState$1(state);
+    if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
 
     if (reducer && !isPJO$5(reducer)) {
       throw new Error("config.reducer " + NOT_A_JSON);
@@ -5293,7 +5294,7 @@
       state: mergedState,
       moduleState: moduleState,
       mstate: mstate,
-      //用于before-render里避免merge moduleState而导致当然冗余触发get
+      //用于before-render里避免merge moduleState而导致的冗余触发get
       globalState: globalState,
       connectedState: connectedState,
       extra: {},
@@ -5627,7 +5628,11 @@
         };
       });
     });
-    ctx.reducer = _caller;
+    ctx.reducer = _caller; //alias
+
+    ctx.mr = ctx.moduleReducer;
+    ctx.cr = ctx.connectedReducer;
+    ctx.r = ctx.reducer;
 
     if (watchedKeys === '-') {
       __$$autoWatch = true;

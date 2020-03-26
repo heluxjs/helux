@@ -1,3 +1,11 @@
+#### 2020-03-25
+2.3.23 发布
+* optimize: 为`ctx`相关联的`reducer`新增别名，方便用户简写调用
+- crx.r` for `ctx.reducer`
+- crx.mr` for `ctx.moduleReducer`
+- crx.cr` for `ctx.connectedReducer`
+* fix: 为`middleware function`的第一个参数`midInfo`新增`modState`接口类型描述
+
 #### 2020-03-24
 2.3.21 发布
 * refactor: 精简`defComputed`、`defWatch`，删除top接口`defLazyComputed`,`defImmediateWatch`

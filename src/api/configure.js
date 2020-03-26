@@ -34,6 +34,7 @@ export default function (module, config) {
 
   const { state, reducer, computed, watch, init, isClassSingle } = config;
   const eState = evalState(state);
+  if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
 
   if (reducer && !isPJO(reducer)) {
     throw new Error(`config.reducer ${NOT_A_JSON}`);
@@ -56,5 +57,7 @@ export default function (module, config) {
   }
 
   ccContext.moduleName_isConfigured_[module] = true;
+
+
   send(SIG_MODULE_CONFIGURED, module);
 }

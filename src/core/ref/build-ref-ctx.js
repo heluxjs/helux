@@ -245,7 +245,7 @@ export default function (ref, params, liteLevel = 5) {
     // state
     state: mergedState,
     moduleState,
-    mstate,//用于before-render里避免merge moduleState而导致当然冗余触发get
+    mstate,//用于before-render里避免merge moduleState而导致的冗余触发get
     globalState,
     connectedState,
     extra: {},// can pass value to extra in every render period
@@ -296,8 +296,6 @@ export default function (ref, params, liteLevel = 5) {
     __$$settedList: [],//[{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
   };
-  
-
 
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
@@ -471,8 +469,12 @@ export default function (ref, params, liteLevel = 5) {
       reducerObj[fnName] = (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
     });
   });
-
   ctx.reducer = _caller;
+
+  //alias
+  ctx.mr = ctx.moduleReducer;
+  ctx.cr = ctx.connectedReducer;
+  ctx.r = ctx.reducer;
 
   if (watchedKeys === '-') {
     __$$autoWatch = true;

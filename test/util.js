@@ -5,14 +5,14 @@ export function delay(ms = 1000) {
 export function makeStoreConfig(moduleName) {
   return {
     [moduleName]: {
-      state: {
+      state: () => ({
         name: moduleName,
         age: 22,
-        info:{
-          addr:'bj',
-          email:'x@concent.com',
+        info: {
+          addr: 'bj',
+          email: 'x@concent.com',
         }
-      },
+      }),
       reducer: {
         changeName(name, moduleState, ctx) {
           return { name };

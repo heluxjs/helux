@@ -412,7 +412,10 @@ export interface ICtxBase {
 
   readonly moduleReducer: any;
   readonly connectedReducer: any;
-  readonly reducer: IAnyFnInObj;
+  readonly reducer: any;
+  readonly mr: any;// alias of moduleReducer
+  readonly cr: any;// alias of connectedReducer
+  readonly r: any;// alias of reducer
 
   computed: typeof refCtxComputed;
   watch: typeof refCtxWatch;
@@ -496,12 +499,14 @@ export interface IRefCtx<
   readonly mstate: ModuleState;
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
+  readonly mr: ModuleReducer;// alias of moduleReducer
   readonly settings: Settings;
   readonly mapped: Mapped;
   readonly refComputed: RefComputed;
   // when connect other modules
   readonly connectedState: ConnectedState;
   readonly connectedReducer: ConnectedReducer;
+  readonly cr: ConnectedReducer;// alias of connectedReducer
   readonly connectedComputed: ConnectedComputed;
 }
 
@@ -536,8 +541,15 @@ export interface ICtx
   readonly state: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
-  readonly mstate: RootState[ModuleName];
+  // readonly mstate: RootState[ModuleName];
+  readonly reducer: RootReducer;
+  readonly r: RootReducer;
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
+    RootReducer[ModuleName]['setState'] extends Function ?
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+  ) : {};
+  // alias of moduleReducer
+  readonly mr: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
   ) : {};
@@ -548,6 +560,7 @@ export interface ICtx
   // overwrite connectedState , connectedComputed
   readonly connectedState: Pick<RootState, ConnectedModules>;
   readonly connectedReducer: Pick<RootReducer, ConnectedModules>;
+  readonly cr: Pick<RootReducer, ConnectedModules>;// alias of connectedReducer
   readonly connectedComputed: Pick<RootCu, ConnectedModules>;
 
   // !!! 目前这样写有问题，例如连接是foo,bar, 
@@ -759,18 +772,19 @@ interface StoreConfig {
   [moduleName: string]: ModuleConfig;
 }
 
-type StateInfo = {
+type MidInfo = {
   calledBy: string, type: string, payload: any,
   renderKey: string, delay: number, ccKey: string, ccUniqueKey: string,
   committedState: object, sharedState: object | null,
-  refModule: string, module: string, fnName: string
+  refModule: string, module: string, fnName: string,
+  modState: (key: string, value: any) => void,
 };
 type PluginOn = (sig: string | string[], callback: (data: { sig: string, payload: any }) => void) => void;
 interface Plugin {
   install: (on: PluginOn) => { name: string };
 }
 interface RunOptions {
-  middlewares?: ((stateInfo: StateInfo, next: Function) => void)[];
+  middlewares?: ((midInfo: MidInfo, next: Function) => void)[];
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false
   isStrict?: boolean;

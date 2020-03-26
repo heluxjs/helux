@@ -1,12 +1,11 @@
 import { makeStoreConfig, extractMessage } from './util';
-import { run, getState, setState, lazyReducer, reducer, set, cst, configure, dispatch, cloneModule } from '../src/index';
+import { run, getState, setState, reducer, set, cst, configure, dispatch, cloneModule } from '../src/index';
 
 const Foo = 'foo';
 const Bar = 'bar';
 
 test('run concent app with a store config', async () => {
-  run(makeStoreConfig('foo'), { isStrict: true });
-  // run(makeStoreConfig());
+  run(makeStoreConfig('foo'));
 
   const fooState = getState(Foo);
   expect(fooState.name).toBe(Foo);
@@ -19,7 +18,6 @@ test('run concent app with a store config', async () => {
   const buildInCcState = getState(cst.MODULE_CC);
   expect(buildInCcState).toBeTruthy();
 
-  expect(lazyReducer[Foo].changeName).toBeInstanceOf(Function);
   expect(reducer[Foo].changeName).toBeInstanceOf(Function);
 
   try {
@@ -49,12 +47,11 @@ test('run concent app with a store config', async () => {
   try{
     configure();
   }catch(err){
-    expect(extractMessage(err)).toMatch(/(?=config is not plain json object)/);
+    expect(extractMessage(err)).toMatch(/(?=param config is not a plain json object!)/);
   }
 
   /** test configure  */
   configure(Bar, makeStoreConfig(Bar)[Bar]);
-  expect(lazyReducer[Bar].changeName).toBeInstanceOf(Function);
   expect(reducer[Bar].changeName).toBeInstanceOf(Function);
 
   const barState = getState(Bar);
@@ -65,10 +62,6 @@ test('run concent app with a store config', async () => {
   await dispatch(`${Bar}/changeName`, 'dispatchedName');
   expect(barState.name).toBe('dispatchedName');
 
-  /** test lazyReducer  */
-  await lazyReducer[Bar].changeName('aNewNameSendedByLazyReducer');
-  expect(barState.name).toBe('aNewNameSendedByLazyReducer');
-
   /** test reducer  */
   await reducer[Bar].changeName('aNewNameSendedByReducer');
   expect(barState.name).toBe('aNewNameSendedByReducer');
@@ -78,11 +71,8 @@ test('run concent app with a store config', async () => {
   cloneModule(clonedModule, Bar);
   const newBarState = getState(clonedModule);
   expect(newBarState).toBeTruthy();
-  expect(lazyReducer[clonedModule].changeName).toBeInstanceOf(Function);
   expect(reducer[clonedModule].changeName).toBeInstanceOf(Function);
   await dispatch(`${clonedModule}/changeName`, 'well,see what happen');
   expect(newBarState.name).toBe('well,see what happen');
-  await lazyReducer[clonedModule].changeName('change newBar module name');
-  expect(newBarState.name).toBe('change newBar module name');
 
 });
