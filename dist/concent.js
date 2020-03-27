@@ -687,7 +687,9 @@
   function pickDepFns (isBeforeMount, cate, type, depDesc, stateModule, oldState, committedState, cUkey) {
     var moduleDep = depDesc[stateModule]; // it can be refModuleDep or moduleDep
 
-    var pickedFns = [];
+    var pickedFns = []; // 针对type module， init-module-state时，已对_computedValueOri赋值了默认cuDesc，
+    // 所以此时可以安全的直接判断非关系，而不用担心 {}对象存在
+
     if (!moduleDep) return {
       pickedFns: pickedFns,
       setted: [],
@@ -1716,7 +1718,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.24',
+      version: '2.3.26',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -1950,7 +1952,10 @@
     rootStateVer[module] = okeys(state).reduce(function (map, key) {
       map[key] = 1;
       return map;
-    }, {});
+    }, {}); // 把_computedValueOri safeGet从init-module-computed调整到此处
+    // 防止用户不定义任何computed，而只是定义watch时报错undefined
+
+    safeGet(ccContext.computed._computedValueOri, module, makeCuDepDesc());
     var stateKeys = Object.keys(state);
     ccContext.moduleName_stateKeys_[module] = stateKeys;
 
@@ -2603,8 +2608,7 @@
     return moduleComputedValue;
   }
 
-  var safeGet$1 = safeGet,
-      isPJO$1 = isPJO;
+  var isPJO$1 = isPJO;
   function initModuleComputed (module, computed) {
     if (!computed) return;
     var tip = "module[" + module + "] computed";
@@ -2633,8 +2637,9 @@
       return pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
     };
 
-    var deltaCommittedState = Object.assign({}, moduleState);
-    var cuOri = safeGet$1(ccComputed._computedValueOri, module);
+    var deltaCommittedState = Object.assign({}, moduleState); // 在init-module-state那里已safeGet, 这里可以安全的直接读取
+
+    var cuOri = ccComputed._computedValueOri[module];
     rootComputedValue[module] = makeObCuContainer(computed, cuOri);
     var moduleComputedValue = rootComputedValue[module];
     executeDepFns(d, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, deltaCommittedState, makeCallInfo(module), true, 'computed', CATE_MODULE, moduleComputedValue);

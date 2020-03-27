@@ -34,7 +34,10 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   const moduleDep = depDesc[stateModule];// it can be refModuleDep or moduleDep
   const pickedFns = [];
 
-  if (!moduleDep) return { pickedFns, setted:[], changed:[] };
+  // 针对type module， init-module-state时，已对_computedValueOri赋值了默认cuDesc，
+  // 所以此时可以安全的直接判断非关系，而不用担心 {}对象存在
+  if (!moduleDep) return { pickedFns, setted: [], changed: [] };
+
   const { retKey_fn_, retKey_lazy_, stateKey_retKeys_, fnCount } = moduleDep;
 
   /** 首次调用 */
