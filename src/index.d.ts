@@ -1143,6 +1143,7 @@ export function getRefs<Ctx extends ICtxBase>(): Ctx[];
 export function cloneModule(moduleName: string, existingModule: string, moduleConfig?: ModuleConfig): void;
 
 declare type DefaultExport = {
+  ccContext: any,
   clearContextIfHot: typeof clearContextIfHot,
   run: typeof run,
   register: typeof register,

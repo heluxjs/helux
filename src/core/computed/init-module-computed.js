@@ -33,7 +33,8 @@ export default function (module, computed) {
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
   const deltaCommittedState = Object.assign({}, moduleState);
 
-  const cuOri = safeGet(ccComputed._computedValueOri, module);
+  // 在init-module-state那里已safeGet, 这里可以安全的直接读取
+  const cuOri = ccComputed._computedValueOri[module];
   rootComputedValue[module] = makeObCuContainer(computed, cuOri);
   const moduleComputedValue = rootComputedValue[module];
 
