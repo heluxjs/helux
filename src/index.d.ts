@@ -615,7 +615,6 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 export interface IFnCtxBase{
   retKey: string;
   isFirstCall: boolean;
-  commitCu: GetFnCtxCommitCu<any>;
   setted: string[];
   changed: string[];
   stateModule: string;

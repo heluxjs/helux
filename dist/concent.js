@@ -1718,7 +1718,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.26',
+      version: '2.3.27',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -1955,7 +1955,10 @@
     }, {}); // 把_computedValueOri safeGet从init-module-computed调整到此处
     // 防止用户不定义任何computed，而只是定义watch时报错undefined
 
-    safeGet(ccContext.computed._computedValueOri, module, makeCuDepDesc());
+    var cu = ccContext.computed;
+    safeGet(cu._computedDep, module, makeCuDepDesc());
+    safeGet(cu._computedValue, module);
+    safeGet(cu._computedValueOri, module);
     var stateKeys = Object.keys(state);
     ccContext.moduleName_stateKeys_[module] = stateKeys;
 

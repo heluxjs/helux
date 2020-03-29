@@ -28,7 +28,10 @@ export default function (module, mState, moduleMustNotExisted = true) {
   }, {});
   // 把_computedValueOri safeGet从init-module-computed调整到此处
   // 防止用户不定义任何computed，而只是定义watch时报错undefined
-  util.safeGet(ccContext.computed._computedValueOri, module, util.makeCuDepDesc());
+  const cu = ccContext.computed;
+  util.safeGet(cu._computedDep, module, util.makeCuDepDesc());
+  util.safeGet(cu._computedValue, module);
+  util.safeGet(cu._computedValueOri, module);
 
   const stateKeys = Object.keys(state);
   ccContext.moduleName_stateKeys_[module] = stateKeys;
