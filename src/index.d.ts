@@ -57,6 +57,11 @@ type CcCst = {
   FN_WATCH: 'watch';
 }
 
+export type CalledBy = CcCst['DISPATCH'] | CcCst['SET_STATE'] | CcCst['SET_MODULE_STATE'] | CcCst['FORCE_UPDATE'] | CcCst['INVOKE'] | CcCst['SYNC'];
+export type SigFn = CcCst['SIG_FN_START'] | CcCst['SIG_FN_END'] | CcCst['SIG_FN_QUIT'] | CcCst['SIG_FN_ERR'];
+export type SigModuleConfigured = CcCst['SIG_MODULE_CONFIGURED'];
+export type SigStateChanged = CcCst['SIG_STATE_CHANGED'];
+
 export interface IAnyObj { [key: string]: any }
 export interface IAnyFn {
   (...args: any): any;
@@ -771,19 +776,46 @@ interface StoreConfig {
   [moduleName: string]: ModuleConfig;
 }
 
-type MidInfo = {
-  calledBy: string, type: string, payload: any,
+type MidCtx = {
+  calledBy: CalledBy, type: string, payload: any,
   renderKey: string, delay: number, ccKey: string, ccUniqueKey: string,
   committedState: object, sharedState: object | null,
   refModule: string, module: string, fnName: string,
   modState: (key: string, value: any) => void,
 };
-type PluginOn = (sig: string | string[], callback: (data: { sig: string, payload: any }) => void) => void;
+
+type SigFnData = {
+  sig: SigFn,
+  payload: {
+    isSourceCall: boolean,
+    calledBy: CalledBy,
+    module: string,
+    chainId: number,
+    fn: Function,
+  }
+};
+type SigModuleConfiguredData = {
+  sig: SigModuleConfigured,
+  payload: string,//配置了新模块
+};
+type SigStateChangedData = {
+  sig: SigStateChanged,
+  payload: {
+    committedState: IAnyObj,
+    sharedState: IAnyObj | null,
+    module: string,
+    type: string,
+    ccUniqueKey: string,
+    renderKey: string,
+  }
+};
+
+type PluginOn = (sig: string | string[], callback: (data: SigFnData) => void) => void;
 interface Plugin {
   install: (on: PluginOn) => { name: string };
 }
 interface RunOptions {
-  middlewares?: ((midInfo: MidInfo, next: Function) => void)[];
+  middlewares?: ((midCtx: MidCtx, next: Function) => void)[];
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false
   isStrict?: boolean;

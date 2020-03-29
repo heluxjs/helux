@@ -12,7 +12,7 @@ import { send } from '../plugin';
 const { isPJO, justWarning, isObjectNotNull, computeFeature, okeys } = util;
 const {
   FOR_ONE_INS_FIRSTLY, FOR_ALL_INS_OF_A_MOD,
-  FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC,
+  FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
@@ -24,14 +24,6 @@ const {
 //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
 function getStateFor(targetModule, refModule) {
   return targetModule === refModule ? FOR_ONE_INS_FIRSTLY : FOR_ALL_INS_OF_A_MOD;
-}
-
-function getActionType(calledBy, type) {
-  if ([FORCE_UPDATE, SET_STATE, SET_MODULE_STATE, INVOKE, SYNC].includes(calledBy)) {
-    return `ccApi/${calledBy}`;
-  } else {
-    return `dispatch/${type}`;
-  }
 }
 
 function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
@@ -132,8 +124,8 @@ export default function (state, {
         if (renderType === RENDER_NO_OP && !realShare) {
         } else {
           send(SIG_STATE_CHANGED, {
-            committedState, sharedState: realShare,
-            module, type: getActionType(calledBy, type), ccUniqueKey, renderKey
+            calledBy, type, committedState, sharedState: realShare,
+            module, ccUniqueKey, renderKey
           });
         }
 
