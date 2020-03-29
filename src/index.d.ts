@@ -801,18 +801,22 @@ type SigModuleConfiguredData = {
 type SigStateChangedData = {
   sig: SigStateChanged,
   payload: {
+    calledBy: CalledBy,
+    type: string,
     committedState: IAnyObj,
     sharedState: IAnyObj | null,
     module: string,
-    type: string,
     ccUniqueKey: string,
     renderKey: string,
   }
 };
 
-type PluginOn = (sig: string | string[], callback: (data: SigFnData) => void) => void;
+function ccPluginOn(sig: SigFn | SigFn[], callback: (data: SigFnData) => void): void;
+function ccPluginOn(sig: SigModuleConfigured, callback: (data: SigModuleConfiguredData) => void): void;
+function ccPluginOn(sig: SigStateChanged, callback: (data: SigStateChangedData) => void): void;
+function ccPluginOn(sig: string | string[], callback: (data: { sig: string, payload: any }) => void): void;
 interface Plugin {
-  install: (on: PluginOn) => { name: string };
+  install: (on: typeof ccPluginOn) => { name: string };
 }
 interface RunOptions {
   middlewares?: ((midCtx: MidCtx, next: Function) => void)[];
