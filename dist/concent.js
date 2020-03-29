@@ -1718,7 +1718,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.27',
+      version: '2.3.28',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -3006,9 +3006,6 @@
       FOR_ALL_INS_OF_A_MOD$1 = FOR_ALL_INS_OF_A_MOD,
       FORCE_UPDATE$1 = FORCE_UPDATE,
       SET_STATE$1 = SET_STATE,
-      SET_MODULE_STATE$1 = SET_MODULE_STATE,
-      INVOKE$1 = INVOKE,
-      SYNC$1 = SYNC,
       SIG_STATE_CHANGED$1 = SIG_STATE_CHANGED,
       RENDER_NO_OP$1 = RENDER_NO_OP,
       RENDER_BY_KEY$1 = RENDER_BY_KEY,
@@ -3024,14 +3021,6 @@
 
   function getStateFor(targetModule, refModule) {
     return targetModule === refModule ? FOR_ONE_INS_FIRSTLY$1 : FOR_ALL_INS_OF_A_MOD$1;
-  }
-
-  function getActionType(calledBy, type) {
-    if ([FORCE_UPDATE$1, SET_STATE$1, SET_MODULE_STATE$1, INVOKE$1, SYNC$1].includes(calledBy)) {
-      return "ccApi/" + calledBy;
-    } else {
-      return "dispatch/" + type;
-    }
   }
 
   function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
@@ -3165,10 +3154,11 @@
 
         if (renderType === RENDER_NO_OP$1 && !realShare) ; else {
           send(SIG_STATE_CHANGED$1, {
+            calledBy: calledBy,
+            type: type,
             committedState: committedState,
             sharedState: realShare,
             module: module,
-            type: getActionType(calledBy, type),
             ccUniqueKey: ccUniqueKey,
             renderKey: renderKey
           });
