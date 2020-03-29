@@ -2,7 +2,7 @@
 ### dependency collection
 In concent `v2`, support dependency collection automatically, so now there are two ways to let concent know your component dependency.
 
-- Specify it with param `watchedKeys` when your declare a component
+- Specify param `watchedKeys` when your declare a component
 ```js
 import { register, useConcent } from 'concent';
 
@@ -98,7 +98,7 @@ function FnComp{
 in v1, user should get lazy computed value by call function, in v2 can get ti by property directly.
 ```js
 import React, { Component } from "react";
-import { register, run, useConcent, defLazyComputed } from "concent";
+import { register, run, useConcent, defComputed } from "concent";
 import "./styles.css";
 
 // run concent with a module named counter
@@ -117,9 +117,9 @@ run({
         return n.count * 10;
       },
       // when count changed and read heavyCount will trigger this fn execute
-      heavyCount:defLazyComputed((n)=>{
+      heavyCount:defComputed((n)=>{
         return n.count * 1000000;
-      }, ['count'])
+      }, {lazy:true}),
     }
   }
 });
