@@ -27,31 +27,29 @@ function getStateFor(targetModule, refModule) {
 }
 
 function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
-  let hasMid = false;
   if (skipMiddleware !== true) {
     const len = middlewares.length;
     if (len > 0) {
-      hasMid = true;
       let index = 0;
       const next = () => {
         if (index === len) {// all middlewares been executed
-          cb(hasMid);
+          cb();
         } else {
           const middlewareFn = middlewares[index];
           index++;
-          if(typeof middlewareFn === 'function')middlewareFn(passToMiddleware, next);
+          if (typeof middlewareFn === 'function') middlewareFn(passToMiddleware, next);
           else {
             justWarning(`found one middleware is not a function`);
             next();
           }
         }
       }
-      next(hasMid);
+      next();
     } else {
       cb();
     }
   } else {
-    cb(hasMid);
+    cb();
   }
 }
 
@@ -110,15 +108,7 @@ export default function (state, {
         // 调用此接口请明确知道后果,
         // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
 
-        let realShare = sharedState;
-        if (hasMid) {
-          // 有中间件时，设置第三位参数为true，需再次提取一下sharedState, 防止用户扩展了sharedState上不存在于store的key
-          // 合并committedState是防止用户修改了committedState上的moduleStateKey
-          realShare = saveSharedState(module, passToMiddleware.sharedState, true);
-        } else {
-          sharedState && saveSharedState(module, sharedState);
-        }
-
+        const realShare = saveSharedState(module, passToMiddleware.sharedState, true);
         updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP && !realShare) {

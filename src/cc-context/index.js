@@ -56,17 +56,31 @@ const saveSharedState = (module, toSave, needExtract = false) => {
     target = partialState;
   }
 
+  let changedState = null;
   if (target) {
+    changedState = {};
     const moduleState = getState(module);
     const prevModuleState = getPrevState(module);
     okeys(target).forEach(key => {
-      prevModuleState[key] = moduleState[key];
-      incStateVer(module, key);
-      moduleState[key] = target[key];
+      const oldVal = moduleState[key];
+      const newVal = target[key];
+      const valType = typeof newVal;
+
+      let isNotEqual = true;
+      if (valType !== 'object') {
+        isNotEqual = oldVal !== newVal;
+      }
+
+      if (isNotEqual) {
+        prevModuleState[key] = oldVal;
+        moduleState[key] = newVal;
+        incStateVer(module, key);
+        changedState[key] = newVal;
+      }
     });
   }
 
-  return target;
+  return changedState;
 }
 
 const getState = (module) => {
