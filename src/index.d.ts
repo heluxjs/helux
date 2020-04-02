@@ -811,10 +811,10 @@ type SigStateChangedData = {
   }
 };
 
-function ccPluginOn(sig: SigFn | SigFn[], callback: (data: SigFnData) => void): void;
-function ccPluginOn(sig: SigModuleConfigured, callback: (data: SigModuleConfiguredData) => void): void;
-function ccPluginOn(sig: SigStateChanged, callback: (data: SigStateChangedData) => void): void;
-function ccPluginOn(sig: string | string[], callback: (data: { sig: string, payload: any }) => void): void;
+declare function ccPluginOn(sig: SigFn | SigFn[], callback: (data: SigFnData) => void): void;
+declare function ccPluginOn(sig: SigModuleConfigured, callback: (data: SigModuleConfiguredData) => void): void;
+declare function ccPluginOn(sig: SigStateChanged, callback: (data: SigStateChangedData) => void): void;
+declare function ccPluginOn(sig: string | string[], callback: (data: { sig: string, payload: any }) => void): void;
 interface Plugin {
   install: (on: typeof ccPluginOn) => { name: string };
 }
