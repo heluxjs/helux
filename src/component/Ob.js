@@ -17,7 +17,15 @@ export default React.memo(function (props) {
   const register = module ? { module } : { connect };
   register.lite = 1;
   const ctx = useConcent(register);
-  const passState = module ? ctx.moduleState : ctx.connectedState;
+  
+  let state, computed;
+  if (module) {
+    state = ctx.moduleState;
+    computed = ctx.moduleComputed;
+  } else {
+    state = ctx.connectedState;
+    computed = ctx.connectedComputed;
+  }
 
-  return view(passState);
+  return view({ state, computed });
 })
