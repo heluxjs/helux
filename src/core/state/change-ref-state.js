@@ -83,7 +83,7 @@ export default function (state, {
   Object.assign(state, sharedState);
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback,
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, true,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
 
@@ -126,7 +126,9 @@ export default function (state, {
   );
 }
 
-function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next) {
+function triggerReactSetState(
+  targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, needExtractChanged = false, next
+) {
   const { state: refState, ctx: refCtx } = targetRef;
   if (
     // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
@@ -167,9 +169,12 @@ function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, s
   const { shouldCurrentRefUpdate } = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false);
 
   const ccSetState = () => {
-     // 记录stateKeys，方便triggerRefEffect之用
-    refCtx.__$$settedList.push({ module: stateModule, keys: okeys(deltaCommittedState) });
-    refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+    const changedState = needExtractChanged ? util.extractChangedState(refCtx.state, deltaCommittedState) : deltaCommittedState;
+    if (changedState) {
+      // 记录stateKeys，方便triggerRefEffect之用
+      refCtx.__$$settedList.push({ module: stateModule, keys: okeys(changedState) });
+      refCtx.__$$ccSetState(changedState, reactCallback, shouldCurrentRefUpdate);
+    }
   }
 
   if (next) {

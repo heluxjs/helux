@@ -10,7 +10,7 @@ import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
 import extractStateByKeys from '../core/state/extract-state-by-keys';
 
 const { _computedValue } = computed;
-const { okeys } = util;
+const { okeys, extractChangedState } = util;
 const refs = {};
 const getDispatcher = () => refs[CC_DISPATCHER];
 
@@ -56,31 +56,12 @@ const saveSharedState = (module, toSave, needExtract = false) => {
     target = partialState;
   }
 
-  let changedState = null;
-  if (target) {
-    changedState = {};
-    const moduleState = getState(module);
-    const prevModuleState = getPrevState(module);
-    okeys(target).forEach(key => {
-      const oldVal = moduleState[key];
-      const newVal = target[key];
-      const valType = typeof newVal;
-
-      let isNotEqual = true;
-      if (valType !== 'object') {
-        isNotEqual = oldVal !== newVal;
-      }
-
-      if (isNotEqual) {
-        prevModuleState[key] = oldVal;
-        moduleState[key] = newVal;
-        incStateVer(module, key);
-        changedState[key] = newVal;
-      }
-    });
-  }
-
-  return changedState;
+  const moduleState = getState(module);
+  const prevModuleState = getPrevState(module);
+  return extractChangedState(moduleState, target, {
+    prevStateContainer: prevModuleState,
+    incStateVer: key => incStateVer(module, key),
+  });
 }
 
 const getState = (module) => {
@@ -165,7 +146,7 @@ const ccContext = {
   store: {
     appendState: function (module, state) {
       const stateKeys = util.safeGetArray(moduleName_stateKeys_, module);
-      util.okeys(state).forEach(k => {
+      okeys(state).forEach(k => {
         if (!stateKeys.includes(k)) {
           stateKeys.push(k);
         }
@@ -237,7 +218,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.3.28',
+    version: '2.3.29',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

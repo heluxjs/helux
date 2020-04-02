@@ -26,6 +26,7 @@ import _appendState from './api/append-state';
 import _reducer from './api/reducer';
 import _clearContextIfHot from './api/clear-context-if-hot';
 import _CcFragment from './component/CcFragment';
+import _Ob from './component/Ob';
 import _useConcent from './api/use-concent';
 import * as _cst from './support/constant';
 import * as util from './support/util';
@@ -57,6 +58,7 @@ export const getRefs = _getRefs;
 export const reducer = _reducer;
 export const clearContextIfHot = _clearContextIfHot;
 export const CcFragment = _CcFragment;
+export const Ob = _Ob;
 export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
@@ -98,6 +100,7 @@ const defaultExport = {
   reducer,
   clearContextIfHot,
   CcFragment,
+  Ob,
   cst,
   appendState,
   useConcent,

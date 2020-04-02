@@ -80,6 +80,7 @@ export default function (
     isHot,
     // autoCreateDispatcher = true,
     bindCtxToMethod = false,
+    objectValueCompare = false,
     computedCompare = true,
     watchCompare = true,
     watchImmediate = false,
@@ -100,6 +101,7 @@ export default function (
       const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
+      rv.objectValueCompare = objectValueCompare;
       rv.computedCompare = computedCompare;
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;

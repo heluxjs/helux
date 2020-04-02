@@ -277,6 +277,39 @@ export function shallowDiffers(a, b) {
   return false;
 }
 
+export function extractChangedState(oldState, partialNewState, moduleOpt) {
+  let changedState = {};
+
+  let setted = false;
+  if (partialNewState) {
+    const objectValueCompare = runtimeVar.objectValueCompare;
+    okeys(partialNewState).forEach(key => {
+      const oldVal = oldState[key];
+      const newVal = partialNewState[key];
+      const valType = typeof newVal;
+
+      let isNotEqual = true;
+      if (valType !== 'object') {
+        isNotEqual = oldVal !== newVal;
+      } else if (objectValueCompare) {
+        isNotEqual = oldVal !== newVal;
+      }
+
+      if (isNotEqual) {
+        if (moduleOpt) {
+          moduleOpt.prevStateContainer[key] = oldVal;
+          moduleOpt.incStateVer(key);
+          oldState[key] = newVal;
+        }
+        changedState[key] = newVal;
+        setted = true;
+      }
+    });
+  }
+
+  return setted ? changedState : null;
+}
+
 export function differStateKeys(oldState, newState) {
   const changed = [], setted = [];
   // const unchanged=[];

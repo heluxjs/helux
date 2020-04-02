@@ -289,7 +289,7 @@ declare function refCtxComputed(
 ): void;
 
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?:number): void;
+  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number): void;
 // (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>(
   retKey: string,
@@ -346,24 +346,24 @@ type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
 
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?:boolean, immediate?: boolean): void;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean): void;
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
-declare function syncCb(value: any, keyPath: string, syncContext: { module:string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
+declare function syncCb(value: any, keyPath: string, syncContext: { module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
 // if module state is not equal full state, you need pass generic type FullState
 declare function syncCb<Val, ModuleState, RefState = {}, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { module:string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
+    syncContext: { module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
-declare function asCb(value: any, keyPath: string, syncContext: { module:string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): any;
+declare function asCb(value: any, keyPath: string, syncContext: { module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): any;
 // if module state is not equal full state, you need pass generic type FullState
 declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { module:string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
+    syncContext: { module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
 //////////////////////////////////////////
@@ -617,7 +617,7 @@ type GetFnCtxCommit<ModuleState> = <PS extends Partial<ModuleState>>(partialStat
 type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
 
 // to constrain IFnCtx interface series shape
-export interface IFnCtxBase{
+export interface IFnCtxBase {
   retKey: string;
   isFirstCall: boolean;
   setted: string[];
@@ -826,6 +826,19 @@ interface RunOptions {
   errorHandler?: (err: Error) => void;
   reducer?: IAnyFnInObj;// deprecated
   bindCtxToMethod?: boolean;
+  /**
+   * objectValueCompare is false by default.
+   * in this situation concent treat object value as new value when user set it
+   * 
+   * const { obj } = ctx.state;
+   * obj.foo = 'new';
+   * ctx.setState({obj});// trigger re-render
+   * 
+   * // but if you set objectValueCompare true, you need write immutable style to code trigger re-render
+   * ctx.setState({obj});// no trigger re-render
+   * ctx.setState({obj:{...obj}});// trigger re-render
+   */
+  objectValueCompare?: boolean;// default is false
   computedCompare?: boolean;// default is true
   watchCompare?: boolean;// default is true
   watchImmediate?: boolean;// default is false
@@ -1163,6 +1176,9 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
     ccOption?: { storedKeys?: string[], renderKey?: string, persistStoredKeys?: boolean, tag?: string }
   }, any> { }
 
+type ObRenderFn = (passState: IAnyObj) => React.ReactElement;
+export function Ob(props: { module?: string, connect?: string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
+
 /**
  * user specify detail type when use
  * 
@@ -1211,6 +1227,7 @@ declare type DefaultExport = {
   defWatch: typeof defWatch,
   cst: typeof cst,
   CcFragment: typeof CcFragment,
+  Ob: typeof Ob,
 }
 
 declare let defaultExport: DefaultExport;
