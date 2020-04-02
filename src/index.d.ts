@@ -1177,7 +1177,7 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
   }, any> { }
 
 type ObRenderFn = ({ state: IAnyObj, computed: IAnyObj }) => React.ReactElement;
-export function Ob(props: { module?: string, connect?: string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
+export function Ob(props: { module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
 
 /**
  * user specify detail type when use

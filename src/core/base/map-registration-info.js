@@ -88,9 +88,11 @@ export default function (
   checker.checkStoredKeys(moduleName_stateKeys_[module], inputStoredKeys);
 
   let _connect = connect;
-  if (Array.isArray(connect)) {
+  const isArr = Array.isArray(connect);
+  if (isArr || typeof connect === 'string') {
     _connect = {};
-    connect.forEach(m => _connect[m] = '-');//标识自动收集观察依赖
+    const connectedModules = isArr ? connect : connect.split(',');
+    connectedModules.forEach(m => _connect[m] = '-');//标识自动收集观察依赖
   }
 
   // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
