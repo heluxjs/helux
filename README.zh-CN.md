@@ -189,7 +189,90 @@ export default function App() {
 }
 ```
 
-## 🔨Examples with some advanced features
+## ❤️依赖收集
+concent使用`Proxy`&`defineProperty` in `v2.3+`完成了运行时的依赖收集特性，大幅缩小UI视图渲染范围，提高应用性能。
+
+### 模块级别的计算依赖收集
+
+```js
+run({
+  counter:{
+    state:{
+      modCount: 10,
+      modCountBak: 100,
+      factor: 1,
+    },
+    computed:{
+      xxx(n){
+        return n.modCount + n.modCountBak;
+      },// for xxx computed retKey, the depKeys is ['modCount', 'modCountBak']
+      yyy(n){
+        return n.modCountBak;
+      },// for yyy computed retKey, the depKeys is ['modCountBak']
+      zzz(n, o, f){// n means newState, o means oldState, f means fnCtx
+        return f.cuVal.xxx + n.factor;
+      },// for zzz computed retKey, the depKeys is ['factor', 'modCount', 'modCountBak']
+    },
+    watch:{
+      xxx:{
+        fn(n){
+          console.log('---> trigger watch xxx', n.modCount);
+        },// for xxx watch retKey, the depKeys is ['modCount']
+        immediate: true,
+      },
+    }
+  }
+});
+```
+
+### 实例级别的计算依赖收集
+
+```js
+const setup = ctx => {
+  ctx.computed('show', (n)=>{
+    return n.show + n.cool + n.good;
+  });// for show retKey, the depKeys is ['show', 'cool', 'good']
+
+  ctx.computed('show2', (n)=>{
+    return n.show + '2222' + n.cool;
+  });// for show2 retKey, the depKeys is ['show', 'cool', 'good']
+};
+```
+
+### 渲染期间的依赖收集
+
+```js
+import {register, useConcent} from 'concent';
+
+const iState = ()=>({show:true});
+function FnComp(){
+  const {state, syncBool} = useConcent({module:'counter', state:iState, setup});
+  return (
+    <div>
+      {/** if show is true, current ins's dependency is ['modCount']*/}
+      {state.show? <span>{state.modCount}</span> : ''}
+      <button onClick={syncBool('show')}>toggle</button>
+    </div>
+  );
+}
+
+@register({module:'counter', state:iState, setup})
+class ClassComp extends React.Component{
+  // state = iState(); //or write private state here
+  render(){
+     const {state, syncBool} = this.ctx;
+    return (
+      <div>
+        {/** if show is true, current ins's dependency is ['modCount']*/}
+        {state.show? <span>{state.modCount}</span> : ''}
+        <button onClick={syncBool('show')}>toggle</button>
+      </div>
+  }
+}
+```
+**[edit this demo on CodeSandbox](https://codesandbox.io/s/condescending-satoshi-p5e5dr)**
+
+## 🔨其他高级特性实例
 - 运行concent，载入模块配置
 
 ```javascript
