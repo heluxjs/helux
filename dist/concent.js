@@ -152,6 +152,7 @@
     // like componentDidCatch in react 16.*
     isStrict: false,
     isDebug: false,
+    objectValueCompare: false,
     computedCompare: true,
     watchCompare: true,
     watchImmediate: false,
@@ -450,6 +451,39 @@
     }
 
     return false;
+  }
+  function extractChangedState(oldState, partialNewState, moduleOpt) {
+    var changedState = {};
+    var setted = false;
+
+    if (partialNewState) {
+      var objectValueCompare = runtimeVar.objectValueCompare;
+      okeys(partialNewState).forEach(function (key) {
+        var oldVal = oldState[key];
+        var newVal = partialNewState[key];
+        var valType = typeof newVal;
+        var isNotEqual = true;
+
+        if (valType !== 'object') {
+          isNotEqual = oldVal !== newVal;
+        } else if (objectValueCompare) {
+          isNotEqual = oldVal !== newVal;
+        }
+
+        if (isNotEqual) {
+          if (moduleOpt) {
+            moduleOpt.prevStateContainer[key] = oldVal;
+            moduleOpt.incStateVer(key);
+            oldState[key] = newVal;
+          }
+
+          changedState[key] = newVal;
+          setted = true;
+        }
+      });
+    }
+
+    return setted ? changedState : null;
   }
   function differStateKeys(oldState, newState) {
     var changed = [],
@@ -1497,7 +1531,8 @@
 
   var _reducer;
   var _computedValue$2 = computedMap._computedValue;
-  var okeys$1 = okeys;
+  var okeys$1 = okeys,
+      extractChangedState$1 = extractChangedState;
   var refs = {};
 
   var getDispatcher = function getDispatcher() {
@@ -1557,19 +1592,16 @@
       target = partialState;
     }
 
-    if (target) {
-      var moduleState = _getState(module);
+    var moduleState = _getState(module);
 
-      var prevModuleState = _getPrevState(module);
+    var prevModuleState = _getPrevState(module);
 
-      okeys$1(target).forEach(function (key) {
-        prevModuleState[key] = moduleState[key];
-        incStateVer(module, key);
-        moduleState[key] = target[key];
-      });
-    }
-
-    return target;
+    return extractChangedState$1(moduleState, target, {
+      prevStateContainer: prevModuleState,
+      incStateVer: function incStateVer(key) {
+        return _incStateVer(module, key);
+      }
+    });
   };
 
   var _getState = function getState(module) {
@@ -1585,7 +1617,7 @@
     return _stateVer[module];
   };
 
-  var incStateVer = function incStateVer(module, key) {
+  var _incStateVer = function _incStateVer(module, key) {
     _stateVer[module][key]++;
   };
 
@@ -1651,7 +1683,7 @@
     store: {
       appendState: function appendState(module, state) {
         var stateKeys = safeGetArray(moduleName_stateKeys_, module);
-        okeys(state).forEach(function (k) {
+        okeys$1(state).forEach(function (k) {
           if (!stateKeys.includes(k)) {
             stateKeys.push(k);
           }
@@ -1718,7 +1750,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.3.28',
+      version: '2.4.0',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -3024,19 +3056,16 @@
   }
 
   function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
-    var hasMid = false;
-
     if (skipMiddleware !== true) {
       var len = middlewares.length;
 
       if (len > 0) {
-        hasMid = true;
         var index = 0;
 
         var next = function next() {
           if (index === len) {
             // all middlewares been executed
-            cb(hasMid);
+            cb();
           } else {
             var middlewareFn = middlewares[index];
             index++;
@@ -3047,12 +3076,12 @@
           }
         };
 
-        next(hasMid);
+        next();
       } else {
         cb();
       }
     } else {
-      cb(hasMid);
+      cb();
     }
   }
   /**
@@ -3110,7 +3139,7 @@
     });
     Object.assign(state, sharedState); // source ref will receive the whole committed state 
 
-    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, // committedState means final committedState
+    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, true, // committedState means final committedState
     function (renderType, committedState, updateRef) {
       var passToMiddleware = {
         calledBy: calledBy,
@@ -3140,16 +3169,7 @@
         // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，且不会再触发computed&watch
         // 调用此接口请明确知道后果,
         // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
-        var realShare = sharedState;
-
-        if (hasMid) {
-          // 有中间件时，设置第三位参数为true，需再次提取一下sharedState, 防止用户扩展了sharedState上不存在于store的key
-          // 合并committedState是防止用户修改了committedState上的moduleStateKey
-          realShare = saveSharedState$1(module, passToMiddleware.sharedState, true);
-        } else {
-          sharedState && saveSharedState$1(module, sharedState);
-        }
-
+        var realShare = saveSharedState$1(module, passToMiddleware.sharedState, true);
         updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP$1 && !realShare) ; else {
@@ -3169,7 +3189,11 @@
     });
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, needExtractChanged, next) {
+    if (needExtractChanged === void 0) {
+      needExtractChanged = false;
+    }
+
     var refState = targetRef.state,
         refCtx = targetRef.ctx;
 
@@ -3221,13 +3245,17 @@
         shouldCurrentRefUpdate = _watchKeyForRef.shouldCurrentRefUpdate;
 
     var ccSetState = function ccSetState() {
-      // 记录stateKeys，方便triggerRefEffect之用
-      refCtx.__$$settedList.push({
-        module: stateModule,
-        keys: okeys$4(deltaCommittedState)
-      });
+      var changedState = needExtractChanged ? extractChangedState(refCtx.state, deltaCommittedState) : deltaCommittedState;
 
-      refCtx.__$$ccSetState(deltaCommittedState, reactCallback, shouldCurrentRefUpdate);
+      if (changedState) {
+        // 记录stateKeys，方便triggerRefEffect之用
+        refCtx.__$$settedList.push({
+          module: stateModule,
+          keys: okeys$4(changedState)
+        });
+
+        refCtx.__$$ccSetState(changedState, reactCallback, shouldCurrentRefUpdate);
+      }
     };
 
     if (next) {
@@ -4395,10 +4423,12 @@
     checkModuleName(module, false, "module[" + module + "] is not configured in store");
     checkStoredKeys(moduleName_stateKeys_$3[module], inputStoredKeys);
     var _connect = connect;
+    var isArr = Array.isArray(connect);
 
-    if (Array.isArray(connect)) {
+    if (isArr || typeof connect === 'string') {
       _connect = {};
-      connect.forEach(function (m) {
+      var connectedModules = isArr ? connect : connect.split(',');
+      connectedModules.forEach(function (m) {
         return _connect[m] = '-';
       }); //标识自动收集观察依赖
     } // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
@@ -6915,6 +6945,8 @@
         isHot = _ref2.isHot,
         _ref2$bindCtxToMethod = _ref2.bindCtxToMethod,
         bindCtxToMethod = _ref2$bindCtxToMethod === void 0 ? false : _ref2$bindCtxToMethod,
+        _ref2$objectValueComp = _ref2.objectValueCompare,
+        objectValueCompare = _ref2$objectValueComp === void 0 ? false : _ref2$objectValueComp,
         _ref2$computedCompare = _ref2.computedCompare,
         computedCompare = _ref2$computedCompare === void 0 ? true : _ref2$computedCompare,
         _ref2$watchCompare = _ref2.watchCompare,
@@ -6942,6 +6974,7 @@
         var rv = ccContext.runtimeVar;
         rv.isStrict = isStrict;
         rv.isDebug = isDebug;
+        rv.objectValueCompare = objectValueCompare;
         rv.computedCompare = computedCompare;
         rv.watchCompare = watchCompare;
         rv.watchImmediate = watchImmediate;
@@ -7684,6 +7717,44 @@
 
   var _caller$1 = ccContext.reducer._caller;
 
+  /**
+   * inspired by mobx's <Observer>{state=>state.name}</Observer>
+   */
+  var _Ob = React.memo(function (props) {
+    var firstProps = React.useRef(props);
+    var _firstProps$current = firstProps.current,
+        module = _firstProps$current.module,
+        connect = _firstProps$current.connect,
+        render = _firstProps$current.render,
+        children = _firstProps$current.children;
+
+    if (module && connect) {
+      throw new Error("module, connect can not been supplied both");
+    } else if (!module && !connect) {
+      throw new Error("module or connect should been supplied");
+    }
+
+    var view = render || children;
+    var register = module ? {
+      module: module
+    } : {
+      connect: connect
+    };
+    register.lite = 1;
+    var ctx = useConcent(register);
+    var state, computed;
+
+    if (module) {
+      state = ctx.moduleState;
+      computed = ctx.moduleComputed;
+    } else {
+      state = ctx.connectedState;
+      computed = ctx.connectedComputed;
+    }
+
+    return view([state, computed]);
+  });
+
   var cloneModule = _cloneModule;
   var run = _run;
   var connect = _connect;
@@ -7711,6 +7782,7 @@
   var reducer = _caller$1;
   var clearContextIfHot$1 = clearContextIfHot;
   var CcFragment$1 = CcFragment;
+  var Ob = _Ob;
   var cst = _cst;
   var appendState$1 = appendState;
   var useConcent$1 = useConcent;
@@ -7761,6 +7833,7 @@
     reducer: reducer,
     clearContextIfHot: clearContextIfHot$1,
     CcFragment: CcFragment$1,
+    Ob: Ob,
     cst: cst,
     appendState: appendState$1,
     useConcent: useConcent$1,
@@ -7846,6 +7919,7 @@
   exports.reducer = reducer;
   exports.clearContextIfHot = clearContextIfHot$1;
   exports.CcFragment = CcFragment$1;
+  exports.Ob = Ob;
   exports.cst = cst;
   exports.appendState = appendState$1;
   exports.useConcent = useConcent$1;

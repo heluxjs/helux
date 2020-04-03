@@ -1,4 +1,32 @@
 #### 2020-03-25
+2.4.0 发布
+* 新增组件`Ob`
+```js
+// 可以在任意地方使用
+import { Ob } from 'concent'
+
+//局部的订阅某个模块的数据
+render(){
+  return (
+    <div>
+      ob module state
+      <Ob module="foo">{([state, computed])=><h1>{state.name}</h1>}</Ob>
+    </div>
+  );
+}
+
+//局部的订阅多个模块的数据
+render(){
+  return (
+    <div>
+      ob module state
+      <Ob connect="foo,bar">{([state, computed])=><h1>{state.foo.name} {state.bar.key1}</h1>}</Ob>
+    </div>
+  );
+}
+```
+
+#### 2020-03-25
 2.3.23 发布
 * optimize: 为`ctx`相关联的`reducer`新增别名，方便用户简写调用
 - crx.r` for `ctx.reducer`
