@@ -37,7 +37,7 @@
     "url": "https://github.com/concentjs/concent/issues"
   },
   "bundleDependencies": false,
-  "dependencies": {
+  "peerDependencies": {
     "@types/react": "^16.9.13",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
