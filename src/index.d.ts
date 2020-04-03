@@ -769,7 +769,7 @@ type ModuleConfig = {
     // [retKey: string]: typeof watchFn | WatchFnDesc;
     [retKey: string]: WatchFn | WatchFnDesc;
   };
-  init?: <ModuleState>() => Partial<ModuleState>
+  init?: (() => Partial<IAnyObj>) | (() => Promise<Partial<IAnyObj>>);
 }
 
 interface StoreConfig {
