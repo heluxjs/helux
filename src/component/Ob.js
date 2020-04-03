@@ -27,5 +27,5 @@ export default React.memo(function (props) {
     computed = ctx.connectedComputed;
   }
 
-  return view({ state, computed });
+  return view([state, computed]);
 })

@@ -1176,7 +1176,10 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
     ccOption?: { storedKeys?: string[], renderKey?: string, persistStoredKeys?: boolean, tag?: string }
   }, any> { }
 
-type ObRenderFn = ({ state: IAnyObj, computed: IAnyObj }) => React.ReactElement;
+/**
+ * [state, computed]
+ */
+type ObRenderFn = ([IAnyObj, IAnyObj]) => React.ReactElement;
 export function Ob(props: { module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
 
 /**
