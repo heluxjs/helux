@@ -9,12 +9,12 @@ import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 // cur: {a:'val', c:'val', d:'val'}
 //
 // after render
-// cur: {a:1, c:1, c:1} compare: {a:1, b:2, c:1, d:1} nextCompare:{a:2, c:2, d:2}
+// cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} nextCompare:{a:2, c:2, d:2}
 //
-// then concent will know b should delete dep because=0, 
+// then concent will know b should delete dep because its value is 2, 
 // compare key count=4>3 or compare include 2, so should let cache expire
 //
-// before next render
+// before next render, assign nextCompare to cur, assign {} to nextCompare
 // cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
 
 export default function (ref, module, key, isForModule) {
