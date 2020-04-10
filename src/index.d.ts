@@ -141,25 +141,25 @@ type SyncReturn = (...args: any) => void;
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 
 type RefComputedFn<FnCtx extends IFnCtxBase, CuRet, RefFullState extends IAnyObj = {}> = (
-  oldState: RefFullState,
   newState: RefFullState,
+  oldState: RefFullState,
   fnCtx: FnCtx,
 ) => CuRet;
 
 type RefWatchFn<FnCtx extends IFnCtxBase, RefFullState extends IAnyObj = {}> = (
-  oldState: RefFullState,
   newState: RefFullState,
+  oldState: RefFullState,
   fnCtx: FnCtx,
 ) => boolean | void;
 
 declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
-  oldVal: any,
-  newVal: any,
+  newState: any,
+  oldState: any,
   fnCtx: FnCtx,
 ): any;
 type GetComputedFn<T> = <FnCtx extends IFnCtxBase = IFnCtxBase>(
-  oldVal: any,
-  newVal: any,
+  newState: any,
+  oldState: any,
   fnCtx: FnCtx,
 ) => T;
 
@@ -740,7 +740,7 @@ interface RegisterOptionsMoSt<
 
 //user decide it is FnCtx or FnCtxConnect
 interface WatchFn {
-  <IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void | boolean;
+  <IFnCtx extends IFnCtxBase>(newState: any, oldState: any, fnCtx: IFnCtx): void | boolean;
 }
 // declare function watchFn<IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void;
 type WatchFnDesc = {
@@ -1179,7 +1179,7 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
 /**
  * [state, computed]
  */
-type ObRenderFn = ([IAnyObj, IAnyObj]) => React.ReactElement;
+type ObRenderFn = (obTuple: [IAnyObj, IAnyObj]) => React.ReactElement;
 export function Ob(props: { module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
 
 /**
