@@ -1,3 +1,51 @@
+#### 2020-04-12
+2.4.2 发布
+* 支持`useConcent`渲染期间改变参数`module`和`connect`, [在线示例](https://codesandbox.io/s/dynamic-module-and-connect-xevsp?file=/src/App.js)
+- `Ob`组件可以动态更新`module`参数或`connect`参数
+```jsx
+run({
+  counter: {
+    state: { count: 999 }
+  },
+  counter2: {
+    state: { count: 100000 },
+  },
+});
+
+export default function App() {
+  const [mod, setMod] = React.useState('counter');
+  const changeMod = ()=> setMod(mod==='counter'? 'counter2': 'counter');
+  console.log(`now mod is ${mod}`);
+
+  return (
+    <div className="App">
+      <h3>
+      <button onClick={changeMod}>change mod</button>
+      <Ob module={mod}>{([state]) => <div>xx: {state.count}</div>}</Ob>
+    </div>
+  );
+}
+```
+- `useConcent`接口支持动态更新`module`参数或`connect`参数
+```js
+const setup = ctx=>{
+  ctx.effect(()=>{
+    return ()=>{
+      console.log('trigger unmount');
+    }
+  }, [])
+}
+
+function SetupFnCounter() {
+  const [mod, setMod] = React.useState('counter');
+  const changeMod = ()=> setMod(mod==='counter'? 'counter2': 'counter');
+
+  // 需要小心的是，模块变更意味着setup会重新执行一次，之前的setup定义的卸载逻辑会被触发
+  const ctx = useConcent({ module: mod, setup });
+  // return ui
+}
+```
+
 #### 2020-03-25
 2.4.0 发布
 * 新增组件`Ob`
