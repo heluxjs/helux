@@ -1185,10 +1185,11 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
   }, any> { }
 
 /**
- * [state, computed]
+ * [state, computed, reducers]
+ * reducers:{ mr: IAnyFnInObj, cr: IAnyFnInObj, r: IAnyFnInObj }
  */
-type ObRenderFn = (obTuple: [IAnyObj, IAnyObj]) => React.ReactElement;
-export function Ob(props: { classKey?:string, module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
+type ObRenderFn = (obTuple: [IAnyObj, IAnyObj, { mr: IAnyFnInObj, cr: IAnyFnInObj, r: IAnyFnInObj }]) => React.ReactElement;
+export function Ob(props: { classKey?: string, module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
 
 /**
  * user specify detail type when use

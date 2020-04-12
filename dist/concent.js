@@ -1790,7 +1790,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.2',
+      version: '2.4.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -7846,6 +7846,9 @@
     };
     register.lite = 1;
     var ctx = useConcentForOb(register, classKey);
+    var mr = ctx.mr,
+        cr = ctx.cr,
+        r = ctx.r;
     var state, computed;
 
     if (module) {
@@ -7856,7 +7859,11 @@
       computed = ctx.connectedComputed;
     }
 
-    return view([state, computed]);
+    return view([state, computed, {
+      mr: mr,
+      cr: cr,
+      r: r
+    }]);
   });
 
   var cloneModule = _cloneModule;

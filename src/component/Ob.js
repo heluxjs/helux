@@ -18,6 +18,7 @@ export default React.memo(function (props) {
   const register = module ? { module } : { connect };
   register.lite = 1;
   const ctx = useConcentForOb(register, classKey);
+  const { mr, cr, r} = ctx;
 
   let state, computed;
   if (module) {
@@ -28,5 +29,5 @@ export default React.memo(function (props) {
     computed = ctx.connectedComputed;
   }
 
-  return view([state, computed]);
+  return view([state, computed, { mr, cr, r}]);
 })
