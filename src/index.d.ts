@@ -1,8 +1,11 @@
 import { Component, ReactNode, ComponentClass, FC } from 'react';
 
 type CC_CLASS = '$$CcClass';
-type CC_FRAGMENT = '$$CcFrag';
 type CC_HOOK = '$$CcHook';
+
+type CC_FRAGMENT = '$$CcFrag';
+type CC_CUSTOMIZE = '$$CcCust';
+type CC_OB = '$$CcOb';
 
 export type MODULE_GLOBAL = '$$global';
 export type MODULE_DEFAULT = '$$default';
@@ -18,8 +21,10 @@ type CcCst = {
   MODULE_CC_ROUTER: '$$CONCENT_ROUTER';
 
   CC_CLASS: CC_CLASS;
-  CC_FRAGMENT: CC_FRAGMENT;
   CC_HOOK: CC_HOOK;
+  CC_FRAGMENT: CC_FRAGMENT;
+  CC_OB: CC_OB;
+  CC_CUSTOMIZE: CC_CUSTOMIZE;
   CC_PREFIX: '$$Cc';
 
   CC_DISPATCHER: '$$Dispatcher';
@@ -381,7 +386,10 @@ export interface ICtxBase {
   readonly module: PropKey;
   // module: '$$default';
   readonly isSingle: boolean;
-  readonly type: CC_CLASS | CC_FRAGMENT | CC_HOOK;
+  /** component type */
+  readonly type: CC_CLASS | CC_HOOK;
+  /** component instance type */
+  readonly insType: CC_FRAGMENT | CC_OB | CC_CUSTOMIZE;
   readonly ccKey: string;
   readonly ccClassKey: string;
   readonly ccUniqueKey: string;
@@ -1180,7 +1188,7 @@ export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
  * [state, computed]
  */
 type ObRenderFn = (obTuple: [IAnyObj, IAnyObj]) => React.ReactElement;
-export function Ob(props: { module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
+export function Ob(props: { classKey?:string, module?: string, connect?: string | string[], render: ObRenderFn, children?: ObRenderFn }): React.FC;
 
 /**
  * user specify detail type when use

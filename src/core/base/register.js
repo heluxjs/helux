@@ -1,7 +1,7 @@
 import React from 'react';
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
-  MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS
+  MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS, CC_CUSTOMIZE,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -66,7 +66,7 @@ export default function register({
 
             // props.ccOption
             const params = Object.assign({}, props, {
-              isSingle, module: _module, tag, state: privState, type: CC_CLASS,
+              isSingle, module: _module, tag, state: privState, type: CC_CLASS, insType: CC_CUSTOMIZE,
               watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
             });
             buildRefCtx(this, params, lite);

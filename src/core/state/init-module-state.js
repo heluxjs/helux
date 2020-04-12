@@ -20,8 +20,8 @@ export default function (module, mState, moduleMustNotExisted = true) {
   const rootState = ccStore.getState();
   const rootStateVer = ccStore.getStateVer();
   const prevRootState = ccStore.getPrevState();
-  rootState[module] = state;
-  prevRootState[module] = Object.assign({}, state);
+  util.safeAssignToMap(rootState, module, state);
+  util.safeAssignToMap(prevRootState, module, state);
   rootStateVer[module] = util.okeys(state).reduce((map, key) => {
     map[key] = 1;
     return map;

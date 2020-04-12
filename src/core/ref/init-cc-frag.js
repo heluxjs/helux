@@ -1,4 +1,4 @@
-import { CC_FRAGMENT } from '../../support/constant';
+import { CC_FRAGMENT, CC_CUSTOMIZE, CC_CLASS, CC_HOOK } from '../../support/constant';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
 import buildRefCtx from '../ref/build-ref-ctx';
@@ -21,21 +21,22 @@ export default function (ref) {
   let target_watchedKeys = watchedKeys;
   let target_ccClassKey = ccClassKey;
   let target_connect = connect;
+  let insType = CC_CUSTOMIZE;
 
   //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
   if (props.__$$regDumb !== true) {
+    insType = CC_FRAGMENT;
     const { _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_FRAGMENT, util.getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
+      module, ccClassKey, renderKeyClasses, CC_CLASS, util.getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
     );
     target_watchedKeys = watchedKeys;
     target_ccClassKey = _ccClassKey;
     target_connect = _connect;
   }
-  //直接使用<CcFragment />构造的cc实例，把ccOption.storedKeys当作registerStoredKeys
 
   buildRefCtx(ref, {
-    isSingle, ccKey, connect: target_connect, state, module,
-    storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, type: CC_FRAGMENT
+    isSingle, ccKey, connect: target_connect, state, module, type: CC_CLASS, insType,
+    storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption,
   }, lite);
   ref.ctx.reactSetState = hf.makeRefSetState(ref);
   ref.ctx.reactForceUpdate = hf.makeRefForceUpdate(ref);

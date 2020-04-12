@@ -34,8 +34,9 @@ export default function (allowNamingDispatcher, module, connect, watchedKeys, pr
 
   if (!allowNamingDispatcher) {
     if (classKey.toLowerCase() === CC_DISPATCHER.toLowerCase()) {
-      throw new Error(`${CC_DISPATCHER} is cc built-in ccClassKey name, if you want to customize your dispatcher, 
-      you can set autoCreateDispatcher=false in StartupOption, and use createDispatcher then.`)
+      // throw new Error(`${CC_DISPATCHER} is cc built-in ccClassKey name, if you want to customize your dispatcher, 
+      // you can set autoCreateDispatcher=false in StartupOption, and use createDispatcher then.`)
+      throw new Error(`${CC_DISPATCHER} is cc built-in ccClassKey name.`)
     }
   }
 

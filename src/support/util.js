@@ -194,6 +194,18 @@ export function safeAssignObjectValue(assignTo, assignFrom) {
   });
 }
 
+/**
+ * 把某个object赋值到container[key]的map下，map存在就直接赋值，map不存在则先创建再赋值，确保map引用无变化
+ * @param {*} container 对象容器
+ * @param {*} key 字段名
+ * @param {*} objectToBeenAssign 等待赋值的object
+ */
+export function safeAssignToMap(container, key, objectToBeenAssign) {
+  let map = container[key];
+  if (!map) map = container[key] = {};
+  safeAssignObjectValue(map, objectToBeenAssign);
+}
+
 export function computeFeature(ccUniqueKey, state) {
   const stateKeys = Object.keys(state);
   const stateKeysStr = stateKeys.sort().join('|');
@@ -205,7 +217,9 @@ export function randomNumber(lessThan = 52) {
   return parseInt(seed * lessThan);
 }
 
-export function clearObject(object, excludeKeys = [], reset) {
+// 在 object[key]存在且deepClear为true时，传入的reset会被忽略
+// 传入deepClear是为了保持引用不变
+export function clearObject(object, excludeKeys = [], reset, deepClear = false) {
   if (Array.isArray(object)) {
     const retainKeys = [];
     excludeKeys.forEach(key => {
@@ -216,8 +230,13 @@ export function clearObject(object, excludeKeys = [], reset) {
   } else Object.keys(object).forEach(key => {
     if (excludeKeys.includes(key)) {
     } else {
-      if (reset) object[key] = reset;
-      else delete object[key];
+      const subMap = object[key];
+      if (deepClear && subMap) {
+        okeys(subMap).forEach(key => delete subMap[key]);
+      } else {
+        if (reset) object[key] = reset;
+        else delete object[key];
+      }
     }
   });
 }

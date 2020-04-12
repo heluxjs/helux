@@ -1,7 +1,7 @@
 import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
-import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT } from '../support/constant';
+import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT, CC_OB } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
 import { clearCuRefer } from '../core/base/find-dep-fns-to-execute';
 import initModuleWatch from '../core/watch/init-module-watch';
@@ -39,17 +39,15 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
 
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
   Object.keys(cct).forEach(ccClassKey => {
-    const ctx = cct[ccClassKey];
-    const ccKeys = ctx.ccKeys;
+    const clsCtx = cct[ccClassKey];
+    const ccKeys = clsCtx.ccKeys;
     const tmpExclude = [];
-    if (otherExcludeKeys.length > 0 ) {
+    if (otherExcludeKeys.length > 0) {
       ccKeys.forEach(ccKey => {
-        if(otherExcludeKeys.includes(ccKey) ){
-          tmpExclude.push(ccKey);
-        }
+        otherExcludeKeys.includes(ccKey) && tmpExclude.push(ccKey);
       })
     }
-    clearObject(ctx.ccKeys, tmpExclude);
+    clearObject(clsCtx.ccKeys, tmpExclude);
   });
   clearObject(ccContext.handlerKey_handler_);
   clearObject(ccUKey_ref_, [CC_DISPATCHER].concat(otherExcludeKeys));
@@ -76,22 +74,27 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   }
 }
 
-// 这些CcFragIns随后需要被恢复
-function _pickCcFragIns() {
+function _pickNonCustomizeIns() {
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
   const ccFragKeys = [];
+  const ccNonCusKeys = [];
   okeys(ccUKey_ref_).forEach(ccKey => {
     const ref = ccUKey_ref_[ccKey];
     if (ref
-      && ref.ctx.type === CC_FRAGMENT
-      && ref.props.__$$regDumb !== true // 直接<CcFragment>实例化的
       && ref.__$$isMounted === true // 已挂载
       && ref.__$$isUnmounted == false // 未卸载
     ) {
-      ccFragKeys.push(ccKey);
+      const insType = ref.ctx.insType;
+      // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
+      if (insType === CC_FRAGMENT) {
+        ccFragKeys.push(ccKey);
+        ccNonCusKeys.push(ccKey);
+      } else if (insType === CC_OB) {
+        ccNonCusKeys.push(ccKey)
+      }
     }
   })
-  return ccFragKeys;
+  return { ccFragKeys, ccNonCusKeys };
 }
 
 function _clearAll() {
@@ -102,21 +105,23 @@ function _clearAll() {
   const toExcludedModules = okeys(ccContext.moduleName_isConfigured_).concat([MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER]);
 
   clearObject(ccContext.reducer._reducer, toExcludedModules);
-  clearObject(ccContext.store._state, toExcludedModules, {});
+  clearObject(ccContext.store._state, toExcludedModules, {}, true);
   clearObject(ccContext.computed._computedDep, toExcludedModules);
   clearObject(ccContext.computed._computedValue, toExcludedModules);
   clearObject(ccContext.watch._watchDep, toExcludedModules);
   clearObject(ccContext.middlewares);
   clearObject(ccContext.waKey_uKeyMap_);
   clearCachedData();
-  const ccFragKeys = _pickCcFragIns();
-  _clearInsAssociation(false, ccFragKeys);
+  const { ccFragKeys, ccNonCusKeys } = _pickNonCustomizeIns();
+  _clearInsAssociation(false, ccNonCusKeys);
   return ccFragKeys;
 }
 
 export default function (clearAll = false) {
   ccContext.info.latestStartupTime = Date.now();
+  // 热加载模式下，这些CcFragIns随后需要被恢复
   let ccFragKeys = [];
+
   if (ccContext.isStartup) {
     if (ccContext.isHotReloadMode()) {
       if (clearAll) {
@@ -137,10 +142,10 @@ export default function (clearAll = false) {
         }
   
         _checkDispatcher();
-        ccFragKeys = _pickCcFragIns();
+        const ret = _pickNonCustomizeIns();
         // !!!重计算各个模块的computed结果
-        _clearInsAssociation(ccContext.reComputed, ccFragKeys);
-        return ccFragKeys;
+        _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys);
+        return ret.ccFragKeys;
       }
     } else {
       console.warn(`clear failed because of not running under hot reload mode!`);

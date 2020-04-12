@@ -89,7 +89,7 @@ export default function (ref, params, liteLevel = 5) {
 
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
-    isSingle, ccClassKey, ccKey = '', module, type,
+    isSingle, ccClassKey, ccKey = '', module, type, insType,
     state, storedKeys = [], persistStoredKeys = false, watchedKeys, connect = {}, tag = '', ccOption = {},
   } = params;
   const stateModule = module;
@@ -199,6 +199,7 @@ export default function (ref, params, liteLevel = 5) {
   const ctx = {
     // static params
     type,
+    insType,
     isSingle,
     module,
     ccClassKey,

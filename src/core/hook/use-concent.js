@@ -1,5 +1,5 @@
 import React from 'react';
-import { CC_HOOK } from '../../support/constant';
+import { CC_HOOK, CC_OB, CC_CUSTOMIZE } from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
@@ -34,7 +34,7 @@ function CcHook(state, hookSetter, props) {
 }
 
 // rState: resolvedState, iState: initialState
-function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
+function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
   // when single file demo in hmr mode trigger buildRef, rState is 0 
   // so here call evalState again
   const state = rState || evalState(iState);
@@ -53,7 +53,7 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   const hookRef = ref || new CcHook(hookState, hookSetter, props);
 
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys, state, type: CC_HOOK,
+    module: _module, watchedKeys, state, type: CC_HOOK, insType,
     ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
   });
   hookRef.props = props;// keep shape same as class
@@ -68,7 +68,8 @@ function buildRef(ref, refKeyContainer, rState, iState, regOpt, hookState, hookS
   beforeMount(hookRef, setup, bindCtxToMethod);
 
   // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
-  refKeyContainer.current = hookRef.ctx.ccUniqueKey;
+  hookCtx.prevCcUKey = hookCtx.ccUKey;
+  hookCtx.ccUKey = hookRef.ctx.ccUniqueKey;
 
   // rewrite useRef for CcHook
   refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
@@ -86,8 +87,28 @@ function replaceSetter(ctx, hookSetter){
 }
 
 const tip = 'react version is LTE 16.8';
-//写为具名函数，防止react devtoo里显示.default
-export default function useConcent(registerOption, ccClassKey){
+
+const connectToStr = (connect) => {
+  if (!connect) return '';
+  else if (Array.isArray(connect)) return connect.join(',');
+  else if (typeof connect === 'object') return JSON.stringify(connect);
+  else return connect;
+}
+
+const isRegChanged = (firstRegOpt, curRegOpt) => {
+  if (firstRegOpt.module !== curRegOpt.module) {
+    return true;
+  }
+  if (connectToStr(firstRegOpt.connect) !== connectToStr(curRegOpt.connect)) {
+    return true;
+  }
+  return false;
+}
+
+function _useConcent(registerOption, ccClassKey, insType) {
+  const hookCtxContainer = React.useRef({ prevCcUKey: null, ccUKey: null, regOpt: registerOption });
+  const hookCtx = hookCtxContainer.current;
+
   const _registerOption = getRegisterOptions(registerOption);
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
@@ -104,15 +125,15 @@ export default function useConcent(registerOption, ccClassKey){
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
 
-  const refKeyContainer = React.useRef(null);
-
-  const cref = (ref) => buildRef(ref, refKeyContainer, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
+  const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
   let hookRef;
 
-  if (isFirstRendered) {
+  // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
+  if (isFirstRendered || isRegChanged(hookCtx.regOpt, registerOption)) {
+    hookCtx.regOpt = registerOption;
     hookRef = cref();
   } else {
-    hookRef = ccUKey_ref_[refKeyContainer.current];
+    hookRef = ccUKey_ref_[hookCtx.ccUKey];
     if (!hookRef) {// single file demo in hot reload mode
       hookRef = cref();
     } else {
@@ -124,32 +145,37 @@ export default function useConcent(registerOption, ccClassKey){
   }
 
   const refCtx = hookRef.ctx; 
-  // ???does user really need beforeMount,mounted,beforeUpdate,updated,beforeUnmount in setup???
   const effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect;
+
+  //after first render of a timing hookRef just created 
+  effectHandler(() => {
+    // // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为，此前已走了一次beforeUnmount
+    // // 需要走重新初始化当前组件的整个流程，否则热加载时的setup等参数将无效，只是不需要再次创建ref
+    // if (!hookRef.isFirstRendered) {
+    //   cref(hookRef);
+    // }
+    // mock componentWillUnmount
+    return () => {
+      const targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
+      const toUnmountRef = ccUKey_ref_[targetCcUKey];
+      if (toUnmountRef) {
+        hookCtx.prevCcUKey = null;
+        beforeUnmount(toUnmountRef);
+      }
+    }
+  }, [hookRef]);// 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
+
   //after every render
   effectHandler(() => {
+    replaceSetter(refCtx, hookSetter);
+
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       didUpdate(hookRef);
-    }
-    replaceSetter(refCtx, hookSetter);
-  });
-
-  //after first render
-  effectHandler(() => {// mock componentDidMount
-    // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为，此前已走了一次beforeUnmount
-    // 需要走重新初始化当前组件的整个流程，否则热加载时的setup等参数将无效，只是不需要再次创建ref
-    if (hookRef.isFirstRendered === false) {
-      cref(hookRef);
-    } else {
+    } else {// mock componentDidMount
       hookRef.isFirstRendered = false;
+      didMount(hookRef);
     }
-    replaceSetter(refCtx, hookSetter);
-    didMount(hookRef);
-    
-    return () => {// mock componentWillUnmount
-      beforeUnmount(hookRef);
-    }
-  }, []);
+  });
 
   beforeRender(hookRef);
 
@@ -164,3 +190,18 @@ export default function useConcent(registerOption, ccClassKey){
 
   return refCtx;
 }
+
+/**
+ * 仅供内部 component/Ob 调用
+ */
+export function useConcentForOb(registerOption, ccClassKey) {
+  // 只针对Ob组件实例化检查时，reg参数是否已变化
+  return _useConcent(registerOption, ccClassKey, CC_OB);
+}
+
+//写为具名函数，防止react-dev-tool里显示.default
+function useConcent(registerOption, ccClassKey) {
+  return _useConcent(registerOption, ccClassKey, CC_CUSTOMIZE);
+}
+
+export default useConcent;
