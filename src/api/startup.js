@@ -139,7 +139,7 @@ export default function (
       //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
       boot.configPlugins(plugins);
 
-      // 可以理解为类似useConcent里处理double - invoking 以及 async rendering的过程
+      // 可以理解为类似useConcent里处理double-invoking 以及 async rendering的过程
       // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
       // 防止在线IDE热加载后，ui和store不同步的问题
       ccFragKeys.forEach(key => {

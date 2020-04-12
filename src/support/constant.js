@@ -29,8 +29,9 @@ export const RENDER_BY_STATE = 3;
 export const FOR_ONE_INS_FIRSTLY = 1;
 export const FOR_ALL_INS_OF_A_MOD = 2;
 
-export const EFFECT_AVAILABLE = 1;
-export const EFFECT_STOPPED = 0;
+// 暂时用不到
+// export const EFFECT_AVAILABLE = 1;
+// export const EFFECT_STOPPED = 0;
 
 export const DISPATCH = 'dispatch';
 export const SET_STATE = 'setState';

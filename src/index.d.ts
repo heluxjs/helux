@@ -41,8 +41,8 @@ type CcCst = {
   FOR_ONE_INS_FIRSTLY: 1;
   FOR_ALL_INS_OF_A_MOD: 2;
 
-  EFFECT_AVAILABLE: 1;
-  EFFECT_STOPPED: 0;
+  // EFFECT_AVAILABLE: 1;
+  // EFFECT_STOPPED: 0;
 
   DISPATCH: 'dispatch';
   SET_STATE: 'setState';
