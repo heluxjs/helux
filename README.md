@@ -72,7 +72,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 ## 🎇Dependency Collection & Exact Update
 ![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
 
-!## 🎆Unified coding of class components and function components
+## 🎆Unified coding of class components and function components
 ![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/7.png)
 
 ## 🖥Online experience
