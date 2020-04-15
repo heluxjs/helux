@@ -73,7 +73,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 ![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
 
 ## 🎆Unified coding of class components and function components
-![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/7.png)
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
 
 ## 🖥Online experience
 - simple quick start project:   
