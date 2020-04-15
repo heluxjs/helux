@@ -7,12 +7,6 @@ a predictable、zero-cost-use、progressive、high performance's enhanced state 
 support **dependency collection** & **lazy computed**
 [more details about v2](./V2Details.md)
 
-## 🎇Dependency Collection & Exact Update
-[](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
-
-## 🎆Unified coding of class components and function components
-[](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/7.png)
-
 ## Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
@@ -75,6 +69,11 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 
 [review this gif](https://xvcej.csb.app/#/)
 
+## 🎇Dependency Collection & Exact Update
+![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
+
+!## 🎆Unified coding of class components and function components
+![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/7.png)
 
 ## 🖥Online experience
 - simple quick start project:   
