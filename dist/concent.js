@@ -1790,7 +1790,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.3',
+      version: '2.4.4',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -6463,8 +6463,8 @@
             // }
           };
 
-          _proto.componentDidUpdate = function componentDidUpdate() {
-            if (_ToBeExtendedClass.prototype.componentDidUpdate) _ToBeExtendedClass.prototype.componentDidUpdate.call(this);
+          _proto.componentDidUpdate = function componentDidUpdate(prevProps, prevState, snapshot) {
+            if (_ToBeExtendedClass.prototype.componentDidUpdate) _ToBeExtendedClass.prototype.componentDidUpdate.call(this, prevProps, prevState, snapshot);
             didUpdate(this);
           };
 
@@ -7843,7 +7843,8 @@
       module: module
     } : {
       connect: connect
-    };
+    }; // 设置为1，最小化ctx够造过程，仅附加状态数据，衍生数据、和reducer相关函数
+
     register.lite = 1;
     var ctx = useConcentForOb(register, classKey);
     var mr = ctx.mr,
