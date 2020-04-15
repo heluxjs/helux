@@ -3,7 +3,6 @@ English | [简体中文](./README.zh-CN.md)
 ## [concent](https://concentjs.github.io/concent-doc)
 a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency collection&mark**、**ref collection** and **state broadcast**，power you react!   
 
-
 ## v2 Released Now🎊 🎉🎊 🎉🎊 🎉
 support **dependency collection** & **lazy computed**
 [more details about v2](./V2Details.md)
@@ -70,6 +69,11 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 
 [review this gif](https://xvcej.csb.app/#/)
 
+## 🎇Dependency Collection & Exact Update
+![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
+
+## 🎆Unified coding of class components and function components
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
 
 ## 🖥Online experience
 - simple quick start project:   
