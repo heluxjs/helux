@@ -64,6 +64,11 @@
 
 [review this gif](https://xvcej.csb.app/#/)
 
+## 🎇依赖收集&精确更新
+![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
+
+## 🎆统一类组件和函数组件编码方式
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
 
 ## 🖥在线体验
 - 快速开始:   
