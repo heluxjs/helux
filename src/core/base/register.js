@@ -147,8 +147,8 @@ export default function register({
           // }
         }
 
-        componentDidUpdate() {
-          if (super.componentDidUpdate) super.componentDidUpdate();
+        componentDidUpdate(prevProps, prevState, snapshot) {
+          if (super.componentDidUpdate) super.componentDidUpdate(prevProps, prevState, snapshot);
           didUpdate(this);
         }
 
