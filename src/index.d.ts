@@ -305,8 +305,8 @@ declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase 
 // !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
 // 先写为如下方式
 type MultiComputed = {
-  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any) | {
-    fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => any,
+  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: _IFnCtx) => any) | {
+    fn: (oldVal: any, newVal: any, fnCtx: _IFnCtx) => any,
     depKeys?: DepKeys,
     compare?: boolean,
     sort?: number,
@@ -336,8 +336,8 @@ declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
 // !!! 写成  <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => VorB 暂时无法约束值类型
 // 先写为如下方式
 type MultiWatch = {
-  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: IFnCtxBase) => VorB) | {
-    fn: (oldVal: any, newVal: any, fnCtx: IFnCtxBase) => VorB,
+  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: _IFnCtx) => VorB) | {
+    fn: (oldVal: any, newVal: any, fnCtx: _IFnCtx) => VorB,
     depKeys?: DepKeys,
     compare?: boolean,
     immediate?: boolean,
@@ -624,8 +624,9 @@ export interface ICtxDefault
 type GetFnCtxCommit<ModuleState> = <PS extends Partial<ModuleState>>(partialState: PS) => void;
 type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(partialComputed: PC) => void;
 
+
 // to constrain IFnCtx interface series shape
-export interface IFnCtxBase {
+interface _IFnCtx{// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
   retKey: string;
   isFirstCall: boolean;
   setted: string[];
@@ -635,9 +636,12 @@ export interface IFnCtxBase {
   oldState: any;
   committedState: IAnyObj;
   cuVal: any;
-  refCtx: ICtxBase;
+  refCtx: any;
   commit: GetFnCtxCommit<any>;
   commitCu: GetFnCtxCommitCu<any>;
+}
+export interface IFnCtxBase extends _IFnCtx{
+  refCtx: ICtxBase;
 }
 // M, means need module associate generic type
 export interface IFnCtx<RefCtx extends ICtxBase = ICtxBase, FullState = {}, Computed = {}> extends IFnCtxBase {
