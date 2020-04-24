@@ -251,30 +251,31 @@ type MyReturnType<F extends (...args) => any> = ReturnType<F> extends Promise<in
     type PayloadType<FnName extends string> = (Parameters<reducerFnType<FnName>>)[0];
     type reducerFnResultType<FnName extends string> = ReturnType<reducerFnType<FnName>>;
  */
-declare function refCtxDispatch<Fn extends IReducerFn>
-  (type: string, payload: (Parameters<Fn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<Fn>>;
+type RenderKeyOrOpts = string | IDispatchOptions;
 declare function refCtxDispatch<RdFn extends IReducerFn>
-  (type: RdFn, payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
+  (type: string, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
+declare function refCtxDispatch<RdFn extends IReducerFn>
+  (type: RdFn, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn, FullState extends IAnyObj = {}>
-  (type: { module?: string, fn: RdFn, cb?: (state: FullState) => void }, payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
+  (type: { module?: string, fn: RdFn, cb?: (state: FullState) => void }, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn>
-  (type: [string, RdFn], payload: (Parameters<RdFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<RdFn>>;
+  (type: [string, RdFn], payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 
 declare function refCtxInvoke<UserFn extends IReducerFn>
-  (fn: UserFn, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<UserFn>>;
+  (fn: UserFn, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 declare function refCtxInvoke<UserFn extends IReducerFn>
-  (fn: UserFn, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<UserFn>>;
+  (fn: UserFn, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 declare function refCtxInvoke<UserFn extends IReducerFn>
-  (fn: { module: string, fn: UserFn }, payload: (Parameters<UserFn>)[0], renderKey?: string, delay?: number): Promise<GetPromiseT<UserFn>>;
+  (fn: { module: string, fn: UserFn }, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 
-declare function refCtxSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: string, delay?: number): void;
-declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: string, delay?: number): void;
+declare function refCtxSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
+declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
-declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: string, delay?: number): void;
+declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
-declare function refCtxSetGlobalState<GlobalState = {}>(state: Partial<GlobalState>, cb?: (newFullState: GlobalState) => void, renderKey?: string, delay?: number): void;
+declare function refCtxSetGlobalState<GlobalState = {}>(state: Partial<GlobalState>, cb?: (newFullState: GlobalState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
-declare function refCtxSetModuleState<RootState, T extends keyof RootState>(moduleName: T, state: Partial<RootState[T]>, cb?: (newFullState: RootState[T]) => void, renderKey?: string, delay?: number): void;
+declare function refCtxSetModuleState<RootState, T extends keyof RootState>(moduleName: T, state: Partial<RootState[T]>, cb?: (newFullState: RootState[T]) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
 declare function refCtxGetConnectWatchedKeys(module: string): string[];
@@ -1164,16 +1165,16 @@ type DefOptions = { depKeys?: DepKeys, compare?: boolean, lazy?: boolean, sort?:
 export function defComputedVal<CuRet>(ret: CuRet): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 export function defComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, defOptions: DepKeys | DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, defOptions?: DepKeys | DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 export function defComputed<CuRet>
-  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions: DepKeys | DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions?: DepKeys | DefOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 type DefLazyOptions = { depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean };
 
 export function defLazyComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, defOptions: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 export function defLazyComputed<CuRet>
-  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
+  (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
 
