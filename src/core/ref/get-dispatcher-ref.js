@@ -1,4 +1,4 @@
-import { CC_DISPATCHER, ERR } from '../../support/constant';
+import { CC_DISPATCHER } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 

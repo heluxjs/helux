@@ -2,7 +2,7 @@ import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
-const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl, okeys } = util;
+const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
 const { runtimeVar, ccClassKey_ccClassContext_, ccUKey_ref_ } = ccContext;
 const ccUKey_insCount = {};
 

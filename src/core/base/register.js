@@ -57,6 +57,7 @@ export default function register({
 
         constructor(props, context) {
           try {
+            /** eslint-disable-next-line */
             super(props, context);
             const optState = evalState(state);
             const thisState = this.state || {};
@@ -109,7 +110,7 @@ export default function register({
           ctx.childRef = childRef;
           childRef.ctx = ctx;
 
-          ctx.reactSetState = childRef.setState.bind(childRef);;
+          ctx.reactSetState = childRef.setState.bind(childRef);
           ctx.reactForceUpdate = childRef.forceUpdate.bind(childRef);
 
           // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate

@@ -1,4 +1,4 @@
-
+/* eslint-disable */
 import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
 import { NOT_A_JSON, CU_KEY } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
@@ -229,6 +229,7 @@ export function clearObject(object, excludeKeys = [], reset, deepClear = false) 
     retainKeys.forEach(key => object.push(key));
   } else Object.keys(object).forEach(key => {
     if (excludeKeys.includes(key)) {
+      // do nothing
     } else {
       const subMap = object[key];
       if (deepClear && subMap) {
@@ -401,7 +402,7 @@ export function isOnlineEditor() {
 
 export function makeCallInfo(module) {
   return { payload: null, renderKey: '', delay: -1, module, fnName: '' }
-};
+}
 
 export function evalState(state = {}) {
   const ret = typeof state === 'function' ? state() : state;

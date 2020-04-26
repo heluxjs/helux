@@ -1,4 +1,4 @@
-import { CC_FRAGMENT, CC_CUSTOMIZE, CC_CLASS, CC_HOOK } from '../../support/constant';
+import { CC_FRAGMENT, CC_CUSTOMIZE, CC_CLASS } from '../../support/constant';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';
 import buildRefCtx from '../ref/build-ref-ctx';

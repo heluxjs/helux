@@ -72,7 +72,7 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
   }
 
   _parseDescObj(cate, confMeta, _descObj);
-};
+}
 
 function _parseDescObj(cate, confMeta, descObj) {
   const { computedCompare, watchCompare, watchImmediate } = runtimeVar;
@@ -80,7 +80,7 @@ function _parseDescObj(cate, confMeta, descObj) {
   const defaultCompare = confMeta.type === FN_CU ? computedCompare : watchCompare;
   const callerModule = confMeta.module;
 
-  okeys(descObj).forEach((retKey, idx) => {
+  okeys(descObj).forEach((retKey) => {
     const val = descObj[retKey];
     const vType = typeof val;
 

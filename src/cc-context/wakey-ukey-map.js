@@ -1,5 +1,3 @@
-import { safeGet, justWarning } from '../support/util';
-
 
 // 依赖收集写入的映射
 export const waKey_uKeyMap_ = {};
@@ -37,7 +35,9 @@ export function delIns(module, stateKey, ccUniqueKey) {
 export function delInsM(modStateKey, ccUniqueKey) {
   try {
     delete waKey_uKeyMap_[modStateKey][ccUniqueKey];
-  } catch (err) { }
+  } catch (err) {
+    // do nothing
+  }
 }
 
 export function mapStaticIns(module, stateKey, ccUniqueKey) {
@@ -51,5 +51,7 @@ export function mapStaticInsM(modStateKey, ccUniqueKey) {
 export function delStaticInsM(modStateKey, ccUniqueKey) {
   try {
     delete waKey_staticUKeyMap_[modStateKey][ccUniqueKey];
-  } catch (err) { }
+  } catch (err) { 
+    // do nothing
+  }
 }

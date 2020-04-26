@@ -100,7 +100,7 @@ export default function (state, {
         passToMiddleware.sharedState[key] = val;
       };
 
-      callMiddlewares(skipMiddleware, passToMiddleware, (hasMid) => {
+      callMiddlewares(skipMiddleware, passToMiddleware, () => {
 
         // 到这里才触发调用saveSharedState存储模块状态和updateRef更新调用实例，注这两者前后顺序不能调换
         // 因为updateRef里的beforeRender需要把最新的模块状态合进来
@@ -112,6 +112,7 @@ export default function (state, {
         updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP && !realShare) {
+          // do nothing
         } else {
           send(SIG_STATE_CHANGED, {
             calledBy, type, committedState, sharedState: realShare,

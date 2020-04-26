@@ -49,4 +49,4 @@ export default function (spec, ref, e) {
     const { state } = extractStateByCcsync(ccsync, value, ccint, ref.state, mockE.isToggleBool);
     ref.setState(state, null, ccrkey, ccdelay);
   }
-};
+}

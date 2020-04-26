@@ -11,7 +11,7 @@ const {
   moduleSingleClass, ccClassKey_ccClassContext_,
   computed: { _computedValue },
 } = ccContext;
-const { verifyKeys, makeError: me, verboseInfo: vbi } = util;
+const { verifyKeys, verboseInfo: vbi } = util;
 
 function checkCcStartupOrNot() {
   if (ccContext.isStartup !== true) {

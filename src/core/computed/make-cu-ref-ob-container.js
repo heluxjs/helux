@@ -6,6 +6,8 @@ import computedMap from '../../cc-context/computed-map';
 import { CATE_MODULE } from '../../support/constant';
 import { justWarning } from '../../support/util';
 
+const hasOwnPropertyCall = Object.prototype.hasOwnProperty.call;
+
 const { _computedValueOri, _computedValue, _computedDep } = computedMap;
 
 function writeRetKeyDep(moduleCuDep, ref, module, retKey, isForModule) {
@@ -58,9 +60,9 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, refCtx,
 
       // 1 防止用户从 cuVal读取不存在的key
       // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，强制用户要注意计算函数的书写顺序
-      if (oriCuContainer.hasOwnProperty(otherRetKey)) {
+      if (hasOwnPropertyCall(oriCuContainer, otherRetKey)) {
         retKeys.push(otherRetKey);
-      }else{
+      } else {
         justWarning(`${sourceType} ${fnType} retKey[${retKey}] get cuVal invalid retKey[${otherRetKey}]`)
       }
 
@@ -85,7 +87,7 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
     get: function (target, retKey) {
 
       // 防止用户从 cuVal读取不存在的key
-      if (oriCuContainer.hasOwnProperty(retKey)) {
+      if (hasOwnPropertyCall(oriCuContainer, retKey)) {
 
         // 由refComputed.{keyName}取值触发
         if (isRefCu) {

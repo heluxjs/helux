@@ -96,7 +96,9 @@ export default (spec, e, refCtx) => {
 
       const dataSetDelay = dataset.ccdelay;
       if (dataSetDelay) {
-        try { ccdelay = parseInt(dataSetDelay); } catch (err) { }
+        try { ccdelay = parseInt(dataSetDelay); } catch (err) {
+          // do nothing
+        }
       }
 
     } else {

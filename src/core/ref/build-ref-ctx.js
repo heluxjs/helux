@@ -240,6 +240,7 @@ export default function (ref, params, liteLevel = 5) {
 
     prevProps: props,
     props,
+    //collected mapProps result
     mapped: {},
 
     prevState: mergedState,
@@ -263,9 +264,6 @@ export default function (ref, params, liteLevel = 5) {
     moduleReducer: {},
     connectedReducer: {},
     reducer: {},
-
-    //collected mapProps result
-    mapped: {},
 
     // api meta data
     stateKeys,

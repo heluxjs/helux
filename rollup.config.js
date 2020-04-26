@@ -3,6 +3,7 @@ import babel from 'rollup-plugin-babel'
 import replace from 'rollup-plugin-replace'
 import commonjs from 'rollup-plugin-commonjs'
 import { uglify } from 'rollup-plugin-uglify'
+import { eslint } from 'rollup-plugin-eslint';
 import pkg from './package.json'
 
 const env = process.env.NODE_ENV;
@@ -38,7 +39,10 @@ const config = {
       namedExports: {
         'node_modules/react-is/index.js': ['isValidElementType'],
       }
-    })
+    }),
+    eslint({
+      include: ['src/**/*.js'] // 需要检查的部分
+    }),
   ]
 }
 

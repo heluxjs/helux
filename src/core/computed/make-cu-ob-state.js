@@ -12,9 +12,9 @@ export default function (state, depKeys) {
       if (!depKeys.includes(key)) depKeys.push(key);
       return target[key];
     },
-    set: function (target, key) {
-      // 故意写为原值，拒绝用户在computed回调里修改state的值
-      target[key] = target[key];
+    // set: function (target, key) {
+    set: function () {
+      // do nothing，拒绝用户在computed回调里修改state的值
 
       return true;
     }
