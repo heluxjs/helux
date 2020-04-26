@@ -109,7 +109,31 @@ export type ComputedValType<T> = {
   );
 }
 
-export type SettingsType<SetupFn extends (...args: any) => any> = ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>;
+export type SettingsType<SetupFn> = ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>;
+
+/**
+ * inspired by
+ * https://github.com/pirix-gh/ts-toolbelt/blob/master/src/List/Tail.ts
+ */
+type C2List<A = any> = ReadonlyArray<A>;
+type Tail<L extends C2List> =
+  ((...t: L) => any) extends ((head: any, ...tail: infer LTail) => any)
+  ? LTail
+  : never
+type GetRestItemsType<A extends Array<any>> = Exclude<A, A[0]>;
+// where set bindCtxToMethod as true, user should use SettingsCType to infer ctx.settings type
+export type SettingsCType<SetupFn, Ctx extends ICtxBase = ICtxBase> =
+  SetupFn extends IAnyFn ? (
+    ReturnType<SetupFn> extends IAnyObj ? (
+      { [key in keyof ReturnType<SetupFn>]:
+        (
+          ReturnType<SetupFn>[key] extends IAnyFn ?
+          (...p: GetRestItemsType<Tail<Parameters<ReturnType<SetupFn>[key]>>>) => ReturnType<ReturnType<SetupFn>[key]> :
+          ReturnType<SetupFn>[key]
+        )
+      }
+    ) : {}
+  ) : {};
 
 export type StateType<S> = S extends IAnyFn ? ReturnType<IAnyFn> : S;
 
@@ -275,6 +299,7 @@ declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState
 
 declare function refCtxSetGlobalState<GlobalState = {}>(state: Partial<GlobalState>, cb?: (newFullState: GlobalState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
+declare function refCtxSetModuleState(moduleName: string, state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 declare function refCtxSetModuleState<RootState, T extends keyof RootState>(moduleName: T, state: Partial<RootState[T]>, cb?: (newFullState: RootState[T]) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
@@ -627,7 +652,7 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 
 
 // to constrain IFnCtx interface series shape
-interface _IFnCtx{// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
+interface _IFnCtx {// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
   retKey: string;
   isFirstCall: boolean;
   setted: string[];
@@ -641,7 +666,7 @@ interface _IFnCtx{// 方便 ctx.computed({....}) 定义计算描述体时，可�
   commit: GetFnCtxCommit<any>;
   commitCu: GetFnCtxCommitCu<any>;
 }
-export interface IFnCtxBase extends _IFnCtx{
+export interface IFnCtxBase extends _IFnCtx {
   refCtx: ICtxBase;
 }
 // M, means need module associate generic type
@@ -678,6 +703,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   lite?: 1 | 2 | 3 | 4;
   layoutEffect?: boolean;// work for useConcent only
   isPropsProxy?: boolean;// work for register only, default false
+  bindCtxToMethod?: boolean;// default false
   isSingle?: boolean; //default false
   renderKeyClasses?: string[];
   compareProps?: boolean;//default true
@@ -837,8 +863,7 @@ interface RunOptions {
   isHot?: boolean;// default is false
   isStrict?: boolean;
   errorHandler?: (err: Error) => void;
-  reducer?: IAnyFnInObj;// deprecated
-  bindCtxToMethod?: boolean;
+  bindCtxToMethod?: boolean;// default false
   /**
    * objectValueCompare is false by default.
    * in this situation concent treat object value as new value when user set it
