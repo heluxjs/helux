@@ -5,7 +5,7 @@ import { NOT_A_JSON } from '../../support/priv-constant';
 const { okeys, isPJO } = util;
 const { store: { _state } } = ccContext;
 
-const hasOwnPropertyCall = Object.prototype.hasOwnProperty.call;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  * 根据connect,watchedKeys算出ccClassKey值和connectedModuleKeyMapping值
@@ -42,7 +42,7 @@ export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) 
       throw new Error(invalidConnectItem(m));
     } else {
       val.forEach(sKey => {
-        if (!hasOwnPropertyCall(moduleState, sKey)) {
+        if (!hasOwnProperty.call(moduleState, sKey)) {
           throw new Error(`${invalidConnect} module[${m}]'s key[${sKey}] not declared in cc store `);
         } else {
           feature += `${sKey},`;

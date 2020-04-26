@@ -1113,7 +1113,7 @@
   /**
    * 为每一个实例单独建立了一个获取计算结果的观察容器，方便写入依赖
    */
-  var hasOwnPropertyCall = Object.prototype.hasOwnProperty.call;
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
   var _computedValueOri$1 = computedMap._computedValueOri,
       _computedValue$1 = computedMap._computedValue,
       _computedDep$1 = computedMap._computedDep;
@@ -1168,7 +1168,7 @@
       get: function get(target, otherRetKey) {
         // 1 防止用户从 cuVal读取不存在的key
         // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，强制用户要注意计算函数的书写顺序
-        if (hasOwnPropertyCall(oriCuContainer, otherRetKey)) {
+        if (hasOwnProperty.call(oriCuContainer, otherRetKey)) {
           retKeys.push(otherRetKey);
         } else {
           justWarning(sourceType + " " + fnType + " retKey[" + retKey + "] get cuVal invalid retKey[" + otherRetKey + "]");
@@ -1200,7 +1200,7 @@
     return new Proxy(oriCuContainer, {
       get: function get(target, retKey) {
         // 防止用户从 cuVal读取不存在的key
-        if (hasOwnPropertyCall(oriCuContainer, retKey)) {
+        if (hasOwnProperty.call(oriCuContainer, retKey)) {
           // 由refComputed.{keyName}取值触发
           if (isRefCu) {
             var computedDep = ref.ctx.computedDep;
@@ -1508,18 +1508,10 @@
       curStateForComputeFn = getFnCommittedState();
 
       if (curStateForComputeFn) {
-        var assignCuState = function assignCuState(toAssign, judgeEmpty) {
-          if (judgeEmpty === void 0) {
-            judgeEmpty = false;
-          }
-
+        // toAssign may be null
+        var assignCuState = function assignCuState(toAssign) {
           curStateForComputeFn = toAssign;
-
-          if (judgeEmpty && okeys(toAssign).length === 0) {
-            curStateForComputeFn = null;
-            return;
-          }
-
+          if (!curStateForComputeFn) return;
           Object.assign(initNewState, curStateForComputeFn);
           Object.assign(initDeltaCommittedState, curStateForComputeFn);
           hasDelta = true;
@@ -1539,7 +1531,8 @@
         }
 
         if (partialState) {
-          // watch里提交了新的片段state，再次过一遍computed函数
+          assignCuState(partialState); // watch里提交了新的片段state，再次过一遍computed函数
+
           if (fnType === FN_WATCH) {
             // const stateKey_retKeys_ = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
             var computedDep = getCuDep(refCtx, sourceType, stateModule);
@@ -1550,8 +1543,6 @@
 
             executeDepFns(ref, stateModule, refModule, oldState, _finder2, partialState, initNewState, initDeltaCommittedState, callInfo, false, // 再次由watch发起的computed函数查找调用，irFirstCall，一定是false
             FN_CU, sourceType, computedContainer);
-          } else {
-            assignCuState(partialState);
           }
         }
       }
@@ -1795,7 +1786,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.7',
+      version: '2.4.9',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -4258,7 +4249,7 @@
   var okeys$6 = okeys,
       isPJO$6 = isPJO;
   var _state$1 = ccContext.store._state;
-  var hasOwnPropertyCall$1 = Object.prototype.hasOwnProperty.call;
+  var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
   /**
    * 根据connect,watchedKeys算出ccClassKey值和connectedModuleKeyMapping值
    */
@@ -4299,7 +4290,7 @@
         throw new Error(invalidConnectItem(m));
       } else {
         val.forEach(function (sKey) {
-          if (!hasOwnPropertyCall$1(moduleState, sKey)) {
+          if (!hasOwnProperty$1.call(moduleState, sKey)) {
             throw new Error(invalidConnect + " module[" + m + "]'s key[" + sKey + "] not declared in cc store ");
           } else {
             feature += sKey + ",";

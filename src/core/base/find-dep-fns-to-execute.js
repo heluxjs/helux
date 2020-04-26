@@ -272,12 +272,10 @@ export default function executeDepFns(
     curStateForComputeFn = getFnCommittedState();
 
     if (curStateForComputeFn) {
-      const assignCuState = (toAssign, judgeEmpty = false) => {
+      // toAssign may be null
+      const assignCuState = (toAssign) => {
         curStateForComputeFn = toAssign;
-        if (judgeEmpty && okeys(toAssign).length === 0) {
-          curStateForComputeFn = null;
-          return;
-        }
+        if(!curStateForComputeFn) return;
         Object.assign(initNewState, curStateForComputeFn);
         Object.assign(initDeltaCommittedState, curStateForComputeFn);
         hasDelta = true;
@@ -294,6 +292,7 @@ export default function executeDepFns(
       }
 
       if (partialState) {
+        assignCuState(partialState);
 
         // watch里提交了新的片段state，再次过一遍computed函数
         if (fnType === FN_WATCH) {
@@ -311,8 +310,6 @@ export default function executeDepFns(
             false, // 再次由watch发起的computed函数查找调用，irFirstCall，一定是false
             FN_CU, sourceType, computedContainer
           );
-        } else {
-          assignCuState(partialState);
         }
       }
 
