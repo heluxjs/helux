@@ -13,7 +13,7 @@ import {
   // exitChain, getChainStateMap, 
   getAllChainStateMap, removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
 } from '../chain';
-import { send, onOnce } from '../plugin';
+import { send, onOnce, offOnce } from '../plugin';
 import * as checker from '../checker';
 import changeRefState from '../state/change-ref-state';
 import setState from './set-state';
@@ -468,9 +468,10 @@ export function makeSetStateHandler(module, initPost) {
   return state => {
     const execInitPost = () => (initPost && initPost());
     try {
-      setState(module, state);
       onOnce(SIG_STATE_CHANGED, execInitPost);
+      setState(module, state);
     } catch (err) {
+      offOnce(SIG_STATE_CHANGED, execInitPost);
       const moduleState = getState(module);
       if (!moduleState) {
         return justWarning(`invalid module ${module}`);

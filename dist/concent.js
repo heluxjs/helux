@@ -1786,7 +1786,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.10',
+      version: '2.4.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2767,33 +2767,29 @@
 
   var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED];
   var sig_cbs_ = {};
+  var sig_OnceCbs_ = {};
   sigs.forEach(function (sig) {
     return sig_cbs_[sig] = [];
   });
-  function clearCbs() {
-    sigs.forEach(function (sig) {
-      return sig_cbs_[sig].length = 0;
-    });
+  sigs.forEach(function (sig) {
+    return sig_OnceCbs_[sig] = [];
+  });
+
+  function _getOnceCbs(sig) {
+    var cbs = sig_OnceCbs_[sig];
+    sig_OnceCbs_[sig].length = 0;
+    return cbs;
   }
-  function send(sig, payload) {
-    var cbs = sig_cbs_[sig];
-    cbs.forEach(function (cb) {
-      cb({
-        sig: sig,
-        payload: payload
-      });
-    });
-  }
-  function on(sigOrSigs, cb) {
+
+  function _pushSigCb(sigMap, sigOrSigs, cb) {
     function pushCb(sig, cb) {
-      var cbs = sig_cbs_[sig];
+      var cbs = sigMap[sig];
 
-      if (!cbs) {
+      if (cb) {
+        cbs.push(cb);
+      } else {
         console.warn("invalid sig[" + sig + "]");
-        return;
       }
-
-      cbs.push(cb);
     }
 
     if (Array.isArray(sigOrSigs)) {
@@ -2803,6 +2799,36 @@
     } else {
       pushCb(sigOrSigs, cb);
     }
+  }
+
+  function clearCbs() {
+    sigs.forEach(function (sig) {
+      return sig_cbs_[sig].length = 0;
+    });
+  }
+  function send(sig, payload) {
+    var cbs = sig_cbs_[sig];
+    cbs.forEach(function (cb) {
+      return cb({
+        sig: sig,
+        payload: payload
+      });
+    });
+
+    var onceCbs = _getOnceCbs(sig);
+
+    onceCbs.forEach(function (cb) {
+      return cb({
+        sig: sig,
+        payload: payload
+      });
+    });
+  }
+  function on(sigOrSigs, cb) {
+    _pushSigCb(sig_cbs_, sigOrSigs, cb);
+  }
+  function onOnce(sigOrSigs, cb) {
+    _pushSigCb(sig_OnceCbs_, sigOrSigs, cb);
   }
 
   var catchCcError = (function (err) {
@@ -4037,10 +4063,15 @@
     };
   } // for module/init method
 
-  function makeSetStateHandler(module) {
+  function makeSetStateHandler(module, initPost) {
     return function (state) {
+      var execInitPost = function execInitPost() {
+        return initPost && initPost();
+      };
+
       try {
         setState$1(module, state);
+        onOnce(SIG_STATE_CHANGED, execInitPost);
       } catch (err) {
         var moduleState = getState(module);
 
@@ -4062,6 +4093,7 @@
         }
 
         justTip("no ccInstance found for module[" + module + "] currently, cc will just store it, lately ccInstance will pick this state to render");
+        execInitPost();
       }
     };
   }
@@ -4161,7 +4193,7 @@
       }
 
       Promise.resolve().then(init).then(function (state) {
-        makeSetStateHandler(module)(state);
+        makeSetStateHandler(module)(state, config.initPost);
       });
     }
 
@@ -6626,7 +6658,7 @@
       return initModuleWatch(m, rootWatch[m]);
     });
   }
-  function executeRootInit(init) {
+  function executeRootInit(init, initPost) {
     if (!init) return;
 
     if (!isPJO$7(init)) {
@@ -6639,7 +6671,7 @@
 
       if (initFn) {
         Promise.resolve().then(initFn).then(function (state) {
-          makeSetStateHandler(moduleName)(state);
+          makeSetStateHandler(moduleName)(state, initPost[moduleName]);
         });
       }
     });
@@ -7011,6 +7043,8 @@
         reducer = _ref$reducer === void 0 ? {} : _ref$reducer,
         _ref$init = _ref.init,
         init = _ref$init === void 0 ? null : _ref$init,
+        _ref$initPost = _ref.initPost,
+        initPost = _ref$initPost === void 0 ? {} : _ref$initPost,
         _ref$computed = _ref.computed,
         computed = _ref$computed === void 0 ? {} : _ref$computed,
         _ref$watch = _ref.watch,
@@ -7077,7 +7111,7 @@
         configRootReducer(reducer);
         configRootComputed(computed);
         configRootWatch(watch);
-        executeRootInit(init);
+        executeRootInit(init, initPost);
         configMiddlewares(middlewares);
 
         var bindOthers = function bindOthers(bindTarget) {
@@ -7150,6 +7184,7 @@
       watch: {},
       computed: {},
       init: {},
+      initPost: {},
       moduleSingleClass: {}
     };
 
@@ -7160,6 +7195,7 @@
           watch = moduleConf.watch,
           computed = moduleConf.computed,
           init = moduleConf.init,
+          initPost = moduleConf.initPost,
           isClassSingle = moduleConf.isClassSingle;
 
       if (storeConf.store[m]) {
@@ -7172,6 +7208,7 @@
       if (watch) storeConf.watch[m] = watch;
       if (computed) storeConf.computed[m] = computed;
       if (init) storeConf.init[m] = init;
+      if (initPost) storeConf.initPost[m] = initPost;
       storeConf.moduleSingleClass[m] = isClassSingle === true;
     }; // traversal moduleNames
 
