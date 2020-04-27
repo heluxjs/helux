@@ -1,7 +1,7 @@
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
   MODULE_GLOBAL, ERR, 
-  SIG_FN_START, SIG_FN_END, SIG_FN_ERR,
+  SIG_FN_START, SIG_FN_END, SIG_FN_ERR, SIG_STATE_CHANGED,
   DISPATCH, INVOKE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
@@ -13,7 +13,7 @@ import {
   // exitChain, getChainStateMap, 
   getAllChainStateMap, removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
 } from '../chain';
-import { send } from '../plugin';
+import { send, onOnce } from '../plugin';
 import * as checker from '../checker';
 import changeRefState from '../state/change-ref-state';
 import setState from './set-state';
@@ -464,10 +464,12 @@ export function makeDispatchHandler(
 }
 
 // for module/init method
-export function makeSetStateHandler(module) {
+export function makeSetStateHandler(module, initPost) {
   return state => {
+    const execInitPost = () => (initPost && initPost());
     try {
       setState(module, state);
+      onOnce(SIG_STATE_CHANGED, execInitPost);
     } catch (err) {
       const moduleState = getState(module);
       if (!moduleState) {
@@ -482,6 +484,7 @@ export function makeSetStateHandler(module) {
       }
 
       util.justTip(`no ccInstance found for module[${module}] currently, cc will just store it, lately ccInstance will pick this state to render`);
+      execInitPost();
     }
   }
 }

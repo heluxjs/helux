@@ -63,7 +63,7 @@ export function configRootWatch(rootWatch) {
   Object.keys(rootWatch).forEach(m => initModuleWatch(m, rootWatch[m]));
 }
 
-export function executeRootInit(init) {
+export function executeRootInit(init, initPost) {
   if (!init) return;
   if (!isPJO(init)) {
     throw new Error(`init ${NOT_A_JSON}`);
@@ -74,7 +74,7 @@ export function executeRootInit(init) {
     const initFn = init[moduleName];
     if (initFn) {
       Promise.resolve().then(initFn).then(state => {
-        makeSetStateHandler(moduleName)(state)
+        makeSetStateHandler(moduleName)(state, initPost[moduleName])
       });
     }
   });

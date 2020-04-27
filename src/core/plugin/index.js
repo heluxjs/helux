@@ -17,7 +17,35 @@ const sigs = [
 ];
 
 const sig_cbs_ = {};
+const sig_OnceCbs_ = {};
+
 sigs.forEach(sig => sig_cbs_[sig] = []);
+sigs.forEach(sig => sig_OnceCbs_[sig] = []);
+
+function _getOnceCbs(sig) {
+  const cbs = sig_OnceCbs_[sig];
+  sig_OnceCbs_[sig].length = 0;
+  return cbs;
+}
+
+function _pushSigCb(sigMap, sigOrSigs, cb){
+  function pushCb(sig, cb) {
+    const cbs = sigMap[sig];
+    if(cb){
+      cbs.push(cb);
+    }else{
+      console.warn(`invalid sig[${sig}]`);
+    }
+  }
+
+  if (Array.isArray(sigOrSigs)) {
+    sigOrSigs.forEach(sig => {
+      pushCb(sig, cb);
+    })
+  } else {
+    pushCb(sigOrSigs, cb);
+  }
+}
 
 export function clearCbs() {
   sigs.forEach(sig => sig_cbs_[sig].length = 0);
@@ -25,26 +53,16 @@ export function clearCbs() {
 
 export function send(sig, payload) {
   const cbs = sig_cbs_[sig];
-  cbs.forEach(cb => {
-    cb({ sig, payload });
-  });
+  cbs.forEach(cb => cb({ sig, payload }));
+
+  const onceCbs = _getOnceCbs(sig);
+  onceCbs.forEach(cb => cb({ sig, payload }));
 }
 
 export function on(sigOrSigs, cb) {
-  function pushCb(sig, cb) {
-    const cbs = sig_cbs_[sig];
-    if (!cbs) {
-      console.warn(`invalid sig[${sig}]`);
-      return
-    }
-    cbs.push(cb);
-  }
+  _pushSigCb(sig_cbs_, sigOrSigs, cb)
+}
 
-  if (Array.isArray(sigOrSigs)) {
-    sigOrSigs.forEach(sig => {
-      pushCb(sig, cb)
-    })
-  } else {
-    pushCb(sigOrSigs, cb)
-  }
+export function onOnce(sigOrSigs, cb) {
+  _pushSigCb(sig_OnceCbs_, sigOrSigs, cb)
 }

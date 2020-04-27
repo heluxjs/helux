@@ -67,6 +67,7 @@ export default function (
     store = {},
     reducer = {},
     init = null,
+    initPost = {},
     computed = {},
     watch = {},
     moduleSingleClass = {},
@@ -117,7 +118,7 @@ export default function (
       boot.configRootReducer(reducer);
       boot.configRootComputed(computed);
       boot.configRootWatch(watch);
-      boot.executeRootInit(init);
+      boot.executeRootInit(init, initPost);
       boot.configMiddlewares(middlewares);
 
 

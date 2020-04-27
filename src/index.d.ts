@@ -811,6 +811,7 @@ type ModuleConfig = {
     [retKey: string]: WatchFn | WatchFnDesc;
   };
   init?: (() => Partial<IAnyObj>) | (() => Promise<Partial<IAnyObj>>);
+  initPost?: IAnyFn;
 }
 
 interface StoreConfig {

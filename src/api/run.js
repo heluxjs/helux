@@ -30,11 +30,12 @@ export default function (store = {}, options = {}) {
     watch: {},
     computed: {},
     init: {},
+    initPost: {},
     moduleSingleClass: {},
   }
 
   const buildStoreConf = (m, moduleConf)=>{
-    const { state, reducer = {}, watch, computed, init, isClassSingle } = moduleConf;
+    const { state, reducer = {}, watch, computed, init, initPost, isClassSingle } = moduleConf;
     if(storeConf.store[m]){
       throw new Error(`run api error: module${m} duplicate`);
     }
@@ -46,6 +47,7 @@ export default function (store = {}, options = {}) {
     if (watch) storeConf.watch[m] = watch;
     if (computed) storeConf.computed[m] = computed;
     if (init) storeConf.init[m] = init;
+    if (initPost) storeConf.initPost[m] = initPost;
     storeConf.moduleSingleClass[m] = isClassSingle === true;
   }
 
