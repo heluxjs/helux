@@ -109,7 +109,9 @@ export type ComputedValType<T> = {
   );
 }
 
-export type SettingsType<SetupFn> = ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>;
+export type SettingsType<SetupFn> = SetupFn extends IAnyFn ?
+  (ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>) :
+  {};
 
 /**
  * inspired by
@@ -597,10 +599,10 @@ export interface ICtx
   readonly refComputed: RefComputed;
   readonly mapped: Mapped;
   // overwrite connectedState , connectedComputed
-  readonly connectedState: Pick<RootState, ConnectedModules>;
-  readonly connectedReducer: Pick<RootReducer, ConnectedModules>;
-  readonly cr: Pick<RootReducer, ConnectedModules>;// alias of connectedReducer
-  readonly connectedComputed: Pick<RootCu, ConnectedModules>;
+  readonly connectedState: Pick<RootState, ConnectedModules | MODULE_GLOBAL >;
+  readonly connectedReducer: Pick<RootReducer, ConnectedModules | MODULE_GLOBAL >;
+  readonly cr: Pick<RootReducer, ConnectedModules | MODULE_GLOBAL >;// alias of connectedReducer
+  readonly connectedComputed: Pick<RootCu, ConnectedModules| MODULE_GLOBAL >;
 
   // !!! 目前这样写有问题，例如连接是foo,bar, 
   // 外面推导出的是 Pick<RootReducer, "foo"> | Pick<RootReducer, "bar">
