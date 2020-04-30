@@ -811,7 +811,7 @@ type ModuleConfig = {
     [retKey: string]: WatchFn | WatchFnDesc;
   };
   init?: (() => Partial<IAnyObj>) | (() => Promise<Partial<IAnyObj>>);
-  initPost?: IAnyFn;
+  initPost?: (dispatch: IDispatch, moduleState: any) => any;
 }
 
 interface StoreConfig {
@@ -1175,7 +1175,11 @@ interface IDispatchExtra {
   throwError?: boolean;
   refModule?: string;
 }
-export function dispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
+
+declare function ccDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
+export type IDispatch = typeof ccDispatch;
+
+export declare const dispatch: IDispatch;
 
 export declare const emit: typeof refCtxEmit;
 
@@ -1269,7 +1273,7 @@ declare type DefaultExport = {
   defComputed: typeof defComputed,
   defLazyComputed: typeof defLazyComputed,
   defComputedVal: typeof defComputedVal,
-  defWatch: typeof defWatch,
+  defWatch: IDispatch,
   cst: typeof cst,
   CcFragment: typeof CcFragment,
   Ob: typeof Ob,

@@ -52,7 +52,7 @@ export default function (module, config) {
       throw new Error('init value must be a function!');
     }
     Promise.resolve().then(init).then(state => {
-      makeSetStateHandler(module)(state, config.initPost);
+      makeSetStateHandler(module, config.initPost)(state);
     });
   }
 

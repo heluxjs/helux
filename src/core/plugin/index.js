@@ -24,7 +24,7 @@ sigs.forEach(sig => sig_cbs_[sig] = []);
 sigs.forEach(sig => sig_OnceCbs_[sig] = []);
 
 function _getOnceCbs(sig) {
-  const cbs = sig_OnceCbs_[sig];
+  const cbs = sig_OnceCbs_[sig].slice();
   sig_OnceCbs_[sig].length = 0;
   return cbs;
 }

@@ -74,7 +74,7 @@ export function executeRootInit(init, initPost) {
     const initFn = init[moduleName];
     if (initFn) {
       Promise.resolve().then(initFn).then(state => {
-        makeSetStateHandler(moduleName)(state, initPost[moduleName])
+        makeSetStateHandler(moduleName, initPost[moduleName])(state)
       });
     }
   });

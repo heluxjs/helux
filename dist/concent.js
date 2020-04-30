@@ -1786,7 +1786,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.11',
+      version: '2.4.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2768,6 +2768,7 @@
   var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED];
   var sig_cbs_ = {};
   var sig_OnceCbs_ = {};
+  var seq = 1;
   sigs.forEach(function (sig) {
     return sig_cbs_[sig] = [];
   });
@@ -2776,7 +2777,7 @@
   });
 
   function _getOnceCbs(sig) {
-    var cbs = sig_OnceCbs_[sig];
+    var cbs = sig_OnceCbs_[sig].slice();
     sig_OnceCbs_[sig].length = 0;
     return cbs;
   }
@@ -2827,8 +2828,23 @@
   function on(sigOrSigs, cb) {
     _pushSigCb(sig_cbs_, sigOrSigs, cb);
   }
-  function onOnce(sigOrSigs, cb) {
-    _pushSigCb(sig_OnceCbs_, sigOrSigs, cb);
+  function onOnce(sig, cb) {
+    if (cb) {
+      cb.__seq = seq++;
+
+      _pushSigCb(sig_OnceCbs_, sig, cb);
+    }
+  }
+  function offOnce(sig, cb) {
+    var cbSeq = cb && cb.__seq;
+
+    if (cbSeq) {
+      var cbs = sig_OnceCbs_[sig];
+      var cbIdx = cbs.findIndex(function (v) {
+        return v.__seq === cbSeq;
+      });
+      cbs.splice(cbIdx, 1);
+    }
   }
 
   var catchCcError = (function (err) {
@@ -4066,13 +4082,24 @@
   function makeSetStateHandler(module, initPost) {
     return function (state) {
       var execInitPost = function execInitPost() {
-        return initPost && initPost();
+        var moduleDispatch = function moduleDispatch(action) {
+          var _action = typeof action === 'string' && !action.includes('/') ? module + "/" + action : action;
+
+          for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+            args[_key2 - 1] = arguments[_key2];
+          }
+
+          ccDispatch.apply(void 0, [_action].concat(args));
+        };
+
+        initPost && initPost(moduleDispatch, getState(module));
       };
 
       try {
-        setState$1(module, state);
         onOnce(SIG_STATE_CHANGED, execInitPost);
+        setState$1(module, state);
       } catch (err) {
+        offOnce(SIG_STATE_CHANGED, execInitPost);
         var moduleState = getState(module);
 
         if (!moduleState) {
@@ -4193,7 +4220,7 @@
       }
 
       Promise.resolve().then(init).then(function (state) {
-        makeSetStateHandler(module)(state, config.initPost);
+        makeSetStateHandler(module, config.initPost)(state);
       });
     }
 
@@ -6671,7 +6698,7 @@
 
       if (initFn) {
         Promise.resolve().then(initFn).then(function (state) {
-          makeSetStateHandler(moduleName)(state, initPost[moduleName]);
+          makeSetStateHandler(moduleName, initPost[moduleName])(state);
         });
       }
     });

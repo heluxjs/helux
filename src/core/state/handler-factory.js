@@ -466,7 +466,14 @@ export function makeDispatchHandler(
 // for module/init method
 export function makeSetStateHandler(module, initPost) {
   return state => {
-    const execInitPost = () => (initPost && initPost());
+    const execInitPost = () => {
+      const moduleDispatch = (action, ...args) => {
+        let _action = typeof action === 'string' && !action.includes('/') ? `${module}/${action}` : action;
+        ccDispatch(_action, ...args);
+      }
+      initPost && initPost(moduleDispatch, getState(module));
+    };
+
     try {
       onOnce(SIG_STATE_CHANGED, execInitPost);
       setState(module, state);
