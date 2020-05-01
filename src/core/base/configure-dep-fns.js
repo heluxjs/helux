@@ -47,7 +47,7 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
   const type = confMeta.type;
   if (cate === CATE_REF) {
     if (!ctx.__$$inBM) {
-      justWarning(`${cate} ${type} must be been called in setup block`);
+      justWarning(`${cate} ${type} must been called in setup block`);
       return;
     }
   }
