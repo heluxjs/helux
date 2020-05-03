@@ -1,3 +1,7 @@
+#### 2020-05-03
+2.4.16 发布
+fix: globalComputed未正确收集到依赖
+
 #### 2020-04-12
 2.4.2 发布
 * 支持`useConcent`渲染期间改变参数`module`和`connect`, [在线示例](https://codesandbox.io/s/dynamic-module-and-connect-xevsp?file=/src/App.js)
