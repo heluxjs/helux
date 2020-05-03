@@ -1786,7 +1786,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.15',
+      version: '2.4.16',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2257,6 +2257,7 @@
     });
   }
 
+  /** eslint-disabled */
   var _currentIndex = 0;
   var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
 
@@ -2320,7 +2321,7 @@
 
     if (cate === CATE_REF) {
       if (!ctx.__$$inBM) {
-        justWarning(cate + " " + type + " must be been called in setup block");
+        justWarning(cate + " " + type + " must been called in setup block");
         return;
       }
     }
@@ -5310,14 +5311,24 @@
     connectedModules.forEach(function (m) {
       return connectedComputed[m] = makeCuRefObContainer(ref, m, false);
     });
-    var moduleComputed = makeCuRefObContainer(ref, module);
-    var globalComputed = makeCuRefObContainer(ref, MODULE_GLOBAL); // const globalState = getState(MODULE_GLOBAL);
+    var moduleComputed = makeCuRefObContainer(ref, module); // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
+
+    var globalComputed = connectedComputed[MODULE_GLOBAL]; // const globalState = getState(MODULE_GLOBAL);
 
     var globalState = makeObState(ref, getState$3(MODULE_GLOBAL), MODULE_GLOBAL, false); // extract privStateKeys
 
-    var privStateKeys = removeArrElements(okeys$7(state), modStateKeys);
-    var moduleState;
-    if (stateModule === MODULE_GLOBAL) moduleState = globalState;else moduleState = makeObState(ref, mstate, module, true); // record ccClassKey
+    var privStateKeys = removeArrElements(okeys$7(state), modStateKeys); // 不推荐用户指定实例属于$$global模块，要不然会造成即属于又连接的情况产生
+
+    var moduleState = makeObState(ref, mstate, module, true);
+
+    if (module === MODULE_GLOBAL) {
+      //  it is not a good idea to specify a ins belong to $$global module, 
+      //  all ins connect to $$global module automatically!
+      //  recommend you visit its data by ctx.globalState or ctx.globalComputed
+      //  or you can visit by ctx.connectedState.$$global or ctx.connectComputed.$$global instead
+      justWarning("belong to $$global is not good.");
+    } // record ccClassKey
+
 
     var ccClassKeys = safeGetArray$2(moduleName_ccClassKeys_$1, module);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // declare cc state series api
@@ -6352,6 +6363,7 @@
     unsetRef(ccClassKey, ccUniqueKey, renderKey);
   }
 
+  /** eslint-disabled */
   function beforeRender (ref) {
     var ctx = ref.ctx;
     ctx.__$$renderStatus = START; // 处于收集观察依赖

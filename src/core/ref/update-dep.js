@@ -74,7 +74,6 @@ export default function (ref, module, key, isForModule) {
       // 处于非自动收集状态则忽略
       if (refCtx.watchedKeys !== '-') return;
 
-
       const {
         __$$curWaKeys,
         __$$compareWaKeys,

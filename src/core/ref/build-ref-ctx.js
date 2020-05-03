@@ -146,16 +146,23 @@ export default function (ref, params, liteLevel = 5) {
   const connectedComputed = {};
   connectedModules.forEach(m => connectedComputed[m] = makeCuRefObContainer(ref, m, false));
   const moduleComputed = makeCuRefObContainer(ref, module);
-  const globalComputed = makeCuRefObContainer(ref, MODULE_GLOBAL);
+  // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
+  const globalComputed = connectedComputed[MODULE_GLOBAL];
   
   // const globalState = getState(MODULE_GLOBAL);
   const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
   // extract privStateKeys
   const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
 
-  let moduleState;
-  if (stateModule === MODULE_GLOBAL) moduleState = globalState;
-  else moduleState = makeObState(ref, mstate, module, true);
+  // 不推荐用户指定实例属于$$global模块，要不然会造成即属于又连接的情况产生
+  const moduleState = makeObState(ref, mstate, module, true);
+  if (module === MODULE_GLOBAL) {
+    //  it is not a good idea to specify a ins belong to $$global module, 
+    //  all ins connect to $$global module automatically!
+    //  recommend you visit its data by ctx.globalState or ctx.globalComputed
+    //  or you can visit by ctx.connectedState.$$global or ctx.connectComputed.$$global instead
+    util.justWarning(`belong to $$global is not good.`);
+  }
 
   // record ccClassKey
   const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
