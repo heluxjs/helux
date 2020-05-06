@@ -1574,7 +1574,9 @@
   var refs = {};
 
   var getDispatcher = function getDispatcher() {
-    return refs[CC_DISPATCHER];
+    var d = refs[CC_DISPATCHER];
+    if (!d) d = refs[CC_DISPATCHER] = ccContext.permanentDispatcher;
+    return d;
   };
 
   var setStateByModule = function setStateByModule(module, committedState, _temp) {
@@ -1788,7 +1790,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.17',
+      version: '2.4.18',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'

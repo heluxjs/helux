@@ -105,7 +105,7 @@ const isRegChanged = (firstRegOpt, curRegOpt) => {
   return false;
 }
 
-function _useConcent(registerOption, ccClassKey, insType) {
+function _useConcent(registerOption = {}, ccClassKey, insType) {
   const hookCtxContainer = React.useRef({ prevCcUKey: null, ccUKey: null, regOpt: registerOption });
   const hookCtx = hookCtxContainer.current;
 
