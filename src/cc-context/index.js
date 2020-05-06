@@ -12,7 +12,11 @@ import extractStateByKeys from '../core/state/extract-state-by-keys';
 const { _computedValue } = computed;
 const { okeys, extractChangedState } = util;
 const refs = {};
-const getDispatcher = () => refs[CC_DISPATCHER];
+const getDispatcher = () => {
+  let d = refs[CC_DISPATCHER];
+  if (!d) d = refs[CC_DISPATCHER] = ccContext.permanentDispatcher;
+  return d;
+};
 
 const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false } = {}) => {
   const moduleState = getState(module);
@@ -218,7 +222,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.4.17',
+    version: '2.4.18',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',
