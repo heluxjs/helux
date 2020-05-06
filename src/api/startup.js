@@ -112,6 +112,7 @@ export default function (
         const Dispatcher = createDispatcher();
         appendDispatcher(Dispatcher);
       }
+      ccContext.permanentDispatcher = ccContext.refs[CC_DISPATCHER];
       
       boot.configModuleSingleClass(moduleSingleClass);
       boot.configStoreState(store);

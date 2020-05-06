@@ -40,7 +40,13 @@ export default function(module, mustBelongToModule = false) {
     ccKeys = [CC_DISPATCHER];
   }
 
-  const oneRef = ccUKey_ref_[ccKeys[0]];
+  const oneKey = ccKeys[0];
+  let oneRef = ccUKey_ref_[oneKey];
+
+  // 微前端架构下，应用会反复卸载和加载，再次加载时dispatcher需要被重置回来
+  if (oneKey === CC_DISPATCHER && !oneRef) {
+    oneRef = ccUKey_ref_[oneKey] = ccContext.permanentDispatcher;
+  }
 
   if (!oneRef) {
     throw new Error('cc found no ref!');

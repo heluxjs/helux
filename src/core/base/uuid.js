@@ -1,4 +1,4 @@
-/** eslint-disabled */
+/** eslint-disable */
 import { randomNumber } from '../../support/util';
 let _currentIndex = 0;
 const letters = [

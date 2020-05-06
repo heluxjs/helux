@@ -78,6 +78,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   const cachedPickedRetKeys = cachePool[cacheKey];
 
   if (cachedPickedRetKeys) {
+    // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
     return {
       pickedFns: cachedPickedRetKeys.map(retKey => _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey])),
       setted,
@@ -88,6 +89,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   _pickFn(pickedFns, setted, changed, retKey_fn_, stateKey_retKeys_, retKey_lazy_, fnCount);
   cachePool[cacheKey] = pickedFns.map(v => v.retKey);
 
+   // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
   return { pickedFns, setted, changed };
 }
 

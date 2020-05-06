@@ -218,7 +218,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.4.16',
+    version: '2.4.17',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',
@@ -232,6 +232,7 @@ const ccContext = {
   middlewares: [],
   plugins: [],
   pluginNameMap: {},
+  permanentDispatcher: null,
 }
 
 export function getCcContext() {

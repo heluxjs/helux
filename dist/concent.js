@@ -839,6 +839,7 @@
     var cachedPickedRetKeys = cachePool[cacheKey];
 
     if (cachedPickedRetKeys) {
+      // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
       return {
         pickedFns: cachedPickedRetKeys.map(function (retKey) {
           return _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey]);
@@ -852,7 +853,8 @@
 
     cachePool[cacheKey] = pickedFns.map(function (v) {
       return v.retKey;
-    });
+    }); // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
+
     return {
       pickedFns: pickedFns,
       setted: setted,
@@ -1786,7 +1788,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.16',
+      version: '2.4.17',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -1798,7 +1800,8 @@
     errorHandler: null,
     middlewares: [],
     plugins: [],
-    pluginNameMap: {}
+    pluginNameMap: {},
+    permanentDispatcher: null
   };
   var lsLen = localStorage.length;
   var _refStoreState = ccContext.refStore._state;
@@ -2087,7 +2090,12 @@
       ccKeys = [CC_DISPATCHER];
     }
 
-    var oneRef = ccUKey_ref_[ccKeys[0]];
+    var oneKey = ccKeys[0];
+    var oneRef = ccUKey_ref_[oneKey]; // 微前端架构下，应用会反复卸载和加载，再次加载时dispatcher需要被重置回来
+
+    if (oneKey === CC_DISPATCHER && !oneRef) {
+      oneRef = ccUKey_ref_[oneKey] = ccContext.permanentDispatcher;
+    }
 
     if (!oneRef) {
       throw new Error('cc found no ref!');
@@ -2257,7 +2265,7 @@
     });
   }
 
-  /** eslint-disabled */
+  /** eslint-disable */
   var _currentIndex = 0;
   var letters = ['a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z'];
 
@@ -2370,7 +2378,6 @@
       }
 
       if (isPJO(targetItem)) {
-        // depKeys设置为默认自动收集
         var _targetItem = targetItem,
             fn = _targetItem.fn,
             _targetItem$immediate = _targetItem.immediate,
@@ -6363,7 +6370,7 @@
     unsetRef(ccClassKey, ccUniqueKey, renderKey);
   }
 
-  /** eslint-disabled */
+  /** eslint-disable */
   function beforeRender (ref) {
     var ctx = ref.ctx;
     ctx.__$$renderStatus = START; // 处于收集观察依赖
@@ -7145,6 +7152,7 @@
           appendDispatcher(Dispatcher);
         }
 
+        ccContext.permanentDispatcher = ccContext.refs[CC_DISPATCHER];
         configModuleSingleClass(moduleSingleClass);
         configStoreState(store);
         configRootReducer(reducer);
