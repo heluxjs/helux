@@ -62,6 +62,8 @@ const saveSharedState = (module, toSave, needExtract = false) => {
 
   const moduleState = getState(module);
   const prevModuleState = getPrevState(module);
+  incModuleVer(module);
+
   return extractChangedState(moduleState, target, {
     prevStateContainer: prevModuleState,
     incStateVer: key => incStateVer(module, key),
@@ -74,6 +76,19 @@ const getState = (module) => {
 
 const getPrevState = (module) => {
   return _prevState[module];
+}
+
+const getModuleVer = function (module) {
+  if (!module) return _moduleVer;
+  return _moduleVer[module];
+}
+
+const incModuleVer = function (module) {
+  try {
+    _moduleVer[module]++;
+  } catch (err) {
+    _moduleVer[module] = 1;
+  }
 }
 
 const getStateVer = function (module) {
@@ -98,6 +113,9 @@ const _prevState = getRootState();
 // 1 effect里的函数再次出发当前实例渲染，渲染完后检查prevModuleState curModuleState, 对应的key值还是不一样，又再次出发effect，造成死循环
 // 2 确保引用型值是基于原有引用修改某个属性的值时，也能触发effect
 const _stateVer = {};
+// 优化before-render里无意义的merge mstate导致冗余的set（太多的set会导致 Maximum call stack size exceeded）
+// https://codesandbox.io/s/happy-bird-rc1t7?file=/src/App.js concent below 2.4.18会触发
+const _moduleVer = {};
 
 const ccContext = {
   getDispatcher,
@@ -169,6 +187,7 @@ const ccContext = {
       else return _prevState;
     },
     getStateVer,
+    getModuleVer,
     setState: function (module, partialSharedState, options) {
       return setStateByModule(module, partialSharedState, options);
     },
@@ -222,7 +241,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.4.18',
+    version: '2.4.19',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

@@ -19,6 +19,7 @@ export default function (module, mState, moduleMustNotExisted = true) {
   const ccStore = ccContext.store;
   const rootState = ccStore.getState();
   const rootStateVer = ccStore.getStateVer();
+  const rootModuleVer = ccStore.getModuleVer();
   const prevRootState = ccStore.getPrevState();
   util.safeAssignToMap(rootState, module, state);
   util.safeAssignToMap(prevRootState, module, state);
@@ -26,6 +27,8 @@ export default function (module, mState, moduleMustNotExisted = true) {
     map[key] = 1;
     return map;
   }, {});
+  rootModuleVer[module] = 1;
+
   // 把_computedValueOri safeGet从init-module-computed调整到此处
   // 防止用户不定义任何computed，而只是定义watch时报错undefined
   const cu = ccContext.computed;

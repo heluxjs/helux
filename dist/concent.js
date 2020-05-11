@@ -1636,6 +1636,7 @@
 
     var prevModuleState = _getPrevState(module);
 
+    incModuleVer(module);
     return extractChangedState$1(moduleState, target, {
       prevStateContainer: prevModuleState,
       incStateVer: function incStateVer(key) {
@@ -1650,6 +1651,19 @@
 
   var _getPrevState = function getPrevState(module) {
     return _prevState[module];
+  };
+
+  var getModuleVer = function getModuleVer(module) {
+    if (!module) return _moduleVer;
+    return _moduleVer[module];
+  };
+
+  var incModuleVer = function incModuleVer(module) {
+    try {
+      _moduleVer[module]++;
+    } catch (err) {
+      _moduleVer[module] = 1;
+    }
   };
 
   var getStateVer = function getStateVer(module) {
@@ -1676,7 +1690,10 @@
   // 2 确保引用型值是基于原有引用修改某个属性的值时，也能触发effect
 
 
-  var _stateVer = {};
+  var _stateVer = {}; // 优化before-render里无意义的merge mstate导致冗余的set（太多的set会导致 Maximum call stack size exceeded）
+  // https://codesandbox.io/s/happy-bird-rc1t7?file=/src/App.js concent below 2.4.18会触发
+
+  var _moduleVer = {};
   var ccContext = {
     getDispatcher: getDispatcher,
     isHotReloadMode: function isHotReloadMode() {
@@ -1742,6 +1759,7 @@
         if (module) return _getPrevState(module);else return _prevState;
       },
       getStateVer: getStateVer,
+      getModuleVer: getModuleVer,
       setState: function setState(module, partialSharedState, options) {
         return setStateByModule(module, partialSharedState, options);
       },
@@ -1790,7 +1808,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.18',
+      version: '2.4.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2019,13 +2037,15 @@
     var ccStore = ccContext.store;
     var rootState = ccStore.getState();
     var rootStateVer = ccStore.getStateVer();
+    var rootModuleVer = ccStore.getModuleVer();
     var prevRootState = ccStore.getPrevState();
     safeAssignToMap(rootState, module, state);
     safeAssignToMap(prevRootState, module, state);
     rootStateVer[module] = okeys(state).reduce(function (map, key) {
       map[key] = 1;
       return map;
-    }, {}); // 把_computedValueOri safeGet从init-module-computed调整到此处
+    }, {});
+    rootModuleVer[module] = 1; // 把_computedValueOri safeGet从init-module-computed调整到此处
     // 防止用户不定义任何computed，而只是定义watch时报错undefined
 
     var cu = ccContext.computed;
@@ -5498,7 +5518,8 @@
       __$$ccForceUpdate: makeCcForceUpdateHandler(ref),
       __$$settedList: [],
       //[{module:string, keys:string[]}, ...]
-      __$$prevMoStateVer: {}
+      __$$prevMoStateVer: {},
+      __$$prevModuleVer: {}
     };
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
@@ -6373,18 +6394,27 @@
   }
 
   /** eslint-disable */
+  var store = ccContext.store;
   function beforeRender (ref) {
     var ctx = ref.ctx;
     ctx.__$$renderStatus = START; // 处于收集观察依赖
 
     if (ctx.__$$autoWatch) {
       if (ctx.__$$hasModuleState) {
-        //每次渲染前都将最新的模块state合进来, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
-        Object.assign(ref.state, ctx.mstate); // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
+        var __$$prevModuleVer = ctx.__$$prevModuleVer,
+            refModule = ctx.module;
+        var moduleVer = store.getModuleVer(refModule);
+        var mVer = moduleVer[refModule];
 
-        ref.state = makeObState(ref, ref.state, ctx.module, true);
-        ctx.state = ref.state; // ctx.moduleState = makeObState(ref, ctx.mstate, ctx.module, true);
+        if (__$$prevModuleVer[refModule] !== mVer) {
+          __$$prevModuleVer[refModule] = mVer; // 比较版本, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
 
+          Object.assign(ref.state, ctx.mstate);
+        } // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
+
+
+        ref.state = makeObState(ref, ref.state, refModule, true);
+        ctx.state = ref.state;
         ctx.__$$curWaKeys = {};
         ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;
         ctx.__$$compareWaKeyCount = ctx.__$$nextCompareWaKeyCount; // 渲染期间再次收集
@@ -7597,6 +7627,10 @@
   };
 
   function _useConcent(registerOption, ccClassKey, insType) {
+    if (registerOption === void 0) {
+      registerOption = {};
+    }
+
     var hookCtxContainer = React.useRef({
       prevCcUKey: null,
       ccUKey: null,

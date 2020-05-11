@@ -301,6 +301,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$settedList: [],//[{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
+    __$$prevModuleVer: {},
   };
 
   ref.setState = setState;

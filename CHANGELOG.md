@@ -1,3 +1,8 @@
+#### 2020-05-11
+2.4.19 发布
+fix: 极端情况反复对同一个组件一直频繁渲染会触发Maximum call stack size exceeded
+> 见示例 https://codesandbox.io/s/happy-bird-rc1t7?file=/src/App.js 在2.4.18之前的确会 Maximum call stack size exceeded，2.4.19已不会
+
 #### 2020-05-03
 2.4.16 发布
 fix: globalComputed未正确收集到依赖
