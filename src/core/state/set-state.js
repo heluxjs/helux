@@ -16,4 +16,4 @@ export function innerSetState(module, state, stateChangedCb) {
 
 export default function (module, state, renderKey, delay = -1, skipMiddleware) {
   _setState(state, { ccKey: '[[top api:setState]]', module, renderKey, delay, skipMiddleware });
-};
+}

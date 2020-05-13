@@ -1,3 +1,7 @@
+#### 2020-05-13
+2.4.20 发布
+fix: initPost回调里模块状态不是最新结果
+
 #### 2020-05-11
 2.4.19 发布
 fix: 极端情况反复对同一个组件一直频繁渲染会触发Maximum call stack size exceeded

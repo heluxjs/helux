@@ -1808,7 +1808,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.19',
+      version: '2.4.20',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2797,20 +2797,9 @@
 
   var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED];
   var sig_cbs_ = {};
-  var sig_OnceCbs_ = {};
-  var seq = 1;
   sigs.forEach(function (sig) {
     return sig_cbs_[sig] = [];
   });
-  sigs.forEach(function (sig) {
-    return sig_OnceCbs_[sig] = [];
-  });
-
-  function _getOnceCbs(sig) {
-    var cbs = sig_OnceCbs_[sig].slice();
-    sig_OnceCbs_[sig].length = 0;
-    return cbs;
-  }
 
   function _pushSigCb(sigMap, sigOrSigs, cb) {
     function pushCb(sig, cb) {
@@ -2845,36 +2834,9 @@
         payload: payload
       });
     });
-
-    var onceCbs = _getOnceCbs(sig);
-
-    onceCbs.forEach(function (cb) {
-      return cb({
-        sig: sig,
-        payload: payload
-      });
-    });
   }
   function on(sigOrSigs, cb) {
     _pushSigCb(sig_cbs_, sigOrSigs, cb);
-  }
-  function onOnce(sig, cb) {
-    if (cb) {
-      cb.__seq = seq++;
-
-      _pushSigCb(sig_OnceCbs_, sig, cb);
-    }
-  }
-  function offOnce(sig, cb) {
-    var cbSeq = cb && cb.__seq;
-
-    if (cbSeq) {
-      var cbs = sig_OnceCbs_[sig];
-      var cbIdx = cbs.findIndex(function (v) {
-        return v.__seq === cbSeq;
-      });
-      cbs.splice(cbIdx, 1);
-    }
   }
 
   var catchCcError = (function (err) {
@@ -3193,10 +3155,7 @@
     }
   }
   /**
-   * 
-   * @param {*} state 
-   * @param {*} option 
-   * @param {*} targetRef 
+   * 修改状态入口函数
    */
 
 
@@ -3206,6 +3165,7 @@
         _ref$skipMiddleware = _ref.skipMiddleware,
         skipMiddleware = _ref$skipMiddleware === void 0 ? false : _ref$skipMiddleware,
         payload = _ref.payload,
+        stateChangedCb = _ref.stateChangedCb,
         reactCallback = _ref.reactCallback,
         type = _ref.type,
         _ref$calledBy = _ref.calledBy,
@@ -3290,8 +3250,10 @@
             ccUniqueKey: ccUniqueKey,
             renderKey: renderKey
           });
-        }
+        } // 无论是否真的有状态改变，此回调都会被触发
 
+
+        if (stateChangedCb) stateChangedCb();
         if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay);
       });
     });
@@ -3454,24 +3416,33 @@
     });
   }
 
+  function _setState(state, options) {
+    try {
+      var ref = pickOneRef(options.module);
+      ref.ctx.changeState(state, options);
+    } catch (err) {
+      strictWarning(err);
+    }
+  }
+
+  function innerSetState(module, state, stateChangedCb) {
+    _setState(state, {
+      module: module,
+      stateChangedCb: stateChangedCb
+    });
+  }
   function setState$1 (module, state, renderKey, delay, skipMiddleware) {
     if (delay === void 0) {
       delay = -1;
     }
 
-    try {
-      var ref = pickOneRef(module);
-      var option = {
-        ccKey: '[[top api:setState]]',
-        module: module,
-        renderKey: renderKey,
-        delay: delay,
-        skipMiddleware: skipMiddleware
-      };
-      ref.ctx.changeState(state, option);
-    } catch (err) {
-      strictWarning(err);
-    }
+    _setState(state, {
+      ccKey: '[[top api:setState]]',
+      module: module,
+      renderKey: renderKey,
+      delay: delay,
+      skipMiddleware: skipMiddleware
+    });
   }
 
   // import hoistNonReactStatic from 'hoist-non-react-statics';
@@ -4126,10 +4097,8 @@
       };
 
       try {
-        onOnce(SIG_STATE_CHANGED, execInitPost);
-        setState$1(module, state);
+        innerSetState(module, state, execInitPost);
       } catch (err) {
-        offOnce(SIG_STATE_CHANGED, execInitPost);
         var moduleState = getState(module);
 
         if (!moduleState) {
@@ -7818,7 +7787,7 @@
     throw new Error("api doc: cc.setState(module:string, state:object, renderKey:string, delayMs?:number, skipMiddleware?:boolean, throwError?:boolean)");
   }
 
-  function _setState (module, state, renderKey, delayMs, skipMiddleware, throwError) {
+  function _setState$1 (module, state, renderKey, delayMs, skipMiddleware, throwError) {
     if (delayMs === void 0) {
       delayMs = -1;
     }
@@ -8024,7 +7993,7 @@
   var registerHookComp$1 = registerHookComp;
   var configure$1 = configure;
   var setGlobalState$1 = setGlobalState;
-  var setState$2 = _setState;
+  var setState$2 = _setState$1;
   var set = _set;
   var setValue$1 = _setValue;
   var getState$7 = getState$6;

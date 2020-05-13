@@ -1,7 +1,7 @@
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
   MODULE_GLOBAL, ERR, 
-  SIG_FN_START, SIG_FN_END, SIG_FN_ERR, SIG_STATE_CHANGED,
+  SIG_FN_START, SIG_FN_END, SIG_FN_ERR,
   DISPATCH, INVOKE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
