@@ -17,17 +17,8 @@ const sigs = [
 ];
 
 const sig_cbs_ = {};
-const sig_OnceCbs_ = {};
-let seq = 1;
 
 sigs.forEach(sig => sig_cbs_[sig] = []);
-sigs.forEach(sig => sig_OnceCbs_[sig] = []);
-
-function _getOnceCbs(sig) {
-  const cbs = sig_OnceCbs_[sig].slice();
-  sig_OnceCbs_[sig].length = 0;
-  return cbs;
-}
 
 function _pushSigCb(sigMap, sigOrSigs, cb){
   function pushCb(sig, cb) {
@@ -55,27 +46,8 @@ export function clearCbs() {
 export function send(sig, payload) {
   const cbs = sig_cbs_[sig];
   cbs.forEach(cb => cb({ sig, payload }));
-
-  const onceCbs = _getOnceCbs(sig);
-  onceCbs.forEach(cb => cb({ sig, payload }));
 }
 
 export function on(sigOrSigs, cb) {
   _pushSigCb(sig_cbs_, sigOrSigs, cb)
-}
-
-export function onOnce(sig, cb) {
-  if (cb) {
-    cb.__seq = seq++;
-    _pushSigCb(sig_OnceCbs_, sig, cb)
-  }
-}
-
-export function offOnce(sig, cb) {
-  let cbSeq = cb && cb.__seq;
-  if (cbSeq) {
-    const cbs = sig_OnceCbs_[sig];
-    const cbIdx = cbs.findIndex(v => v.__seq === cbSeq);
-    cbs.splice(cbIdx, 1);
-  }
 }

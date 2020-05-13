@@ -13,10 +13,10 @@ import {
   // exitChain, getChainStateMap, 
   getAllChainStateMap, removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
 } from '../chain';
-import { send, onOnce, offOnce } from '../plugin';
+import { send } from '../plugin';
 import * as checker from '../checker';
 import changeRefState from '../state/change-ref-state';
-import setState from './set-state';
+import { innerSetState } from './set-state';
 import extractStateByKeys from './extract-state-by-keys';
 
 const { verboseInfo, makeError, justWarning, isPJO, okeys } = util;
@@ -475,10 +475,8 @@ export function makeSetStateHandler(module, initPost) {
     };
 
     try {
-      onOnce(SIG_STATE_CHANGED, execInitPost);
-      setState(module, state);
+      innerSetState(module, state, execInitPost);
     } catch (err) {
-      offOnce(SIG_STATE_CHANGED, execInitPost);
       const moduleState = getState(module);
       if (!moduleState) {
         return justWarning(`invalid module ${module}`);

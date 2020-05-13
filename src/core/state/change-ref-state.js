@@ -54,13 +54,10 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
 }
 
 /**
- * 
- * @param {*} state 
- * @param {*} option 
- * @param {*} targetRef 
+ * 修改状态入口函数
  */
 export default function (state, {
-  module, skipMiddleware = false, payload,
+  module, skipMiddleware = false, payload, stateChangedCb,
   reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
 ) {
   if (state === undefined) return;
@@ -119,6 +116,9 @@ export default function (state, {
             module, ccUniqueKey, renderKey
           });
         }
+
+        // 无论是否真的有状态改变，此回调都会被触发
+        if (stateChangedCb) stateChangedCb();
 
         if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay);
       });
