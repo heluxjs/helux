@@ -7,6 +7,8 @@ export default function (refCtx) {
       type: FN_WATCH, refCtx, stateKeys: refCtx.stateKeys, retKeyFns: refCtx.watchRetKeyFns,
       module: refCtx.module, connect: refCtx.connect, dep: refCtx.watchDep
     };
+
+    refCtx.__$$cuOrWaCalled = true;
     configureDepFns(CATE_REF, confMeta, watchItem, watchHandler, depKeysOrOpt);
   };
 } 

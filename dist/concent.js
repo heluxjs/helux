@@ -1808,7 +1808,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.20',
+      version: '2.4.21',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -4341,7 +4341,7 @@
         if (val !== '*' && val !== '-') throw new Error(invalidConnectItem(m));else {
           featureStrs.push(feature + "*");
           okeys$6(moduleState).forEach(function (sKey) {
-            return connectedModuleKeyMapping[m + "/" + sKey] = sKey;
+            connectedModuleKeyMapping[m + "/" + sKey] = sKey;
           });
         }
       } else if (!Array.isArray(val)) {
@@ -4526,7 +4526,7 @@
       _connect = {};
       var connectedModules = isArr ? connect : connect.split(',');
       connectedModules.forEach(function (m) {
-        return _connect[m] = '-';
+        _connect[m] = '-';
       }); //标识自动收集观察依赖
     } // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
 
@@ -4799,6 +4799,7 @@
         connect: refCtx.connect,
         dep: refCtx.watchDep
       };
+      refCtx.__$$cuOrWaCalled = true;
       configureDepFns(CATE_REF, confMeta, watchItem, watchHandler, depKeysOrOpt);
     };
   }
@@ -4814,6 +4815,7 @@
         connect: refCtx.connect,
         dep: refCtx.computedDep
       };
+      refCtx.__$$cuOrWaCalled = true;
       configureDepFns(CATE_REF, confMeta, computedItem, computedHandler, depKeysOrOpt);
     };
   }
@@ -5216,7 +5218,7 @@
     if (module) return getWKeys(module);else {
       var cKeys = {};
       connectedModules.forEach(function (m) {
-        return cKeys[m] = getWKeys(m);
+        cKeys[m] = getWKeys(m);
       });
       return cKeys;
     }
@@ -5307,7 +5309,7 @@
 
     var connectedComputed = {};
     connectedModules.forEach(function (m) {
-      return connectedComputed[m] = makeCuRefObContainer(ref, m, false);
+      connectedComputed[m] = makeCuRefObContainer(ref, m, false);
     });
     var moduleComputed = makeCuRefObContainer(ref, module); // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
 
@@ -5488,7 +5490,8 @@
       __$$settedList: [],
       //[{module:string, keys:string[]}, ...]
       __$$prevMoStateVer: {},
-      __$$prevModuleVer: {}
+      __$$prevModuleVer: {},
+      __$$cuOrWaCalled: false
     };
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
@@ -5496,14 +5499,20 @@
     ctx.initState = function (initState) {
       // 已挂载则不让用户在调用initState
       if (ref.__$$isMounted) {
-        return justWarning$6("ctx.initState can only been called before first render period!");
+        return justWarning$6("initState can only been called before first render period!");
       }
 
       if (!isPJO(state)) {
         return justWarning$6("state " + NOT_A_JSON);
       }
 
-      ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
+      if (ctx.__$$cuOrWaCalled) {
+        return justWarning$6("initState must been called before computed or watch");
+      }
+
+      ref.state = Object.assign({}, state, initState, refStoredState, moduleState); // 更新stateKeys，防止遗漏新的私有stateKey
+
+      ctx.stateKeys = okeys$7(ref.state);
       ctx.prevState = ctx.state = ref.state;
     }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
 
@@ -5644,7 +5653,7 @@
             _ref$ccUniqueKey = _ref.ccUniqueKey,
             inputCcUkey = _ref$ccUniqueKey === void 0 ? ccUniqueKey : _ref$ccUniqueKey;
 
-        //这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
+        // 这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
         var _ev$getEventItem = getEventItem(event),
             name = _ev$getEventItem.name,
             identity = _ev$getEventItem.identity;
@@ -5658,7 +5667,7 @@
       };
 
       ctx.on = function (inputEvent, handler) {
-        //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
+        // 这里刻意赋默认值identity = null，表示on的是不带id认证的监听
         var _ev$getEventItem2 = getEventItem(inputEvent),
             event = _ev$getEventItem2.name,
             _ev$getEventItem2$ide = _ev$getEventItem2.identity,
@@ -6476,9 +6485,9 @@
           function CcClass(props, context) {
             var _this;
 
+            _this = _ToBeExtendedClass.call(this, props, context) || this;
+
             try {
-              /** eslint-disable-next-line */
-              _this = _ToBeExtendedClass.call(this, props, context) || this;
               var optState = evalState$2(state);
               var thisState = _this.state || {};
               var privState = Object.assign(thisState, optState);

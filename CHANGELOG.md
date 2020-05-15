@@ -1,3 +1,8 @@
+#### 2020-05-15
+2.4.21 发布
+fix: 遗漏了`ctx.initState`新的私有状态stateKey
+> 见示例 https://codesandbox.io/s/hello-concent-pzde3，<=2.4.20版本里未能正确触发watch
+
 #### 2020-05-13
 2.4.20 发布
 fix: initPost回调里模块状态不是最新结果

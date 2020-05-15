@@ -302,6 +302,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$settedList: [],//[{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
     __$$prevModuleVer: {},
+    __$$cuOrWaCalled: false,
   };
 
   ref.setState = setState;
@@ -311,12 +312,17 @@ export default function (ref, params, liteLevel = 5) {
   ctx.initState = (initState) => {
     // 已挂载则不让用户在调用initState
     if (ref.__$$isMounted) {
-      return justWarning(`ctx.initState can only been called before first render period!`);
+      return justWarning(`initState can only been called before first render period!`);
     }
     if (!util.isPJO(state)) {
       return justWarning(`state ${NOT_A_JSON}`);
     }
+    if (ctx.__$$cuOrWaCalled) {
+      return justWarning(`initState must been called before computed or watch`);
+    }
     ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
+    // 更新stateKeys，防止遗漏新的私有stateKey
+    ctx.stateKeys = okeys(ref.state);
     ctx.prevState = ctx.state = ref.state;
   }
 

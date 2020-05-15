@@ -9,6 +9,8 @@ export default function (refCtx) {
       stateKeys: refCtx.stateKeys, retKeyFns: refCtx.computedRetKeyFns,
       module: refCtx.module, connect: refCtx.connect, dep: refCtx.computedDep
     };
+
+    refCtx.__$$cuOrWaCalled = true;
     configureDepFns(CATE_REF, confMeta, computedItem, computedHandler, depKeysOrOpt);
   };
 } 
