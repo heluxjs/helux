@@ -78,6 +78,7 @@
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-uglify": "^6.0.0",
+    "rollup-plugin-eslint": "^7.0.0",
     "semver": "^5.5.0",
     "uglify-js": "3.5.8"
   },
@@ -127,8 +128,5 @@
     "test": "jest"
   },
   "unpkg": "dist/concent.js",
-  "version": "2.4.20",
-  "dependencies": {
-    "rollup-plugin-eslint": "^7.0.0"
-  }
+  "version": "2.4.20"
 }
