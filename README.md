@@ -70,7 +70,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 [review this gif](https://xvcej.csb.app/#/)
 
 ## 🎇Dependency Collection & Exact Update
-![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/3.png)
 
 ## 🎆Unified coding of class components and function components
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
