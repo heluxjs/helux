@@ -144,7 +144,7 @@ export default function (ref, params, liteLevel = 5) {
   // const moduleState = getState(module);
   
   const connectedComputed = {};
-  connectedModules.forEach(m => connectedComputed[m] = makeCuRefObContainer(ref, m, false));
+  connectedModules.forEach(m => { connectedComputed[m] = makeCuRefObContainer(ref, m, false) });
   const moduleComputed = makeCuRefObContainer(ref, module);
   // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
   const globalComputed = connectedComputed[MODULE_GLOBAL];
@@ -366,12 +366,12 @@ export default function (ref, params, liteLevel = 5) {
     };
     // 默认off掉当前实例对某个事件名的所有监听
     ctx.off = (event, { module, ccClassKey, ccUniqueKey: inputCcUkey = ccUniqueKey } = {}) => {
-      //这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
+      // 这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
       const { name, identity } = ev.getEventItem(event);
       ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
     }
     ctx.on = (inputEvent, handler) => {
-      //这里刻意赋默认值identity = null，表示on的是不带id认证的监听
+      // 这里刻意赋默认值identity = null，表示on的是不带id认证的监听
       const { name: event, identity = null } = ev.getEventItem(inputEvent);
       ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
     };

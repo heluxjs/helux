@@ -92,7 +92,7 @@ export default function (
   if (isArr || typeof connect === 'string') {
     _connect = {};
     const connectedModules = isArr ? connect : connect.split(',');
-    connectedModules.forEach(m => _connect[m] = '-');//标识自动收集观察依赖
+    connectedModules.forEach(m => { _connect[m] = '-' });//标识自动收集观察依赖
   }
 
   // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集

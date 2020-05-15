@@ -36,7 +36,7 @@ export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) 
       if (val !== '*' && val !== '-') throw new Error(invalidConnectItem(m));
       else {
         featureStrs.push(`${feature}*`);
-        okeys(moduleState).forEach(sKey => connectedModuleKeyMapping[`${m}/${sKey}`] = sKey);
+        okeys(moduleState).forEach(sKey => { connectedModuleKeyMapping[`${m}/${sKey}`] = sKey });
       }
     } else if (!Array.isArray(val)) {
       throw new Error(invalidConnectItem(m));

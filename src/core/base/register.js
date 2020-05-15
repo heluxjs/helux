@@ -41,7 +41,7 @@ export default function register({
   try {
 
     const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS, getPassToMapWaKeys(watchedKeys), storedKeys, connect,  __checkStartUp, __calledBy
+      module, ccClassKey, renderKeyClasses, CC_CLASS, getPassToMapWaKeys(watchedKeys), storedKeys, connect, __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {
@@ -56,12 +56,11 @@ export default function register({
       const _CcClass = class CcClass extends ToBeExtendedClass {
 
         constructor(props, context) {
+          super(props, context);
           try {
-            /** eslint-disable-next-line */
-            super(props, context);
             const optState = evalState(state);
             const thisState = this.state || {};
-            const privState  = Object.assign(thisState, optState);
+            const privState = Object.assign(thisState, optState);
 
             this.$$attach = this.$$attach.bind(this);
 
@@ -78,7 +77,7 @@ export default function register({
               throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);
             }
 
-            
+
             if (!isPropsProxy) {
               if (this.$$setup) this.$$setup = this.$$setup.bind(this);
               beforeMount(this, setup || this.$$setup || staticSetup, false);
@@ -116,7 +115,7 @@ export default function register({
           // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
           childRef.setState = ctx.setState;
           childRef.forceUpdate = ctx.forceUpdate;
-          
+
           //替换掉ctx.__$$ccSetState ctx.__$$ccForceUpdate, 让changeRefState正确的更新目标实例
           ctx.__$$ccSetState = hf.makeCcSetStateHandler(childRef, this);
           ctx.__$$ccForceUpdate = hf.makeCcForceUpdateHandler(childRef);
@@ -126,7 +125,7 @@ export default function register({
           const thisState = this.state;
           Object.assign(childRefState, thisState);
           beforeRender(childRef);
-          
+
           //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
           // const newState = Object.assign({}, childRefState, thisState);
           // this.state = newState; // bad writing
