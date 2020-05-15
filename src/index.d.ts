@@ -1273,7 +1273,7 @@ declare type DefaultExport = {
   defComputed: typeof defComputed,
   defLazyComputed: typeof defLazyComputed,
   defComputedVal: typeof defComputedVal,
-  defWatch: IDispatch,
+  defWatch: typeof defWatch,
   cst: typeof cst,
   CcFragment: typeof CcFragment,
   Ob: typeof Ob,
