@@ -70,7 +70,7 @@ const getConnectWatchedKeys = (ctx, module) => {
   if (module) return getWKeys(module);
   else {
     const cKeys = {};
-    connectedModules.forEach(m => cKeys[m] = getWKeys(m));
+    connectedModules.forEach(m => { cKeys[m] = getWKeys(m) });
     return cKeys;
   }
 }
