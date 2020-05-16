@@ -9,7 +9,7 @@ import computeValueForRef from '../computed/compute-value-for-ref';
 import findUpdateRefs from '../ref/find-update-refs';
 import { send } from '../plugin';
 
-const { isPJO, justWarning, isObjectNotNull, computeFeature, okeys } = util;
+const { isPJO, justWarning, isObjectNull, computeFeature, okeys } = util;
 const {
   FOR_ONE_INS_FIRSTLY, FOR_ALL_INS_OF_A_MOD,
   FORCE_UPDATE, SET_STATE,
@@ -138,9 +138,8 @@ function triggerReactSetState(
     targetRef.__$$isUnmounted === true || // 已卸载
     stateFor !== FOR_ONE_INS_FIRSTLY ||
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
-    calledBy !== FORCE_UPDATE && !isObjectNotNull(state)
+    (calledBy !== FORCE_UPDATE && isObjectNull(state))
   ) {
-    if (reactCallback) reactCallback(refState);
     return next && next(RENDER_NO_OP, state);
   }
 

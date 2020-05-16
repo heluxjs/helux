@@ -1,4 +1,9 @@
 #### 2020-05-15
+2.4.22 发布
+refactor: `triggerReactSetState`里当触发`RENDER_NO_OP`时，不再执行`reactCallback`
+fix: class的`setState`的第二位callback参数未能向function一样能够传递最新的state
+
+#### 2020-05-15
 2.4.21 发布
 fix: 遗漏了`ctx.initState`新的私有状态stateKey
 > 见示例 https://codesandbox.io/s/hello-concent-pzde3，<=2.4.20版本里未能正确触发watch

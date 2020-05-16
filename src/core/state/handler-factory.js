@@ -498,22 +498,26 @@ export function makeSetStateHandler(module, initPost) {
 export const makeRefSetState = (ref) => (partialState, cb) => {
   const ctx = ref.ctx;
   const newState = Object.assign({}, ref.state, partialState);
-  
+
   if (ctx.type === CC_HOOK) {
     ref.state = ctx.state = newState;
     ctx.__boundSetState(newState);
-    if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+    if (cb) cb(newState);
   } else {
     ctx.state = newState;
     // don't assign newState to ref.state before didMount
     // it will cause
-    // Warning: Expected CC(SomeComp) state to match memoized state before processing the update queue
+    // Warning: Expected CC(SomeComp) state to match memorized state before processing the update queue
     if (!ref.__$$isMounted) {
       Object.assign(ref.state, partialState);
     } else {
       ref.state = newState;
     }
-    ctx.__boundSetState(newState, cb);
+
+    // 此处注意原始的react class setSate [,callback] 参数，它不会提供latest state
+    ctx.__boundSetState(partialState, () => {
+      if (cb) cb(newState);
+    });
   }
 }
 
