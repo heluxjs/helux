@@ -1808,7 +1808,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.4.21',
+      version: '2.4.22',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -3101,7 +3101,7 @@
 
   var isPJO$3 = isPJO,
       justWarning$2 = justWarning,
-      isObjectNotNull$1 = isObjectNotNull,
+      isObjectNull$1 = isObjectNull,
       computeFeature$1 = computeFeature,
       okeys$4 = okeys;
   var FOR_ONE_INS_FIRSTLY$1 = FOR_ONE_INS_FIRSTLY,
@@ -3271,8 +3271,7 @@
     // targetRef.__$$isMounted === false || // 还未挂载上
     targetRef.__$$isUnmounted === true || // 已卸载
     stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
-    calledBy !== FORCE_UPDATE$1 && !isObjectNotNull$1(state)) {
-      if (reactCallback) reactCallback(refState);
+    calledBy !== FORCE_UPDATE$1 && isObjectNull$1(state)) {
       return next && next(RENDER_NO_OP$1, state);
     }
 
@@ -4133,19 +4132,22 @@
 
         ctx.__boundSetState(newState);
 
-        if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+        if (cb) cb(newState);
       } else {
         ctx.state = newState; // don't assign newState to ref.state before didMount
         // it will cause
-        // Warning: Expected CC(SomeComp) state to match memoized state before processing the update queue
+        // Warning: Expected CC(SomeComp) state to match memorized state before processing the update queue
 
         if (!ref.__$$isMounted) {
           Object.assign(ref.state, partialState);
         } else {
           ref.state = newState;
-        }
+        } // 此处注意原始的react class setSate [,callback] 参数，它不会提供latest state
 
-        ctx.__boundSetState(newState, cb);
+
+        ctx.__boundSetState(partialState, function () {
+          if (cb) cb(newState);
+        });
       }
     };
   };
@@ -4372,7 +4374,7 @@
     };
   }
 
-  var isObjectNull$1 = isObjectNull,
+  var isObjectNull$2 = isObjectNull,
       me$1 = makeError;
   var featureStr_classKey_ = ccContext.featureStr_classKey_,
       userClassKey_featureStr_ = ccContext.userClassKey_featureStr_,
@@ -4386,7 +4388,7 @@
     // 未指定classKey
     if (!classKey) {
       // 未指定所属模块，也未连接到其他模块，且无watchedKeys
-      if (module === MODULE_DEFAULT && isObjectNull$1(connect) && watchedKeys.length === 0) {
+      if (module === MODULE_DEFAULT && isObjectNull$2(connect) && watchedKeys.length === 0) {
         return prefix + "0";
       }
 
@@ -5176,7 +5178,7 @@
       safeGetArray$2 = safeGetArray,
       safeGet$2 = safeGet,
       justWarning$6 = justWarning,
-      isObjectNull$2 = isObjectNull;
+      isObjectNull$3 = isObjectNull;
   var idSeq = 0;
 
   function getEId() {
@@ -5264,7 +5266,7 @@
         ccOption = _params$ccOption === void 0 ? {} : _params$ccOption;
     var stateModule = module;
     var existedCtx = ref.ctx;
-    var isCtxNull = isObjectNull$2(existedCtx); // 做个保护判断，防止 ctx = {}
+    var isCtxNull = isObjectNull$3(existedCtx); // 做个保护判断，防止 ctx = {}
 
     var modStateKeys = moduleName_stateKeys_$4[stateModule];
     var __boundSetState = ref.setState,
@@ -7207,7 +7209,7 @@
 
   var isPJO$8 = isPJO,
       okeys$b = okeys,
-      isObjectNull$3 = isObjectNull,
+      isObjectNull$4 = isObjectNull,
       evalState$4 = evalState;
 
   var pError = function pError(label) {
@@ -7282,7 +7284,7 @@
     });
     pendingModules.length = 0; // clear pending modules
 
-    if (isObjectNull$3(storeConf.init)) storeConf.init = null;
+    if (isObjectNull$4(storeConf.init)) storeConf.init = null;
     startup(storeConf, options);
   }
 
