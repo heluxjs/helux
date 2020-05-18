@@ -3,10 +3,6 @@ English | [简体中文](./README.zh-CN.md)
 ## [concent](https://concentjs.github.io/concent-doc)
 a predictable、zero-cost-use、progressive、high performance's enhanced state management solution，work based on **dependency collection&mark**、**ref collection** and **state broadcast**，power you react!   
 
-## v2 Released Now🎊 🎉🎊 🎉🎊 🎉
-support **dependency collection** & **lazy computed**
-[more details about v2](./V2Details.md)
-
 ## Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
@@ -69,10 +65,86 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 
 [review this gif](https://xvcej.csb.app/#/)
 
-## 🎇Dependency Collection & Exact Update
+## 🎇Enjoy composition api & dependency collection🎊 🎉
+
+with composition api, user can easily separate ui and logic.
+[view this demo](https://codesandbox.io/s/hello-concent-djxxh)
+
+```js
+import { run, useConcent } from "concent";
+
+run();// startup concent
+
+const setup = ctx => {
+  const { initState, computed, watch, setState, sync } = ctx;
+  
+  initState({ greeting: 'hello concent' });
+  computed("reversedGreeting", n => n.greeting.split('').reverse());
+  watch("greeting", (n, o) => alert(`from ${o.greeting} to ${n.greeting}`));
+  
+  return {
+    changeGreeting: (e) => setState({ greeting: e.target.value }),
+    changeGreeting2: sync('greeting'),
+  };
+};
+
+function HelloConcent(){
+  const { state, refComputed, settings } = useConcent({ setup });
+  return (
+    <>
+      <h1>{state.greeting}</h1>
+      <h1>{refComputed.reversedGreeting}</h1>
+      <input value={state.greeting} onChange={settings.changeGreeting}/>
+      <input value={state.greeting} onChange={settings.changeGreeting}/>
+    </>
+  );
+}
+```
+
+with dependency collection, exact update become true.
+
+```js
+run({
+  counter: {
+    state: { count: 1 }
+  }
+});
+
+const Counter = React.memo(function Counter() {
+  const { state, ccUniqueKey } = useConcent("counter");
+  const [showCount, setShow] = useState(true);
+  const toggleShow = () => setShow(!showCount);
+
+  return (
+    <div>
+      <button onClick={toggleShow}>toggle</button>
+      {/*when showCount is false, current instance will have no re-render behavior any more*/}
+      {/*no matter the module state count value changed or not*/}
+      <span>{showCount ? state.count : "hide count"}</span>
+    </div>
+  );
+});
+```
+[simple demo 1](https://codesandbox.io/s/hello-concent-egb4d)
+[simple demo 2](https://codesandbox.io/s/dep-collection-uiqzn)
+
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/3.png)
 
 ## 🎆Unified coding of class components and function components
+`setup` can be used in both class and function component, that means user can easily share logic (even including life cycle logic) between the 2 kinds of component. 
+
+```js
+// for class
+@register({setup})
+class ClsComp extends React.Component{...}
+
+// for function
+function FnComp(){
+  useConcent({setup});
+}
+```
+[view demo](https://codesandbox.io/s/nifty-cdn-6g3hh)
+
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
 
 ## 🖥Online experience
