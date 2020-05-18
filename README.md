@@ -277,7 +277,7 @@ class ClassComp extends React.Component{
   }
 }
 ```
-**[edit this demo on CodeSandbox](https://codesandbox.io/s/condescending-satoshi-p5e5dr)**
+**[edit this demo on CodeSandbox](https://codesandbox.io/s/dep-collection-uiqzn)**
 
 ## 🔨Examples with some advanced features
 - run concent，load model configuration
