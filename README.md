@@ -95,7 +95,7 @@ function HelloConcent(){
       <h1>{state.greeting}</h1>
       <h1>{refComputed.reversedGreeting}</h1>
       <input value={state.greeting} onChange={settings.changeGreeting}/>
-      <input value={state.greeting} onChange={settings.changeGreeting}/>
+      <input value={state.greeting} onChange={settings.changeGreeting2}/>
     </>
   );
 }
