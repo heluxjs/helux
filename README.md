@@ -63,7 +63,8 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
     
 ![hello-concent](https://github.com/fantasticsoul/assets/blob/master/img/cc-intro-1.gif?raw=true)
 
-[review this gif](https://xvcej.csb.app/#/)
+[review this gif source code](https://stackblitz.com/edit/react-wpzgqd?file=index.js) or [see a full demo]([review this gif](https://xvcej.csb.app/#/))
+
 
 ## 🎇Enjoy composition api & dependency collection🎊 🎉
 
