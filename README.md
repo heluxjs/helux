@@ -61,7 +61,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 
 </div>
     
-![hello-concent](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/hello.gif)
+![hello-concent](https://github.com/fantasticsoul/assets/blob/master/img/cc-intro-2.gif?raw=true)
 
 [review this gif](https://xvcej.csb.app/#/)
 
