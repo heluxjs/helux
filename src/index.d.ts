@@ -407,8 +407,8 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
  * use this interface to match ctx type that component only defined belong-module
  * 
  * concent will build ctx for every instance
- * for class get get like this: this.ctx
- * for function get get like this: const ctx = useConcent('foo');
+ * get ctx in class : this.ctx
+ * get ctx in function : const ctx = useConcent('foo');
  */
 export interface ICtxBase {
   readonly module: PropKey;

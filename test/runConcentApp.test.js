@@ -20,6 +20,7 @@ test('run concent app with a store config', async () => {
 
   expect(reducer[Foo].changeName).toBeInstanceOf(Function);
 
+  // test undeclared module name
   try {
     setState('undeclared module name', { bar: 222 });
   } catch (err) {
