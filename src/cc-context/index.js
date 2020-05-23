@@ -142,26 +142,28 @@ const ccContext = {
   moduleName_isConfigured_: {
   },
   /**
-    ccClassContext:{
-      module,
-      ccClassKey,
-      // renderKey机制影响的类范围，默认只影响调用者所属的类，如果有别的类观察了同一个模块的某个key，这个类的实例是否触发渲染不受renderKey影响
-      // 为 * 表示影响所有的类，即其他类实例都受renderKey机制影响。
-      renderKeyClasses, 
-      originalWatchedKeys,
-      watchedKeys,
-      ccKeys: [],
-      connectedState: {},
-      connectedModuleKeyMapping: null,
-      connectedModule:{},//记录当前cc类连接到了其他哪些模块
-    }
+   * ccClassContext:{
+   *   module,
+   *   ccClassKey,
+   *   // renderKey机制影响的类范围，默认只影响调用者所属的类，如果有别的类观察了同一个模块的某个key，这个类的实例是否触发渲染不受renderKey影响
+   *   // 为 * 表示影响所有的类，即其他类实例都受renderKey机制影响。
+   *   renderKeyClasses, 
+   *   originalWatchedKeys,
+   *   watchedKeys,
+   *   ccKeys: [],
+   *   connectedState: {},
+   *   connectedModuleKeyMapping: null,
+   *   connectedModule:{},//记录当前cc类连接到了其他哪些模块
+   * }
   */
   ccClassKey_ccClassContext_: {
   },
-  // globalStateKeys is maintained by cc automatically,
-  // when user call cc.setGlobalState, or ccInstance.setGlobalState,
-  // commit state will be checked strictly by cc with globalStateKeys,
-  // all the keys of commit state must been included in globalStateKeys
+  /**
+   * globalStateKeys is maintained by cc automatically,
+   * when user call cc.setGlobalState, or ccInstance.setGlobalState,
+   * committedState will be checked strictly by cc with globalStateKeys,
+   * committedState keys must been included in globalStateKeys
+   */
   globalStateKeys: [
   ],
   //store里的setState行为会自动触发模块级别的computed、watch函数
@@ -226,14 +228,17 @@ const ccContext = {
     _init: {}
   },
   ccUKey_ref_: refs,
-  //  key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
+  /**
+   * key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
+   */
   event_handlers_: {},
   ccUKey_handlerKeys_: {},
-  // to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
-  // it is a ref that towards ccUniqueKeyEvent_handler_'s key
-  // when component unmounted, its handler will been removed
+  /**
+   * to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
+   * it is a ref that towards ccUniqueKeyEvent_handler_'s key
+   * when component unmounted, its handler will been removed
+   */
   handlerKey_handler_: {},
-  // { 'foo/f1': {ukey1: 1, ukey2:1 } }
   waKey_uKeyMap_,
   waKey_staticUKeyMap_,
   refs,
@@ -247,8 +252,6 @@ const ccContext = {
     tag: 'yuna',
   },
 
-  // fragment association
-  fragmentNameCount: 0,
   featureStr_classKey_: {},
   userClassKey_featureStr_: {},
   errorHandler: null,
