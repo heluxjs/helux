@@ -1,3 +1,7 @@
+#### 2020-05-27
+2.5.1 发布
+refactor: 适配`react-native`，去`react-dom`依赖，重构`dispatcher`初始化方式
+
 #### 2020-05-15
 2.4.22 发布
 refactor: `triggerReactSetState`里当触发`RENDER_NO_OP`时，不再执行`reactCallback`
