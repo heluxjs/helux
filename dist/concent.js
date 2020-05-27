@@ -1009,18 +1009,31 @@
     };
   }
 
+  var isKeyValid = function isKeyValid(obj, key) {
+    return typeof key !== "symbol" && Object.prototype.hasOwnProperty.call(obj, key);
+  };
   /**
    * 用于传递给 computed 回调收集相关依赖
    * defComputed((newState, oldState)=>{
    *   //此处的newState oldState即cuObState
    * })
-   * @param {*} state 
-   * @param {*} depKeys 
+   * @param {{[key:string]:any}} state 
+   * @param {string[]} depKeys 
    */
+
+
   function makeCuObState (state, depKeys) {
     return new Proxy(state, {
       get: function get(target, key) {
-        if (!depKeys.includes(key)) depKeys.push(key);
+        /**
+         * 第一个isKeyValid判断，是为了防止误使用state算computed value，而触发了其他的key收集
+         *   ctx.computed('count', n => {
+         *     return n * 2;
+         *    })
+         *   // 本应该是 n.count * 2, 写为 n * 2 后，触发的key分别为
+         *   // valueOf, toString, Symbol(...)
+         */
+        if (isKeyValid(target, key) && !depKeys.includes(key)) depKeys.push(key);
         return target[key];
       },
       // set: function (target, key) {
@@ -1824,22 +1837,29 @@
     middlewares: [],
     plugins: [],
     pluginNameMap: {},
-    permanentDispatcher: null
+    permanentDispatcher: null,
+    localStorage: null,
+    recoverRefState: function recoverRefState() {}
   };
-  var lsLen = localStorage.length;
-  var _refStoreState = ccContext.refStore._state;
 
-  for (var i = 0; i < lsLen; i++) {
-    var lsKey = localStorage.key(i);
+  ccContext.recoverRefState = function () {
+    var localStorage = ccContext.localStorage;
+    if (!localStorage) return;
+    var lsLen = localStorage.length;
+    var _refStoreState = ccContext.refStore._state;
 
-    if (lsKey.startsWith('CCSS_')) {
-      try {
-        _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
-      } catch (err) {
-        console.error(err);
+    for (var i = 0; i < lsLen; i++) {
+      var lsKey = localStorage.key(i);
+
+      if (lsKey.startsWith('CCSS_')) {
+        try {
+          _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
-  }
+  };
 
   /**
    * private variable, not bind in ccContext
@@ -3296,7 +3316,7 @@
               entireStoredState = _extractStateByKeys2.partialState;
 
           var currentStoredState = Object.assign({}, entireStoredState, partialState);
-          localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
+          if (ccContext.localStorage) ccContext.localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
         }
 
         refStore.setState(ccUniqueKey, partialState);
@@ -6791,7 +6811,9 @@
         _ref2$watchImmediate = _ref2.watchImmediate,
         watchImmediate = _ref2$watchImmediate === void 0 ? false : _ref2$watchImmediate,
         _ref2$reComputed = _ref2.reComputed,
-        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed;
+        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed,
+        _ref2$localStorage = _ref2.localStorage,
+        localStorage = _ref2$localStorage === void 0 ? null : _ref2$localStorage;
 
     try {
       throw new Error();
@@ -6816,6 +6838,14 @@
         rv.watchCompare = watchCompare;
         rv.watchImmediate = watchImmediate;
         rv.bindCtxToMethod = bindCtxToMethod;
+
+        if (localStorage) {
+          ccContext.localStorage = localStorage;
+        } else if (window && window.localStorage) {
+          ccContext.localStorage = window.localStorage;
+        }
+
+        ccContext.recoverRefState();
         createDispatcher();
         configModuleSingleClass(moduleSingleClass);
         configStoreState(store);

@@ -884,6 +884,7 @@ interface RunOptions {
   watchCompare?: boolean;// default is true
   watchImmediate?: boolean;// default is false
   reComputed?: boolean;// default is true
+  localStorage?: any;// localStorage lib, in browser it will be window.localStorage by default, in rn, user should pass one
 }
 
 export interface IActionCtxBase {

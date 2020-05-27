@@ -8,8 +8,8 @@ const isKeyValid = (obj, key) => {
  * defComputed((newState, oldState)=>{
  *   //此处的newState oldState即cuObState
  * })
- * @param {*} state 
- * @param {*} depKeys 
+ * @param {{[key:string]:any}} state 
+ * @param {string[]} depKeys 
  */
 export default function (state, depKeys) {
   return new Proxy(state, {

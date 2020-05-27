@@ -83,6 +83,7 @@ export default function (
     watchCompare = true,
     watchImmediate = false,
     reComputed = true,
+    localStorage = null,
   } = {}) {
   try {
     throw new Error();
@@ -104,6 +105,13 @@ export default function (
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;
       rv.bindCtxToMethod = bindCtxToMethod;
+
+      if (localStorage) {
+        ccContext.localStorage = localStorage;
+      } else if (window && window.localStorage) {
+        ccContext.localStorage = window.localStorage;
+      }
+      ccContext.recoverRefState();
 
       createDispatcher();
       

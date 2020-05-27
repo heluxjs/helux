@@ -242,7 +242,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.5.1',
+    version: '2.5.2',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',
@@ -255,23 +255,30 @@ const ccContext = {
   plugins: [],
   pluginNameMap: {},
   permanentDispatcher: null,
+  localStorage: null,
+  recoverRefState: () => { },
+}
+
+ccContext.recoverRefState = function () {
+  const localStorage = ccContext.localStorage;
+  if (!localStorage) return;
+
+  const lsLen = localStorage.length;
+  const _refStoreState = ccContext.refStore._state;
+  for (let i = 0; i < lsLen; i++) {
+    const lsKey = localStorage.key(i);
+    if (lsKey.startsWith('CCSS_')) {
+      try {
+        _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }
 }
 
 export function getCcContext() {
   return ccContext;
-}
-
-const lsLen = localStorage.length;
-const _refStoreState = ccContext.refStore._state;
-for (let i = 0; i < lsLen; i++) {
-  const lsKey = localStorage.key(i);
-  if (lsKey.startsWith('CCSS_')) {
-    try {
-      _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
-    } catch (err) {
-      console.error(err);
-    }
-  }
 }
 
 export default ccContext;

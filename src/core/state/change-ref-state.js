@@ -159,7 +159,7 @@ function triggerReactSetState(
       if (refCtx.persistStoredKeys === true) {
         const { partialState: entireStoredState } = extractStateByKeys(refState, storedKeys);
         const currentStoredState = Object.assign({}, entireStoredState, partialState);
-        localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
+        if (ccContext.localStorage) ccContext.localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
       }
       refStore.setState(ccUniqueKey, partialState);
     }
