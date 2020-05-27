@@ -141,7 +141,7 @@ export default function register({
           didMount(this);
 
 
-          // 代理模式不再强制检查$$attach是否给调用
+          // 代理模式不再强制检查$$attach是否已调用
           // if (isPropsProxy === true && !this.ctx.childRef) {
           //   throw new Error('you forgot to call this.props.$$attach(this) in constructor, you must call it after state assign expression next line!');
           // }

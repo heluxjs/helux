@@ -1,24 +1,17 @@
-import register from '../core/base/register';
-import React from 'react';
-import { CC_DISPATCHER } from '../support/constant';
+import buildRefCtx from '../core/ref/build-ref-ctx';
+import mapRegistrationInfo from '../core/base/map-registration-info';
+import { CC_DISPATCHER, MODULE_DEFAULT, CC_CLASS } from '../support/constant';
 import ccContext from '../cc-context';
-import * as util from '../support/util';
 
-export default function (CustomizedComponent) {
-  class DefaultComponent extends React.Component {
-    render() {
-      return this.props.children || React.createElement('span', {style:{display:'none'}});
-    }
-  }
+const noop = () => { };
 
-  if (ccContext.refs[CC_DISPATCHER]) {
-    if(ccContext.isHotReloadMode()){
-      util.justTip(`hot reload mode, CC_DISPATCHER existed`);
-    }else{
-      throw new Error(`CcDispatcher can only be initialize one time`);
-    }
-  }
+export default function () {
+  const ccClassKey = CC_DISPATCHER;
+  mapRegistrationInfo(
+    MODULE_DEFAULT, ccClassKey, '', CC_CLASS, [], [], [], false, 'cc'
+  );
 
-  let TargetComponent = CustomizedComponent || DefaultComponent;
-  return register({ isSingle: true, __checkStartUp: false, __calledBy: 'cc' }, CC_DISPATCHER)(TargetComponent);
+  const mockRef = { setState: noop, forceUpdate: noop };
+  buildRefCtx(mockRef, { module: MODULE_DEFAULT, connect: [], watchedKeys: [], ccClassKey, state: {} });
+  ccContext.permanentDispatcher = mockRef;
 }

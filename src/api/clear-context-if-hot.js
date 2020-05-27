@@ -1,35 +1,12 @@
 import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
-import { MODULE_DEFAULT, CC_DISPATCHER, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT, CC_OB } from '../support/constant';
+import { MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT, CC_OB } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
 import { clearCuRefer } from '../core/base/find-dep-fns-to-execute';
 import initModuleWatch from '../core/watch/init-module-watch';
-import createDispatcher from './create-dispatcher';
-import appendDispatcher from '../core/base/append-dispatcher';
 
 let justCalledByStartUp = false;
-
-/**
-  CodeSandbox ide里，当runConcent.js单独放置时，代码结构如下
-    import React, { Component } from "react";
-    import ReactDom from "react-dom";
-    import "./runConcent";
-    import App from "./App";
-    import { clearContextIfHot } from "concent";
-
-    clearContextIfHot();
-    ReactDom.render(<App />, document.getElementById("root"));
- * 
- * 如果只修改了其他地方的代码属于App相关依赖的代码，查看dom结构返现热加载直接将dispatcher div标签丢弃，
- * 同时refs里也没有dispatcher引用了，这里做一次额外检查
- */
-function _checkDispatcher() {
-  if (!ccContext.refs[CC_DISPATCHER]) {
-    const Dispatcher = createDispatcher();
-    appendDispatcher(Dispatcher);
-  }
-}
 
 function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearCuRefer();
@@ -50,7 +27,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
     clearObject(clsCtx.ccKeys, tmpExclude);
   });
   clearObject(ccContext.handlerKey_handler_);
-  clearObject(ccUKey_ref_, [CC_DISPATCHER].concat(otherExcludeKeys));
+  clearObject(ccUKey_ref_, otherExcludeKeys);
 
 
   if (recomputed) {
@@ -141,7 +118,6 @@ export default function (clearAll = false) {
           return ccFragKeys;
         }
   
-        _checkDispatcher();
         const ret = _pickNonCustomizeIns();
         // !!!重计算各个模块的computed结果
         _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys);

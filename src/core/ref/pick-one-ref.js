@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import { CC_DISPATCHER, MODULE_DEFAULT, CC_FRAGMENT } from '../../support/constant';
+import { MODULE_DEFAULT, CC_FRAGMENT } from '../../support/constant';
 
 /****
  * 尽可能优先找module的实例，找不到的话在根据mustBelongToModule值来决定要不要找其他模块的实例
@@ -29,27 +29,16 @@ export default function(module, mustBelongToModule = false) {
     if (module === MODULE_DEFAULT) {
       ccKeys = ccKeys.filter(key => !key.startsWith(CC_FRAGMENT));
     }
-    if (ccKeys.length === 0) {
-      if (mustBelongToModule === false) ccKeys = [CC_DISPATCHER];
-      else{
-        const ignoreIt = `if this message doesn't matter, you can ignore it`;
-        throw new Error(`[[pickOneRef]]: no ref found for module[${module}]!,${ignoreIt}`);
-      }
+    if (ccKeys.length === 0 && mustBelongToModule) {
+      const ignoreIt = `if this message doesn't matter, you can ignore it`;
+      throw new Error(`[[pickOneRef]]: no ref found for module[${module}]!,${ignoreIt}`);
     }
-  } else {
-    ccKeys = [CC_DISPATCHER];
   }
 
-  const oneKey = ccKeys[0];
-  let oneRef = ccUKey_ref_[oneKey];
-
-  // 微前端架构下，应用会反复卸载和加载，再次加载时dispatcher需要被重置回来
-  if (oneKey === CC_DISPATCHER && !oneRef) {
-    oneRef = ccUKey_ref_[oneKey] = ccContext.permanentDispatcher;
-  }
-
+  let oneRef = ccUKey_ref_[ccKeys[0]];
   if (!oneRef) {
-    throw new Error('cc found no ref!');
+    oneRef = ccContext.permanentDispatcher;
   }
+
   return oneRef;
 }

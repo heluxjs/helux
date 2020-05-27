@@ -1,9 +1,7 @@
 import * as util from '../support/util';
-import { CC_DISPATCHER } from '../support/constant';
 import ccContext from '../cc-context';
 import createDispatcher from './create-dispatcher';
 import * as boot from '../core/base/boot';
-import appendDispatcher from '../core/base/append-dispatcher';
 import clearContextIfHot from './clear-context-if-hot';
 import didMount from '../core/base/did-mount';
 import beforeUnmount from '../core/base/before-unmount';
@@ -79,7 +77,6 @@ export default function (
     isDebug = false,
     errorHandler = null,
     isHot,
-    // autoCreateDispatcher = true,
     bindCtxToMethod = false,
     objectValueCompare = false,
     computedCompare = true,
@@ -108,11 +105,7 @@ export default function (
       rv.watchImmediate = watchImmediate;
       rv.bindCtxToMethod = bindCtxToMethod;
 
-      if (!ccContext.refs[CC_DISPATCHER]) {
-        const Dispatcher = createDispatcher();
-        appendDispatcher(Dispatcher);
-      }
-      ccContext.permanentDispatcher = ccContext.refs[CC_DISPATCHER];
+      createDispatcher();
       
       boot.configModuleSingleClass(moduleSingleClass);
       boot.configStoreState(store);

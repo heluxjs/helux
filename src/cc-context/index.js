@@ -3,7 +3,7 @@ import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
 import { waKey_uKeyMap_, waKey_staticUKeyMap_ } from './wakey-ukey-map';
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, CC_DISPATCHER } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
@@ -12,11 +12,7 @@ import extractStateByKeys from '../core/state/extract-state-by-keys';
 const { _computedValue } = computed;
 const { okeys, extractChangedState } = util;
 const refs = {};
-const getDispatcher = () => {
-  let d = refs[CC_DISPATCHER];
-  if (!d) d = refs[CC_DISPATCHER] = ccContext.permanentDispatcher;
-  return d;
-};
+const getDispatcher = () => ccContext.permanentDispatcher;
 
 const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false } = {}) => {
   const moduleState = getState(module);
@@ -246,7 +242,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.4.22',
+    version: '2.5.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',
