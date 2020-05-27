@@ -448,3 +448,17 @@ export function makeFnDesc(fn, depKeysOrOpt, check = true) {
   check && checkDepKeys(assignFrom.depKeys)
   return Object.assign(desc, assignFrom);
 }
+
+
+const symbolTag = "[object Symbol]"
+
+function isObjectLike(value) {
+  return typeof value == "object" && value !== null
+}
+
+export function isSymbol(value) {
+  return (
+    typeof value === "symbol" ||
+    (isObjectLike(value) && Object.prototype.toString.call(value) === symbolTag)
+  )
+}
