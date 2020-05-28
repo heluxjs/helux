@@ -4,7 +4,7 @@ import { makeCuObValue, okeys, justWarning } from '../../support/util';
 export default function (computed, originalCuContainer) {
   const moduleComputedValue = {};
   okeys(computed).forEach(key => {
-    //避免get无限递归，用这个对象来存其他信息
+    // 避免get无限递归，用这个对象来存其他信息
     originalCuContainer[key] = makeCuObValue();
 
     Object.defineProperty(

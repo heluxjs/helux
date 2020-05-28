@@ -12,6 +12,9 @@ export default function () {
   );
 
   const mockRef = { setState: noop, forceUpdate: noop };
-  buildRefCtx(mockRef, { module: MODULE_DEFAULT, connect: [], watchedKeys: [], ccClassKey, state: {} });
+  buildRefCtx(mockRef, {
+    module: MODULE_DEFAULT, connect: [], watchedKeys: [],
+    ccClassKey, state: {}, ccOption: {}, storedKeys: [],
+  });
   ccContext.permanentDispatcher = mockRef;
 }

@@ -1015,7 +1015,7 @@
   /**
    * 用于传递给 computed 回调收集相关依赖
    * defComputed((newState, oldState)=>{
-   *   //此处的newState oldState即cuObState
+   *   // 此处的newState oldState即cuObState
    * })
    * @param {{[key:string]:any}} state 
    * @param {string[]} depKeys 
@@ -1028,7 +1028,7 @@
         /**
          * 第一个isKeyValid判断，是为了防止误使用state算computed value，而触发了其他的key收集
          *   ctx.computed('count', n => {
-         *     return n * 2;
+         *     return n * 2;// 正确写法本应该是 return n.count * 2
          *    })
          *   // 本应该是 n.count * 2, 写为 n * 2 后，触发的key分别为
          *   // valueOf, toString, Symbol(...)
@@ -1046,14 +1046,14 @@
 
   // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
-  // rendering input
+  // rendering period input as below
   // cur: {a:'val', c:'val', d:'val'}
   //
   // after render
   // cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} nextCompare:{a:2, c:2, d:2}
   //
-  // then concent will know b should delete dep because its value is 2, 
-  // compare key count=4>3 or compare include 2, so should let cache expire
+  // then concent know 'b' should delete from dep because its value is 2, 
+  // compare key count become bigger than previous render(4>3) or compare key values include 2, so should let cache expire
   //
   // before next render, assign nextCompare to cur, assign {} to nextCompare
   // cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
@@ -1140,27 +1140,29 @@
     });
   }
   /** 
-   * 仅用于模块首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
-   * 实例首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
+   * 此函数被以下两种场景调用
+   * 1 模块首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
+   * 2 实例首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
    * 
    * module:
    * function fullName(n, o, f){
    *    return n.firstName + n.lastName;
    * }
    * 
+   * // 此时funnyName依赖是 firstName lastName age
    * function funnyName(n, o, f){
-   *    const { fullName } = f.cuVal;// 此时funnyName依赖是 firstName lastName age
+   *    const { fullName } = f.cuVal;
    *    return fullName + n.age;
    * }
    * 
    * ref:
-   * 
    * ctx.computed('fullName',(n, o, f)=>{
    *    return n.firstName + n.lastName;
    * })
    * 
+   * // 此时funnyName依赖是 firstName lastName age
    * ctx.computed('funnyName',(n, o, f)=>{
-   *    const { fullName } = f.cuVal;// 此时funnyName依赖是 firstName lastName age
+   *    const { fullName } = f.cuVal;
    *    return fullName + n.age;
    * })
    */
@@ -1206,7 +1208,7 @@
       isRefCu = false;
     }
 
-    // 注意isRefCu为true是，获取ref.ctx是安全的
+    // 注意isRefCu为true时，框架保证了读取ref.ctx下其他属性是安全的
     var oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri$1[module];
     var oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue$1[module];
     if (!oriCuContainer) return {}; // 为普通的计算结果容器建立代理对象
@@ -1826,7 +1828,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.5.1',
+      version: '2.5.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -2673,7 +2675,7 @@
   function makeObCuContainer (computed, originalCuContainer) {
     var moduleComputedValue = {};
     okeys(computed).forEach(function (key) {
-      //避免get无限递归，用这个对象来存其他信息
+      // 避免get无限递归，用这个对象来存其他信息
       originalCuContainer[key] = makeCuObValue();
       Object.defineProperty(moduleComputedValue, key, {
         get: function get() {
@@ -5186,8 +5188,8 @@
       // 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换
       refComputedValue: {},
       // 包裹了defineProperty后的结果容器
+      // 原始的计算结果容器，在beforeMount阶段对refComputedValue包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
       refComputedOri: {},
-      // 原始的计算结果容器，在beforeMount时对refComputedValue包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
       moduleComputed: moduleComputed,
       globalComputed: globalComputed,
       connectedComputed: connectedComputed,
@@ -5875,7 +5877,9 @@
       connect: [],
       watchedKeys: [],
       ccClassKey: ccClassKey,
-      state: {}
+      state: {},
+      ccOption: {},
+      storedKeys: []
     });
     ccContext.permanentDispatcher = mockRef;
   }

@@ -5,14 +5,14 @@ import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 // before render
 // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
 //
-// rendering input
+// rendering period input as below
 // cur: {a:'val', c:'val', d:'val'}
 //
 // after render
 // cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} nextCompare:{a:2, c:2, d:2}
 //
-// then concent will know b should delete dep because its value is 2, 
-// compare key count=4>3 or compare include 2, so should let cache expire
+// then concent know 'b' should delete from dep because its value is 2, 
+// compare key count become bigger than previous render(4>3) or compare key values include 2, so should let cache expire
 //
 // before next render, assign nextCompare to cur, assign {} to nextCompare
 // cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}

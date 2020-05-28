@@ -20,27 +20,29 @@ function writeRetKeyDep(moduleCuDep, ref, module, retKey, isForModule) {
 }
 
 /** 
- * 仅用于模块首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
- * 实例首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
+ * 此函数被以下两种场景调用
+ * 1 模块首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
+ * 2 实例首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
  * 
  * module:
  * function fullName(n, o, f){
  *    return n.firstName + n.lastName;
  * }
  * 
+ * // 此时funnyName依赖是 firstName lastName age
  * function funnyName(n, o, f){
- *    const { fullName } = f.cuVal;// 此时funnyName依赖是 firstName lastName age
+ *    const { fullName } = f.cuVal;
  *    return fullName + n.age;
  * }
  * 
  * ref:
- * 
  * ctx.computed('fullName',(n, o, f)=>{
  *    return n.firstName + n.lastName;
  * })
  * 
+ * // 此时funnyName依赖是 firstName lastName age
  * ctx.computed('funnyName',(n, o, f)=>{
- *    const { fullName } = f.cuVal;// 此时funnyName依赖是 firstName lastName age
+ *    const { fullName } = f.cuVal;
  *    return fullName + n.age;
  * })
  */
@@ -77,7 +79,7 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, refCtx,
 
 // isForModule : true for module , false for connect
 export default function (ref, module, isForModule = true, isRefCu = false) {
-  // 注意isRefCu为true是，获取ref.ctx是安全的
+  // 注意isRefCu为true时，框架保证了读取ref.ctx下其他属性是安全的
   const oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri[module];
   const oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue[module];
   if (!oriCuContainer) return {};

@@ -263,7 +263,8 @@ export default function (ref, params, liteLevel = 5) {
     // computed result containers
     refComputed: {},// 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换
     refComputedValue: {}, // 包裹了defineProperty后的结果容器
-    refComputedOri: {},// 原始的计算结果容器，在beforeMount时对refComputedValue包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
+    // 原始的计算结果容器，在beforeMount阶段对refComputedValue包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
+    refComputedOri: {},
     moduleComputed,
     globalComputed,
     connectedComputed,
