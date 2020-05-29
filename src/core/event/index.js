@@ -4,7 +4,11 @@ import ccContext from '../../cc-context';
 const { event_handlers_, handlerKey_handler_, ccUKey_handlerKeys_, ccUKey_ref_} = ccContext;
 const { makeHandlerKey, safeGetArray, justWarning } = util;
 
-function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity = null) {
+function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
+  // 不用默认参数写法了
+  // codesandbox lost default value
+  const _identity = identity == undefined ? null : identity;
+
   const handlers = event_handlers_[event];
   if (handlers) {
     let filteredHandlers = handlers;
@@ -15,8 +19,8 @@ function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity = n
 
     // identity is null means user call emit like emit('eventName')
     // identity is not null means user call emit like emit(['eventName', 'idtName'])
-    if (identity !== undefined) {
-      filteredHandlers = filteredHandlers.filter(v => v.identity === identity);
+    if (_identity !== undefined) {
+      filteredHandlers = filteredHandlers.filter(v => v.identity === _identity);
     }
     return filteredHandlers;
   }
@@ -120,6 +124,7 @@ export function offEventHandlersByCcUniqueKey(ccUniqueKey) {
 }
 
 export function getEventItem(event) {
+  let outputEv;
   if (event && typeof event === 'object') {
     let _event;
     if (Array.isArray(event)) {
@@ -128,10 +133,13 @@ export function getEventItem(event) {
     } else {
       _event = Object.assign({}, event);
     }
+    if (!_event.identity) _event.identity = null;
 
     //否则就允许用户传如自己定义的module, ccClassKey
-    return _event;
+    outputEv = _event;
   } else {
-    return { name: event };
+    outputEv = { name: event, identity: null };
   }
+
+  return outputEv;
 }

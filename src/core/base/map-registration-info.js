@@ -87,7 +87,7 @@ export default function (
   checker.checkModuleName(module, false, `module[${module}] is not configured in store`);
   checker.checkStoredKeys(moduleName_stateKeys_[module], inputStoredKeys);
 
-  let _connect = connect;
+  let _connect = connect || {};// codesandbox lost default value
   const isArr = Array.isArray(connect);
   if (isArr || typeof connect === 'string') {
     _connect = {};

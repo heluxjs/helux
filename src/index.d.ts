@@ -422,6 +422,7 @@ export interface ICtxBase {
   readonly ccClassKey: string;
   readonly ccUniqueKey: string;
   readonly initTime: number;
+  readonly lastRenderTime: number;
   readonly renderCount: number;
   readonly watchedKeys: string[] | TStar | TAuto;
   readonly privStateKeys: string[];

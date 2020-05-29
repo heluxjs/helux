@@ -1,3 +1,4 @@
+import runtimeVar from '../../cc-context/runtime-var';
 
 const isKeyValid = (obj, key) => {
   return typeof key !== "symbol" && Object.prototype.hasOwnProperty.call(obj, key)
@@ -14,6 +15,10 @@ const isKeyValid = (obj, key) => {
 export default function (state, depKeys) {
   return new Proxy(state, {
     get: function (target, key) {
+      if (runtimeVar.isDebug) {
+        console.log(`key:${key}`);
+      }
+
       /**
        * 第一个isKeyValid判断，是为了防止误使用state算computed value，而触发了其他的key收集
        *   ctx.computed('count', n => {
@@ -23,6 +28,7 @@ export default function (state, depKeys) {
        *   // valueOf, toString, Symbol(...)
        */
       if (isKeyValid(target, key) && !depKeys.includes(key)) depKeys.push(key);
+
       return target[key];
     },
     // set: function (target, key) {

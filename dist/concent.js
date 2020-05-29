@@ -1025,6 +1025,9 @@
   function makeCuObState (state, depKeys) {
     return new Proxy(state, {
       get: function get(target, key) {
+        if (runtimeVar.isDebug) {
+          console.log("key:" + key);
+        }
         /**
          * 第一个isKeyValid判断，是为了防止误使用state算computed value，而触发了其他的key收集
          *   ctx.computed('count', n => {
@@ -1033,6 +1036,8 @@
          *   // 本应该是 n.count * 2, 写为 n * 2 后，触发的key分别为
          *   // valueOf, toString, Symbol(...)
          */
+
+
         if (isKeyValid(target, key) && !depKeys.includes(key)) depKeys.push(key);
         return target[key];
       },
@@ -1828,7 +1833,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.5.3',
+      version: '2.5.8',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -4318,9 +4323,9 @@
       justWarning$4 = justWarning;
 
   function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
-    if (identity === void 0) {
-      identity = null;
-    }
+    // 不用默认参数写法了
+    // codesandbox lost default value
+    var _identity = identity == undefined ? null : identity;
 
     var handlers = event_handlers_[event];
 
@@ -4335,9 +4340,9 @@
       }); // identity is null means user call emit like emit('eventName')
       // identity is not null means user call emit like emit(['eventName', 'idtName'])
 
-      if (identity !== undefined) {
+      if (_identity !== undefined) {
         filteredHandlers = filteredHandlers.filter(function (v) {
-          return v.identity === identity;
+          return v.identity === _identity;
         });
       }
 
@@ -4483,6 +4488,8 @@
     }
   }
   function getEventItem(event) {
+    var outputEv;
+
     if (event && typeof event === 'object') {
       var _event;
 
@@ -4495,15 +4502,19 @@
         };
       } else {
         _event = Object.assign({}, event);
-      } //否则就允许用户传如自己定义的module, ccClassKey
+      }
 
+      if (!_event.identity) _event.identity = null; //否则就允许用户传如自己定义的module, ccClassKey
 
-      return _event;
+      outputEv = _event;
     } else {
-      return {
-        name: event
+      outputEv = {
+        name: event,
+        identity: null
       };
     }
+
+    return outputEv;
   }
 
   var ev = /*#__PURE__*/Object.freeze({
@@ -4994,17 +5005,15 @@
         type = params.type,
         insType = params.insType,
         state = params.state,
-        _params$storedKeys = params.storedKeys,
-        storedKeys = _params$storedKeys === void 0 ? [] : _params$storedKeys,
-        _params$persistStored = params.persistStoredKeys,
-        persistStoredKeys = _params$persistStored === void 0 ? false : _params$persistStored,
-        watchedKeys = params.watchedKeys,
-        _params$connect = params.connect,
-        connect = _params$connect === void 0 ? {} : _params$connect,
         _params$tag = params.tag,
-        tag = _params$tag === void 0 ? '' : _params$tag,
-        _params$ccOption = params.ccOption,
-        ccOption = _params$ccOption === void 0 ? {} : _params$ccOption;
+        tag = _params$tag === void 0 ? '' : _params$tag; // 不用默认解构写法了
+    // codesandbox lost default value
+
+    var ccOption = params.ccOption || {};
+    var storedKeys = params.storedKeys || [];
+    var watchedKeys = params.watchedKeys || [];
+    var connect = params.connect || {};
+    var persistStoredKeys = params.persistStoredKeys == null ? false : params.persistStoredKeys;
     var stateModule = module;
     var existedCtx = ref.ctx;
     var isCtxNull = isObjectNull$2(existedCtx); // 做个保护判断，防止 ctx = {}
@@ -5410,11 +5419,9 @@
       };
 
       ctx.on = function (inputEvent, handler) {
-        // 这里刻意赋默认值identity = null，表示on的是不带id认证的监听
         var _ev$getEventItem2 = getEventItem(inputEvent),
             event = _ev$getEventItem2.name,
-            _ev$getEventItem2$ide = _ev$getEventItem2.identity,
-            identity = _ev$getEventItem2$ide === void 0 ? null : _ev$getEventItem2$ide;
+            identity = _ev$getEventItem2.identity;
 
         bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
       };
@@ -5816,7 +5823,10 @@
     var allowNamingDispatcher = __calledBy === 'cc';
     checkModuleName(module, false, "module[" + module + "] is not configured in store");
     checkStoredKeys(moduleName_stateKeys_$4[module], inputStoredKeys);
-    var _connect = connect;
+
+    var _connect = connect || {}; // codesandbox lost default value
+
+
     var isArr = Array.isArray(connect);
 
     if (isArr || typeof connect === 'string') {
@@ -5874,12 +5884,8 @@
     };
     buildRefCtx(mockRef, {
       module: MODULE_DEFAULT,
-      connect: [],
-      watchedKeys: [],
       ccClassKey: ccClassKey,
-      state: {},
-      ccOption: {},
-      storedKeys: []
+      state: {}
     });
     ccContext.permanentDispatcher = mockRef;
   }
@@ -7006,7 +7012,8 @@
     ctx.__$$renderStatus = START; // 处于收集观察依赖
 
     if (ctx.__$$autoWatch) {
-      if (ctx.__$$hasModuleState) {
+      // 找到合适的实际替换掉ctx.state，防止一直使用同一个ctx.state proxy对象触发get照成Maximum call问题
+      if (ctx.__$$hasModuleState || ctx.renderCount % 25 === 0) {
         var __$$prevModuleVer = ctx.__$$prevModuleVer,
             refModule = ctx.module;
         var moduleVer = store.getModuleVer(refModule);
@@ -7058,37 +7065,33 @@
     return new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
   };
 
-  function register(_temp, ccClassKey) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        _ref$module = _ref.module,
-        module = _ref$module === void 0 ? MODULE_DEFAULT : _ref$module,
-        _ref$state = _ref.state,
-        state = _ref$state === void 0 ? {} : _ref$state,
-        _ref$watchedKeys = _ref.watchedKeys,
-        watchedKeys = _ref$watchedKeys === void 0 ? '-' : _ref$watchedKeys,
-        _ref$storedKeys = _ref.storedKeys,
-        storedKeys = _ref$storedKeys === void 0 ? [] : _ref$storedKeys,
-        _ref$setup = _ref.setup,
-        setup = _ref$setup === void 0 ? null : _ref$setup,
-        persistStoredKeys = _ref.persistStoredKeys,
-        _ref$connect = _ref.connect,
-        connect = _ref$connect === void 0 ? {} : _ref$connect,
-        tag = _ref.tag,
-        lite = _ref.lite,
-        _ref$isPropsProxy = _ref.isPropsProxy,
-        isPropsProxy = _ref$isPropsProxy === void 0 ? false : _ref$isPropsProxy,
-        _ref$isSingle = _ref.isSingle,
-        isSingle = _ref$isSingle === void 0 ? false : _ref$isSingle,
-        renderKeyClasses = _ref.renderKeyClasses,
-        _ref$__checkStartUp = _ref.__checkStartUp,
-        __checkStartUp = _ref$__checkStartUp === void 0 ? true : _ref$__checkStartUp,
-        _ref$compareProps = _ref.compareProps,
-        compareProps = _ref$compareProps === void 0 ? true : _ref$compareProps,
-        __calledBy = _ref.__calledBy;
-
+  function register(regOpt, ccClassKey) {
     if (ccClassKey === void 0) {
       ccClassKey = '';
     }
+
+    // 不用默认解构写法了
+    // codesandbox lost default value
+    var _regOpt = regOpt || {};
+
+    var _regOpt$setup = _regOpt.setup,
+        setup = _regOpt$setup === void 0 ? null : _regOpt$setup,
+        persistStoredKeys = _regOpt.persistStoredKeys,
+        tag = _regOpt.tag,
+        lite = _regOpt.lite,
+        renderKeyClasses = _regOpt.renderKeyClasses,
+        __calledBy = _regOpt.__calledBy;
+    var module = _regOpt.module || MODULE_DEFAULT;
+    var state = _regOpt.state || {};
+    var watchedKeys = _regOpt.watchedKeys || '-';
+    var storedKeys = _regOpt.storedKeys || [];
+    var connect = _regOpt.connect || {};
+    var isPropsProxy = _regOpt.isPropsProxy == null ? false : _regOpt.isPropsProxy;
+    var isSingle = _regOpt.isSingle == null ? false : _regOpt.isSingle;
+
+    var __checkStartUp = _regOpt.__checkStartUp == null ? true : _regOpt.__checkStartUp;
+
+    var compareProps = _regOpt.compareProps == null ? true : _regOpt.compareProps;
 
     try {
       var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_CLASS, getPassToMapWaKeys$1(watchedKeys), storedKeys, connect, __checkStartUp, __calledBy),
@@ -7489,17 +7492,16 @@
     // when single file demo in hmr mode trigger buildRef, rState is 0 
     // so here call evalState again
     var state = rState || evalState(iState);
-    var bindCtxToMethod = regOpt.bindCtxToMethod;
+    var bindCtxToMethod = regOpt.bindCtxToMethod; // 不用默认解构写法了
+    // codesandbox lost default value
+
     var renderKeyClasses = regOpt.renderKeyClasses,
         module = regOpt.module,
-        _regOpt$watchedKeys = regOpt.watchedKeys,
-        watchedKeys = _regOpt$watchedKeys === void 0 ? '-' : _regOpt$watchedKeys,
-        _regOpt$storedKeys = regOpt.storedKeys,
-        storedKeys = _regOpt$storedKeys === void 0 ? [] : _regOpt$storedKeys,
-        _regOpt$connect = regOpt.connect,
-        connect = _regOpt$connect === void 0 ? {} : _regOpt$connect,
         setup = regOpt.setup,
         lite = regOpt.lite;
+    var watchedKeys = regOpt.watchedKeys || '-';
+    var storedKeys = regOpt.storedKeys || [];
+    var connect = regOpt.connect || {};
     incCursor();
 
     var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_HOOK, getPassToMapWaKeys(watchedKeys), storedKeys, connect, true),
@@ -7582,15 +7584,14 @@
     var _registerOption = getRegisterOptions(registerOption); // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
 
 
-    var _registerOption$state = _registerOption.state,
-        iState = _registerOption$state === void 0 ? {} : _registerOption$state,
-        _registerOption$props = _registerOption.props,
-        props = _registerOption$props === void 0 ? {} : _registerOption$props,
-        mapProps = _registerOption.mapProps,
+    var mapProps = _registerOption.mapProps,
         _registerOption$layou = _registerOption.layoutEffect,
-        layoutEffect = _registerOption$layou === void 0 ? false : _registerOption$layou,
-        _registerOption$extra = _registerOption.extra,
-        extra = _registerOption$extra === void 0 ? {} : _registerOption$extra;
+        layoutEffect = _registerOption$layou === void 0 ? false : _registerOption$layou; // 不用默认解构写法了
+    // codesandbox lost default value 
+
+    var iState = _registerOption.state || {};
+    var props = _registerOption.props || {};
+    var extra = _registerOption.extra || {};
     var reactUseState = React.useState;
 
     if (!reactUseState) {

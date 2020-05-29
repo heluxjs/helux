@@ -1,8 +1,13 @@
 import updateDep from '../ref/update-dep';
+import runtimeVar from '../../cc-context/runtime-var';
 
 export default function (ref, state, module, isForModule) {
   return new Proxy(state, {
     get: function (target, key) {
+      if (runtimeVar.isDebug) {
+        console.log(`ob-state-key: ${key}`);
+      }
+
       updateDep(ref, module, key, isForModule);
       return target[key];
     },

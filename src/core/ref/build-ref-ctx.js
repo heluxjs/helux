@@ -90,8 +90,17 @@ export default function (ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
     isSingle, ccClassKey, ccKey = '', module, type, insType,
-    state, storedKeys = [], persistStoredKeys = false, watchedKeys, connect = {}, tag = '', ccOption = {},
+    state, tag = '',
   } = params;
+
+  // 不用默认解构写法了
+  // codesandbox lost default value
+  const ccOption = params.ccOption || {};
+  const storedKeys = params.storedKeys || [];
+  const watchedKeys = params.watchedKeys || [];
+  const connect = params.connect || {};
+  const persistStoredKeys = params.persistStoredKeys == null ? false : params.persistStoredKeys;
+
   const stateModule = module;
   const existedCtx = ref.ctx;
   const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
@@ -203,6 +212,7 @@ export default function (ref, params, liteLevel = 5) {
   const computedDep = {}, watchDep = {};
 
   const props = getOutProps(ref.props);
+  const now = Date.now();
   const ctx = {
     // static params
     type,
@@ -213,7 +223,8 @@ export default function (ref, params, liteLevel = 5) {
     ccKey,
     ccUniqueKey,
     renderCount: 1,
-    initTime: Date.now(),
+    initTime: now,
+    lastRenderTime: now,
     watchedKeys,
     privStateKeys,
     connect,
@@ -378,8 +389,7 @@ export default function (ref, params, liteLevel = 5) {
       ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
     }
     ctx.on = (inputEvent, handler) => {
-      // 这里刻意赋默认值identity = null，表示on的是不带id认证的监听
-      const { name: event, identity = null } = ev.getEventItem(inputEvent);
+      const { name: event, identity } = ev.getEventItem(inputEvent);
       ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
     };
   }

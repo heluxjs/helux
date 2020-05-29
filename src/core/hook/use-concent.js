@@ -40,10 +40,15 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   const state = rState || evalState(iState);
   const bindCtxToMethod = regOpt.bindCtxToMethod;
 
+  // 不用默认解构写法了
+  // codesandbox lost default value
   const {
-    renderKeyClasses, module, watchedKeys = '-', storedKeys = [],
-    connect = {}, setup, lite,
+    renderKeyClasses, module,
+    setup, lite,
   } = regOpt;
+  const watchedKeys = regOpt.watchedKeys || '-';
+  const storedKeys = regOpt.storedKeys || [];
+  const connect = regOpt.connect || {};
 
   incCursor();
   const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
@@ -111,7 +116,12 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
 
   const _registerOption = getRegisterOptions(registerOption);
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
-  let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
+  const { mapProps, layoutEffect = false } = _registerOption;
+  // 不用默认解构写法了
+  // codesandbox lost default value 
+  const iState = _registerOption.state || {};
+  const props = _registerOption.props || {};
+  const extra = _registerOption.extra || {};
 
   const reactUseState = React.useState;
   if (!reactUseState) {
