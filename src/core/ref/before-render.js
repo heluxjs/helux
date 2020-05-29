@@ -4,18 +4,15 @@ import makeObState from '../state/make-ob-state';
 import ccContext from '../../cc-context/index';
 
 const { store } = ccContext;
-const NEED_REPLACE_MS = 20 * 1000;
 
 export default function (ref) {
   const ctx = ref.ctx;
   ctx.__$$renderStatus = START;
-  const lastRenderTime = ctx.lastRenderTime;
-  const now = Date.now();
 
   // 处于收集观察依赖
   if (ctx.__$$autoWatch) {
     // 找个合适的时机替换掉ctx.state，防止一直使用同一个ctx.state proxy对象触发get，进而造成Maximum call问题
-    if (ctx.__$$hasModuleState || ctx.renderCount % 50 === 0 || (now - lastRenderTime > NEED_REPLACE_MS)) {
+    if (ctx.__$$hasModuleState || ctx.renderCount % 50 === 0) {
       const { __$$prevModuleVer, module: refModule } = ctx;
       const moduleVer = store.getModuleVer(refModule);
       const mVer = moduleVer[refModule];
@@ -53,5 +50,5 @@ export default function (ref) {
     });
   }
 
-  ctx.lastRenderTime = now;
+  ctx.renderCount += 1;
 }

@@ -1833,7 +1833,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.5.8',
+      version: '2.5.9',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -3621,7 +3621,6 @@
 
 
       if (shouldCurrentRefUpdate) {
-        refCtx.renderCount += 1;
         refCtx.reactSetState(state, cb);
       } else {
         Object.assign(ref.state, state);
@@ -3632,7 +3631,6 @@
   function makeCcForceUpdateHandler(ref) {
     return function (cb) {
       var refCtx = ref.ctx;
-      refCtx.renderCount += 1;
       refCtx.reactForceUpdate(cb);
     };
   } // last param: chainData
@@ -4528,6 +4526,10 @@
   function makeObState (ref, state, module, isForModule) {
     return new Proxy(state, {
       get: function get(target, key) {
+        if (runtimeVar.isDebug) {
+          console.log("ob-state-key: " + key);
+        }
+
         updateDep(ref, module, key, isForModule);
         return target[key];
       },
@@ -5137,6 +5139,7 @@
     var computedDep = {},
         watchDep = {};
     var props = getOutProps(ref.props);
+    var now = Date.now();
     var ctx = {
       // static params
       type: type,
@@ -5147,7 +5150,7 @@
       ccKey: ccKey,
       ccUniqueKey: ccUniqueKey,
       renderCount: 1,
-      initTime: Date.now(),
+      initTime: now,
       watchedKeys: watchedKeys,
       privStateKeys: privStateKeys,
       connect: connect,
@@ -7012,8 +7015,8 @@
     ctx.__$$renderStatus = START; // 处于收集观察依赖
 
     if (ctx.__$$autoWatch) {
-      // 找到合适的实际替换掉ctx.state，防止一直使用同一个ctx.state proxy对象触发get照成Maximum call问题
-      if (ctx.__$$hasModuleState || ctx.renderCount % 25 === 0) {
+      // 找个合适的时机替换掉ctx.state，防止一直使用同一个ctx.state proxy对象触发get，进而造成Maximum call问题
+      if (ctx.__$$hasModuleState || ctx.renderCount % 50 === 0) {
         var __$$prevModuleVer = ctx.__$$prevModuleVer,
             refModule = ctx.module;
         var moduleVer = store.getModuleVer(refModule);
@@ -7049,6 +7052,8 @@
         ctx.__$$nextCompareConnWaKeyCount[m] = 0;
       });
     }
+
+    ctx.renderCount += 1;
   }
 
   var ccClassDisplayName$1 = ccClassDisplayName,

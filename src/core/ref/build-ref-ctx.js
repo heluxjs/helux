@@ -224,7 +224,6 @@ export default function (ref, params, liteLevel = 5) {
     ccUniqueKey,
     renderCount: 1,
     initTime: now,
-    lastRenderTime: now,
     watchedKeys,
     privStateKeys,
     connect,

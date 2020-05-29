@@ -130,7 +130,6 @@ export function makeCcSetStateHandler(ref, containerRef) {
 
     /** start update ui */
     if (shouldCurrentRefUpdate) {
-      refCtx.renderCount += 1;
       refCtx.reactSetState(state, cb);
     }else{
       Object.assign(ref.state, state);
@@ -142,7 +141,6 @@ export function makeCcSetStateHandler(ref, containerRef) {
 export function makeCcForceUpdateHandler(ref) {
   return (cb) => {
     const refCtx = ref.ctx;
-    refCtx.renderCount += 1;
     refCtx.reactForceUpdate(cb);
   }
 }
