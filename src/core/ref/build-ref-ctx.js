@@ -263,6 +263,7 @@ export default function (ref, params, liteLevel = 5) {
     prevState: mergedState,
     // state
     state: mergedState,
+    unProxyState: mergedState,// 没有proxy化的state
     moduleState,
     mstate,//用于before-render里避免merge moduleState而导致的冗余触发get
     globalState,

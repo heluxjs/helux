@@ -11,8 +11,7 @@ export default function (ref) {
 
   // 处于收集观察依赖
   if (ctx.__$$autoWatch) {
-    // 找个合适的时机替换掉ctx.state，防止一直使用同一个ctx.state proxy对象触发get，进而造成Maximum call问题
-    if (ctx.__$$hasModuleState || ctx.renderCount % 50 === 0) {
+    if (ctx.__$$hasModuleState) {
       const { __$$prevModuleVer, module: refModule } = ctx;
       const moduleVer = store.getModuleVer(refModule);
       const mVer = moduleVer[refModule];
@@ -22,8 +21,11 @@ export default function (ref) {
         Object.assign(ref.state, ctx.mstate);
       }
 
+      // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题
+      // ref.state = makeObState(ref, ref.state, refModule, true);
+
       // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
-      ref.state = makeObState(ref, ref.state, refModule, true);
+      ref.state = makeObState(ref, ref.unProxyState, refModule, true);
       ctx.state = ref.state;
 
       ctx.__$$curWaKeys = {};
