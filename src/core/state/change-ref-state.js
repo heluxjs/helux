@@ -242,17 +242,18 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
   connectRefKeys.forEach(refKey => {
     const ref = ccUKey_ref_[refKey];
     if (!ref) return;
-    if (ref.__$$isUnmounted !== true) {
+
+    // 对于挂载好了还未卸载的实例，才有必要触发重渲染
+    if (ref.__$$isUnmounted === false) {
       const refCtx = ref.ctx;
       const deltaState = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
       const { shouldCurrentRefUpdate } = watchKeyForRef(ref, moduleName, prevModuleState, deltaState, callInfo);
-      
+
       if (shouldCurrentRefUpdate) {
         // 记录sharedStateKeys，方便triggerRefEffect之用
         refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
         refCtx.__$$ccForceUpdate();
       }
-
     }
   });
 

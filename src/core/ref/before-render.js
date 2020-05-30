@@ -25,7 +25,7 @@ export default function (ref) {
       // ref.state = makeObState(ref, ref.state, refModule, true);
 
       // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
-      ref.state = makeObState(ref, ref.unProxyState, refModule, true);
+      ref.state = makeObState(ref, ctx.unProxyState, refModule, true);
       ctx.state = ref.state;
 
       ctx.__$$curWaKeys = {};

@@ -1,4 +1,9 @@
 #### 2020-05-27
+2.5.11 发布
+fix: `beforeRender`里反复用代理对象生成代理对象，最终导致maximum call问题
+> 新增`unProxyState`解决此问题
+
+#### 2020-05-27
 2.5.1 发布
 refactor: 适配`react-native`，去`react-dom`依赖，重构`dispatcher`初始化方式
 

@@ -1833,7 +1833,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.5.9',
+      version: '2.5.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -4145,6 +4145,7 @@
   var makeRefSetState = function makeRefSetState(ref) {
     return function (partialState, cb) {
       var ctx = ref.ctx;
+      Object.assign(ctx.unProxyState, partialState);
       var newState = Object.assign({}, ref.state, partialState);
 
       if (ctx.type === CC_HOOK) {
@@ -5186,6 +5187,8 @@
       prevState: mergedState,
       // state
       state: mergedState,
+      unProxyState: mergedState,
+      // 没有proxy化的state
       moduleState: moduleState,
       mstate: mstate,
       //用于before-render里避免merge moduleState而导致的冗余触发get
@@ -7015,8 +7018,7 @@
     ctx.__$$renderStatus = START; // 处于收集观察依赖
 
     if (ctx.__$$autoWatch) {
-      // 找个合适的时机替换掉ctx.state，防止一直使用同一个ctx.state proxy对象触发get，进而造成Maximum call问题
-      if (ctx.__$$hasModuleState || ctx.renderCount % 50 === 0) {
+      if (ctx.__$$hasModuleState) {
         var __$$prevModuleVer = ctx.__$$prevModuleVer,
             refModule = ctx.module;
         var moduleVer = store.getModuleVer(refModule);
@@ -7026,10 +7028,12 @@
           __$$prevModuleVer[refModule] = mVer; // 比较版本, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
 
           Object.assign(ref.state, ctx.mstate);
-        } // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
+        } // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题
+        // ref.state = makeObState(ref, ref.state, refModule, true);
+        // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
 
 
-        ref.state = makeObState(ref, ref.state, refModule, true);
+        ref.state = makeObState(ref, ctx.unProxyState, refModule, true);
         ctx.state = ref.state;
         ctx.__$$curWaKeys = {};
         ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;

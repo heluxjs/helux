@@ -59,7 +59,7 @@ function _pickNonCustomizeIns() {
     const ref = ccUKey_ref_[ccKey];
     if (ref
       && ref.__$$isMounted === true // 已挂载
-      && ref.__$$isUnmounted == false // 未卸载
+      && ref.__$$isUnmounted === false // 未卸载
     ) {
       const insType = ref.ctx.insType;
       // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
