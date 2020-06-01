@@ -360,9 +360,24 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   if (liteLevel > 2) {// level 3, assign async api
+    const cachedBoundFns = {};
+
     const doSync = (e, val, rkey, delay, type) => {
-      if (typeof e === 'string') return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
-      __sync({ type: 'val' }, ref, e);//allow <input data-ccsync="foo/f1" onChange={ctx.sync} />
+      if (typeof e === 'string') {
+        if (typeof val === 'object') {
+          return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
+        } else {
+          const key = `${e}|${val}|${rkey}|${delay}`;
+          let boundFn = cachedBoundFns[key];
+          if (!boundFn) {
+            boundFn = cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
+          }
+          return boundFn;
+        }
+      }
+
+      // case: <input data-ccsync="foo/f1" onChange={ctx.sync} />
+      __sync({ type: 'val' }, ref, e);
     }
 
     ctx.sync = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'val');

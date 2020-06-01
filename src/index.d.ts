@@ -156,7 +156,7 @@ export type ReducerType<T extends IAnyObj> = T['setState'] extends Function ? {
   readonly [K in keyof T]: ReducerMethod<T, K>;
 } : {
   readonly [K in keyof T]: ReducerMethod<T, K>;
-} & { setState: ReducerMethod<{ setState: (payload: IAnyObj, renderKeyOrOptions?: string | IDispatchOptions, delay?: number) => any }, 'setState'> }
+} & { setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: string | IDispatchOptions, delay?: number) => Promise<P> }
 
 export interface EvMapBase {
   [key: string]: any[];
