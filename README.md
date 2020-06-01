@@ -129,7 +129,7 @@ const Counter = React.memo(function Counter() {
 [simple demo 1](https://codesandbox.io/s/hello-concent-egb4d)
 [simple demo 2](https://codesandbox.io/s/dep-collection-uiqzn)
 
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/3.png)
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-wcu-new.png)
 
 ## 🎆Unified coding of class components and function components
 `setup` can be used in both class and function component, that means user can easily share logic (even including life cycle logic) between the 2 kinds of component. 
