@@ -1,3 +1,8 @@
+#### 2020-06-02
+2.6.1 发布
+fix: 重构`find-dep-fns-to-execute`，支持更复杂的链路
+> https://codesandbox.io/s/complex-cu-watch-chain-in-ref-l9nh7?file=/src/App.js
+
 #### 2020-05-27
 2.5.12 发布
 fix: `refCtx`调用`initState`丢失`privStateKeys`
