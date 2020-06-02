@@ -1,4 +1,8 @@
 #### 2020-05-27
+2.5.12 发布
+fix: `refCtx`调用`initState`丢失`privStateKeys`
+feature: 对`sync`函数提供`cachedBoundFns`支持
+
 2.5.11 发布
 fix: `beforeRender`里反复用代理对象生成代理对象，最终导致maximum call问题
 > 新增`unProxyState`解决此问题

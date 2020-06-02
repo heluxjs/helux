@@ -86,20 +86,11 @@ function recordDep(ccUniqueKey, module, watchedKeys) {
  * liteLevel 越小，绑定的方法越少
  */
 export default function (ref, params, liteLevel = 5) {
-
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
     isSingle, ccClassKey, ccKey = '', module, type, insType,
-    state, tag = '',
+    state, storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {}, tag = '', ccOption = {},
   } = params;
-
-  // 不用默认解构写法了
-  // codesandbox lost default value
-  const ccOption = params.ccOption || {};
-  const storedKeys = params.storedKeys || [];
-  const watchedKeys = params.watchedKeys || [];
-  const connect = params.connect || {};
-  const persistStoredKeys = params.persistStoredKeys == null ? false : params.persistStoredKeys;
 
   const stateModule = module;
   const existedCtx = ref.ctx;
@@ -157,8 +148,6 @@ export default function (ref, params, liteLevel = 5) {
   const moduleComputed = makeCuRefObContainer(ref, module);
   // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
   const globalComputed = connectedComputed[MODULE_GLOBAL];
-  
-  // const globalState = getState(MODULE_GLOBAL);
   const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
   // extract privStateKeys
   const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
@@ -187,13 +176,12 @@ export default function (ref, params, liteLevel = 5) {
   const setModuleState = (module, state, reactCallback, renderKey, delay) => {
     _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
   };
-  // const setState = (state, reactCallback, renderKey, delay) => {
   const setState = (p1, p2, p3, p4, p5) => {
     if (typeof p1 === 'string') {
-      //p1 module, p2 state, p3 cb, p4 rkey, p5 delay
+      //p1: module, p2: state, p3: cb, p4: rkey, p5: delay
       setModuleState(p1, p2, p3, p4, p5);
     } else {
-      //p1 state, p2 cb, p3 rkey, p4 delay
+      //p1: state, p2: cb, p3: rkey, p4: delay
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
@@ -229,7 +217,7 @@ export default function (ref, params, liteLevel = 5) {
     connect,
     connectedModules,
 
-    // dynamic meta, I don't want user know these props, so put them in ctx instead of ref
+    // dynamic meta, I don't want user know these props, so let field name start with __$$
     __$$onEvents,// 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
 
     __$$hasModuleState: modStateKeys.length > 0,
@@ -237,7 +225,7 @@ export default function (ref, params, liteLevel = 5) {
 
     __$$curWaKeys: {},
     __$$compareWaKeys: {},
-    __$$compareWaKeyCount: 0,//write before render
+    __$$compareWaKeyCount: 0,// write before render
     __$$nextCompareWaKeys: {},
     __$$nextCompareWaKeyCount: 0,
 
@@ -332,10 +320,12 @@ export default function (ref, params, liteLevel = 5) {
     if (ctx.__$$cuOrWaCalled) {
       return justWarning(`initState must been called before computed or watch`);
     }
-    ref.state = Object.assign({}, state, initState, refStoredState, moduleState);
+    const newRefState = Object.assign({}, state, initState, refStoredState, moduleState);
     // 更新stateKeys，防止遗漏新的私有stateKey
-    ctx.stateKeys = okeys(ref.state);
-    ctx.prevState = ctx.state = ref.state;
+    ctx.stateKeys = okeys(newRefState);
+    ctx.privStateKeys = util.removeArrElements(okeys(newRefState), modStateKeys);
+
+    ctx.prevState = ctx.state = ref.state = newRefState;
   }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
@@ -470,8 +460,8 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   let __$$autoWatch = false;
-  //向实例的reducer里绑定方法，key:{module} value:{reducerFn}
-  //为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
+  // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
+  // 为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
     let reducerObj;
     if (m === module) {

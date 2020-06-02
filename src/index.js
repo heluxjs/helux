@@ -17,7 +17,6 @@ import _emit from './api/emit';
 import _off from './api/off';
 import _dispatch from './api/dispatch';
 import _ccContext from './cc-context';
-import _createDispatcher from './api/create-dispatcher';
 import _execute from './api/execute';
 import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
@@ -51,7 +50,6 @@ export const emit = _emit;
 export const off = _off;
 export const dispatch = _dispatch;
 export const ccContext = _ccContext;
-export const createDispatcher = _createDispatcher;
 export const execute = _execute;
 export const executeAll = _executeAll;
 export const getRefs = _getRefs;
@@ -93,7 +91,6 @@ const defaultExport = {
   getComputed,
   getConnectedState,
   ccContext,
-  createDispatcher,
   execute,
   executeAll,
   getRefs,

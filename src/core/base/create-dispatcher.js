@@ -1,7 +1,7 @@
-import buildRefCtx from '../core/ref/build-ref-ctx';
-import mapRegistrationInfo from '../core/base/map-registration-info';
-import { CC_DISPATCHER, MODULE_DEFAULT, CC_CLASS } from '../support/constant';
-import ccContext from '../cc-context';
+import buildRefCtx from '../ref/build-ref-ctx';
+import mapRegistrationInfo from './map-registration-info';
+import { CC_DISPATCHER, MODULE_DEFAULT, CC_CLASS } from '../../support/constant';
+import ccContext from '../../cc-context';
 
 const noop = () => { };
 

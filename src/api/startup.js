@@ -1,6 +1,6 @@
 import * as util from '../support/util';
 import ccContext from '../cc-context';
-import createDispatcher from './create-dispatcher';
+import createDispatcher from '../core/base/create-dispatcher';
 import * as boot from '../core/base/boot';
 import clearContextIfHot from './clear-context-if-hot';
 import didMount from '../core/base/did-mount';

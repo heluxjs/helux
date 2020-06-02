@@ -1,5 +1,5 @@
-import React from 'react';
 // import hoistNonReactStatic from 'hoist-non-react-statics';
+import React from 'react';
 import {
   MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS, CC_CUSTOMIZE,
 } from '../../support/constant';
@@ -21,28 +21,23 @@ const cl = color;
 const ss = styleStr;
 const setupErr = info => new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
 
-export default function register( regOpt, ccClassKey = '') {
-  // 不用默认解构写法了
-  // codesandbox lost default value
-  const _regOpt = regOpt || {};
-  const {
-    setup = null,
-    persistStoredKeys,
-    tag,
-    lite,
-    renderKeyClasses,
-    __calledBy,
-  } = _regOpt;
-  const module = _regOpt.module || MODULE_DEFAULT;
-  const state = _regOpt.state || {};
-  const watchedKeys = _regOpt.watchedKeys || '-';
-  const storedKeys = _regOpt.storedKeys || [];
-  const connect = _regOpt.connect || {};
-  const isPropsProxy = _regOpt.isPropsProxy == null ? false : _regOpt.isPropsProxy;
-  const isSingle = _regOpt.isSingle == null ? false : _regOpt.isSingle;
-  const __checkStartUp = _regOpt.__checkStartUp == null ? true : _regOpt.__checkStartUp;
-  const compareProps = _regOpt.compareProps == null ? true : _regOpt.compareProps;
-
+export default function register({
+  module = MODULE_DEFAULT,
+  state = {},
+  watchedKeys = '-',
+  storedKeys = [],
+  setup = null,
+  persistStoredKeys,
+  connect = {},
+  tag,
+  lite,
+  isPropsProxy = false,
+  isSingle = false,
+  renderKeyClasses,
+  __checkStartUp = true,
+  compareProps = true,
+  __calledBy,
+} = {}, ccClassKey = '') {
   try {
     const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
       module, ccClassKey, renderKeyClasses, CC_CLASS, getPassToMapWaKeys(watchedKeys), storedKeys, connect, __checkStartUp, __calledBy

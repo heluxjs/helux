@@ -17,13 +17,13 @@ export default function (ref, stateModule, oldState, committedState, callInfo, i
 
   const newState = Object.assign({}, oldState, committedState);
 
-  const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(
+  const curDepWatchFns = (committedState, isBeforeMount) => pickDepFns(
     isBeforeMount, CATE_REF, FN_WATCH, watchDep, stateModule, oldState, committedState, ccUniqueKey
   );
 
   // 触发有stateKey依赖列表相关的watch函数
   return findDepFnsToExecute(
-    ref, stateModule, refModule, oldState, curDepComputedFns,
+    ref, stateModule, refModule, oldState, curDepWatchFns,
     committedState, newState, deltaCommittedState, callInfo, isBeforeMount,
     FN_WATCH, CATE_REF, computedContainer,
   );
