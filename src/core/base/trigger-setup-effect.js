@@ -42,7 +42,7 @@ export default function (ref, callByDidMount) {
 
     // start handle effect meta data of state keys
     const prevState = ctx.prevState;
-    const curState = ref.state;
+    const curState = ref.unProxyState;
     const toBeExecutedFns = [];
 
     effectItems.forEach(item => {

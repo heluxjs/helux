@@ -14,13 +14,9 @@ export default function (ref) {
     if (ctx.__$$hasModuleState) {
       const { __$$prevModuleVer, module: refModule } = ctx;
       const moduleVer = store.getModuleVer(refModule);
-      const mVer = moduleVer[refModule];
-
-      const prevModuleVer = __$$prevModuleVer[refModule];
-      if (prevModuleVer && prevModuleVer !== mVer) {
-        __$$prevModuleVer[refModule] = mVer;
-        // 比较版本, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
-        Object.assign(ref.state, ctx.mstate);
+      if (__$$prevModuleVer[refModule] !== moduleVer) {
+        __$$prevModuleVer[refModule] = moduleVer;
+        Object.assign(ctx.unProxyState, ctx.mstate);
       }
 
       // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题

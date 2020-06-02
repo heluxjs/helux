@@ -30,8 +30,7 @@ export default function (module, computed) {
   configureDepFns(CATE_MODULE, { type: FN_CU, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
 
   const d = ccContext.getDispatcher();
-  const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
-  const deltaCommittedState = Object.assign({}, moduleState);
+  const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, FN_CU, rootComputedDep, module, moduleState, committedState);
 
   // 在init-module-state那里已safeGet, 这里可以安全的直接读取
   const cuOri = ccComputed._computedValueOri[module];
@@ -40,8 +39,8 @@ export default function (module, computed) {
 
   findDepFnsToExecute(
     d, module, d && d.ctx.module, moduleState, curDepComputedFns,
-    moduleState, moduleState, deltaCommittedState, util.makeCallInfo(module), true,
-    'computed', CATE_MODULE, moduleComputedValue,
+    moduleState, moduleState, moduleState, util.makeCallInfo(module), true,
+    FN_CU, CATE_MODULE, moduleComputedValue,
   );
 
 }

@@ -301,8 +301,16 @@ export function extractChangedState(oldState, partialNewState, moduleOpt) {
   let changedState = {};
 
   let setted = false;
+  const { extractRefChangedState, extractModuleChangedState, nonObjectValueCompare, objectValueCompare } = runtimeVar;
+  const needExtractChangedState = moduleOpt ? extractModuleChangedState : extractRefChangedState;
+
+  // 非模块调用
+  if (!moduleOpt) {
+    if (!needExtractChangedState) return partialNewState;
+    if (!nonObjectValueCompare && !objectValueCompare) return partialNewState;
+  }
+
   if (partialNewState) {
-    const objectValueCompare = runtimeVar.objectValueCompare;
     okeys(partialNewState).forEach(key => {
       const oldVal = oldState[key];
       const newVal = partialNewState[key];
@@ -310,9 +318,11 @@ export function extractChangedState(oldState, partialNewState, moduleOpt) {
 
       let isNotEqual = true;
       if (valType !== 'object') {
-        isNotEqual = oldVal !== newVal;
-      } else if (objectValueCompare) {
-        isNotEqual = oldVal !== newVal;
+        // 比较非object类型的值
+        if (nonObjectValueCompare) isNotEqual = oldVal !== newVal;
+      } else {
+        // 比较object类型的值
+        if (objectValueCompare) isNotEqual = oldVal !== newVal;
       }
 
       if (isNotEqual) {

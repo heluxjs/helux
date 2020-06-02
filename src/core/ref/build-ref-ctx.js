@@ -320,12 +320,12 @@ export default function (ref, params, liteLevel = 5) {
     if (ctx.__$$cuOrWaCalled) {
       return justWarning(`initState must been called before computed or watch`);
     }
-    const newRefState = Object.assign({}, state, initState, refStoredState, moduleState);
+    const newRefState = Object.assign({}, state, initState, refStoredState, mstate);
     // 更新stateKeys，防止遗漏新的私有stateKey
     ctx.stateKeys = okeys(newRefState);
     ctx.privStateKeys = util.removeArrElements(okeys(newRefState), modStateKeys);
 
-    ctx.prevState = ctx.state = ref.state = newRefState;
+    ctx.unProxyState = ctx.prevState = ctx.state = ref.state = newRefState;
   }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
@@ -354,10 +354,11 @@ export default function (ref, params, liteLevel = 5) {
 
     const doSync = (e, val, rkey, delay, type) => {
       if (typeof e === 'string') {
-        if (isValueNotNull(val) && typeof val === 'object') {
+        const valType = typeof val;
+        if (isValueNotNull(val) && (valType === 'object' || valType === 'function')) {
           return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
         } else {
-          const key = `${e}|${rkey}|${delay}`;
+          const key = `${e}|${val}|${rkey}|${delay}`;
           let boundFn = cachedBoundFns[key];
           if (!boundFn) {
             boundFn = cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);

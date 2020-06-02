@@ -17,7 +17,7 @@ const {
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
 const {
-  store: { setState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
+  store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
   refStore, moduleName_stateKeys_
 } = ccContext;
 
@@ -71,16 +71,18 @@ export default function (state, {
   const stateFor = getStateFor(module, refModule);
   const callInfo = { payload, renderKey, ccKey, module, fnName };
   
-  //在triggerReactSetState之前把状态存储到store，
-  //防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
+  // 在triggerReactSetState之前把状态存储到store，
+  // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
   // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
-  const sharedState = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true });
+  const { partialState: sharedState, hasDelta } = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true });
 
-  Object.assign(state, sharedState);
+  if(hasDelta){
+    Object.assign(state, sharedState);
+  }
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, true,
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
 
@@ -112,7 +114,7 @@ export default function (state, {
           // do nothing
         } else {
           send(SIG_STATE_CHANGED, {
-            calledBy, type, committedState, sharedState: realShare,
+            calledBy, type, committedState, sharedState: realShare || {},
             module, ccUniqueKey, renderKey
           });
         }
@@ -128,9 +130,11 @@ export default function (state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, needExtractChanged = false, next
+  targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next
 ) {
-  const { state: refState, ctx: refCtx } = targetRef;
+  const refCtx = targetRef.ctx;
+  const refState = refCtx.unProxyState;
+
   if (
     // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
     // targetRef.__$$isMounted === false || // 还未挂载上
@@ -159,21 +163,26 @@ function triggerReactSetState(
       if (refCtx.persistStoredKeys === true) {
         const { partialState: entireStoredState } = extractStateByKeys(refState, storedKeys);
         const currentStoredState = Object.assign({}, entireStoredState, partialState);
-        if (ccContext.localStorage) ccContext.localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
+        if (ccContext.localStorage) {
+          ccContext.localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
+        }
       }
       refStore.setState(ccUniqueKey, partialState);
     }
   }
 
-  let deltaCommittedState = computeValueForRef(targetRef, stateModule, refState, state, callInfo);
-  const { shouldCurrentRefUpdate } = watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo, false);
+  const deltaCommittedState = Object.assign({}, state);
+  computeValueForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo);
+  watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo);
 
   const ccSetState = () => {
-    const changedState = needExtractChanged ? util.extractChangedState(refCtx.state, deltaCommittedState) : deltaCommittedState;
+    // 使用 unProxyState ，避免触发get
+    const changedState = util.extractChangedState(refCtx.unProxyState, deltaCommittedState)
+
     if (changedState) {
       // 记录stateKeys，方便triggerRefEffect之用
       refCtx.__$$settedList.push({ module: stateModule, keys: okeys(changedState) });
-      refCtx.__$$ccSetState(changedState, reactCallback, shouldCurrentRefUpdate);
+      refCtx.__$$ccSetState(changedState, reactCallback);
     }
   }
 
@@ -192,10 +201,11 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
 
   // save state to store
   if (partialState) {
-    return setState(moduleName, partialState, options);// {sharedState, saveSharedState}
+    const { hasDelta, deltaCommittedState } = storeSetState(moduleName, partialState, options);
+    return { partialState: deltaCommittedState, hasDelta };
   }
 
-  return  partialState ;
+  return { partialState, hasDelta: false };
 }
 
 function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
@@ -234,7 +244,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     const refUKey = ref.ctx.ccUniqueKey;
 
     if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
-    // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用，同时这ignoreCurrentCcUkey里也不会发送信号给插件
+    // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
     triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
   });
 
@@ -246,14 +256,32 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     // 对于挂载好了还未卸载的实例，才有必要触发重渲染
     if (ref.__$$isUnmounted === false) {
       const refCtx = ref.ctx;
-      const deltaState = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo);
-      const { shouldCurrentRefUpdate } = watchKeyForRef(ref, moduleName, prevModuleState, deltaState, callInfo);
 
-      if (shouldCurrentRefUpdate) {
-        // 记录sharedStateKeys，方便triggerRefEffect之用
-        refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
-        refCtx.__$$ccForceUpdate();
+      const { hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState } =
+        computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
+
+      const { hasDelta: hasDeltaInWa, newCommittedState: waCommittedState } =
+        watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
+
+        
+      // computed & watch 过程中提交了新的state，合并到unProxyState里，beforeRender时会利用unProxyState生成最新的obState
+      // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部保证了实例里cu或者wa函数commit提交的
+      // 状态只能是privateStateKey，所以合并到unProxyState是安全的
+      if (hasDeltaInCu || hasDeltaInWa) {
+        const changedRefPrivState = Object.assign(cuCommittedState, waCommittedState);
+        const refModule = refCtx.module;
+        const refState = refCtx.unProxyState;
+
+        computeValueForRef(ref, refModule, refState, changedRefPrivState, callInfo);
+        watchKeyForRef(ref, refModule, refState, changedRefPrivState, callInfo);
+
+        Object.assign(refState, changedRefPrivState);
+        refCtx.__$$settedList.push({ module: refModule, keys: okeys(changedRefPrivState) });
       }
+
+      // 记录sharedStateKeys，方便triggerRefEffect之用
+      refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
+      refCtx.__$$ccForceUpdate();
     }
   });
 

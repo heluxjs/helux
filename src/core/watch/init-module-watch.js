@@ -2,7 +2,7 @@ import ccContext from '../../cc-context';
 import * as checker from '../checker';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
-import { CATE_MODULE } from '../../support/constant';
+import { CATE_MODULE, FN_WATCH } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
@@ -13,7 +13,7 @@ const { isPJO, safeGet, okeys } = util;
  * 设置watch值，过滤掉一些无效的key
  */
 export default function (module, moduleWatch, append = false) {
-  if(!moduleWatch) return;
+  if (!moduleWatch) return;
 
   const tip = `module[${module}] watch`;
   if (!isPJO(moduleWatch)) {
@@ -38,14 +38,14 @@ export default function (module, moduleWatch, append = false) {
   configureDepFns(CATE_MODULE, { module, stateKeys: okeys(moduleState), dep: rootWatchDep }, moduleWatch);
 
   const d = ccContext.getDispatcher();
-  const deltaCommittedState = Object.assign({}, moduleState);
-  const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  const curDepWatchFns = (committedState, isFirstCall) =>
+    pickDepFns(isFirstCall, CATE_MODULE, FN_WATCH, rootWatchDep, module, moduleState, committedState);
   const moduleComputedValue = safeGet(rootComputedValue, module);
-  
+
   findDepFnsToExecute(
     d, module, d && d.ctx.module, moduleState, curDepWatchFns,
-    moduleState, moduleState, deltaCommittedState, util.makeCallInfo(module), true,
-    'watch', CATE_MODULE, moduleComputedValue,
+    moduleState, moduleState, moduleState, util.makeCallInfo(module), true,
+    FN_WATCH, CATE_MODULE, moduleComputedValue,
   );
 
 }

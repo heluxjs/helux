@@ -27,18 +27,16 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
   const callerRef = ref || getDispatcher();
   const refModule = callerRef.module;
   const newState = Object.assign({}, moduleState, committedState);
-
   const deltaCommittedState = Object.assign({}, committedState);
-  let stateForComputeFn = deltaCommittedState;
 
-  findDepFnsToExecute(
+  const { hasDelta: hasDeltaInCu } = findDepFnsToExecute(
     callerRef, module, refModule, moduleState, curDepComputedFns,
-    stateForComputeFn, newState, deltaCommittedState, callInfo, false,
+    deltaCommittedState, newState, deltaCommittedState, callInfo, false,
     'computed', CATE_MODULE, moduleComputedValue,
   );
-  findDepFnsToExecute(
+  const { hasDelta: hasDeltaInWa } = findDepFnsToExecute(
     callerRef, module, refModule, moduleState, curDepWatchFns,
-    stateForComputeFn, newState, deltaCommittedState, callInfo, false,
+    deltaCommittedState, newState, deltaCommittedState, callInfo, false,
     'watch', CATE_MODULE, moduleComputedValue,
   );
 
@@ -46,7 +44,10 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
     saveSharedState(module, deltaCommittedState);
   }
 
-  return deltaCommittedState;
+  return {
+    hasDelta: hasDeltaInCu || hasDeltaInWa,
+    deltaCommittedState,
+  };
 }
 
 const saveSharedState = (module, toSave, needExtract = false) => {
@@ -242,7 +243,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.5.13',
+    version: '2.6.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'yuna',

@@ -21,13 +21,9 @@ export const CC_OB = '$$CcOb';
  */
 export const CC_CUSTOMIZE = '$$CcCust';
 
-
 export const CC_PREFIX = '$$Cc';
 
-
 export const CC_DISPATCHER = '$$Dispatcher';
-export const CC_DISPATCHER_BOX = '__cc_dispatcher_container_designed_by_zzk_qq_is_624313307__';
-
 
 export const  CCSYNC_KEY = Symbol('__for_sync_param_ccsync__');
 

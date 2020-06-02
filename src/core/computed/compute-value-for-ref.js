@@ -1,14 +1,12 @@
 import pickDepFns from '../base/pick-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
-import { CATE_REF } from '../../support/constant';
+import { CATE_REF, FN_CU } from '../../support/constant';
 
-//CcFragment实例调用会提供callerCtx
 // stateModule表示状态所属的模块
-export default function (ref, stateModule, oldState, committedState, callInfo, isBeforeMount = false, mergeDeltaToCommitted = false) {
+export default function (ref, stateModule, oldState, deltaCommittedState, callInfo, isBeforeMount = false, mergeToDelta) {
   const refCtx = ref.ctx;
-  const deltaCommittedState = Object.assign({}, committedState);
 
-  if (!refCtx.hasComputedFn) return deltaCommittedState;
+  if (!refCtx.hasComputedFn) return { hasDelta: false, newCommittedState: {} };
 
   const { computedDep, module: refModule, ccUniqueKey } = refCtx;
 
@@ -18,22 +16,15 @@ export default function (ref, stateModule, oldState, committedState, callInfo, i
     computedContainer = refCtx.connectedComputed[stateModule];
   }
 
-  // const moduleState = ccContext.store.getState(stateModule);
-  const newState = Object.assign({}, oldState, committedState);
+  const newState = Object.assign({}, oldState, deltaCommittedState);
 
   const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(
-    isBeforeMount, CATE_REF, 'computed', computedDep, stateModule,
+    isBeforeMount, CATE_REF, FN_CU, computedDep, stateModule,
     oldState, committedState, ccUniqueKey);
   // 触发依赖stateKeys相关的computed函数
-  findDepFnsToExecute(
+  return findDepFnsToExecute(
     ref, stateModule, refModule, oldState, curDepComputedFns,
-    committedState, newState, deltaCommittedState, callInfo, isBeforeMount,
-    'computed', CATE_REF, computedContainer,
+    deltaCommittedState, newState, deltaCommittedState, callInfo, isBeforeMount,
+    FN_CU, CATE_REF, computedContainer, mergeToDelta
   );
-
-  if (mergeDeltaToCommitted) {
-    Object.assign(committedState, deltaCommittedState);
-  }
-
-  return deltaCommittedState;
 }

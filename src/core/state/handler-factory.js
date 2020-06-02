@@ -116,25 +116,18 @@ function __invoke(userLogicFn, option, payload){
 }
 
 export function makeCcSetStateHandler(ref, containerRef) {
-  return (state, cb, shouldCurrentRefUpdate) => {
+  return (state, cb) => {
     const refCtx = ref.ctx;
 
     /** start update state */
     // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state,
     // 注意这里赋值也是取refCtx.state取做合并，因为频繁进入此函数时，ref.state可能还不是最新的
-    // refCtx.state = newFullState;
     if (containerRef) {
-      const newFullState = Object.assign({}, refCtx.state, state);
+      const newFullState = Object.assign({}, refCtx.unProxyState, state);
       containerRef.state = newFullState;
     }
 
-    /** start update ui */
-    if (shouldCurrentRefUpdate) {
-      refCtx.reactSetState(state, cb);
-    }else{
-      Object.assign(ref.state, state);
-      refCtx.state = ref.state;
-    }
+    refCtx.reactSetState(state, cb);
   }
 }
 

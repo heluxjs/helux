@@ -115,17 +115,20 @@ function mapRSList(cuRetKey, referCuRetKeys, refCtx, ccUniqueKey, sourceType, st
 
 // fnType: computed watch
 // sourceType: module ref
+// initDeltaCommittedState 会在整个过程里收集所有的提交状态
 export default function executeDepFns(
   ref = {}, stateModule, refModule, oldState, finder,
-  stateForComputeFn, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
-  fnType, sourceType, computedContainer
+  committedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
+  fnType, sourceType, computedContainer, mergeToDelta = true
 ) {
   const refCtx = ref.ctx;
   const ccUniqueKey = refCtx ? refCtx.ccUniqueKey : '';
 
+  // while循环结束后，收集到的所有的新增或更新state
+  const committedStateInWhile = {};
+
   let whileCount = 0;
-  let curStateForComputeFn = stateForComputeFn;
-  let shouldCurrentRefUpdate = true;
+  let curStateForComputeFn = committedState;
   let hasDelta = false;
 
   while (curStateForComputeFn) {
@@ -147,7 +150,9 @@ export default function executeDepFns(
         // 在sourceType为module时 
         // 这里的computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
         cuVal: computedContainer,
-        stateModule, refModule, oldState, committedState: curStateForComputeFn, refCtx
+        committedState: curStateForComputeFn,
+        deltaCommittedState: initDeltaCommittedState,
+        stateModule, refModule, oldState, refCtx
       };
 
       // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
@@ -198,7 +203,7 @@ export default function executeDepFns(
         }
 
       } else {// watch
-        let computedValueOrRet, tmpInitNewState = initNewState;
+        let tmpInitNewState = initNewState;
         let tmpOldState = oldState;
 
         // 首次触发watch时，才传递ob对象，用于收集依赖
@@ -208,10 +213,7 @@ export default function executeDepFns(
           tmpOldState = tmpInitNewState;
         }
 
-        computedValueOrRet = fn(tmpInitNewState, tmpOldState, fnCtx);
-
-        //实例里只要有一个watch函数返回false，就会阻碍当前实例的ui被更新
-        if (computedValueOrRet === false) shouldCurrentRefUpdate = false;
+        fn(tmpInitNewState, tmpOldState, fnCtx);
 
         // 首次触发watch时, 才记录依赖
         if (needCollectDep) {
@@ -268,33 +270,52 @@ export default function executeDepFns(
 
     });
 
-    // 这里一次性处理所有computed函数提交了然后合并后的state
+    // 这里一次性处理所有computed or watch函数提交了然后合并后的state
     curStateForComputeFn = getFnCommittedState();
 
     if (curStateForComputeFn) {
       // toAssign may be null
-      const assignCuState = (toAssign) => {
-        curStateForComputeFn = toAssign;
-        if(!curStateForComputeFn) return;
-        Object.assign(initNewState, curStateForComputeFn);
-        Object.assign(initDeltaCommittedState, curStateForComputeFn);
+      const assignCuState = (toAssign, mergeAssign = false) => {
+        // 确保finder函数只针对这一部分新提交的状态去触发computed or watch
+        if (mergeAssign) Object.assign(curStateForComputeFn, toAssign);
+        else curStateForComputeFn = toAssign;
+
+        if (!curStateForComputeFn) return;
+        Object.assign(committedStateInWhile, curStateForComputeFn);
+
+        if (mergeToDelta) {
+          Object.assign(initNewState, curStateForComputeFn);
+          Object.assign(initDeltaCommittedState, curStateForComputeFn);
+        }else{
+          // 强行置为null，结束while循环  
+          // mergeToDelta为false表示这是来自connectedRefs触发的 cu 或者 wa 函数
+          // 此时传入的 initDeltaCommittedState 是模块state
+          // 但是实例里 cu 或 wa 函数只能commit private state
+          // 收集到 committedStateInWhile 后，在外面单独触发新的 computedForRef watchForRef过程
+          curStateForComputeFn = null;
+        }
+
         hasDelta = true;
       }
 
-      // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
-      // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
-      const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
-      const { partialState, ignoredStateKeys } = extractStateByKeys(curStateForComputeFn, stateKeys, true);
+      const ensureCommittedState = (fnCommittedState) => {
+        // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
+        // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
+        const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
+        const { partialState, ignoredStateKeys } = extractStateByKeys(fnCommittedState, stateKeys, true);
 
-      if (ignoredStateKeys.length) {
-        const reason = `they are not ${sourceType === CATE_REF ? 'private' : 'module'}, fn is ${sourceType} ${fnType}`;
-        justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid, ${reason}`)
+        if (ignoredStateKeys.length) {
+          const reason = `they are not ${sourceType === CATE_REF ? 'private' : 'module'}, fn is ${sourceType} ${fnType}`;
+          justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid, ${reason}`)
+        }
+        return partialState;// 返回合法的提交状态
       }
 
+      const partialState = ensureCommittedState(curStateForComputeFn);
       if (partialState) {
         assignCuState(partialState);
 
-        // watch里提交了新的片段state，再次过一遍computed函数
+        // watch里提交了新的片段state，再次过一遍computed、watch函数
         if (fnType === FN_WATCH) {
           // const stateKey_retKeys_ = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
           const computedDep = getCuDep(refCtx, sourceType, stateModule);
@@ -304,22 +325,33 @@ export default function executeDepFns(
             oldState, committedState, ccUniqueKey
           );
 
-          executeDepFns(
+          // 一轮watch函数执行结束，去触发对应的computed计算
+          const { hasDelta, newCommittedState } = executeDepFns(
             ref, stateModule, refModule, oldState, finder,
             partialState, initNewState, initDeltaCommittedState, callInfo,
             false, // 再次由watch发起的computed函数查找调用，irFirstCall，一定是false
             FN_CU, sourceType, computedContainer
           );
+
+          if (hasDelta) {
+            // see https://codesandbox.io/s/complex-cu-watch-chain-s9wzt, 
+            // 输入 cc.setState('test', {k1:Date.now()})，确保k4 watch被触发
+            const validCommittedState = ensureCommittedState(newCommittedState);
+            // 让validCommittedState合并到curStateForComputeFn里，确保下一轮循环相关watch能被computed里提交的状态触发
+            assignCuState(validCommittedState, true);
+          }
         }
+
       }
 
     }
 
     if (whileCount > 2) {
       justWarning('fnCtx.commit may goes endless loop, please check your code');
+      // 清空，确保不再触发while循环
       curStateForComputeFn = null;
     }
   }
 
-  return { shouldCurrentRefUpdate, hasDelta };
+  return { hasDelta, newCommittedState: committedStateInWhile };
 }

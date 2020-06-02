@@ -78,11 +78,14 @@ export default function (
     errorHandler = null,
     isHot,
     bindCtxToMethod = false,
-    objectValueCompare = false,
     computedCompare = true,
     watchCompare = true,
     watchImmediate = false,
     reComputed = true,
+    extractModuleChangedState  = true,
+    extractRefChangedState  = false,
+    objectValueCompare  = false,
+    nonObjectValueCompare  = true,
     localStorage = null,
   } = {}) {
   try {
@@ -100,10 +103,13 @@ export default function (
       const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
-      rv.objectValueCompare = objectValueCompare;
       rv.computedCompare = computedCompare;
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;
+      rv.extractModuleChangedState = extractModuleChangedState;
+      rv.extractRefChangedState = extractRefChangedState;
+      rv.objectValueCompare = objectValueCompare;
+      rv.nonObjectValueCompare = nonObjectValueCompare;
       rv.bindCtxToMethod = bindCtxToMethod;
 
       if (localStorage) {
