@@ -20,10 +20,11 @@ export default function (spec, ref, e) {
 
   if (e && e.stopPropagation) e.stopPropagation();
 
-  const { ccsync, ccint, ccdelay, ccrkey } = dataset;
+  const { ccint, ccdelay, ccrkey } = dataset;
+  let ccsync = dataset.ccsync;
 
   if (ccsync.startsWith('/')) {
-    dataset.ccsync = `${refModule}${ccsync}`;//附加上默认模块值
+    ccsync = `${refModule}${ccsync}`;//附加上默认模块值
   }
 
   if (ccsync.includes('/')) {// syncModuleState 同步模块的state状态
