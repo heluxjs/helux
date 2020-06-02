@@ -15,7 +15,9 @@ export default function (ref) {
       const { __$$prevModuleVer, module: refModule } = ctx;
       const moduleVer = store.getModuleVer(refModule);
       const mVer = moduleVer[refModule];
-      if (__$$prevModuleVer[refModule] !== mVer) {
+
+      const prevModuleVer = __$$prevModuleVer[refModule];
+      if (prevModuleVer && prevModuleVer !== mVer) {
         __$$prevModuleVer[refModule] = mVer;
         // 比较版本, 防止render期间读取已过期状态, 此处使用mstate，避免触发get
         Object.assign(ref.state, ctx.mstate);
