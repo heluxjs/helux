@@ -28,7 +28,7 @@ const {
   // computed: { _computedValueOri, _computedValue },
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet, justWarning, isObjectNull } = util;
+const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet, justWarning, isObjectNull, isValueNotNull } = util;
 
 let idSeq = 0;
 function getEId() {
@@ -364,10 +364,10 @@ export default function (ref, params, liteLevel = 5) {
 
     const doSync = (e, val, rkey, delay, type) => {
       if (typeof e === 'string') {
-        if (typeof val === 'object') {
+        if (isValueNotNull(val) && typeof val === 'object') {
           return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
         } else {
-          const key = `${e}|${val}|${rkey}|${delay}`;
+          const key = `${e}|${rkey}|${delay}`;
           let boundFn = cachedBoundFns[key];
           if (!boundFn) {
             boundFn = cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
