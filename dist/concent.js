@@ -1895,7 +1895,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.6.2',
+      version: '2.6.4',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -5183,9 +5183,15 @@
     };
 
     var setState = function setState(p1, p2, p3, p4, p5) {
-      if (typeof p1 === 'string') {
+      var p1Type = typeof p1;
+
+      if (p1Type === 'string') {
         //p1: module, p2: state, p3: cb, p4: rkey, p5: delay
         setModuleState(p1, p2, p3, p4, p5);
+      } else if (p1Type === 'function') {
+        var newState = p1(Object.assign({}, ctx.unProxyState), ctx.props);
+
+        _setState(stateModule, newState, SET_STATE, p2, p3, p4);
       } else {
         //p1: state, p2: cb, p3: rkey, p4: delay
         _setState(stateModule, p1, SET_STATE, p2, p3, p4);

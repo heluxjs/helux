@@ -294,6 +294,7 @@ declare function refCtxInvoke<UserFn extends IReducerFn>
   (fn: { module: string, fn: UserFn }, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 
 declare function refCtxSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
+declare function refCtxSetState<FullState = {}>(cb: (prevFullState: FullState) => IAnyObj, renderKey?: RenderKeyOrOpts, delay?: number): void;
 declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
@@ -305,6 +306,9 @@ declare function refCtxSetModuleState<RootState, T extends keyof RootState>(modu
 
 declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
 declare function refCtxGetConnectWatchedKeys(module: string): string[];
+
+
+declare function reducerSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 /**
  * <V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
@@ -586,12 +590,12 @@ export interface ICtx
   readonly r: RootReducer;
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof reducerSetState }
   ) : {};
   // alias of moduleReducer
   readonly mr: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof refCtxSetState }
+    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof reducerSetState }
   ) : {};
   readonly moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : {};
   readonly settings: Settings;

@@ -1,3 +1,7 @@
+#### 2020-06-03
+2.6.4 发布
+feature: support setState((prevState, props)=> newState)
+
 #### 2020-06-02
 2.6.1 发布
 fix: 重构`find-dep-fns-to-execute`，支持更复杂的链路

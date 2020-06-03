@@ -182,7 +182,7 @@ export default function (ref, params, liteLevel = 5) {
       //p1: module, p2: state, p3: cb, p4: rkey, p5: delay
       setModuleState(p1, p2, p3, p4, p5);
     } else if (p1Type === 'function') {
-      const newState = p1Type(Object.assign({}, ctx.unProxyState));
+      const newState = p1(Object.assign({}, ctx.unProxyState), ctx.props);
       _setState(stateModule, newState, SET_STATE, p2, p3, p4);
     } else {
       //p1: state, p2: cb, p3: rkey, p4: delay
