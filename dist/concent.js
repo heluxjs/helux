@@ -1895,7 +1895,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.6.1',
+      version: '2.6.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'yuna'
@@ -6314,7 +6314,7 @@
       // callByDidUpdate
       // start handle effect meta data of state keys
       var prevState = ctx.prevState;
-      var curState = ref.unProxyState;
+      var curState = ctx.unProxyState;
       var toBeExecutedFns = [];
       effectItems.forEach(function (item) {
         // const { status, depKeys, fn, eId } = item;

@@ -177,9 +177,13 @@ export default function (ref, params, liteLevel = 5) {
     _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
   };
   const setState = (p1, p2, p3, p4, p5) => {
-    if (typeof p1 === 'string') {
+    const p1Type = typeof p1;
+    if (p1Type === 'string') {
       //p1: module, p2: state, p3: cb, p4: rkey, p5: delay
       setModuleState(p1, p2, p3, p4, p5);
+    } else if (p1Type === 'function') {
+      const newState = p1Type(Object.assign({}, ctx.unProxyState));
+      _setState(stateModule, newState, SET_STATE, p2, p3, p4);
     } else {
       //p1: state, p2: cb, p3: rkey, p4: delay
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
