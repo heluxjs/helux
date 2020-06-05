@@ -54,7 +54,7 @@ export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) 
   });
 
   featureStrs.push('|');// 之后是watchKeys相关的特征值参数
-  if (watchedKeys === '*') featureStrs.push(`${compTypePrefix}_$${belongModule}/*`);
+  if (watchedKeys === '*' || watchedKeys === '-') featureStrs.push(`${compTypePrefix}_$${belongModule}/*`);
   else {
     watchedKeys.sort();
     const tmpStr = `${belongModule}/` + watchedKeys.join(',');
