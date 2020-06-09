@@ -279,7 +279,7 @@ export default function (ref, params, liteLevel = 5) {
     // api meta data
     stateKeys,
     computedDep,
-    computedRetKeyFns: {},//不按模块分类，映射的cuRetKey_fn_
+    computedRetKeyFns: {},
     watchDep,
     watchRetKeyFns: {},//不按模块分类，映射的watchRetKey_fn_
     execute: null,

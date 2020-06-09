@@ -91,7 +91,7 @@ function handleCcFnError(err, __innerCb) {
     if (__innerCb) __innerCb(err);
     else {
       justWarning(err);
-      if (ccContext.errorHandler) ccContext.errorHandler(err);
+      if (ccContext.runtimeHandler.errorHandler) ccContext.runtimeHandler.errorHandler(err);
     }
   }
 }
@@ -523,7 +523,3 @@ export const makeRefForceUpdate = (ref) => (cb) => {
     ctx.__boundForceUpdate(cb);
   }
 }
-
-
-/** avoid  Circular dependency, move this fn to util */
-// export function makeCommitHandler(module, refCtx) {}

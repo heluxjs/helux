@@ -6,7 +6,7 @@ import { CATE_MODULE, FN_CU } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import pickDepFns from '../base/pick-dep-fns';
-import makeObCuContainer from '../computed/make-cu-ob-container';
+import makeCuRetContainer from '../computed/make-cu-ret-container';
 
 const { isPJO } = util;
 
@@ -34,7 +34,7 @@ export default function (module, computed) {
 
   // 在init-module-state那里已safeGet, 这里可以安全的直接读取
   const cuOri = ccComputed._computedValueOri[module];
-  rootComputedValue[module] = makeObCuContainer(computed, cuOri);
+  rootComputedValue[module] = makeCuRetContainer(computed, cuOri);
   const moduleComputedValue = rootComputedValue[module];
 
   findDepFnsToExecute(

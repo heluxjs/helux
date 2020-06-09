@@ -1,15 +1,19 @@
-import { makeCommitHandler, okeys, justWarning, makeCuObValue, safeGet, safeGetArray, noDupPush } from '../../support/util';
+import {
+  makeCommitHandler, okeys, justWarning, makeCuPackedValue,
+  safeGet, safeGetArray, noDupPush, isAsyncFn, noop,
+} from '../../support/util';
 import { FN_WATCH, CATE_REF, FN_CU, CATE_MODULE } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import pickDepFns from '../base/pick-dep-fns';
 import makeCuObState from '../computed/make-cu-ob-state';
+import executeAsyncCuInfo from '../computed/execute-async-cu-info';
 import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
 import cuMap from '../../cc-context/computed-map';
 import waMap from '../../cc-context/watch-map';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 
-const noOp = (tip) => justWarning(`${tip} call commit or commitCu as it is lazy`);
+const noCommit = (tip, asIs) => justWarning(`${tip} call commit or commitCu as it is ${asIs}`);
 
 // 记录某个cuRetKey引用过哪些staticCuRetKeys
 // 直接引用或者间接引用过staticCuRetKey都会记录在列表内
@@ -112,6 +116,7 @@ function mapRSList(cuRetKey, referCuRetKeys, refCtx, ccUniqueKey, sourceType, st
   });
 }
 
+const STOP_FN = Symbol('sf');
 
 // fnType: computed watch
 // sourceType: module ref
@@ -126,6 +131,7 @@ export default function executeDepFns(
 
   // while循环结束后，收集到的所有的新增或更新state
   const committedStateInWhile = {};
+  const nextTickCuInfo = { sourceType, ref, module: stateModule, fns: [], fnAsync: [], fnRetKeys: [], cuRetContainer: computedContainer };
 
   let whileCount = 0;
   let curStateForComputeFn = committedState;
@@ -136,69 +142,122 @@ export default function executeDepFns(
     // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
     // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
     const beforeMountFlag = whileCount === 1 ? isFirstCall : false;
-    const { pickedFns, setted, changed } = finder(curStateForComputeFn, beforeMountFlag);
+    const { pickedFns, setted, changed, retKey_stateKeys_ } = finder(curStateForComputeFn, beforeMountFlag);
+    nextTickCuInfo.retKey_stateKeys_ = retKey_stateKeys_;
+
     if (!pickedFns.length) break;
 
     const { commit, getFnCommittedState } = makeCommitHandler();
     const { commit: commitCu, getFnCommittedState: getRetKeyCu, clear: clearCu } = makeCommitHandler();
 
     pickedFns.forEach(({ retKey, fn, depKeys, isLazy }) => {
-      const tip = `${sourceType} ${fnType} retKey[${retKey}] can't`;
+      const keyInfo = `${sourceType} ${fnType} retKey[${retKey}]`;
+      const tip = `${keyInfo} can't`;
+
+      // 异步计算的初始值
+      let initialVal = '';
+      let isInitialValSetted = false;
 
       const fnCtx = {
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
-        // 在sourceType为module时 
-        // 这里的computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
+        // 在sourceType为module时, 如果非首次计算
+        // computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
         cuVal: computedContainer,
         committedState: curStateForComputeFn,
         deltaCommittedState: initDeltaCommittedState,
-        stateModule, refModule, oldState, refCtx
+        stateModule, refModule, oldState, refCtx,
+        setInitialVal: () => {
+          beforeMountFlag && justWarning(`non async ${keyInfo} call setInitialVal is unnecessary`);
+        },
       };
 
       // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
       const needCollectDep = beforeMountFlag && depKeys === '-';
 
-      // 读取cuVal时，记录cuRetKeys，用于辅助下面计算依赖
+      // 用户通过cuVal读取其他计算结果时，记录cuRetKeys，用于辅助下面计算依赖
       const collectedCuRetKeys = [];
       // 读取newState时，记录stateKeys，用于辅助下面计算依赖
       const collectedDepKeys = [];
 
       // 对于computed，首次计算时会替换为obContainer用于收集依赖
       // !!!对于watch，immediate为true才有机会替换为obContainer收集到依赖
+      const referInfo = { hasAsyncCuRefer: false };
       if (needCollectDep) {
         // 替换cuVal，以便动态的收集到computed&watch函数里读取cuVal时计算相关依赖
-        fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys);
+        fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys, referInfo);
       }
 
       if (fnType === FN_CU) {
-        if (isLazy) {
-          // lazyComputed 不能调用commit commitCu，以隔绝副作用
-          fnCtx.commit = () => noOp(tip);
+        const isCuFnAsync = isAsyncFn(fn);
+
+        if (isLazy || isCuFnAsync) {
+          // lazyComputed 和 asyncComputed 不能调用commit commitCu，以隔绝副作用
+          const asIs = isLazy ? 'lazy' : 'async computed';
+          fnCtx.commit = () => noCommit(tip, asIs);
           fnCtx.commitCu = fnCtx.commit;
+          if (isCuFnAsync) fnCtx.setInitialVal = val => {
+            initialVal = val;
+            isInitialValSetted = true;
+            // 这里阻止异步计算函数的首次执行，交给executeAsyncCuInfo去触发
+            if (beforeMountFlag) throw STOP_FN;
+          }
         }
 
-        if (needCollectDep) {
-          const obInitNewState = makeCuObState(initNewState, collectedDepKeys);
-          // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
-          const computedValueOrRet = fn(obInitNewState, obInitNewState, fnCtx);
-          // 记录计算结果
-          computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
-
-          // 在computed函数里读取了newState的stateKey，需要将其记录到当前retKey的依赖列表上
-          // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
-          setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys);
-
-          // 在computed里读取cuVal里的其他retKey结果, 要将其他retKey对应的stateKeys写到当前retKey的依赖列表上，
-          // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
-          setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
-
-          mapRSList(retKey, collectedCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule);
+        if (isLazy) {
+          computedContainer[retKey] = makeCuPackedValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
         } else {
-          if (isLazy) {
-            computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
+          let newStateArg = initNewState, oldStateArg = oldState;
+
+          // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
+          if (needCollectDep) {
+            newStateArg = oldStateArg = makeCuObState(initNewState, collectedDepKeys);
+          }
+
+          let computedRet;
+          if (isCuFnAsync) {
+            fn(newStateArg, oldStateArg, fnCtx).catch(err => {
+              if (err !== STOP_FN) throw err;
+            })
           } else {
-            const computedValueOrRet = fn(initNewState, oldState, fnCtx);
-            computedContainer[retKey] = makeCuObValue(false, computedValueOrRet);
+            computedRet = fn(newStateArg, oldStateArg, fnCtx);
+          }
+
+          if (isCuFnAsync || referInfo.hasAsyncCuRefer) {
+            // 首次计算时需要赋初始化值
+            if (beforeMountFlag) {
+              if (!isInitialValSetted) {
+                throw new Error(`async ${keyInfo} forget call setInitialVal`);
+              }
+              computedRet = initialVal;
+            }
+            // 不做任何新的计算，还是赋值原来的结果
+            // 新的结果等待 asyncComputedMgr 来计算并触发相关实例重渲染
+            else computedRet = computedContainer[retKey];
+
+            // 替换掉setInitialVal，使其失效
+            fnCtx.setInitialVal = noop;
+            fnCtx.commit = () => noCommit(tip, 'async computed or it refers async computed ret');
+            fnCtx.commitCu = fnCtx.commit;
+
+            //安排到nextTickCuInfo里，while结束后单独触发它们挨个按需计算
+            nextTickCuInfo.fns.push(() => fn(newStateArg, oldStateArg, fnCtx));
+            nextTickCuInfo.fnAsync.push(isCuFnAsync);
+            nextTickCuInfo.fnRetKeys.push(retKey);
+          }
+
+          // 记录计算结果
+          computedContainer[retKey] = makeCuPackedValue(false, computedRet);
+
+          if (needCollectDep) {
+            // 在computed函数里读取了newState的stateKey，需要将其记录到当前retKey的依赖列表上
+            // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
+            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys);
+
+            // 在computed里读取cuVal里的其他retKey结果, 要将其他retKey对应的stateKeys写到当前retKey的依赖列表上，
+            // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
+            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
+
+            mapRSList(retKey, collectedCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule);
           }
         }
 
@@ -241,11 +300,11 @@ export default function executeDepFns(
 
       if (committedCuRet) {
         const retKey_fn_ = getRetKeyFnMap(refCtx, sourceType, stateModule);
-        
+
         okeys(committedCuRet).forEach(cuRetKey => {
           // 模块计算函数里调用commitCu只能修改模块计算retKey
           // 实例计算函数里调用commitCu只能修改实例计算retKey
-          
+
           const fnDesc = retKey_fn_[cuRetKey];
           if (!fnDesc) justWarning(`commitCu:${tip} commit [${cuRetKey}], it is not defined`);
           // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
@@ -257,7 +316,7 @@ export default function executeDepFns(
                 // 直接或间接引用了这个cuRetKey，就不能去改变它，以避免死循环
                 justWarning(`commitCu:${tip} change [${cuRetKey}], [${retKey}] referred [${cuRetKey}]`);
               } else {
-                computedContainer[cuRetKey] = makeCuObValue(false, committedCuRet[cuRetKey]);
+                computedContainer[cuRetKey] = makeCuPackedValue(false, committedCuRet[cuRetKey]);
               }
             } else {
               justWarning(`commitCu:${tip} change [${cuRetKey}], it must have zero dep keys`);
@@ -286,7 +345,7 @@ export default function executeDepFns(
         if (mergeToDelta) {
           Object.assign(initNewState, curStateForComputeFn);
           Object.assign(initDeltaCommittedState, curStateForComputeFn);
-        }else{
+        } else {
           // 强行置为null，结束while循环  
           // mergeToDelta为false表示这是来自connectedRefs触发的 cu 或者 wa 函数
           // 此时传入的 initDeltaCommittedState 是模块state
@@ -343,7 +402,6 @@ export default function executeDepFns(
         }
 
       }
-
     }
 
     if (whileCount > 2) {
@@ -352,6 +410,8 @@ export default function executeDepFns(
       curStateForComputeFn = null;
     }
   }
+
+  executeAsyncCuInfo(nextTickCuInfo);
 
   return { hasDelta, newCommittedState: committedStateInWhile };
 }

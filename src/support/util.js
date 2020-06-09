@@ -5,6 +5,8 @@ import runtimeVar from '../cc-context/runtime-var';
 
 const cer = console.error;
 
+export function noop(){}
+
 export function isValueNotNull(value) {
   return !(value === null || value === undefined);
 }
@@ -39,6 +41,24 @@ export function isPJO(obj, canBeArray = false) {
   }
 }
 
+export function isAsyncFn(fn) {
+  // @see https://github.com/tj/co/blob/master/index.js
+  // obj.constructor.name === 'AsyncFunction'
+  let isAsync = Object.prototype.toString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
+  if (isAsync === true) {
+    return true;
+  }
+
+  //有可能成降级编译成 __awaiter格式的了 或者 _regenerator
+  var fnStr = fn.toString();
+  if (fnStr.indexOf('_awaiter') >= 0 || fnStr.indexOf('_regenerator') >= 0) {
+    return true;
+  }
+
+  return false;
+}
+
+
 export function makeError(code, extraMessage) {
   let message = '';
   if (typeof code === 'string') message = code;
@@ -52,7 +72,7 @@ export function makeError(code, extraMessage) {
   return error;
 }
 
-export function makeCuObValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx, ) {
+export function makeCuPackedValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx, ) {
   return { [CU_KEY]: 1, needCompute, fn, newState, oldState, fnCtx, isLazy, result };
 }
 
@@ -471,4 +491,8 @@ export function isSymbol(value) {
     typeof value === "symbol" ||
     (isObjectLike(value) && Object.prototype.toString.call(value) === symbolTag)
   )
+}
+
+export function delay(ms=0) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

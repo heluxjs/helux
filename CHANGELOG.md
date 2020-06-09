@@ -1,4 +1,35 @@
 #### 2020-06-03
+2.7.1 发布
+feature: support async computed
+@ee https://codesandbox.io/s/async-computed-35byz
+```
+const delay = (ms = 600) => new Promise(r => setTimeout(r, ms));
+
+run({
+  counter: {
+    state: { num: 1, numBig: 100 },
+    computed: {
+      numx10({ num }) {
+        return num * 10;
+      },
+      async numx10_2({ num }, o, f) {
+        // 必需调用setInitialVal给numx10_2一个初始值，
+        // 该函数仅在初次computed触发时执行一次
+        f.setInitialVal(num * 55);
+        await delay();
+        return num * 100;
+      },
+      async numx10_3({ num }, o, f) {
+        f.setInitialVal(num * 1);
+        await delay();
+        return num * f.cuVal.numx10_2;
+      },
+    }
+  }
+});
+```
+
+#### 2020-06-03
 2.6.4 发布
 feature: support setState((prevState, props)=> newState)
 

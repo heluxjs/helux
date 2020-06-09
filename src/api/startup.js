@@ -99,7 +99,7 @@ export default function (
       justTip(`cc version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
-      ccContext.errorHandler = errorHandler;
+      ccContext.runtimeHandler.errorHandler = errorHandler;
       const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;

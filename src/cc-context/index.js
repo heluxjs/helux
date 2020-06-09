@@ -2,7 +2,9 @@ import moduleName_stateKeys_ from './statekeys-map';
 import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
+import runtimeHandler from './runtime-handler';
 import { waKey_uKeyMap_, waKey_staticUKeyMap_ } from './wakey-ukey-map';
+import refs from './refs';
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
@@ -11,7 +13,6 @@ import extractStateByKeys from '../core/state/extract-state-by-keys';
 
 const { _computedValue } = computed;
 const { okeys, extractChangedState } = util;
-const refs = {};
 const getDispatcher = () => ccContext.permanentDispatcher;
 
 const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false } = {}) => {
@@ -121,6 +122,7 @@ const ccContext = {
     return window && (window.webpackHotUpdate || util.isOnlineEditor());
   },
   runtimeVar,
+  runtimeHandler,
   isHot: false,
   reComputed: true,
   isStartup: false,
@@ -243,15 +245,14 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.6.5',
+    version: '2.7.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-    tag: 'yuna',
+    tag: 'tina',
   },
 
   featureStr_classKey_: {},
   userClassKey_featureStr_: {},
-  errorHandler: null,
   middlewares: [],
   plugins: [],
   pluginNameMap: {},

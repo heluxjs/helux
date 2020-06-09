@@ -102,9 +102,9 @@ interface IReducerFn {
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
 export type ComputedValType<T> = {
-  readonly [K in keyof T]: T[K] extends IAnyFn ? ReturnType<T[K]> :
+  readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<ReturnType<T[K]>> :
   (
-    T[K] extends IComputedFnSimpleDesc ? ReturnType<T[K]['fn']> : never
+    T[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<T[K]['fn']>> : never
   );
 }
 
@@ -442,6 +442,7 @@ export interface ICtxBase {
   extra: any;
   staticExtra: any;
   readonly state: any;
+  readonly unProxyState: any;
   readonly prevState: any;
   readonly props: any;
   readonly prevProps: any;
@@ -536,6 +537,7 @@ export interface IRefCtx<
   readonly props: Props;
   readonly prevProps: Props;
   readonly state: PrivState & ModuleState;
+  readonly unProxyState: PrivState & ModuleState;
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly prevState: PrivState & ModuleState;
@@ -583,6 +585,7 @@ export interface ICtx
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly state: RootState[ModuleName] & PrivState;
+  readonly unProxyState: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
   // readonly mstate: RootState[ModuleName];
@@ -599,6 +602,7 @@ export interface ICtx
   ) : {};
   readonly moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : {};
   readonly settings: Settings;
+  /** for user get computed value in ui */
   readonly refComputed: RefComputed;
   readonly mapped: Mapped;
   // overwrite connectedState , connectedComputed
@@ -669,6 +673,7 @@ interface _IFnCtx {// 方便 ctx.computed({....}) 定义计算描述体时，可
   deltaCommittedState: IAnyObj;
   cuVal: any;
   refCtx: any;
+  setInitialVal: (initialVal) => void;
   commit: GetFnCtxCommit<any>;
   commitCu: GetFnCtxCommitCu<any>;
 }

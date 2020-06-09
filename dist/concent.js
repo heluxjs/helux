@@ -181,6 +181,10 @@
     nonObjectValueCompare: true
   };
 
+  var runtimeHandler = {
+    errorHandler: null
+  };
+
   // 依赖收集写入的映射
   var waKey_uKeyMap_ = {}; // 依赖标记写入的映射，是一个实例化完成就会固化的依赖
   // 不采取一开始映射好全部waKey的形式，而是采用safeGet动态添加map映射
@@ -225,6 +229,8 @@
     }
   }
 
+  var refs = {};
+
   var CU_KEY = Symbol('cuk');
   var START = '1';
   var END = '2';
@@ -234,6 +240,7 @@
 
   /* eslint-disable */
   var cer = console.error;
+  function noop() {}
   function isValueNotNull(value) {
     return !(value === null || value === undefined);
   }
@@ -270,6 +277,24 @@
       return false;
     }
   }
+  function isAsyncFn(fn) {
+    // @see https://github.com/tj/co/blob/master/index.js
+    // obj.constructor.name === 'AsyncFunction'
+    var isAsync = Object.prototype.toString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
+
+    if (isAsync === true) {
+      return true;
+    } //有可能成降级编译成 __awaiter格式的了 或者 _regenerator
+
+
+    var fnStr = fn.toString();
+
+    if (fnStr.indexOf('_awaiter') >= 0 || fnStr.indexOf('_regenerator') >= 0) {
+      return true;
+    }
+
+    return false;
+  }
   function makeError(code, extraMessage) {
     var message = '';
     if (typeof code === 'string') message = code;else {
@@ -281,7 +306,7 @@
     error.code = code;
     return error;
   }
-  function makeCuObValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx) {
+  function makeCuPackedValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx) {
     var _ref;
 
     return _ref = {}, _ref[CU_KEY] = 1, _ref.needCompute = needCompute, _ref.fn = fn, _ref.newState = newState, _ref.oldState = oldState, _ref.fnCtx = fnCtx, _ref.isLazy = isLazy, _ref.result = result, _ref;
@@ -743,6 +768,15 @@
     check && checkDepKeys(assignFrom.depKeys);
     return Object.assign(desc, assignFrom);
   }
+  function delay(ms) {
+    if (ms === void 0) {
+      ms = 0;
+    }
+
+    return new Promise(function (resolve) {
+      return setTimeout(resolve, ms);
+    });
+  }
 
   function getCacheDataContainer() {
     return {
@@ -793,11 +827,13 @@
     if (!moduleDep) return {
       pickedFns: pickedFns,
       setted: [],
-      changed: []
+      changed: [],
+      retKey_stateKeys_: {}
     };
     var retKey_fn_ = moduleDep.retKey_fn_,
         retKey_lazy_ = moduleDep.retKey_lazy_,
         stateKey_retKeys_ = moduleDep.stateKey_retKeys_,
+        retKey_stateKeys_ = moduleDep.retKey_stateKeys_,
         fnCount = moduleDep.fnCount;
     /** 首次调用 */
 
@@ -814,7 +850,8 @@
             return _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey]);
           }).sort(sortCb),
           setted: _setted,
-          changed: _changed
+          changed: _changed,
+          retKey_stateKeys_: retKey_stateKeys_
         };
       } // for watch
 
@@ -836,7 +873,8 @@
       return {
         pickedFns: pickedFns,
         setted: _setted,
-        changed: _changed
+        changed: _changed,
+        retKey_stateKeys_: retKey_stateKeys_
       };
     } // 这些目标stateKey的值发生了变化
 
@@ -849,7 +887,8 @@
       return {
         pickedFns: pickedFns,
         setted: [],
-        changed: []
+        changed: [],
+        retKey_stateKeys_: {}
       };
     } //用setted + changed + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
 
@@ -867,7 +906,8 @@
           return _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey]);
         }),
         setted: setted,
-        changed: changed
+        changed: changed,
+        retKey_stateKeys_: retKey_stateKeys_
       };
     }
 
@@ -880,7 +920,8 @@
     return {
       pickedFns: pickedFns,
       setted: setted,
-      changed: changed
+      changed: changed,
+      retKey_stateKeys_: retKey_stateKeys_
     };
   }
 
@@ -1067,6 +1108,889 @@
     });
   }
 
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
+
+  var runtime_1 = createCommonjsModule(function (module) {
+  /**
+   * Copyright (c) 2014-present, Facebook, Inc.
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE file in the root directory of this source tree.
+   */
+
+  var runtime = (function (exports) {
+
+    var Op = Object.prototype;
+    var hasOwn = Op.hasOwnProperty;
+    var undefined; // More compressible than void 0.
+    var $Symbol = typeof Symbol === "function" ? Symbol : {};
+    var iteratorSymbol = $Symbol.iterator || "@@iterator";
+    var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+    var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+    function wrap(innerFn, outerFn, self, tryLocsList) {
+      // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+      var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+      var generator = Object.create(protoGenerator.prototype);
+      var context = new Context(tryLocsList || []);
+
+      // The ._invoke method unifies the implementations of the .next,
+      // .throw, and .return methods.
+      generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+      return generator;
+    }
+    exports.wrap = wrap;
+
+    // Try/catch helper to minimize deoptimizations. Returns a completion
+    // record like context.tryEntries[i].completion. This interface could
+    // have been (and was previously) designed to take a closure to be
+    // invoked without arguments, but in all the cases we care about we
+    // already have an existing method we want to call, so there's no need
+    // to create a new function object. We can even get away with assuming
+    // the method takes exactly one argument, since that happens to be true
+    // in every case, so we don't have to touch the arguments object. The
+    // only additional allocation required is the completion record, which
+    // has a stable shape and so hopefully should be cheap to allocate.
+    function tryCatch(fn, obj, arg) {
+      try {
+        return { type: "normal", arg: fn.call(obj, arg) };
+      } catch (err) {
+        return { type: "throw", arg: err };
+      }
+    }
+
+    var GenStateSuspendedStart = "suspendedStart";
+    var GenStateSuspendedYield = "suspendedYield";
+    var GenStateExecuting = "executing";
+    var GenStateCompleted = "completed";
+
+    // Returning this object from the innerFn has the same effect as
+    // breaking out of the dispatch switch statement.
+    var ContinueSentinel = {};
+
+    // Dummy constructor functions that we use as the .constructor and
+    // .constructor.prototype properties for functions that return Generator
+    // objects. For full spec compliance, you may wish to configure your
+    // minifier not to mangle the names of these two functions.
+    function Generator() {}
+    function GeneratorFunction() {}
+    function GeneratorFunctionPrototype() {}
+
+    // This is a polyfill for %IteratorPrototype% for environments that
+    // don't natively support it.
+    var IteratorPrototype = {};
+    IteratorPrototype[iteratorSymbol] = function () {
+      return this;
+    };
+
+    var getProto = Object.getPrototypeOf;
+    var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+    if (NativeIteratorPrototype &&
+        NativeIteratorPrototype !== Op &&
+        hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+      // This environment has a native %IteratorPrototype%; use it instead
+      // of the polyfill.
+      IteratorPrototype = NativeIteratorPrototype;
+    }
+
+    var Gp = GeneratorFunctionPrototype.prototype =
+      Generator.prototype = Object.create(IteratorPrototype);
+    GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+    GeneratorFunctionPrototype.constructor = GeneratorFunction;
+    GeneratorFunctionPrototype[toStringTagSymbol] =
+      GeneratorFunction.displayName = "GeneratorFunction";
+
+    // Helper for defining the .next, .throw, and .return methods of the
+    // Iterator interface in terms of a single ._invoke method.
+    function defineIteratorMethods(prototype) {
+      ["next", "throw", "return"].forEach(function(method) {
+        prototype[method] = function(arg) {
+          return this._invoke(method, arg);
+        };
+      });
+    }
+
+    exports.isGeneratorFunction = function(genFun) {
+      var ctor = typeof genFun === "function" && genFun.constructor;
+      return ctor
+        ? ctor === GeneratorFunction ||
+          // For the native GeneratorFunction constructor, the best we can
+          // do is to check its .name property.
+          (ctor.displayName || ctor.name) === "GeneratorFunction"
+        : false;
+    };
+
+    exports.mark = function(genFun) {
+      if (Object.setPrototypeOf) {
+        Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+      } else {
+        genFun.__proto__ = GeneratorFunctionPrototype;
+        if (!(toStringTagSymbol in genFun)) {
+          genFun[toStringTagSymbol] = "GeneratorFunction";
+        }
+      }
+      genFun.prototype = Object.create(Gp);
+      return genFun;
+    };
+
+    // Within the body of any async function, `await x` is transformed to
+    // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+    // `hasOwn.call(value, "__await")` to determine if the yielded value is
+    // meant to be awaited.
+    exports.awrap = function(arg) {
+      return { __await: arg };
+    };
+
+    function AsyncIterator(generator) {
+      function invoke(method, arg, resolve, reject) {
+        var record = tryCatch(generator[method], generator, arg);
+        if (record.type === "throw") {
+          reject(record.arg);
+        } else {
+          var result = record.arg;
+          var value = result.value;
+          if (value &&
+              typeof value === "object" &&
+              hasOwn.call(value, "__await")) {
+            return Promise.resolve(value.__await).then(function(value) {
+              invoke("next", value, resolve, reject);
+            }, function(err) {
+              invoke("throw", err, resolve, reject);
+            });
+          }
+
+          return Promise.resolve(value).then(function(unwrapped) {
+            // When a yielded Promise is resolved, its final value becomes
+            // the .value of the Promise<{value,done}> result for the
+            // current iteration.
+            result.value = unwrapped;
+            resolve(result);
+          }, function(error) {
+            // If a rejected Promise was yielded, throw the rejection back
+            // into the async generator function so it can be handled there.
+            return invoke("throw", error, resolve, reject);
+          });
+        }
+      }
+
+      var previousPromise;
+
+      function enqueue(method, arg) {
+        function callInvokeWithMethodAndArg() {
+          return new Promise(function(resolve, reject) {
+            invoke(method, arg, resolve, reject);
+          });
+        }
+
+        return previousPromise =
+          // If enqueue has been called before, then we want to wait until
+          // all previous Promises have been resolved before calling invoke,
+          // so that results are always delivered in the correct order. If
+          // enqueue has not been called before, then it is important to
+          // call invoke immediately, without waiting on a callback to fire,
+          // so that the async generator function has the opportunity to do
+          // any necessary setup in a predictable way. This predictability
+          // is why the Promise constructor synchronously invokes its
+          // executor callback, and why async functions synchronously
+          // execute code before the first await. Since we implement simple
+          // async functions in terms of async generators, it is especially
+          // important to get this right, even though it requires care.
+          previousPromise ? previousPromise.then(
+            callInvokeWithMethodAndArg,
+            // Avoid propagating failures to Promises returned by later
+            // invocations of the iterator.
+            callInvokeWithMethodAndArg
+          ) : callInvokeWithMethodAndArg();
+      }
+
+      // Define the unified helper method that is used to implement .next,
+      // .throw, and .return (see defineIteratorMethods).
+      this._invoke = enqueue;
+    }
+
+    defineIteratorMethods(AsyncIterator.prototype);
+    AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+      return this;
+    };
+    exports.AsyncIterator = AsyncIterator;
+
+    // Note that simple async functions are implemented on top of
+    // AsyncIterator objects; they just return a Promise for the value of
+    // the final result produced by the iterator.
+    exports.async = function(innerFn, outerFn, self, tryLocsList) {
+      var iter = new AsyncIterator(
+        wrap(innerFn, outerFn, self, tryLocsList)
+      );
+
+      return exports.isGeneratorFunction(outerFn)
+        ? iter // If outerFn is a generator, return the full iterator.
+        : iter.next().then(function(result) {
+            return result.done ? result.value : iter.next();
+          });
+    };
+
+    function makeInvokeMethod(innerFn, self, context) {
+      var state = GenStateSuspendedStart;
+
+      return function invoke(method, arg) {
+        if (state === GenStateExecuting) {
+          throw new Error("Generator is already running");
+        }
+
+        if (state === GenStateCompleted) {
+          if (method === "throw") {
+            throw arg;
+          }
+
+          // Be forgiving, per 25.3.3.3.3 of the spec:
+          // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+          return doneResult();
+        }
+
+        context.method = method;
+        context.arg = arg;
+
+        while (true) {
+          var delegate = context.delegate;
+          if (delegate) {
+            var delegateResult = maybeInvokeDelegate(delegate, context);
+            if (delegateResult) {
+              if (delegateResult === ContinueSentinel) continue;
+              return delegateResult;
+            }
+          }
+
+          if (context.method === "next") {
+            // Setting context._sent for legacy support of Babel's
+            // function.sent implementation.
+            context.sent = context._sent = context.arg;
+
+          } else if (context.method === "throw") {
+            if (state === GenStateSuspendedStart) {
+              state = GenStateCompleted;
+              throw context.arg;
+            }
+
+            context.dispatchException(context.arg);
+
+          } else if (context.method === "return") {
+            context.abrupt("return", context.arg);
+          }
+
+          state = GenStateExecuting;
+
+          var record = tryCatch(innerFn, self, context);
+          if (record.type === "normal") {
+            // If an exception is thrown from innerFn, we leave state ===
+            // GenStateExecuting and loop back for another invocation.
+            state = context.done
+              ? GenStateCompleted
+              : GenStateSuspendedYield;
+
+            if (record.arg === ContinueSentinel) {
+              continue;
+            }
+
+            return {
+              value: record.arg,
+              done: context.done
+            };
+
+          } else if (record.type === "throw") {
+            state = GenStateCompleted;
+            // Dispatch the exception by looping back around to the
+            // context.dispatchException(context.arg) call above.
+            context.method = "throw";
+            context.arg = record.arg;
+          }
+        }
+      };
+    }
+
+    // Call delegate.iterator[context.method](context.arg) and handle the
+    // result, either by returning a { value, done } result from the
+    // delegate iterator, or by modifying context.method and context.arg,
+    // setting context.delegate to null, and returning the ContinueSentinel.
+    function maybeInvokeDelegate(delegate, context) {
+      var method = delegate.iterator[context.method];
+      if (method === undefined) {
+        // A .throw or .return when the delegate iterator has no .throw
+        // method always terminates the yield* loop.
+        context.delegate = null;
+
+        if (context.method === "throw") {
+          // Note: ["return"] must be used for ES3 parsing compatibility.
+          if (delegate.iterator["return"]) {
+            // If the delegate iterator has a return method, give it a
+            // chance to clean up.
+            context.method = "return";
+            context.arg = undefined;
+            maybeInvokeDelegate(delegate, context);
+
+            if (context.method === "throw") {
+              // If maybeInvokeDelegate(context) changed context.method from
+              // "return" to "throw", let that override the TypeError below.
+              return ContinueSentinel;
+            }
+          }
+
+          context.method = "throw";
+          context.arg = new TypeError(
+            "The iterator does not provide a 'throw' method");
+        }
+
+        return ContinueSentinel;
+      }
+
+      var record = tryCatch(method, delegate.iterator, context.arg);
+
+      if (record.type === "throw") {
+        context.method = "throw";
+        context.arg = record.arg;
+        context.delegate = null;
+        return ContinueSentinel;
+      }
+
+      var info = record.arg;
+
+      if (! info) {
+        context.method = "throw";
+        context.arg = new TypeError("iterator result is not an object");
+        context.delegate = null;
+        return ContinueSentinel;
+      }
+
+      if (info.done) {
+        // Assign the result of the finished delegate to the temporary
+        // variable specified by delegate.resultName (see delegateYield).
+        context[delegate.resultName] = info.value;
+
+        // Resume execution at the desired location (see delegateYield).
+        context.next = delegate.nextLoc;
+
+        // If context.method was "throw" but the delegate handled the
+        // exception, let the outer generator proceed normally. If
+        // context.method was "next", forget context.arg since it has been
+        // "consumed" by the delegate iterator. If context.method was
+        // "return", allow the original .return call to continue in the
+        // outer generator.
+        if (context.method !== "return") {
+          context.method = "next";
+          context.arg = undefined;
+        }
+
+      } else {
+        // Re-yield the result returned by the delegate method.
+        return info;
+      }
+
+      // The delegate iterator is finished, so forget it and continue with
+      // the outer generator.
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    // Define Generator.prototype.{next,throw,return} in terms of the
+    // unified ._invoke helper method.
+    defineIteratorMethods(Gp);
+
+    Gp[toStringTagSymbol] = "Generator";
+
+    // A Generator should always return itself as the iterator object when the
+    // @@iterator function is called on it. Some browsers' implementations of the
+    // iterator prototype chain incorrectly implement this, causing the Generator
+    // object to not be returned from this call. This ensures that doesn't happen.
+    // See https://github.com/facebook/regenerator/issues/274 for more details.
+    Gp[iteratorSymbol] = function() {
+      return this;
+    };
+
+    Gp.toString = function() {
+      return "[object Generator]";
+    };
+
+    function pushTryEntry(locs) {
+      var entry = { tryLoc: locs[0] };
+
+      if (1 in locs) {
+        entry.catchLoc = locs[1];
+      }
+
+      if (2 in locs) {
+        entry.finallyLoc = locs[2];
+        entry.afterLoc = locs[3];
+      }
+
+      this.tryEntries.push(entry);
+    }
+
+    function resetTryEntry(entry) {
+      var record = entry.completion || {};
+      record.type = "normal";
+      delete record.arg;
+      entry.completion = record;
+    }
+
+    function Context(tryLocsList) {
+      // The root entry object (effectively a try statement without a catch
+      // or a finally block) gives us a place to store values thrown from
+      // locations where there is no enclosing try statement.
+      this.tryEntries = [{ tryLoc: "root" }];
+      tryLocsList.forEach(pushTryEntry, this);
+      this.reset(true);
+    }
+
+    exports.keys = function(object) {
+      var keys = [];
+      for (var key in object) {
+        keys.push(key);
+      }
+      keys.reverse();
+
+      // Rather than returning an object with a next method, we keep
+      // things simple and return the next function itself.
+      return function next() {
+        while (keys.length) {
+          var key = keys.pop();
+          if (key in object) {
+            next.value = key;
+            next.done = false;
+            return next;
+          }
+        }
+
+        // To avoid creating an additional object, we just hang the .value
+        // and .done properties off the next function object itself. This
+        // also ensures that the minifier will not anonymize the function.
+        next.done = true;
+        return next;
+      };
+    };
+
+    function values(iterable) {
+      if (iterable) {
+        var iteratorMethod = iterable[iteratorSymbol];
+        if (iteratorMethod) {
+          return iteratorMethod.call(iterable);
+        }
+
+        if (typeof iterable.next === "function") {
+          return iterable;
+        }
+
+        if (!isNaN(iterable.length)) {
+          var i = -1, next = function next() {
+            while (++i < iterable.length) {
+              if (hasOwn.call(iterable, i)) {
+                next.value = iterable[i];
+                next.done = false;
+                return next;
+              }
+            }
+
+            next.value = undefined;
+            next.done = true;
+
+            return next;
+          };
+
+          return next.next = next;
+        }
+      }
+
+      // Return an iterator with no values.
+      return { next: doneResult };
+    }
+    exports.values = values;
+
+    function doneResult() {
+      return { value: undefined, done: true };
+    }
+
+    Context.prototype = {
+      constructor: Context,
+
+      reset: function(skipTempReset) {
+        this.prev = 0;
+        this.next = 0;
+        // Resetting context._sent for legacy support of Babel's
+        // function.sent implementation.
+        this.sent = this._sent = undefined;
+        this.done = false;
+        this.delegate = null;
+
+        this.method = "next";
+        this.arg = undefined;
+
+        this.tryEntries.forEach(resetTryEntry);
+
+        if (!skipTempReset) {
+          for (var name in this) {
+            // Not sure about the optimal order of these conditions:
+            if (name.charAt(0) === "t" &&
+                hasOwn.call(this, name) &&
+                !isNaN(+name.slice(1))) {
+              this[name] = undefined;
+            }
+          }
+        }
+      },
+
+      stop: function() {
+        this.done = true;
+
+        var rootEntry = this.tryEntries[0];
+        var rootRecord = rootEntry.completion;
+        if (rootRecord.type === "throw") {
+          throw rootRecord.arg;
+        }
+
+        return this.rval;
+      },
+
+      dispatchException: function(exception) {
+        if (this.done) {
+          throw exception;
+        }
+
+        var context = this;
+        function handle(loc, caught) {
+          record.type = "throw";
+          record.arg = exception;
+          context.next = loc;
+
+          if (caught) {
+            // If the dispatched exception was caught by a catch block,
+            // then let that catch block handle the exception normally.
+            context.method = "next";
+            context.arg = undefined;
+          }
+
+          return !! caught;
+        }
+
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          var record = entry.completion;
+
+          if (entry.tryLoc === "root") {
+            // Exception thrown outside of any try block that could handle
+            // it, so set the completion value of the entire function to
+            // throw the exception.
+            return handle("end");
+          }
+
+          if (entry.tryLoc <= this.prev) {
+            var hasCatch = hasOwn.call(entry, "catchLoc");
+            var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+            if (hasCatch && hasFinally) {
+              if (this.prev < entry.catchLoc) {
+                return handle(entry.catchLoc, true);
+              } else if (this.prev < entry.finallyLoc) {
+                return handle(entry.finallyLoc);
+              }
+
+            } else if (hasCatch) {
+              if (this.prev < entry.catchLoc) {
+                return handle(entry.catchLoc, true);
+              }
+
+            } else if (hasFinally) {
+              if (this.prev < entry.finallyLoc) {
+                return handle(entry.finallyLoc);
+              }
+
+            } else {
+              throw new Error("try statement without catch or finally");
+            }
+          }
+        }
+      },
+
+      abrupt: function(type, arg) {
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          if (entry.tryLoc <= this.prev &&
+              hasOwn.call(entry, "finallyLoc") &&
+              this.prev < entry.finallyLoc) {
+            var finallyEntry = entry;
+            break;
+          }
+        }
+
+        if (finallyEntry &&
+            (type === "break" ||
+             type === "continue") &&
+            finallyEntry.tryLoc <= arg &&
+            arg <= finallyEntry.finallyLoc) {
+          // Ignore the finally entry if control is not jumping to a
+          // location outside the try/catch block.
+          finallyEntry = null;
+        }
+
+        var record = finallyEntry ? finallyEntry.completion : {};
+        record.type = type;
+        record.arg = arg;
+
+        if (finallyEntry) {
+          this.method = "next";
+          this.next = finallyEntry.finallyLoc;
+          return ContinueSentinel;
+        }
+
+        return this.complete(record);
+      },
+
+      complete: function(record, afterLoc) {
+        if (record.type === "throw") {
+          throw record.arg;
+        }
+
+        if (record.type === "break" ||
+            record.type === "continue") {
+          this.next = record.arg;
+        } else if (record.type === "return") {
+          this.rval = this.arg = record.arg;
+          this.method = "return";
+          this.next = "end";
+        } else if (record.type === "normal" && afterLoc) {
+          this.next = afterLoc;
+        }
+
+        return ContinueSentinel;
+      },
+
+      finish: function(finallyLoc) {
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          if (entry.finallyLoc === finallyLoc) {
+            this.complete(entry.completion, entry.afterLoc);
+            resetTryEntry(entry);
+            return ContinueSentinel;
+          }
+        }
+      },
+
+      "catch": function(tryLoc) {
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          if (entry.tryLoc === tryLoc) {
+            var record = entry.completion;
+            if (record.type === "throw") {
+              var thrown = record.arg;
+              resetTryEntry(entry);
+            }
+            return thrown;
+          }
+        }
+
+        // The context.catch method must only be called with a location
+        // argument that corresponds to a known catch block.
+        throw new Error("illegal catch attempt");
+      },
+
+      delegateYield: function(iterable, resultName, nextLoc) {
+        this.delegate = {
+          iterator: values(iterable),
+          resultName: resultName,
+          nextLoc: nextLoc
+        };
+
+        if (this.method === "next") {
+          // Deliberately forget the last sent value so that we don't
+          // accidentally pass it on to the delegate.
+          this.arg = undefined;
+        }
+
+        return ContinueSentinel;
+      }
+    };
+
+    // Regardless of whether this script is executing as a CommonJS module
+    // or not, return the runtime object so that we can declare the variable
+    // regeneratorRuntime in the outer scope, which allows this module to be
+    // injected easily by `bin/regenerator --include-runtime script.js`.
+    return exports;
+
+  }(
+    // If this script is executing as a CommonJS module, use module.exports
+    // as the regeneratorRuntime namespace. Otherwise create a new empty
+    // object. Either way, the resulting object will be used to initialize
+    // the regeneratorRuntime variable at the top of this file.
+    module.exports
+  ));
+
+  try {
+    regeneratorRuntime = runtime;
+  } catch (accidentalStrictMode) {
+    // This module should not be running in strict mode, so the above
+    // assignment should always work unless something is misconfigured. Just
+    // in case runtime.js accidentally runs in strict mode, we can escape
+    // strict mode using a global Function call. This could conceivably fail
+    // if a Content Security Policy forbids using Function, but in that case
+    // the proper solution is to fix the accidental strict mode problem. If
+    // you've misconfigured your bundler to force strict mode and applied a
+    // CSP to forbid Function, and you're not willing to fix either of those
+    // problems, please detail your unique predicament in a GitHub issue.
+    Function("r", "regeneratorRuntime = r")(runtime);
+  }
+  });
+
+  var regenerator = runtime_1;
+
+  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+    try {
+      var info = gen[key](arg);
+      var value = info.value;
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    if (info.done) {
+      resolve(value);
+    } else {
+      Promise.resolve(value).then(_next, _throw);
+    }
+  }
+
+  function _asyncToGenerator(fn) {
+    return function () {
+      var self = this,
+          args = arguments;
+      return new Promise(function (resolve, reject) {
+        var gen = fn.apply(self, args);
+
+        function _next(value) {
+          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+        }
+
+        function _throw(err) {
+          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+        }
+
+        _next(undefined);
+      });
+    };
+  }
+
+  var catchCcError = (function (err) {
+    var errorHandler = runtimeHandler.errorHandler;
+    if (errorHandler) errorHandler(err);else throw err;
+  });
+
+  var waKey_uKeyMap_$1 = waKey_uKeyMap_,
+      waKey_staticUKeyMap_$1 = waKey_staticUKeyMap_;
+
+  function triggerReRender(ref) {
+    // 对于挂载好了还未卸载的实例，才有必要触发重渲染
+    if (ref.__$$isUnmounted === false) {
+      var refCtx = ref.ctx;
+
+      refCtx.__$$ccForceUpdate();
+    }
+  }
+
+  function executeCuInfo(_x) {
+    return _executeCuInfo.apply(this, arguments);
+  }
+
+  function _executeCuInfo() {
+    _executeCuInfo = _asyncToGenerator(
+    /*#__PURE__*/
+    regenerator.mark(function _callee(cuInfo) {
+      var sourceType, ref, module, fnAsync, fns, fnRetKeys, cuRetContainer, retKey_stateKeys_, len, stateKeys, i, fn, isAsync, retKey, ret, uKeyMap, uKeys;
+      return regenerator.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.prev = 0;
+              _context.next = 3;
+              return delay();
+
+            case 3:
+              sourceType = cuInfo.sourceType, ref = cuInfo.ref, module = cuInfo.module, fnAsync = cuInfo.fnAsync, fns = cuInfo.fns, fnRetKeys = cuInfo.fnRetKeys, cuRetContainer = cuInfo.cuRetContainer, retKey_stateKeys_ = cuInfo.retKey_stateKeys_;
+              len = fns.length;
+              stateKeys = [];
+              i = 0;
+
+            case 7:
+              if (!(i < len)) {
+                _context.next = 24;
+                break;
+              }
+
+              fn = fns[i];
+              isAsync = fnAsync[i];
+              retKey = fnRetKeys[i];
+              ret = void 0;
+
+              if (!isAsync) {
+                _context.next = 18;
+                break;
+              }
+
+              _context.next = 15;
+              return fn();
+
+            case 15:
+              ret = _context.sent;
+              _context.next = 19;
+              break;
+
+            case 18:
+              ret = fn();
+
+            case 19:
+              cuRetContainer[retKey] = makeCuPackedValue(false, ret);
+              if (sourceType !== CATE_REF) stateKeys = stateKeys.concat(retKey_stateKeys_[retKey]);
+
+            case 21:
+              i++;
+              _context.next = 7;
+              break;
+
+            case 24:
+              if (sourceType !== CATE_REF) {
+                stateKeys = Array.from(new Set(stateKeys));
+                uKeyMap = {};
+                stateKeys.forEach(function (stateKey) {
+                  var waKey = module + "/" + stateKey; // 利用assign不停的去重
+
+                  Object.assign(uKeyMap, waKey_uKeyMap_$1[waKey], waKey_staticUKeyMap_$1[waKey]);
+                });
+                uKeys = okeys(uKeyMap);
+                uKeys.forEach(function (refKey) {
+                  var ref = refs[refKey];
+                  if (!ref) return;
+                  triggerReRender(ref);
+                });
+              } else {
+                triggerReRender(ref);
+              }
+
+              _context.next = 30;
+              break;
+
+            case 27:
+              _context.prev = 27;
+              _context.t0 = _context["catch"](0);
+              catchCcError(_context.t0);
+
+            case 30:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, null, [[0, 27]]);
+    }));
+    return _executeCuInfo.apply(this, arguments);
+  }
+
   // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
   // rendering period input as below
@@ -1153,6 +2077,7 @@
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var _computedValueOri$1 = computedMap._computedValueOri,
       _computedValue$1 = computedMap._computedValue,
+      _computedRaw$1 = computedMap._computedRaw,
       _computedDep$1 = computedMap._computedDep;
 
   function writeRetKeyDep(moduleCuDep, ref, module, retKey, isForModule) {
@@ -1163,54 +2088,66 @@
     });
   }
   /** 
-   * 此函数被以下两种场景调用
-   * 1 模块首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
-   * 2 实例首次运行computed&watch时收集函数里读取其他cuRet结果的retKeys,
+   * 此函数被以下两种场景调用，
+   * 1 模块首次运行computed&watch时
+   * 2 实例首次运行computed&watch时
+   * 用于生成cuVal透传给计算函数fnCtx.cuVal,
+   * 用户读取cuVal的结果时，收集到当前计算函对其他计算函数的依赖关系
    * 
-   * module:
-   * function fullName(n, o, f){
-   *    return n.firstName + n.lastName;
-   * }
+   *  module:
+   *    function fullName(n, o, f){
+   *       return n.firstName + n.lastName;
+   *    }
    * 
-   * // 此时funnyName依赖是 firstName lastName age
-   * function funnyName(n, o, f){
+   *  // 此时funnyName依赖是 firstName lastName age
+   *  function funnyName(n, o, f){
    *    const { fullName } = f.cuVal;
    *    return fullName + n.age;
-   * }
+   *  }
    * 
-   * ref:
-   * ctx.computed('fullName',(n, o, f)=>{
+   *  ref:
+   *  ctx.computed('fullName',(n, o, f)=>{
    *    return n.firstName + n.lastName;
-   * })
+   *  })
    * 
-   * // 此时funnyName依赖是 firstName lastName age
-   * ctx.computed('funnyName',(n, o, f)=>{
+   *  // 此时funnyName依赖是 firstName lastName age
+   *  ctx.computed('funnyName',(n, o, f)=>{
    *    const { fullName } = f.cuVal;
    *    return fullName + n.age;
-   * })
+   *  })
    */
 
 
-  function getSimpleObContainer(retKey, sourceType, fnType, module, refCtx, retKeys) {
-    var oriCuContainer, oriCuObContainer;
+  function getSimpleObContainer(retKey, sourceType, fnType, module,
+  /**@type ICtx*/
+  refCtx, retKeys, referInfo) {
+    var oriCuContainer, oriCuObContainer, computedRaw;
 
     if (CATE_MODULE === sourceType) {
       oriCuContainer = _computedValueOri$1[module];
       oriCuObContainer = _computedValue$1[module];
+      computedRaw = _computedRaw$1[module];
     } else {
       oriCuContainer = refCtx.refComputedOri;
       oriCuObContainer = refCtx.refComputedValue;
-    } // 为普通的计算结果容器建立代理对象
+      computedRaw = refCtx.computedRetKeyFns;
+    } // create cuVal
 
 
     return new Proxy(oriCuContainer, {
       get: function get(target, otherRetKey) {
-        // 1 防止用户从 cuVal读取不存在的key
-        // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，强制用户要注意计算函数的书写顺序
+        var fnInfo = sourceType + " " + fnType + " retKey[" + retKey + "]"; // 1 防止用户从 cuVal读取不存在的key
+        // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，所以这里强制用户要注意计算函数的书写顺序
+
         if (hasOwnProperty.call(oriCuContainer, otherRetKey)) {
+          if (isAsyncFn(computedRaw[otherRetKey])) {
+            referInfo.hasAsyncCuRefer = true; //  不允许读取异步计算函数结果做二次计算，隔离一切副作用，确保依赖关系简单和纯粹
+            // throw new Error(`${fnInfo},  get an async retKey[${otherRetKey}] from cuVal is not allowed`);
+          }
+
           retKeys.push(otherRetKey);
         } else {
-          justWarning(sourceType + " " + fnType + " retKey[" + retKey + "] get cuVal invalid retKey[" + otherRetKey + "]");
+          justWarning(fnInfo + " get cuVal invalid retKey[" + otherRetKey + "]");
         } // 从已定义defineProperty的计算结果容器里获取结果
 
 
@@ -1231,7 +2168,7 @@
       isRefCu = false;
     }
 
-    // 注意isRefCu为true时，框架保证了读取ref.ctx下其他属性是安全的
+    // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
     var oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri$1[module];
     var oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue$1[module];
     if (!oriCuContainer) return {}; // 为普通的计算结果容器建立代理对象
@@ -1262,8 +2199,8 @@
     });
   }
 
-  var noOp = function noOp(tip) {
-    return justWarning(tip + " call commit or commitCu as it is lazy");
+  var noCommit = function noCommit(tip, asIs) {
+    return justWarning(tip + " call commit or commitCu as it is " + asIs);
   }; // 记录某个cuRetKey引用过哪些staticCuRetKeys
   // 直接引用或者间接引用过staticCuRetKey都会记录在列表内
 
@@ -1371,10 +2308,11 @@
         });
       }
     });
-  } // fnType: computed watch
+  }
+
+  var STOP_FN = Symbol('sf'); // fnType: computed watch
   // sourceType: module ref
   // initDeltaCommittedState 会在整个过程里收集所有的提交状态
-
 
   function executeDepFns(ref, stateModule, refModule, oldState, finder, committedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall, fnType, sourceType, computedContainer, mergeToDelta) {
     if (ref === void 0) {
@@ -1389,6 +2327,15 @@
     var ccUniqueKey = refCtx ? refCtx.ccUniqueKey : ''; // while循环结束后，收集到的所有的新增或更新state
 
     var committedStateInWhile = {};
+    var nextTickCuInfo = {
+      sourceType: sourceType,
+      ref: ref,
+      module: stateModule,
+      fns: [],
+      fnAsync: [],
+      fnRetKeys: [],
+      cuRetContainer: computedContainer
+    };
     var whileCount = 0;
     var curStateForComputeFn = committedState;
     var hasDelta = false;
@@ -1402,8 +2349,10 @@
       var _finder = finder(curStateForComputeFn, beforeMountFlag),
           pickedFns = _finder.pickedFns,
           setted = _finder.setted,
-          changed = _finder.changed;
+          changed = _finder.changed,
+          retKey_stateKeys_ = _finder.retKey_stateKeys_;
 
+      nextTickCuInfo.retKey_stateKeys_ = retKey_stateKeys_;
       if (!pickedFns.length) return "break";
 
       var _makeCommitHandler = makeCommitHandler(),
@@ -1420,7 +2369,11 @@
             fn = _ref.fn,
             depKeys = _ref.depKeys,
             isLazy = _ref.isLazy;
-        var tip = sourceType + " " + fnType + " retKey[" + retKey + "] can't";
+        var keyInfo = sourceType + " " + fnType + " retKey[" + retKey + "]";
+        var tip = keyInfo + " can't"; // 异步计算的初始值
+
+        var initialVal = '';
+        var isInitialValSetted = false;
         var fnCtx = {
           retKey: retKey,
           callInfo: callInfo,
@@ -1429,59 +2382,115 @@
           commitCu: commitCu,
           setted: setted,
           changed: changed,
-          // 在sourceType为module时 
-          // 这里的computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
+          // 在sourceType为module时, 如果非首次计算
+          // computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
           cuVal: computedContainer,
           committedState: curStateForComputeFn,
           deltaCommittedState: initDeltaCommittedState,
           stateModule: stateModule,
           refModule: refModule,
           oldState: oldState,
-          refCtx: refCtx
+          refCtx: refCtx,
+          setInitialVal: function setInitialVal() {
+            beforeMountFlag && justWarning("non async " + keyInfo + " call setInitialVal is unnecessary");
+          }
         }; // 循环里的首次计算且是自动收集状态，注入代理对象，收集计算&观察依赖
 
-        var needCollectDep = beforeMountFlag && depKeys === '-'; // 读取cuVal时，记录cuRetKeys，用于辅助下面计算依赖
+        var needCollectDep = beforeMountFlag && depKeys === '-'; // 用户通过cuVal读取其他计算结果时，记录cuRetKeys，用于辅助下面计算依赖
 
         var collectedCuRetKeys = []; // 读取newState时，记录stateKeys，用于辅助下面计算依赖
 
         var collectedDepKeys = []; // 对于computed，首次计算时会替换为obContainer用于收集依赖
         // !!!对于watch，immediate为true才有机会替换为obContainer收集到依赖
 
+        var referInfo = {
+          hasAsyncCuRefer: false
+        };
+
         if (needCollectDep) {
           // 替换cuVal，以便动态的收集到computed&watch函数里读取cuVal时计算相关依赖
-          fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys);
+          fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys, referInfo);
         }
 
         if (fnType === FN_CU) {
-          if (isLazy) {
-            // lazyComputed 不能调用commit commitCu，以隔绝副作用
+          var isCuFnAsync = isAsyncFn(fn);
+
+          if (isLazy || isCuFnAsync) {
+            // lazyComputed 和 asyncComputed 不能调用commit commitCu，以隔绝副作用
+            var asIs = isLazy ? 'lazy' : 'async computed';
+
             fnCtx.commit = function () {
-              return noOp(tip);
+              return noCommit(tip, asIs);
             };
 
             fnCtx.commitCu = fnCtx.commit;
+            if (isCuFnAsync) fnCtx.setInitialVal = function (val) {
+              initialVal = val;
+              isInitialValSetted = true; // 这里阻止异步计算函数的首次执行，交给executeAsyncCuInfo去触发
+
+              if (beforeMountFlag) throw STOP_FN;
+            };
           }
 
-          if (needCollectDep) {
-            var obInitNewState = makeCuObState(initNewState, collectedDepKeys); // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
-
-            var computedValueOrRet = fn(obInitNewState, obInitNewState, fnCtx); // 记录计算结果
-
-            computedContainer[retKey] = makeCuObValue(false, computedValueOrRet); // 在computed函数里读取了newState的stateKey，需要将其记录到当前retKey的依赖列表上
-            // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
-
-            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys); // 在computed里读取cuVal里的其他retKey结果, 要将其他retKey对应的stateKeys写到当前retKey的依赖列表上，
-            // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
-
-            setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
-            mapRSList(retKey, collectedCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule);
+          if (isLazy) {
+            computedContainer[retKey] = makeCuPackedValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
           } else {
-            if (isLazy) {
-              computedContainer[retKey] = makeCuObValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
-            } else {
-              var _computedValueOrRet = fn(initNewState, oldState, fnCtx);
+            var newStateArg = initNewState,
+                oldStateArg = oldState; // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
 
-              computedContainer[retKey] = makeCuObValue(false, _computedValueOrRet);
+            if (needCollectDep) {
+              newStateArg = oldStateArg = makeCuObState(initNewState, collectedDepKeys);
+            }
+
+            var computedRet;
+
+            if (isCuFnAsync) {
+              fn(newStateArg, oldStateArg, fnCtx)["catch"](function (err) {
+                if (err !== STOP_FN) throw err;
+              });
+            } else {
+              computedRet = fn(newStateArg, oldStateArg, fnCtx);
+            }
+
+            if (isCuFnAsync || referInfo.hasAsyncCuRefer) {
+              // 首次计算时需要赋初始化值
+              if (beforeMountFlag) {
+                if (!isInitialValSetted) {
+                  throw new Error("async " + keyInfo + " forget call setInitialVal");
+                }
+
+                computedRet = initialVal;
+              } // 不做任何新的计算，还是赋值原来的结果
+              // 新的结果等待 asyncComputedMgr 来计算并触发相关实例重渲染
+              else computedRet = computedContainer[retKey]; // 替换掉setInitialVal，使其失效
+
+
+              fnCtx.setInitialVal = noop;
+
+              fnCtx.commit = function () {
+                return noCommit(tip, 'async computed or it refers async computed ret');
+              };
+
+              fnCtx.commitCu = fnCtx.commit; //安排到nextTickCuInfo里，while结束后单独触发它们挨个按需计算
+
+              nextTickCuInfo.fns.push(function () {
+                return fn(newStateArg, oldStateArg, fnCtx);
+              });
+              nextTickCuInfo.fnAsync.push(isCuFnAsync);
+              nextTickCuInfo.fnRetKeys.push(retKey);
+            } // 记录计算结果
+
+
+            computedContainer[retKey] = makeCuPackedValue(false, computedRet);
+
+            if (needCollectDep) {
+              // 在computed函数里读取了newState的stateKey，需要将其记录到当前retKey的依赖列表上
+              // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
+              setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedDepKeys); // 在computed里读取cuVal里的其他retKey结果, 要将其他retKey对应的stateKeys写到当前retKey的依赖列表上，
+              // 以便能够在相应stateKey值改变时，能够正确命中该computed函数
+
+              setStateKeyRetKeysMap(refCtx, sourceType, FN_CU, stateModule, retKey, collectedCuRetKeys, false);
+              mapRSList(retKey, collectedCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule);
             }
           }
         } else {
@@ -1536,7 +2545,7 @@
                     // 直接或间接引用了这个cuRetKey，就不能去改变它，以避免死循环
                     justWarning("commitCu:" + tip + " change [" + cuRetKey + "], [" + retKey + "] referred [" + cuRetKey + "]");
                   } else {
-                    computedContainer[cuRetKey] = makeCuObValue(false, committedCuRet[cuRetKey]);
+                    computedContainer[cuRetKey] = makeCuPackedValue(false, committedCuRet[cuRetKey]);
                   }
                 } else {
                   justWarning("commitCu:" + tip + " change [" + cuRetKey + "], it must have zero dep keys");
@@ -1636,6 +2645,7 @@
       if (_ret === "break") break;
     }
 
+    executeCuInfo(nextTickCuInfo);
     return {
       hasDelta: hasDelta,
       newCommittedState: committedStateInWhile
@@ -1646,7 +2656,6 @@
   var _computedValue$2 = computedMap._computedValue;
   var okeys$1 = okeys,
       extractChangedState$1 = extractChangedState;
-  var refs = {};
 
   var getDispatcher = function getDispatcher() {
     return ccContext.permanentDispatcher;
@@ -1780,6 +2789,7 @@
       return window && (window.webpackHotUpdate || isOnlineEditor());
     },
     runtimeVar: runtimeVar,
+    runtimeHandler: runtimeHandler,
     isHot: false,
     reComputed: true,
     isStartup: false,
@@ -1895,14 +2905,13 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.6.4',
+      version: '2.7.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-      tag: 'yuna'
+      tag: 'tina'
     },
     featureStr_classKey_: {},
     userClassKey_featureStr_: {},
-    errorHandler: null,
     middlewares: [],
     plugins: [],
     pluginNameMap: {},
@@ -2217,7 +3226,7 @@
     return Promise.resolve();
   };
 
-  function ccDispatch (action, payLoadWhenActionIsString, rkOrOptions, delay, _temp) {
+  function ccDispatch (action, payLoadWhenActionIsString, rkOrOptions, delay$$1, _temp) {
     if (rkOrOptions === void 0) {
       rkOrOptions = '';
     }
@@ -2285,11 +3294,11 @@
         if (!fullFnNames) return;
         var tasks = [];
         fullFnNames.forEach(function (fullFnName) {
-          tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, rkOrOptions, delay));
+          tasks.push(dispatchFn(fullFnName, payLoadWhenActionIsString, rkOrOptions, delay$$1));
         });
         return Promise.all(tasks);
       } else {
-        return dispatchFn(action, payLoadWhenActionIsString, rkOrOptions, delay);
+        return dispatchFn(action, payLoadWhenActionIsString, rkOrOptions, delay$$1);
       }
     } catch (err) {
       if (throwError) throw err;else {
@@ -2339,8 +3348,8 @@
 
       if (!list.includes(fullFnName)) list.push(fullFnName);
 
-      subReducerCaller[name] = function (payload, renderKeyOrOptions, delay) {
-        return dispatch(fullFnName, payload, renderKeyOrOptions, delay);
+      subReducerCaller[name] = function (payload, renderKeyOrOptions, delay$$1) {
+        return dispatch(fullFnName, payload, renderKeyOrOptions, delay$$1);
       };
 
       var reducerFn = newReducer[name];
@@ -2739,11 +3748,15 @@
     };
   }
 
-  function makeObCuContainer (computed, originalCuContainer) {
+  /**
+   * 盛放计算结果的容器
+   */
+
+  function makeCuRetContainer (computed, originalCuContainer) {
     var moduleComputedValue = {};
     okeys(computed).forEach(function (key) {
-      // 避免get无限递归，用这个对象来存其他信息
-      originalCuContainer[key] = makeCuObValue();
+      // 用这个对象来存其他信息, 避免get无限递归，
+      originalCuContainer[key] = makeCuPackedValue();
       Object.defineProperty(moduleComputedValue, key, {
         get: function get() {
           var value = originalCuContainer[key] || {}; //防止用户传入未定义的key
@@ -2824,7 +3837,7 @@
 
 
     var cuOri = ccComputed._computedValueOri[module];
-    rootComputedValue[module] = makeObCuContainer(computed, cuOri);
+    rootComputedValue[module] = makeCuRetContainer(computed, cuOri);
     var moduleComputedValue = rootComputedValue[module];
     executeDepFns(d, module, d && d.ctx.module, moduleState, curDepComputedFns, moduleState, moduleState, moduleState, makeCallInfo(module), true, FN_CU, CATE_MODULE, moduleComputedValue);
   }
@@ -2920,10 +3933,6 @@
   function on(sigOrSigs, cb) {
     _pushSigCb(sig_cbs_, sigOrSigs, cb);
   }
-
-  var catchCcError = (function (err) {
-    if (ccContext.errorHandler) ccContext.errorHandler(err);else throw err;
-  });
 
   var id = 0;
   /** 针对lazy的reducer调用链状态记录缓存map */
@@ -3080,8 +4089,8 @@
 
   var okeys$3 = okeys;
   var ccUKey_ref_ = ccContext.ccUKey_ref_,
-      waKey_uKeyMap_$1 = ccContext.waKey_uKeyMap_,
-      waKey_staticUKeyMap_$1 = ccContext.waKey_staticUKeyMap_;
+      waKey_uKeyMap_$2 = ccContext.waKey_uKeyMap_,
+      waKey_staticUKeyMap_$2 = ccContext.waKey_staticUKeyMap_;
   function findUpdateRefs (moduleName, partialSharedState, renderKey, renderKeyClasses) {
     var sharedStateKeys = okeys$3(partialSharedState);
     var cacheKey = getCacheKey(moduleName, sharedStateKeys, renderKey, renderKeyClasses);
@@ -3100,7 +4109,7 @@
     sharedStateKeys.forEach(function (stateKey) {
       var waKey = moduleName + "/" + stateKey; // 利用assign不停的去重
 
-      Object.assign(targetUKeyMap, waKey_uKeyMap_$1[waKey], waKey_staticUKeyMap_$1[waKey]);
+      Object.assign(targetUKeyMap, waKey_uKeyMap_$2[waKey], waKey_staticUKeyMap_$2[waKey]);
     });
     var uKeys = okeys$3(targetUKeyMap);
 
@@ -3254,7 +4263,7 @@
         _ref$renderKey = _ref.renderKey,
         renderKey = _ref$renderKey === void 0 ? '' : _ref$renderKey,
         _ref$delay = _ref.delay,
-        delay = _ref$delay === void 0 ? -1 : _ref$delay;
+        delay$$1 = _ref$delay === void 0 ? -1 : _ref$delay;
 
     if (state === undefined) return;
 
@@ -3299,7 +4308,7 @@
         type: type,
         payload: payload,
         renderKey: renderKey,
-        delay: delay,
+        delay: delay$$1,
         ccKey: ccKey,
         ccUniqueKey: ccUniqueKey,
         committedState: committedState,
@@ -3339,7 +4348,7 @@
 
 
         if (stateChangedCb) stateChangedCb();
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay);
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay$$1);
       });
     });
   }
@@ -3442,14 +4451,14 @@
     };
   }
 
-  function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
+  function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay$$1) {
     var startBroadcastState = function startBroadcastState() {
       broadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
     };
 
-    if (delay > 0) {
+    if (delay$$1 > 0) {
       var feature = computeFeature$1(targetRef.ctx.ccUniqueKey, sharedState);
-      runLater(startBroadcastState, feature, delay);
+      runLater(startBroadcastState, feature, delay$$1);
     } else {
       startBroadcastState();
     }
@@ -3543,16 +4552,16 @@
       stateChangedCb: stateChangedCb
     });
   }
-  function setState (module, state, renderKey, delay, skipMiddleware) {
-    if (delay === void 0) {
-      delay = -1;
+  function setState (module, state, renderKey, delay$$1, skipMiddleware) {
+    if (delay$$1 === void 0) {
+      delay$$1 = -1;
     }
 
     _setState(state, {
       ccKey: '[[top api:setState]]',
       module: module,
       renderKey: renderKey,
-      delay: delay,
+      delay: delay$$1,
       skipMiddleware: skipMiddleware
     });
   }
@@ -3652,7 +4661,7 @@
     if (err) {
       if (__innerCb) __innerCb(err);else {
         justWarning$3(err);
-        if (ccContext.errorHandler) ccContext.errorHandler(err);
+        if (ccContext.runtimeHandler.errorHandler) ccContext.runtimeHandler.errorHandler(err);
       }
     }
   }
@@ -3673,7 +4682,7 @@
 
   function __invoke(userLogicFn, option, payload) {
     var callerRef = option.callerRef,
-        delay = option.delay,
+        delay$$1 = option.delay,
         renderKey = option.renderKey,
         calledBy = option.calledBy,
         module = option.module,
@@ -3687,7 +4696,7 @@
       module: module,
       calledBy: calledBy,
       fnName: userLogicFn.name,
-      delay: delay,
+      delay: delay$$1,
       renderKey: renderKey,
       chainId: chainId,
       oriChainId: oriChainId,
@@ -3724,7 +4733,7 @@
         oriChainId = _ref.oriChainId,
         isLazy = _ref.isLazy,
         _ref$delay = _ref.delay,
-        delay = _ref$delay === void 0 ? -1 : _ref$delay,
+        delay$$1 = _ref$delay === void 0 ? -1 : _ref$delay,
         _ref$isSilent = _ref.isSilent,
         isSilent = _ref$isSilent === void 0 ? false : _ref$isSilent,
         _ref$chainId_depth_ = _ref.chainId_depth_,
@@ -3735,7 +4744,7 @@
           _isSilent = isSilent;
 
       var _renderKey = '',
-          _delay = inputDelay != undefined ? inputDelay : delay;
+          _delay = inputDelay != undefined ? inputDelay : delay$$1;
 
       if (isPJO$4(inputRKey)) {
         var lazy = inputRKey.lazy,
@@ -3818,7 +4827,7 @@
         calledBy = executionContext.calledBy,
         fnName = executionContext.fnName,
         _executionContext$del = executionContext.delay,
-        delay = _executionContext$del === void 0 ? -1 : _executionContext$del,
+        delay$$1 = _executionContext$del === void 0 ? -1 : _executionContext$del,
         renderKey = executionContext.renderKey,
         chainId = executionContext.chainId,
         oriChainId = executionContext.oriChainId,
@@ -3835,27 +4844,27 @@
         //调用前先加1
         chainId_depth_[chainId] = chainId_depth_[chainId] + 1; // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
 
-        var _dispatch = makeDispatchHandler(callerRef, false, isSilent, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_);
+        var _dispatch = makeDispatchHandler(callerRef, false, isSilent, targetModule, renderKey, delay$$1, chainId, oriChainId, chainId_depth_);
 
-        var silentDispatch = makeDispatchHandler(callerRef, false, true, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_);
-        var lazyDispatch = makeDispatchHandler(callerRef, true, isSilent, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
+        var silentDispatch = makeDispatchHandler(callerRef, false, true, targetModule, renderKey, delay$$1, chainId, oriChainId, chainId_depth_);
+        var lazyDispatch = makeDispatchHandler(callerRef, true, isSilent, targetModule, renderKey, delay$$1, chainId, oriChainId, chainId_depth_); // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
         //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
 
         var invoke = makeInvokeHandler(callerRef, {
-          delay: delay,
+          delay: delay$$1,
           chainId: chainId,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
         });
         var lazyInvoke = makeInvokeHandler(callerRef, {
           isLazy: true,
-          delay: delay,
+          delay: delay$$1,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
         });
         var silentInvoke = makeInvokeHandler(callerRef, {
           isLazy: false,
-          delay: delay,
+          delay: delay$$1,
           isSilent: true,
           oriChainId: oriChainId,
           chainId_depth_: chainId_depth_
@@ -3894,7 +4903,7 @@
             return _dispatch('setState', state, {
               silent: isSilent,
               renderKey: renderKey,
-              delay: delay
+              delay: delay$$1
             });
           },
           //透传上下文参数给IDispatchOptions,
@@ -3965,7 +4974,7 @@
               type: type,
               calledBy: calledBy,
               fnName: fnName,
-              delay: delay,
+              delay: delay$$1,
               payload: payload
             }, callerRef);
           }
@@ -4001,7 +5010,7 @@
         reactCallback = _ref2.cb,
         __innerCb = _ref2.__innerCb,
         _ref2$delay = _ref2.delay,
-        delay = _ref2$delay === void 0 ? -1 : _ref2$delay,
+        delay$$1 = _ref2$delay === void 0 ? -1 : _ref2$delay,
         chainId = _ref2.chainId,
         oriChainId = _ref2.oriChainId,
         chainId_depth_ = _ref2.chainId_depth_;
@@ -4027,7 +5036,7 @@
       context: true,
       __innerCb: __innerCb,
       calledBy: DISPATCH,
-      delay: delay,
+      delay: delay$$1,
       renderKey: renderKey,
       isSilent: isSilent,
       chainId: chainId,
@@ -4036,14 +5045,14 @@
     };
     invokeWith(reducerFn, executionContext, payload);
   }
-  function makeDispatchHandler(callerRef, in_isLazy, in_isSilent, defaultModule, defaultRenderKey, delay, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
+  function makeDispatchHandler(callerRef, in_isLazy, in_isSilent, defaultModule, defaultRenderKey, delay$$1, chainId, oriChainId, chainId_depth_ // sourceModule, oriChainId, oriChainDepth
   ) {
     if (defaultRenderKey === void 0) {
       defaultRenderKey = '';
     }
 
-    if (delay === void 0) {
-      delay = -1;
+    if (delay$$1 === void 0) {
+      delay$$1 = -1;
     }
 
     if (chainId_depth_ === void 0) {
@@ -4059,7 +5068,7 @@
           isSilent = in_isSilent;
       var _renderKey = '';
 
-      var _delay = userInputDelay || delay;
+      var _delay = userInputDelay || delay$$1;
 
       if (isPJO$4(userInputRKey)) {
         _renderKey = defaultRenderKey;
@@ -4270,8 +5279,6 @@
       }
     };
   };
-  /** avoid  Circular dependency, move this fn to util */
-  // export function makeCommitHandler(module, refCtx) {}
 
   var isPJO$5 = isPJO,
       evalState$1 = evalState;
@@ -5015,7 +6022,7 @@
     return Symbol("__autoGen_" + idSeq + "__");
   }
 
-  var noop = function noop() {};
+  var noop$1 = function noop$$1() {};
 
   var eType = function eType(th) {
     return "type of defineEffect " + th + " param must be";
@@ -5168,18 +6175,18 @@
       changeRefState(state, option, ref);
     };
 
-    var _setState = function _setState(module, state, calledBy, reactCallback, renderKey, delay) {
+    var _setState = function _setState(module, state, calledBy, reactCallback, renderKey, delay$$1) {
       changeState(state, {
         calledBy: calledBy,
         module: module,
         renderKey: renderKey,
-        delay: delay,
+        delay: delay$$1,
         reactCallback: reactCallback
       });
     };
 
-    var setModuleState = function setModuleState(module, state, reactCallback, renderKey, delay) {
-      _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
+    var setModuleState = function setModuleState(module, state, reactCallback, renderKey, delay$$1) {
+      _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay$$1);
     };
 
     var setState = function setState(p1, p2, p3, p4, p5) {
@@ -5198,8 +6205,8 @@
       }
     };
 
-    var forceUpdate = function forceUpdate(reactCallback, renderKey, delay) {
-      _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
+    var forceUpdate = function forceUpdate(reactCallback, renderKey, delay$$1) {
+      _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay$$1);
     };
 
     var __$$onEvents = [];
@@ -5296,7 +6303,6 @@
       stateKeys: stateKeys,
       computedDep: computedDep,
       computedRetKeyFns: {},
-      //不按模块分类，映射的cuRetKey_fn_
       watchDep: watchDep,
       watchRetKeyFns: {},
       //不按模块分类，映射的watchRetKey_fn_
@@ -5304,10 +6310,10 @@
       effectMeta: effectMeta,
       retKey_fnUid_: {},
       // api
-      reactSetState: noop,
+      reactSetState: noop$1,
       //等待重写
       __boundSetState: __boundSetState,
-      reactForceUpdate: noop,
+      reactForceUpdate: noop$1,
       //等待重写
       __boundForceUpdate: __boundForceUpdate,
       setState: setState,
@@ -5380,8 +6386,8 @@
 
       ctx.invokeSilent = ctx.silentInvoke; // alias of silentInvoke
 
-      ctx.setGlobalState = function (state, reactCallback, renderKey, delay) {
-        _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
+      ctx.setGlobalState = function (state, reactCallback, renderKey, delay$$1) {
+        _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay$$1);
       };
     }
 
@@ -5389,22 +6395,22 @@
       // level 3, assign async api
       var cachedBoundFns = {};
 
-      var doSync = function doSync(e, val, rkey, delay, type) {
+      var doSync = function doSync(e, val, rkey, delay$$1, type) {
         if (typeof e === 'string') {
           var valType = typeof val;
 
           if (isValueNotNull$1(val) && (valType === 'object' || valType === 'function')) {
             var _sync$bind;
 
-            return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = type, _sync$bind.val = val, _sync$bind.delay = delay, _sync$bind.rkey = rkey, _sync$bind), ref);
+            return __sync.bind(null, (_sync$bind = {}, _sync$bind[CCSYNC_KEY] = e, _sync$bind.type = type, _sync$bind.val = val, _sync$bind.delay = delay$$1, _sync$bind.rkey = rkey, _sync$bind), ref);
           } else {
-            var key = e + "|" + val + "|" + rkey + "|" + delay;
+            var key = e + "|" + val + "|" + rkey + "|" + delay$$1;
             var boundFn = cachedBoundFns[key];
 
             if (!boundFn) {
               var _sync$bind2;
 
-              boundFn = cachedBoundFns[key] = __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = type, _sync$bind2.val = val, _sync$bind2.delay = delay, _sync$bind2.rkey = rkey, _sync$bind2), ref);
+              boundFn = cachedBoundFns[key] = __sync.bind(null, (_sync$bind2 = {}, _sync$bind2[CCSYNC_KEY] = e, _sync$bind2.type = type, _sync$bind2.val = val, _sync$bind2.delay = delay$$1, _sync$bind2.rkey = rkey, _sync$bind2), ref);
             }
 
             return boundFn;
@@ -5417,80 +6423,80 @@
         }, ref, e);
       };
 
-      ctx.sync = function (e, val, rkey, delay) {
+      ctx.sync = function (e, val, rkey, delay$$1) {
         if (rkey === void 0) {
           rkey = '';
         }
 
-        if (delay === void 0) {
-          delay = -1;
+        if (delay$$1 === void 0) {
+          delay$$1 = -1;
         }
 
-        return doSync(e, val, rkey, delay, 'val');
+        return doSync(e, val, rkey, delay$$1, 'val');
       };
 
-      ctx.syncBool = function (e, val, rkey, delay) {
+      ctx.syncBool = function (e, val, rkey, delay$$1) {
         if (rkey === void 0) {
           rkey = '';
         }
 
-        if (delay === void 0) {
-          delay = -1;
+        if (delay$$1 === void 0) {
+          delay$$1 = -1;
         }
 
-        return doSync(e, val, rkey, delay, 'bool');
+        return doSync(e, val, rkey, delay$$1, 'bool');
       };
 
-      ctx.syncInt = function (e, val, rkey, delay) {
+      ctx.syncInt = function (e, val, rkey, delay$$1) {
         if (rkey === void 0) {
           rkey = '';
         }
 
-        if (delay === void 0) {
-          delay = -1;
+        if (delay$$1 === void 0) {
+          delay$$1 = -1;
         }
 
-        return doSync(e, val, rkey, delay, 'int');
+        return doSync(e, val, rkey, delay$$1, 'int');
       };
 
-      ctx.syncAs = function (e, val, rkey, delay) {
+      ctx.syncAs = function (e, val, rkey, delay$$1) {
         if (rkey === void 0) {
           rkey = '';
         }
 
-        if (delay === void 0) {
-          delay = -1;
+        if (delay$$1 === void 0) {
+          delay$$1 = -1;
         }
 
-        return doSync(e, val, rkey, delay, 'as');
+        return doSync(e, val, rkey, delay$$1, 'as');
       };
 
-      ctx.set = function (ccsync, val, rkey, delay) {
+      ctx.set = function (ccsync, val, rkey, delay$$1) {
         var _sync;
 
         if (rkey === void 0) {
           rkey = '';
         }
 
-        if (delay === void 0) {
-          delay = -1;
+        if (delay$$1 === void 0) {
+          delay$$1 = -1;
         }
 
-        __sync((_sync = {}, _sync[CCSYNC_KEY] = ccsync, _sync.type = 'val', _sync.val = val, _sync.delay = delay, _sync.rkey = rkey, _sync), ref);
+        __sync((_sync = {}, _sync[CCSYNC_KEY] = ccsync, _sync.type = 'val', _sync.val = val, _sync.delay = delay$$1, _sync.rkey = rkey, _sync), ref);
       };
 
-      ctx.setBool = function (ccsync, rkey, delay) {
+      ctx.setBool = function (ccsync, rkey, delay$$1) {
         var _sync2;
 
         if (rkey === void 0) {
           rkey = '';
         }
 
-        if (delay === void 0) {
-          delay = -1;
+        if (delay$$1 === void 0) {
+          delay$$1 = -1;
         }
 
-        __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'bool', _sync2.delay = delay, _sync2.rkey = rkey, _sync2), ref);
+        __sync((_sync2 = {}, _sync2[CCSYNC_KEY] = ccsync, _sync2.type = 'bool', _sync2.delay = delay$$1, _sync2.rkey = rkey, _sync2), ref);
       };
     }
 
@@ -5658,8 +6664,8 @@
 
       var fnNames = _module_fnNames_[m] || [];
       fnNames.forEach(function (fnName) {
-        reducerObj[fnName] = function (payload, rkeyOrOption, delay) {
-          return dispatch(m + "/" + fnName, payload, rkeyOrOption, delay);
+        reducerObj[fnName] = function (payload, rkeyOrOption, delay$$1) {
+          return dispatch(m + "/" + fnName, payload, rkeyOrOption, delay$$1);
         };
       });
     });
@@ -5771,7 +6777,7 @@
     });
     featureStrs.push('|'); // 之后是watchKeys相关的特征值参数
 
-    if (watchedKeys === '*') featureStrs.push(compTypePrefix + "_$" + belongModule + "/*");else {
+    if (watchedKeys === '*' || watchedKeys === '-') featureStrs.push(compTypePrefix + "_$" + belongModule + "/*");else {
       watchedKeys.sort();
       var tmpStr = belongModule + "/" + watchedKeys.join(',');
       featureStrs.push(tmpStr);
@@ -5981,14 +6987,14 @@
     };
   }
 
-  var noop$1 = function noop() {};
+  var noop$2 = function noop() {};
 
   function createDispatcher () {
     var ccClassKey = CC_DISPATCHER;
     mapRegistrationInfo(MODULE_DEFAULT, ccClassKey, '', CC_CLASS, [], [], [], false, 'cc');
     var mockRef = {
-      setState: noop$1,
-      forceUpdate: noop$1
+      setState: noop$2,
+      forceUpdate: noop$2
     };
     buildRefCtx(mockRef, {
       module: MODULE_DEFAULT,
@@ -6758,7 +7764,7 @@
     // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
 
 
-    ctx.refComputedValue = makeObCuContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
+    ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
     ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
     triggerComputedAndWatch(ref);
     ctx.__$$inBM = false;
@@ -6953,7 +7959,7 @@
         justTip$1("cc version " + ccContext.info.version);
         if (isHot !== undefined) ccContext.isHot = isHot;
         ccContext.reComputed = reComputed;
-        ccContext.errorHandler = errorHandler;
+        ccContext.runtimeHandler.errorHandler = errorHandler;
         var rv = ccContext.runtimeVar;
         rv.isStrict = isStrict;
         rv.isDebug = isDebug;
@@ -7864,14 +8870,14 @@
    * note! cc will filter the input state to meet global state shape and only pass the filtered state to global module
    */
 
-  function setGlobalState (state, cb, delay, idt, throwError) {
+  function setGlobalState (state, cb, delay$$1, idt, throwError) {
     if (throwError === void 0) {
       throwError = false;
     }
 
     try {
       var ref = pickOneRef();
-      ref.ctx.setGlobalState(state, cb, delay, idt);
+      ref.ctx.setGlobalState(state, cb, delay$$1, idt);
     } catch (err) {
       if (throwError) throw err;else justWarning(err.message);
     }

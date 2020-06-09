@@ -1,27 +1,30 @@
 import { CU_KEY } from '../../support/priv-constant';
-import { makeCuObValue, okeys, justWarning } from '../../support/util';
+import { makeCuPackedValue, okeys, justWarning } from '../../support/util';
 
+/**
+ * 盛放计算结果的容器
+ */
 export default function (computed, originalCuContainer) {
   const moduleComputedValue = {};
+  
   okeys(computed).forEach(key => {
-    // 避免get无限递归，用这个对象来存其他信息
-    originalCuContainer[key] = makeCuObValue();
+    // 用这个对象来存其他信息, 避免get无限递归，
+    originalCuContainer[key] = makeCuPackedValue();
 
-    Object.defineProperty(
-      moduleComputedValue, key, {
+    Object.defineProperty(moduleComputedValue, key, {
       get: function () {
         const value = originalCuContainer[key] || {};//防止用户传入未定义的key
         const { needCompute, fn, newState, oldState, fnCtx, isLazy, result } = value;
         if (!isLazy) {
           return result;
         }
-  
+
         if (isLazy && needCompute) {
           const ret = fn(newState, oldState, fnCtx);
           value.result = ret;
           value.needCompute = false;
         }
-  
+
         return value.result;
       },
       set: function (input) {
@@ -44,5 +47,6 @@ export default function (computed, originalCuContainer) {
       }
     })
   });
+
   return moduleComputedValue;
 }

@@ -36,9 +36,9 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
 
   // 针对type module， init-module-state时，已对_computedValueOri赋值了默认cuDesc，
   // 所以此时可以安全的直接判断非关系，而不用担心 {}对象存在
-  if (!moduleDep) return { pickedFns, setted: [], changed: [] };
+  if (!moduleDep) return { pickedFns, setted: [], changed: [], retKey_stateKeys_: {} };
 
-  const { retKey_fn_, retKey_lazy_, stateKey_retKeys_, fnCount } = moduleDep;
+  const { retKey_fn_, retKey_lazy_, stateKey_retKeys_, retKey_stateKeys_, fnCount } = moduleDep;
 
   /** 首次调用 */
   if (isBeforeMount) {
@@ -48,7 +48,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
     if (type === 'computed') {
       return {
         pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey])).sort(sortCb), 
-        setted, changed,
+        setted, changed, retKey_stateKeys_,
       };
     }
     
@@ -59,14 +59,14 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
     });
 
     pickedFns.sort(sortCb);
-    return { pickedFns, setted, changed };
+    return { pickedFns, setted, changed, retKey_stateKeys_ };
   }
 
   // 这些目标stateKey的值发生了变化
   const { setted, changed } = differStateKeys(oldState, committedState);
 
   if (setted.length === 0) {
-    return { pickedFns, setted: [], changed: [] };
+    return { pickedFns, setted: [], changed: [], retKey_stateKeys_: {} };
   }
 
   //用setted + changed + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
@@ -81,8 +81,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
     // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
     return {
       pickedFns: cachedPickedRetKeys.map(retKey => _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey])),
-      setted,
-      changed,
+      setted, changed, retKey_stateKeys_,
     };
   }
 
@@ -90,7 +89,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   cachePool[cacheKey] = pickedFns.map(v => v.retKey);
 
    // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
-  return { pickedFns, setted, changed };
+  return { pickedFns, setted, changed, retKey_stateKeys_ };
 }
 
 
