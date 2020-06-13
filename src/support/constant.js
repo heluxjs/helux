@@ -35,6 +35,11 @@ export const SIG_FN_ERR = 13;
 export const SIG_MODULE_CONFIGURED = 14;
 export const SIG_STATE_CHANGED = 15;
 
+export const SIG_ASYNC_COMPUTED_START = 30;
+export const SIG_ASYNC_COMPUTED_END = 31;
+export const SIG_ASYNC_COMPUTED_ERR = 32;
+export const SIG_ASYNC_COMPUTED_BATCH_START = 33;
+export const SIG_ASYNC_COMPUTED_BATCH_END = 34;
 
 export const RENDER_NO_OP = 1;
 export const RENDER_BY_KEY = 2;

@@ -2,20 +2,20 @@ import { START } from '../../support/priv-constant';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 
-// before render
-// cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
+//  before render
+//  cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
 //
-// rendering period input as below
-// cur: {a:'val', c:'val', d:'val'}
+//  receive cur in rendering period as below
+//  cur: {a:'val', c:'val', d:'val'}
 //
-// after render
-// cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} nextCompare:{a:2, c:2, d:2}
+//  after render
+//  cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} compareCount=4 nextCompare:{a:2, c:2, d:2}
 //
-// then concent know 'b' should delete from dep because its value is 2, 
-// compare key count become bigger than previous render(4>3) or compare key values include 2, so should let cache expire
+//  then concent know 'b' should delete from dep because its value is 2, 
+//  if compare key count become bigger than previous render(4>3) or compare key values include 2, then cache will be expired
 //
-// before next render, assign nextCompare to cur, assign {} to nextCompare
-// cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
+//  before next render, assign nextCompare to compare, clear cur and nextCompare
+//  cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
 
 export default function (ref, module, key, isForModule) {
   const refCtx = ref.ctx;

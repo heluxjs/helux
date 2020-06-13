@@ -1,3 +1,7 @@
+#### 2020-06-13
+2.7.2 发布
+feature: 新增`SIG_ASYNC_COMPUTED_***`相关信号
+
 #### 2020-06-03
 2.7.1 发布
 feature: support async computed

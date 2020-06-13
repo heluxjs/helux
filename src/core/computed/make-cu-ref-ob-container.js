@@ -21,33 +21,33 @@ function writeRetKeyDep(moduleCuDep, ref, module, retKey, isForModule) {
 }
 
 /** 
- * 此函数被以下两种场景调用，
- * 1 模块首次运行computed&watch时
- * 2 实例首次运行computed&watch时
- * 用于生成cuVal透传给计算函数fnCtx.cuVal,
- * 用户读取cuVal的结果时，收集到当前计算函对其他计算函数的依赖关系
- * 
- *  module:
- *    function fullName(n, o, f){
- *       return n.firstName + n.lastName;
- *    }
- * 
- *  // 此时funnyName依赖是 firstName lastName age
- *  function funnyName(n, o, f){
- *    const { fullName } = f.cuVal;
- *    return fullName + n.age;
- *  }
- * 
- *  ref:
- *  ctx.computed('fullName',(n, o, f)=>{
- *    return n.firstName + n.lastName;
- *  })
- * 
- *  // 此时funnyName依赖是 firstName lastName age
- *  ctx.computed('funnyName',(n, o, f)=>{
- *    const { fullName } = f.cuVal;
- *    return fullName + n.age;
- *  })
+  此函数被以下两种场景调用，
+  1 模块首次运行computed&watch时
+  2 实例首次运行computed&watch时
+  用于生成cuVal透传给计算函数fnCtx.cuVal,
+  用户读取cuVal的结果时，收集到当前计算函对其他计算函数的依赖关系
+  
+    module:
+      function fullName(n, o, f){
+          return n.firstName + n.lastName;
+      }
+    
+    // 此时funnyName依赖是 firstName lastName age
+    function funnyName(n, o, f){
+      const { fullName } = f.cuVal;
+      return fullName + n.age;
+    }
+    
+    ref:
+    ctx.computed('fullName',(n, o, f)=>{
+      return n.firstName + n.lastName;
+    })
+    
+    // 此时funnyName依赖是 firstName lastName age
+    ctx.computed('funnyName',(n, o, f)=>{
+      const { fullName } = f.cuVal;
+      return fullName + n.age;
+    })
  */
 export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@type ICtx*/refCtx, retKeys, referInfo) {
   let oriCuContainer, oriCuObContainer, computedRaw;
@@ -91,7 +91,7 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
 }
 
 // isForModule : true for module , false for connect
-export default function (ref, module, isForModule = true, isRefCu = false) {
+export default function (ref, module, isForModule = true, isRefCu = false, isStatus = false) {
   // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
   const oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri[module];
   const oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue[module];

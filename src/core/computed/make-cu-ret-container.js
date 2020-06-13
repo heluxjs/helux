@@ -2,7 +2,12 @@ import { CU_KEY } from '../../support/priv-constant';
 import { makeCuPackedValue, okeys, justWarning } from '../../support/util';
 
 /**
- * 盛放计算结果的容器
+ * 提供给用户使用，从存储的打包计算结果里获取目标计算结果的容器
+ * ------------------------------------------------------------------------------------
+ * 触发get时，会从打包对象里获取目标计算结果，
+ * 打包对象按 ${retKey} 放置在originalCuContainer里，
+ * 对于refComputed，originalCuContainer 是 ctx.refComputedOri
+ * 对于moduleComputed，originalCuContainer 是  concentContext.ccComputed._computedValueOri.{$module}
  */
 export default function (computed, originalCuContainer) {
   const moduleComputedValue = {};
@@ -13,7 +18,8 @@ export default function (computed, originalCuContainer) {
 
     Object.defineProperty(moduleComputedValue, key, {
       get: function () {
-        const value = originalCuContainer[key] || {};//防止用户传入未定义的key
+        // 防止用户传入未定义的key
+        const value = originalCuContainer[key] || {};
         const { needCompute, fn, newState, oldState, fnCtx, isLazy, result } = value;
         if (!isLazy) {
           return result;

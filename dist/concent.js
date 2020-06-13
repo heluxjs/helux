@@ -47,6 +47,11 @@
   var SIG_FN_ERR = 13;
   var SIG_MODULE_CONFIGURED = 14;
   var SIG_STATE_CHANGED = 15;
+  var SIG_ASYNC_COMPUTED_START = 30;
+  var SIG_ASYNC_COMPUTED_END = 31;
+  var SIG_ASYNC_COMPUTED_ERR = 32;
+  var SIG_ASYNC_COMPUTED_BATCH_START = 33;
+  var SIG_ASYNC_COMPUTED_BATCH_END = 34;
   var RENDER_NO_OP = 1;
   var RENDER_BY_KEY = 2;
   var RENDER_BY_STATE = 3;
@@ -99,6 +104,11 @@
     SIG_FN_ERR: SIG_FN_ERR,
     SIG_MODULE_CONFIGURED: SIG_MODULE_CONFIGURED,
     SIG_STATE_CHANGED: SIG_STATE_CHANGED,
+    SIG_ASYNC_COMPUTED_START: SIG_ASYNC_COMPUTED_START,
+    SIG_ASYNC_COMPUTED_END: SIG_ASYNC_COMPUTED_END,
+    SIG_ASYNC_COMPUTED_ERR: SIG_ASYNC_COMPUTED_ERR,
+    SIG_ASYNC_COMPUTED_BATCH_START: SIG_ASYNC_COMPUTED_BATCH_START,
+    SIG_ASYNC_COMPUTED_BATCH_END: SIG_ASYNC_COMPUTED_BATCH_END,
     RENDER_NO_OP: RENDER_NO_OP,
     RENDER_BY_KEY: RENDER_BY_KEY,
     RENDER_BY_STATE: RENDER_BY_STATE,
@@ -1883,11 +1893,56 @@
     if (errorHandler) errorHandler(err);else throw err;
   });
 
+  var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED, SIG_ASYNC_COMPUTED_START, SIG_ASYNC_COMPUTED_END, SIG_ASYNC_COMPUTED_ERR, SIG_ASYNC_COMPUTED_BATCH_START, SIG_ASYNC_COMPUTED_BATCH_END];
+  var sig_cbs_ = {};
+  sigs.forEach(function (sig) {
+    return sig_cbs_[sig] = [];
+  });
+
+  function _pushSigCb(sigMap, sigOrSigs, cb) {
+    function pushCb(sig, cb) {
+      var cbs = sigMap[sig];
+
+      if (cb) {
+        cbs.push(cb);
+      } else {
+        console.warn("invalid sig[" + sig + "]");
+      }
+    }
+
+    if (Array.isArray(sigOrSigs)) {
+      sigOrSigs.forEach(function (sig) {
+        pushCb(sig, cb);
+      });
+    } else {
+      pushCb(sigOrSigs, cb);
+    }
+  }
+
+  function clearCbs() {
+    sigs.forEach(function (sig) {
+      return sig_cbs_[sig].length = 0;
+    });
+  }
+  function send(sig, payload) {
+    var cbs = sig_cbs_[sig];
+    cbs.forEach(function (cb) {
+      return cb({
+        sig: sig,
+        payload: payload
+      });
+    });
+  }
+  function on(sigOrSigs, cb) {
+    _pushSigCb(sig_cbs_, sigOrSigs, cb);
+  }
+
   var waKey_uKeyMap_$1 = waKey_uKeyMap_,
       waKey_staticUKeyMap_$1 = waKey_staticUKeyMap_;
 
   function triggerReRender(ref) {
-    // 对于挂载好了还未卸载的实例，才有必要触发重渲染
+    if (!ref) return; // 对于挂载好了还未卸载的实例，才有必要触发重渲染
+
     if (ref.__$$isUnmounted === false) {
       var refCtx = ref.ctx;
 
@@ -1903,7 +1958,7 @@
     _executeCuInfo = _asyncToGenerator(
     /*#__PURE__*/
     regenerator.mark(function _callee(cuInfo) {
-      var sourceType, ref, module, fnAsync, fns, fnRetKeys, cuRetContainer, retKey_stateKeys_, len, stateKeys, i, fn, isAsync, retKey, ret, uKeyMap, uKeys;
+      var sourceType, ref, module, fnAsync, fns, fnRetKeys, cuRetContainer, retKey_stateKeys_, len, isModule, stateKeys, curRetKey, i, fn, isAsync, retKey, ret, toSend, uKeyMap, uKeys;
       return regenerator.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -1915,47 +1970,86 @@
             case 3:
               sourceType = cuInfo.sourceType, ref = cuInfo.ref, module = cuInfo.module, fnAsync = cuInfo.fnAsync, fns = cuInfo.fns, fnRetKeys = cuInfo.fnRetKeys, cuRetContainer = cuInfo.cuRetContainer, retKey_stateKeys_ = cuInfo.retKey_stateKeys_;
               len = fns.length;
+              isModule = sourceType !== CATE_REF;
               stateKeys = [];
+              curRetKey = '';
+              _context.prev = 8;
+              send(SIG_ASYNC_COMPUTED_BATCH_START, {
+                module: module
+              });
               i = 0;
 
-            case 7:
+            case 11:
               if (!(i < len)) {
-                _context.next = 24;
+                _context.next = 31;
                 break;
               }
 
               fn = fns[i];
               isAsync = fnAsync[i];
               retKey = fnRetKeys[i];
+              curRetKey = retKey;
               ret = void 0;
+              send(SIG_ASYNC_COMPUTED_START, {
+                module: module,
+                retKey: retKey
+              });
 
               if (!isAsync) {
-                _context.next = 18;
+                _context.next = 24;
                 break;
               }
 
-              _context.next = 15;
+              _context.next = 21;
               return fn();
 
-            case 15:
-              ret = _context.sent;
-              _context.next = 19;
-              break;
-
-            case 18:
-              ret = fn();
-
-            case 19:
-              cuRetContainer[retKey] = makeCuPackedValue(false, ret);
-              if (sourceType !== CATE_REF) stateKeys = stateKeys.concat(retKey_stateKeys_[retKey]);
-
             case 21:
-              i++;
-              _context.next = 7;
+              ret = _context.sent;
+              _context.next = 25;
               break;
 
             case 24:
-              if (sourceType !== CATE_REF) {
+              ret = fn();
+
+            case 25:
+              cuRetContainer[retKey] = makeCuPackedValue(false, ret);
+              send(SIG_ASYNC_COMPUTED_END, {
+                module: module,
+                retKey: retKey
+              });
+              if (isModule) stateKeys = stateKeys.concat(retKey_stateKeys_[retKey]);
+
+            case 28:
+              i++;
+              _context.next = 11;
+              break;
+
+            case 31:
+              send(SIG_ASYNC_COMPUTED_BATCH_END, {
+                module: module
+              });
+              _context.next = 38;
+              break;
+
+            case 34:
+              _context.prev = 34;
+              _context.t0 = _context["catch"](8);
+
+              if (isModule) {
+                toSend = {
+                  module: module,
+                  err: _context.t0,
+                  retKey: curRetKey
+                };
+                send(SIG_ASYNC_COMPUTED_ERR, toSend);
+                send(SIG_ASYNC_COMPUTED_BATCH_END, toSend);
+              }
+
+              catchCcError(_context.t0);
+
+            case 38:
+              if (isModule) {
+                //  让所有正确执行完毕的计算函数关联到的实例能够被触发重渲染
                 stateKeys = Array.from(new Set(stateKeys));
                 uKeyMap = {};
                 stateKeys.forEach(function (stateKey) {
@@ -1965,45 +2059,43 @@
                 });
                 uKeys = okeys(uKeyMap);
                 uKeys.forEach(function (refKey) {
-                  var ref = refs[refKey];
-                  if (!ref) return;
-                  triggerReRender(ref);
+                  triggerReRender(refs[refKey]);
                 });
               } else {
                 triggerReRender(ref);
               }
 
-              _context.next = 30;
+              _context.next = 44;
               break;
 
-            case 27:
-              _context.prev = 27;
-              _context.t0 = _context["catch"](0);
-              catchCcError(_context.t0);
+            case 41:
+              _context.prev = 41;
+              _context.t1 = _context["catch"](0);
+              catchCcError(_context.t1);
 
-            case 30:
+            case 44:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[0, 27]]);
+      }, _callee, null, [[0, 41], [8, 34]]);
     }));
     return _executeCuInfo.apply(this, arguments);
   }
 
-  // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
+  //  cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
-  // rendering period input as below
-  // cur: {a:'val', c:'val', d:'val'}
+  //  receive cur in rendering period as below
+  //  cur: {a:'val', c:'val', d:'val'}
   //
-  // after render
-  // cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} nextCompare:{a:2, c:2, d:2}
+  //  after render
+  //  cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} compareCount=4 nextCompare:{a:2, c:2, d:2}
   //
-  // then concent know 'b' should delete from dep because its value is 2, 
-  // compare key count become bigger than previous render(4>3) or compare key values include 2, so should let cache expire
+  //  then concent know 'b' should delete from dep because its value is 2, 
+  //  if compare key count become bigger than previous render(4>3) or compare key values include 2, then cache will be expired
   //
-  // before next render, assign nextCompare to cur, assign {} to nextCompare
-  // cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
+  //  before next render, assign nextCompare to compare, clear cur and nextCompare
+  //  cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
 
   function updateDep (ref, module, key, isForModule) {
     var refCtx = ref.ctx;
@@ -2088,33 +2180,33 @@
     });
   }
   /** 
-   * 此函数被以下两种场景调用，
-   * 1 模块首次运行computed&watch时
-   * 2 实例首次运行computed&watch时
-   * 用于生成cuVal透传给计算函数fnCtx.cuVal,
-   * 用户读取cuVal的结果时，收集到当前计算函对其他计算函数的依赖关系
-   * 
-   *  module:
-   *    function fullName(n, o, f){
-   *       return n.firstName + n.lastName;
-   *    }
-   * 
-   *  // 此时funnyName依赖是 firstName lastName age
-   *  function funnyName(n, o, f){
-   *    const { fullName } = f.cuVal;
-   *    return fullName + n.age;
-   *  }
-   * 
-   *  ref:
-   *  ctx.computed('fullName',(n, o, f)=>{
-   *    return n.firstName + n.lastName;
-   *  })
-   * 
-   *  // 此时funnyName依赖是 firstName lastName age
-   *  ctx.computed('funnyName',(n, o, f)=>{
-   *    const { fullName } = f.cuVal;
-   *    return fullName + n.age;
-   *  })
+    此函数被以下两种场景调用，
+    1 模块首次运行computed&watch时
+    2 实例首次运行computed&watch时
+    用于生成cuVal透传给计算函数fnCtx.cuVal,
+    用户读取cuVal的结果时，收集到当前计算函对其他计算函数的依赖关系
+    
+      module:
+        function fullName(n, o, f){
+            return n.firstName + n.lastName;
+        }
+      
+      // 此时funnyName依赖是 firstName lastName age
+      function funnyName(n, o, f){
+        const { fullName } = f.cuVal;
+        return fullName + n.age;
+      }
+      
+      ref:
+      ctx.computed('fullName',(n, o, f)=>{
+        return n.firstName + n.lastName;
+      })
+      
+      // 此时funnyName依赖是 firstName lastName age
+      ctx.computed('funnyName',(n, o, f)=>{
+        const { fullName } = f.cuVal;
+        return fullName + n.age;
+      })
    */
 
 
@@ -2159,13 +2251,17 @@
     });
   } // isForModule : true for module , false for connect
 
-  function makeCuRefObContainer (ref, module, isForModule, isRefCu) {
+  function makeCuRefObContainer (ref, module, isForModule, isRefCu, isStatus) {
     if (isForModule === void 0) {
       isForModule = true;
     }
 
     if (isRefCu === void 0) {
       isRefCu = false;
+    }
+
+    if (isStatus === void 0) {
+      isStatus = false;
     }
 
     // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
@@ -2905,7 +3001,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.1',
+      version: '2.7.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -3749,7 +3845,12 @@
   }
 
   /**
-   * 盛放计算结果的容器
+   * 提供给用户使用，从存储的打包计算结果里获取目标计算结果的容器
+   * ------------------------------------------------------------------------------------
+   * 触发get时，会从打包对象里获取目标计算结果，
+   * 打包对象按 ${retKey} 放置在originalCuContainer里，
+   * 对于refComputed，originalCuContainer 是 ctx.refComputedOri
+   * 对于moduleComputed，originalCuContainer 是  concentContext.ccComputed._computedValueOri.{$module}
    */
 
   function makeCuRetContainer (computed, originalCuContainer) {
@@ -3759,8 +3860,8 @@
       originalCuContainer[key] = makeCuPackedValue();
       Object.defineProperty(moduleComputedValue, key, {
         get: function get() {
-          var value = originalCuContainer[key] || {}; //防止用户传入未定义的key
-
+          // 防止用户传入未定义的key
+          var value = originalCuContainer[key] || {};
           var needCompute = value.needCompute,
               fn = value.fn,
               newState = value.newState,
@@ -3888,50 +3989,6 @@
 
     var moduleComputedValue = safeGet$1(rootComputedValue, module);
     executeDepFns(d, module, d && d.ctx.module, moduleState, curDepWatchFns, moduleState, moduleState, moduleState, makeCallInfo(module), true, FN_WATCH, CATE_MODULE, moduleComputedValue);
-  }
-
-  var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED];
-  var sig_cbs_ = {};
-  sigs.forEach(function (sig) {
-    return sig_cbs_[sig] = [];
-  });
-
-  function _pushSigCb(sigMap, sigOrSigs, cb) {
-    function pushCb(sig, cb) {
-      var cbs = sigMap[sig];
-
-      if (cb) {
-        cbs.push(cb);
-      } else {
-        console.warn("invalid sig[" + sig + "]");
-      }
-    }
-
-    if (Array.isArray(sigOrSigs)) {
-      sigOrSigs.forEach(function (sig) {
-        pushCb(sig, cb);
-      });
-    } else {
-      pushCb(sigOrSigs, cb);
-    }
-  }
-
-  function clearCbs() {
-    sigs.forEach(function (sig) {
-      return sig_cbs_[sig].length = 0;
-    });
-  }
-  function send(sig, payload) {
-    var cbs = sig_cbs_[sig];
-    cbs.forEach(function (cb) {
-      return cb({
-        sig: sig,
-        payload: payload
-      });
-    });
-  }
-  function on(sigOrSigs, cb) {
-    _pushSigCb(sig_cbs_, sigOrSigs, cb);
   }
 
   var id = 0;
@@ -6160,11 +6217,11 @@
     var moduleState = makeObState(ref, mstate, module, true);
 
     if (module === MODULE_GLOBAL) {
-      //  it is not a good idea to specify a ins belong to $$global module, 
+      //  it is not a good idea to specify an ins belong to $$global module, 
       //  all ins connect to $$global module automatically!
-      //  recommend you visit its data by ctx.globalState or ctx.globalComputed
-      //  or you can visit by ctx.connectedState.$$global or ctx.connectComputed.$$global instead
-      justWarning("belong to $$global is not good.");
+      //  recommend you visit its data via ctx.globalState or ctx.globalComputed
+      //  or you can visit via ctx.connectedState.$$global or ctx.connectComputed.$$global instead
+      justWarning(ccUniqueKey + " belong to $$global is not recommended");
     } // record ccClassKey
 
 

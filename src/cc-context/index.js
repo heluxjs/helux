@@ -245,7 +245,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.7.1',
+    version: '2.7.2',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'tina',
