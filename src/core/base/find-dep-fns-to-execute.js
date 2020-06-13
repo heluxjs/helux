@@ -214,7 +214,8 @@ export default function executeDepFns(
           }
 
           let computedRet;
-          if (isCuFnAsync) {
+          // 异步函数首次执行时才去调用它，仅为了收集依赖
+          if (isCuFnAsync && beforeMountFlag) {
             fn(newStateArg, oldStateArg, fnCtx).catch(err => {
               if (err !== STOP_FN) throw err;
             })

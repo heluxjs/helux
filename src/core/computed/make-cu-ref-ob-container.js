@@ -91,7 +91,7 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
 }
 
 // isForModule : true for module , false for connect
-export default function (ref, module, isForModule = true, isRefCu = false, isStatus = false) {
+export default function (ref, module, isForModule = true, isRefCu = false) {
   // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
   const oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri[module];
   const oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue[module];

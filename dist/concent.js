@@ -1958,30 +1958,40 @@
     _executeCuInfo = _asyncToGenerator(
     /*#__PURE__*/
     regenerator.mark(function _callee(cuInfo) {
-      var sourceType, ref, module, fnAsync, fns, fnRetKeys, cuRetContainer, retKey_stateKeys_, len, isModule, stateKeys, curRetKey, i, fn, isAsync, retKey, ret, toSend, uKeyMap, uKeys;
+      var fns, len, sourceType, ref, module, fnAsync, fnRetKeys, cuRetContainer, retKey_stateKeys_, isModule, stateKeys, curRetKey, i, fn, isAsync, retKey, ret, toSend, uKeyMap, uKeys;
       return regenerator.wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
               _context.prev = 0;
-              _context.next = 3;
+              fns = cuInfo.fns;
+              len = fns.length;
+
+              if (!(len === 0)) {
+                _context.next = 5;
+                break;
+              }
+
+              return _context.abrupt("return");
+
+            case 5:
+              _context.next = 7;
               return delay();
 
-            case 3:
-              sourceType = cuInfo.sourceType, ref = cuInfo.ref, module = cuInfo.module, fnAsync = cuInfo.fnAsync, fns = cuInfo.fns, fnRetKeys = cuInfo.fnRetKeys, cuRetContainer = cuInfo.cuRetContainer, retKey_stateKeys_ = cuInfo.retKey_stateKeys_;
-              len = fns.length;
+            case 7:
+              sourceType = cuInfo.sourceType, ref = cuInfo.ref, module = cuInfo.module, fnAsync = cuInfo.fnAsync, fnRetKeys = cuInfo.fnRetKeys, cuRetContainer = cuInfo.cuRetContainer, retKey_stateKeys_ = cuInfo.retKey_stateKeys_;
               isModule = sourceType !== CATE_REF;
               stateKeys = [];
               curRetKey = '';
-              _context.prev = 8;
+              _context.prev = 11;
               send(SIG_ASYNC_COMPUTED_BATCH_START, {
                 module: module
               });
               i = 0;
 
-            case 11:
+            case 14:
               if (!(i < len)) {
-                _context.next = 31;
+                _context.next = 34;
                 break;
               }
 
@@ -1996,22 +2006,22 @@
               });
 
               if (!isAsync) {
-                _context.next = 24;
+                _context.next = 27;
                 break;
               }
 
-              _context.next = 21;
+              _context.next = 24;
               return fn();
 
-            case 21:
+            case 24:
               ret = _context.sent;
-              _context.next = 25;
+              _context.next = 28;
               break;
 
-            case 24:
+            case 27:
               ret = fn();
 
-            case 25:
+            case 28:
               cuRetContainer[retKey] = makeCuPackedValue(false, ret);
               send(SIG_ASYNC_COMPUTED_END, {
                 module: module,
@@ -2019,21 +2029,21 @@
               });
               if (isModule) stateKeys = stateKeys.concat(retKey_stateKeys_[retKey]);
 
-            case 28:
-              i++;
-              _context.next = 11;
-              break;
-
             case 31:
-              send(SIG_ASYNC_COMPUTED_BATCH_END, {
-                module: module
-              });
-              _context.next = 38;
+              i++;
+              _context.next = 14;
               break;
 
             case 34:
-              _context.prev = 34;
-              _context.t0 = _context["catch"](8);
+              send(SIG_ASYNC_COMPUTED_BATCH_END, {
+                module: module
+              });
+              _context.next = 41;
+              break;
+
+            case 37:
+              _context.prev = 37;
+              _context.t0 = _context["catch"](11);
 
               if (isModule) {
                 toSend = {
@@ -2047,7 +2057,7 @@
 
               catchCcError(_context.t0);
 
-            case 38:
+            case 41:
               if (isModule) {
                 //  让所有正确执行完毕的计算函数关联到的实例能够被触发重渲染
                 stateKeys = Array.from(new Set(stateKeys));
@@ -2065,20 +2075,20 @@
                 triggerReRender(ref);
               }
 
-              _context.next = 44;
+              _context.next = 47;
               break;
 
-            case 41:
-              _context.prev = 41;
+            case 44:
+              _context.prev = 44;
               _context.t1 = _context["catch"](0);
               catchCcError(_context.t1);
 
-            case 44:
+            case 47:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[0, 41], [8, 34]]);
+      }, _callee, null, [[0, 44], [11, 37]]);
     }));
     return _executeCuInfo.apply(this, arguments);
   }
@@ -2251,17 +2261,13 @@
     });
   } // isForModule : true for module , false for connect
 
-  function makeCuRefObContainer (ref, module, isForModule, isRefCu, isStatus) {
+  function makeCuRefObContainer (ref, module, isForModule, isRefCu) {
     if (isForModule === void 0) {
       isForModule = true;
     }
 
     if (isRefCu === void 0) {
       isRefCu = false;
-    }
-
-    if (isStatus === void 0) {
-      isStatus = false;
     }
 
     // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
@@ -3001,7 +3007,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.2',
+      version: '2.7.4',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'

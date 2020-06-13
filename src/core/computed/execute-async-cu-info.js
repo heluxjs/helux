@@ -22,11 +22,12 @@ function triggerReRender(ref) {
 
 export default async function executeCuInfo(cuInfo) {
   try {
+    const fns = cuInfo.fns;
     const len = fns.length;
     if (len === 0) return;
 
     await delay();
-    const { sourceType, ref, module, fnAsync, fns, fnRetKeys, cuRetContainer, retKey_stateKeys_ } = cuInfo;
+    const { sourceType, ref, module, fnAsync, fnRetKeys, cuRetContainer, retKey_stateKeys_ } = cuInfo;
     const isModule = sourceType !== CATE_REF;
 
     let stateKeys = [];
