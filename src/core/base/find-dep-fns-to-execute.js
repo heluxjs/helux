@@ -215,10 +215,12 @@ export default function executeDepFns(
 
           let computedRet;
           // 异步函数首次执行时才去调用它，仅为了收集依赖
-          if (isCuFnAsync && beforeMountFlag) {
-            fn(newStateArg, oldStateArg, fnCtx).catch(err => {
-              if (err !== STOP_FN) throw err;
-            })
+          if (isCuFnAsync) {
+            if (beforeMountFlag) {
+              fn(newStateArg, oldStateArg, fnCtx).catch(err => {
+                if (err !== STOP_FN) throw err;
+              })
+            }
           } else {
             computedRet = fn(newStateArg, oldStateArg, fnCtx);
           }

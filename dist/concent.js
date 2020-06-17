@@ -2180,10 +2180,12 @@
   var _computedValueOri$1 = computedMap._computedValueOri,
       _computedValue$1 = computedMap._computedValue,
       _computedRaw$1 = computedMap._computedRaw,
-      _computedDep$1 = computedMap._computedDep;
+      _computedDep$1 = computedMap._computedDep; // refModuleCuDep 来自 ref.ctx.computedDep
 
-  function writeRetKeyDep(moduleCuDep, ref, module, retKey, isForModule) {
-    var retKey_stateKeys_ = moduleCuDep.retKey_stateKeys_;
+  function writeRetKeyDep(refModuleCuDep, ref, module, retKey, isForModule) {
+    var retKey_stateKeys_ = refModuleCuDep.retKey_stateKeys_; // 所有组件都自动连接到$$global模块，但是未必有对$$global模块的retKey依赖
+
+    if (!retKey_stateKeys_) return;
     var stateKeys = retKey_stateKeys_[retKey] || [];
     stateKeys.forEach(function (stateKey) {
       updateDep(ref, module, stateKey, isForModule);
@@ -2544,12 +2546,14 @@
               newStateArg = oldStateArg = makeCuObState(initNewState, collectedDepKeys);
             }
 
-            var computedRet;
+            var computedRet; // 异步函数首次执行时才去调用它，仅为了收集依赖
 
             if (isCuFnAsync) {
-              fn(newStateArg, oldStateArg, fnCtx)["catch"](function (err) {
-                if (err !== STOP_FN) throw err;
-              });
+              if (beforeMountFlag) {
+                fn(newStateArg, oldStateArg, fnCtx)["catch"](function (err) {
+                  if (err !== STOP_FN) throw err;
+                });
+              }
             } else {
               computedRet = fn(newStateArg, oldStateArg, fnCtx);
             }
@@ -3007,7 +3011,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.4',
+      version: '2.7.8',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
