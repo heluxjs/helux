@@ -1,10 +1,11 @@
 import * as util from '../../support/util';
+import { MODULE_GLOBAL } from '../../support/constant';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 import makeCuRetContainer from '../computed/make-cu-ret-container';
 import makeCuRefObContainer from '../computed/make-cu-ref-ob-container';
 
-const { okeys } = util;
+const { okeys, makeCuDepDesc } = util;
 const { runtimeVar } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
@@ -38,6 +39,17 @@ export default function (ref, setup, bindCtxToMethod) {
   ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
   ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
   
+  // 所有的组件都会自动连接到$$global模块，但是有可能没有使用$$global模块数据做过任何实例计算
+  // 这里需要补齐computedDep.$$global 和 watchDep.$$global 的依赖描述数据
+  // 防止后续逻辑里出错
+  const { computedDep, watchDep } = ctx;
+  if (!computedDep[MODULE_GLOBAL]) {
+    computedDep[MODULE_GLOBAL] = makeCuDepDesc();
+  }
+  if (!watchDep[MODULE_GLOBAL]) {
+    watchDep[MODULE_GLOBAL] = makeCuDepDesc();
+  }
+
   triggerComputedAndWatch(ref);
 
   ctx.__$$inBM = false;

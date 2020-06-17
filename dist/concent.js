@@ -834,7 +834,7 @@
     var pickedFns = []; // 针对type module， init-module-state时，已对_computedValueOri赋值了默认cuDesc，
     // 所以此时可以安全的直接判断非关系，而不用担心 {}对象存在
 
-    if (!moduleDep) return {
+    if (isObjectNull(moduleDep)) return {
       pickedFns: pickedFns,
       setted: [],
       changed: [],
@@ -3011,7 +3011,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.8',
+      version: '2.7.10',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -7803,7 +7803,8 @@
     if (hasWatchFn) cuOrWatch(watchKeyForRef);
   }
 
-  var okeys$a = okeys;
+  var okeys$a = okeys,
+      makeCuDepDesc$1 = makeCuDepDesc;
   var runtimeVar$4 = ccContext.runtimeVar;
   function beforeMount (ref, setup, bindCtxToMethod) {
     var ctx = ref.ctx;
@@ -7832,7 +7833,13 @@
 
 
     ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
-    ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
+    ctx.refComputed = makeCuRefObContainer(ref, null, true, true); // 所有的组件都会自动连接到$$global模块，但是有可能没有使用$$global模块数据做过任何实例计算
+    // 这里需要补齐computedDep.$$global 的依赖描述数据
+
+    if (!ctx.computedDep[MODULE_GLOBAL]) {
+      ctx.computedDep[MODULE_GLOBAL] = makeCuDepDesc$1();
+    }
+
     triggerComputedAndWatch(ref);
     ctx.__$$inBM = false;
   }
