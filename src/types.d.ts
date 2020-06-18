@@ -107,10 +107,8 @@ interface IReducerFn {
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
 export type ComputedValType<T> = {
-  readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<ReturnType<T[K]>> :
-  (
-    T[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<T[K]['fn']>> : never
-  );
+  readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<T[K]> :
+  (T[K] extends IComputedFnSimpleDesc ? GetPromiseT<T[K]['fn']> : never);
 }
 
 export type SettingsType<SetupFn> = SetupFn extends IAnyFn ?
@@ -737,7 +735,9 @@ interface IRegBaseSt<P extends IAnyObj, ICtx extends ICtxBase, FnState = {}> ext
   state: FnState; // state required
 }
 
-type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] |
+// 加readonly 修饰是为了支持声明connect时用 as const后缀
+// @see https://codesandbox.io/s/concent-guide-ts-zrxd5?file=/src/pages/CtxMConn/index.tsx
+type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] | readonly (keyof RootState)[] |
   // !!! currently I do not know how to pass ${moduleName} to evaluate target type in object value
   // something like (keyof RootState[moduleName] )[] but it is wrong writing
   { [moduleName in (keyof RootState)]?: TStar | TAuto | string[] };
