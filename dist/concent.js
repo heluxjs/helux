@@ -3011,7 +3011,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.10',
+      version: '2.7.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -7834,10 +7834,18 @@
 
     ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
     ctx.refComputed = makeCuRefObContainer(ref, null, true, true); // 所有的组件都会自动连接到$$global模块，但是有可能没有使用$$global模块数据做过任何实例计算
-    // 这里需要补齐computedDep.$$global 的依赖描述数据
+    // 这里需要补齐computedDep.$$global 和 watchDep.$$global 的依赖描述数据
+    // 防止后续逻辑里出错
 
-    if (!ctx.computedDep[MODULE_GLOBAL]) {
-      ctx.computedDep[MODULE_GLOBAL] = makeCuDepDesc$1();
+    var computedDep = ctx.computedDep,
+        watchDep = ctx.watchDep;
+
+    if (!computedDep[MODULE_GLOBAL]) {
+      computedDep[MODULE_GLOBAL] = makeCuDepDesc$1();
+    }
+
+    if (!watchDep[MODULE_GLOBAL]) {
+      watchDep[MODULE_GLOBAL] = makeCuDepDesc$1();
     }
 
     triggerComputedAndWatch(ref);
