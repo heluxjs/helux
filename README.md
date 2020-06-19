@@ -1,7 +1,7 @@
 English | [简体中文](./README.zh-CN.md)
 
 ## [concent](https://concentjs.github.io/concent-doc)
-❤️ Build-in **dependency collection**, a predictable、zero-cost-use、progressive、high performance's react develop framework ❤️
+❤️ Build-in **dependency collection**, a predictable、zero-cost-use、progressive、high performance's react develop framework 
 
 ## Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
