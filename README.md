@@ -177,8 +177,8 @@ const changeNum = () => mr.inc(20); // or ctx.mr.asynInc(10)
 ```
 
 infact concent allow user change with top api `setState`、`dispatch` and `reducer`.
-
-- with `setState`
+ 
+- with `setState`    
 
 ```js
 import { getState, setState } from "concent";
@@ -203,7 +203,7 @@ import { getState, dispatch } from "concent";
 })()
 ```
 
-- with `reducer`
+- with `reducer`    
 infact concent collect all module's reducer to its internal `reducer` map to let user call reducer method directly!
 ```js
 import { getState, reducer as ccReducer } from "concent";
