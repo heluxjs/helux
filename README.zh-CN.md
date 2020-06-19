@@ -62,13 +62,191 @@
     
 ![hello-concent](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/hello.gif)
 
-[review this gif](https://xvcej.csb.app/#/)
+[查看gif图源码](https://stackblitz.com/edit/react-wpzgqd?file=index.js) or [查看gif图演示站点](https://xvcej.csb.app/#/)
 
-## 🎇依赖收集&精确更新
-![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
+## 📦快速开始
+确保已安装[nodejs](http://nodejs.cn/download/)。
 
-## 🎆统一类组件和函数组件编码方式
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
+### Install concent
+使用npm命令安装`cocnent`
+
+```sh
+$ cd cc-app
+$ npm i --save concent
+```
+
+or yarn command
+
+```sh
+$ yarn add concent
+```
+
+### 定义模块
+使用`run`接口定义一个模块
+
+```js
+import { run } from 'concent';
+
+run({
+  counter: {// 声明一个名为'counter'的模块
+    state: { num: 1, numBig: 100 }, // 定义状态
+  },
+  // 你也可以在这里继续声明或添加其他模块
+});
+```
+
+### 消费状态&修改状态
+使用`register`接口为class组件指定一个模块，或`useConcent`为function组件指定一个模块。
+> 让concent知道当前组件属于具体的哪个模块
+
+```js
+import { register, useConcent } from 'concent';
+
+@register('counter')
+class DemoCls extends React.Component{
+  // 此时setState提交的状态触发自己重渲染 
+  // 同时也会触发其他同样属于coutner模块的实例且消费了具体数据的实例重渲染
+  inc = ()=> this.setState({num: this.state.num + 1})
+  render(){
+    // 这里读取了num，意味着当前实例的依赖key列表是 ['num']
+    const { num } = this.state;
+    // render logic
+  }
+}
+
+function DemoFn(){
+  const { state, setState } = useConcent('counter');
+  const inc = ()=> setState({num: state.num + 1});
+  // render logic
+}
+```
+
+注意`state`是一个`proxy`对象，用于帮助`concent`在组件实例在每一轮渲染期间动态的收集到依赖列表，让[精确渲染]((https://codesandbox.io/s/dep-collection-uiqzn?file=/src/App.js)得以优雅实现。
+
+### 实例化组件
+实例化concent组件不需要任何`Provider`包裹在根节点处，你可以在任何地方做实例化，查看[在线演示](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js)
+
+```jsx
+const rootElement = document.getElementById("root");
+ReactDOM.render(
+  <React.StrictMode>
+    <div>
+      <ClsComp />
+      <FnComp />
+    </div>
+  </React.StrictMode>,
+  rootElement
+);
+```
+
+### 定义reducer
+如果你在改变状态状态之前还有很多业务逻辑要处理，推荐将它们剥离到`reducer`
+> 为了concent获得最佳的运行性能，强调用户总是返回片段状态。
+
+```js
+run({
+  counter: { /** ... */},
+  reducer: {
+    inc(payload, moduleState) {
+      return { num: moduleState.num + 1 };
+    },
+    async asyncInc(payload, moduleState) {
+      await delay();
+      return { num: moduleState.num + 1 };
+    }
+  }
+});
+```
+
+定义完`reducer`之后，你可以在组件里呼叫定义好的方法了，从而替代`setState`
+
+```js
+//  --------- 对于类组件 -----------
+changeNum = () => this.setState({ num: 10 })
+// ===> 修改为
+changeNum = () => this.ctx.mr.inc(10);// or this.ctx.mr.asynInc(10)
+
+//当然这里也可以写为ctx.dispatch调用，不过更推荐用上面的moduleReducer直接调用
+//this.ctx.dispatch('inc', 10); // or this.ctx.dispatch('asynInc', 10)
+
+//  --------- 对于函数组件 -----------
+const { state, mr } = useConcent("counter");// useConcent 返回的就是ctx
+const changeNum = () => mr.inc(20); // or ctx.mr.asynInc(10)
+
+//对于函数组将同样支持dispatch调用方式
+//ctx.dispatch('inc', 10);  // or ctx.dispatch('asynInc', 10)
+```
+
+在脱离ui范围的时候，`concent`允许用户使用顶层api修改状态。
+
+- 使用 `setState`    
+
+```js
+import { getState, setState } from "concent";
+
+console.log(getState('counter').num);// log: 1
+setState('counter', {num:10});// 修改counter模块num值
+console.log(getState('counter').num);// log: 10
+```
+
+- 使用 `dispatch`   
+`dispatch` 会返回一个promise，所以我们需要在外部包裹一个`async`
+
+```js
+import { getState, dispatch } from "concent";
+
+(async ()=>{
+  console.log(getState("counter").num);// log 1
+  await dispatch("counter/inc");
+  console.log(getState("counter").num);// log 2
+  await dispatch("counter/asyncInc");
+  console.log(getState("counter").num);// log 3
+})()
+```
+
+- 使用 `reducer`    
+`run`接口定义的`reducer`集合已被`concent`集中管理起来，并允许用户以`reducer.${moduleName}.${methodName}`的方式直接发起调用
+
+```js
+import { getState, reducer as ccReducer } from "concent";
+
+(async ()=>{
+  console.log(getState("counter").num);// log 1
+  await ccReducer.counter.inc();
+  console.log(getState("counter").num);// log 2
+  await ccReducer.counter.asyncInc();
+  console.log(getState("counter").num);// log 3
+})()
+```
+
+### 定义computed
+如果你想基于模块状态计算出其他数据，推荐定义`computed`
+
+```js
+run({
+  counter: { /** ... */},
+  reducer: { /** ... */},
+  computed: {
+    numx2: ({num})=> num * 2,
+    numBigx2: ({numBig})=> numBig * 2,
+    numSumBig: ({num, numBig})=> num + numBig,
+  }
+});
+
+// 函数组件ui处获取计算结果
+const { moduleComputed } = useConcent('counter');
+
+// 类组件ui处获取计算结果
+const { moduleComputed } = this.ctx;
+```
+
+注意当你在函数的参数列表里解构具体的值时，也是在同时声明了当前计算函数的依赖。
+```js
+ // 当前函数仅在num或者numBig发送改变时才会触发重计算
+ const numSumBig = ({num, numBig})=> num + numBig,
+```
+**async comoputed** 也是支持的, [点击查看演示](https://codesandbox.io/s/async-computed-35byz?file=/src/App.js:1378-2042).
+
 
 ## 🖥在线体验
 - 快速开始:   
@@ -111,6 +289,17 @@ source code see here：https://github.com/fantasticsoul/concent-guid-ts
 * **模块克隆**，支持对已定义模块进行克隆,满足你高维度抽象的需要。
 * **完整的typescript支持**，能够非常容易地书写[优雅的ts代码](https://codesandbox.io/s/concent-guide-ts-zrxd5)。
 
+### 🎇依赖收集&精确更新
+![](https://github.com/fantasticsoul/assets/blob/master/article-img/rmc-comparison/3.png)
+
+### 🎆统一类组件和函数组件编码方式
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/cc-unified-lifecycle-en.png)
+
+## Eco system
+基于**中间件**和**插件机制**，你可以很容易的抽象和定制非业务相关的处理器，或者迁移`redux`生态相关库。
+
+![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
+
 ## 搭配react-router使用
 请移步阅读和了解[react-router-concent](https://github.com/concentjs/react-router-concent)，暴露`history`对象，可以全局任意地方使用，享受编程式的导航跳转。
 
@@ -125,74 +314,6 @@ source code see here：https://github.com/fantasticsoul/concent-guid-ts
 
 [concent-plugin-loading在线示例](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
-## 📦 快速开始
-确保你本地机器上安装有[nodejs](http://nodejs.cn/download/)。
-### 创建一个app
-在你的电脑上，选择一个合适的目录并进入，使用[create-react-app](https://github.com/facebookincubator/create-react-app) 创建一个app
-```sh
-$ npm i -g create-react-app
-$ create-react-app cc-app
-```
-### 安装concent
-创建好app后，进入你的app根目录，使用npm安装`concent`
-```sh
-$ cd cc-app
-$ npm i --save concent
-```
-或者使用yarn安装
-```sh
-$ yarn add concent
-```
-### 将`App.js`文件的内容全部替换为以下代码
-> 你也可以[点击这里在线编辑](https://codesandbox.io/s/green-tdd-g2mcr).
-
-```javascript
-import React, { Component } from 'react';
-import { register, run, useConcent } from 'concent';
-
-// 运行concent，配置一个名为counter的模块
-run({
-  counter:{
-    state:{count:1}
-  }
-})
-
-// 定义一个属于counter模块的类组件
-@register('counter')
-class Counter extends Component{
-  render(){
-    //此时setState能够直接提交状态到store，并广播到其他同属于counter模块的实例
-    const add = ()=>this.setState({count:this.state.count+1});
-    return (
-      <div>
-        {this.state.count}
-        <button onClick={add}>add</button>
-      </div>
-    )
-  }
-}
-
-// 定义一个属于counter模块的函数组件
-function FnCounter(){
-  const ctx = useConcent('counter');
-  const add = ()=>ctx.setState({count:ctx.state.count+1});
-  return (
-    <div>
-      {ctx.state.count}
-      <button onClick={add}>add</button>
-    </div>
-  )
-}
-
-export default function App() {
-  return (
-    <div className="App">
-      <Counter />
-      <FnCounter />
-    </div>
-  );
-}
-```
 
 ## ❤️依赖收集
 concent使用`Proxy`&`defineProperty` in `v2.3+`完成了运行时的依赖收集特性，大幅缩小UI视图渲染范围，提高应用性能。
@@ -277,7 +398,7 @@ class ClassComp extends React.Component{
 ```
 **[edit this demo on CodeSandbox](https://codesandbox.io/s/condescending-satoshi-p5e5dr)**
 
-## 🔨其他高级特性实例
+## 🔨代码实战
 - 运行concent，载入模块配置
 
 ```javascript
@@ -520,7 +641,5 @@ function HookCounter(){
 * [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
 ___
 ## 图片介绍
-### cc状态分发流程
-![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
 ### cc组件渲染流程
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)

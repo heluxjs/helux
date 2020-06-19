@@ -230,6 +230,12 @@ run({
     numSumBig: ({num, numBig})=> num + numBig,
   }
 });
+
+// get computed result in funtion component
+const { moduleComputed } = useConcent('counter');
+
+// get computed result in class component
+const { moduleComputed } = this.ctx;
 ```
 
 Attention that when you deconstruct the state for a computed function, you are also declare the dep keys for the function at the same time.
