@@ -143,7 +143,7 @@ ReactDOM.render(
 
 ### Define reducer
 If you have many logic code before changing state, we recommend put them to `reducer`
-> concent emphasize user should always return a partial state instead of whole state, it will let concent working in best performance mode.
+> concent emphasize user should always return a partial state instead of whole state, it will let concent working in best performance mode, so just return what you changed in the reducer function.
 
 ```js
 run({
