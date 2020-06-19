@@ -123,6 +123,8 @@ function DemoFn(){
 
 注意`state`是一个`proxy`对象，用于帮助`concent`在组件实例在每一轮渲染期间动态的收集到依赖列表，让[精确渲染](https://codesandbox.io/s/dep-collection-uiqzn?file=/src/App.js)得以优雅实现。
 
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/recoil-vs-concent/r5.gif)
+
 ### 实例化组件
 实例化concent组件不需要任何`Provider`包裹在根节点处，你可以在任何地方做实例化，查看[在线演示](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js)
 
