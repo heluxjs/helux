@@ -232,7 +232,7 @@ run({
 });
 ```
 
-Attention that when you deconstruct the state for on computed function, you are also declare the dep keys for the function at the same time.
+Attention that when you deconstruct the state for a computed function, you are also declare the dep keys for the function at the same time.
 
 ```js
  // current function will only been execute when num or numBig changed.
