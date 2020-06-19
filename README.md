@@ -125,7 +125,7 @@ function DemoFn(){
 Attention that `state` is a proxy object, for helping concent collect every instantce's dep keys in every render period, that makes [exact update](https://codesandbox.io/s/dep-collection-uiqzn?file=/src/App.js) become true
 
 
-### Initilize component
+### Initialize component
 There is no need to wrap with the root component with a `Provider`, you can just initialize the concent component any where you want, [here](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js) you can view the demo.
 
 ```jsx
