@@ -1,7 +1,7 @@
 [English](./README.md) | 简体中文
 
 ## [concent](https://concentjs.github.io/concent-doc)
-内置依赖收集，一个可预测、0入侵、渐进式、高性能的react开发框架，power you react!
+❤️ 内置依赖收集，一个可预测、0入侵、渐进式、高性能的react开发框架!
 
 了解更多请访问官方文档[https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc).
 
