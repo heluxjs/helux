@@ -179,7 +179,7 @@ const { state, mr } = useConcent("counter");// useConcent returns ref ctx
 const changeNum = () => mr.inc(20); // or ctx.mr.asynInc(10)
 ```
 
-infact concent allow user change with top api `setState`、`dispatch` and `reducer`.
+infact concent allow user change state with top api `setState`、`dispatch` and `reducer`.
  
 - with `setState`    
 
