@@ -147,16 +147,18 @@ ReactDOM.render(
 
 ```js
 run({
-  counter: { /** ... */},
-  reducer: {
-    inc(payload, moduleState) {
-      return { num: moduleState.num + 1 };
+  counter: {
+    state: {/** ... */},
+    reducer: {
+      inc(payload, moduleState) {
+        return { num: moduleState.num + 1 };
+      },
+      async asyncInc(payload, moduleState) {
+        await delay();
+        return { num: moduleState.num + 1 };
+      },
     },
-    async asyncInc(payload, moduleState) {
-      await delay();
-      return { num: moduleState.num + 1 };
-    }
-  }
+  },
 });
 ```
 
@@ -226,13 +228,15 @@ import { getState, reducer as ccReducer } from "concent";
 
 ```js
 run({
-  counter: { /** ... */},
-  reducer: { /** ... */},
-  computed: {
-    numx2: ({num})=> num * 2,
-    numBigx2: ({numBig})=> numBig * 2,
-    numSumBig: ({num, numBig})=> num + numBig,
-  }
+  counter: {
+    state: { /** ... */},
+    reducer: { /** ... */},
+    computed: {
+      numx2: ({num})=> num * 2,
+      numBigx2: ({numBig})=> numBig * 2,
+      numSumBig: ({num, numBig})=> num + numBig,
+    },
+  },
 });
 
 // 函数组件ui处获取计算结果
