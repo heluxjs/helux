@@ -148,16 +148,18 @@ If you have many logic code before changing state, we recommend put them to `red
 
 ```js
 run({
-  counter: { /** ... */},
-  reducer: {
-    inc(payload, moduleState) {
-      return { num: moduleState.num + 1 };
+  counter: { 
+    state: {/** ... */},
+    reducer: {
+      inc(payload, moduleState) {
+        return { num: moduleState.num + 1 };
+      },
+      async asyncInc(payload, moduleState) {
+        await delay();
+        return { num: moduleState.num + 1 };
+      }
     },
-    async asyncInc(payload, moduleState) {
-      await delay();
-      return { num: moduleState.num + 1 };
-    }
-  }
+  },
 });
 ```
 
@@ -223,13 +225,15 @@ If you want to compute another state with module state, we recommend put them to
 
 ```js
 run({
-  counter: { /** ... */},
-  reducer: { /** ... */},
-  computed: {
-    numx2: ({num})=> num * 2,
-    numBigx2: ({numBig})=> numBig * 2,
-    numSumBig: ({num, numBig})=> num + numBig,
-  }
+  counter: { 
+    state: { /** ... */},
+    reducer: { /** ... */},
+    computed: {
+      numx2: ({num})=> num * 2,
+      numBigx2: ({numBig})=> numBig * 2,
+      numSumBig: ({num, numBig})=> num + numBig,
+    }
+  },
 });
 
 // get computed result in funtion component
