@@ -1,3 +1,7 @@
+/**
+ * http://react.html.cn/docs/strict-mode.html
+ * https://frontarm.com/daishi-kato/use-ref-in-concurrent-mode/
+ */
 import React from 'react';
 import { CC_HOOK, CC_OB, CC_CUSTOMIZE } from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
@@ -105,12 +109,27 @@ const isRegChanged = (firstRegOpt, curRegOpt) => {
   return false;
 }
 
+function getFirstRenderedInfo(curCursor, usableCursor) {
+  const info = { isFirstRendered: true, skipFirstRender: false };
+  if (curCursor === 1) {
+    return info;
+  }
+
+  if (curCursor === usableCursor) {
+    const prevCursor = curCursor - 1;
+  } else { 
+    info.isFirstRendered = false;
+    return info;
+  }
+}
+
 function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
-  const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: registerOption });
+  const _registerOption = getRegisterOptions(registerOption);
+
+  const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption });
   const hookCtx = hookCtxContainer.current;
 
-  const _registerOption = getRegisterOptions(registerOption);
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
 
@@ -127,8 +146,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   let hookRef;
 
   // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
-  if (isFirstRendered || isRegChanged(hookCtx.regOpt, registerOption)) {
-    hookCtx.regOpt = registerOption;
+  if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption)) {
+    hookCtx.regOpt = _registerOption;
     hookRef = cref();
   } else {
     hookRef = ccUKey_ref_[hookCtx.ccUKey];

@@ -3011,7 +3011,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.11',
+      version: 'test-2.0.0',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -8782,7 +8782,9 @@
       registerOption = {};
     }
 
+    var cursor = getUsableCursor();
     var hookCtxContainer = React.useRef({
+      cursor: cursor,
       prevCcUKey: null,
       ccUKey: null,
       regOpt: registerOption
@@ -8807,17 +8809,12 @@
       throw new Error(tip);
     }
 
-    var cursor = getUsableCursor();
-
-    var _reactUseState = reactUseState(cursor),
-        lockedCursor = _reactUseState[0];
-
-    var isFirstRendered = lockedCursor === cursor;
+    var isFirstRendered = hookCtx.cursor === cursor;
     var state = isFirstRendered ? evalState(iState) : 0;
 
-    var _reactUseState2 = reactUseState(state),
-        hookState = _reactUseState2[0],
-        hookSetter = _reactUseState2[1];
+    var _reactUseState = reactUseState(state),
+        hookState = _reactUseState[0],
+        hookSetter = _reactUseState[1];
 
     var cref = function cref(ref) {
       return buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
