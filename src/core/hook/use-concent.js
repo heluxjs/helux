@@ -106,7 +106,8 @@ const isRegChanged = (firstRegOpt, curRegOpt) => {
 }
 
 function _useConcent(registerOption = {}, ccClassKey, insType) {
-  const hookCtxContainer = React.useRef({ prevCcUKey: null, ccUKey: null, regOpt: registerOption });
+  const cursor = getUsableCursor();
+  const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: registerOption });
   const hookCtx = hookCtxContainer.current;
 
   const _registerOption = getRegisterOptions(registerOption);
@@ -118,10 +119,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     throw new Error(tip);
   }
 
-  const cursor = getUsableCursor();
-  const [lockedCursor] = reactUseState(cursor);
-  const isFirstRendered = lockedCursor === cursor;
-
+  const isFirstRendered = hookCtx.cursor === cursor;
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
 
