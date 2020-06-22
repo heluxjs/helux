@@ -496,3 +496,19 @@ export function isSymbol(value) {
 export function delay(ms=0) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function getErrStackKeywordLoc(err, keyword, offset = 0) {
+  const errStack = err.stack;
+  const arr = errStack.split('\n');
+  const len = arr.length;
+  let curLocation = '';
+
+  for (let i = 0; i < len; i++) {
+    if (arr[i].includes(keyword)) {
+      curLocation = arr[i + offset];
+      break;
+    }
+  }
+
+  return curLocation;
+}

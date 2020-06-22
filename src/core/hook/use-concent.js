@@ -15,9 +15,10 @@ import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState, getPassToMapWaKeys } from '../../support/util';
 import beforeRender from '../ref/before-render';
+import { isRegChanged, getFirstRenderInfo } from './common';
 
 const { ccUKey_ref_ } = ccContext;
-
+const cusor_hookRef_ = {};
 let refCursor = 1;
 
 function getUsableCursor() {
@@ -82,46 +83,16 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
     return ref;
   }
 
+  cusor_hookRef_[hookCtx.cursor] = hookRef;
   return hookRef;
 }
 
-function replaceSetter(ctx, hookSetter){
+function replaceSetter(ctx, hookSetter) {
   ctx.__boundSetState = hookSetter;
   ctx.__boundForceUpdate = hookSetter;
 }
 
 const tip = 'react version is LTE 16.8';
-
-const connectToStr = (connect) => {
-  if (!connect) return '';
-  else if (Array.isArray(connect)) return connect.join(',');
-  else if (typeof connect === 'object') return JSON.stringify(connect);
-  else return connect;
-}
-
-const isRegChanged = (firstRegOpt, curRegOpt) => {
-  if (firstRegOpt.module !== curRegOpt.module) {
-    return true;
-  }
-  if (connectToStr(firstRegOpt.connect) !== connectToStr(curRegOpt.connect)) {
-    return true;
-  }
-  return false;
-}
-
-function getFirstRenderedInfo(curCursor, usableCursor) {
-  const info = { isFirstRendered: true, skipFirstRender: false };
-  if (curCursor === 1) {
-    return info;
-  }
-
-  if (curCursor === usableCursor) {
-    const prevCursor = curCursor - 1;
-  } else { 
-    info.isFirstRendered = false;
-    return info;
-  }
-}
 
 function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
@@ -129,6 +100,12 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
 
   const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption });
   const hookCtx = hookCtxContainer.current;
+  const { isFirstRendered, skip } = getFirstRenderInfo(hookCtx, cursor);
+  let hookRef;
+
+  if (skip) {
+    hookRef = cusor_hookRef_[hookCtx.cursor - 1];
+  }
 
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
@@ -138,39 +115,36 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     throw new Error(tip);
   }
 
-  const isFirstRendered = hookCtx.cursor === cursor;
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
 
-  const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
-  let hookRef;
+  
+  if (!skip) {
+    const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
 
-  // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
-  if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption)) {
-    hookCtx.regOpt = _registerOption;
-    hookRef = cref();
-  } else {
-    hookRef = ccUKey_ref_[hookCtx.ccUKey];
-    if (!hookRef) {// single file demo in hot reload mode
+    // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
+    if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption)) {
+      hookCtx.regOpt = _registerOption;
       hookRef = cref();
     } else {
-      const refCtx = hookRef.ctx;
-      refCtx.prevProps = refCtx.props;
-      hookRef.props = refCtx.props = props;
-      refCtx.extra = extra;
+      hookRef = ccUKey_ref_[hookCtx.ccUKey];
+      if (!hookRef) {// single file demo in hot reload mode
+        hookRef = cref();
+      } else {
+        const refCtx = hookRef.ctx;
+        refCtx.prevProps = refCtx.props;
+        hookRef.props = refCtx.props = props;
+        refCtx.extra = extra;
+      }
     }
   }
 
-  const refCtx = hookRef.ctx; 
+
+  const refCtx = hookRef.ctx;
   const effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect;
 
   //after first render of a timing hookRef just created 
   effectHandler(() => {
-    // // 正常情况走到这里应该是true，如果是false，则是热加载情况下的hook行为，此前已走了一次beforeUnmount
-    // // 需要走重新初始化当前组件的整个流程，否则热加载时的setup等参数将无效，只是不需要再次创建ref
-    // if (!hookRef.isFirstRendered) {
-    //   cref(hookRef);
-    // }
     // mock componentWillUnmount
     return () => {
       const targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
@@ -178,6 +152,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       if (toUnmountRef) {
         hookCtx.prevCcUKey = null;
         beforeUnmount(toUnmountRef);
+        delete cusor_hookRef_[hookCtx.cursor];
       }
     }
   }, [hookRef]);// 渲染过程中变化module或者connect的值，触发卸载前一刻的ref

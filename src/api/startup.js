@@ -7,27 +7,14 @@ import didMount from '../core/base/did-mount';
 import beforeUnmount from '../core/base/before-unmount';
 import initCcFrag from '../core/ref/init-cc-frag';
 
-const { justTip, bindToWindow } = util;
+const { justTip, bindToWindow, getErrStackKeywordLoc } = util;
 let cachedLocation = '';
 
 function checkStartup(err) {
-  const errStack = err.stack;
   const info = ccContext.info;
-  const arr = errStack.split('\n');
-  const len = arr.length;
-  let curLocation = '';
 
-  const tryGetLocation = (keyword, offset) => {
-    for (let i = 0; i < len; i++) {
-      if (arr[i].includes(keyword)) {
-        curLocation = arr[i + offset];
-        break;
-      }
-    }
-  }
-
-  tryGetLocation('startup', 2);//向下2句找触发run的文件
-  if (!curLocation) tryGetLocation('runConcent', 0);
+  let curLocation = getErrStackKeywordLoc(err, 'startup', 2);//向下2句找触发run的文件
+  if (!curLocation) curLocation = getErrStackKeywordLoc(err, 'runConcent', 0);
 
   const letRunOk = () => {
     ccContext.isHot = true;
