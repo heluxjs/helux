@@ -3030,7 +3030,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: 'test-2.0.6',
+      version: 'test-2.0.10',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -8700,7 +8700,11 @@
     return loc;
   };
 
-  function isRegChanged(firstRegOpt, curRegOpt) {
+  function isRegChanged(firstRegOpt, curRegOpt, checkTag) {
+    if (checkTag === void 0) {
+      checkTag = false;
+    }
+
     if (firstRegOpt.module !== curRegOpt.module) {
       return true;
     }
@@ -8709,7 +8713,7 @@
       return true;
     }
 
-    if (firstRegOpt.tag !== curRegOpt.tag) {
+    if (checkTag && firstRegOpt.tag !== curRegOpt.tag) {
       return true;
     }
 
@@ -8766,7 +8770,7 @@
     refCursor = refCursor + 1;
   }
 
-  function CcHook(state, hookSetter, props) {
+  function CcHook(state, hookSetter, props, hookCtx) {
     //new CcHook时，这里锁定的hookSetter就是后面一直可以用的setter
     //如果存在期一直替换hookSetter，反倒会造成打开react-dev-tool，点击面板里的dom后，视图便不再更新的bug
     this.setState = hookSetter;
@@ -8774,6 +8778,7 @@
     this.state = state;
     this.isFirstRendered = true;
     this.props = props;
+    this.hookCtx = hookCtx;
   } // rState: resolvedState, iState: initialState
 
 
@@ -8799,7 +8804,7 @@
         _ccClassKey = _mapRegistrationInfo._ccClassKey,
         _connect = _mapRegistrationInfo._connect;
 
-    var hookRef = ref || new CcHook(hookState, hookSetter, props);
+    var hookRef = ref || new CcHook(hookState, hookSetter, props, hookCtx);
     var params = Object.assign({}, regOpt, {
       module: _module,
       watchedKeys: watchedKeys,
@@ -8899,7 +8904,7 @@
       }; // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
 
 
-      if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption)) {
+      if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
         hookCtx.regOpt = _registerOption;
         hookRef = cref();
       } else {
@@ -8923,6 +8928,7 @@
     effectHandler(function () {
       // mock componentWillUnmount
       return function () {
+        var hookCtx = hookRef.hookCtx;
         var targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
         var toUnmountRef = ccUKey_ref_$4[targetCcUKey];
 
@@ -8947,16 +8953,19 @@
         didMount(hookRef);
       }
     });
-    beforeRender(hookRef); // before every render
 
-    if (mapProps) {
-      var mapped = mapProps(refCtx);
+    if (!skip) {
+      beforeRender(hookRef); // before every render
 
-      if (!isPJO(mapped)) {
-        throw new Error("mapProps ret " + NOT_A_JSON);
+      if (mapProps) {
+        var mapped = mapProps(refCtx);
+
+        if (!isPJO(mapped)) {
+          throw new Error("mapProps ret " + NOT_A_JSON);
+        }
+
+        refCtx.mapped = mapped;
       }
-
-      refCtx.mapped = mapped;
     }
 
     return refCtx;

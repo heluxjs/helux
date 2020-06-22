@@ -246,10 +246,15 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   // in find-dep-fns-to-execute.js setStateKeyRetKeysMap
   if (depKeys === '-') return;
 
-  let _depKeys = depKeys === '*' ? ['*'] : depKeys;
-  if (depKeys === '*') retKey_stateKeys_[retKey] = moduleName_stateKeys_[module];
+  const allKeyDep = depKeys === '*';
 
-  _depKeys.forEach(sKey => {
+  let targetDepKeys = allKeyDep ? ['*'] : depKeys;
+  if (allKeyDep) {
+    retKey_stateKeys_[retKey] = moduleName_stateKeys_[module];
+  }
+
+  targetDepKeys.forEach(sKey => {
+    if (!allKeyDep) safeGetThenNoDupPush(retKey_stateKeys_, retKey, sKey);
     //一个依赖key列表里的stateKey会对应着多个结果key
     safeGetThenNoDupPush(stateKey_retKeys_, sKey, retKey);
   });

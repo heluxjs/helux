@@ -124,7 +124,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
 
     // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
-    if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption)) {
+    if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
       hookCtx.regOpt = _registerOption;
       hookRef = cref();
     } else {
@@ -139,7 +139,6 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       }
     }
   }
-
 
   const refCtx = hookRef.ctx;
   const effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect;
@@ -162,7 +161,6 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   //after every render
   effectHandler(() => {
     replaceSetter(refCtx, hookSetter);
-
     if (!hookRef.isFirstRendered) {// mock componentDidUpdate
       didUpdate(hookRef);
     } else {// mock componentDidMount
@@ -171,15 +169,16 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     }
   });
 
-  beforeRender(hookRef);
-
-  // before every render
-  if (mapProps) {
-    const mapped = mapProps(refCtx);
-    if (!isPJO(mapped)) {
-      throw new Error(`mapProps ret ${NOT_A_JSON}`)
+  if (!skip) {
+    beforeRender(hookRef);
+    // before every render
+    if (mapProps) {
+      const mapped = mapProps(refCtx);
+      if (!isPJO(mapped)) {
+        throw new Error(`mapProps ret ${NOT_A_JSON}`)
+      }
+      refCtx.mapped = mapped;
     }
-    refCtx.mapped = mapped;
   }
 
   return refCtx;
