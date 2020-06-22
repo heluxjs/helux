@@ -28,7 +28,7 @@ function incCursor() {
   refCursor = refCursor + 1;
 }
 
-function CcHook(state, hookSetter, props) {
+function CcHook(state, hookSetter, props, hookCtx) {
   //new CcHook时，这里锁定的hookSetter就是后面一直可以用的setter
   //如果存在期一直替换hookSetter，反倒会造成打开react-dev-tool，点击面板里的dom后，视图便不再更新的bug
   this.setState = hookSetter;
@@ -36,6 +36,7 @@ function CcHook(state, hookSetter, props) {
   this.state = state;
   this.isFirstRendered = true;
   this.props = props;
+  this.hookCtx = hookCtx;
 }
 
 // rState: resolvedState, iState: initialState
@@ -55,7 +56,7 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
     module, ccClassKey, renderKeyClasses, CC_HOOK, getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
   );
 
-  const hookRef = ref || new CcHook(hookState, hookSetter, props);
+  const hookRef = ref || new CcHook(hookState, hookSetter, props, hookCtx);
 
   const params = Object.assign({}, regOpt, {
     module: _module, watchedKeys, state, type: CC_HOOK, insType,
@@ -147,6 +148,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   effectHandler(() => {
     // mock componentWillUnmount
     return () => {
+      const hookCtx = hookRef.hookCtx;
       const targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
       const toUnmountRef = ccUKey_ref_[targetCcUKey];
       if (toUnmountRef) {
