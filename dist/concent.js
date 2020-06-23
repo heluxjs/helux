@@ -3030,7 +3030,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: 'test-2.0.10',
+      version: '2.7.12',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -3805,13 +3805,16 @@
 
 
     if (depKeys === '-') return;
+    var allKeyDep = depKeys === '*';
+    var targetDepKeys = allKeyDep ? ['*'] : depKeys;
 
-    var _depKeys = depKeys === '*' ? ['*'] : depKeys;
+    if (allKeyDep) {
+      retKey_stateKeys_[retKey] = moduleName_stateKeys_$1[module];
+    }
 
-    if (depKeys === '*') retKey_stateKeys_[retKey] = moduleName_stateKeys_$1[module];
+    targetDepKeys.forEach(function (sKey) {
+      if (!allKeyDep) safeGetThenNoDupPush(retKey_stateKeys_, retKey, sKey); //一个依赖key列表里的stateKey会对应着多个结果key
 
-    _depKeys.forEach(function (sKey) {
-      //一个依赖key列表里的stateKey会对应着多个结果key
       safeGetThenNoDupPush(stateKey_retKeys_, sKey, retKey);
     });
   } // 分析retKey或者depKey是不是stateKey,
@@ -8679,32 +8682,11 @@
     }, ccClassKey);
   }
 
-  var cusor_RegOpt_ = {}; // ucLoc: useConcentLocation
-
-  var cusor_ucLoc_ = {};
-
   var connectToStr = function connectToStr(connect) {
     if (!connect) return '';else if (Array.isArray(connect)) return connect.join(',');else if (typeof connect === 'object') return JSON.stringify(connect);else return connect;
   };
 
-  var getCallUseConcentLoc = function getCallUseConcentLoc() {
-    var loc = '';
-
-    try {
-      throw new Error('');
-    } catch (err) {
-      // 向下偏移2句话才是调用处，命中时是_useConcent，向下一句是useConcent，再向下才是用户调用处
-      loc = getErrStackKeywordLoc(err, 'useConcent', 2);
-    }
-
-    return loc;
-  };
-
-  function isRegChanged(firstRegOpt, curRegOpt, checkTag) {
-    if (checkTag === void 0) {
-      checkTag = false;
-    }
-
+  function isRegChanged(firstRegOpt, curRegOpt) {
     if (firstRegOpt.module !== curRegOpt.module) {
       return true;
     }
@@ -8713,45 +8695,11 @@
       return true;
     }
 
-    if (checkTag && firstRegOpt.tag !== curRegOpt.tag) {
+    if (firstRegOpt.tag !== curRegOpt.tag) {
       return true;
     }
 
     return false;
-  }
-  function getFirstRenderInfo(hookCtx, usableCursor) {
-    var curCursor = hookCtx.cursor,
-        curRegOpt = hookCtx.regOpt;
-    var info = {
-      isFirstRendered: true,
-      skip: false
-    };
-
-    if (curCursor === 1) ; else if (curCursor === usableCursor) {
-      var prevCursor = curCursor - 1;
-      var prevRegOpt = cusor_RegOpt_[prevCursor];
-
-      if (prevRegOpt) {
-        // 猜测是否由于 double-invoking机制触发的第二次【首次渲染】
-        if (!isRegChanged(prevRegOpt, curRegOpt)) {
-          var ucLoc = getCallUseConcentLoc();
-          cusor_ucLoc_[curCursor] = ucLoc;
-
-          if (cusor_ucLoc_[prevCursor] === ucLoc) {
-            info.skip = true;
-          }
-        }
-      }
-    } else {
-      info.isFirstRendered = false;
-    }
-
-    if (info.isFirstRendered && !info.skip) {
-      cusor_RegOpt_[curCursor] = curRegOpt;
-      cusor_ucLoc_[curCursor] = getCallUseConcentLoc();
-    }
-
-    return info;
   }
 
   /**
@@ -8759,11 +8707,12 @@
    * https://frontarm.com/daishi-kato/use-ref-in-concurrent-mode/
    */
   var ccUKey_ref_$4 = ccContext.ccUKey_ref_;
-  var cusor_hookRef_ = {};
+  var cursor_hookCtx_ = {};
   var refCursor = 1;
 
   function getUsableCursor() {
-    return refCursor;
+    var toReturn = refCursor;
+    return toReturn;
   }
 
   function incCursor() {
@@ -8783,8 +8732,10 @@
 
 
   function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
-    // when single file demo in hmr mode trigger buildRef, rState is 0 
+    incCursor();
+    cursor_hookCtx_[hookCtx.cursor] = hookCtx; // when single file demo in hmr mode trigger buildRef, rState is 0 
     // so here call evalState again
+
     var state = rState || evalState(iState);
     var bindCtxToMethod = regOpt.bindCtxToMethod;
     var renderKeyClasses = regOpt.renderKeyClasses,
@@ -8797,7 +8748,6 @@
         connect = _regOpt$connect === void 0 ? {} : _regOpt$connect,
         setup = regOpt.setup,
         lite = regOpt.lite;
-    incCursor();
 
     var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_HOOK, getPassToMapWaKeys(watchedKeys), storedKeys, connect, true),
         _module = _mapRegistrationInfo._module,
@@ -8805,6 +8755,7 @@
         _connect = _mapRegistrationInfo._connect;
 
     var hookRef = ref || new CcHook(hookState, hookSetter, props, hookCtx);
+    hookCtx.hookRef = hookRef;
     var params = Object.assign({}, regOpt, {
       module: _module,
       watchedKeys: watchedKeys,
@@ -8838,7 +8789,6 @@
       return ref;
     };
 
-    cusor_hookRef_[hookCtx.cursor] = hookRef;
     return hookRef;
   }
 
@@ -8856,26 +8806,17 @@
 
     var cursor = getUsableCursor();
 
-    var _registerOption = getRegisterOptions(registerOption);
+    var _registerOption = getRegisterOptions(registerOption); // ef: effectFlag
+
 
     var hookCtxContainer = React.useRef({
       cursor: cursor,
       prevCcUKey: null,
       ccUKey: null,
-      regOpt: _registerOption
+      regOpt: _registerOption,
+      ef: 0
     });
-    var hookCtx = hookCtxContainer.current;
-
-    var _getFirstRenderInfo = getFirstRenderInfo(hookCtx, cursor),
-        isFirstRendered = _getFirstRenderInfo.isFirstRendered,
-        skip = _getFirstRenderInfo.skip;
-
-    var hookRef;
-
-    if (skip) {
-      hookRef = cusor_hookRef_[hookCtx.cursor - 1];
-    } // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
-
+    var hookCtx = hookCtxContainer.current; // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
 
     var _registerOption$state = _registerOption.state,
         iState = _registerOption$state === void 0 ? {} : _registerOption$state,
@@ -8892,51 +8833,53 @@
       throw new Error(tip);
     }
 
+    var isFirstRendered = cursor === hookCtx.cursor;
     var state = isFirstRendered ? evalState(iState) : 0;
 
     var _reactUseState = reactUseState(state),
         hookState = _reactUseState[0],
         hookSetter = _reactUseState[1];
 
-    if (!skip) {
-      var cref = function cref(ref) {
-        return buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
-      }; // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
+    var cref = function cref(ref) {
+      return buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
+    };
 
+    var hookRef; // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
 
-      if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
-        hookCtx.regOpt = _registerOption;
+    if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
+      hookCtx.regOpt = _registerOption;
+      hookRef = cref();
+    } else {
+      hookRef = ccUKey_ref_$4[hookCtx.ccUKey];
+
+      if (!hookRef) {
+        // single file demo in hot reload mode
         hookRef = cref();
       } else {
-        hookRef = ccUKey_ref_$4[hookCtx.ccUKey];
-
-        if (!hookRef) {
-          // single file demo in hot reload mode
-          hookRef = cref();
-        } else {
-          var _refCtx = hookRef.ctx;
-          _refCtx.prevProps = _refCtx.props;
-          hookRef.props = _refCtx.props = props;
-          _refCtx.extra = extra;
-        }
+        var _refCtx = hookRef.ctx;
+        _refCtx.prevProps = _refCtx.props;
+        hookRef.props = _refCtx.props = props;
+        _refCtx.extra = extra;
       }
     }
 
     var refCtx = hookRef.ctx;
-    var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; //after first render of a timing hookRef just created 
+    var effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect; // after first render of hookRef just created 
 
     effectHandler(function () {
-      // mock componentWillUnmount
+      var hookCtx = hookRef.hookCtx;
+      hookCtx.ef = 1; // mock componentWillUnmount
+
       return function () {
-        var hookCtx = hookRef.hookCtx;
         var targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
         var toUnmountRef = ccUKey_ref_$4[targetCcUKey];
 
         if (toUnmountRef) {
           hookCtx.prevCcUKey = null;
           beforeUnmount(toUnmountRef);
-          delete cusor_hookRef_[hookCtx.cursor];
         }
+
+        delete cursor_hookCtx_[cursor];
       };
     }, [hookRef]); // 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
     //after every render
@@ -8951,21 +8894,33 @@
         // mock componentDidMount
         hookRef.isFirstRendered = false;
         didMount(hookRef);
+      } // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
+
+
+      if (!hookCtx.clearPrev) {
+        hookCtx.clearPrev = true;
+        var _cursor = hookCtx.cursor;
+        var prevCursor = _cursor - 1;
+        var prevHookCtx = cursor_hookCtx_[prevCursor];
+
+        if (prevHookCtx && prevHookCtx.ef === 0) {
+          delete cursor_hookCtx_[prevCursor]; // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
+          // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
+
+          beforeUnmount(prevHookCtx.hookRef);
+        }
       }
     });
+    beforeRender(hookRef); // before every render
 
-    if (!skip) {
-      beforeRender(hookRef); // before every render
+    if (mapProps) {
+      var mapped = mapProps(refCtx);
 
-      if (mapProps) {
-        var mapped = mapProps(refCtx);
-
-        if (!isPJO(mapped)) {
-          throw new Error("mapProps ret " + NOT_A_JSON);
-        }
-
-        refCtx.mapped = mapped;
+      if (!isPJO(mapped)) {
+        throw new Error("mapProps ret " + NOT_A_JSON);
       }
+
+      refCtx.mapped = mapped;
     }
 
     return refCtx;

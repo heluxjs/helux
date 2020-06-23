@@ -1,3 +1,8 @@
+#### 2020-06-23
+2.7.12 发布
+fix: 人工标记depKeys的computed元数据维护错误
+optimize: 针对strictMode的双调用机制，利用`effectFlag`标记来删除一个多余维护的hookRef
+
 #### 2020-06-13
 2.7.2 发布
 feature: 新增`SIG_ASYNC_COMPUTED_***`相关信号

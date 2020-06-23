@@ -15,14 +15,15 @@ import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState, getPassToMapWaKeys } from '../../support/util';
 import beforeRender from '../ref/before-render';
-import { isRegChanged, getFirstRenderInfo } from './common';
+import { isRegChanged } from './common';
 
 const { ccUKey_ref_ } = ccContext;
-const cusor_hookRef_ = {};
+const cursor_hookCtx_ = {};
 let refCursor = 1;
 
 function getUsableCursor() {
-  return refCursor;
+  let toReturn = refCursor;
+  return toReturn; 
 }
 function incCursor() {
   refCursor = refCursor + 1;
@@ -41,6 +42,9 @@ function CcHook(state, hookSetter, props, hookCtx) {
 
 // rState: resolvedState, iState: initialState
 function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
+  incCursor();
+  cursor_hookCtx_[hookCtx.cursor] = hookCtx;
+
   // when single file demo in hmr mode trigger buildRef, rState is 0 
   // so here call evalState again
   const state = rState || evalState(iState);
@@ -51,12 +55,12 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
     connect = {}, setup, lite,
   } = regOpt;
 
-  incCursor();
   const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
     module, ccClassKey, renderKeyClasses, CC_HOOK, getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
   );
 
   const hookRef = ref || new CcHook(hookState, hookSetter, props, hookCtx);
+  hookCtx.hookRef = hookRef;
 
   const params = Object.assign({}, regOpt, {
     module: _module, watchedKeys, state, type: CC_HOOK, insType,
@@ -84,7 +88,6 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
     return ref;
   }
 
-  cusor_hookRef_[hookCtx.cursor] = hookRef;
   return hookRef;
 }
 
@@ -99,62 +102,58 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
   const _registerOption = getRegisterOptions(registerOption);
 
-  const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption });
+  // ef: effectFlag
+  const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption, ef: 0 });
   const hookCtx = hookCtxContainer.current;
-  const { isFirstRendered, skip } = getFirstRenderInfo(hookCtx, cursor);
-  let hookRef;
-
-  if (skip) {
-    hookRef = cusor_hookRef_[hookCtx.cursor - 1];
-  }
-
+  
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
-
+  
   const reactUseState = React.useState;
   if (!reactUseState) {
     throw new Error(tip);
   }
-
+  
+  const isFirstRendered = cursor === hookCtx.cursor;
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
-
   
-  if (!skip) {
-    const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
-
-    // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
-    if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
-      hookCtx.regOpt = _registerOption;
+  const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
+  
+  let hookRef;
+  // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
+  if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
+    hookCtx.regOpt = _registerOption;
+    hookRef = cref();
+  } else {
+    hookRef = ccUKey_ref_[hookCtx.ccUKey];
+    if (!hookRef) {// single file demo in hot reload mode
       hookRef = cref();
     } else {
-      hookRef = ccUKey_ref_[hookCtx.ccUKey];
-      if (!hookRef) {// single file demo in hot reload mode
-        hookRef = cref();
-      } else {
-        const refCtx = hookRef.ctx;
-        refCtx.prevProps = refCtx.props;
-        hookRef.props = refCtx.props = props;
-        refCtx.extra = extra;
-      }
+      const refCtx = hookRef.ctx;
+      refCtx.prevProps = refCtx.props;
+      hookRef.props = refCtx.props = props;
+      refCtx.extra = extra;
     }
   }
 
   const refCtx = hookRef.ctx;
   const effectHandler = layoutEffect ? React.useLayoutEffect : React.useEffect;
 
-  //after first render of a timing hookRef just created 
+  // after first render of hookRef just created 
   effectHandler(() => {
+    const hookCtx = hookRef.hookCtx;
+    hookCtx.ef = 1;
+
     // mock componentWillUnmount
     return () => {
-      const hookCtx = hookRef.hookCtx;
       const targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
       const toUnmountRef = ccUKey_ref_[targetCcUKey];
       if (toUnmountRef) {
         hookCtx.prevCcUKey = null;
         beforeUnmount(toUnmountRef);
-        delete cusor_hookRef_[hookCtx.cursor];
       }
+      delete cursor_hookCtx_[cursor];
     }
   }, [hookRef]);// 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
 
@@ -167,18 +166,30 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       hookRef.isFirstRendered = false;
       didMount(hookRef);
     }
+
+    // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
+    if (!hookCtx.clearPrev) {
+      hookCtx.clearPrev = true;
+      const cursor = hookCtx.cursor;
+      const prevCursor = cursor - 1;
+      const prevHookCtx = cursor_hookCtx_[prevCursor];
+      if (prevHookCtx && prevHookCtx.ef === 0) {
+        delete cursor_hookCtx_[prevCursor];
+        // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
+        // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
+        beforeUnmount(prevHookCtx.hookRef);
+      }
+    }
   });
 
-  if (!skip) {
-    beforeRender(hookRef);
-    // before every render
-    if (mapProps) {
-      const mapped = mapProps(refCtx);
-      if (!isPJO(mapped)) {
-        throw new Error(`mapProps ret ${NOT_A_JSON}`)
-      }
-      refCtx.mapped = mapped;
+  beforeRender(hookRef);
+  // before every render
+  if (mapProps) {
+    const mapped = mapProps(refCtx);
+    if (!isPJO(mapped)) {
+      throw new Error(`mapProps ret ${NOT_A_JSON}`)
     }
+    refCtx.mapped = mapped;
   }
 
   return refCtx;

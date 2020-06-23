@@ -1260,7 +1260,13 @@ export declare const reducer: IAnyFnInObj;
 
 export function getRefs<Ctx extends ICtxBase>(): Ctx[];
 
-export function cloneModule(moduleName: string, existingModule: string, moduleConfig?: ModuleConfig): void;
+/**
+ * 
+ * @param newModuleName 
+ * @param existingModuleName 
+ * @param overwriteModuleConfig overwriteModuleConfig will been merged to existingModuleConfig
+ */
+export function cloneModule(newModuleName: string, existingModuleName: string, overwriteModuleConfig?: ModuleConfig): void;
 
 declare type DefaultExport = {
   ccContext: any,
