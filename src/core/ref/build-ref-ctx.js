@@ -5,7 +5,7 @@ import {
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
 import * as util from '../../support/util';
-import { NOT_A_JSON, END, START } from '../../support/priv-constant';
+import { NOT_A_JSON, UNSTART, START } from '../../support/priv-constant';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
 import changeRefState from '../state/change-ref-state';
@@ -225,7 +225,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$onEvents,// 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
 
     __$$hasModuleState: modStateKeys.length > 0,
-    __$$renderStatus: END,
+    __$$renderStatus: UNSTART,
 
     __$$curWaKeys: {},
     __$$compareWaKeys: {},

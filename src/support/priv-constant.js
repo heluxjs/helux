@@ -2,6 +2,7 @@
 export const CU_KEY = Symbol('cuk');
 export const REF_KEY = Symbol('refk');
 
+export const UNSTART = '0';
 export const START = '1';
 export const END = '2';
 

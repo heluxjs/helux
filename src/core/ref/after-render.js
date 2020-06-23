@@ -42,7 +42,7 @@ export default function (ref) {
   const ctx = ref.ctx;
   ctx.__$$renderStatus = END;
   
-  // 不存在自动收集行为
+  // 不处于收集观察依赖
   if (!ctx.__$$autoWatch) {
     return;
   }

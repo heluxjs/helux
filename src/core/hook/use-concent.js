@@ -183,6 +183,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   });
 
   beforeRender(hookRef);
+
   // before every render
   if (mapProps) {
     const mapped = mapProps(refCtx);
