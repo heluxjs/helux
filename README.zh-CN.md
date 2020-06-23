@@ -1,7 +1,7 @@
 [English](./README.md) | 简体中文
 
 ## [concent](https://concentjs.github.io/concent-doc)
-一个可预测、0入侵、渐进式、高性能的增强型状态管理方案，基于**引用收集**、**依赖标记**和**状态分发**原理，power you react!
+❤️ 内置依赖收集，一个可预测、0入侵、渐进式、高性能的react开发框架!
 
 了解更多请访问官方文档[https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc).
 
@@ -123,6 +123,8 @@ function DemoFn(){
 
 注意`state`是一个`proxy`对象，用于帮助`concent`在组件实例在每一轮渲染期间动态的收集到依赖列表，让[精确渲染](https://codesandbox.io/s/dep-collection-uiqzn?file=/src/App.js)得以优雅实现。
 
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/recoil-vs-concent/r5.gif)
+
 ### 实例化组件
 实例化concent组件不需要任何`Provider`包裹在根节点处，你可以在任何地方做实例化，查看[在线演示](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js)
 
@@ -145,16 +147,18 @@ ReactDOM.render(
 
 ```js
 run({
-  counter: { /** ... */},
-  reducer: {
-    inc(payload, moduleState) {
-      return { num: moduleState.num + 1 };
+  counter: {
+    state: {/** ... */},
+    reducer: {
+      inc(payload, moduleState) {
+        return { num: moduleState.num + 1 };
+      },
+      async asyncInc(payload, moduleState) {
+        await delay();
+        return { num: moduleState.num + 1 };
+      },
     },
-    async asyncInc(payload, moduleState) {
-      await delay();
-      return { num: moduleState.num + 1 };
-    }
-  }
+  },
 });
 ```
 
@@ -224,13 +228,15 @@ import { getState, reducer as ccReducer } from "concent";
 
 ```js
 run({
-  counter: { /** ... */},
-  reducer: { /** ... */},
-  computed: {
-    numx2: ({num})=> num * 2,
-    numBigx2: ({numBig})=> numBig * 2,
-    numSumBig: ({num, numBig})=> num + numBig,
-  }
+  counter: {
+    state: { /** ... */},
+    reducer: { /** ... */},
+    computed: {
+      numx2: ({num})=> num * 2,
+      numBigx2: ({numBig})=> numBig * 2,
+      numSumBig: ({num, numBig})=> num + numBig,
+    },
+  },
 });
 
 // 函数组件ui处获取计算结果
