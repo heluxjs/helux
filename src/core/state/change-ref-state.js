@@ -252,17 +252,17 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
 
   const prevModuleState = getPrevState(moduleName);
   connectRefKeys.forEach(refKey => {
+    // 对于即属于又连接的实例，避免一次重复的渲染
+    if (renderedInBelong[refKey]) {
+      return;
+    }
+
     const ref = ccUKey_ref_[refKey];
     if (!ref) return;
 
     // 对于挂载好了还未卸载的实例，才有必要触发重渲染
     if (ref.__$$isUnmounted === false) {
       const refCtx = ref.ctx;
-
-      // 对于即属于又连接的实例，避免一次重复的渲染
-      if (renderedInBelong[refKey]) {
-        return;
-      }
 
       const { hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState } =
         computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
