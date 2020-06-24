@@ -3031,7 +3031,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.13',
+      version: '2.7.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -4575,6 +4575,7 @@
         belongRefKeys = _findUpdateRefs$resul.belong,
         connectRefKeys = _findUpdateRefs$resul.connect;
 
+    var renderedInBelong = {};
     belongRefKeys.forEach(function (refKey) {
       var ref = ccUKey_ref_[refKey];
       if (!ref) return;
@@ -4582,6 +4583,7 @@
       if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
 
       triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1);
+      renderedInBelong[refKey] = 1;
     });
     var prevModuleState = getPrevState(moduleName);
     connectRefKeys.forEach(function (refKey) {
@@ -4589,7 +4591,11 @@
       if (!ref) return; // 对于挂载好了还未卸载的实例，才有必要触发重渲染
 
       if (ref.__$$isUnmounted === false) {
-        var refCtx = ref.ctx;
+        var refCtx = ref.ctx; // 对于即属于又连接的实例，避免一次重复的渲染
+
+        if (renderedInBelong[refKey]) {
+          return;
+        }
 
         var _computeValueForRef = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false),
             hasDeltaInCu = _computeValueForRef.hasDelta,
@@ -6247,16 +6253,7 @@
 
     var privStateKeys = removeArrElements(okeys$6(state), modStateKeys); // 不推荐用户指定实例属于$$global模块，要不然会造成即属于又连接的情况产生
 
-    var moduleState = makeObState(ref, mstate, module, true);
-
-    if (module === MODULE_GLOBAL) {
-      //  it is not a good idea to specify an ins belong to $$global module, 
-      //  all ins connect to $$global module automatically!
-      //  recommend you visit its data via ctx.globalState or ctx.globalComputed
-      //  or you can visit via ctx.connectedState.$$global or ctx.connectComputed.$$global instead
-      justWarning(ccUniqueKey + " belong to $$global is not recommended");
-    } // record ccClassKey
-
+    var moduleState = makeObState(ref, mstate, module, true); // record ccClassKey
 
     var ccClassKeys = safeGetArray$2(moduleName_ccClassKeys_, module);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // declare cc state series api

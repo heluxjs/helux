@@ -15,7 +15,6 @@ const {
   FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
-  MODULE_GLOBAL,
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
@@ -239,6 +238,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     sharedStateKeys, result: { belong: belongRefKeys, connect: connectRefKeys }
   } = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses);
 
+  const renderedInBelong = {};
   belongRefKeys.forEach(refKey => {
     const ref = ccUKey_ref_[refKey];
     if (!ref) return;
@@ -247,6 +247,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
     triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
+    renderedInBelong[refKey] = 1;
   });
 
   const prevModuleState = getPrevState(moduleName);
@@ -258,8 +259,8 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     if (ref.__$$isUnmounted === false) {
       const refCtx = ref.ctx;
 
-      // 定义属于$$global的实例在这里可以忽略掉，因其已在belongRefKeys里挑出来被触发触发了
-      if (refCtx.module === MODULE_GLOBAL) {
+      // 对于即属于又连接的实例，避免一次重复的渲染
+      if (renderedInBelong[refKey]) {
         return;
       }
 
