@@ -154,13 +154,6 @@ export default function (ref, params, liteLevel = 5) {
 
   // 不推荐用户指定实例属于$$global模块，要不然会造成即属于又连接的情况产生
   const moduleState = makeObState(ref, mstate, module, true);
-  if (module === MODULE_GLOBAL) {
-    //  it is not a good idea to specify an ins belong to $$global module, 
-    //  all ins connect to $$global module automatically!
-    //  recommend you visit its data via ctx.globalState or ctx.globalComputed
-    //  or you can visit via ctx.connectedState.$$global or ctx.connectComputed.$$global instead
-    util.justWarning(`${ccUniqueKey} belong to $$global is not recommended`);
-  }
 
   // record ccClassKey
   const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);

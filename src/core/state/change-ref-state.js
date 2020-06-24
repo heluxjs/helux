@@ -15,6 +15,7 @@ const {
   FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
+  MODULE_GLOBAL,
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
@@ -256,6 +257,11 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     // 对于挂载好了还未卸载的实例，才有必要触发重渲染
     if (ref.__$$isUnmounted === false) {
       const refCtx = ref.ctx;
+
+      // 定义属于$$global的实例在这里可以忽略掉，因其已在belongRefKeys里挑出来被触发触发了
+      if (refCtx.module === MODULE_GLOBAL) {
+        return;
+      }
 
       const { hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState } =
         computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
