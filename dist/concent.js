@@ -8437,7 +8437,11 @@
           _proto.componentWillUnmount = function componentWillUnmount() {
             if (_ToBeExtendedClass.prototype.componentWillUnmount) _ToBeExtendedClass.prototype.componentWillUnmount.call(this);
             beforeUnmount(this);
-          };
+          } // 注：strict mode 模式下，class组件的双调用机制行为和function组件不一样
+          // constructor x2 ---> render x2 ---> componentDidMount x1
+          // 两次构造器里虽然生成了不同的refCtx，但是两次render里给的 this.ctx 始终是最新的那一个
+          // 所以此处不需要像 useConcent 一样做ef标记
+          ;
 
           _proto.render = function render() {
             this.ctx.prevProps = this.ctx.props;
@@ -8708,8 +8712,8 @@
    * http://react.html.cn/docs/strict-mode.html
    * https://frontarm.com/daishi-kato/use-ref-in-concurrent-mode/
    */
-  var ccUKey_ref_$4 = ccContext.ccUKey_ref_; // const cursor_hookCtx_ = {};
-
+  var ccUKey_ref_$4 = ccContext.ccUKey_ref_;
+  var cursor_hookCtx_ = {};
   var refCursor = 1;
 
   function getUsableCursor() {
@@ -8734,8 +8738,8 @@
 
 
   function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
-    incCursor(); // cursor_hookCtx_[hookCtx.cursor] = hookCtx;
-    // when single file demo in hmr mode trigger buildRef, rState is 0 
+    incCursor();
+    cursor_hookCtx_[hookCtx.cursor] = hookCtx; // when single file demo in hmr mode trigger buildRef, rState is 0 
     // so here call evalState again
 
     var state = rState || evalState(iState);
@@ -8879,8 +8883,9 @@
         if (toUnmountRef) {
           hookCtx.prevCcUKey = null;
           beforeUnmount(toUnmountRef);
-        } // delete cursor_hookCtx_[cursor];
+        }
 
+        delete cursor_hookCtx_[cursor];
       };
     }, [hookRef]); // 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
     //after every render
@@ -8896,19 +8901,23 @@
         hookRef.isFirstRendered = false;
         didMount(hookRef);
       } // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
-      // if (!hookCtx.clearPrev) {
-      //   hookCtx.clearPrev = true;
-      //   const cursor = hookCtx.cursor;
-      //   const prevCursor = cursor - 1;
-      //   const prevHookCtx = cursor_hookCtx_[prevCursor];
-      //   if (prevHookCtx && prevHookCtx.ef === 0) {
-      //     delete cursor_hookCtx_[prevCursor];
-      //     // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
-      //     // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
-      //     beforeUnmount(prevHookCtx.hookRef);
-      //   }
-      // }
+      // 虽然未存储到refs上，但是收集到的依赖存储到了waKey_uKeyMap_上
+      // 这里通过触发beforeUnmount来清理多余的依赖
 
+
+      if (!hookCtx.clearPrev) {
+        hookCtx.clearPrev = true;
+        var _cursor = hookCtx.cursor;
+        var prevCursor = _cursor - 1;
+        var prevHookCtx = cursor_hookCtx_[prevCursor];
+
+        if (prevHookCtx && prevHookCtx.ef === 0) {
+          delete cursor_hookCtx_[prevCursor]; // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
+          // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
+
+          beforeUnmount(prevHookCtx.hookRef);
+        }
+      }
     });
     beforeRender(hookRef); // before every render
 
