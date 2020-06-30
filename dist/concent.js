@@ -5869,6 +5869,7 @@
         if (typeof val === 'function') {
           // moduleState指的是所修改的目标模块的state
           var syncRet = val(value, keyPath, {
+            event: e,
             module: module,
             moduleState: mState,
             fullKeyPath: fullKeyPath,
