@@ -168,6 +168,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     }
 
     // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
+    // 虽然未存储到refs上，但是收集到的依赖存储到了waKey_uKeyMap_上
+    // 这里通过触发beforeUnmount来清理多余的依赖
     if (!hookCtx.clearPrev) {
       hookCtx.clearPrev = true;
       const cursor = hookCtx.cursor;

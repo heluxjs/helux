@@ -14,7 +14,7 @@ export default {
   extractModuleChangedState: true,
   extractRefChangedState: false,
 
-  // 对于triggerReactSetState调用，当judgeStateChangedForRef为true时，触发__$$ccSetState 前，提取真正发生变化变化的值
+  // 对于triggerReactSetState调用，当judgeStateChangedForRef为true时，触发__$$ccSetState 前，提取真正发生变化的值
   // 对于saveSharedState调用，提取真正发生变化的值作为sharedState，透传给其他实例
 
   // object类型值的比较规则默认是 false

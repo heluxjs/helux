@@ -14,9 +14,9 @@ export function isRegChanged(firstRegOpt, curRegOpt) {
   if (connectToStr(firstRegOpt.connect) !== connectToStr(curRegOpt.connect)) {
     return true;
   }
-  if (firstRegOpt.tag !== curRegOpt.tag) {
-    return true;
-  }
+  // if (firstRegOpt.tag !== curRegOpt.tag) {
+  //   return true;
+  // }
 
   return false;
 }

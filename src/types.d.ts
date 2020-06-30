@@ -585,6 +585,7 @@ export interface ICtx
   readonly props: Props;
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
+  readonly globalComputed: RootCu[MODULE_GLOBAL];
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly state: RootState[ModuleName] & PrivState;

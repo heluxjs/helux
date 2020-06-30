@@ -156,6 +156,10 @@ export default function register({
           beforeUnMount(this);
         }
 
+        // 注：strict mode 模式下，class组件的双调用机制行为和function组件不一样
+        // constructor x2 ---> render x2 ---> componentDidMount x1
+        // 两次构造器里虽然生成了不同的refCtx，但是两次render里给的 this.ctx 始终是最新的那一个
+        // 所以此处不需要像 useConcent 一样做ef标记
         render() {
           this.ctx.prevProps = this.ctx.props;
           this.ctx.props = this.props;

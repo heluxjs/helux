@@ -179,7 +179,7 @@
     bindCtxToMethod: false,
     extractModuleChangedState: true,
     extractRefChangedState: false,
-    // 对于triggerReactSetState调用，当judgeStateChangedForRef为true时，触发__$$ccSetState 前，提取真正发生变化变化的值
+    // 对于triggerReactSetState调用，当judgeStateChangedForRef为true时，触发__$$ccSetState 前，提取真正发生变化的值
     // 对于saveSharedState调用，提取真正发生变化的值作为sharedState，透传给其他实例
     // object类型值的比较规则默认是 false
     // false: 不比较，只要set了就提取出来
@@ -3031,7 +3031,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.15',
+      version: '2.0.17',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -4587,15 +4587,16 @@
     });
     var prevModuleState = getPrevState(moduleName);
     connectRefKeys.forEach(function (refKey) {
+      // 对于即属于又连接的实例，避免一次重复的渲染
+      if (renderedInBelong[refKey]) {
+        return;
+      }
+
       var ref = ccUKey_ref_[refKey];
       if (!ref) return; // 对于挂载好了还未卸载的实例，才有必要触发重渲染
 
       if (ref.__$$isUnmounted === false) {
-        var refCtx = ref.ctx; // 对于即属于又连接的实例，避免一次重复的渲染
-
-        if (renderedInBelong[refKey]) {
-          return;
-        }
+        var refCtx = ref.ctx;
 
         var _computeValueForRef = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false),
             hasDeltaInCu = _computeValueForRef.hasDelta,
@@ -8695,11 +8696,10 @@
 
     if (connectToStr(firstRegOpt.connect) !== connectToStr(curRegOpt.connect)) {
       return true;
-    }
+    } // if (firstRegOpt.tag !== curRegOpt.tag) {
+    //   return true;
+    // }
 
-    if (firstRegOpt.tag !== curRegOpt.tag) {
-      return true;
-    }
 
     return false;
   }
@@ -8708,8 +8708,8 @@
    * http://react.html.cn/docs/strict-mode.html
    * https://frontarm.com/daishi-kato/use-ref-in-concurrent-mode/
    */
-  var ccUKey_ref_$4 = ccContext.ccUKey_ref_;
-  var cursor_hookCtx_ = {};
+  var ccUKey_ref_$4 = ccContext.ccUKey_ref_; // const cursor_hookCtx_ = {};
+
   var refCursor = 1;
 
   function getUsableCursor() {
@@ -8734,8 +8734,8 @@
 
 
   function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
-    incCursor();
-    cursor_hookCtx_[hookCtx.cursor] = hookCtx; // when single file demo in hmr mode trigger buildRef, rState is 0 
+    incCursor(); // cursor_hookCtx_[hookCtx.cursor] = hookCtx;
+    // when single file demo in hmr mode trigger buildRef, rState is 0 
     // so here call evalState again
 
     var state = rState || evalState(iState);
@@ -8879,9 +8879,8 @@
         if (toUnmountRef) {
           hookCtx.prevCcUKey = null;
           beforeUnmount(toUnmountRef);
-        }
+        } // delete cursor_hookCtx_[cursor];
 
-        delete cursor_hookCtx_[cursor];
       };
     }, [hookRef]); // 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
     //after every render
@@ -8897,21 +8896,19 @@
         hookRef.isFirstRendered = false;
         didMount(hookRef);
       } // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
+      // if (!hookCtx.clearPrev) {
+      //   hookCtx.clearPrev = true;
+      //   const cursor = hookCtx.cursor;
+      //   const prevCursor = cursor - 1;
+      //   const prevHookCtx = cursor_hookCtx_[prevCursor];
+      //   if (prevHookCtx && prevHookCtx.ef === 0) {
+      //     delete cursor_hookCtx_[prevCursor];
+      //     // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
+      //     // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
+      //     beforeUnmount(prevHookCtx.hookRef);
+      //   }
+      // }
 
-
-      if (!hookCtx.clearPrev) {
-        hookCtx.clearPrev = true;
-        var _cursor = hookCtx.cursor;
-        var prevCursor = _cursor - 1;
-        var prevHookCtx = cursor_hookCtx_[prevCursor];
-
-        if (prevHookCtx && prevHookCtx.ef === 0) {
-          delete cursor_hookCtx_[prevCursor]; // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
-          // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
-
-          beforeUnmount(prevHookCtx.hookRef);
-        }
-      }
     });
     beforeRender(hookRef); // before every render
 
