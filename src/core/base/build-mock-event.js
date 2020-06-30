@@ -53,7 +53,7 @@ export default (spec, e, refCtx) => {
     } else {
       if (typeof val === 'function') {
         // moduleState指的是所修改的目标模块的state
-        const syncRet = val(value, keyPath, { module, moduleState: mState, fullKeyPath, state: refState, refCtx });
+        const syncRet = val(value, keyPath, { event: e, module, moduleState: mState, fullKeyPath, state: refState, refCtx });
 
         if (syncRet != undefined) {
           if (type === 'as') value = syncRet;// value is what cb returns;

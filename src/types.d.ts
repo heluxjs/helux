@@ -169,7 +169,7 @@ export type TAuto = '-';
 export type DepKeys = string[] | TStar | TAuto;
 
 // type EvSyncReturn = (event: React.ChangeEvent<HTMLInputElement>) => void;
-type SyncReturn = (...args: any) => void;
+type SyncReturn = IAnyObj | boolean;
 
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 
@@ -389,20 +389,28 @@ declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
-declare function syncCb(value: any, keyPath: string, syncContext: { module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): IAnyObj | boolean;
+declare function syncCb
+  (
+    value: any, keyPath: string,
+    syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }
+  ): IAnyObj | boolean;
 // if module state is not equal full state, you need pass generic type FullState
 declare function syncCb<Val, ModuleState, RefState = {}, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
+    syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
-declare function asCb(value: any, keyPath: string, syncContext: { module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }): any;
+declare function asCb
+  (
+    value: any, keyPath: string,
+    syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }
+  ): any;
 // if module state is not equal full state, you need pass generic type FullState
 declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtxBase>
   (
     value: Val, keyPath: string,
-    syncContext: { module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
+    syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
 //////////////////////////////////////////
@@ -505,7 +513,7 @@ export interface ICtxBase {
   sync: (string: string, value?: typeof syncCb | any, renderKey?: string, delay?: string) => SyncReturn;
   syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: string, delay?: string) => SyncReturn;
   syncInt: (string: string, value?: typeof syncCb | number, renderKey?: string, delay?: string) => SyncReturn;
-  syncAs: (string: string, value?: typeof asCb | any, renderKey?: string, delay?: string) => SyncReturn;
+  syncAs: (string: string, value?: typeof asCb | any, renderKey?: string, delay?: string) => any;
   set: (string: string, value: any, renderKey?: string, delay?: string) => void;
   setBool: (string: string, renderKey?: string, delay?: string) => void;
   readonly settings: IAnyObj;
