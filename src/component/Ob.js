@@ -19,7 +19,7 @@ export default React.memo(function (props) {
   // 设置为1，最小化ctx够造过程，仅附加状态数据，衍生数据、和reducer相关函数
   register.lite = 1;
   const ctx = useConcentForOb(register, classKey);
-  const { mr, cr, r} = ctx;
+  const { mr, cr, r } = ctx;
 
   let state, computed;
   if (module) {
@@ -30,5 +30,5 @@ export default React.memo(function (props) {
     computed = ctx.connectedComputed;
   }
 
-  return view([state, computed, { mr, cr, r}]);
+  return view([state, computed, { mr, cr, r }]);
 })
