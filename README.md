@@ -69,10 +69,9 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 Make sure you have installed [nodejs](http://nodejs.cn/download/)。
 
 ### Install concent
-Install `concent` with npm command.
+Install `concent` with npm command in your project directory.
 
 ```sh
-$ cd cc-app
 $ npm i --save concent
 ```
 
