@@ -454,7 +454,8 @@ export default function (ref, params, liteLevel = 5) {
   const allModules = connectedModules.slice();
   if (!allModules.includes(module)) allModules.push(module);
   else {
-    justWarning(`[${ccUniqueKey}]'s module[${module}] is in belongTo and connect both, it will cause redundant render.`);
+    // 已做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染
+    // justWarning(`[${ccUniqueKey}]'s module[${module}] is in belongTo and connect both, it will cause redundant render.`);
   }
 
   let __$$autoWatch = false;

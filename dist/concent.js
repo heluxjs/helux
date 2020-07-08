@@ -3031,7 +3031,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.17',
+      version: '2.7.18',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -7038,10 +7038,10 @@
       connectedModules.forEach(function (m) {
         _connect[m] = '-';
       }); //标识自动收集观察依赖
-    } // 不指定global模块的话，默认自动收集global观察依赖，方便用户直接使用ctx.globalState时，就触发自动收集
+    } // 未设定连接$$global模块的watchedKeys参数时，自动连击$$global模块，并默认采用依赖收集
 
 
-    if (module !== MODULE_GLOBAL && !_connect[MODULE_GLOBAL]) {
+    if (!_connect[MODULE_GLOBAL]) {
       _connect[MODULE_GLOBAL] = '-';
     }
 
