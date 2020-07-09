@@ -139,7 +139,7 @@ export type SettingsCType<SetupFn, Ctx extends ICtxBase = ICtxBase> =
     ) : {}
   ) : {};
 
-export type StateType<S> = S extends IAnyFn ? ReturnType<IAnyFn> : S;
+export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
 interface IDispatchOptions {
   silent?: boolean;

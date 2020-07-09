@@ -28,7 +28,10 @@ const {
   // computed: { _computedValueOri, _computedValue },
 } = ccContext;
 
-const { okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet, justWarning, isObjectNull, isValueNotNull } = util;
+const {
+  okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet,
+  justWarning, isObjectNull, isValueNotNull, noDupPush,
+} = util;
 
 let idSeq = 0;
 function getEId() {
@@ -452,11 +455,10 @@ export default function (ref, params, liteLevel = 5) {
     __$$nextCompareConnWaKeys, __$$nextCompareConnWaKeyCount,
   } = ctx;
   const allModules = connectedModules.slice();
-  if (!allModules.includes(module)) allModules.push(module);
-  else {
-    // 已做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染
-    // justWarning(`[${ccUniqueKey}]'s module[${module}] is in belongTo and connect both, it will cause redundant render.`);
-  }
+
+  // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
+  // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
+  noDupPush(allModules, module);
 
   let __$$autoWatch = false;
   // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
