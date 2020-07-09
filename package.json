@@ -42,7 +42,7 @@
     "react": "^16.8.6"
   },
   "deprecated": false,
-  "description": "control your react component state in a funny way, every react instance of different class if they were registered in concent own the ability of knowing and syncing each other's state, just have a try and discover more^_^",
+  "description": "Build-in dependency collection, a predictable、zero-cost-use、progressive、high performance's react develop framework",
   "devDependencies": {
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
