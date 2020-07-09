@@ -3031,7 +3031,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.19',
+      version: '2.7.20',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -6187,6 +6187,8 @@
         module = params.module,
         type = params.type,
         insType = params.insType,
+        _params$extra = params.extra,
+        extra = _params$extra === void 0 ? {} : _params$extra,
         state = params.state,
         _params$storedKeys = params.storedKeys,
         storedKeys = _params$storedKeys === void 0 ? [] : _params$storedKeys,
@@ -6372,10 +6374,10 @@
       //用于before-render里避免merge moduleState而导致的冗余触发get
       globalState: globalState,
       connectedState: connectedState,
-      extra: {},
-      // can pass value to extra in every render period
+      // for function: can pass value to extra in every render period
+      // for class: can pass value to extra one time
+      extra: extra,
       staticExtra: {},
-      // only can be assign value in setup block
       // computed result containers
       refComputed: {},
       // 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换
@@ -8297,6 +8299,8 @@
         persistStoredKeys = _ref.persistStoredKeys,
         _ref$connect = _ref.connect,
         connect = _ref$connect === void 0 ? {} : _ref$connect,
+        _ref$extra = _ref.extra,
+        extra = _ref$extra === void 0 ? {} : _ref$extra,
         tag = _ref.tag,
         lite = _ref.lite,
         _ref$isPropsProxy = _ref.isPropsProxy,
@@ -8356,7 +8360,8 @@
                 ccClassKey: _ccClassKey,
                 connect: _connect,
                 storedKeys: storedKeys,
-                persistStoredKeys: persistStoredKeys
+                persistStoredKeys: persistStoredKeys,
+                extra: extra
               });
               buildRefCtx(_assertThisInitialized(_this), params, lite);
               _this.ctx.reactSetState = makeRefSetState(_assertThisInitialized(_this));
@@ -8770,6 +8775,7 @@
       state: state,
       type: CC_HOOK,
       insType: insType,
+      extra: extra,
       ccClassKey: _ccClassKey,
       connect: _connect,
       ccOption: props.ccOption
@@ -8782,8 +8788,6 @@
     hookRef.ctx.reactForceUpdate = makeRefForceUpdate(hookRef);
     var refCtx = hookRef.ctx;
     refCtx.props = props; // attach props to ctx
-
-    refCtx.extra = extra; // attach extra before setup process
 
     beforeMount(hookRef, setup, bindCtxToMethod); // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
 
