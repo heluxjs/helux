@@ -3031,7 +3031,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.18',
+      version: '2.7.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -6112,7 +6112,8 @@
       safeGet$2 = safeGet,
       justWarning$6 = justWarning,
       isObjectNull$2 = isObjectNull,
-      isValueNotNull$1 = isValueNotNull;
+      isValueNotNull$1 = isValueNotNull,
+      noDupPush$1 = noDupPush;
   var idSeq = 0;
 
   function getEId() {
@@ -6712,10 +6713,10 @@
         __$$compareConnWaKeyCount = ctx.__$$compareConnWaKeyCount,
         __$$nextCompareConnWaKeys = ctx.__$$nextCompareConnWaKeys,
         __$$nextCompareConnWaKeyCount = ctx.__$$nextCompareConnWaKeyCount;
-    var allModules = connectedModules.slice();
-    if (!allModules.includes(module)) allModules.push(module);else {
-      justWarning$6("[" + ccUniqueKey + "]'s module[" + module + "] is in belongTo and connect both, it will cause redundant render.");
-    }
+    var allModules = connectedModules.slice(); // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
+    // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
+
+    noDupPush$1(allModules, module);
     var __$$autoWatch = false; // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
     // 为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
 
