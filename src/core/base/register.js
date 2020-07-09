@@ -29,6 +29,7 @@ export default function register({
   setup = null,
   persistStoredKeys,
   connect = {},
+  extra = {},
   tag,
   lite,
   isPropsProxy = false,
@@ -66,7 +67,7 @@ export default function register({
             // props.ccOption
             const params = Object.assign({}, props, {
               isSingle, module: _module, tag, state: privState, type: CC_CLASS, insType: CC_CUSTOMIZE,
-              watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys
+              watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys, extra,
             });
             buildRefCtx(this, params, lite);
             this.ctx.reactSetState = hf.makeRefSetState(this);

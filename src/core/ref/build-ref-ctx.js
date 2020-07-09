@@ -91,7 +91,7 @@ function recordDep(ccUniqueKey, module, watchedKeys) {
 export default function (ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
-    isSingle, ccClassKey, ccKey = '', module, type, insType,
+    isSingle, ccClassKey, ccKey = '', module, type, insType, extra = {},
     state, storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {}, tag = '', ccOption = {},
   } = params;
 
@@ -256,8 +256,10 @@ export default function (ref, params, liteLevel = 5) {
     mstate,//用于before-render里避免merge moduleState而导致的冗余触发get
     globalState,
     connectedState,
-    extra: {},// can pass value to extra in every render period
-    staticExtra: {},// only can be assign value in setup block
+    // for function: can pass value to extra in every render period
+    // for class: can pass value to extra one time
+    extra,
+    staticExtra: {},
 
     // computed result containers
     refComputed: {},// 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换

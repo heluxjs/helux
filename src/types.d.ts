@@ -717,7 +717,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   module?: PropKey;
   props?: P;
   state?: IAnyFnReturnObj | IAnyObj;
-  extra?: any,// work for useConcent only
+  extra?: any,// assign to ctx.extra in every render period for useConcent , but only time for register
   watchedKeys?: string[] | TStar | TAuto;
   storedKeys?: any;
   connect?: any;

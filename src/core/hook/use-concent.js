@@ -63,8 +63,8 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   hookCtx.hookRef = hookRef;
 
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys, state, type: CC_HOOK, insType,
-    ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption
+    module: _module, watchedKeys, state, type: CC_HOOK, insType, extra,
+    ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption,
   });
   hookRef.props = props;// keep shape same as class
   buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
@@ -74,7 +74,6 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
 
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
-  refCtx.extra = extra;// attach extra before setup process
   beforeMount(hookRef, setup, bindCtxToMethod);
 
   // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
