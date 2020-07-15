@@ -943,6 +943,8 @@ export interface IActionCtx<
   module: ModuleName;
   moduleState: RootState[ModuleName];
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : {};
+  rootState: RootState;
+  globalState: RootState[MODULE_GLOBAL];
   setState: <T extends Partial<FullState>>(obj: T) => Promise<T>;
   refCtx: RefCtx;
 }
