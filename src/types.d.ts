@@ -916,6 +916,13 @@ interface RunOptions {
 }
 
 export interface IActionCtxBase {
+  callInfo: {
+    renderKey: string;
+    delay: number;
+    fnName: string;
+    type: string;
+    calledBy: string;
+  },
   callerModule: string;
   module: PropKey;
   committedStateMap: IAnyObj,

@@ -16,7 +16,7 @@ export default function (ref) {
   } = registerOptions;
 
   const state = evalState(registerOptions.state);
-  const { ccClassKey, ccKey, ccOption = {} } = props;
+  const { ccClassKey, ccKey, ccOption = {}, id } = props;
 
   let target_watchedKeys = watchedKeys;
   let target_ccClassKey = ccClassKey;
@@ -36,7 +36,7 @@ export default function (ref) {
 
   buildRefCtx(ref, {
     isSingle, ccKey, connect: target_connect, state, module, type: CC_CLASS, insType,
-    storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption,
+    storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, id,
   }, lite);
   ref.ctx.reactSetState = hf.makeRefSetState(ref);
   ref.ctx.reactForceUpdate = hf.makeRefForceUpdate(ref);

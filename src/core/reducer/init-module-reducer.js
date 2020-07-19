@@ -54,6 +54,7 @@ export default function (module, reducer = {}) {
       targetFn.__stateModule = module;
       // AsyncFunction GeneratorFunction Function
       targetFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
+      targetFn.__isAsync = util.isAsyncFn(reducerFn);
     }
     // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
     // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数

@@ -1,6 +1,6 @@
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import {
-  MODULE_GLOBAL, ERR, 
+  MODULE_GLOBAL, ERR,
   SIG_FN_START, SIG_FN_END, SIG_FN_ERR,
   DISPATCH, INVOKE, CC_HOOK,
 } from '../../support/constant';
@@ -9,7 +9,7 @@ import * as util from '../../support/util';
 import catchCcError from '../base/catch-cc-error';
 import ccDispatch from '../base/dispatch';
 import {
-  getChainId, setChainState, setAllChainState, setAndGetChainStateList, 
+  getChainId, setChainState, setAllChainState, setAndGetChainStateList,
   // exitChain, getChainStateMap, 
   getAllChainStateMap, removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
 } from '../chain';
@@ -22,7 +22,7 @@ import extractStateByKeys from './extract-state-by-keys';
 const { verboseInfo, makeError, justWarning, isPJO, okeys } = util;
 const {
   store: { getState, setState: storeSetState },
-  reducer: { _reducer }, 
+  reducer: { _reducer },
   computed: { _computedValue },
   // ccClassKey_ccClassContext_,
 } = ccContext;
@@ -103,14 +103,14 @@ function _promisifyCcFn(ccFn, userLogicFn, executionContext, payload) {
   }).catch(catchCcError);
 }
 
-function __promisifiedInvokeWith(userLogicFn, executionContext, payload){
+function __promisifiedInvokeWith(userLogicFn, executionContext, payload) {
   return _promisifyCcFn(invokeWith, userLogicFn, executionContext, payload);
 }
 
-function __invoke(userLogicFn, option, payload){
+function __invoke(userLogicFn, option, payload) {
   const { callerRef, delay, renderKey, calledBy, module, chainId, oriChainId, chainId_depth_, isSilent } = option;
   return __promisifiedInvokeWith(userLogicFn, {
-    callerRef, context: true, module, calledBy, fnName: userLogicFn.name, 
+    callerRef, context: true, module, calledBy, fnName: userLogicFn.name,
     delay, renderKey, chainId, oriChainId, chainId_depth_, isSilent,
   }, payload);
 }
@@ -166,7 +166,7 @@ export function makeInvokeHandler(callerRef, { chainId, oriChainId, isLazy, dela
     if (firstParamType === 'function') {
       // 可能用户直接使用invoke调用了reducer函数
       if (firstParam.__fnName) firstParam.name = firstParam.__fnName;
-      
+
       // 这里不修改option.module，concent明确定义了dispatch和invoke规则
       /**
         invoke调用函数引用时
@@ -200,12 +200,12 @@ export function makeInvokeHandler(callerRef, { chainId, oriChainId, isLazy, dela
   }
 }
 
-export function invokeWith(userLogicFn, executionContext, payload){
+export function invokeWith(userLogicFn, executionContext, payload) {
   const callerRef = executionContext.callerRef;
-  const callerModule = callerRef.ctx.module; 
+  const callerModule = callerRef.ctx.module;
   const {
     module: targetModule = callerModule, context = false,
-    cb, __innerCb, type, calledBy, fnName, delay = -1, renderKey,
+    cb, __innerCb, type, calledBy, fnName = '', delay = -1, renderKey,
     chainId, oriChainId, chainId_depth_, isSilent
     // sourceModule
   } = executionContext;
@@ -235,14 +235,17 @@ export function invokeWith(userLogicFn, executionContext, payload){
 
       //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
       const invoke = makeInvokeHandler(callerRef, { delay, chainId, oriChainId, chainId_depth_ });
-      const lazyInvoke =  makeInvokeHandler(callerRef, { isLazy: true, delay, oriChainId, chainId_depth_ });
-      const silentInvoke =  makeInvokeHandler(callerRef, { isLazy: false, delay, isSilent:true, oriChainId, chainId_depth_ });
+      const lazyInvoke = makeInvokeHandler(callerRef, { isLazy: true, delay, oriChainId, chainId_depth_ });
+      const silentInvoke = makeInvokeHandler(callerRef, { isLazy: false, delay, isSilent: true, oriChainId, chainId_depth_ });
 
       // 首次调用时是undefined，这里做个保护
       const committedStateMap = getAllChainStateMap(chainId) || {};
       const committedState = committedStateMap[targetModule] || {};
 
       actionContext = {
+        callInfo: {
+          renderKey, delay, fnName, type, calledBy
+        },
         module: targetModule,
         callerModule,
         committedStateMap,//一次ref dispatch调用，所经过的所有reducer的返回结果收集
@@ -280,9 +283,7 @@ export function invokeWith(userLogicFn, executionContext, payload){
       send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
     }
 
-    const firstStepCall = new Promise(r => r(userLogicFn(payload, moduleState, actionContext)));
-    firstStepCall.then(partialState => {
-
+    const handleReturnState = partialState => {
       chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1
       const curDepth = chainId_depth_[chainId];
       const isFirstDepth = curDepth === 1;
@@ -327,17 +328,50 @@ export function invokeWith(userLogicFn, executionContext, payload){
       }
 
       if (__innerCb) __innerCb(null, partialState);
-    }).catch(err => {
+    };
+
+    const handleFnError = err => {
       send(SIG_FN_ERR, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
       handleCcFnError(err, __innerCb);
-    });
+    };
+
+    const stOrPromisedSt = userLogicFn(payload, moduleState, actionContext);
+
+    if (userLogicFn.__isAsync) {
+      Promise.resolve(stOrPromisedSt).then(handleReturnState).catch(handleFnError);
+    } 
+    // 防止输入中文时，因为隔了一个Promise而出现抖动
+    else {
+      try {
+        if (userLogicFn.__isReturnJudged) {
+          handleReturnState(stOrPromisedSt);
+          return;
+        }
+
+        // 再判断一次，有可能会被编译器再包一层，形如：
+        //  function getServerStore(_x2) {
+        //    return _getServerStore.apply(this, arguments);
+        //  }
+        if (util.isAsyncFn(stOrPromisedSt)) {
+          userLogicFn.__isAsync = true;
+          Promise.resolve(stOrPromisedSt).then(handleReturnState).catch(handleFnError);
+          return;
+        } else {
+          userLogicFn.__isReturnJudged = true;
+        }
+
+        handleReturnState(stOrPromisedSt);
+      } catch (err) {
+        handleFnError(err);
+      }
+    }
   });
 }
 
 export function dispatch({
   callerRef, module: inputModule, renderKey, isSilent,
   type, payload, cb: reactCallback, __innerCb, delay = -1, chainId, oriChainId, chainId_depth_ } = {}
-){
+) {
   const targetReducerMap = _reducer[inputModule];
   if (!targetReducerMap) {
     return __innerCb(new Error(`no reducerMap found for module:[${inputModule}]`));
@@ -384,7 +418,7 @@ export function makeDispatchHandler(
 
     let _module = defaultModule;
 
-    const callInvoke = ()=>{
+    const callInvoke = () => {
       const iHandler = makeInvokeHandler(callerRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, chainId_depth_ });
       return iHandler(paramObj, payload, _renderKey, _delay);
     }

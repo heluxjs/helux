@@ -289,8 +289,9 @@
     }
   }
   function isAsyncFn(fn) {
-    // @see https://github.com/tj/co/blob/master/index.js
+    if (!fn) return false; // @see https://github.com/tj/co/blob/master/index.js
     // obj.constructor.name === 'AsyncFunction'
+
     var isAsync = Object.prototype.toString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
 
     if (isAsync === true) {
@@ -3031,7 +3032,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.21',
+      version: '2.7.25',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -3499,6 +3500,7 @@
         targetFn.__stateModule = module; // AsyncFunction GeneratorFunction Function
 
         targetFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
+        targetFn.__isAsync = isAsyncFn(reducerFn);
       } // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
       // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
       // reducerFn.stateModule = module;
@@ -4922,7 +4924,8 @@
         __innerCb = executionContext.__innerCb,
         type = executionContext.type,
         calledBy = executionContext.calledBy,
-        fnName = executionContext.fnName,
+        _executionContext$fnN = executionContext.fnName,
+        fnName = _executionContext$fnN === void 0 ? '' : _executionContext$fnN,
         _executionContext$del = executionContext.delay,
         delay$$1 = _executionContext$del === void 0 ? -1 : _executionContext$del,
         renderKey = executionContext.renderKey,
@@ -4970,6 +4973,13 @@
         var committedStateMap = getAllChainStateMap(chainId) || {};
         var committedState = committedStateMap[targetModule] || {};
         actionContext = {
+          callInfo: {
+            renderKey: renderKey,
+            delay: delay$$1,
+            fnName: fnName,
+            type: type,
+            calledBy: calledBy
+          },
           module: targetModule,
           callerModule: callerModule,
           committedStateMap: committedStateMap,
@@ -5021,10 +5031,7 @@
         });
       }
 
-      var firstStepCall = new Promise(function (r) {
-        return r(userLogicFn(payload, moduleState, actionContext));
-      });
-      firstStepCall.then(function (partialState) {
+      var handleReturnState = function handleReturnState(partialState) {
         chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
 
         var curDepth = chainId_depth_[chainId];
@@ -5084,7 +5091,9 @@
         }
 
         if (__innerCb) __innerCb(null, partialState);
-      })["catch"](function (err) {
+      };
+
+      var handleFnError = function handleFnError(err) {
         send(SIG_FN_ERR, {
           isSourceCall: isSourceCall,
           calledBy: calledBy,
@@ -5093,7 +5102,37 @@
           fn: userLogicFn
         });
         handleCcFnError(err, __innerCb);
-      });
+      };
+
+      var stOrPromisedSt = userLogicFn(payload, moduleState, actionContext);
+
+      if (userLogicFn.__isAsync) {
+        Promise.resolve(stOrPromisedSt).then(handleReturnState)["catch"](handleFnError);
+      } // 防止输入中文时，因为隔了一个Promise而出现抖动
+      else {
+          try {
+            if (userLogicFn.__isReturnJudged) {
+              handleReturnState(stOrPromisedSt);
+              return;
+            } // 再判断一次，有可能会被编译器再包一层，形如：
+            //  function getServerStore(_x2) {
+            //    return _getServerStore.apply(this, arguments);
+            //  }
+
+
+            if (isAsyncFn(stOrPromisedSt)) {
+              userLogicFn.__isAsync = true;
+              Promise.resolve(stOrPromisedSt).then(handleReturnState)["catch"](handleFnError);
+              return;
+            } else {
+              userLogicFn.__isReturnJudged = true;
+            }
+
+            handleReturnState(stOrPromisedSt);
+          } catch (err) {
+            handleFnError(err);
+          }
+        }
     });
   }
   function dispatch$1(_temp2) {
@@ -6189,6 +6228,7 @@
         insType = params.insType,
         _params$extra = params.extra,
         extra = _params$extra === void 0 ? {} : _params$extra,
+        id = params.id,
         state = params.state,
         _params$storedKeys = params.storedKeys,
         storedKeys = _params$storedKeys === void 0 ? [] : _params$storedKeys,
@@ -6223,9 +6263,9 @@
     refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined ? persistStoredKeys : ccOption.persistStoredKeys;
     refOption.tag = ccOption.tag || tag; // pick ref defined tag first, register tag second
 
-    var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
-    refOption.renderKey = ccOption.renderKey || ccUniqueKey; // 没有设定renderKey的话，默认ccUniqueKey就是renderKey
+    var ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag); // 没有设定renderKey的话读id，最后才默认renderKey为ccUniqueKey
 
+    refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
     refOption.storedKeys = getStoredKeys(state, modStateKeys, ccOption.storedKeys, storedKeys); //用户使用ccKey属性的话，必需显示的指定ccClassKey
 
     if (ccKey && !ccClassKey) {
@@ -7902,7 +7942,8 @@
     var ccClassKey = props.ccClassKey,
         ccKey = props.ccKey,
         _props$ccOption = props.ccOption,
-        ccOption = _props$ccOption === void 0 ? {} : _props$ccOption;
+        ccOption = _props$ccOption === void 0 ? {} : _props$ccOption,
+        id = props.id;
     var target_watchedKeys = watchedKeys;
     var target_ccClassKey = ccClassKey;
     var target_connect = connect;
@@ -7932,7 +7973,8 @@
       watchedKeys: target_watchedKeys,
       tag: tag,
       ccClassKey: target_ccClassKey,
-      ccOption: ccOption
+      ccOption: ccOption,
+      id: id
     }, lite);
     ref.ctx.reactSetState = makeRefSetState(ref);
     ref.ctx.reactForceUpdate = makeRefForceUpdate(ref);
@@ -8779,7 +8821,8 @@
       extra: extra,
       ccClassKey: _ccClassKey,
       connect: _connect,
-      ccOption: props.ccOption
+      ccOption: props.ccOption,
+      id: props.id
     });
     hookRef.props = props; // keep shape same as class
 

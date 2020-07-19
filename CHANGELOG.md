@@ -1,3 +1,13 @@
+#### 2020-07-20
+2.7.25 发布
+fix: async reducer编译后多一层保证判断失败
+
+#### 2020-07-16
+2.7.22 发布
+fix: dispatch调用方法修改state时，input框输入中文出现抖动
+optimize: 对ActionCtx新增callInfo
+optimize: 添加读取id为renderKey的机制
+
 #### 2020-06-25
 2.7.15 发布
 optimize: 针对既属于模块a也连接到模块a的组件做优化，从而减少一次冗余的渲染

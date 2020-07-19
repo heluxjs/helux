@@ -42,6 +42,8 @@ export function isPJO(obj, canBeArray = false) {
 }
 
 export function isAsyncFn(fn) {
+  if (!fn) return false;
+
   // @see https://github.com/tj/co/blob/master/index.js
   // obj.constructor.name === 'AsyncFunction'
   let isAsync = Object.prototype.toString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
