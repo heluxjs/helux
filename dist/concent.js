@@ -3032,7 +3032,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.25',
+      version: '2.7.26',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -5372,8 +5372,9 @@
   }
   var makeRefSetState = function makeRefSetState(ref) {
     return function (partialState, cb) {
-      var ctx = ref.ctx;
-      Object.assign(ctx.unProxyState, partialState);
+      var ctx = ref.ctx; // TODO: 这里的newState的赋值流程可能可以优化，结合beforeRender看下有没有冗余赋值的地方
+
+      ctx.unProxyState = Object.assign({}, ctx.unProxyState, partialState);
       var newState = Object.assign({}, ref.state, partialState);
 
       if (ctx.type === CC_HOOK) {
@@ -8259,7 +8260,7 @@
     triggerSetupEffect(ref); //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
     //注意一定是先调用triggerSetupEffect，再赋值
 
-    ref.ctx.prevState = ref.state;
+    ref.ctx.prevState = ref.ctx.unProxyState;
   }
 
   /** eslint-disable */

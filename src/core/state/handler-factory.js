@@ -522,7 +522,8 @@ export function makeSetStateHandler(module, initPost) {
 
 export const makeRefSetState = (ref) => (partialState, cb) => {
   const ctx = ref.ctx;
-  Object.assign(ctx.unProxyState, partialState);
+  // TODO: 这里的newState的赋值流程可能可以优化，结合beforeRender看下有没有冗余赋值的地方
+  ctx.unProxyState = Object.assign({}, ctx.unProxyState, partialState);
   const newState = Object.assign({}, ref.state, partialState);
 
   if (ctx.type === CC_HOOK) {
