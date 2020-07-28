@@ -82,7 +82,6 @@ export default function (
     if (!canStartup) return;
 
     try {
-      console.log(`%c window.name:${window.name}`, 'color:green;border:1px solid green');
       justTip(`cc version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
@@ -123,7 +122,7 @@ export default function (
         bindToWindow('cccc', ccContext.computed._computedValue, bindTarget);
         bindToWindow('sss', ccContext.store._state, bindTarget);
       }
-      if (window.mcc) {
+      if (window && window.mcc) {
         setTimeout(() => {//延迟绑定，等待ccns的输入
           bindOthers(window.mcc[util.getCcNamespace()]);
         }, 1200);

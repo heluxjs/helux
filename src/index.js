@@ -30,6 +30,11 @@ import _useConcent from './api/use-concent';
 import * as _cst from './support/constant';
 import * as util from './support/util';
 
+// for ssr
+if (typeof window === 'undefined') {
+  global.window = {}
+}
+
 export const cloneModule = _cloneModule;
 export const run = _run;
 export const connect = _connect;
@@ -137,20 +142,22 @@ function avoidMultiCcInSameScope() {
 }
 
 // 微前端机构里，每个子应用都有自己的cc实例，需要绑定到mcc下，防止相互覆盖
-const multiCcContainer = window.mcc;
-if (multiCcContainer) {
-  // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
-  setTimeout(() => {
-    const ccns = util.getCcNamespace();
-    if (!ccns) {
-      throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
-    } else {
-      avoidMultiCcInSameScope();
-    }
-  }, 1000);
-} else {
-  avoidMultiCcInSameScope();
-  util.bindToWindow('cc', defaultExport);
+if (window) {
+  const multiCcContainer = window.mcc;
+  if (multiCcContainer) {
+    // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
+    setTimeout(() => {
+      const ccns = util.getCcNamespace();
+      if (!ccns) {
+        throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
+      } else {
+        avoidMultiCcInSameScope();
+      }
+    }, 1000);
+  } else {
+    avoidMultiCcInSameScope();
+    util.bindToWindow('cc', defaultExport);
+  }
 }
 
 export default defaultExport;
