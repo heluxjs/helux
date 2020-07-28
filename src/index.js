@@ -32,7 +32,8 @@ import * as util from './support/util';
 
 // for ssr
 if (typeof window === 'undefined') {
-  global.window = {}
+  // eslint-disable-next-line
+  global && (global.window = {});
 }
 
 export const cloneModule = _cloneModule;
@@ -113,6 +114,8 @@ const defaultExport = {
   defWatch,
 }
 
+let multiCcContainer = null;
+
 export function bindCcToMcc(name) {
   if (!multiCcContainer) {
     throw new Error('current env is not multi concent ins mode');
@@ -143,7 +146,7 @@ function avoidMultiCcInSameScope() {
 
 // 微前端机构里，每个子应用都有自己的cc实例，需要绑定到mcc下，防止相互覆盖
 if (window) {
-  const multiCcContainer = window.mcc;
+  multiCcContainer = window.mcc;
   if (multiCcContainer) {
     // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
     setTimeout(() => {

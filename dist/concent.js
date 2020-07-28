@@ -558,6 +558,7 @@
 
   function bindToWindow(key, toBindObj, targetObj) {
     var attachToTarget = function attachToTarget(targetObj) {
+      if (!window) return;
       if (targetObj) targetObj[key] = toBindObj;else window[key] = toBindObj;
     };
 
@@ -3032,7 +3033,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.26',
+      version: '2.7.27',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -8093,7 +8094,6 @@
       if (!canStartup) return;
 
       try {
-        console.log("%c window.name:" + window.name, 'color:green;border:1px solid green');
         justTip$1("cc version " + ccContext.info.version);
         if (isHot !== undefined) ccContext.isHot = isHot;
         ccContext.reComputed = reComputed;
@@ -8133,7 +8133,7 @@
           bindToWindow$1('sss', ccContext.store._state, bindTarget);
         };
 
-        if (window.mcc) {
+        if (window && window.mcc) {
           setTimeout(function () {
             //延迟绑定，等待ccns的输入
             bindOthers(window.mcc[getCcNamespace()]);
@@ -9260,6 +9260,11 @@
     }]);
   });
 
+  if (typeof window === 'undefined') {
+    // eslint-disable-next-line
+    global && (global.window = {});
+  }
+
   var cloneModule = _cloneModule;
   var run = _run;
   var connect = _connect;
@@ -9346,6 +9351,7 @@
     defComputedVal: defComputedVal,
     defWatch: defWatch
   };
+  var multiCcContainer = null;
   function bindCcToMcc(name) {
     if (!multiCcContainer) {
       throw new Error('current env is not multi concent ins mode');
@@ -9377,22 +9383,24 @@
   } // 微前端机构里，每个子应用都有自己的cc实例，需要绑定到mcc下，防止相互覆盖
 
 
-  var multiCcContainer = window.mcc;
+  if (window) {
+    multiCcContainer = window.mcc;
 
-  if (multiCcContainer) {
-    // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
-    setTimeout(function () {
-      var ccns = getCcNamespace();
+    if (multiCcContainer) {
+      // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
+      setTimeout(function () {
+        var ccns = getCcNamespace();
 
-      if (!ccns) {
-        throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
-      } else {
-        avoidMultiCcInSameScope();
-      }
-    }, 1000);
-  } else {
-    avoidMultiCcInSameScope();
-    bindToWindow('cc', defaultExport);
+        if (!ccns) {
+          throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
+        } else {
+          avoidMultiCcInSameScope();
+        }
+      }, 1000);
+    } else {
+      avoidMultiCcInSameScope();
+      bindToWindow('cc', defaultExport);
+    }
   }
 
   exports.cloneModule = cloneModule;
