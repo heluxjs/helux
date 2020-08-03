@@ -424,14 +424,20 @@ export function makeDispatchHandler(
     }
 
     if (paramObjType && paramObjType === 'object') {
-      if (Array.isArray(paramObjType)) {
-        return callInvoke();
+      if (Array.isArray(paramObj)) {
+        const [mInArr, rInArr] = paramObj;
+        if (rInArr && rInArr.__fnName) {
+          _module = mInArr;
+          _type = rInArr.__fnName;
+        } else {
+          return callInvoke();
+        }
+      } else {
+        const { module, type, cb } = paramObj;
+        if (module) _module = module;
+        _type = type;
+        _cb = cb;
       }
-      const { module, type, cb } = paramObj;
-      if (module) _module = module;
-      _type = type;
-      _cb = cb;
-
     } else if (paramObjType === 'string' || paramObjType === 'function') {
       let targetFirstParam = paramObj;
       if (paramObjType === 'function') {

@@ -27,7 +27,7 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
 
   const putRef = (isBelong, ccUniqueKey) => {
     isBelong ? belongRefKeys.push(ccUniqueKey) : connectRefKeys.push(ccUniqueKey);
-  }
+  };
 
   const tryMatch = (ref, toBelong) => {
     const {
@@ -43,8 +43,7 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
         if (isRenderKeyMatched) {
           putRef(toBelong, ccUniqueKey);
         }
-      }
-      else {
+      } else {
         // 这些指定类实例受renderKey机制影响
         if (renderKeyClasses.includes(refCcClassKey)) {
           if (isRenderKeyMatched) {
@@ -59,8 +58,7 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
     } else {
       putRef(toBelong, ccUniqueKey);
     }
-
-  }
+  };
 
   let missRef = false;
   uKeys.forEach(key => {

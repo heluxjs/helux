@@ -3033,7 +3033,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.27',
+      version: '2.7.28',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -5242,17 +5242,26 @@
       };
 
       if (paramObjType && paramObjType === 'object') {
-        if (Array.isArray(paramObjType)) {
-          return callInvoke();
-        }
+        if (Array.isArray(paramObj)) {
+          var _paramObj = paramObj,
+              mInArr = _paramObj[0],
+              rInArr = _paramObj[1];
 
-        var _paramObj = paramObj,
-            module = _paramObj.module,
-            type = _paramObj.type,
-            cb = _paramObj.cb;
-        if (module) _module = module;
-        _type = type;
-        _cb = cb;
+          if (rInArr && rInArr.__fnName) {
+            _module = mInArr;
+            _type = rInArr.__fnName;
+          } else {
+            return callInvoke();
+          }
+        } else {
+          var _paramObj2 = paramObj,
+              module = _paramObj2.module,
+              type = _paramObj2.type,
+              cb = _paramObj2.cb;
+          if (module) _module = module;
+          _type = type;
+          _cb = cb;
+        }
       } else if (paramObjType === 'string' || paramObjType === 'function') {
         var targetFirstParam = paramObj;
 
