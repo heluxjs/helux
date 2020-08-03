@@ -1,4 +1,8 @@
 #### 2020-07-26
+2.7.28 发布
+fix: makeDispatchHandler处理paramObj类型逻辑错误
+
+#### 2020-07-26
 2.7.26 发布
 fix: effect 依赖数组无效
 > prevState指向了代理state导致的问题
