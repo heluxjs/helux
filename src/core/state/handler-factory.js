@@ -530,7 +530,10 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
   const ctx = ref.ctx;
   const newState = Object.assign({}, ctx.unProxyState, partialState);
   ctx.unProxyState = newState;
+  // 和class setState(partialState, cb); 保持一致
   const cbNewState = () => cb && cb(newState);
+  // 让ctx.state始终保持同一个引用，使setup里，可以安全的解构state反复使用
+  ctx.state = Object.assign(ctx.state, partialState);
 
   if (ctx.type === CC_HOOK) {
     ctx.__boundSetState(newState);
@@ -544,14 +547,12 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
 export const makeRefForceUpdate = (ref) => (cb) => {
   const ctx = ref.ctx;
   const newState = Object.assign({}, ctx.unProxyState);
-  // 和class setState(partialState, cb); 保持一致
   const cbNewState = () => cb && cb(newState);
 
   if (ctx.type === CC_HOOK) {
     ctx.__boundSetState(newState);
     cbNewState();
   } else {
-    // 此处注意原始的react class forceUpdate [,callback] 不会提供latestState
     ctx.__boundForceUpdate(cbNewState);
   }
 }

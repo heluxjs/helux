@@ -23,7 +23,7 @@ const {
   refStore,
   ccClassKey_ccClassContext_,
   moduleName_stateKeys_,
-  store: { getState },
+  store: { getState, getModuleVer },
   moduleName_ccClassKeys_,
   // computed: { _computedValueOri, _computedValue },
 } = ccContext;
@@ -183,7 +183,7 @@ export default function (ref, params, liteLevel = 5) {
     }
   };
   const forceUpdate = (reactCallback, renderKey, delay) => {
-    _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay);
+    _setState(stateModule, ref.unProxyState, FORCE_UPDATE, reactCallback, renderKey, delay);
   };
 
   const __$$onEvents = [];
@@ -300,7 +300,7 @@ export default function (ref, params, liteLevel = 5) {
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$settedList: [],//[{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
-    __$$prevModuleVer: {},
+    __$$prevModuleVer: getModuleVer(stateModule),
     __$$cuOrWaCalled: false,
   };
 
@@ -308,7 +308,7 @@ export default function (ref, params, liteLevel = 5) {
   ref.forceUpdate = forceUpdate;
 
   // allow user have a chance to define state in setup block;
-  ctx.initState = (initState) => {
+  ctx.initState = (initialState) => {
     // 已挂载则不让用户在调用initState
     if (ref.__$$isMounted) {
       return justWarning(`initState can only been called before first render period!`);
@@ -319,12 +319,13 @@ export default function (ref, params, liteLevel = 5) {
     if (ctx.__$$cuOrWaCalled) {
       return justWarning(`initState must been called before computed or watch`);
     }
-    const newRefState = Object.assign({}, state, initState, refStoredState, mstate);
+    const newRefState = Object.assign({}, state, initialState, refStoredState, mstate);
     // 更新stateKeys，防止遗漏新的私有stateKey
     ctx.stateKeys = okeys(newRefState);
     ctx.privStateKeys = util.removeArrElements(okeys(newRefState), modStateKeys);
 
-    ctx.unProxyState = ctx.prevState = ctx.state = ref.state = newRefState;
+    ctx.unProxyState = ctx.prevState = newRefState;
+    ref.state = ctx.state = Object.assign(ctx.state, newRefState);
   }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler

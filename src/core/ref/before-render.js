@@ -1,9 +1,8 @@
 /** eslint-disable */
 import { START } from '../../support/priv-constant';
-import makeObState from '../state/make-ob-state';
 import ccContext from '../../cc-context/index';
 
-const { store } = ccContext;
+const { store: { getModuleVer } } = ccContext;
 
 export default function (ref) {
   const ctx = ref.ctx;
@@ -20,19 +19,19 @@ export default function (ref) {
 
   if (ctx.__$$hasModuleState) {
     const { __$$prevModuleVer, module: refModule } = ctx;
-    const moduleVer = store.getModuleVer(refModule);
-    if (__$$prevModuleVer[refModule] !== moduleVer) {
-      __$$prevModuleVer[refModule] = moduleVer;
-      Object.assign(ctx.unProxyState, ctx.__$$mstate);
+    const moduleVer = getModuleVer(refModule);
+
+    // 当组件某一刻对模块状态无依赖后，ctx.state里的模块状态始终是旧值
+    // 所以此处通过比较模板版本差异，主动合并最新模块状态
+    // 这样在组件自己触发自己渲染后，如果那一刻ui里又通过ctx.state读取了模块状态
+    // 那么这段逻辑通过比较模板版本差异，主动合并最新模块状态，能报保证ui里读到的模块状态是最新值
+    // 但是此处需要注意的是如果ui始终没通过ctx.state读取了模块状态
+    // 那么click回调里的ctx.state始终会是旧值，所以推荐用户在事件回调里始终读取moduleState,以确保读取最新模块值
+    if (__$$prevModuleVer !== moduleVer) {
+      ctx.__$$prevModuleVer = moduleVer;
+      ctx.unProxyState = Object.assign({}, ctx.unProxyState, ctx.__$$mstate);
+      Object.assign(ctx.state, ctx.__$$mstate);
     }
-
-    // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题
-    // ref.state = makeObState(ref, ref.state, refModule, true);
-
-    // 类组件this.reactSetState调用后生成的this.state是一个普通对象
-    // 每次渲染前替换为Proxy对象，确保让类组件里使用this.state时是Proxy对象，进而能够收集到依赖
-    ref.state = makeObState(ref, ctx.unProxyState, refModule, true);
-    ctx.state = ref.state;
 
     ctx.__$$curWaKeys = {};
     ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;
@@ -42,6 +41,10 @@ export default function (ref) {
     ctx.__$$nextCompareWaKeys = {};
     ctx.__$$nextCompareWaKeyCount = 0;
   }
+
+  // 类组件this.reactSetState调用后生成的this.state是一个新的普通对象
+  // 每次渲染前替换为ctx.state指向的Proxy对象，确保让类组件里使用this.state能够收集到依赖
+  ref.state = ctx.state;
 
   const { connectedModules, connect } = ctx;
   connectedModules.forEach(m => {
