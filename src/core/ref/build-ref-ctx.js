@@ -242,15 +242,15 @@ export default function (ref, params, liteLevel = 5) {
 
     prevProps: props,
     props,
-    //collected mapProps result
+    // collected mapProps result
     mapped: {},
 
     prevState: mergedState,
     // state
-    state: mergedState,
+    state: makeObState(ref, mergedState, stateModule, true),
     unProxyState: mergedState,// 没有proxy化的state
     moduleState,
-    mstate,//用于before-render里避免merge moduleState而导致的冗余触发get
+    __$$mstate: mstate,// 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
     globalState,
     connectedState,
     // for function: can pass value to extra in every render period

@@ -23,7 +23,7 @@ export default function (ref) {
     const moduleVer = store.getModuleVer(refModule);
     if (__$$prevModuleVer[refModule] !== moduleVer) {
       __$$prevModuleVer[refModule] = moduleVer;
-      Object.assign(ctx.unProxyState, ctx.mstate);
+      Object.assign(ctx.unProxyState, ctx.__$$mstate);
     }
 
     // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题

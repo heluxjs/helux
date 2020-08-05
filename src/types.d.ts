@@ -458,7 +458,6 @@ export interface ICtxBase {
   readonly props: any;
   readonly prevProps: any;
   readonly moduleState: any;
-  readonly mstate: any;
   readonly globalState: any;
   readonly connectedState: any;
   readonly refComputed: any;
@@ -553,7 +552,6 @@ export interface IRefCtx<
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
-  readonly mstate: ModuleState;
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
   readonly mr: ModuleReducer;// alias of moduleReducer
@@ -600,7 +598,6 @@ export interface ICtx
   readonly unProxyState: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
   readonly moduleState: RootState[ModuleName];
-  // readonly mstate: RootState[ModuleName];
   readonly reducer: RootReducer;
   readonly r: RootReducer;
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
