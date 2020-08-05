@@ -9,7 +9,6 @@ export default function (ref) {
   const ctx = ref.ctx;
   ctx.renderCount += 1;
 
-  
   // 不处于收集观察依赖 or 已经开始都要跳出此函数
   // strictMode模式下，会走两次beforeRender 一次afterRender，
   // 所以这里严格用ctx.__$$renderStatus === START 来控制只真正执行一次beforeRender
@@ -30,7 +29,8 @@ export default function (ref) {
     // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题
     // ref.state = makeObState(ref, ref.state, refModule, true);
 
-    // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
+    // 类组件this.reactSetState调用后生成的this.state是一个普通对象
+    // 每次渲染前替换为Proxy对象，确保让类组件里使用this.state时是Proxy对象，进而能够收集到依赖
     ref.state = makeObState(ref, ctx.unProxyState, refModule, true);
     ctx.state = ref.state;
 

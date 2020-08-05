@@ -144,8 +144,6 @@ export default function (ref, params, liteLevel = 5) {
   const classConnectedState = classCtx.connectedState;
   const connectedModules = okeys(connect);
   const connectedState = {};
-
-  // const moduleState = getState(module);
   
   const connectedComputed = {};
   connectedModules.forEach(m => { connectedComputed[m] = makeCuRefObContainer(ref, m, false) });
@@ -155,9 +153,7 @@ export default function (ref, params, liteLevel = 5) {
   const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
   // extract privStateKeys
   const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
-
-  // 不推荐用户指定实例属于$$global模块，要不然会造成即属于又连接的情况产生
-  const moduleState = makeObState(ref, mstate, module, true);
+  const moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true);
 
   // record ccClassKey
   const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
