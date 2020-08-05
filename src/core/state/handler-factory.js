@@ -528,39 +528,30 @@ export function makeSetStateHandler(module, initPost) {
 
 export const makeRefSetState = (ref) => (partialState, cb) => {
   const ctx = ref.ctx;
-  // TODO: 这里的newState的赋值流程可能可以优化，结合beforeRender看下有没有冗余赋值的地方
-  ctx.unProxyState = Object.assign({}, ctx.unProxyState, partialState);
-  const newState = Object.assign({}, ref.state, partialState);
+  const newState = Object.assign({}, ctx.unProxyState, partialState);
+  ctx.unProxyState = newState;
+  const cbNewState = () => cb && cb(newState);
 
   if (ctx.type === CC_HOOK) {
-    ref.state = ctx.state = newState;
     ctx.__boundSetState(newState);
-    if (cb) cb(newState);
+    cbNewState();
   } else {
-    ctx.state = newState;
-    // don't assign newState to ref.state before didMount
-    // it will cause
-    // Warning: Expected CC(SomeComp) state to match memorized state before processing the update queue
-    if (!ref.__$$isMounted) {
-      Object.assign(ref.state, partialState);
-    } else {
-      ref.state = newState;
-    }
-
-    // 此处注意原始的react class setSate [,callback] 参数，它不会提供latest state
-    ctx.__boundSetState(partialState, () => {
-      if (cb) cb(newState);
-    });
+    // 此处注意原始的react class setSate [,callback] 不会提供latestState
+    ctx.__boundSetState(partialState, cbNewState);
   }
 }
 
 export const makeRefForceUpdate = (ref) => (cb) => {
   const ctx = ref.ctx;
+  const newState = Object.assign({}, ctx.unProxyState);
+  // 和class setState(partialState, cb); 保持一致
+  const cbNewState = () => cb && cb(newState);
+
   if (ctx.type === CC_HOOK) {
-    const newState = Object.assign({}, ref.state);
     ctx.__boundSetState(newState);
-    if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+    cbNewState();
   } else {
-    ctx.__boundForceUpdate(cb);
+    // 此处注意原始的react class forceUpdate [,callback] 不会提供latestState
+    ctx.__boundForceUpdate(cbNewState);
   }
 }
