@@ -3033,7 +3033,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.7.28',
+      version: '2.0.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -5382,47 +5382,42 @@
   }
   var makeRefSetState = function makeRefSetState(ref) {
     return function (partialState, cb) {
-      var ctx = ref.ctx; // TODO: 这里的newState的赋值流程可能可以优化，结合beforeRender看下有没有冗余赋值的地方
+      var ctx = ref.ctx;
+      var newState = Object.assign({}, ctx.unProxyState, partialState);
+      ctx.unProxyState = newState; // 和class setState(partialState, cb); 保持一致
 
-      ctx.unProxyState = Object.assign({}, ctx.unProxyState, partialState);
-      var newState = Object.assign({}, ref.state, partialState);
+      var cbNewState = function cbNewState() {
+        return cb && cb(newState);
+      }; // 让ctx.state始终保持同一个引用，使setup里，可以安全的解构state反复使用
+
+
+      ctx.state = Object.assign(ctx.state, partialState);
 
       if (ctx.type === CC_HOOK) {
-        ref.state = ctx.state = newState;
-
         ctx.__boundSetState(newState);
 
-        if (cb) cb(newState);
+        cbNewState();
       } else {
-        ctx.state = newState; // don't assign newState to ref.state before didMount
-        // it will cause
-        // Warning: Expected CC(SomeComp) state to match memorized state before processing the update queue
-
-        if (!ref.__$$isMounted) {
-          Object.assign(ref.state, partialState);
-        } else {
-          ref.state = newState;
-        } // 此处注意原始的react class setSate [,callback] 参数，它不会提供latest state
-
-
-        ctx.__boundSetState(partialState, function () {
-          if (cb) cb(newState);
-        });
+        // 此处注意原始的react class setSate [,callback] 不会提供latestState
+        ctx.__boundSetState(partialState, cbNewState);
       }
     };
   };
   var makeRefForceUpdate = function makeRefForceUpdate(ref) {
     return function (cb) {
       var ctx = ref.ctx;
+      var newState = Object.assign({}, ctx.unProxyState);
+
+      var cbNewState = function cbNewState() {
+        return cb && cb(newState);
+      };
 
       if (ctx.type === CC_HOOK) {
-        var newState = Object.assign({}, ref.state);
-
         ctx.__boundSetState(newState);
 
-        if (cb) cb(newState); // 和class setState(partialState, cb); 保持一致
+        cbNewState();
       } else {
-        ctx.__boundForceUpdate(cb);
+        ctx.__boundForceUpdate(cbNewState);
       }
     };
   };
@@ -6153,7 +6148,9 @@
       refStore$1 = ccContext.refStore,
       ccClassKey_ccClassContext_$1 = ccContext.ccClassKey_ccClassContext_,
       moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
-      getState$3 = ccContext.store.getState,
+      _ccContext$store$2 = ccContext.store,
+      getState$3 = _ccContext$store$2.getState,
+      getModuleVer$1 = _ccContext$store$2.getModuleVer,
       moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
   var okeys$6 = okeys,
       me$1 = makeError,
@@ -6296,8 +6293,7 @@
     var classCtx = ccClassKey_ccClassContext_$1[ccClassKey];
     var classConnectedState = classCtx.connectedState;
     var connectedModules = okeys$6(connect);
-    var connectedState = {}; // const moduleState = getState(module);
-
+    var connectedState = {};
     var connectedComputed = {};
     connectedModules.forEach(function (m) {
       connectedComputed[m] = makeCuRefObContainer(ref, m, false);
@@ -6307,9 +6303,8 @@
     var globalComputed = connectedComputed[MODULE_GLOBAL];
     var globalState = makeObState(ref, getState$3(MODULE_GLOBAL), MODULE_GLOBAL, false); // extract privStateKeys
 
-    var privStateKeys = removeArrElements(okeys$6(state), modStateKeys); // 不推荐用户指定实例属于$$global模块，要不然会造成即属于又连接的情况产生
-
-    var moduleState = makeObState(ref, mstate, module, true); // record ccClassKey
+    var privStateKeys = removeArrElements(okeys$6(state), modStateKeys);
+    var moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true); // record ccClassKey
 
     var ccClassKeys = safeGetArray$2(moduleName_ccClassKeys_, module);
     if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey); // declare cc state series api
@@ -6349,7 +6344,7 @@
     };
 
     var forceUpdate = function forceUpdate(reactCallback, renderKey, delay$$1) {
-      _setState(stateModule, ref.state, FORCE_UPDATE, reactCallback, renderKey, delay$$1);
+      _setState(stateModule, ref.unProxyState, FORCE_UPDATE, reactCallback, renderKey, delay$$1);
     };
 
     var __$$onEvents = [];
@@ -6413,16 +6408,16 @@
       tag: refOption.tag,
       prevProps: props,
       props: props,
-      //collected mapProps result
+      // collected mapProps result
       mapped: {},
       prevState: mergedState,
       // state
-      state: mergedState,
+      state: makeObState(ref, mergedState, stateModule, true),
       unProxyState: mergedState,
       // 没有proxy化的state
       moduleState: moduleState,
-      mstate: mstate,
-      //用于before-render里避免merge moduleState而导致的冗余触发get
+      __$$mstate: mstate,
+      // 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
       globalState: globalState,
       connectedState: connectedState,
       // for function: can pass value to extra in every render period
@@ -6478,13 +6473,13 @@
       __$$settedList: [],
       //[{module:string, keys:string[]}, ...]
       __$$prevMoStateVer: {},
-      __$$prevModuleVer: {},
+      __$$prevModuleVer: getModuleVer$1(stateModule),
       __$$cuOrWaCalled: false
     };
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
 
-    ctx.initState = function (initState) {
+    ctx.initState = function (initialState) {
       // 已挂载则不让用户在调用initState
       if (ref.__$$isMounted) {
         return justWarning$6("initState can only been called before first render period!");
@@ -6498,11 +6493,12 @@
         return justWarning$6("initState must been called before computed or watch");
       }
 
-      var newRefState = Object.assign({}, state, initState, refStoredState, mstate); // 更新stateKeys，防止遗漏新的私有stateKey
+      var newRefState = Object.assign({}, state, initialState, refStoredState, mstate); // 更新stateKeys，防止遗漏新的私有stateKey
 
       ctx.stateKeys = okeys$6(newRefState);
       ctx.privStateKeys = removeArrElements(okeys$6(newRefState), modStateKeys);
-      ctx.unProxyState = ctx.prevState = ctx.state = ref.state = newRefState;
+      ctx.unProxyState = ctx.prevState = newRefState;
+      ref.state = ctx.state = Object.assign(ctx.state, newRefState);
     }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
 
 
@@ -7413,10 +7409,10 @@
   }
 
   var moduleName_stateKeys_$5 = ccContext.moduleName_stateKeys_,
-      _ccContext$store$2 = ccContext.store,
-      getPrevState$1 = _ccContext$store$2.getPrevState,
-      getState$4 = _ccContext$store$2.getState,
-      getStateVer$1 = _ccContext$store$2.getStateVer;
+      _ccContext$store$3 = ccContext.store,
+      getPrevState$1 = _ccContext$store$3.getPrevState,
+      getState$4 = _ccContext$store$3.getState,
+      getStateVer$1 = _ccContext$store$3.getStateVer;
 
   var warn = function warn(key, frag) {
     return justWarning("effect: key[" + key + "] is invalid, its " + frag + " has not been declared in' store!");
@@ -8273,7 +8269,7 @@
   }
 
   /** eslint-disable */
-  var store = ccContext.store;
+  var getModuleVer$2 = ccContext.store.getModuleVer;
   function beforeRender (ref) {
     var ctx = ref.ctx;
     ctx.renderCount += 1; // 不处于收集观察依赖 or 已经开始都要跳出此函数
@@ -8289,26 +8285,30 @@
     if (ctx.__$$hasModuleState) {
       var __$$prevModuleVer = ctx.__$$prevModuleVer,
           refModule = ctx.module;
-      var moduleVer = store.getModuleVer(refModule);
+      var moduleVer = getModuleVer$2(refModule); // 当组件某一刻对模块状态无依赖后，ctx.state里的模块状态始终是旧值
+      // 所以此处通过比较模板版本差异，主动合并最新模块状态
+      // 这样在组件自己触发自己渲染后，如果那一刻ui里又通过ctx.state读取了模块状态
+      // 那么这段逻辑通过比较模板版本差异，主动合并最新模块状态，能报保证ui里读到的模块状态是最新值
+      // 但是此处需要注意的是如果ui始终没通过ctx.state读取了模块状态
+      // 那么click回调里的ctx.state始终会是旧值，所以推荐用户在事件回调里始终读取moduleState,以确保读取最新模块值
 
-      if (__$$prevModuleVer[refModule] !== moduleVer) {
-        __$$prevModuleVer[refModule] = moduleVer;
-        Object.assign(ctx.unProxyState, ctx.mstate);
-      } // 一直使用ref.state生成新的ref.state，相当于一直使用proxy对象生成proxy对象，会触发Maximum call问题
-      // ref.state = makeObState(ref, ref.state, refModule, true);
-      // 每次生成的state都是一个新对象，让effect逻辑里prevState curState对比能够成立
+      if (__$$prevModuleVer !== moduleVer) {
+        ctx.__$$prevModuleVer = moduleVer;
+        ctx.unProxyState = Object.assign({}, ctx.unProxyState, ctx.__$$mstate);
+        Object.assign(ctx.state, ctx.__$$mstate);
+      }
 
-
-      ref.state = makeObState(ref, ctx.unProxyState, refModule, true);
-      ctx.state = ref.state;
       ctx.__$$curWaKeys = {};
       ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;
       ctx.__$$compareWaKeyCount = ctx.__$$nextCompareWaKeyCount; // 渲染期间再次收集
 
       ctx.__$$nextCompareWaKeys = {};
       ctx.__$$nextCompareWaKeyCount = 0;
-    }
+    } // 类组件this.reactSetState调用后生成的this.state是一个新的普通对象
+    // 每次渲染前替换为ctx.state指向的Proxy对象，确保让类组件里使用this.state能够收集到依赖
 
+
+    ref.state = ctx.state;
     var connectedModules = ctx.connectedModules,
         connect = ctx.connect;
     connectedModules.forEach(function (m) {

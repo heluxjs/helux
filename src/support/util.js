@@ -281,7 +281,10 @@ export function excludeArrStringItem(arr, toExcludeStr) {
 
 export function convertToStandardEvent(e) {
   let ret = null;
+  // avoid Warning: This synthetic event is reused for performance reasons. If you're seeing this...
+  // call e.persist() @see https://reactjs.org/docs/events.html#event-pooling
   if (e) {
+    if (e.persist) e.persist();
     if (e.currentTarget && e.type) {
       ret = e;
     } else if (e.nativeEvent && e.target) {
