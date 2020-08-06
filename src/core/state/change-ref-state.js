@@ -144,7 +144,7 @@ function triggerReactSetState(
   const refState = refCtx.unProxyState;
 
   if (ignoreRender) {
-    nextNoop();
+    return nextNoop();
   }
 
   if (

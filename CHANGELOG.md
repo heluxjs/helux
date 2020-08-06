@@ -1,3 +1,19 @@
+#### 2020-08-06
+2.8.1 发布
+fix: 已失去模块状态依赖的组件，自己触发修改模块状态还会触发自己渲染
+fix: 存在`synthetic event is reused`警告
+optimize: 优化`ctx.state`赋值流程，减少不必要的assign过程，同时支持setup反复提前解构`ctx.state`并反复使用了，因为现在ctx.state是一个固定引用
+```js
+function setup(ctx){
+  // before v2.8, 
+  const inc = ()=> ({num: ctx.state.num + 1});
+
+  // after v2.8
+  const { state } = ctx;
+  const inc = ()=> ({num: state.num + 1});// 这样写也是ok的了
+}
+```
+
 #### 2020-07-26
 2.7.28 发布
 fix: makeDispatchHandler处理paramObj类型逻辑错误

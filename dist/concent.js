@@ -1072,13 +1072,15 @@
     }
 
     var partialState = {},
-        ignoredStateKeys = [];
+        ignoredStateKeys = [],
+        missKeyInState = false;
 
     if (!isPJO(state)) {
       return {
         partialState: returnNullIfEmpty ? null : partialState,
         isStateEmpty: true,
-        ignoredStateKeys: ignoredStateKeys
+        ignoredStateKeys: ignoredStateKeys,
+        missKeyInState: missKeyInState
       };
     }
 
@@ -1086,6 +1088,7 @@
     var committedStateKeys = okeys(state);
 
     if (committedStateKeys.length >= stateKeys.length) {
+      missKeyInState = true;
       stateKeys.forEach(function (key) {
         if (setPartialState(partialState, state, key)) isStateEmpty = false;
       });
@@ -1095,6 +1098,7 @@
         if (stateKeys.includes(key)) {
           if (setPartialState(partialState, state, key)) isStateEmpty = false;
         } else {
+          missKeyInState = true;
           if (needIgnored) ignoredStateKeys.push(key);
         }
       });
@@ -1104,7 +1108,8 @@
     return {
       partialState: partialState,
       isStateEmpty: isStateEmpty,
-      ignoredStateKeys: ignoredStateKeys
+      ignoredStateKeys: ignoredStateKeys,
+      missKeyInState: missKeyInState
     };
   }
 
@@ -3036,7 +3041,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.21',
+      version: '2.8.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -4391,15 +4396,19 @@
       noSave: true
     }),
         sharedState = _syncCommittedStateTo.partialState,
-        hasDelta = _syncCommittedStateTo.hasDelta;
+        hasDelta = _syncCommittedStateTo.hasDelta,
+        hasPrivState = _syncCommittedStateTo.hasPrivState;
 
     if (hasDelta) {
       Object.assign(state, sharedState);
     }
 
-    var isIncludeModuleState = !!sharedState; // source ref will receive the whole committed state 
+    var hasModuleState = !!sharedState; // 不包含私有状态，仅包含模块状态，交给belongRefs那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
+    // 因为belongRefs那里可能不会把它查出来
 
-    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback, // committedState means final committedState
+    var ignoreRender = !hasPrivState && hasModuleState; // source ref will receive the whole committed state 
+
+    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback, // committedState means final committedState
     function (renderType, committedState, updateRef) {
       var passToMiddleware = {
         calledBy: calledBy,
@@ -4445,22 +4454,31 @@
         } // 无论是否真的有状态改变，此回调都会被触发
 
 
-        if (stateChangedCb) stateChangedCb();
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay$$1);
+        if (stateChangedCb) stateChangedCb(); // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
+
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, renderKey, delay$$1);
       });
     });
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback, next) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback, next) {
+    var nextNoop = function nextNoop() {
+      return next && next(RENDER_NO_OP$1, state);
+    };
+
     var refCtx = targetRef.ctx;
     var refState = refCtx.unProxyState;
+
+    if (ignoreRender) {
+      return nextNoop();
+    }
 
     if ( // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
     // targetRef.__$$isMounted === false || // 还未挂载上
     targetRef.__$$isUnmounted === true || // 已卸载
     stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && isObjectNull$1(state)) {
-      return next && next(RENDER_NO_OP$1, state);
+      return nextNoop();
     }
 
     var stateModule = refCtx.module,
@@ -4474,7 +4492,7 @@
 
       if (refCtx.renderKey !== renderKey) {
         // current instance can been rendered only if current instance's ccKey equal renderKey
-        return next && next(RENDER_NO_OP$1, state);
+        return nextNoop();
       }
     }
 
@@ -4516,7 +4534,7 @@
         // __$$ccSetState 调用里已将changedState合并到 ctx.unProxyState 和 ctx.state上, 见 handler-factory/makeRefSetState
 
 
-        if (isIncludeModuleState) {
+        if (hasModuleState) {
           refCtx.__$$prevModuleVer = getModuleVer$1(stateModule);
         }
 
@@ -4535,7 +4553,8 @@
     var stateKeys = moduleName_stateKeys_$2[moduleName]; // extract shared state
 
     var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys, true),
-        partialState = _extractStateByKeys3.partialState; // save state to store
+        partialState = _extractStateByKeys3.partialState,
+        hasPrivState = _extractStateByKeys3.missKeyInState; // save state to store
 
 
     if (partialState) {
@@ -4545,19 +4564,21 @@
 
       return {
         partialState: deltaCommittedState,
-        hasDelta: hasDelta
+        hasDelta: hasDelta,
+        hasPrivState: hasPrivState
       };
     }
 
     return {
       partialState: partialState,
-      hasDelta: false
+      hasDelta: false,
+      hasPrivState: hasPrivState
     };
   }
 
-  function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay$$1) {
+  function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey, delay$$1) {
     var startBroadcastState = function startBroadcastState() {
-      broadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
+      broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey);
     };
 
     if (delay$$1 > 0) {
@@ -4568,7 +4589,7 @@
     }
   }
 
-  function broadcastState(callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
+  function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKey) {
     if (!partialSharedState) {
       // null
       return;
@@ -4578,10 +4599,7 @@
     var _targetRef$ctx2 = targetRef.ctx,
         currentCcUKey = _targetRef$ctx2.ccUniqueKey,
         ccClassKey = _targetRef$ctx2.ccClassKey;
-    var renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses; // if stateFor === FOR_ONE_INS_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
-    // so flag ignoreCurrentCcUkey as true;
-
-    var ignoreCurrentCcUKey = stateFor === FOR_ONE_INS_FIRSTLY$1;
+    var renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
 
     var _findUpdateRefs = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses),
         sharedStateKeys = _findUpdateRefs.sharedStateKeys,
@@ -4594,9 +4612,9 @@
       var ref = ccUKey_ref_[refKey];
       if (!ref) return;
       var refUKey = ref.ctx.ccUniqueKey;
-      if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
+      if (refUKey === currentCcUKey && !allowOriInsRender) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
 
-      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, true);
+      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, true, false);
       renderedInBelong[refKey] = 1;
     });
     var prevModuleState = getPrevState(moduleName);
