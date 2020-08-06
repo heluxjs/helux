@@ -51,6 +51,5 @@ export default function (ref, setup, bindCtxToMethod) {
   }
 
   triggerComputedAndWatch(ref);
-
   ctx.__$$inBM = false;
 }

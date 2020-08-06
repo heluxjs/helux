@@ -10,13 +10,12 @@ export default function (ref) {
   const ctx = ref.ctx;
 
   // 取原始对象，防止computeValueForRef里用Object.assign触发依赖收集
-  // 首次挂载组件时，prevState是原始对象，state可能是代理过的对象
-  const { hasComputedFn, hasWatchFn, connectedModules, module: refModule, state: refState } = ctx;
+  const { hasComputedFn, hasWatchFn, connectedModules, module: refModule, unProxyState } = ctx;
 
   const callInfo = makeCallInfo(refModule);
 
   const cuOrWatch = (op) => {
-    op(ref, refModule, refState, refState, callInfo, true);
+    op(ref, refModule, unProxyState, unProxyState, callInfo, true);
     connectedModules.forEach(m => {
       const mState = getState(m);
       const tmpCallInfo = makeCallInfo(m);
