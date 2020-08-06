@@ -17,7 +17,7 @@ const {
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
 const {
-  store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
+  store: { setState: storeSetState, getPrevState, saveSharedState, getModuleVer }, middlewares, ccClassKey_ccClassContext_,
   refStore, moduleName_stateKeys_
 } = ccContext;
 
@@ -80,9 +80,10 @@ export default function (state, {
   if(hasDelta){
     Object.assign(state, sharedState);
   }
+  const isIncludeModuleState = !!sharedState;
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback,
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
 
@@ -130,7 +131,7 @@ export default function (state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next
+  targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback, next
 ) {
   const refCtx = targetRef.ctx;
   const refState = refCtx.unProxyState;
@@ -182,6 +183,11 @@ function triggerReactSetState(
     if (changedState) {
       // 记录stateKeys，方便triggerRefEffect之用
       refCtx.__$$settedList.push({ module: stateModule, keys: okeys(changedState) });
+      // 避免before-render里，一次多余的 assign __$$mstate to unProxyState 过程
+      // __$$ccSetState 调用里已将changedState合并到 ctx.unProxyState 和 ctx.state上, 见 handler-factory/makeRefSetState
+      if (isIncludeModuleState) {
+        refCtx.__$$prevModuleVer = getModuleVer(stateModule);
+      }
       refCtx.__$$ccSetState(changedState, reactCallback);
     }
   }
@@ -246,7 +252,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
 
     if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
-    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY);
+    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, true);
     renderedInBelong[refKey] = 1;
   });
 

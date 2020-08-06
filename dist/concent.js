@@ -542,9 +542,12 @@
     return Object.keys(obj);
   }
   function convertToStandardEvent(e) {
-    var ret = null;
+    var ret = null; // avoid Warning: This synthetic event is reused for performance reasons. If you're seeing this...
+    // call e.persist() @see https://reactjs.org/docs/events.html#event-pooling
 
     if (e) {
+      if (e.persist) e.persist();
+
       if (e.currentTarget && e.type) {
         ret = e;
       } else if (e.nativeEvent && e.target) {
@@ -3033,7 +3036,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.19',
+      version: '2.0.20',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
