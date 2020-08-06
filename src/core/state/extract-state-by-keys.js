@@ -11,14 +11,15 @@ function setPartialState(partialState, state, key) {
 }
 
 export default function (state, stateKeys = [], returnNullIfEmpty = false, needIgnored = false) {
-  let partialState = {}, ignoredStateKeys = [];
+  let partialState = {}, ignoredStateKeys = [], missKeyInState = false;
   if (!isPJO(state)) {
-    return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true, ignoredStateKeys };
+    return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true, ignoredStateKeys, missKeyInState };
   }
   let isStateEmpty = true;
 
   const committedStateKeys = okeys(state);
   if (committedStateKeys.length >= stateKeys.length) {
+    missKeyInState = true;
     stateKeys.forEach(key => {
       if (setPartialState(partialState, state, key)) isStateEmpty = false;
     });
@@ -28,6 +29,7 @@ export default function (state, stateKeys = [], returnNullIfEmpty = false, needI
       if (stateKeys.includes(key)) {
         if (setPartialState(partialState, state, key)) isStateEmpty = false;
       } else {
+        missKeyInState = true;
         if (needIgnored) ignoredStateKeys.push(key);
       }
     });
@@ -35,5 +37,5 @@ export default function (state, stateKeys = [], returnNullIfEmpty = false, needI
 
   if (isStateEmpty && returnNullIfEmpty) partialState = null;
 
-  return { partialState, isStateEmpty, ignoredStateKeys };
+  return { partialState, isStateEmpty, ignoredStateKeys, missKeyInState };
 }

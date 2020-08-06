@@ -3036,7 +3036,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.20',
+      version: '2.0.21',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -4300,6 +4300,7 @@
       storeSetState = _ccContext$store.setState,
       getPrevState = _ccContext$store.getPrevState,
       saveSharedState$1 = _ccContext$store.saveSharedState,
+      getModuleVer$1 = _ccContext$store.getModuleVer,
       middlewares = ccContext.middlewares,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       refStore = ccContext.refStore,
@@ -4394,10 +4395,11 @@
 
     if (hasDelta) {
       Object.assign(state, sharedState);
-    } // source ref will receive the whole committed state 
+    }
 
+    var isIncludeModuleState = !!sharedState; // source ref will receive the whole committed state 
 
-    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, // committedState means final committedState
+    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback, // committedState means final committedState
     function (renderType, committedState, updateRef) {
       var passToMiddleware = {
         calledBy: calledBy,
@@ -4449,7 +4451,7 @@
     });
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, reactCallback, next) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback, next) {
     var refCtx = targetRef.ctx;
     var refState = refCtx.unProxyState;
 
@@ -4510,7 +4512,13 @@
         refCtx.__$$settedList.push({
           module: stateModule,
           keys: okeys$4(changedState)
-        });
+        }); // 避免before-render里，一次多余的 assign __$$mstate to unProxyState 过程
+        // __$$ccSetState 调用里已将changedState合并到 ctx.unProxyState 和 ctx.state上, 见 handler-factory/makeRefSetState
+
+
+        if (isIncludeModuleState) {
+          refCtx.__$$prevModuleVer = getModuleVer$1(stateModule);
+        }
 
         refCtx.__$$ccSetState(changedState, reactCallback);
       }
@@ -4588,7 +4596,7 @@
       var refUKey = ref.ctx.ccUniqueKey;
       if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
 
-      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1);
+      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, true);
       renderedInBelong[refKey] = 1;
     });
     var prevModuleState = getPrevState(moduleName);
@@ -6153,7 +6161,7 @@
       moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
       _ccContext$store$2 = ccContext.store,
       getState$3 = _ccContext$store$2.getState,
-      getModuleVer$1 = _ccContext$store$2.getModuleVer,
+      getModuleVer$2 = _ccContext$store$2.getModuleVer,
       moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
   var okeys$6 = okeys,
       me$1 = makeError,
@@ -6476,7 +6484,7 @@
       __$$settedList: [],
       //[{module:string, keys:string[]}, ...]
       __$$prevMoStateVer: {},
-      __$$prevModuleVer: getModuleVer$1(stateModule),
+      __$$prevModuleVer: getModuleVer$2(stateModule),
       __$$cuOrWaCalled: false
     };
     ref.setState = setState;
@@ -8272,7 +8280,7 @@
   }
 
   /** eslint-disable */
-  var getModuleVer$2 = ccContext.store.getModuleVer;
+  var getModuleVer$3 = ccContext.store.getModuleVer;
   function beforeRender (ref) {
     var ctx = ref.ctx;
     ctx.renderCount += 1; // 不处于收集观察依赖 or 已经开始都要跳出此函数
@@ -8288,7 +8296,7 @@
     if (ctx.__$$hasModuleState) {
       var __$$prevModuleVer = ctx.__$$prevModuleVer,
           refModule = ctx.module;
-      var moduleVer = getModuleVer$2(refModule); // 当组件某一刻对模块状态无依赖后，ctx.state里的模块状态始终是旧值
+      var moduleVer = getModuleVer$3(refModule); // 当组件某一刻对模块状态无依赖后，ctx.state里的模块状态始终是旧值
       // 所以此处通过比较模板版本差异，主动合并最新模块状态
       // 这样在组件自己触发自己渲染后，如果那一刻ui里又通过ctx.state读取了模块状态
       // 那么这段逻辑通过比较模板版本差异，主动合并最新模块状态，能报保证ui里读到的模块状态是最新值

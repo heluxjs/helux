@@ -75,15 +75,20 @@ export default function (state, {
   // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
   // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
-  const { partialState: sharedState, hasDelta } = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true });
+  const {
+    partialState: sharedState, hasDelta, hasPrivState
+  } = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true });
 
-  if(hasDelta){
+  if (hasDelta) {
     Object.assign(state, sharedState);
   }
-  const isIncludeModuleState = !!sharedState;
+  const hasModuleState = !!sharedState;
+  // 不包含私有状态，仅包含模块状态，交给belongRefs那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
+  // 因为belongRefs那里可能不会把它查出来
+  const ignoreRender = !hasPrivState && hasModuleState;
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback,
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
 
@@ -123,7 +128,8 @@ export default function (state, {
         // 无论是否真的有状态改变，此回调都会被触发
         if (stateChangedCb) stateChangedCb();
 
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, stateFor, module, renderKey, delay);
+        // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, renderKey, delay);
       });
 
     }
@@ -131,10 +137,15 @@ export default function (state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKey, calledBy, state, stateFor, isIncludeModuleState, reactCallback, next
+  targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback, next
 ) {
+  const nextNoop = () => next && next(RENDER_NO_OP, state);
   const refCtx = targetRef.ctx;
   const refState = refCtx.unProxyState;
+
+  if (ignoreRender) {
+    nextNoop();
+  }
 
   if (
     // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
@@ -145,7 +156,7 @@ function triggerReactSetState(
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     (calledBy !== FORCE_UPDATE && isObjectNull(state))
   ) {
-    return next && next(RENDER_NO_OP, state);
+    return nextNoop();
   }
 
   const { module: stateModule, storedKeys, ccUniqueKey } = refCtx;
@@ -154,7 +165,7 @@ function triggerReactSetState(
   if (renderKey) {//if user specify renderKey
     renderType = RENDER_BY_KEY;
     if (refCtx.renderKey !== renderKey) {// current instance can been rendered only if current instance's ccKey equal renderKey
-      return next && next(RENDER_NO_OP, state);
+    return nextNoop();
     }
   }
 
@@ -185,9 +196,10 @@ function triggerReactSetState(
       refCtx.__$$settedList.push({ module: stateModule, keys: okeys(changedState) });
       // 避免before-render里，一次多余的 assign __$$mstate to unProxyState 过程
       // __$$ccSetState 调用里已将changedState合并到 ctx.unProxyState 和 ctx.state上, 见 handler-factory/makeRefSetState
-      if (isIncludeModuleState) {
+      if (hasModuleState) {
         refCtx.__$$prevModuleVer = getModuleVer(stateModule);
       }
+
       refCtx.__$$ccSetState(changedState, reactCallback);
     }
   }
@@ -203,20 +215,20 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
   const stateKeys = moduleName_stateKeys_[moduleName];
 
   // extract shared state
-  const { partialState } = extractStateByKeys(committedState, stateKeys, true);
+  const { partialState, missKeyInState: hasPrivState } = extractStateByKeys(committedState, stateKeys, true);
 
   // save state to store
   if (partialState) {
     const { hasDelta, deltaCommittedState } = storeSetState(moduleName, partialState, options);
-    return { partialState: deltaCommittedState, hasDelta };
+    return { partialState: deltaCommittedState, hasDelta, hasPrivState };
   }
 
-  return { partialState, hasDelta: false };
+  return { partialState, hasDelta: false, hasPrivState };
 }
 
-function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey, delay) {
+function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey, delay) {
   const startBroadcastState = () => {
-    broadcastState(callInfo, targetRef, sharedState, stateFor, moduleName, renderKey);
+    broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey);
   };
 
   if (delay > 0) {
@@ -227,7 +239,7 @@ function triggerBroadcastState(callInfo, targetRef, sharedState, stateFor, modul
   }
 }
 
-function broadcastState(callInfo, targetRef, partialSharedState, stateFor, moduleName, renderKey) {
+function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKey) {
   if (!partialSharedState) {// null
     return;
   }
@@ -235,10 +247,6 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
 
   const { ccUniqueKey: currentCcUKey, ccClassKey } = targetRef.ctx;
   const renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
-
-  // if stateFor === FOR_ONE_INS_FIRSTLY, it means currentCcInstance has triggered __$$ccSetState
-  // so flag ignoreCurrentCcUkey as true;
-  const ignoreCurrentCcUKey = stateFor === FOR_ONE_INS_FIRSTLY;
 
   const {
     sharedStateKeys, result: { belong: belongRefKeys, connect: connectRefKeys }
@@ -250,9 +258,9 @@ function broadcastState(callInfo, targetRef, partialSharedState, stateFor, modul
     if (!ref) return;
     const refUKey = ref.ctx.ccUniqueKey;
 
-    if (ignoreCurrentCcUKey && refUKey === currentCcUKey) return;
+    if (refUKey === currentCcUKey && !allowOriInsRender) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
-    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, true);
+    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, true, false);
     renderedInBelong[refKey] = 1;
   });
 
