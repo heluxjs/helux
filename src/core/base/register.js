@@ -163,7 +163,8 @@ export default function register({
             return super.render();
           } else {
             //将$$attach传递下去，让用户在构造器里紧接着super之后调this.props.$$attach()
-            return React.createElement(ReactClass, { ctx: this.ctx, $$attach: this.$$attach });
+            const newProps = { ...this.props, $$attach: this.$$attach };
+            return React.createElement(ReactClass, newProps);
           }
         }
       }
