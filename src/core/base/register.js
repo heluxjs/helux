@@ -150,21 +150,18 @@ export default function register({
         // 两次构造器里虽然生成了不同的refCtx，但是两次render里给的 this.ctx 始终是最新的那一个
         // 所以此处不需要像 useConcent 一样做ef标记
         render() {
+          const outProps = this.props;
           this.ctx.prevProps = this.ctx.props;
-          this.ctx.props = this.props;
-
-          if (runtimeVar.isDebug) {
-            console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
-          }
+          this.ctx.props = outProps;
 
           beforeRender(this);
           if (isPropsProxy === false) {
-            //now cc class extends ReactClass, call super.render()
+            // now cc class extends ReactClass, call super.render()
             return super.render();
           } else {
-            //将$$attach传递下去，让用户在构造器里紧接着super之后调this.props.$$attach()
-            const newProps = { ...this.props, $$attach: this.$$attach };
-            return React.createElement(ReactClass, newProps);
+            //将$$attach传递下去，用户需在构造器里最后一样调用props.$$attach()
+            const passedProps = { ...outProps, ctx: this.ctx, $$attach: this.$$attach };
+            return React.createElement(ReactClass, passedProps);
           }
         }
       }

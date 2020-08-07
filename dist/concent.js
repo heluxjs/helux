@@ -3041,10 +3041,10 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.4',
+      version: '2.8.5',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-      tag: 'tina'
+      tag: 'glaxy'
     },
     featureStr_classKey_: {},
     userClassKey_featureStr_: {},
@@ -8275,6 +8275,24 @@
     startup(storeConf, options);
   }
 
+  function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+
+      return target;
+    };
+
+    return _extends.apply(this, arguments);
+  }
+
   function _assertThisInitialized(self) {
     if (self === void 0) {
       throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -8528,10 +8546,11 @@
               return _ToBeExtendedClass.prototype.render.call(this);
             } else {
               //将$$attach传递下去，让用户在构造器里紧接着super之后调this.props.$$attach()
-              return React.createElement(ReactClass, {
-                ctx: this.ctx,
+              var newProps = _extends({}, this.props, {
                 $$attach: this.$$attach
               });
+
+              return React.createElement(ReactClass, newProps);
             }
           };
 
