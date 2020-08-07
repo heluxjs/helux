@@ -179,8 +179,7 @@ export default function register({
         }
       }
 
-      if (_ccClassKey === CC_DISPATCHER) _CcClass.displayName = 'CcDispatcher';
-      else _CcClass.displayName = ccClassDisplayName(_ccClassKey);
+      _CcClass.displayName = ccClassDisplayName(_ccClassKey);
       return _CcClass;
     }
   } catch (err) {
