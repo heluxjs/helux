@@ -3041,7 +3041,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.2',
+      version: '2.8.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -5785,9 +5785,20 @@
     getEventItem: getEventItem
   });
 
+  var getModuleVer$2 = ccContext.store.getModuleVer;
   function makeObState (ref, state, module, isForModule) {
     return new Proxy(state, {
       get: function get(target, key) {
+        // ensureStateNotExpired, 当实例失去模块数据依赖，回调方法直接使用ctx.state时，state里的模块数据可能已过期
+        if (isForModule) {
+          var modVer = getModuleVer$2(module);
+
+          if (modVer !== ref.ctx.__$$prevModuleVer) {
+            ref.ctx.__$$prevModuleVer = modVer;
+            Object.assign(state, ref.ctx.__$$mstate);
+          }
+        }
+
         updateDep(ref, module, key, isForModule);
         return target[key];
       },
@@ -6179,7 +6190,7 @@
       moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
       _ccContext$store$2 = ccContext.store,
       getState$3 = _ccContext$store$2.getState,
-      getModuleVer$2 = _ccContext$store$2.getModuleVer,
+      getModuleVer$3 = _ccContext$store$2.getModuleVer,
       moduleName_ccClassKeys_ = ccContext.moduleName_ccClassKeys_;
   var okeys$6 = okeys,
       me$1 = makeError,
@@ -6502,7 +6513,7 @@
       __$$settedList: [],
       //[{module:string, keys:string[]}, ...]
       __$$prevMoStateVer: {},
-      __$$prevModuleVer: getModuleVer$2(stateModule),
+      __$$prevModuleVer: getModuleVer$3(stateModule),
       __$$cuOrWaCalled: false
     };
     ref.setState = setState;
@@ -8297,7 +8308,6 @@
   }
 
   /** eslint-disable */
-  var getModuleVer$3 = ccContext.store.getModuleVer;
   function beforeRender (ref) {
     var ctx = ref.ctx;
     ctx.renderCount += 1; // 不处于收集观察依赖 or 已经开始都要跳出此函数
@@ -8311,21 +8321,6 @@
     if (ctx.__$$renderStatus !== START) ctx.__$$renderStatus = START;
 
     if (ctx.__$$hasModuleState) {
-      var __$$prevModuleVer = ctx.__$$prevModuleVer,
-          refModule = ctx.module;
-      var moduleVer = getModuleVer$3(refModule); // 当组件某一刻对模块状态无依赖后，ctx.state里的模块状态始终是旧值
-      // 所以此处通过比较模板版本差异，主动合并最新模块状态
-      // 这样在组件自己触发自己渲染后，如果那一刻ui里又通过ctx.state读取了模块状态
-      // 那么这段逻辑通过比较模板版本差异，主动合并最新模块状态，能报保证ui里读到的模块状态是最新值
-      // 但是此处需要注意的是如果ui始终没通过ctx.state读取了模块状态
-      // 那么click回调里的ctx.state始终会是旧值，所以推荐用户在事件回调里始终读取moduleState,以确保读取最新模块值
-
-      if (__$$prevModuleVer !== moduleVer) {
-        ctx.__$$prevModuleVer = moduleVer;
-        ctx.unProxyState = Object.assign({}, ctx.unProxyState, ctx.__$$mstate);
-        Object.assign(ctx.state, ctx.__$$mstate);
-      }
-
       ctx.__$$curWaKeys = {};
       ctx.__$$compareWaKeys = ctx.__$$nextCompareWaKeys;
       ctx.__$$compareWaKeyCount = ctx.__$$nextCompareWaKeyCount; // 渲染期间再次收集

@@ -1,3 +1,18 @@
+#### 2020-08-07
+2.8.3 发布
+optimize: 利用模块状态版本号确保无论实例是否失去模块依赖，`ctx.state`总是能够获取到最新值
+```js
+
+function setup(ctx){
+  const { state } = ctx;
+
+  // before v2.8.3, state.num可能为旧值，如果实例失去了num依赖
+  // after v2.8.3, state.num一定会是最新值
+  const inc = ()=> ({num: state.num + 1});
+}
+
+```
+
 #### 2020-08-06
 2.8.1 发布
 fix: 已失去模块状态依赖的组件，自己触发修改模块状态还会触发自己渲染
