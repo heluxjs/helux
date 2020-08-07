@@ -1,8 +1,19 @@
 import updateDep from '../ref/update-dep';
+import ccContext from '../../cc-context/index';
+
+const { store: { getModuleVer } } = ccContext;
 
 export default function (ref, state, module, isForModule) {
   return new Proxy(state, {
     get: function (target, key) {
+      // ensureStateNotExpired, 当实例失去模块数据依赖，回调方法直接使用ctx.state时，state里的模块数据可能已过期
+      if (isForModule) {
+        const modVer = getModuleVer(module);
+        if (modVer !== ref.ctx.__$$prevModuleVer) {
+          ref.ctx.__$$prevModuleVer = modVer;
+          Object.assign(state, ref.ctx.__$$mstate);
+        }
+      }
       updateDep(ref, module, key, isForModule);
       return target[key];
     },

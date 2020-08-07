@@ -3041,7 +3041,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.1',
+      version: '2.8.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -7883,17 +7883,16 @@
 
   function triggerComputedAndWatch (ref) {
     var ctx = ref.ctx; // 取原始对象，防止computeValueForRef里用Object.assign触发依赖收集
-    // 首次挂载组件时，prevState是原始对象，state可能是代理过的对象
 
     var hasComputedFn = ctx.hasComputedFn,
         hasWatchFn = ctx.hasWatchFn,
         connectedModules = ctx.connectedModules,
         refModule = ctx.module,
-        refState = ctx.state;
+        unProxyState = ctx.unProxyState;
     var callInfo = makeCallInfo(refModule);
 
     var cuOrWatch = function cuOrWatch(op) {
-      op(ref, refModule, refState, refState, callInfo, true);
+      op(ref, refModule, unProxyState, unProxyState, callInfo, true);
       connectedModules.forEach(function (m) {
         var mState = getState$5(m);
         var tmpCallInfo = makeCallInfo(m);
