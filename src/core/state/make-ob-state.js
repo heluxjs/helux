@@ -9,9 +9,10 @@ export default function (ref, state, module, isForModule) {
       // ensureStateNotExpired, 当实例失去模块数据依赖，回调方法直接使用ctx.state时，state里的模块数据可能已过期
       if (isForModule) {
         const modVer = getModuleVer(module);
-        if (modVer !== ref.ctx.__$$prevModuleVer) {
-          ref.ctx.__$$prevModuleVer = modVer;
-          Object.assign(state, ref.ctx.__$$mstate);
+        const ctx = ref.ctx;
+        if (modVer !== ctx.__$$prevModuleVer) {
+          ctx.__$$prevModuleVer = modVer;
+          Object.assign(state, ctx.__$$mstate);
         }
       }
       updateDep(ref, module, key, isForModule);
