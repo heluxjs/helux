@@ -3041,7 +3041,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.3',
+      version: '2.0.29',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'tina'
@@ -4834,25 +4834,14 @@
     }, payload);
   }
 
-  function makeCcSetStateHandler(ref, containerRef) {
+  function makeCcSetStateHandler(ref) {
     return function (state, cb) {
-      var refCtx = ref.ctx;
-      /** start update state */
-      // 和react保持immutable的思路一致，强迫用户养成习惯，总是从ctx取最新的state,
-      // 注意这里赋值也是取refCtx.state取做合并，因为频繁进入此函数时，ref.state可能还不是最新的
-
-      if (containerRef) {
-        var newFullState = Object.assign({}, refCtx.unProxyState, state);
-        containerRef.state = newFullState;
-      }
-
-      refCtx.reactSetState(state, cb);
+      ref.ctx.reactSetState(state, cb);
     };
   }
   function makeCcForceUpdateHandler(ref) {
     return function (cb) {
-      var refCtx = ref.ctx;
-      refCtx.reactForceUpdate(cb);
+      ref.ctx.reactForceUpdate(cb);
     };
   } // last param: chainData
 
@@ -5792,10 +5781,11 @@
         // ensureStateNotExpired, 当实例失去模块数据依赖，回调方法直接使用ctx.state时，state里的模块数据可能已过期
         if (isForModule) {
           var modVer = getModuleVer$2(module);
+          var ctx = ref.ctx;
 
-          if (modVer !== ref.ctx.__$$prevModuleVer) {
-            ref.ctx.__$$prevModuleVer = modVer;
-            Object.assign(state, ref.ctx.__$$mstate);
+          if (modVer !== ctx.__$$prevModuleVer) {
+            ctx.__$$prevModuleVer = modVer;
+            Object.assign(state, ctx.__$$mstate);
           }
         }
 
@@ -8310,7 +8300,11 @@
   /** eslint-disable */
   function beforeRender (ref) {
     var ctx = ref.ctx;
-    ctx.renderCount += 1; // 不处于收集观察依赖 or 已经开始都要跳出此函数
+    ctx.renderCount += 1; // 类组件this.reactSetState调用后生成的this.state是一个新的普通对象
+    // 每次渲染前替换为ctx.state指向的Proxy对象，确保让类组件里使用this.state能够收集到依赖
+
+    ref.state = ctx.state;
+    if (ctx.childRef) ctx.childRef.state = ctx.state; // 不处于收集观察依赖 or 已经开始都要跳出此函数
     // strictMode模式下，会走两次beforeRender 一次afterRender，
     // 所以这里严格用ctx.__$$renderStatus === START 来控制只真正执行一次beforeRender
 
@@ -8327,11 +8321,8 @@
 
       ctx.__$$nextCompareWaKeys = {};
       ctx.__$$nextCompareWaKeyCount = 0;
-    } // 类组件this.reactSetState调用后生成的this.state是一个新的普通对象
-    // 每次渲染前替换为ctx.state指向的Proxy对象，确保让类组件里使用this.state能够收集到依赖
+    }
 
-
-    ref.state = ctx.state;
     var connectedModules = ctx.connectedModules,
         connect = ctx.connect;
     connectedModules.forEach(function (m) {
@@ -8481,35 +8472,31 @@
           _proto.$$attach = function $$attach(childRef) {
             var ctx = this.ctx;
             ctx.childRef = childRef;
-            childRef.ctx = ctx;
-            ctx.reactSetState = childRef.setState.bind(childRef);
-            ctx.reactForceUpdate = childRef.forceUpdate.bind(childRef); // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
+            childRef.ctx = ctx; // 让代理属性的目标组件即可从this.props 也可从 this 访问 ctx
+            // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
 
             childRef.setState = ctx.setState;
-            childRef.forceUpdate = ctx.forceUpdate; //替换掉ctx.__$$ccSetState ctx.__$$ccForceUpdate, 让changeRefState正确的更新目标实例
+            childRef.forceUpdate = ctx.forceUpdate;
 
-            ctx.__$$ccSetState = makeCcSetStateHandler(childRef, this);
-            ctx.__$$ccForceUpdate = makeCcForceUpdateHandler(childRef);
-            if (!childRef.state) childRef.state = {};
-            var childRefState = childRef.state;
-            var thisState = this.state;
-            Object.assign(childRefState, thisState);
-            beforeRender(childRef); //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
-            // const newState = Object.assign({}, childRefState, thisState);
-            // this.state = newState; // bad writing
-            // okeys(newState).forEach(key => thisState[key] = newState[key]);
+            if (isObjectNotNull(childRef.state)) {
+              Object.assign(ctx.state, childRef.state, ctx.__$$mstate);
+            }
 
             if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
             if (setup && (childRef.$$setup || staticSetup)) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
-            beforeMount(childRef, setup || childRef.$$setup || staticSetup, false);
+            beforeMount(this, setup || childRef.$$setup || staticSetup, false);
+            beforeRender(this);
           };
 
           _proto.componentDidMount = function componentDidMount() {
+            // 属性代理模式，必需在组件consturctor里调用 props.$$attach(this)
+            // you must call it in next line of state assign expression 
+            if (isPropsProxy && !this.ctx.childRef) {
+              throw new Error("forget call props.$$attach(this) in consturctor when set isPropsProxy true");
+            }
+
             if (_ToBeExtendedClass.prototype.componentDidMount) _ToBeExtendedClass.prototype.componentDidMount.call(this);
-            didMount(this); // 代理模式不再强制检查$$attach是否已调用
-            // if (isPropsProxy === true && !this.ctx.childRef) {
-            //   throw new Error('you forgot to call this.props.$$attach(this) in constructor, you must call it after state assign expression next line!');
-            // }
+            didMount(this);
           };
 
           _proto.componentDidUpdate = function componentDidUpdate(prevProps, prevState, snapshot) {
@@ -8534,9 +8521,10 @@
               console.log(ss$1("@@@ render " + ccClassDisplayName$1(_ccClassKey)), cl$1());
             }
 
-            if (isPropsProxy === false) {
-              beforeRender(this); //now cc class extends ReactClass, call super.render()
+            beforeRender(this);
 
+            if (isPropsProxy === false) {
+              //now cc class extends ReactClass, call super.render()
               return _ToBeExtendedClass.prototype.render.call(this);
             } else {
               //将$$attach传递下去，让用户在构造器里紧接着super之后调this.props.$$attach()
@@ -8550,7 +8538,7 @@
           return CcClass;
         }(ToBeExtendedClass);
 
-        if (_ccClassKey === CC_DISPATCHER) _CcClass.displayName = 'CcDispatcher';else _CcClass.displayName = ccClassDisplayName$1(_ccClassKey);
+        _CcClass.displayName = ccClassDisplayName$1(_ccClassKey);
         return _CcClass;
       };
     } catch (err) {

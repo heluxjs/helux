@@ -1,7 +1,7 @@
 // import hoistNonReactStatic from 'hoist-non-react-statics';
 import React from 'react';
 import {
-  MODULE_DEFAULT, CC_DISPATCHER, CC_CLASS, CC_CUSTOMIZE,
+  MODULE_DEFAULT, CC_CLASS, CC_CUSTOMIZE,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -107,44 +107,32 @@ export default function register({
         $$attach(childRef) {
           const ctx = this.ctx;
           ctx.childRef = childRef;
-          childRef.ctx = ctx;
-
-          ctx.reactSetState = childRef.setState.bind(childRef);
-          ctx.reactForceUpdate = childRef.forceUpdate.bind(childRef);
+          childRef.ctx = ctx;// 让代理属性的目标组件即可从this.props 也可从 this 访问 ctx
 
           // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
           childRef.setState = ctx.setState;
           childRef.forceUpdate = ctx.forceUpdate;
 
-          //替换掉ctx.__$$ccSetState ctx.__$$ccForceUpdate, 让changeRefState正确的更新目标实例
-          ctx.__$$ccSetState = hf.makeCcSetStateHandler(childRef, this);
-          ctx.__$$ccForceUpdate = hf.makeCcForceUpdateHandler(childRef);
-
-          if (!childRef.state) childRef.state = {};
-          const childRefState = childRef.state;
-          const thisState = this.state;
-          Object.assign(childRefState, thisState);
-          beforeRender(childRef);
-
-          //避免提示 Warning: Expected {Component} state to match memoized state before componentDidMount
-          // const newState = Object.assign({}, childRefState, thisState);
-          // this.state = newState; // bad writing
-          // okeys(newState).forEach(key => thisState[key] = newState[key]);
+          if (util.isObjectNotNull(childRef.state)) {
+            Object.assign(ctx.state, childRef.state, ctx.__$$mstate);
+          }
 
           if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
           if (setup && (childRef.$$setup || staticSetup)) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
-          beforeMount(childRef, setup || childRef.$$setup || staticSetup, false);
+          beforeMount(this, setup || childRef.$$setup || staticSetup, false);
+
+          beforeRender(this);
         }
 
         componentDidMount() {
+          // 属性代理模式，必需在组件consturctor里调用 props.$$attach(this)
+          // you must call it in next line of state assign expression 
+          if (isPropsProxy && !this.ctx.childRef) {
+            throw new Error(`forget call props.$$attach(this) in consturctor when set isPropsProxy true`);
+          }
+
           if (super.componentDidMount) super.componentDidMount();
           didMount(this);
-
-
-          // 代理模式不再强制检查$$attach是否已调用
-          // if (isPropsProxy === true && !this.ctx.childRef) {
-          //   throw new Error('you forgot to call this.props.$$attach(this) in constructor, you must call it after state assign expression next line!');
-          // }
         }
 
         componentDidUpdate(prevProps, prevState, snapshot) {
@@ -168,8 +156,9 @@ export default function register({
           if (runtimeVar.isDebug) {
             console.log(ss(`@@@ render ${ccClassDisplayName(_ccClassKey)}`), cl());
           }
+
+          beforeRender(this);
           if (isPropsProxy === false) {
-            beforeRender(this);
             //now cc class extends ReactClass, call super.render()
             return super.render();
           } else {
