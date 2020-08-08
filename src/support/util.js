@@ -27,7 +27,7 @@ export function isObjectNull(object) {
 
 export function isObject(obj) {
   const str = Object.prototype.toString.call(obj);
-  // 编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
+  // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
   return str === '[object Object]' || str === '[object Module]';
 }
 

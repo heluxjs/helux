@@ -58,7 +58,10 @@ export function getConnect(regConnect) {
   if (isArr || typeof targetConnect === 'string') {
     const connectedModules = isArr ? targetConnect : targetConnect.split(',');
     connectedModules.forEach(m => { finalConnect[m] = '-' });//标识自动收集观察依赖
+  } else {
+    finalConnect = regConnect;
   }
+
   // 未设定连接$$global模块的watchedKeys参数时，自动连接$$global模块，并默认采用依赖收集
   if (!finalConnect[MODULE_GLOBAL]) {
     finalConnect[MODULE_GLOBAL] = '-';

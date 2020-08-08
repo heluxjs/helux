@@ -269,7 +269,9 @@
     return !isObjectNotNull(object);
   }
   function isObject(obj) {
-    return Object.prototype.toString.call(obj) === '[object Object]';
+    var str = Object.prototype.toString.call(obj); // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
+
+    return str === '[object Object]' || str === '[object Module]';
   } // isPJO is short of isPlainJsonObject
 
   function isPJO(obj, canBeArray) {
@@ -3012,7 +3014,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.6',
+      version: '2.8.7',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6215,6 +6217,8 @@
       connectedModules.forEach(function (m) {
         finalConnect[m] = '-';
       }); //标识自动收集观察依赖
+    } else {
+      finalConnect = regConnect;
     } // 未设定连接$$global模块的watchedKeys参数时，自动连接$$global模块，并默认采用依赖收集
 
 

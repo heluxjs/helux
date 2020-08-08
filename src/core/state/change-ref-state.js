@@ -83,13 +83,12 @@ export default function (state, {
   if (hasDelta) {
     Object.assign(state, sharedState);
   }
-  const hasModuleState = !!sharedState;
   // 不包含私有状态，仅包含模块状态，交给belongRefs那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
-  // 因为belongRefs那里可能不会把它查出来
-  const ignoreRender = !hasPrivState && hasModuleState;
+  // 因为belongRefs那里是根据有无依赖来确定要不要渲染，这样的话如果失去了依赖不把它查出来就不触发它渲染了
+  const ignoreRender = !hasPrivState && !!sharedState;
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback,
+  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
 
@@ -138,7 +137,7 @@ export default function (state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback, next
+  targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback, next
 ) {
   const nextNoop = () => next && next(RENDER_NO_OP, state);
   const refCtx = targetRef.ctx;
@@ -195,12 +194,6 @@ function triggerReactSetState(
     if (changedState) {
       // 记录stateKeys，方便triggerRefEffect之用
       refCtx.__$$settedList.push({ module: stateModule, keys: okeys(changedState) });
-      // 避免before-render里，一次多余的 assign __$$mstate to unProxyState 过程
-      // __$$ccSetState 调用里已将changedState合并到 ctx.unProxyState 和 ctx.state上, 见 handler-factory/makeRefSetState
-      if (hasModuleState) {
-        refCtx.__$$prevModuleVer = getModuleVer(stateModule);
-      }
-
       refCtx.__$$ccSetState(changedState, reactCallback);
     }
   }
@@ -262,7 +255,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
 
     if (refUKey === currentCcUKey && !allowOriInsRender) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
-    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, true, false);
+    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, false);
     renderedInBelong[refKey] = 1;
   });
 
