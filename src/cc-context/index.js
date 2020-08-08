@@ -232,7 +232,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.8.7',
+    version: '2.8.8',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glaxy',

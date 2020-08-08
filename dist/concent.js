@@ -3014,7 +3014,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.7',
+      version: '2.8.8',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4325,7 +4325,6 @@
       storeSetState = _ccContext$store.setState,
       getPrevState = _ccContext$store.getPrevState,
       saveSharedState$1 = _ccContext$store.saveSharedState,
-      getModuleVer$1 = _ccContext$store.getModuleVer,
       middlewares = ccContext.middlewares,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       refStore = ccContext.refStore,
@@ -4421,14 +4420,13 @@
 
     if (hasDelta) {
       Object.assign(state, sharedState);
-    }
+    } // 不包含私有状态，仅包含模块状态，交给belongRefs那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
+    // 因为belongRefs那里是根据有无依赖来确定要不要渲染，这样的话如果失去了依赖不把它查出来就不触发它渲染了
 
-    var hasModuleState = !!sharedState; // 不包含私有状态，仅包含模块状态，交给belongRefs那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
-    // 因为belongRefs那里可能不会把它查出来
 
-    var ignoreRender = !hasPrivState && hasModuleState; // source ref will receive the whole committed state 
+    var ignoreRender = !hasPrivState && !!sharedState; // source ref will receive the whole committed state 
 
-    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback, // committedState means final committedState
+    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback, // committedState means final committedState
     function (renderType, committedState, updateRef) {
       var passToMiddleware = {
         calledBy: calledBy,
@@ -4481,7 +4479,7 @@
     });
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, hasModuleState, ignoreRender, reactCallback, next) {
+  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback, next) {
     var nextNoop = function nextNoop() {
       return next && next(RENDER_NO_OP$1, state);
     };
@@ -4550,13 +4548,7 @@
         refCtx.__$$settedList.push({
           module: stateModule,
           keys: okeys$5(changedState)
-        }); // 避免before-render里，一次多余的 assign __$$mstate to unProxyState 过程
-        // __$$ccSetState 调用里已将changedState合并到 ctx.unProxyState 和 ctx.state上, 见 handler-factory/makeRefSetState
-
-
-        if (hasModuleState) {
-          refCtx.__$$prevModuleVer = getModuleVer$1(stateModule);
-        }
+        });
 
         refCtx.__$$ccSetState(changedState, reactCallback);
       }
@@ -4636,7 +4628,7 @@
       var refUKey = ref.ctx.ccUniqueKey;
       if (refUKey === currentCcUKey && !allowOriInsRender) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
 
-      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, true, false);
+      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, false);
       renderedInBelong[refKey] = 1;
     });
     var prevModuleState = getPrevState(moduleName);
@@ -5792,13 +5784,13 @@
     getEventItem: getEventItem
   });
 
-  var getModuleVer$2 = ccContext.store.getModuleVer;
+  var getModuleVer$1 = ccContext.store.getModuleVer;
   function makeObState (ref, state, module, isForModule) {
     return new Proxy(state, {
       get: function get(target, key) {
         // ensureStateNotExpired, 当实例失去模块数据依赖，回调方法直接使用ctx.state时，state里的模块数据可能已过期
         if (isForModule) {
-          var modVer = getModuleVer$2(module);
+          var modVer = getModuleVer$1(module);
           var ctx = ref.ctx;
 
           if (modVer !== ctx.__$$prevModuleVer) {
@@ -6237,7 +6229,7 @@
       getModuleStateKeys$2 = ccContext.getModuleStateKeys,
       _ccContext$store$2 = ccContext.store,
       getState$3 = _ccContext$store$2.getState,
-      getModuleVer$3 = _ccContext$store$2.getModuleVer;
+      getModuleVer$2 = _ccContext$store$2.getModuleVer;
   var okeys$7 = okeys,
       me$1 = makeError,
       vbi$3 = verboseInfo,
@@ -6551,7 +6543,7 @@
       __$$settedList: [],
       //[{module:string, keys:string[]}, ...]
       __$$prevMoStateVer: {},
-      __$$prevModuleVer: getModuleVer$3(stateModule),
+      __$$prevModuleVer: getModuleVer$2(stateModule),
       __$$cuOrWaCalled: false
     };
     ref.setState = setState;

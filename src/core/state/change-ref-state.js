@@ -18,7 +18,7 @@ const {
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
 } = cst;
 const {
-  store: { setState: storeSetState, getPrevState, saveSharedState, getModuleVer }, middlewares, ccClassKey_ccClassContext_,
+  store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
   refStore, moduleName_stateKeys_
 } = ccContext;
 
