@@ -19,7 +19,7 @@ export default function (module, mustBelongToModule = false) {
     const len = ukeys.length;
     for (let i = 0; i < len; i++) {
       /** @type {{ctx:ICtxBase}} */
-      const ref = ukeys[i];
+      const ref = ccUKey_ref_[ukeys[i]];
       if (ref.ctx.module === module) {
         oneRef = ref;
         break;

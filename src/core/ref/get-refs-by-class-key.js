@@ -11,7 +11,7 @@ export default function (ccClassKey) {
 
   for (let i = 0; i < len; i++) {
     /** @type {{ctx:ICtxBase}} */
-    const ref = ukeys[i];
+    const ref = ccUKey_ref_[ukeys[i]];
     if (ref.ctx.ccClassKey === ccClassKey) {
       refs.push(ref);
     }

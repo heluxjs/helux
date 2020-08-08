@@ -3012,7 +3012,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.35',
+      version: '2.8.6',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -3352,7 +3352,7 @@
 
       for (var i = 0; i < len; i++) {
         /** @type {{ctx:ICtxBase}} */
-        var ref = ukeys[i];
+        var ref = ccUKey_ref_[ukeys[i]];
 
         if (ref.ctx.module === module) {
           oneRef = ref;
@@ -9053,7 +9053,7 @@
 
     for (var i = 0; i < len; i++) {
       /** @type {{ctx:ICtxBase}} */
-      var ref = ukeys[i];
+      var ref = ccUKey_ref_$5[ukeys[i]];
 
       if (ref.ctx.ccClassKey === ccClassKey) {
         refs.push(ref);
