@@ -61,4 +61,4 @@ function App() {
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## [try edit this online demo](https://codesandbox.io/s/practical-architecture-3l5mp?file=/src/App.js)
+## [try edit this online demo](https://codesandbox.io/s/dep-collection-of-state-3l5mp)
