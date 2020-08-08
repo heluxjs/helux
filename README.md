@@ -5,7 +5,7 @@ English | [简体中文](./README.zh-CN.md)
 
 ## Examples
 
-### features
+### Key features demo
 [Dep collection of state](./examples/dep-collestion-of-state.md) | [Dep collection of computed](./README.zh-CN.md) | [Composition api](./README.zh-CN.md) | [Composition api](./README.zh-CN.md) | [Combine reducers]()
 
 ## Docs

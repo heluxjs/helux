@@ -3017,7 +3017,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.9',
+      version: '2.8.10',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6449,7 +6449,7 @@
       ccClassKey: ccClassKey,
       ccKey: ccKey,
       ccUniqueKey: ccUniqueKey,
-      renderCount: 1,
+      renderCount: 0,
       initTime: now,
       watchedKeys: watchedKeys,
       privStateKeys: privStateKeys,
