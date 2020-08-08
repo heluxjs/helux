@@ -8,7 +8,7 @@ const noop = () => { };
 export default function () {
   const ccClassKey = CC_DISPATCHER;
   mapRegistrationInfo(
-    MODULE_DEFAULT, ccClassKey, '', CC_CLASS, [], [], [], false, 'cc'
+    MODULE_DEFAULT, ccClassKey, '', CC_CLASS, [], [], false, 'cc'
   );
 
   const mockRef = { setState: noop, forceUpdate: noop };

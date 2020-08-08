@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import * as checker from '../checker';
+import * as checker from '../param/checker';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import { CATE_MODULE, FN_WATCH } from '../../support/constant';

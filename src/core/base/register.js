@@ -3,7 +3,6 @@ import React from 'react';
 import {
   MODULE_DEFAULT, CC_CLASS, CC_CUSTOMIZE,
 } from '../../support/constant';
-import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 import catchCcError from './catch-cc-error';
 import * as hf from '../state/handler-factory';
@@ -15,10 +14,7 @@ import didUpdate from './did-update';
 import beforeUnMount from './before-unmount';
 import beforeRender from '../ref/before-render';
 
-const { ccClassDisplayName, styleStr, color, getPassToMapWaKeys, shallowDiffers, evalState } = util;
-const { runtimeVar } = ccContext;
-const cl = color;
-const ss = styleStr;
+const { ccClassDisplayName, shallowDiffers, evalState } = util;
 const setupErr = info => new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
 
 export default function register({
@@ -39,8 +35,8 @@ export default function register({
   __calledBy,
 } = {}, ccClassKey = '') {
   try {
-    const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS, getPassToMapWaKeys(watchedKeys), storedKeys, connect, __checkStartUp, __calledBy
+    const { _module, _ccClassKey, _connect, _watchedKeys } = mapRegistrationInfo(
+      module, ccClassKey, renderKeyClasses, CC_CLASS, watchedKeys, connect, __checkStartUp, __calledBy
     );
 
     return function (ReactClass) {
@@ -66,7 +62,7 @@ export default function register({
             // props.ccOption
             const params = Object.assign({}, props, {
               module: _module, tag, state: privState, type: CC_CLASS, insType: CC_CUSTOMIZE,
-              watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys, extra,
+              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys, extra,
             });
             buildRefCtx(this, params, lite);
             this.ctx.reactSetState = hf.makeRefSetState(this);

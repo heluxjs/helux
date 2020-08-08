@@ -20,7 +20,6 @@ import _ccContext from './cc-context';
 import _execute from './api/execute';
 import _executeAll from './api/execute-all';
 import _getRefs from './api/get-refs';
-import _getConnectedState from './api/get-connected-state';
 import _appendState from './api/append-state';
 import _reducer from './api/reducer';
 import _clearContextIfHot from './api/clear-context-if-hot';
@@ -50,7 +49,6 @@ export const set = _set;
 export const setValue = _setValue;
 export const getState = _getState;
 export const getGlobalState = _getGlobalState;
-export const getConnectedState = _getConnectedState;
 export const getComputed = _getComputed;
 export const emit = _emit;
 export const off = _off;
@@ -95,7 +93,6 @@ const defaultExport = {
   getGlobalState,
   getState,
   getComputed,
-  getConnectedState,
   ccContext,
   execute,
   executeAll,

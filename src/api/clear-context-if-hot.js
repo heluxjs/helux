@@ -12,20 +12,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearCuRefer();
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
-  const cct = ccContext.ccClassKey_ccClassContext_;
-
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
-  Object.keys(cct).forEach(ccClassKey => {
-    const clsCtx = cct[ccClassKey];
-    const ccKeys = clsCtx.ccKeys;
-    const tmpExclude = [];
-    if (otherExcludeKeys.length > 0) {
-      ccKeys.forEach(ccKey => {
-        otherExcludeKeys.includes(ccKey) && tmpExclude.push(ccKey);
-      })
-    }
-    clearObject(clsCtx.ccKeys, tmpExclude);
-  });
   clearObject(ccContext.handlerKey_handler_);
   clearObject(ccUKey_ref_, otherExcludeKeys);
 

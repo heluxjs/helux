@@ -15,19 +15,18 @@ import getDefineComputedHandler from '../computed/get-define-computed-handler';
 import makeCuRefObContainer from '../computed/make-cu-ref-ob-container';
 import computeCcUniqueKey from '../base/compute-cc-unique-key';
 import getOutProps from '../base/get-out-props';
-import getStoredKeys from '../base/get-stored-keys';
 import __sync from '../base/sync';
+import { getStoredKeys } from '../param/extractor';
 
 const {
   reducer: { _module_fnNames_, _caller },
   refStore,
-  moduleName_stateKeys_,
+  getModuleStateKeys,
   store: { getState, getModuleVer },
-  moduleName_ccClassKeys_,
 } = ccContext;
 
 const {
-  okeys, makeError: me, verboseInfo: vbi, safeGetArray, safeGet,
+  okeys, makeError: me, verboseInfo: vbi, safeGet,
   justWarning, isObjectNull, isValueNotNull, noDupPush,
 } = util;
 
@@ -62,7 +61,7 @@ const getConnectWatchedKeys = (ctx, module) => {
       return getModuleWaKeys(module);
     } else {
       const waKeys = connect[module];
-      if (waKeys === '*') return moduleName_stateKeys_[module];
+      if (waKeys === '*') return getModuleStateKeys(module);
       else if (waKeys === '-') return getModuleWaKeys(module);
       else return waKeys;
     }
@@ -77,7 +76,7 @@ const getConnectWatchedKeys = (ctx, module) => {
 }
 
 function recordDep(ccUniqueKey, module, watchedKeys) {
-  const waKeys = watchedKeys === '*' ? moduleName_stateKeys_[module] : watchedKeys;
+  const waKeys = watchedKeys === '*' ? getModuleStateKeys(module) : watchedKeys;
   waKeys.forEach(stateKey => mapIns(module, stateKey, ccUniqueKey));
 }
 
@@ -96,7 +95,7 @@ export default function (ref, params, liteLevel = 5) {
   const stateModule = module;
   const existedCtx = ref.ctx;
   const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
-  const modStateKeys = moduleName_stateKeys_[stateModule];
+  const modStateKeys = getModuleStateKeys(stateModule);
 
   let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
 
@@ -114,12 +113,12 @@ export default function (ref, params, liteLevel = 5) {
   refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined ? persistStoredKeys : ccOption.persistStoredKeys;
   refOption.tag = ccOption.tag || tag;
 
-  // pick ref defined tag first, register tag second
+  // pick ccOption tag first, register tag second
   const ccUniqueKey = computeCcUniqueKey(ccClassKey, ccKey, refOption.tag);
   // 没有设定renderKey的话读id，最后才默认renderKey为ccUniqueKey
   refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
 
-  refOption.storedKeys = getStoredKeys(state, modStateKeys, ccOption.storedKeys, storedKeys);
+  refOption.storedKeys = getStoredKeys(stateModule, state, ccOption.storedKeys, storedKeys);
 
   //用户使用ccKey属性的话，必需显示的指定ccClassKey
   if (ccKey && !ccClassKey) {
@@ -150,10 +149,6 @@ export default function (ref, params, liteLevel = 5) {
   // extract privStateKeys
   const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
   const moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true);
-
-  // record ccClassKey
-  const ccClassKeys = safeGetArray(moduleName_ccClassKeys_, module);
-  if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 
   // declare cc state series api
   const changeState = (state, option) => {

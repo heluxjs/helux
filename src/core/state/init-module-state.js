@@ -1,7 +1,7 @@
 import ccContext from '../../cc-context';
 import { MODULE_GLOBAL, MODULE_VOID } from '../../support/constant';
 import * as util from '../../support/util';
-import * as checker from '../checker';
+import * as checker from '../param/checker';
 import guessDuplicate from '../base/guess-duplicate';
 import * as refCache from '../ref/_cache';
 

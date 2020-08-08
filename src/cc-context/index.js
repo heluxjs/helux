@@ -128,8 +128,6 @@ const ccContext = {
   isStartup: false,
   moduleName_stateFn_: {
   },
-  moduleName_ccClassKeys_: {
-  },
   // 映射好模块的状态所有key并缓存住，用于提高性能
   moduleName_stateKeys_,
   // 记录模块是不是通过configure配置的
@@ -142,9 +140,6 @@ const ccContext = {
    *   // renderKey机制影响的类范围，默认只影响调用者所属的类，如果有别的类观察了同一个模块的某个key，这个类的实例是否触发渲染不受renderKey影响
    *   // 为 * 表示影响所有的类，即其他类实例都受renderKey机制影响。
    *   renderKeyClasses, 
-   *   originalWatchedKeys,
-   *   watchedKeys,
-   *   ccKeys: [],
    * }
   */
   ccClassKey_ccClassContext_: {
@@ -237,7 +232,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.8.5',
+    version: '2.0.35',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glaxy',
@@ -251,6 +246,7 @@ const ccContext = {
   permanentDispatcher: null,
   localStorage: null,
   recoverRefState: () => { },
+  getModuleStateKeys: (m) => ccContext.moduleName_stateKeys_[m],
 }
 
 ccContext.recoverRefState = function () {

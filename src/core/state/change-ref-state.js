@@ -1,3 +1,4 @@
+/** @typedef {import('../../types').ICtxBase} ICtxBase */
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
@@ -245,6 +246,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
   }
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
 
+  /** @type ICtxBase */
   const { ccUniqueKey: currentCcUKey, ccClassKey } = targetRef.ctx;
   const renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
 

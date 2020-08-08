@@ -1,17 +1,21 @@
+/** @typedef {import('../../types').ICtxBase} ICtxBase */
 import ccContext from '../../cc-context';
+import { okeys } from '../../support/util';
 
-const { ccUKey_ref_, ccClassKey_ccClassContext_ } = ccContext;
+const { ccUKey_ref_ } = ccContext;
 
 export default function (ccClassKey) {
-  let refs = [];
-  const ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
-  if (!ccClassContext) {
-    return refs;
+  const refs = [];
+  const ukeys = okeys(ccUKey_ref_);
+  const len = ukeys.length;
+
+  for (let i = 0; i < len; i++) {
+    /** @type {{ctx:ICtxBase}} */
+    const ref = ukeys[i];
+    if (ref.ctx.ccClassKey === ccClassKey) {
+      refs.push(ref);
+    }
   }
-  const ccKeys = ccClassContext.ccKeys;
-  ccKeys.forEach(k => {
-    const ref = ccUKey_ref_[k];
-    if (ref) refs.push(ref);
-  });
+
   return refs;
 }

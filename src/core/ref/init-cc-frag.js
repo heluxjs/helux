@@ -26,10 +26,10 @@ export default function (ref) {
   //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
   if (props.__$$regDumb !== true) {
     insType = CC_FRAGMENT;
-    const { _ccClassKey, _connect } = mapRegistrationInfo(
-      module, ccClassKey, renderKeyClasses, CC_CLASS, util.getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
+    const { _ccClassKey, _connect, _watchedKeys } = mapRegistrationInfo(
+      module, ccClassKey, renderKeyClasses, CC_CLASS, watchedKeys, connect, true
     );
-    target_watchedKeys = watchedKeys;
+    target_watchedKeys = _watchedKeys;
     target_ccClassKey = _ccClassKey;
     target_connect = _connect;
   }

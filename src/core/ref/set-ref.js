@@ -3,16 +3,17 @@ import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
 const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
-const { runtimeVar, ccClassKey_ccClassContext_, ccUKey_ref_ } = ccContext;
+const { runtimeVar, ccUKey_ref_ } = ccContext;
 const ccUKey_insCount = {};
 
 
-function setCcInstanceRef(ccUniqueKey, ref, ccKeys, delayMs) {
-  function setRef() {
+function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
+  const setRef = () => {
     ccUKey_ref_[ccUniqueKey] = ref;
-    ccKeys.push(ccUniqueKey);
   }
-  incCcKeyInsCount(ccUniqueKey);
+
+  if (ccContext.isHotReloadMode()) incCcKeyInsCount(ccUniqueKey);
+  
   if (delayMs) {
     setTimeout(setRef, delayMs);
   } else {
@@ -34,17 +35,16 @@ export function getCcKeyInsCount(ccUniqueKey) {
 }
 
 
-export default function (ref, ccClassKey, ccKey, ccUniqueKey) {
-  const classContext = ccClassKey_ccClassContext_[ccClassKey];
-  const ccKeys = classContext.ccKeys;
+export default function (ref) {
   if (runtimeVar.isDebug) {
     console.log(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
   }
 
+  const { ccClassKey, ccKey, ccUniqueKey } = ref.ctx;
   const isHot = ccContext.isHotReloadMode();
-  if (ccKeys.includes(ccUniqueKey)) {
+  if (ccUKey_ref_[ccUniqueKey]) {
     const dupErr = () => {
-      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccUniqueKey}`));
+      throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccKey}`));
     }
     if (isHot) {
       // get existed ins count
@@ -62,13 +62,11 @@ export default function (ref, ccClassKey, ccKey, ccUniqueKey) {
       // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now in unmount func, 
       // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
       // so cc set ref later
-      setCcInstanceRef(ccUniqueKey, ref, ccKeys, 600);
+      setCcInstanceRef(ccUniqueKey, ref, 600);
     } else {
       dupErr();
     }
   } else {
-    setCcInstanceRef(ccUniqueKey, ref, ccKeys);
+    setCcInstanceRef(ccUniqueKey, ref);
   }
-
-  return classContext;
 }

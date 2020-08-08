@@ -3,7 +3,7 @@ import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_VOID } from '../../support/constant';
 import ccContext from '../../cc-context';
-import * as checker from '../checker';
+import * as checker from '../param/checker';
 import initModuleState from '../state/init-module-state';
 import { makeSetStateHandler } from '../state/handler-factory';
 import initModuleReducer from '../reducer/init-module-reducer';

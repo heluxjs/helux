@@ -13,7 +13,7 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
-import { isPJO, getRegisterOptions, evalState, getPassToMapWaKeys } from '../../support/util';
+import { isPJO, getRegisterOptions, evalState } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import { isRegChanged } from './common';
 
@@ -51,20 +51,21 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   const bindCtxToMethod = regOpt.bindCtxToMethod;
 
   const {
-    renderKeyClasses, module, watchedKeys = '-', storedKeys = [],
+    renderKeyClasses, module, watchedKeys = '-',
     connect = {}, setup, lite,
   } = regOpt;
 
-  const { _module, _ccClassKey, _connect } = mapRegistrationInfo(
-    module, ccClassKey, renderKeyClasses, CC_HOOK, getPassToMapWaKeys(watchedKeys), storedKeys, connect, true
+  const { _module, _ccClassKey, _connect, _watchedKeys } = mapRegistrationInfo(
+    module, ccClassKey, renderKeyClasses, CC_HOOK, watchedKeys, connect, true
   );
 
   const hookRef = ref || new CcHook(hookState, hookSetter, props, hookCtx);
   hookCtx.hookRef = hookRef;
 
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys, state, type: CC_HOOK, insType, extra,
-    ccClassKey: _ccClassKey, connect: _connect, ccOption: props.ccOption, id: props.id,
+    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK, insType, extra,
+    ccClassKey: _ccClassKey, connect: _connect,
+    ccOption: props.ccOption, id: props.id, ccKey: props.ccKey,
   });
   hookRef.props = props;// keep shape same as class
   buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps

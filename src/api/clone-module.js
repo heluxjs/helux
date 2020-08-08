@@ -1,7 +1,7 @@
 import configure from './configure';
 import ccContext from '../cc-context';
 import { evalState, okeys } from '../support/util';
-import * as checker from '../core/checker';
+import * as checker from '../core/param/checker';
 
 function tagReducerFn(reducerFns, moduleName) {
   const taggedReducer = {};

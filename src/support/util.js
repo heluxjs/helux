@@ -25,20 +25,16 @@ export function isObjectNull(object) {
   return !isObjectNotNull(object);
 }
 
-// const _toString = Object.prototype.toString;
-//_toString.call(obj) === '[object Object]'; //judge plain json object
+export function isObject(obj) {
+  return Object.prototype.toString.call(obj) === '[object Object]';
+}
+
 // isPJO is short of isPlainJsonObject
 export function isPJO(obj, canBeArray = false) {
-  // null undefined 0 false ''
-  if (!obj) return false;
+  const isArr = Array.isArray(obj);
+  const isObj = isObject(obj);
 
-  const isObj = (typeof obj) === 'object';
-  if (isObj) {
-    const isArr = Array.isArray(obj);
-    return canBeArray ? isArr : (isObj && !isArr);
-  } else {
-    return false;
-  }
+  return canBeArray ? (isObj || isArr) : isObj;
 }
 
 export function isAsyncFn(fn) {
@@ -90,14 +86,11 @@ export function makeCuDepDesc() {
 }
 
 /** make ccClassContext */
-export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys) {
+export function makeCcClassContext(module, ccClassKey, renderKeyClasses) {
   return {
     module,
     ccClassKey,
     renderKeyClasses,
-    originalWatchedKeys,
-    watchedKeys,
-    ccKeys: [],
   }
 }
 
@@ -457,11 +450,6 @@ export function getValueByKeyPath(obj, keyPath) {
   return _getValue(obj, keys, keys.length - 1, 0);
 }
 
-export function getPassToMapWaKeys(watchedKeys) {
-  if (watchedKeys === '-') return '*';
-  else return watchedKeys;
-}
-
 export function isDepKeysValid(depKeys) {
   return Array.isArray(depKeys) || depKeys === '-' || depKeys === '*';
 }
@@ -480,7 +468,6 @@ export function makeFnDesc(fn, depKeysOrOpt, check = true) {
   check && checkDepKeys(assignFrom.depKeys)
   return Object.assign(desc, assignFrom);
 }
-
 
 const symbolTag = "[object Symbol]"
 

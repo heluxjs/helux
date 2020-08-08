@@ -1193,8 +1193,6 @@ export function getState<RootState>(moduleName?: keyof RootState): object;
 
 export function getGlobalState<RootState extends IRootBase>(): RootState['$$global'];
 
-export function getConnectedState<RootState>(ccClassKey: string): Partial<RootState>;
-
 export function getComputed<T>(moduleName?: string): T;
 
 export function getGlobalComputed<T>(): T;
@@ -1298,7 +1296,6 @@ declare type DefaultExport = {
   setGlobalState: typeof setGlobalState,
   getState: typeof getState,
   getGlobalState: typeof getGlobalState,
-  getConnectedState: typeof getConnectedState,
   getComputed: typeof getComputed,
   getGlobalComputed: typeof getGlobalComputed,
   getRefs: typeof getRefs,

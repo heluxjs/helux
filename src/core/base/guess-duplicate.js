@@ -9,8 +9,8 @@ function getDupLocation(errStack) {
   /** stack may like this: at CodeSandbox
   Error: module name duplicate! --verbose-info: module[SetupDemo]
     at makeError (https://xvcej.csb.app/node_modules/concent/src/support/util.js:128:15)
-    at checkModuleName (https://xvcej.csb.app/node_modules/concent/src/core/checker/index.js:71:15)
->>  at Object.checkModuleNameAndState (https://xvcej.csb.app/node_modules/concent/src/core/checker/index.js:90:3)
+    at checkModuleName (https://xvcej.csb.app/node_modules/concent/src/core/param/checker.js:71:15)
+>>  at Object.checkModuleNameAndState (https://xvcej.csb.app/node_modules/concent/src/core/param/checker.js:90:3)
     at _default (https://xvcej.csb.app/node_modules/concent/src/core/state/init-module-state.js:25:13)
     at _default (https://xvcej.csb.app/node_modules/concent/src/api/configure.js:96:35)
 >>  at evaluate (https://xvcej.csb.app/src/pages/SetupDemo/model/index.js:13:24)

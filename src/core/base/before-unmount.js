@@ -3,7 +3,6 @@ import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
 
-
 const okeys = util.okeys;
 
 function executeClearCb(cbMap, ctx) {
@@ -21,7 +20,7 @@ export default function (ref) {
   //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
   ref.__$$isUnmounted = true;
   const ctx = ref.ctx;
-  const { ccUniqueKey, ccClassKey, renderKey, module, __$$staticWaKeyList } = ctx;
+  const { ccUniqueKey, module, __$$staticWaKeyList } = ctx;
 
   // 正常情况下只有挂载了组件才会有effect等相关定义
   if (ref.__$$isMounted) {
@@ -46,5 +45,5 @@ export default function (ref) {
   // 删除记录的静态依赖
   __$$staticWaKeyList.forEach(modStateKey => delStaticInsM(modStateKey, ccUniqueKey));
 
-  unsetRef(ccClassKey, ccUniqueKey, renderKey);
+  unsetRef(ccUniqueKey);
 }

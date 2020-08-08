@@ -4,7 +4,7 @@ import { SYNC } from '../../support/constant';
 import buildMockEvent from './build-mock-event';
 import extractStateByCcsync from '../state/extract-state-by-ccsync';
 import changeRefState from '../state/change-ref-state';
-import * as checker from '../checker';
+import * as checker from '../param/checker';
 
 const { store: { getState } } = ccContext;
 

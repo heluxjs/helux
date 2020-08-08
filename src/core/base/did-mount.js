@@ -6,12 +6,11 @@ import { mapStaticInsM } from '../../cc-context/wakey-ukey-map';
 
 export default function (ref) {
   afterRender(ref);
-
+  
   ref.__$$isMounted = true;
   ref.__$$isUnmounted = false;
-  const { ccClassKey, ccKey, ccUniqueKey, __$$onEvents, __$$staticWaKeys } = ref.ctx;
-
-  setRef(ref, ccClassKey, ccKey, ccUniqueKey);
+  const { ccUniqueKey, __$$onEvents, __$$staticWaKeys } = ref.ctx;
+  setRef(ref);
 
   const __$$staticWaKeyList = okeys(__$$staticWaKeys);
   // 用于辅助清理依赖映射
@@ -26,5 +25,4 @@ export default function (ref) {
   }
 
   triggerSetupEffect(ref, true);
-
 }

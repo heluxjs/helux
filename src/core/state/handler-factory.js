@@ -14,7 +14,7 @@ import {
   getAllChainStateMap, removeChainState, removeAllChainState, isChainExited, setChainIdLazy, isChainIdLazy
 } from '../chain';
 import { send } from '../plugin';
-import * as checker from '../checker';
+import * as checker from '../param/checker';
 import changeRefState from '../state/change-ref-state';
 import { innerSetState } from './set-state';
 import extractStateByKeys from './extract-state-by-keys';
@@ -114,6 +114,9 @@ function __invoke(userLogicFn, option, payload) {
   }, payload);
 }
 
+// 后面会根据具体组件形态给reactSetState赋值
+// 直接写为 makeCcSetStateHandler = (ref)=> ref.ctx.reactSetState, 是错误的
+// ref.ctx.reactSetState是在后面的流程里被赋值的，所以此处多用一层函数包裹再调用
 export function makeCcSetStateHandler(ref) {
   return (state, cb) => {
     ref.ctx.reactSetState(state, cb);

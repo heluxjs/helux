@@ -9,7 +9,7 @@ import pkg from './package.json'
 const env = process.env.NODE_ENV;
 
 // 排除掉react，不作为打包项目
-const external = ['react', 'react-dom', 'co'].concat(Object.keys(pkg.peerDependencies || {}));
+const external = ['react', 'react-dom'].concat(Object.keys(pkg.peerDependencies || {}));
 
 const config = {
   input: 'src/index.js',
@@ -17,6 +17,7 @@ const config = {
   // exports: 'auto', /** Disable warning for default imports */
   external,
   output: {
+    exports: 'named',
     format: 'umd',
     name: 'concent',
     globals: {
