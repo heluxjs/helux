@@ -1040,7 +1040,8 @@
     }
 
     return false;
-  }
+  } // missKeyInState: true代表state含有stateKeys里不包含的key， false则不含
+
 
   function extractStateByKeys (state, stateKeys, returnNullIfEmpty, needIgnored) {
     if (stateKeys === void 0) {
@@ -1070,9 +1071,11 @@
 
     var isStateEmpty = true;
     var committedStateKeys = okeys(state);
+    var cLen = committedStateKeys.length;
+    var sLen = stateKeys.length;
 
-    if (committedStateKeys.length >= stateKeys.length) {
-      missKeyInState = true;
+    if (cLen >= sLen) {
+      missKeyInState = cLen > sLen;
       stateKeys.forEach(function (key) {
         if (setPartialState(partialState, state, key)) isStateEmpty = false;
       });
@@ -3014,7 +3017,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.8',
+      version: '2.8.9',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4328,7 +4331,7 @@
       middlewares = ccContext.middlewares,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       refStore = ccContext.refStore,
-      moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_; //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
+      getModuleStateKeys$1 = ccContext.getModuleStateKeys; //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
 
   function getStateFor(targetModule, refModule) {
     return targetModule === refModule ? FOR_ONE_INS_FIRSTLY$1 : FOR_ALL_INS_OF_A_MOD$1;
@@ -4562,7 +4565,7 @@
   }
 
   function syncCommittedStateToStore(moduleName, committedState, options) {
-    var stateKeys = moduleName_stateKeys_$2[moduleName]; // extract shared state
+    var stateKeys = getModuleStateKeys$1(moduleName); // extract shared state
 
     var _extractStateByKeys3 = extractStateByKeys(committedState, stateKeys, true),
         partialState = _extractStateByKeys3.partialState,
@@ -5418,7 +5421,7 @@
 
       var cbNewState = function cbNewState() {
         return cb && cb(newState);
-      }; // 让ctx.state始终保持同一个引用，使setup里，可以安全的解构state反复使用
+      }; // 让ctx.state始终保持同一个引用，使setup里可以安全的解构state反复使用
 
 
       ctx.state = Object.assign(ctx.state, partialState);
@@ -6149,7 +6152,7 @@
     }
   }
 
-  var getModuleStateKeys$1 = ccContext.getModuleStateKeys;
+  var getModuleStateKeys$2 = ccContext.getModuleStateKeys;
   var verifyKeys$1 = verifyKeys,
       vbi$2 = verboseInfo;
   function getStoredKeys(belongMotule, refPrivState, ccOptionStoredKeys, regStoredKeys) {
@@ -6159,7 +6162,7 @@
       return [];
     }
 
-    var moduleStateKeys = getModuleStateKeys$1(belongMotule);
+    var moduleStateKeys = getModuleStateKeys$2(belongMotule);
 
     if (targetStoredKeys === '*') {
       // refPrivState里可能含有moduleStateKey，需要进一步过滤
@@ -6176,7 +6179,7 @@
     if (!regWatchedKeys) return [];
 
     if (regWatchedKeys === '*') {
-      return getModuleStateKeys$1(module);
+      return getModuleStateKeys$2(module);
     }
 
     if (regWatchedKeys === '-') {
@@ -6226,7 +6229,7 @@
       _module_fnNames_ = _ccContext$reducer._module_fnNames_,
       _caller = _ccContext$reducer._caller,
       refStore$1 = ccContext.refStore,
-      getModuleStateKeys$2 = ccContext.getModuleStateKeys,
+      getModuleStateKeys$3 = ccContext.getModuleStateKeys,
       _ccContext$store$2 = ccContext.store,
       getState$3 = _ccContext$store$2.getState,
       getModuleVer$2 = _ccContext$store$2.getModuleVer;
@@ -6272,7 +6275,7 @@
         return getModuleWaKeys(module);
       } else {
         var waKeys = connect[module];
-        if (waKeys === '*') return getModuleStateKeys$2(module);else if (waKeys === '-') return getModuleWaKeys(module);else return waKeys;
+        if (waKeys === '*') return getModuleStateKeys$3(module);else if (waKeys === '-') return getModuleWaKeys(module);else return waKeys;
       }
     };
 
@@ -6286,7 +6289,7 @@
   };
 
   function recordDep(ccUniqueKey, module, watchedKeys) {
-    var waKeys = watchedKeys === '*' ? getModuleStateKeys$2(module) : watchedKeys;
+    var waKeys = watchedKeys === '*' ? getModuleStateKeys$3(module) : watchedKeys;
     waKeys.forEach(function (stateKey) {
       return mapIns(module, stateKey, ccUniqueKey);
     });
@@ -6330,7 +6333,7 @@
     var existedCtx = ref.ctx;
     var isCtxNull = isObjectNull$2(existedCtx); // 做个保护判断，防止 ctx = {}
 
-    var modStateKeys = getModuleStateKeys$2(stateModule);
+    var modStateKeys = getModuleStateKeys$3(stateModule);
     var __boundSetState = ref.setState,
         __boundForceUpdate = ref.forceUpdate; // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
     // 做个保护判断，防止 ctx = {}
@@ -7331,7 +7334,7 @@
     }
   }
 
-  var moduleName_stateKeys_$3 = ccContext.moduleName_stateKeys_,
+  var moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_,
       _ccContext$store$3 = ccContext.store,
       getPrevState$1 = _ccContext$store$3.getPrevState,
       getState$4 = _ccContext$store$3.getState,
@@ -7441,7 +7444,7 @@
                 continue;
               }
 
-              if (!moduleName_stateKeys_$3[module].includes(unmoduledKey)) {
+              if (!moduleName_stateKeys_$2[module].includes(unmoduledKey)) {
                 warn(key, "unmoduledKey[" + unmoduledKey + "]");
                 continue;
               }

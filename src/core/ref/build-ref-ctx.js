@@ -197,7 +197,7 @@ export default function (ref, params, liteLevel = 5) {
     ccClassKey,
     ccKey,
     ccUniqueKey,
-    renderCount: 1,
+    renderCount: 0,
     initTime: now,
     watchedKeys,
     privStateKeys,
