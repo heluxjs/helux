@@ -10,6 +10,7 @@ function setPartialState(partialState, state, key) {
   return false;
 }
 
+// missKeyInState: true代表state含有stateKeys里不包含的key， false则不含
 export default function (state, stateKeys = [], returnNullIfEmpty = false, needIgnored = false) {
   let partialState = {}, ignoredStateKeys = [], missKeyInState = false;
   if (!isPJO(state)) {
@@ -18,8 +19,11 @@ export default function (state, stateKeys = [], returnNullIfEmpty = false, needI
   let isStateEmpty = true;
 
   const committedStateKeys = okeys(state);
-  if (committedStateKeys.length >= stateKeys.length) {
-    missKeyInState = true;
+  const cLen = committedStateKeys.length;
+  const sLen = stateKeys.length;
+
+  if (cLen >= sLen) {
+    missKeyInState = cLen > sLen;
     stateKeys.forEach(key => {
       if (setPartialState(partialState, state, key)) isStateEmpty = false;
     });

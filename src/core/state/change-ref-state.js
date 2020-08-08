@@ -19,7 +19,7 @@ const {
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
-  refStore, moduleName_stateKeys_
+  refStore, getModuleStateKeys,
 } = ccContext;
 
 //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
@@ -206,7 +206,7 @@ function triggerReactSetState(
 }
 
 function syncCommittedStateToStore(moduleName, committedState, options) {
-  const stateKeys = moduleName_stateKeys_[moduleName];
+  const stateKeys = getModuleStateKeys(moduleName);
 
   // extract shared state
   const { partialState, missKeyInState: hasPrivState } = extractStateByKeys(committedState, stateKeys, true);

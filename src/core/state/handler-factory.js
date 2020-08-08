@@ -516,7 +516,7 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
   ctx.unProxyState = newState;
   // 和class setState(partialState, cb); 保持一致
   const cbNewState = () => cb && cb(newState);
-  // 让ctx.state始终保持同一个引用，使setup里，可以安全的解构state反复使用
+  // 让ctx.state始终保持同一个引用，使setup里可以安全的解构state反复使用
   ctx.state = Object.assign(ctx.state, partialState);
 
   if (ctx.type === CC_HOOK) {

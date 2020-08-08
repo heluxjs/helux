@@ -3,6 +3,11 @@ English | [简体中文](./README.zh-CN.md)
 ## [concent](https://concentjs.github.io/concent-doc)
 ❤️ Build-in **dependency collection**, a predictable、zero-cost-use、progressive、high performance's react develop framework 
 
+## Examples
+
+### features
+[Dep collection of state](./examples/dep-collestion-of-state.md) | [Dep collection of computed](./README.zh-CN.md) | [Composition api](./README.zh-CN.md) | [Composition api](./README.zh-CN.md) | [Combine reducers]()
+
 ## Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
