@@ -5,7 +5,7 @@ English | [简体中文](./README.zh-CN.md)
 
 ## Examples
 
-### Key features demo
+### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
 - [Dep collection of computed](./examples/dep-collection-of-computed.md)
 - [Composition api](./examples/dep-collestion-of-state.md) 

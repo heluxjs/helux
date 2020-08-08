@@ -3017,7 +3017,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.10',
+      version: '2.8.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -7552,14 +7552,15 @@
     if (ccUKey_insCount[ccUniqueKey] === undefined) return 0;else return ccUKey_insCount[ccUniqueKey];
   }
   function setRef (ref) {
-    if (runtimeVar$2.isDebug) {
-      console.log(ss("register ccKey " + ccUniqueKey + " to CC_CONTEXT"), cl());
-    }
-
     var _ref$ctx = ref.ctx,
         ccClassKey = _ref$ctx.ccClassKey,
         ccKey = _ref$ctx.ccKey,
         ccUniqueKey = _ref$ctx.ccUniqueKey;
+
+    if (runtimeVar$2.isDebug) {
+      console.log(ss("register ccKey " + ccUniqueKey + " to CC_CONTEXT"), cl());
+    }
+
     var isHot = ccContext.isHotReloadMode();
 
     if (ccUKey_ref_$2[ccUniqueKey]) {
@@ -7979,9 +7980,9 @@
         _ref2$bindCtxToMethod = _ref2.bindCtxToMethod,
         bindCtxToMethod = _ref2$bindCtxToMethod === void 0 ? false : _ref2$bindCtxToMethod,
         _ref2$computedCompare = _ref2.computedCompare,
-        computedCompare = _ref2$computedCompare === void 0 ? true : _ref2$computedCompare,
+        computedCompare = _ref2$computedCompare === void 0 ? false : _ref2$computedCompare,
         _ref2$watchCompare = _ref2.watchCompare,
-        watchCompare = _ref2$watchCompare === void 0 ? true : _ref2$watchCompare,
+        watchCompare = _ref2$watchCompare === void 0 ? false : _ref2$watchCompare,
         _ref2$watchImmediate = _ref2.watchImmediate,
         watchImmediate = _ref2$watchImmediate === void 0 ? false : _ref2$watchImmediate,
         _ref2$reComputed = _ref2.reComputed,
@@ -8753,6 +8754,10 @@
     ctx.__boundForceUpdate = hookSetter;
   }
 
+  function getHookCtxCcUKey(hookCtx) {
+    return hookCtx.prevCcUKey || hookCtx.ccUKey;
+  }
+
   var tip = 'react version is LTE 16.8';
 
   function _useConcent(registerOption, ccClassKey, insType) {
@@ -8827,8 +8832,7 @@
       hookCtx.ef = 1; // mock componentWillUnmount
 
       return function () {
-        var targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
-        var toUnmountRef = ccUKey_ref_$4[targetCcUKey];
+        var toUnmountRef = ccUKey_ref_$4[getHookCtxCcUKey(hookCtx)];
 
         if (toUnmountRef) {
           hookCtx.prevCcUKey = null;
@@ -8841,9 +8845,9 @@
     //after every render
 
     effectHandler(function () {
-      replaceSetter(refCtx, hookSetter);
+      replaceSetter(refCtx, hookSetter); // 一定要检查ccUKey_ref_存在了才走didUpdate，热加载模式下会触发卸载
 
-      if (!hookRef.isFirstRendered) {
+      if (!hookRef.isFirstRendered && ccUKey_ref_$4[getHookCtxCcUKey(hookCtx)]) {
         // mock componentDidUpdate
         didUpdate(hookRef);
       } else {

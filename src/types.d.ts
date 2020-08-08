@@ -885,8 +885,8 @@ interface RunOptions {
   isStrict?: boolean;
   errorHandler?: (err: Error) => void;
   bindCtxToMethod?: boolean;// default false
-  computedCompare?: boolean;// default is true
-  watchCompare?: boolean;// default is true
+  computedCompare?: boolean;// default is false, trigger computed if set
+  watchCompare?: boolean;// default is false, trigger watch if set
   watchImmediate?: boolean;// default is false
   reComputed?: boolean;// default is true
   extractModuleChangedState?: boolean;// default is true

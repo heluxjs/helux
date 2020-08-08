@@ -36,11 +36,11 @@ export function getCcKeyInsCount(ccUniqueKey) {
 
 
 export default function (ref) {
+  const { ccClassKey, ccKey, ccUniqueKey } = ref.ctx;
   if (runtimeVar.isDebug) {
     console.log(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
   }
 
-  const { ccClassKey, ccKey, ccUniqueKey } = ref.ctx;
   const isHot = ccContext.isHotReloadMode();
   if (ccUKey_ref_[ccUniqueKey]) {
     const dupErr = () => {

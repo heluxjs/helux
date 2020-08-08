@@ -1,5 +1,5 @@
 
-## Abount dep collection of computed,
+## About dep collection of computed
 just like state dep collection, concent will collect all component's data dep in their every render period when component ins read `moduleComputed`.
 
 

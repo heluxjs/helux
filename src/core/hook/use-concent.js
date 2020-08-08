@@ -96,6 +96,10 @@ function replaceSetter(ctx, hookSetter) {
   ctx.__boundForceUpdate = hookSetter;
 }
 
+function getHookCtxCcUKey(hookCtx) {
+  return hookCtx.prevCcUKey || hookCtx.ccUKey;
+}
+
 const tip = 'react version is LTE 16.8';
 
 function _useConcent(registerOption = {}, ccClassKey, insType) {
@@ -147,8 +151,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
 
     // mock componentWillUnmount
     return () => {
-      const targetCcUKey = hookCtx.prevCcUKey || hookCtx.ccUKey;
-      const toUnmountRef = ccUKey_ref_[targetCcUKey];
+      const toUnmountRef = ccUKey_ref_[getHookCtxCcUKey(hookCtx)];
       if (toUnmountRef) {
         hookCtx.prevCcUKey = null;
         beforeUnmount(toUnmountRef);
@@ -160,7 +163,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   //after every render
   effectHandler(() => {
     replaceSetter(refCtx, hookSetter);
-    if (!hookRef.isFirstRendered) {// mock componentDidUpdate
+    // 一定要检查ccUKey_ref_存在了才走didUpdate，热加载模式下会触发卸载
+    if (!hookRef.isFirstRendered && ccUKey_ref_[getHookCtxCcUKey(hookCtx)]) {// mock componentDidUpdate
       didUpdate(hookRef);
     } else {// mock componentDidMount
       hookRef.isFirstRendered = false;

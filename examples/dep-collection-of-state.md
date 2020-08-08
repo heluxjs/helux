@@ -1,6 +1,6 @@
 
 
-## Abount dep collection of state
+## About dep collection of state
 
 concent will collect all component's data dep in their every render period.
 
