@@ -6,7 +6,10 @@ English | [简体中文](./README.zh-CN.md)
 ## Examples
 
 ### Key features demo
-[Dep collection of state](./examples/dep-collestion-of-state.md) | [Dep collection of computed](./README.zh-CN.md) | [Composition api](./README.zh-CN.md) | [Composition api](./README.zh-CN.md) | [Combine reducers]()
+- [Dep collection of state](./examples/dep-collestion-of-state.md)
+- [Dep collection of computed](./examples/dep-collestion-of-state.md)
+- [Composition api](./examples/dep-collestion-of-state.md) 
+- [Combine reducers](./examples/dep-collestion-of-state.md)
 
 ## Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.

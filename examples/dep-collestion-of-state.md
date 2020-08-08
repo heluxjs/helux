@@ -4,7 +4,7 @@
 
 concent will collect all component's data dep in their every render period.
 
-> try click toggle button, and see the change of `renderCount`
+> try click toggle button and then click add button, see the change of `renderCount`
 
 ```jsx
 import React, { Component } from "react";
