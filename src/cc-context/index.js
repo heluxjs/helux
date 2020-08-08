@@ -126,11 +126,6 @@ const ccContext = {
   isHot: false,
   reComputed: true,
   isStartup: false,
-  //  cc allow multi react class register to a module by default, but if want to control some module 
-  //  to only allow register one react class, flag the module name as true in this option object
-  //  example:  {fooModule: true, barModule:true}
-  moduleSingleClass: {
-  },
   moduleName_stateFn_: {
   },
   moduleName_ccClassKeys_: {

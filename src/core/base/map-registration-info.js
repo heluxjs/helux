@@ -8,7 +8,7 @@ import { MODULE_GLOBAL, MODULE_DEFAULT, CC_DISPATCHER } from '../../support/cons
 
 const {
   moduleName_stateKeys_, moduleName_ccClassKeys_,
-  moduleSingleClass, ccClassKey_ccClassContext_,
+  ccClassKey_ccClassContext_,
   computed: { _computedValue },
 } = ccContext;
 const { verifyKeys, verboseInfo: vbi } = util;
@@ -30,17 +30,14 @@ function getWatchedStateKeys(module, ccClassKey, inputWatchedKeys) {
 
   const { notArray, keyElementNotString } = verifyKeys(inputWatchedKeys, []);
   if (notArray || keyElementNotString) {
-    throw new Error(`watchedKeys ${STR_ARR_OR_STAR} ${vbi(`ccClassKey:${ccClassKey}`)}`);
+    const vbiInfo = vbi(`ccClassKey:${ccClassKey}`);
+    throw new Error(`watchedKeys ${STR_ARR_OR_STAR} ${vbiInfo}`);
   }
   return inputWatchedKeys;
 }
 
 function mapModuleToCcClassKeys(moduleName, ccClassKey) {
   const ccClassKeys = util.safeGetArray(moduleName_ccClassKeys_, moduleName);
-
-  if (moduleSingleClass[moduleName] === true && ccClassKeys.length >= 1) {
-    throw new Error(`module[${moduleName}] is declared as single, only on ccClassKey can been registered to it, and now a ccClassKey[${ccClassKeys[0]}] has been registered!`);
-  }
 
   // 做一个判断，防止热加载时，传入重复的ccClassKey
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
@@ -109,7 +106,7 @@ export default function (
     _renderKeyClasses = [_ccClassKey];
   } else {
     if (!Array.isArray(renderKeyClasses) && renderKeyClasses !== '*') {
-      throw new Error(`renderKeyClasses type err, it is must be an array or string *`);
+      throw new Error(`renderKeyClasses type err, it ${STR_ARR_OR_STAR}`);
     }
     _renderKeyClasses = renderKeyClasses;
   }

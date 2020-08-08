@@ -17,7 +17,7 @@ const { isPJO, evalState } = util;
  * @author zzk
  * @export
  * @param {string} module
- * @param {{state:object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean}} config
+ * @param {{state:object, reducer:object, watch:object, computed:object, init:object}} config
  */
 export default function (module, config) {
   if (!ccContext.isStartup) {
@@ -32,7 +32,7 @@ export default function (module, config) {
     throw new Error('configuring global module is not allowed');
   }
 
-  const { state, reducer, computed, watch, init, isClassSingle } = config;
+  const { state, reducer, computed, watch, init } = config;
   const eState = evalState(state);
   if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
 
@@ -45,7 +45,6 @@ export default function (module, config) {
 
   computed && initModuleComputed(module, computed);
   watch && initModuleWatch(module, watch);
-  ccContext.moduleSingleClass[module] = isClassSingle === true;
 
   if (init) {
     if (typeof init !== 'function') {

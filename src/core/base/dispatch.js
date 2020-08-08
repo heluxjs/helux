@@ -67,5 +67,4 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
       return resolve();
     }
   }
-
 }

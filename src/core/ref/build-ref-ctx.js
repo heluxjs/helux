@@ -91,7 +91,7 @@ function recordDep(ccUniqueKey, module, watchedKeys) {
 export default function (ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   let {
-    isSingle, ccClassKey, ccKey = '', module, type, insType, extra = {}, id,
+    ccClassKey, ccKey = '', module, type, insType, extra = {}, id,
     state, storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {}, tag = '', ccOption = {},
   } = params;
 
@@ -117,7 +117,7 @@ export default function (ref, params, liteLevel = 5) {
   refOption.tag = ccOption.tag || tag;
 
   // pick ref defined tag first, register tag second
-  const ccUniqueKey = computeCcUniqueKey(isSingle, ccClassKey, ccKey, refOption.tag);
+  const ccUniqueKey = computeCcUniqueKey(ccClassKey, ccKey, refOption.tag);
   // 没有设定renderKey的话读id，最后才默认renderKey为ccUniqueKey
   refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
 
@@ -202,7 +202,6 @@ export default function (ref, params, liteLevel = 5) {
     // static params
     type,
     insType,
-    isSingle,
     module,
     ccClassKey,
     ccKey,

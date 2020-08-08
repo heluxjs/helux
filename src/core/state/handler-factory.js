@@ -24,7 +24,6 @@ const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer },
   computed: { _computedValue },
-  // ccClassKey_ccClassContext_,
 } = ccContext;
 const me = makeError;
 const vbi = verboseInfo;
@@ -219,8 +218,6 @@ export function invokeWith(userLogicFn, executionContext, payload) {
       const lazyDispatch = makeDispatchHandler(
         callerRef, true, isSilent, targetModule, renderKey, delay, chainId, oriChainId, chainId_depth_
       );
-
-      // const sourceClassContext = ccClassKey_ccClassContext_[callerRef.ctx.ccClassKey];
 
       //oriChainId, chainId_depth_ 一直携带下去，设置isLazy，会重新生成chainId
       const invoke = makeInvokeHandler(callerRef, { delay, chainId, oriChainId, chainId_depth_ });

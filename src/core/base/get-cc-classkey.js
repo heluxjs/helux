@@ -41,8 +41,8 @@ export default function (allowNamingDispatcher, module, connect, watchedKeys, pr
     }
   }
 
-  const ctx = ccClassKey_ccClassContext_[classKey];
-  if (ctx) {
+  const clsCtx = ccClassKey_ccClassContext_[classKey];
+  if (clsCtx) {
     const fStr = userClassKey_featureStr_[classKey];
     if (fStr !== featureStr) {
       //不允许，特征值不一样的class指定相同的ccClassKey

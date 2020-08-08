@@ -34,7 +34,7 @@ export function getCcKeyInsCount(ccUniqueKey) {
 }
 
 
-export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
+export default function (ref, ccClassKey, ccKey, ccUniqueKey) {
   const classContext = ccClassKey_ccClassContext_[ccClassKey];
   const ccKeys = classContext.ccKeys;
   if (runtimeVar.isDebug) {
@@ -49,7 +49,6 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
     if (isHot) {
       // get existed ins count
       const insCount = getCcKeyInsCount(ccUniqueKey);
-      if (isSingle && insCount > 0) throw me(ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE, vbi(`ccClass:${ccClassKey}`));
       if (insCount > 1) {// now cc can make sure the ccKey duplicate
         dupErr();
       }
@@ -60,7 +59,7 @@ export default function (ref, isSingle, ccClassKey, ccKey, ccUniqueKey) {
       `);
 
       // in webpack hot reload mode, cc works not very well,
-      // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now, in unmount func, 
+      // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now in unmount func, 
       // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
       // so cc set ref later
       setCcInstanceRef(ccUniqueKey, ref, ccKeys, 600);

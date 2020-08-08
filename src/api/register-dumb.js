@@ -25,7 +25,7 @@ function _registerDumb(Dumb, regOpt) {
   return React.createElement(CcFragment, passProps);
 }
 
-// renderKeyClasses, isSingle, tag, mapProps, module = MODULE_DEFAULT,
+// renderKeyClasses, tag, mapProps, module = MODULE_DEFAULT,
 // watchedKeys = '*', storedKeys, persistStoredKeys, render: Dumb,
 // connect = {}, state = {}, setup, bindCtxToMethod, compareProps, lite,
 // bindCtxToMethod

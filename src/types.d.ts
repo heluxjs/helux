@@ -425,9 +425,8 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
  * get ctx in function : const ctx = useConcent('foo');
  */
 export interface ICtxBase {
-  readonly module: PropKey;
   // module: '$$default';
-  readonly isSingle: boolean;
+  readonly module: PropKey;
   /** component type */
   readonly type: CC_CLASS | CC_HOOK;
   /** component instance type */
@@ -724,7 +723,6 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   layoutEffect?: boolean;// work for useConcent only
   isPropsProxy?: boolean;// work for register only, default false
   bindCtxToMethod?: boolean;// default false
-  isSingle?: boolean; //default false
   renderKeyClasses?: string[];
   compareProps?: boolean;//default true
   setup?: (refCtx: ICtx) => IAnyObj | void;

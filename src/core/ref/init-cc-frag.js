@@ -12,7 +12,7 @@ export default function (ref) {
   const registerOptions = getRegisterOptions(props.register);
   const {
     module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-    watchedKeys = '-', connect = {}, isSingle, storedKeys = []
+    watchedKeys = '-', connect = {}, storedKeys = []
   } = registerOptions;
 
   const state = evalState(registerOptions.state);
@@ -35,7 +35,7 @@ export default function (ref) {
   }
 
   buildRefCtx(ref, {
-    isSingle, ccKey, connect: target_connect, state, module, type: CC_CLASS, insType,
+    ccKey, connect: target_connect, state, module, type: CC_CLASS, insType,
     storedKeys, watchedKeys: target_watchedKeys, tag, ccClassKey: target_ccClassKey, ccOption, id,
   }, lite);
   ref.ctx.reactSetState = hf.makeRefSetState(ref);

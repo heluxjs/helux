@@ -38,10 +38,6 @@ import { getRegisterOptions } from '../support/util';
  *    }
  * ```
  * more details you can see https://github.com/fantasticsoul/rcc-antd-pro/blob/master/src/routes/Forms/BasicForm.js
- * @param {string} [registerOption.isSingle] default is false
- * if you only allow current cc class only initialize one time, 
- * that means there is only one cc instance can be existed for current cc class at most,
- * you can define registerOption.isSingle as true, it just like singleton mode in java coding^_^
  */
 export default function (registerOption, ccClassKey) {
   let _registerOption = getRegisterOptions(registerOption);

@@ -55,7 +55,6 @@ export default function (
     initPost = {},
     computed = {},
     watch = {},
-    moduleSingleClass = {},
   } = {},
   {
     plugins = [],
@@ -107,7 +106,6 @@ export default function (
 
       createDispatcher();
       
-      boot.configModuleSingleClass(moduleSingleClass);
       boot.configStoreState(store);
       boot.configRootReducer(reducer);
       boot.configRootComputed(computed);

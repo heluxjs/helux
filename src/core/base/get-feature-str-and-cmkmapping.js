@@ -1,6 +1,6 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { NOT_A_JSON, STR_ARR_OR_STAR } from '../../support/priv-constant';
 
 const { okeys, isPJO } = util;
 const { store: { _state } } = ccContext;
@@ -16,7 +16,7 @@ export default function(connectSpec, watchedKeys, belongModule, compTypePrefix) 
   }
 
   const invalidConnect = `CcFragment or CcClass's prop connect is invalid,`;
-  const invalidConnectItem = m => `${invalidConnect} module[${m}]'s value must be * or array of string`;
+  const invalidConnectItem = m => `${invalidConnect} module[${m}]'s value ${STR_ARR_OR_STAR}`;
 
   const moduleNames = okeys(connectSpec);
   moduleNames.sort();

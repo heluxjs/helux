@@ -9,9 +9,9 @@ export default function (ref) {
 
   ref.__$$isMounted = true;
   ref.__$$isUnmounted = false;
-  const { isSingle, ccClassKey, ccKey, ccUniqueKey, __$$onEvents, __$$staticWaKeys } = ref.ctx;
+  const { ccClassKey, ccKey, ccUniqueKey, __$$onEvents, __$$staticWaKeys } = ref.ctx;
 
-  setRef(ref, isSingle, ccClassKey, ccKey, ccUniqueKey);
+  setRef(ref, ccClassKey, ccKey, ccUniqueKey);
 
   const __$$staticWaKeyList = okeys(__$$staticWaKeys);
   // 用于辅助清理依赖映射

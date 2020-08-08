@@ -33,7 +33,6 @@ export default function register({
   tag,
   lite,
   isPropsProxy = false,
-  isSingle = false,
   renderKeyClasses,
   __checkStartUp = true,
   compareProps = true,
@@ -66,7 +65,7 @@ export default function register({
 
             // props.ccOption
             const params = Object.assign({}, props, {
-              isSingle, module: _module, tag, state: privState, type: CC_CLASS, insType: CC_CUSTOMIZE,
+              module: _module, tag, state: privState, type: CC_CLASS, insType: CC_CUSTOMIZE,
               watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys, extra,
             });
             buildRefCtx(this, params, lite);

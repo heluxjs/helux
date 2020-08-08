@@ -77,7 +77,6 @@ export const ERR = {
   CC_CLASS_KEY_DUPLICATE: 1100,
 
   CC_CLASS_INSTANCE_KEY_DUPLICATE: 1200,
-  CC_CLASS_INSTANCE_MORE_THAN_ONE: 1205,
   CC_STORED_KEYS_NEED_CCKEY: 1207,
 
   CC_REDUCER_NOT_A_FUNCTION: 1503,
@@ -92,7 +91,6 @@ export const ERR_MESSAGE = {
   [ERR.CC_MODULE_NOT_CONNECTED]: `module not been connected by ref`,
 
   [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `props.ccKey duplicate`,
-  [ERR.CC_CLASS_INSTANCE_MORE_THAN_ONE]: 'ccClass is declared as singleton, trying new another one instance is not allowed! ',
   [ERR.CC_STORED_KEYS_NEED_CCKEY]: 'you must explicitly specify a ccKey for ccInstance when set storedKeys!',
 
   [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate!',

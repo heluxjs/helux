@@ -16,7 +16,7 @@ const pError = label => {
 
 /**
  * run will call startup
- * @param {{ [moduleName:string]: config:{state:object|()=>object, reducer:object, watch:object, computed:object, init:object, isClassSingle:boolean} }} store
+ * @param {{ [moduleName:string]: config:{state:object|()=>object, reducer:object, watch:object, computed:object, init:object} }} store
  * @param {{isStrict:boolean}} options
  */
 
@@ -31,11 +31,10 @@ export default function (store = {}, options = {}) {
     computed: {},
     init: {},
     initPost: {},
-    moduleSingleClass: {},
   }
 
   const buildStoreConf = (m, moduleConf)=>{
-    const { state, reducer = {}, watch, computed, init, initPost, isClassSingle } = moduleConf;
+    const { state, reducer = {}, watch, computed, init, initPost } = moduleConf;
     if(storeConf.store[m]){
       throw new Error(`run api error: module${m} duplicate`);
     }
@@ -48,7 +47,6 @@ export default function (store = {}, options = {}) {
     if (computed) storeConf.computed[m] = computed;
     if (init) storeConf.init[m] = init;
     if (initPost) storeConf.initPost[m] = initPost;
-    storeConf.moduleSingleClass[m] = isClassSingle === true;
   }
 
   // traversal moduleNames

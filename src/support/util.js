@@ -105,9 +105,8 @@ export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watched
 }
 
 // !!! different ccClass enable own a same key
-export function makeUniqueCcKey(ccClassKey, ccKey) {
-  // return `${ccClassKey}/${ccKey}`;
-  return `${ccClassKey}$${ccKey}`;
+export function makeUniqueCcKey(ccClassKey, featureStr) {
+  return `${ccClassKey}$${featureStr}`;
 }
 
 export function makeHandlerKey(ccUniqueKey, eventName, identity) {

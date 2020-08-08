@@ -81,14 +81,6 @@ export function executeRootInit(init, initPost) {
   ccContext.init._init = init;
 }
 
-
-export function configModuleSingleClass(moduleSingleClass) {
-  if (!isPJO(moduleSingleClass)) {
-    throw new Error(`StartupOption.moduleSingleClass ${NOT_A_JSON}`);
-  }
-  util.safeAssignObjectValue(ccContext.moduleSingleClass, moduleSingleClass);
-}
-
 export function configMiddlewares(middlewares) {
   if (middlewares.length > 0) {
     const ccMiddlewares = ccContext.middlewares;
@@ -129,7 +121,6 @@ export default {
   configRootComputed,
   configRootWatch,
   executeRootInit,
-  configModuleSingleClass,
   configMiddlewares,
   configPlugins,
 }

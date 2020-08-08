@@ -14,11 +14,11 @@ export default function(module, mustBelongToModule = false) {
       const ccClassKeys = moduleName_ccClassKeys_[module];
       if (ccClassKeys && ccClassKeys.length !== 0) {
         const oneCcClassKey = ccClassKeys[0];
-        const ccClassContext = ccClassKey_ccClassContext_[oneCcClassKey];
-        if (!ccClassContext) {
+        const clsCtx = ccClassKey_ccClassContext_[oneCcClassKey];
+        if (!clsCtx) {
           throw new Error(`no ccClassContext found for ccClassKey ${oneCcClassKey}!`);
         }
-        ccKeys = ccClassContext.ccKeys;
+        ccKeys = clsCtx.ccKeys;
       } else {
         // find one cc ref later
       }
