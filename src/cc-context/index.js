@@ -145,9 +145,6 @@ const ccContext = {
    *   originalWatchedKeys,
    *   watchedKeys,
    *   ccKeys: [],
-   *   connectedState: {},
-   *   connectedModuleKeyMapping: null,
-   *   connectedModule:{},//记录当前cc类连接到了其他哪些模块
    * }
   */
   ccClassKey_ccClassContext_: {

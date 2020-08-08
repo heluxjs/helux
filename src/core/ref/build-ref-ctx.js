@@ -21,11 +21,9 @@ import __sync from '../base/sync';
 const {
   reducer: { _module_fnNames_, _caller },
   refStore,
-  ccClassKey_ccClassContext_,
   moduleName_stateKeys_,
   store: { getState, getModuleVer },
   moduleName_ccClassKeys_,
-  // computed: { _computedValueOri, _computedValue },
 } = ccContext;
 
 const {
@@ -140,8 +138,6 @@ export default function (ref, params, liteLevel = 5) {
   ref.state = mergedState;
   const stateKeys = okeys(mergedState);
 
-  const classCtx = ccClassKey_ccClassContext_[ccClassKey];
-  const classConnectedState = classCtx.connectedState;
   const connectedModules = okeys(connect);
   const connectedState = {};
   
@@ -474,7 +470,8 @@ export default function (ref, params, liteLevel = 5) {
 
     const connectDesc = connect[m];
     if (connectDesc) {
-      let mConnectedState = classConnectedState[m];
+      let moduleState = getState(m);
+
       if (connectDesc === '-') {// auto watch
         __$$autoWatch = true;
 
@@ -484,14 +481,14 @@ export default function (ref, params, liteLevel = 5) {
         __$$nextCompareConnWaKeys[m] = {};
         __$$nextCompareConnWaKeyCount[m] = 0;
 
-        if (m === MODULE_GLOBAL) mConnectedState = ctx.globalState;
-        else mConnectedState = makeObState(ref, mConnectedState, m);
+        if (m === MODULE_GLOBAL) moduleState = ctx.globalState;
+        else moduleState = makeObState(ref, moduleState, m);
       }
       // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
       else {
         recordDep(ccUniqueKey, m, connectDesc);
       }
-      connectedState[m] = mConnectedState;
+      connectedState[m] = moduleState;
     }
 
     const fnNames = _module_fnNames_[m] || [];

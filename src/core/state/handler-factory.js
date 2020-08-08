@@ -251,11 +251,6 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         //指的是目标模块的的moduleComputed
         moduleComputed: _computedValue[targetModule] || {},
 
-        // //!!!指的是调用源cc类的connectedState
-        // connectedState: sourceClassContext.connectedState,
-        // //!!!指的是调用源cc类的connectedComputed
-        // connectedComputed: sourceClassContext.connectedComputed,
-
         //利用dispatch调用自动生成的setState
         setState: (state) => dispatch('setState', state, { silent: isSilent, renderKey, delay }),//透传上下文参数给IDispatchOptions,
         //!!!指的是调用源cc类实例的ctx

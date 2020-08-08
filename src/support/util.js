@@ -98,9 +98,6 @@ export function makeCcClassContext(module, ccClassKey, renderKeyClasses, watched
     originalWatchedKeys,
     watchedKeys,
     ccKeys: [],
-    connectedState: {},
-    connectedModuleKeyMapping: null,
-    connectedModule: {},//记录当前cc类连接到了其他哪些模块
   }
 }
 

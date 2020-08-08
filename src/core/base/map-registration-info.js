@@ -1,5 +1,5 @@
 import ccContext from '../../cc-context';
-import getFeatureStrAndCmkMapping from './get-feature-str-and-cmkmapping';
+import getFeatureStr from './get-feature-str';
 import getCcClassKey from './get-cc-classkey';
 import * as checker from '../checker';
 import * as util from '../../support/util';
@@ -9,7 +9,6 @@ import { MODULE_GLOBAL, MODULE_DEFAULT, CC_DISPATCHER } from '../../support/cons
 const {
   moduleName_stateKeys_, moduleName_ccClassKeys_,
   ccClassKey_ccClassContext_,
-  computed: { _computedValue },
 } = ccContext;
 const { verifyKeys, verboseInfo: vbi } = util;
 
@@ -43,31 +42,13 @@ function mapModuleToCcClassKeys(moduleName, ccClassKey) {
   if (!ccClassKeys.includes(ccClassKey)) ccClassKeys.push(ccClassKey);
 }
 
-function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName, originalWatchedKeys, watchedKeys, connectedModuleKeyMapping, connectedModuleNames) {
+function mapCcClassKeyToCcClassContext(ccClassKey, renderKeyClasses, moduleName, originalWatchedKeys, watchedKeys) {
   let ccClassContext = ccClassKey_ccClassContext_[ccClassKey];
 
   //做一个判断，有可能是热加载调用
   if (!ccClassContext) {
     ccClassContext = util.makeCcClassContext(moduleName, ccClassKey, renderKeyClasses, watchedKeys, originalWatchedKeys);
     ccClassKey_ccClassContext_[ccClassKey] = ccClassContext;
-  }
-
-  const connectedModule = {};
-  const connectedComputed = {};
-  if (connectedModuleKeyMapping) {
-    const _state = ccContext.store._state;
-    const connectedState = ccClassContext.connectedState;
-
-    //直接赋值引用
-    connectedModuleNames.forEach(m => {
-      connectedState[m] = _state[m];
-      connectedComputed[m] = _computedValue[m];
-      connectedModule[m] = 1;//记录连接的模块
-    });
-
-    ccClassContext.connectedModuleKeyMapping = connectedModuleKeyMapping;
-    ccClassContext.connectedModule = connectedModule;
-    ccClassContext.connectedComputed = connectedComputed;
   }
 }
 
@@ -81,7 +62,7 @@ export default function (
   if (__checkStartUp === true) checkCcStartupOrNot();
   const allowNamingDispatcher = __calledBy === 'cc';
 
-  checker.checkModuleName(module, false, `module[${module}] is not configured in store`);
+  checker.checkModuleName(module, false, `module[${module}] not configured`);
   checker.checkStoredKeys(moduleName_stateKeys_[module], inputStoredKeys);
 
   let _connect = connect || {};// codesandbox lost default value
@@ -98,7 +79,7 @@ export default function (
   }
 
   const _watchedKeys = getWatchedStateKeys(module, ccClassKey, inputWatchedKeys);
-  const { featureStr, connectedModuleKeyMapping, connectedModuleNames } = getFeatureStrAndCmkMapping(_connect, _watchedKeys);
+  const featureStr = getFeatureStr(_connect, _watchedKeys);
   const _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, _watchedKeys, classKeyPrefix, featureStr, ccClassKey);
 
   let _renderKeyClasses;
@@ -111,7 +92,7 @@ export default function (
     _renderKeyClasses = renderKeyClasses;
   }
 
-  mapCcClassKeyToCcClassContext(_ccClassKey, _renderKeyClasses, module, inputWatchedKeys, _watchedKeys, connectedModuleKeyMapping, connectedModuleNames);
+  mapCcClassKeyToCcClassContext(_ccClassKey, _renderKeyClasses, module, inputWatchedKeys, _watchedKeys);
   mapModuleToCcClassKeys(module, _ccClassKey);
 
   return { _module: module, _connect, _watchedKeys, _ccClassKey };
