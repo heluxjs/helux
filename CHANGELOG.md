@@ -1,3 +1,8 @@
+#### 2020-08-08
+2.8.6 发布
+optimize: 重构`ccClassKey_ccClassContext_`相关逻辑，删除多余维护的元数据
+optimize: 去掉`registerOption.isSingle`参数控制
+
 #### 2020-08-07
 2.8.3 发布
 optimize: 利用模块状态版本号确保无论实例是否失去模块依赖，`ctx.state`总是能够获取到最新值
