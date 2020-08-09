@@ -392,7 +392,7 @@ declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
 
 declare function refCtxInitState(state: IAnyObj): void;
 declare function refCtxInitState(stateCb: () => IAnyObj): void;
-  
+
 declare function syncCb
   (
     value: any, keyPath: string,
@@ -820,6 +820,9 @@ type TypeDesc = {
   cb?: Function;
 };
 
+declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Partial<T>;
+declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Promise<Partial<T>>;
+
 type ModuleConfig = {
   state: Object;
   reducer?: {
@@ -832,7 +835,7 @@ type ModuleConfig = {
     // [retKey: string]: typeof watchFn | WatchFnDesc;
     [retKey: string]: WatchFn | WatchFnDesc;
   };
-  init?: (() => Partial<IAnyObj>) | (() => Promise<Partial<IAnyObj>>);
+  init?: typeof init;
   initPost?: (dispatch: IDispatch, moduleState: any) => any;
 }
 

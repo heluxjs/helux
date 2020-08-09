@@ -113,7 +113,6 @@ export default function (
       boot.executeRootInit(init, initPost);
       boot.configMiddlewares(middlewares);
 
-
       const bindOthers = (bindTarget) => {
         bindToWindow('CC_CONTEXT', ccContext, bindTarget);
         bindToWindow('ccc', ccContext, bindTarget);

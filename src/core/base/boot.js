@@ -8,7 +8,8 @@ import initModuleState from '../state/init-module-state';
 import { makeSetStateHandler } from '../state/handler-factory';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
-import initModuleComputed from '../computed/init-module-computed';
+import initModuleComputed from '../computed/init-module-computed'
+import catchCcError from './catch-cc-error';;
 import { on, clearCbs } from '../plugin';
 
 const { isPJO, okeys } = util;
@@ -73,9 +74,10 @@ export function executeRootInit(init, initPost) {
     checker.checkModuleName(moduleName, false);
     const initFn = init[moduleName];
     if (initFn) {
-      Promise.resolve().then(initFn).then(state => {
+      const moduleState = ccContext.store.getState(moduleName);
+      Promise.resolve().then(() => initFn(moduleState)).then(state => {
         makeSetStateHandler(moduleName, initPost[moduleName])(state)
-      });
+      }).catch(catchCcError);
     }
   });
   ccContext.init._init = init;

@@ -167,9 +167,9 @@ export function justWarning(err) {
   else cer(err);
 }
 
-export function justTip(msg) {
+export function justTip(msg, tipColor = 'green') {
   console.log(tipStart('TIP'));
-  console.log(`%c${msg}`, 'color:green;border:1px solid green;');
+  console.log(`%c${msg}`, `color:${tipColor};border:1px solid ${tipColor};`);
 }
 
 export function strictWarning(err) {
