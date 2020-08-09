@@ -2,9 +2,10 @@
 
 ## About dep collection of state
 
-concent will collect all component ins's data dep in their every render period.
+Concent will collect all component ins's data dep in their every render period.
+> `state` is a proxy object, for helping concent collect every instantce's dep keys in every render period, that makes become true
 
-> try click toggle button and then click add button, see the change of `renderCount`
+Try click toggle button and then click add button, see the change of `renderCount`
 
 ```jsx
 import React, { Component } from "react";
@@ -61,4 +62,12 @@ function App() {
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## 👉[try edit this online demo](https://codesandbox.io/s/dep-collection-of-state-3l5mp)
+### 👉[try edit this demo](https://codesandbox.io/s/dep-collection-of-state-3l5mp)
+
+___
+
+
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/recoil-vs-concent/r5.gif)
+### 👉[try edit this pic demo](https://codesandbox.io/s/dep-collection-uiqzn)
+
+

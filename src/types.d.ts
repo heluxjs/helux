@@ -391,7 +391,7 @@ declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
 declare function refCtxInitState(state: IAnyObj): void;
-declare function refCtxInitState(stateCb: () => IAnyOb): void;
+declare function refCtxInitState(stateCb: () => IAnyObj): void;
   
 declare function syncCb
   (

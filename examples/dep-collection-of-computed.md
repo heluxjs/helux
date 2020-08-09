@@ -2,6 +2,7 @@
 ## About dep collection of computed
 just like state dep collection, concent will collect all component ins's data dep in their every render period when component ins read `moduleComputed`.
 
+> Attention that when you deconstruct the state for a computed function, you are also declare the dep keys for the function at the same time.
 
 ```jsx
 import React, { Component } from "react";
@@ -104,4 +105,60 @@ function App() {
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## 👉[try edit this online demo](https://codesandbox.io/s/dep-collection-of-computed-4nwlf)
+### 👉[try edit this online demo](https://codesandbox.io/s/dep-collection-of-computed-4nwlf)
+
+___
+
+## async computed
+
+**async comoputed** is also supported, 
+
+### 👉[try edit this async computed demo](https://codesandbox.io/s/async-computed-35byz)
+
+
+## module level computed dependency collection
+
+```js
+run({
+  counter:{
+    state:{
+      modCount: 10,
+      modCountBak: 100,
+      factor: 1,
+    },
+    computed:{
+      xxx(n){
+        return n.modCount + n.modCountBak;
+      },// for xxx computed retKey, the depKeys is ['modCount', 'modCountBak']
+      yyy(n){
+        return n.modCountBak;
+      },// for yyy computed retKey, the depKeys is ['modCountBak']
+      zzz(n, o, f){// n means newState, o means oldState, f means fnCtx
+        return f.cuVal.xxx + n.factor;
+      },// for zzz computed retKey, the depKeys is ['factor', 'modCount', 'modCountBak']
+    },
+    watch:{
+      xxx:{
+        fn(n){
+          console.log('---> trigger watch xxx', n.modCount);
+        },// for xxx watch retKey, the depKeys is ['modCount']
+        immediate: true,
+      },
+    }
+  }
+});
+```
+
+## ref level computed dependency collection
+
+```js
+const setup = ctx => {
+  ctx.computed('show', (n)=>{
+    return n.show + n.cool + n.good;
+  });// for show retKey, the depKeys is ['show', 'cool', 'good']
+
+  ctx.computed('show2', (n)=>{
+    return n.show + '2222' + n.cool;
+  });// for show2 retKey, the depKeys is ['show', 'cool', 'good']
+};
+```

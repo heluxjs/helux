@@ -1,4 +1,10 @@
-## About composition api
+## About composition api 🎉
+
+With composition api, user can easily separate ui and logic.
+
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-re-render-process.png)
+
+
 Concent use `setup` param to support `composition api` feature, why we should use `setup`, look the code below
 
 - without `setup`
@@ -37,7 +43,7 @@ function FnCounter(){
 ```
 `setup` function will only been executed one time in component ins's first render period, so it will help for reducing gc pressure .
 
-👉 try edit this demo](https://codesandbox.io/s/composition-api-1-rw95j)
+👉 [try edit this demo](https://codesandbox.io/s/composition-api-1-rw95j)
 
 ___
 
@@ -93,3 +99,44 @@ class ClsComp extends React.Component{
 > attention that you can not pass setup to register options and define `$$setup` in class inner block both.
 
 👉 [try edit this demo](https://codesandbox.io/s/composition-api-3-ykv9p)
+
+____
+
+## Another 2 simple demos
+
+```jsx
+import { run, useConcent } from "concent";
+
+run();// startup concent
+
+const setup = ctx => {
+  const { initState, computed, watch, setState, sync } = ctx;
+  
+  initState({ greeting: 'hello concent' });
+  computed("reversedGreeting", n => n.greeting.split('').reverse());
+  watch("greeting", (n, o) => alert(`from ${o.greeting} to ${n.greeting}`));
+  
+  return {
+    changeGreeting: (e) => setState({ greeting: e.target.value }),
+    changeGreeting2: sync('greeting'),
+  };
+};
+
+function HelloConcent(){
+  const { state, refComputed, settings } = useConcent({ setup });
+  return (
+    <>
+      <h1>{state.greeting}</h1>
+      <h1>{refComputed.reversedGreeting}</h1>
+      <input value={state.greeting} onChange={settings.changeGreeting}/>
+      <input value={state.greeting} onChange={settings.changeGreeting2}/>
+    </>
+  );
+}
+```
+
+👉 [try edit this demo](https://codesandbox.io/s/hello-concent-djxxh)
+
+![hello-concent](https://github.com/fantasticsoul/assets/blob/master/img/cc-intro-1.gif?raw=true)
+
+👉 [try edit this pic demo](https://stackblitz.com/edit/react-wpzgqd)

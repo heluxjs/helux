@@ -3017,7 +3017,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.11',
+      version: '2.8.13',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6552,8 +6552,14 @@
     ref.setState = setState;
     ref.forceUpdate = forceUpdate; // allow user have a chance to define state in setup block;
 
-    ctx.initState = function (initialState) {
-      // 已挂载则不让用户在调用initState
+    ctx.initState = function (initialStateOrCb) {
+      var initialState = initialStateOrCb;
+
+      if (typeof initialStateOrCb === 'function') {
+        initialState = initialStateOrCb();
+      } // 已挂载则不让用户在调用initState
+
+
       if (ref.__$$isMounted) {
         return justWarning$5("initState can only been called before first render period!");
       }
