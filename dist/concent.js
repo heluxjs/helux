@@ -3025,7 +3025,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.14',
+      version: '2.8.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -8616,12 +8616,11 @@
         module = _registerOption.module,
         _registerOption$watch = _registerOption.watchedKeys,
         watchedKeys = _registerOption$watch === void 0 ? '-' : _registerOption$watch,
-        storedKeys = _registerOption.storedKeys,
         Dumb = _registerOption.render,
         _registerOption$conne = _registerOption.connect,
         connect = _registerOption$conne === void 0 ? {} : _registerOption$conne;
 
-    var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true),
+    var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, connect, true),
         _module = _mapRegistrationInfo._module,
         _ccClassKey = _mapRegistrationInfo._ccClassKey,
         _connect = _mapRegistrationInfo._connect,
