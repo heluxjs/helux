@@ -1,11 +1,20 @@
 #### 2020-08-08
+2.8.13 发布
+- feature: 支持`ctx.initState`传递函数
+```js
+function setup(ctx){
+  ctx.initState(()=>({num: 1}));
+}
+```
+
+#### 2020-08-08
 2.8.6 发布
-optimize: 重构`ccClassKey_ccClassContext_`相关逻辑，删除多余维护的元数据
-optimize: 去掉`registerOption.isSingle`参数控制
+- optimize: 重构`ccClassKey_ccClassContext_`相关逻辑，删除多余维护的元数据
+- optimize: 去掉`registerOption.isSingle`参数控制
 
 #### 2020-08-07
 2.8.3 发布
-optimize: 利用模块状态版本号确保无论实例是否失去模块依赖，`ctx.state`总是能够获取到最新值
+- optimize: 利用模块状态版本号确保无论实例是否失去模块依赖，`ctx.state`总是能够获取到最新值
 ```js
 
 function setup(ctx){
@@ -20,9 +29,9 @@ function setup(ctx){
 
 #### 2020-08-06
 2.8.1 发布
-fix: 已失去模块状态依赖的组件，自己触发修改模块状态还会触发自己渲染
-fix: 存在`synthetic event is reused`警告
-optimize: 优化`ctx.state`赋值流程，减少不必要的assign过程，同时支持setup提前解构`ctx.state`并反复使用它了，因为现在ctx.state是一个固定引用
+- fix: 已失去模块状态依赖的组件，自己触发修改模块状态还会触发自己渲染
+- fix: 存在`synthetic event is reused`警告
+- optimize: 优化`ctx.state`赋值流程，减少不必要的assign过程，同时支持setup提前解构`ctx.state`并反复使用它了，因为现在ctx.state是一个固定引用
 ```js
 function setup(ctx){
   // before v2.8, 
@@ -36,40 +45,40 @@ function setup(ctx){
 
 #### 2020-07-26
 2.7.28 发布
-fix: makeDispatchHandler处理paramObj类型逻辑错误
+- fix: makeDispatchHandler处理paramObj类型逻辑错误
 
 #### 2020-07-26
 2.7.26 发布
-fix: effect 依赖数组无效
+- fix: effect 依赖数组无效
 > prevState指向了代理state导致的问题
 
 #### 2020-07-20
 2.7.25 发布
-fix: async reducer编译后多一层保证判断失败
+- fix: async reducer编译后多一层保证判断失败
 
 #### 2020-07-16
 2.7.22 发布
-fix: dispatch调用方法修改state时，input框输入中文出现抖动
-optimize: 对ActionCtx新增callInfo
-optimize: 添加读取id为renderKey的机制
+- fix: dispatch调用方法修改state时，input框输入中文出现抖动
+- optimize: 对ActionCtx新增callInfo
+- optimize: 添加读取id为renderKey的机制
 
 #### 2020-06-25
 2.7.15 发布
-optimize: 针对既属于模块a也连接到模块a的组件做优化，从而减少一次冗余的渲染
+- optimize: 针对既属于模块a也连接到模块a的组件做优化，从而减少一次冗余的渲染
 > broadcastState过程里通过renderedInBelong记录已触发渲染的实例
 
 #### 2020-06-23
 2.7.12 发布
-fix: 人工标记depKeys的computed元数据维护错误
-optimize: 针对strictMode的双调用机制，利用`effectFlag`标记来删除一个多余维护的hookRef
+- fix: 人工标记depKeys的computed元数据维护错误
+- optimize: 针对strictMode的双调用机制，利用`effectFlag`标记来删除一个多余维护的hookRef
 
 #### 2020-06-13
 2.7.2 发布
-feature: 新增`SIG_ASYNC_COMPUTED_***`相关信号
+- feature: 新增`SIG_ASYNC_COMPUTED_***`相关信号
 
 #### 2020-06-03
 2.7.1 发布
-feature: support async computed
+- feature: support async computed
 @ee https://codesandbox.io/s/async-computed-35byz
 ```
 const delay = (ms = 600) => new Promise(r => setTimeout(r, ms));
@@ -100,48 +109,48 @@ run({
 
 #### 2020-06-03
 2.6.4 发布
-feature: support setState((prevState, props)=> newState)
+- feature: support setState((prevState, props)=> newState)
 
 #### 2020-06-02
 2.6.1 发布
-fix: 重构`find-dep-fns-to-execute`，支持更复杂的链路
+- fix: 重构`find-dep-fns-to-execute`，支持更复杂的链路
 > https://codesandbox.io/s/complex-cu-watch-chain-in-ref-l9nh7?file=/src/App.js
 
 #### 2020-05-27
 2.5.12 发布
-fix: `refCtx`调用`initState`丢失`privStateKeys`
-feature: 对`sync`函数提供`cachedBoundFns`支持
+- fix: `refCtx`调用`initState`丢失`privStateKeys`
+- feature: 对`sync`函数提供`cachedBoundFns`支持
 
 2.5.11 发布
-fix: `beforeRender`里反复用代理对象生成代理对象，最终导致maximum call问题
+- fix: `beforeRender`里反复用代理对象生成代理对象，最终导致maximum call问题
 > 新增`unProxyState`解决此问题
 
 #### 2020-05-27
 2.5.1 发布
-refactor: 适配`react-native`，去`react-dom`依赖，重构`dispatcher`初始化方式
+- refactor: 适配`react-native`，去`react-dom`依赖，重构`dispatcher`初始化方式
 
 #### 2020-05-15
 2.4.22 发布
-refactor: `triggerReactSetState`里当触发`RENDER_NO_OP`时，不再执行`reactCallback`
-fix: class的`setState`的第二位callback参数未能向function一样能够传递最新的state
+- refactor: `triggerReactSetState`里当触发`RENDER_NO_OP`时，不再执行`reactCallback`
+- fix: class的`setState`的第二位callback参数未能向function一样能够传递最新的state
 
 #### 2020-05-15
 2.4.21 发布
-fix: 遗漏了`ctx.initState`新的私有状态stateKey
+- fix: 遗漏了`ctx.initState`新的私有状态stateKey
 > 见示例 https://codesandbox.io/s/hello-concent-pzde3，<=2.4.20版本里未能正确触发watch
 
 #### 2020-05-13
 2.4.20 发布
-fix: initPost回调里模块状态不是最新结果
+- fix: initPost回调里模块状态不是最新结果
 
 #### 2020-05-11
 2.4.19 发布
-fix: 极端情况反复对同一个组件一直频繁渲染会触发Maximum call stack size exceeded
+- fix: 极端情况反复对同一个组件一直频繁渲染会触发Maximum call stack size exceeded
 > 见示例 https://codesandbox.io/s/happy-bird-rc1t7?file=/src/App.js 在2.4.18之前的确会 Maximum call stack size exceeded，2.4.19已不会
 
 #### 2020-05-03
 2.4.16 发布
-fix: globalComputed未正确收集到依赖
+- fix: globalComputed未正确收集到依赖
 
 #### 2020-04-12
 2.4.2 发布
