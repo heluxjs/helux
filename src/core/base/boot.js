@@ -12,7 +12,7 @@ import initModuleComputed from '../computed/init-module-computed';
 import catchCcError from './catch-cc-error';
 import { on, clearCbs } from '../plugin';
 
-const { isPJO, okeys } = util;
+const { isPJO, okeys, isObject } = util;
 
 function checkObj(rootObj, tag) {
   if (!isPJO(rootObj)) {
@@ -20,19 +20,14 @@ function checkObj(rootObj, tag) {
   }
 }
 
-/** 对已有的store.$$global状态追加新的state */
-// export function appendGlobalState(globalState) {
-//   // todo
-// }
-
 export function configStoreState(storeState) {
   checkObj(storeState, 'state');
 
   delete storeState[MODULE_VOID];
   delete storeState[MODULE_CC];
 
-  if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
-  if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
+  if (!isObject(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
+  if (!isObject([MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
 
   const moduleNames = okeys(storeState);
   const len = moduleNames.length;
@@ -49,8 +44,8 @@ export function configStoreState(storeState) {
  */
 export function configRootReducer(rootReducer) {
   checkObj(rootReducer, 'reducer');
-  if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
-  if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
+  if (!isObject(rootReducer[MODULE_DEFAULT])) rootReducer[MODULE_DEFAULT] = {};
+  if (!isObject(rootReducer[MODULE_GLOBAL])) rootReducer[MODULE_GLOBAL] = {};
   okeys(rootReducer).forEach(m => initModuleReducer(m, rootReducer[m]));
 }
 
