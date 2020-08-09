@@ -1,6 +1,6 @@
 
 ## About dep collection of computed
-just like state dep collection, concent will collect all component's data dep in their every render period when component ins read `moduleComputed`.
+just like state dep collection, concent will collect all component ins's data dep in their every render period when component ins read `moduleComputed`.
 
 
 ```jsx
@@ -46,14 +46,6 @@ function FnCounter() {
   );
   const add = () => setState({ num: state.num + 1 });
   const addBig = () => setState({ numBig: state.numBig + 10 });
-  const props = {
-    state,
-    moduleComputed,
-    toggle: syncBool("show"),
-    renderCount,
-    add,
-    addBig
-  };
 
   return (
     <View
@@ -112,4 +104,4 @@ function App() {
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## [try edit this online demo](https://codesandbox.io/s/dep-collection-of-computed-4nwlf)
+## 👉[try edit this online demo](https://codesandbox.io/s/dep-collection-of-computed-4nwlf)

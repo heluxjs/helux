@@ -72,9 +72,11 @@ function App() {
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## [try edit this online demo](https://codesandbox.io/s/combine-reducers-jcy6h)
+## 👉 [try edit this online demo](https://codesandbox.io/s/combine-reducers-jcy6h)
 
 ___
+
+👇
 
 if you put reducer method in one file first and then expose to run api, you can call other reducer func by ref directly instead of string literial
 
@@ -108,6 +110,6 @@ import models from 'models';
 runConcent(models);
 ```
 
-## [try edit this better demo](https://codesandbox.io/s/combine-reducers-better-7u3t9)
+## 👉[try edit this better demo](https://codesandbox.io/s/combine-reducers-better-7u3t9)
 
 ___

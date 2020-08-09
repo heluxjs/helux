@@ -298,7 +298,11 @@ export default function (ref, params, liteLevel = 5) {
   ref.forceUpdate = forceUpdate;
 
   // allow user have a chance to define state in setup block;
-  ctx.initState = (initialState) => {
+  ctx.initState = (initialStateOrCb) => {
+    let initialState = initialStateOrCb;
+    if (typeof initialStateOrCb === 'function') {
+      initialState = initialStateOrCb();
+    }
     // 已挂载则不让用户在调用initState
     if (ref.__$$isMounted) {
       return justWarning(`initState can only been called before first render period!`);
@@ -309,6 +313,7 @@ export default function (ref, params, liteLevel = 5) {
     if (ctx.__$$cuOrWaCalled) {
       return justWarning(`initState must been called before computed or watch`);
     }
+
     const newRefState = Object.assign({}, state, initialState, refStoredState, mstate);
     // 更新stateKeys，防止遗漏新的私有stateKey
     ctx.stateKeys = okeys(newRefState);

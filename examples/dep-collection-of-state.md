@@ -2,7 +2,7 @@
 
 ## About dep collection of state
 
-concent will collect all component's data dep in their every render period.
+concent will collect all component ins's data dep in their every render period.
 
 > try click toggle button and then click add button, see the change of `renderCount`
 
@@ -61,4 +61,4 @@ function App() {
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
-## [try edit this online demo](https://codesandbox.io/s/dep-collection-of-state-3l5mp)
+## 👉[try edit this online demo](https://codesandbox.io/s/dep-collection-of-state-3l5mp)

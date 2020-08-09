@@ -384,11 +384,15 @@ declare function refCtxWatch(multiFn: (ctx: ICtxBase) => MultiWatch): void;
 type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
 
+// compare default is true, immediate default is true
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean): void;
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 
+declare function refCtxInitState(state: IAnyObj): void;
+declare function refCtxInitState(stateCb: () => IAnyOb): void;
+  
 declare function syncCb
   (
     value: any, keyPath: string,
@@ -501,7 +505,7 @@ export interface ICtxBase {
     callback?: () => void
   ) => void;
   reactForceUpdate: (callback?: () => void) => void;
-  initState: (state: IAnyObj) => void;
+  initState: typeof refCtxInitState;
   setState: typeof refCtxSetState;
   refs: { [key: string]: { current: any } };
   useRef: (refName: string) => any;//for class return ref=>{...}, for function return hookRef
