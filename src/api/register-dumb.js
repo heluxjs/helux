@@ -32,11 +32,11 @@ function _registerDumb(Dumb, regOpt) {
 export default function (registerOption, ccClassKey) {
   const _registerOption = util.getRegisterOptions(registerOption);
   const {
-    renderKeyClasses, module, watchedKeys = '-', storedKeys, render: Dumb, connect = {},
+    renderKeyClasses, module, watchedKeys = '-', render: Dumb, connect = {},
   } = _registerOption;
   
   const { _module, _ccClassKey, _connect, _watchedKeys } = mapRegistrationInfo(
-    module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, storedKeys, connect, true
+    module, ccClassKey, renderKeyClasses, CC_FRAGMENT, watchedKeys, connect, true
   );
   _registerOption.module = _module;
   _registerOption.watchedKeys = _watchedKeys;

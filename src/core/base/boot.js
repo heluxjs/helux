@@ -8,8 +8,8 @@ import initModuleState from '../state/init-module-state';
 import { makeSetStateHandler } from '../state/handler-factory';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
-import initModuleComputed from '../computed/init-module-computed'
-import catchCcError from './catch-cc-error';;
+import initModuleComputed from '../computed/init-module-computed';
+import catchCcError from './catch-cc-error';
 import { on, clearCbs } from '../plugin';
 
 const { isPJO, okeys } = util;

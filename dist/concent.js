@@ -426,9 +426,13 @@
       cer(err.stack);
     } else cer(err);
   }
-  function justTip(msg) {
+  function justTip(msg, tipColor) {
+    if (tipColor === void 0) {
+      tipColor = 'green';
+    }
+
     console.log(tipStart('TIP'));
-    console.log("%c" + msg, 'color:green;border:1px solid green;');
+    console.log("%c" + msg, "color:" + tipColor + ";border:1px solid " + tipColor + ";");
   }
   function strictWarning(err) {
     cer(tipStart('WARNING'));
@@ -1907,7 +1911,11 @@
 
   var catchCcError = (function (err) {
     var errorHandler = runtimeHandler.errorHandler;
-    if (errorHandler) errorHandler(err);else throw err;
+    if (errorHandler) errorHandler(err);else {
+      justTip('found uncaught err from cc core, suggest config an errorHandler in run options');
+      console.log(err);
+      throw err;
+    }
   });
 
   var sigs = [SIG_FN_START, SIG_FN_END, SIG_FN_QUIT, SIG_FN_ERR, SIG_MODULE_CONFIGURED, SIG_STATE_CHANGED, SIG_ASYNC_COMPUTED_START, SIG_ASYNC_COMPUTED_END, SIG_ASYNC_COMPUTED_ERR, SIG_ASYNC_COMPUTED_BATCH_START, SIG_ASYNC_COMPUTED_BATCH_END];
@@ -3017,7 +3025,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.13',
+      version: '2.8.14',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -7163,9 +7171,12 @@
       var initFn = init[moduleName];
 
       if (initFn) {
-        Promise.resolve().then(initFn).then(function (state) {
+        var moduleState = ccContext.store.getState(moduleName);
+        Promise.resolve().then(function () {
+          return initFn(moduleState);
+        }).then(function (state) {
           makeSetStateHandler(moduleName, initPost[moduleName])(state);
-        });
+        })["catch"](catchCcError);
       }
     });
     ccContext.init._init = init;
