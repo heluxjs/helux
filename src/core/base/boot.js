@@ -27,7 +27,7 @@ export function configStoreState(storeState) {
   delete storeState[MODULE_CC];
 
   if (!isObject(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
-  if (!isObject([MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
+  if (!isObject(storeState[MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
 
   const moduleNames = okeys(storeState);
   const len = moduleNames.length;
