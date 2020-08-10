@@ -39,7 +39,6 @@ export function configStoreState(storeState) {
 }
 
 /**
- * 
  * @param {{[moduleName:string]:{[reducerFnType:string]:function}}} rootReducer 
  */
 export function configRootReducer(rootReducer) {
@@ -117,6 +116,7 @@ export default {
   configRootReducer,
   configRootComputed,
   configRootWatch,
+  // TODO: add configRootLifecycle
   executeRootInit,
   configMiddlewares,
   configPlugins,

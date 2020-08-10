@@ -13,4 +13,4 @@ export default function (refCtx) {
     refCtx.__$$cuOrWaCalled = true;
     configureDepFns(CATE_REF, confMeta, computedItem, computedHandler, depKeysOrOpt);
   };
-} 
+}

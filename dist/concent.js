@@ -7106,25 +7106,21 @@
   }
 
   var isPJO$6 = isPJO,
-      okeys$9 = okeys;
+      okeys$9 = okeys,
+      isObject$1 = isObject;
 
   function checkObj(rootObj, tag) {
     if (!isPJO$6(rootObj)) {
       throw new Error(tag + " " + NOT_A_JSON);
     }
   }
-  /** 对已有的store.$$global状态追加新的state */
-  // export function appendGlobalState(globalState) {
-  //   // todo
-  // }
-
 
   function configStoreState(storeState) {
     checkObj(storeState, 'state');
     delete storeState[MODULE_VOID];
     delete storeState[MODULE_CC];
-    if (storeState[MODULE_GLOBAL] === undefined) storeState[MODULE_GLOBAL] = {};
-    if (storeState[MODULE_DEFAULT] === undefined) storeState[MODULE_DEFAULT] = {};
+    if (!isObject$1(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
+    if (!isObject$1(storeState[MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
     var moduleNames = okeys$9(storeState);
     var len = moduleNames.length;
 
@@ -7135,14 +7131,13 @@
     }
   }
   /**
-   * 
    * @param {{[moduleName:string]:{[reducerFnType:string]:function}}} rootReducer 
    */
 
   function configRootReducer(rootReducer) {
     checkObj(rootReducer, 'reducer');
-    if (rootReducer[MODULE_DEFAULT] === undefined) rootReducer[MODULE_DEFAULT] = {};
-    if (rootReducer[MODULE_GLOBAL] === undefined) rootReducer[MODULE_GLOBAL] = {};
+    if (!isObject$1(rootReducer[MODULE_DEFAULT])) rootReducer[MODULE_DEFAULT] = {};
+    if (!isObject$1(rootReducer[MODULE_GLOBAL])) rootReducer[MODULE_GLOBAL] = {};
     okeys$9(rootReducer).forEach(function (m) {
       return initModuleReducer(m, rootReducer[m]);
     });
@@ -7684,7 +7679,7 @@
         __$$staticWaKeys = _ref$ctx.__$$staticWaKeys;
     setRef(ref);
 
-    var __$$staticWaKeyList = okeys(__$$staticWaKeys); // 用于辅助清理依赖映射
+    var __$$staticWaKeyList = okeys(__$$staticWaKeys); // 用于辅助记录依赖映射
 
 
     ref.ctx.__$$staticWaKeyList = __$$staticWaKeyList; // 记录静态依赖

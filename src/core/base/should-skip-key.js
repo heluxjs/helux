@@ -35,4 +35,4 @@ export default function (key, refModule, stateModule, connectSpecLike, moduleSta
   }
 
   return { skip, stateKey, keyModule };
-} 
+}

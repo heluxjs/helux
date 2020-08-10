@@ -143,5 +143,4 @@ export default function (ref, callByDidMount) {
     // clear settedList
     __$$settedList.length = 0;
   }
-
 }

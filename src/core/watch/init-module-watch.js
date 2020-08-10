@@ -47,5 +47,4 @@ export default function (module, moduleWatch, append = false) {
     moduleState, moduleState, moduleState, util.makeCallInfo(module), true,
     FN_WATCH, CATE_MODULE, moduleComputedValue,
   );
-
 }

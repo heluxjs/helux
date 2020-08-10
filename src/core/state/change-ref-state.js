@@ -302,4 +302,3 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
   });
 
 }
-

@@ -42,5 +42,4 @@ export default function (module, computed) {
     moduleState, moduleState, moduleState, util.makeCallInfo(module), true,
     FN_CU, CATE_MODULE, moduleComputedValue,
   );
-
 }

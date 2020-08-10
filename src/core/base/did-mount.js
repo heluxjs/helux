@@ -13,7 +13,7 @@ export default function (ref) {
   setRef(ref);
 
   const __$$staticWaKeyList = okeys(__$$staticWaKeys);
-  // 用于辅助清理依赖映射
+  // 用于辅助记录依赖映射
   ref.ctx.__$$staticWaKeyList = __$$staticWaKeyList;
   // 记录静态依赖
   __$$staticWaKeyList.forEach(modStateKey => mapStaticInsM(modStateKey, ccUniqueKey));
