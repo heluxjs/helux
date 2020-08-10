@@ -26,7 +26,7 @@ const {
 } = ccContext;
 
 const {
-  okeys, makeError: me, verboseInfo: vbi, safeGet,
+  okeys, makeError: me, verboseInfo: vbi, safeGet, isDepKeysValid,
   justWarning, isObjectNull, isValueNotNull, noDupPush,
 } = util;
 
@@ -408,8 +408,8 @@ export default function (ref, params, liteLevel = 5) {
       let _immediate = isProp ? compare : immediate;
 
       // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
-      if (depKeys !== null && depKeys !== undefined) {
-        if (!Array.isArray(depKeys)) throw new Error(`${eType('second')} one of them(array, null, undefined)`);
+      if (!isDepKeysValid(depKeys)) {
+        throw new Error(`${eType('second')} one of them(array, null, undefined)`);
       }
 
       let modDepKeys = null;

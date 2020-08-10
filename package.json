@@ -107,14 +107,12 @@
   "main": "lib/index.js",
   "module": "es/index.js",
   "name": "concent",
-  "npmFileMap": [
-    {
-      "basePath": "/dist/",
-      "files": [
-        "*.js"
-      ]
-    }
-  ],
+  "npmFileMap": [{
+    "basePath": "/dist/",
+    "files": [
+      "*.js"
+    ]
+  }],
   "npmName": "concent",
   "repository": {
     "type": "git",
@@ -130,5 +128,8 @@
     "test": "jest"
   },
   "unpkg": "dist/concent.js",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/concentjs"
+  },
   "version": "2.8.15"
 }
