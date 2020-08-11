@@ -128,8 +128,5 @@
     "test": "jest"
   },
   "unpkg": "dist/concent.js",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/concentjs"
-  },
   "version": "2.8.16"
 }

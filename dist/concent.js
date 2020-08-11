@@ -172,8 +172,10 @@
     // like componentDidCatch in react 16.*
     isStrict: false,
     isDebug: false,
-    computedCompare: true,
-    watchCompare: true,
+    computedCompare: false,
+    // 针对object值的比较规则
+    watchCompare: false,
+    // 针对object值的比较规则
     watchImmediate: false,
     bindCtxToMethod: false,
     extractModuleChangedState: true,
@@ -250,6 +252,7 @@
 
   /* eslint-disable */
   var cer = console.error;
+  var protoToString = Object.prototype.toString;
   function noop() {}
   function isValueNotNull(value) {
     return !(value === null || value === undefined);
@@ -268,8 +271,11 @@
   function isObjectNull(object) {
     return !isObjectNotNull(object);
   }
+  function isBool(val) {
+    return typeof val === 'boolean';
+  }
   function isObject(obj) {
-    var str = Object.prototype.toString.call(obj); // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
+    var str = protoToString.call(obj); // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
 
     return str === '[object Object]' || str === '[object Module]';
   } // isPJO is short of isPlainJsonObject
@@ -287,7 +293,7 @@
     if (!fn) return false; // @see https://github.com/tj/co/blob/master/index.js
     // obj.constructor.name === 'AsyncFunction'
 
-    var isAsync = Object.prototype.toString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
+    var isAsync = protoToString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
 
     if (isAsync === true) {
       return true;
@@ -997,11 +1003,18 @@
                   compare = _retKey_fn_$retKey4.compare,
                   depKeys = _retKey_fn_$retKey4.depKeys,
                   sort = _retKey_fn_$retKey4.sort;
-              var canPick = true;
+              var canPick;
+              var isValChanged = changedStateKeys.includes(stateKey); // 检测出发生了变化，就一定pick
 
-              if (compare && !changedStateKeys.includes(stateKey)) {
-                canPick = false;
-              }
+              if (isValChanged) {
+                canPick = true;
+              } // 对于未采用 immutable写法的object是检测不出是否改变的，
+              // 因为指向同一个引用，isValChanged一定是false
+              // 所以如果compare 为true，则要求用户严格采用immutable写法
+              // 为false的话，进入到这里，是已经set的key，canPick一定为true
+              else {
+                  canPick = compare ? isValChanged : true;
+                }
 
               if (canPick) {
                 retKey_picked_[retKey] = true;
@@ -3025,7 +3038,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.15',
+      version: '2.8.16',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6245,6 +6258,9 @@
       me$1 = makeError,
       vbi$3 = verboseInfo,
       safeGet$2 = safeGet,
+      isDepKeysValid$1 = isDepKeysValid,
+      isObject$1 = isObject,
+      isBool$1 = isBool,
       justWarning$5 = justWarning,
       isObjectNull$2 = isObjectNull,
       isValueNotNull$1 = isValueNotNull,
@@ -6773,12 +6789,12 @@
       };
 
       ctx.watch = getDefineWatchHandler(ctx);
-      ctx.computed = getDefineComputedHandler(ctx);
+      ctx.computed = getDefineComputedHandler(ctx); // TODO 优化 effect入参格式：effect(cb, depKeysOrOpt)
 
       var makeEffectHandler = function makeEffectHandler(targetEffectItems, isProp) {
-        return function (fn, depKeys, compare, immediate) {
+        return function (fn, depKeysOrOpt, compare, immediate) {
           if (compare === void 0) {
-            compare = true;
+            compare = false;
           }
 
           if (immediate === void 0) {
@@ -6786,13 +6802,21 @@
           }
 
           if (typeof fn !== 'function') throw new Error(eType('first') + " function");
-          var _depKeys = depKeys; //对于effectProps 第三位参数就是immediate
+          var _depKeys = depKeysOrOpt; //对于effectProps 第三位参数就是immediate
 
-          var _immediate = isProp ? compare : immediate; // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
+          var _compare = compare;
+
+          var _immediate = isProp ? compare : immediate;
+
+          if (isObject$1(depKeysOrOpt)) {
+            _depKeys = depKeysOrOpt.depKeys;
+            _compare = isBool$1(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
+            _immediate = isBool$1(depKeysOrOpt.immediate) ? depKeysOrOpt.immediate : immediate;
+          } // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
 
 
-          if (depKeys !== null && depKeys !== undefined) {
-            if (!Array.isArray(depKeys)) throw new Error(eType('second') + " one of them(array, null, undefined)");
+          if (!isDepKeysValid$1(_depKeys)) {
+            throw new Error(eType('second') + " one of them(array, null, undefined)");
           }
 
           var modDepKeys = null;
@@ -6830,7 +6854,7 @@
             depKeys: _depKeys,
             modDepKeys: modDepKeys,
             eId: getEId(),
-            compare: compare,
+            compare: _compare,
             immediate: _immediate
           };
           targetEffectItems.push(effectItem);
@@ -7107,7 +7131,7 @@
 
   var isPJO$6 = isPJO,
       okeys$9 = okeys,
-      isObject$1 = isObject;
+      isObject$2 = isObject;
 
   function checkObj(rootObj, tag) {
     if (!isPJO$6(rootObj)) {
@@ -7119,8 +7143,8 @@
     checkObj(storeState, 'state');
     delete storeState[MODULE_VOID];
     delete storeState[MODULE_CC];
-    if (!isObject$1(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
-    if (!isObject$1(storeState[MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
+    if (!isObject$2(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
+    if (!isObject$2(storeState[MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
     var moduleNames = okeys$9(storeState);
     var len = moduleNames.length;
 
@@ -7136,8 +7160,8 @@
 
   function configRootReducer(rootReducer) {
     checkObj(rootReducer, 'reducer');
-    if (!isObject$1(rootReducer[MODULE_DEFAULT])) rootReducer[MODULE_DEFAULT] = {};
-    if (!isObject$1(rootReducer[MODULE_GLOBAL])) rootReducer[MODULE_GLOBAL] = {};
+    if (!isObject$2(rootReducer[MODULE_DEFAULT])) rootReducer[MODULE_DEFAULT] = {};
+    if (!isObject$2(rootReducer[MODULE_GLOBAL])) rootReducer[MODULE_GLOBAL] = {};
     okeys$9(rootReducer).forEach(function (m) {
       return initModuleReducer(m, rootReducer[m]);
     });
@@ -7400,135 +7424,136 @@
       // flag isFirstCall as true
       effectItems.forEach(makeItemHandler(eid_effectReturnCb_, true, true));
       effectPropsItems.forEach(makeItemHandler(eid_effectPropsReturnCb_, true, true));
-    } else {
-      // callByDidUpdate
-      // start handle effect meta data of state keys
-      var prevState = ctx.prevState;
-      var curState = ctx.unProxyState;
-      var toBeExecutedFns = [];
-      effectItems.forEach(function (item) {
-        // const { status, depKeys, fn, eId } = item;
-        // if (status === EFFECT_STOPPED) return;
-        // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
-        var modDepKeys = item.modDepKeys,
-            compare = item.compare,
-            fn = item.fn,
-            eId = item.eId;
+      return;
+    } // callByDidUpdate
+    // start handle effect meta data of state keys
 
-        if (modDepKeys) {
-          var keysLen = modDepKeys.length;
-          if (keysLen === 0) return;
-          var mappedSettedKey = mapSettedList(__$$settedList);
-          var shouldEffectExecute = false;
 
-          for (var i = 0; i < keysLen; i++) {
-            var key = modDepKeys[i];
+    var prevState = ctx.prevState;
+    var curState = ctx.unProxyState;
+    var toBeExecutedFns = [];
+    effectItems.forEach(function (item) {
+      // const { status, depKeys, fn, eId } = item;
+      // if (status === EFFECT_STOPPED) return;
+      // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
+      var modDepKeys = item.modDepKeys,
+          compare = item.compare,
+          fn = item.fn,
+          eId = item.eId;
 
-            if (!compare) {
-              if (mappedSettedKey[key]) {
-                shouldEffectExecute = true;
-                break;
-              } else {
-                continue;
-              }
-            }
+      if (!modDepKeys) {
+        toBeExecutedFns.push({
+          fn: fn,
+          eId: eId
+        });
+        return;
+      }
 
-            var targetCurState = void 0,
-                targetPrevState = void 0;
+      var keysLen = modDepKeys.length;
+      if (keysLen === 0) return;
+      var mappedSettedKey = mapSettedList(__$$settedList);
+      var shouldEffectExecute = false;
 
-            var _key$split = key.split('/'),
-                module = _key$split[0],
-                unmoduledKey = _key$split[1];
+      for (var i = 0; i < keysLen; i++) {
+        var key = modDepKeys[i];
 
-            if (module !== refModule) {
-              var _prevState = getPrevState$1(module);
+        var _key$split = key.split('/'),
+            module = _key$split[0],
+            unmoduledKey = _key$split[1];
 
-              var moduleStateVer = getStateVer$1(module);
+        var targetCurState = void 0,
+            targetPrevState = void 0;
 
-              if (__$$prevMoStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
-                continue;
-              } else {
-                __$$prevMoStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
-              }
+        if (module !== refModule) {
+          var _prevState = getPrevState$1(module);
 
-              if (!_prevState) {
-                warn(key, "module[" + module + "]");
-                continue;
-              }
+          var moduleStateVer = getStateVer$1(module);
 
-              if (!moduleName_stateKeys_$2[module].includes(unmoduledKey)) {
-                warn(key, "unmoduledKey[" + unmoduledKey + "]");
-                continue;
-              }
-
-              targetCurState = getState$4(module);
-              targetPrevState = _prevState;
-            } else {
-              targetCurState = curState;
-              targetPrevState = prevState;
-            }
-
-            if (targetPrevState[unmoduledKey] !== targetCurState[unmoduledKey]) {
-              shouldEffectExecute = true;
-              break;
-            }
+          if (__$$prevMoStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
+            continue;
+          } else {
+            __$$prevMoStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
           }
 
-          if (shouldEffectExecute) {
-            toBeExecutedFns.push({
-              fn: fn,
-              eId: eId
-            });
+          if (!_prevState) {
+            warn(key, "module[" + module + "]");
+            continue;
           }
+
+          if (!moduleName_stateKeys_$2[module].includes(unmoduledKey)) {
+            warn(key, "unmoduledKey[" + unmoduledKey + "]");
+            continue;
+          }
+
+          targetCurState = getState$4(module);
+          targetPrevState = _prevState;
         } else {
-          toBeExecutedFns.push({
-            fn: fn,
-            eId: eId
-          });
+          targetCurState = curState;
+          targetPrevState = prevState;
         }
-      }); // flag isFirstCall as false, start to run state effect fns
 
-      toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false)); // start handle effect meta data of props keys
+        var isValChanged = targetPrevState[unmoduledKey] !== targetCurState[unmoduledKey];
 
-      var prevProps = ctx.prevProps;
-      var curProps = ctx.props;
-      var toBeExecutedPropFns = [];
-      effectPropsItems.forEach(function (item) {
-        var depKeys = item.depKeys,
-            fn = item.fn,
-            eId = item.eId;
-
-        if (depKeys) {
-          // prop dep key
-          var keysLen = depKeys.length;
-          if (keysLen === 0) return;
-          var shouldEffectExecute = false;
-
-          for (var i = 0; i < keysLen; i++) {
-            var key = depKeys[i];
-
-            if (prevProps[key] !== curProps[key]) {
-              shouldEffectExecute = true;
-              break;
-            }
-          }
-
-          if (shouldEffectExecute) toBeExecutedPropFns.push({
-            fn: fn,
-            eId: eId
-          });
+        if (isValChanged) {
+          shouldEffectExecute = true;
         } else {
-          toBeExecutedPropFns.push({
-            fn: fn,
-            eId: eId
-          });
+          // compare为true看有没有发生变化（object类型值不走immutable写法的话，这里是false，所以compare值默认是false）
+          // 为false则看是不是setted
+          shouldEffectExecute = compare ? isValChanged : mappedSettedKey[key];
         }
-      }); // flag isFirstCall as false, start to run prop effect fns
 
-      toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false)); // clear settedList
+        if (shouldEffectExecute) {
+          break;
+        }
+      }
 
-      __$$settedList.length = 0;
-    }
+      if (shouldEffectExecute) {
+        toBeExecutedFns.push({
+          fn: fn,
+          eId: eId
+        });
+      }
+    }); // flag isFirstCall as false, start to run state effect fns
+
+    toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false)); // start handle effect meta data of props keys
+
+    var prevProps = ctx.prevProps;
+    var curProps = ctx.props;
+    var toBeExecutedPropFns = [];
+    effectPropsItems.forEach(function (item) {
+      var depKeys = item.depKeys,
+          fn = item.fn,
+          eId = item.eId;
+
+      if (!depKeys) {
+        // prop dep key
+        return toBeExecutedPropFns.push({
+          fn: fn,
+          eId: eId
+        });
+      }
+
+      var keysLen = depKeys.length;
+      var shouldEffectExecute = false;
+
+      for (var i = 0; i < keysLen; i++) {
+        var key = depKeys[i];
+
+        if (prevProps[key] !== curProps[key]) {
+          shouldEffectExecute = true;
+          break;
+        }
+      }
+
+      if (shouldEffectExecute) toBeExecutedPropFns.push({
+        fn: fn,
+        eId: eId
+      });
+    }); // flag isFirstCall as false, start to run prop effect fns
+
+    toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false)); // clear settedList
+
+    __$$settedList.length = 0;
   }
 
   var justWarning$6 = justWarning,
