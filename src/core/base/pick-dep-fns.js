@@ -128,9 +128,19 @@ function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, state
         if (!retKey_picked_[retKey]) {
           const { fn, compare, depKeys, sort } = retKey_fn_[retKey];
 
-          let canPick = true;
-          if (compare && !changedStateKeys.includes(stateKey)) {
-            canPick = false;
+          let canPick;
+          let isValChanged = changedStateKeys.includes(stateKey);
+
+          // 检测出发生了变化，就一定pick
+          if (isValChanged) {
+            canPick = true;
+          }
+          // 对于未采用 immutable写法的object是检测不出是否改变的，
+          // 因为指向同一个引用，isValChanged一定是false
+          // 所以如果compare 为true，则要求用户严格采用immutable写法
+          // 为false的话，进入到这里，是已经set的key，canPick一定为true
+          else {
+            canPick = compare ? isValChanged : true;
           }
 
           if (canPick) {

@@ -4,6 +4,7 @@ import { NOT_A_JSON, CU_KEY } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
 const cer = console.error;
+const protoToString = Object.prototype.toString;
 
 export function noop(){}
 
@@ -25,8 +26,12 @@ export function isObjectNull(object) {
   return !isObjectNotNull(object);
 }
 
+export function isBool(val) {
+  return typeof val === 'boolean';
+}
+
 export function isObject(obj) {
-  const str = Object.prototype.toString.call(obj);
+  const str = protoToString.call(obj);
   // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
   return str === '[object Object]' || str === '[object Module]';
 }
@@ -44,7 +49,7 @@ export function isAsyncFn(fn) {
 
   // @see https://github.com/tj/co/blob/master/index.js
   // obj.constructor.name === 'AsyncFunction'
-  let isAsync = Object.prototype.toString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
+  let isAsync = protoToString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
   if (isAsync === true) {
     return true;
   }

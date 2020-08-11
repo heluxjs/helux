@@ -2,7 +2,7 @@ import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 
 const {
-  moduleName_stateKeys_, 
+  moduleName_stateKeys_,
   store: { getPrevState, getState, getStateVer }
 } = ccContext;
 
@@ -38,109 +38,110 @@ export default function (ref, callByDidMount) {
     // flag isFirstCall as true
     effectItems.forEach(makeItemHandler(eid_effectReturnCb_, true, true));
     effectPropsItems.forEach(makeItemHandler(eid_effectPropsReturnCb_, true, true));
-  } else {// callByDidUpdate
-
-    // start handle effect meta data of state keys
-    const prevState = ctx.prevState;
-    const curState = ctx.unProxyState;
-    const toBeExecutedFns = [];
-
-    effectItems.forEach(item => {
-      // const { status, depKeys, fn, eId } = item;
-      // if (status === EFFECT_STOPPED) return;
-
-      // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
-      const { modDepKeys, compare, fn, eId } = item;
-      if (modDepKeys) {
-        const keysLen = modDepKeys.length;
-        if (keysLen === 0) return;
-
-        const mappedSettedKey = mapSettedList(__$$settedList);
-        let shouldEffectExecute = false;
-
-        for (let i = 0; i < keysLen; i++) {
-          const key = modDepKeys[i];
-          if (!compare) {
-            if (mappedSettedKey[key]) {
-              shouldEffectExecute = true;
-              break;
-            }else{
-              continue;
-            }
-          }
-
-          let targetCurState, targetPrevState;
-          const [module, unmoduledKey] = key.split('/');
-          if (module !== refModule) {
-            const prevState = getPrevState(module);
-            const moduleStateVer = getStateVer(module);
-
-            if (__$$prevMoStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
-              continue;
-            } else {
-              __$$prevMoStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
-            }
-
-            if (!prevState) {
-              warn(key, `module[${module}]`);
-              continue;
-            }
-            if (!moduleName_stateKeys_[module].includes(unmoduledKey)) {
-              warn(key, `unmoduledKey[${unmoduledKey}]`);
-              continue;
-            }
-
-            targetCurState = getState(module);
-            targetPrevState = prevState;
-          } else {
-            targetCurState = curState;
-            targetPrevState = prevState;
-          }
-
-          if (targetPrevState[unmoduledKey] !== targetCurState[unmoduledKey]) {
-            shouldEffectExecute = true;
-            break;
-          }
-        }
-        
-        if (shouldEffectExecute) {
-          toBeExecutedFns.push({ fn, eId });
-        }
-      } else {
-        toBeExecutedFns.push({ fn, eId });
-      }
-    });
-    
-    // flag isFirstCall as false, start to run state effect fns
-    toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false));
-
-     // start handle effect meta data of props keys
-    const prevProps = ctx.prevProps;
-    const curProps = ctx.props;
-    const toBeExecutedPropFns = [];
-    effectPropsItems.forEach(item=>{
-      const { depKeys, fn, eId } = item;
-      if (depKeys) {// prop dep key
-        const keysLen = depKeys.length;
-        if (keysLen === 0) return;
-        let shouldEffectExecute = false;
-        for (let i = 0; i < keysLen; i++) {
-          const key = depKeys[i];
-          if (prevProps[key] !== curProps[key]) {
-            shouldEffectExecute = true;
-            break;
-          }
-        }
-        if (shouldEffectExecute) toBeExecutedPropFns.push({ fn, eId });
-      } else {
-        toBeExecutedPropFns.push({ fn, eId });
-      }
-    });
-
-    // flag isFirstCall as false, start to run prop effect fns
-    toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
-
-    // clear settedList
-    __$$settedList.length = 0;
+    return;
   }
+
+  // callByDidUpdate
+  // start handle effect meta data of state keys
+  const prevState = ctx.prevState;
+  const curState = ctx.unProxyState;
+  const toBeExecutedFns = [];
+
+  effectItems.forEach(item => {
+    // const { status, depKeys, fn, eId } = item;
+    // if (status === EFFECT_STOPPED) return;
+
+    // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
+    const { modDepKeys, compare, fn, eId } = item;
+    if (!modDepKeys) {
+      toBeExecutedFns.push({ fn, eId });
+      return;
+    }
+
+    const keysLen = modDepKeys.length;
+    if (keysLen === 0) return;
+
+    const mappedSettedKey = mapSettedList(__$$settedList);
+    let shouldEffectExecute = false;
+    for (let i = 0; i < keysLen; i++) {
+      const key = modDepKeys[i];
+      const [module, unmoduledKey] = key.split('/');
+      let targetCurState, targetPrevState;
+
+      if (module !== refModule) {
+        const prevState = getPrevState(module);
+        const moduleStateVer = getStateVer(module);
+
+        if (__$$prevMoStateVer[unmoduledKey] === moduleStateVer[unmoduledKey]) {
+          continue;
+        } else {
+          __$$prevMoStateVer[unmoduledKey] = moduleStateVer[unmoduledKey];
+        }
+
+        if (!prevState) {
+          warn(key, `module[${module}]`);
+          continue;
+        }
+        if (!moduleName_stateKeys_[module].includes(unmoduledKey)) {
+          warn(key, `unmoduledKey[${unmoduledKey}]`);
+          continue;
+        }
+
+        targetCurState = getState(module);
+        targetPrevState = prevState;
+      } else {
+        targetCurState = curState;
+        targetPrevState = prevState;
+      }
+      const isValChanged = targetPrevState[unmoduledKey] !== targetCurState[unmoduledKey];
+
+      if (isValChanged) {
+        shouldEffectExecute = true;
+      } else {
+        // compare为true看有没有发生变化（object类型值不走immutable写法的话，这里是false，所以compare值默认是false）
+        // 为false则看是不是setted
+        shouldEffectExecute = compare ? isValChanged : mappedSettedKey[key];
+      }
+
+      if (shouldEffectExecute) {
+        break;
+      }
+    }
+
+    if (shouldEffectExecute) {
+      toBeExecutedFns.push({ fn, eId });
+    }
+
+  });
+
+  // flag isFirstCall as false, start to run state effect fns
+  toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false));
+
+  // start handle effect meta data of props keys
+  const prevProps = ctx.prevProps;
+  const curProps = ctx.props;
+  const toBeExecutedPropFns = [];
+  effectPropsItems.forEach(item => {
+    const { depKeys, fn, eId } = item;
+    if (!depKeys) {// prop dep key
+      return toBeExecutedPropFns.push({ fn, eId });
+    }
+
+    const keysLen = depKeys.length;
+    let shouldEffectExecute = false;
+    for (let i = 0; i < keysLen; i++) {
+      const key = depKeys[i];
+      if (prevProps[key] !== curProps[key]) {
+        shouldEffectExecute = true;
+        break;
+      }
+    }
+    if (shouldEffectExecute) toBeExecutedPropFns.push({ fn, eId });
+  });
+
+  // flag isFirstCall as false, start to run prop effect fns
+  toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
+
+  // clear settedList
+  __$$settedList.length = 0;
 }

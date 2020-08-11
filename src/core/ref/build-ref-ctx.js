@@ -26,7 +26,7 @@ const {
 } = ccContext;
 
 const {
-  okeys, makeError: me, verboseInfo: vbi, safeGet, isDepKeysValid,
+  okeys, makeError: me, verboseInfo: vbi, safeGet, isDepKeysValid, isObject, isBool,
   justWarning, isObjectNull, isValueNotNull, noDupPush,
 } = util;
 
@@ -139,7 +139,7 @@ export default function (ref, params, liteLevel = 5) {
 
   const connectedModules = okeys(connect);
   const connectedState = {};
-  
+
   const connectedComputed = {};
   connectedModules.forEach(m => { connectedComputed[m] = makeCuRefObContainer(ref, m, false) });
   const moduleComputed = makeCuRefObContainer(ref, module);
@@ -397,18 +397,25 @@ export default function (ref, params, liteLevel = 5) {
 
   if (liteLevel > 4) {// level 5, assign enhance api
     ctx.execute = handler => ctx.execute = handler;
-
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
 
-    const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeys, compare = true, immediate = true) => {
+    // TODO 优化 effect入参格式：effect(cb, depKeysOrOpt)
+    const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare = false, immediate = true) => {
       if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
-      let _depKeys = depKeys;
+      let _depKeys = depKeysOrOpt;
       //对于effectProps 第三位参数就是immediate
+      let _compare = compare;
       let _immediate = isProp ? compare : immediate;
 
+      if (isObject(depKeysOrOpt)) {
+        _depKeys = depKeysOrOpt.depKeys;
+        _compare = isBool(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
+        _immediate = isBool(depKeysOrOpt.immediate) ? depKeysOrOpt.immediate : immediate;
+      }
+
       // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
-      if (!isDepKeysValid(depKeys)) {
+      if (!isDepKeysValid(_depKeys)) {
         throw new Error(`${eType('second')} one of them(array, null, undefined)`);
       }
 
@@ -420,22 +427,21 @@ export default function (ref, params, liteLevel = 5) {
           if (depKey.includes('/')) {
             modDepKey = depKey;
             const [m] = depKey.split('/');
-            if(!ctx.connect[m]){
+            if (!ctx.connect[m]) {
               throw me(ERR.CC_MODULE_NOT_CONNECTED, vbi(`depKey[${depKey}]`));
             }
-          }else{
+          } else {
             // 这里要注意， 私有的key
             modDepKey = `${stateModule}/${depKey}`;
           }
 
           modDepKeys.push(modDepKey);
-
           // 先暂时保持起来，组件挂载时才映射依赖
           ctx.__$$staticWaKeys[modDepKey] = 1;
         });
       }
       // 对于effectProps来说是不会读取compare属性来用的
-      const effectItem = { fn, isProp, depKeys: _depKeys, modDepKeys, eId: getEId(), compare, immediate: _immediate };
+      const effectItem = { fn, isProp, depKeys: _depKeys, modDepKeys, eId: getEId(), compare: _compare, immediate: _immediate };
       targetEffectItems.push(effectItem);
     };
 

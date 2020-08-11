@@ -1,3 +1,27 @@
+#### 2020-08-11
+2.8.16 发布
+- optimize: 支持`ctc.effect`传递对象型参数
+```js
+// old way, 为了只想设置immediate为false，不得不把前面两个参数也传递了
+effect(()=>{},null,true, false);
+// new way，只构造对象{immediate:false}即可
+effect(()=>{}, {immediate:false});
+```
+新的方法为
+```ts
+type ClearEffect = IAnyFnPromise | void;
+type EffectDepKeys = string[] | null;
+type DepKeysOpt = { depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean };
+declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOpt): void;
+```
+- optimize: 修正`watchCompare`,`computedCompare`,`effectCompare`语义
+> 默认都是false，表示表示针对object值需不需要比较，走set语义
+
+#### 2020-08-10
+2.8.15 发布
+- fix: registerDumb throw undefined error
+
 #### 2020-08-08
 2.8.13 发布
 - feature: 支持`ctx.initState`传递函数

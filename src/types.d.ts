@@ -383,12 +383,19 @@ declare function refCtxWatch(multiFn: (ctx: ICtxBase) => MultiWatch): void;
 
 type ClearEffect = IAnyFnPromise | void;
 type EffectDepKeys = string[] | null;
+type DepKeysOpt = { depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean };
 
-// compare default is true, immediate default is true
+// compare default is true, 表示针对object值需不需要比较
+// immediate default is true
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean): void;
+declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOpt): void;
+
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
+declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOpt): void;
 
 declare function refCtxInitState(state: IAnyObj): void;
 declare function refCtxInitState(stateCb: () => IAnyObj): void;

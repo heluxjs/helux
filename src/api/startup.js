@@ -64,8 +64,8 @@ export default function (
     errorHandler = null,
     isHot,
     bindCtxToMethod = false,
-    computedCompare = false,
-    watchCompare = false,
+    computedCompare = false,// 表示针对object值需不需要比较
+    watchCompare = false,// 表示针对object值需不需要比较
     watchImmediate = false,
     reComputed = true,
     extractModuleChangedState  = true,
