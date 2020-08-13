@@ -3038,7 +3038,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.16',
+      version: '2.8.18',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4181,12 +4181,10 @@
     var watchDep = refCtx.watchDep,
         refModule = refCtx.module,
         ccUniqueKey = refCtx.ccUniqueKey;
-    var computedContainer = refCtx.refComputed;
-
-    if (stateModule !== refModule) {
-      // 由changeRefState/broadcastState触发的connectedRefs 触发的watch
-      computedContainer = refCtx.connectedComputed[stateModule];
-    }
+    var computedContainer = refCtx.refComputed; // if (stateModule !== refModule) {
+    //   // 由changeRefState/broadcastState触发的connectedRefs 触发的watch
+    //   computedContainer = refCtx.connectedComputed[stateModule];
+    // }
 
     var curDepWatchFns = function curDepWatchFns(committedState, isBeforeMount) {
       return pickDepFns(isBeforeMount, CATE_REF, FN_WATCH, watchDep, stateModule, oldState, committedState, ccUniqueKey);
@@ -4214,12 +4212,10 @@
     var computedDep = refCtx.computedDep,
         refModule = refCtx.module,
         ccUniqueKey = refCtx.ccUniqueKey;
-    var computedContainer = refCtx.refComputed;
-
-    if (stateModule !== refModule) {
-      // 由changeRefState/broadcastState触发的connectedRefs 触发的计算
-      computedContainer = refCtx.connectedComputed[stateModule];
-    }
+    var computedContainer = refCtx.refComputed; // if (stateModule !== refModule) {
+    //   // 由changeRefState/broadcastState触发的connectedRefs 触发的计算
+    //   computedContainer = refCtx.connectedComputed[stateModule];
+    // }
 
     var newState = Object.assign({}, oldState, deltaCommittedState);
 
@@ -6258,7 +6254,6 @@
       me$1 = makeError,
       vbi$3 = verboseInfo,
       safeGet$2 = safeGet,
-      isDepKeysValid$1 = isDepKeysValid,
       isObject$1 = isObject,
       isBool$1 = isBool,
       justWarning$5 = justWarning,
@@ -6789,7 +6784,7 @@
       };
 
       ctx.watch = getDefineWatchHandler(ctx);
-      ctx.computed = getDefineComputedHandler(ctx); // TODO 优化 effect入参格式：effect(cb, depKeysOrOpt)
+      ctx.computed = getDefineComputedHandler(ctx);
 
       var makeEffectHandler = function makeEffectHandler(targetEffectItems, isProp) {
         return function (fn, depKeysOrOpt, compare, immediate) {
@@ -6801,22 +6796,22 @@
             immediate = true;
           }
 
-          if (typeof fn !== 'function') throw new Error(eType('first') + " function");
-          var _depKeys = depKeysOrOpt; //对于effectProps 第三位参数就是immediate
+          if (typeof fn !== 'function') throw new Error(eType('first') + " function"); // depKeys 为null 和 undefined 会自动转为[], 表示无任何依赖，每一轮都执行的副作用
+
+          var _depKeys = depKeysOrOpt || []; //对于effectProps 第三位参数就是immediate
+
 
           var _compare = compare;
 
           var _immediate = isProp ? compare : immediate;
 
           if (isObject$1(depKeysOrOpt)) {
-            _depKeys = depKeysOrOpt.depKeys;
-            _compare = isBool$1(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
+            _depKeys = depKeysOrOpt.depKeys || [], _compare = isBool$1(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
             _immediate = isBool$1(depKeysOrOpt.immediate) ? depKeysOrOpt.immediate : immediate;
-          } // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
+          }
 
-
-          if (!isDepKeysValid$1(_depKeys)) {
-            throw new Error(eType('second') + " one of them(array, null, undefined)");
+          if (!Array.isArray(_depKeys)) {
+            throw new Error(eType('second') + " array, null, or undefined");
           }
 
           var modDepKeys = null;

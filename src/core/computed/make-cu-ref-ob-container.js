@@ -107,13 +107,13 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
 
       // 防止用户从 cuVal读取不存在的key
       if (hasOwnProperty.call(oriCuContainer, retKey)) {
-
+        
         // 由refComputed.{keyName}取值触发
         if (isRefCu) {
           const computedDep = ref.ctx.computedDep;
           Object.keys(computedDep).forEach(m => {
             writeRetKeyDep(computedDep[m], ref, m, retKey, isForModule);
-          })
+          });
         }
         // 由moduleComputed.{keyName} 或者 connectedComputed.{moduleName}.{keyName} 取值触发
         else {

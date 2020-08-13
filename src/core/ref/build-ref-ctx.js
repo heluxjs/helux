@@ -26,7 +26,7 @@ const {
 } = ccContext;
 
 const {
-  okeys, makeError: me, verboseInfo: vbi, safeGet, isDepKeysValid, isObject, isBool,
+  okeys, makeError: me, verboseInfo: vbi, safeGet, isObject, isBool,
   justWarning, isObjectNull, isValueNotNull, noDupPush,
 } = util;
 
@@ -400,23 +400,23 @@ export default function (ref, params, liteLevel = 5) {
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
 
-    // TODO 优化 effect入参格式：effect(cb, depKeysOrOpt)
     const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare = false, immediate = true) => {
       if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
-      let _depKeys = depKeysOrOpt;
+
+      // depKeys 为null 和 undefined 会自动转为[], 表示无任何依赖，每一轮都执行的副作用
+      let _depKeys = depKeysOrOpt || [];
       //对于effectProps 第三位参数就是immediate
       let _compare = compare;
       let _immediate = isProp ? compare : immediate;
 
       if (isObject(depKeysOrOpt)) {
-        _depKeys = depKeysOrOpt.depKeys;
-        _compare = isBool(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
+        _depKeys = depKeysOrOpt.depKeys || [],
+          _compare = isBool(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
         _immediate = isBool(depKeysOrOpt.immediate) ? depKeysOrOpt.immediate : immediate;
       }
 
-      // depKeys 为null 和 undefined 表示无任何依赖，每一轮都执行的副作用
-      if (!isDepKeysValid(_depKeys)) {
-        throw new Error(`${eType('second')} one of them(array, null, undefined)`);
+      if (!Array.isArray(_depKeys)) {
+        throw new Error(`${eType('second')} array, null, or undefined`);
       }
 
       let modDepKeys = null;

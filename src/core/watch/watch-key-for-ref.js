@@ -11,10 +11,10 @@ export default function (ref, stateModule, oldState, deltaCommittedState, callIn
 
   const { watchDep, module: refModule, ccUniqueKey } = refCtx;
   let computedContainer = refCtx.refComputed;
-  if (stateModule !== refModule) {
-    // 由changeRefState/broadcastState触发的connectedRefs 触发的watch
-    computedContainer = refCtx.connectedComputed[stateModule];
-  }
+  // if (stateModule !== refModule) {
+  //   // 由changeRefState/broadcastState触发的connectedRefs 触发的watch
+  //   computedContainer = refCtx.connectedComputed[stateModule];
+  // }
 
   const curDepWatchFns = (committedState, isBeforeMount) => pickDepFns(
     isBeforeMount, CATE_REF, FN_WATCH, watchDep, stateModule, oldState, committedState, ccUniqueKey

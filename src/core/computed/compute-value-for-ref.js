@@ -11,10 +11,10 @@ export default function (ref, stateModule, oldState, deltaCommittedState, callIn
   const { computedDep, module: refModule, ccUniqueKey } = refCtx;
 
   let computedContainer = refCtx.refComputed;
-  if (stateModule !== refModule) {
-    // 由changeRefState/broadcastState触发的connectedRefs 触发的计算
-    computedContainer = refCtx.connectedComputed[stateModule];
-  }
+  // if (stateModule !== refModule) {
+  //   // 由changeRefState/broadcastState触发的connectedRefs 触发的计算
+  //   computedContainer = refCtx.connectedComputed[stateModule];
+  // }
 
   const newState = Object.assign({}, oldState, deltaCommittedState);
 
