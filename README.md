@@ -138,7 +138,7 @@ function DemoFn(){
 ```
 
 ### Initialize component
-There is no need to wrap with the root component with a `Provider`, you can just initialize the concent component any where you want, [here](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js) you can view the demo.
+There is no need to wrap the root component with a `Provider`, you can just initialize the concent component any where you want, [here](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js) you can view the demo.
 
 ```jsx
 const rootElement = document.getElementById("root");
