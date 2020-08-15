@@ -77,6 +77,7 @@ function _clearAll() {
   clearObject(ccContext.waKey_uKeyMap_);
   clearObject(ccContext.lifecycle._mountedOnce);
   clearObject(ccContext.lifecycle._willUnmountOnce);
+  clearObject(ccContext.module_InsCount_, [], 0);
   clearCachedData();
   const { ccFragKeys, ccNonCusKeys } = _pickNonCustomizeIns();
   _clearInsAssociation(false, ccNonCusKeys);
