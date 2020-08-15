@@ -15,7 +15,7 @@ import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState } from '../../support/util';
 import beforeRender from '../ref/before-render';
-import { isRegChanged } from './common';
+import isRegChanged from '../param/is-reg-changed';
 
 const { ccUKey_ref_ } = ccContext;
 const cursor_hookCtx_ = {};

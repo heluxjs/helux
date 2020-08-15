@@ -6,6 +6,7 @@ import didUpdate from '../core/base/did-update';
 import getOutProps from '../core/base/get-out-props';
 import initCcFrag from '../core/ref/init-cc-frag';
 import beforeRender from '../core/ref/before-render';
+import isRegChanged from '../core/param/is-reg-changed';
 
 const { shallowDiffers } = util;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
@@ -13,7 +14,7 @@ const nullSpan = React.createElement('span', { style: { display: 'none' } });
 class CcFragment extends React.Component {
   constructor(props, context) {
     super(props, context);
-    initCcFrag(this);
+    initCcFrag(this, props);
   }
 
   componentDidMount() {
@@ -21,7 +22,16 @@ class CcFragment extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const isPropsChanged = this.__$$compareProps ? shallowDiffers(getOutProps(nextProps), getOutProps(this.props)) : false;
+    const props = getOutProps(nextProps);
+    const isPropsChanged = this.__$$compareProps ? shallowDiffers(props, getOutProps(this.props)) : false;
+    // 检测到register已发送变化，需要重新走一把卸载和初始化流程
+    if (isPropsChanged && isRegChanged(props.register, this.props.register)) {
+      beforeUnmount(this);
+      initCcFrag(this, props);
+      didMount(this);
+      this.ctx.reactForceUpdate();
+      return false;
+    }
     return this.state !== nextState || isPropsChanged;
   }
 

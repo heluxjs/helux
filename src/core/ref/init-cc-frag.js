@@ -7,8 +7,7 @@ import * as util from '../../support/util';
 
 const { getRegisterOptions, evalState } = util;
 
-export default function (ref) {
-  const props = ref.props;
+export default function (ref, props) {
   const registerOptions = getRegisterOptions(props.register);
   const {
     module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,

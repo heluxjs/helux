@@ -3082,7 +3082,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.1.11',
+      version: '2.1.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -8574,8 +8574,7 @@
 
   var getRegisterOptions$1 = getRegisterOptions,
       evalState$4 = evalState;
-  function initCcFrag (ref) {
-    var props = ref.props;
+  function initCcFrag (ref, props) {
     var registerOptions = getRegisterOptions$1(props.register);
     var module = registerOptions.module,
         renderKeyClasses = registerOptions.renderKeyClasses,
@@ -8637,6 +8636,29 @@
     beforeMount(ref, setup, bindCtxToMethod);
   }
 
+  var connectToStr = function connectToStr(connect) {
+    if (!connect) return '';else if (Array.isArray(connect)) return connect.join(',');else if (typeof connect === 'object') return JSON.stringify(connect);else return connect;
+  };
+
+  function isRegChanged(firstRegOpt, curRegOpt) {
+    if (typeof firstRegOpt === 'string' && firstRegOpt !== curRegOpt) {
+      return true;
+    }
+
+    if (firstRegOpt.module !== curRegOpt.module) {
+      return true;
+    }
+
+    if (connectToStr(firstRegOpt.connect) !== connectToStr(curRegOpt.connect)) {
+      return true;
+    } // if (firstRegOpt.tag !== curRegOpt.tag) {
+    //   return true;
+    // }
+
+
+    return false;
+  }
+
   var shallowDiffers$2 = shallowDiffers;
   var nullSpan = React.createElement('span', {
     style: {
@@ -8653,7 +8675,7 @@
       var _this;
 
       _this = _React$Component.call(this, props, context) || this;
-      initCcFrag(_assertThisInitialized(_this));
+      initCcFrag(_assertThisInitialized(_this), props);
       return _this;
     }
 
@@ -8664,7 +8686,17 @@
     };
 
     _proto.shouldComponentUpdate = function shouldComponentUpdate(nextProps, nextState) {
-      var isPropsChanged = this.__$$compareProps ? shallowDiffers$2(getOutProps(nextProps), getOutProps(this.props)) : false;
+      var props = getOutProps(nextProps);
+      var isPropsChanged = this.__$$compareProps ? shallowDiffers$2(props, getOutProps(this.props)) : false; // 检测到register已发送变化，需要重新走一把卸载和初始化流程
+
+      if (isPropsChanged && isRegChanged(props.register, this.props.register)) {
+        beforeUnmount(this);
+        initCcFrag(this, props);
+        didMount(this);
+        this.ctx.reactForceUpdate();
+        return false;
+      }
+
       return this.state !== nextState || isPropsChanged;
     } // componentDidUpdate(prevProps, prevState) {
     ;
@@ -8791,25 +8823,6 @@
     return registerDumb({
       connect: connectSpec
     }, ccClassKey);
-  }
-
-  var connectToStr = function connectToStr(connect) {
-    if (!connect) return '';else if (Array.isArray(connect)) return connect.join(',');else if (typeof connect === 'object') return JSON.stringify(connect);else return connect;
-  };
-
-  function isRegChanged(firstRegOpt, curRegOpt) {
-    if (firstRegOpt.module !== curRegOpt.module) {
-      return true;
-    }
-
-    if (connectToStr(firstRegOpt.connect) !== connectToStr(curRegOpt.connect)) {
-      return true;
-    } // if (firstRegOpt.tag !== curRegOpt.tag) {
-    //   return true;
-    // }
-
-
-    return false;
   }
 
   /**

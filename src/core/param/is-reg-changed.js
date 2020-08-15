@@ -7,7 +7,11 @@ const connectToStr = (connect) => {
   else return connect;
 }
 
-export function isRegChanged(firstRegOpt, curRegOpt) {
+export default function isRegChanged(firstRegOpt, curRegOpt) {
+  if (typeof firstRegOpt === 'string' && firstRegOpt !== curRegOpt) {
+    return true;
+  }
+
   if (firstRegOpt.module !== curRegOpt.module) {
     return true;
   }
