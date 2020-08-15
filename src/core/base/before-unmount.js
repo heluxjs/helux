@@ -2,7 +2,7 @@ import { okeys, getVal } from '../../support/util';
 import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
-import module_InsCount_ from '../../cc-context/modue-ins-count-map';
+import module_insCount_ from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
 import { makeModuleDispatcher } from '../state/handler-factory';
 
@@ -50,13 +50,13 @@ export default function (ref) {
 
   unsetRef(ccUniqueKey);
 
-  module_InsCount_[module] -= 1;
+  module_insCount_[module] -= 1;
   if (_willUnmountOnce[module] === true) {
     return;
   }
 
-  if (module_InsCount_[module] === 0 && _lifecycle[module].lastInsWillUnmount) {
-    const once = _lifecycle[module].lastInsWillUnmount(makeModuleDispatcher(module), __$$mstate);
+  if (module_insCount_[module] === 0 && _lifecycle[module].willUnmount) {
+    const once = _lifecycle[module].willUnmount(makeModuleDispatcher(module), __$$mstate);
     _willUnmountOnce[module] = getVal(once, true);
   }
 }

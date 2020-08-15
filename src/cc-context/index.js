@@ -4,10 +4,10 @@ import watch from './watch-map';
 import runtimeVar from './runtime-var';
 import runtimeHandler from './runtime-handler';
 import { waKey_uKeyMap_, waKey_staticUKeyMap_ } from './wakey-ukey-map';
-import module_InsCount_ from './modue-ins-count-map';
+import module_insCount_ from './modue-ins-count-map';
 import lifecycle from './lifecycle';
 import refs from './refs';
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE } from '../support/constant';
+import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, FN_CU, FN_WATCH } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
@@ -35,12 +35,12 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
   const { hasDelta: hasDeltaInCu } = findDepFnsToExecute(
     callerRef, module, refModule, moduleState, curDepComputedFns,
     deltaCommittedState, newState, deltaCommittedState, callInfo, false,
-    'computed', CATE_MODULE, moduleComputedValue,
+    FN_CU, CATE_MODULE, moduleComputedValue,
   );
   const { hasDelta: hasDeltaInWa } = findDepFnsToExecute(
     callerRef, module, refModule, moduleState, curDepWatchFns,
     deltaCommittedState, newState, deltaCommittedState, callInfo, false,
-    'watch', CATE_MODULE, moduleComputedValue,
+    FN_WATCH, CATE_MODULE, moduleComputedValue,
   );
 
   if (!noSave) {
@@ -64,6 +64,7 @@ const saveSharedState = (module, toSave, needExtract = false) => {
   const prevModuleState = getPrevState(module);
   incModuleVer(module);
 
+  // 调用 extractChangedState 时会更新 moduleState
   return extractChangedState(moduleState, target, {
     prevStateContainer: prevModuleState,
     incStateVer: key => incStateVer(module, key),
@@ -83,12 +84,16 @@ const getModuleVer = function (module) {
   return _moduleVer[module];
 }
 
-const incModuleVer = function (module) {
+const incModuleVer = function (module, val = 1) {
   try {
-    _moduleVer[module]++;
+    _moduleVer[module] += val
   } catch (err) {
-    _moduleVer[module] = 1;
+    _moduleVer[module] = val;
   }
+}
+
+function replaceMV(mv){
+  _moduleVer = mv;
 }
 
 const getStateVer = function (module) {
@@ -115,7 +120,7 @@ const _prevState = getRootState();
 const _stateVer = {};
 // 优化before-render里无意义的merge mstate导致冗余的set（太多的set会导致 Maximum call stack size exceeded）
 // https://codesandbox.io/s/happy-bird-rc1t7?file=/src/App.js concent below 2.4.18会触发
-const _moduleVer = {};
+let _moduleVer = {};
 
 const ccContext = {
   getDispatcher,
@@ -178,6 +183,8 @@ const ccContext = {
     },
     getStateVer,
     getModuleVer,
+    incModuleVer,
+    replaceMV,
     setState: function (module, partialSharedState, options) {
       return setStateByModule(module, partialSharedState, options);
     },
@@ -227,13 +234,13 @@ const ccContext = {
   handlerKey_handler_: {},
   waKey_uKeyMap_,
   waKey_staticUKeyMap_,
-  module_InsCount_,
+  module_insCount_,
   refs,
   info: {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.0.36',
+    version: '2.1.11',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glaxy',

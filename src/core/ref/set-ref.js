@@ -4,7 +4,7 @@ import * as util from '../../support/util'
 
 const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
 const { runtimeVar, ccUKey_ref_ } = ccContext;
-const ccUKey_insCount = {};
+let ccUKey_insCount = {};
 
 
 function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
@@ -22,18 +22,20 @@ function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
 }
 
 export function incCcKeyInsCount(ccUniqueKey) {
-  if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 1;
-  else ccUKey_insCount[ccUniqueKey] += 1;
-}
-export function decCcKeyInsCount(ccUniqueKey) {
-  if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 0;
-  else ccUKey_insCount[ccUniqueKey] -= 1;
-}
-export function getCcKeyInsCount(ccUniqueKey) {
-  if (ccUKey_insCount[ccUniqueKey] === undefined) return 0;
-  else return ccUKey_insCount[ccUniqueKey];
+  util.safeAdd(ccUKey_insCount, ccUniqueKey, 1);
 }
 
+export function decCcKeyInsCount(ccUniqueKey) {
+  util.safeMinus(ccUKey_insCount, ccUniqueKey, 1);
+}
+
+export function getCcKeyInsCount(ccUniqueKey) {
+  return ccUKey_insCount[ccUniqueKey] || 0;
+}
+
+export function clearCount(){
+  ccUKey_insCount = {};
+}
 
 export default function (ref) {
   const { ccClassKey, ccKey, ccUniqueKey } = ref.ctx;

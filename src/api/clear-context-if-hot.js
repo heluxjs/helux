@@ -1,7 +1,8 @@
 import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
-import { MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT, CC_OB } from '../support/constant';
+import { clearCount } from '../core/ref/set-ref';
+import { MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT, CC_OB, CC_CLASS } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
 import { clearCuRefer } from '../core/base/find-dep-fns-to-execute';
 import initModuleWatch from '../core/watch/init-module-watch';
@@ -10,12 +11,24 @@ let justCalledByStartUp = false;
 
 function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearCuRefer();
+  clearCount();
   clearObject(ccContext.event_handlers_);
   clearObject(ccContext.ccUKey_handlerKeys_);
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
   clearObject(ccContext.handlerKey_handler_);
   clearObject(ccUKey_ref_, otherExcludeKeys);
-
+  // 此处故意设置和原来的版本相差几位的数字，
+  // 防止resetClassInsUI调用时类组件实例的版本和模块是相同的
+  // 导致ui更新未同步到store最新数据
+  const { getModuleVer, incModuleVer, replaceMV } = ccContext.store;
+  const moduleVer = getModuleVer();
+  okeys(moduleVer).forEach(m => {
+    const curVer = moduleVer[m];
+    incModuleVer(m, (curVer > 5 ? 1 : 6));
+  })
+  // 用于还原_moduleVer，在resetClassInsUI回调里_moduleVer又变为了 所有的模块版本值为1的奇怪现象.
+  // 全局有没有找到重置_moduleVer的地方.
+  const lockedMV = JSON.parse(JSON.stringify(moduleVer));
 
   if (recomputed) {
     const { computed, watch } = ccContext;
@@ -36,29 +49,43 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
       }
     });
   }
+
+  // resetClassInsUI
+  return () => {
+    // 安排在下一个循环自我刷新
+    setTimeout(() => {
+      replaceMV(lockedMV);
+      otherExcludeKeys.forEach(key => {
+        const ref = ccUKey_ref_[key];
+        ref && ref.ctx.reactForceUpdate();
+      });
+    }, 0);
+  }
 }
 
 function _pickNonCustomizeIns() {
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
   const ccFragKeys = [];
   const ccNonCusKeys = [];
-  okeys(ccUKey_ref_).forEach(ccKey => {
-    const ref = ccUKey_ref_[ccKey];
+  const ccClassInsKeys = [];
+  okeys(ccUKey_ref_).forEach(refKey => {
+    const ref = ccUKey_ref_[refKey];
     if (ref
       && ref.__$$isMounted === true // 已挂载
       && ref.__$$isUnmounted === false // 未卸载
     ) {
-      const insType = ref.ctx.insType;
+      const { insType, type } = ref.ctx;
       // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
       if (insType === CC_FRAGMENT) {
-        ccFragKeys.push(ccKey);
-        ccNonCusKeys.push(ccKey);
+        ccFragKeys.push(refKey);
+        ccNonCusKeys.push(refKey);
       } else if (insType === CC_OB) {
-        ccNonCusKeys.push(ccKey)
+        ccNonCusKeys.push(refKey)
       }
+      if (type === CC_CLASS) ccClassInsKeys.push(refKey);
     }
   })
-  return { ccFragKeys, ccNonCusKeys };
+  return { ccFragKeys, ccNonCusKeys, ccClassInsKeys };
 }
 
 function _clearAll() {
@@ -74,28 +101,41 @@ function _clearAll() {
   clearObject(ccContext.computed._computedValue, toExcludedModules);
   clearObject(ccContext.watch._watchDep, toExcludedModules);
   clearObject(ccContext.middlewares);
-  clearObject(ccContext.waKey_uKeyMap_);
+
+  // class组件实例的依赖要保留，因为它的ref不再被清除（不像function组件那样能在热重载期间能够再次触发unmount和mount）
+  const waKey_uKeyMap_ = ccContext.waKey_uKeyMap_;
+  okeys(waKey_uKeyMap_).forEach(waKey => {
+    const uKeyMap = waKey_uKeyMap_[waKey];
+    const newUKeyMap = {};
+    okeys(uKeyMap).forEach(uKey => {
+      if (uKey.startsWith(CC_CLASS)) {
+        newUKeyMap[uKey] = uKeyMap[uKey];
+      }
+    });
+    waKey_uKeyMap_[waKey] = newUKeyMap;
+  });
+
   clearObject(ccContext.lifecycle._mountedOnce);
   clearObject(ccContext.lifecycle._willUnmountOnce);
-  clearObject(ccContext.module_InsCount_, [], 0);
+  clearObject(ccContext.module_insCount_, [], 0);
   clearCachedData();
-  const { ccFragKeys, ccNonCusKeys } = _pickNonCustomizeIns();
-  _clearInsAssociation(false, ccNonCusKeys);
-  return ccFragKeys;
+  const { ccClassInsKeys } = _pickNonCustomizeIns();
+  return _clearInsAssociation(false, ccClassInsKeys);
 }
 
 export default function (clearAll = false) {
   ccContext.info.latestStartupTime = Date.now();
   // 热加载模式下，这些CcFragIns随后需要被恢复
-  let ccFragKeys = [];
+  // let ccFragKeys = [];
+  const noop = () => { };
 
   if (ccContext.isStartup) {
     if (ccContext.isHotReloadMode()) {
       if (clearAll) {
         console.warn(`attention: make sure [[clearContextIfHot]] been called before app rendered!`);
         justCalledByStartUp = true;
-        ccFragKeys = _clearAll(clearAll);
-        return ccFragKeys;
+        return _clearAll(clearAll);
+        // return ccFragKeys;
       } else {
         // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
         // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命令单独放置在一个脚本里，
@@ -105,21 +145,22 @@ export default function (clearAll = false) {
         // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
         if (justCalledByStartUp) {
           justCalledByStartUp = false;
-          return ccFragKeys;
+          return noop;
         }
   
         const ret = _pickNonCustomizeIns();
         // !!!重计算各个模块的computed结果
-        _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys);
-        return ret.ccFragKeys;
+        return _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys);
+        // return ret.ccFragKeys;
+        // return resetClassInsUI;
       }
     } else {
       console.warn(`clear failed because of not running under hot reload mode!`);
-      return ccFragKeys;
+      return noop;
     }
   }else{
     //还没有启动过，泽只是标记justCalledByStartUp为true
     justCalledByStartUp = true;
-    return ccFragKeys;
+    return noop;
   }
 }

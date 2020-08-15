@@ -3,7 +3,7 @@ import setRef from '../ref/set-ref';
 import afterRender from '../ref/after-render';
 import { okeys, safeAdd } from '../../support/util';
 import { mapStaticInsM } from '../../cc-context/wakey-ukey-map';
-import module_InsCount_ from '../../cc-context/modue-ins-count-map';
+import module_insCount_ from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
 import ccContext from '../../cc-context';
 import { makeModuleDispatcher } from '../state/handler-factory';
@@ -34,17 +34,16 @@ export default function (ref) {
 
   triggerSetupEffect(ref, true);
 
-  safeAdd(module_InsCount_, module, 1);
-  if (_mountedOnce[module] === true) {
-    return;
+  safeAdd(module_insCount_, module, 1);
+  if (_lifecycle[module].mounted) {
+    // mounted可执行多次
+    if (_mountedOnce[module] !== true && module_insCount_[module] == 1) {
+      const once = _lifecycle[module].mounted(makeModuleDispatcher(module), __$$mstate);
+      _mountedOnce[module] = getVal(once, true);
+    }
   }
 
-  if (module_InsCount_[module] == 1 && _lifecycle[module].firstInsMounted) {
-    const once = _lifecycle[module].firstInsMounted(makeModuleDispatcher(module), __$$mstate);
-    _mountedOnce[module] = getVal(once, true);
-  }
-
-  // hook组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
+  // 组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
   if (__$$prevModuleVer !== getModuleVer(module)) {
     ref.ctx.reactForceUpdate();
   }

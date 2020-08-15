@@ -6,7 +6,7 @@ import catchCcError from './catch-cc-error';
 const getState = ccContext.store.getState;
 
 export default function (moduleName, lifecycle = {}) {
-  const { initState, initStateDone, moduleLoaded } = lifecycle;// 对接原来的 moduleConf.init initPost
+  const { initState, initStateDone, loaded } = lifecycle;// 对接原来的 moduleConf.init initPost
   ccContext.lifecycle._lifecycle[moduleName] = lifecycle;
   const moduleState = getState(moduleName);
 
@@ -16,7 +16,7 @@ export default function (moduleName, lifecycle = {}) {
     }).catch(catchCcError);
   }
 
-  if (moduleLoaded) {
-    moduleLoaded(makeModuleDispatcher(moduleName), moduleState);
+  if (loaded) {
+    loaded(makeModuleDispatcher(moduleName), moduleState);
   }
 }

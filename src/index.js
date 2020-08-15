@@ -135,7 +135,7 @@ function avoidMultiCcInSameScope() {
       //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
       if (existedVersion !== newVersion) {
         throw new Error(
-          `concent ver conflict! now[${existedVersion}]-new[${newVersion}], refresh browser or reinstall some concent-eco-lib`
+          `concent ver conflict! cur[${existedVersion}]-new[${newVersion}], refresh browser or reinstall some concent-eco-lib`
         );
       }
     }

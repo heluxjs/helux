@@ -193,6 +193,14 @@ export function safeAdd(object, key, toAdd) {
   }
 }
 
+export function safeMinus(object, key, toMinus) {
+  try {
+    object[key] -= toMinus;
+  } catch (err) {
+    object[key] = 0;
+  }
+}
+
 export function safeGet(object, key, defaultVal = {}) {
   let childrenObject = object[key];
   if (!childrenObject) {

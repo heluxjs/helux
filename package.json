@@ -1,6 +1,6 @@
 {
   "_from": "concent-test",
-  "_id": "concent-test@2.0.36",
+  "_id": "concent-test@2.1.11",
   "_inBundle": false,
   "_integrity": "sha512-YuakaB+lTidx3v4cMrObLoKISm+26UVRqtD6qXscHQ3gWR6SQTVBnKxv+JdiJ+06GMmgIY6e8816TqLkcSw1Pg==",
   "_location": "/concent",
@@ -124,5 +124,5 @@
     "test": "jest"
   },
   "unpkg": "dist/concent.js",
-  "version": "2.0.36"
+  "version": "2.1.11"
 }

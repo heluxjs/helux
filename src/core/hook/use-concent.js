@@ -152,8 +152,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     // mock componentWillUnmount
     return () => {
       const toUnmountRef = ccUKey_ref_[getHookCtxCcUKey(hookCtx)];
+      hookCtx.prevCcUKey = null;
       if (toUnmountRef) {
-        hookCtx.prevCcUKey = null;
         beforeUnmount(toUnmountRef);
       }
       delete cursor_hookCtx_[cursor];
@@ -163,7 +163,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   //after every render
   effectHandler(() => {
     replaceSetter(refCtx, hookSetter);
-    // 一定要检查ccUKey_ref_存在了才走didUpdate，热加载模式下会触发卸载
+    // 热加载模式下会触发卸载，这里需要核实ccUKey_ref_
     if (!hookRef.isFirstRendered && ccUKey_ref_[getHookCtxCcUKey(hookCtx)]) {// mock componentDidUpdate
       didUpdate(hookRef);
     } else {// mock componentDidMount

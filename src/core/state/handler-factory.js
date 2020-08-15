@@ -530,7 +530,7 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
 
 export const makeRefForceUpdate = (ref) => (cb) => {
   const ctx = ref.ctx;
-  const newState = Object.assign({}, ctx.unProxyState);
+  const newState = Object.assign({}, ctx.unProxyState, ctx.__$$mstate);
   const cbNewState = () => cb && cb(newState);
 
   if (ctx.type === CC_HOOK) {

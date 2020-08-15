@@ -842,8 +842,15 @@ type ModuleConfig = {
     // [retKey: string]: typeof watchFn | WatchFnDesc;
     [retKey: string]: WatchFn | WatchFnDesc;
   };
-  init?: typeof init;
-  initPost?: (dispatch: IDispatch, moduleState: any) => any;
+  lifecycle?: {
+    initState?: typeof init; // legency for ModuleConfig.init
+    initStateDone?: (dispatch: IDispatch, moduleState: any) => any; // legency for ModuleConfig.initPost
+    // insteand of initState and initStateDone, using bellow methods is better way
+    // because you can put the logic to reducer
+    loaded?: (dispatch: IDispatch, moduleState: any) => void;
+    mounted?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
+    willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
+  }
 }
 
 interface StoreConfig {

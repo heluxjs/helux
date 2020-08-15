@@ -46,5 +46,5 @@ export default function (module, mState, moduleMustNotExisted = true) {
     });
   }
 
-  ccContext.module_InsCount_[module] = 0;
+  ccContext.module_insCount_[module] = 0;
 }

@@ -241,7 +241,7 @@
   }
 
   var _MODULE_DEFAULT$MODUL;
-  var module_InsCount_ = (_MODULE_DEFAULT$MODUL = {}, _MODULE_DEFAULT$MODUL[MODULE_DEFAULT] = 0, _MODULE_DEFAULT$MODUL[MODULE_GLOBAL] = 0, _MODULE_DEFAULT$MODUL);
+  var module_insCount_ = (_MODULE_DEFAULT$MODUL = {}, _MODULE_DEFAULT$MODUL[MODULE_DEFAULT] = 0, _MODULE_DEFAULT$MODUL[MODULE_GLOBAL] = 0, _MODULE_DEFAULT$MODUL);
 
   var _lifecycle;
   var lifecycle = {
@@ -463,6 +463,13 @@
       object[key] += toAdd;
     } catch (err) {
       object[key] = toAdd;
+    }
+  }
+  function safeMinus(object, key, toMinus) {
+    try {
+      object[key] -= toMinus;
+    } catch (err) {
+      object[key] = 0;
     }
   }
   function safeGet(object, key, defaultVal) {
@@ -2861,10 +2868,10 @@
     var newState = Object.assign({}, moduleState, committedState);
     var deltaCommittedState = Object.assign({}, committedState);
 
-    var _findDepFnsToExecute = executeDepFns(callerRef, module, refModule, moduleState, curDepComputedFns, deltaCommittedState, newState, deltaCommittedState, callInfo, false, 'computed', CATE_MODULE, moduleComputedValue),
+    var _findDepFnsToExecute = executeDepFns(callerRef, module, refModule, moduleState, curDepComputedFns, deltaCommittedState, newState, deltaCommittedState, callInfo, false, FN_CU, CATE_MODULE, moduleComputedValue),
         hasDeltaInCu = _findDepFnsToExecute.hasDelta;
 
-    var _findDepFnsToExecute2 = executeDepFns(callerRef, module, refModule, moduleState, curDepWatchFns, deltaCommittedState, newState, deltaCommittedState, callInfo, false, 'watch', CATE_MODULE, moduleComputedValue),
+    var _findDepFnsToExecute2 = executeDepFns(callerRef, module, refModule, moduleState, curDepWatchFns, deltaCommittedState, newState, deltaCommittedState, callInfo, false, FN_WATCH, CATE_MODULE, moduleComputedValue),
         hasDeltaInWa = _findDepFnsToExecute2.hasDelta;
 
     if (!noSave) {
@@ -2895,7 +2902,8 @@
 
     var prevModuleState = _getPrevState(module);
 
-    incModuleVer(module);
+    incModuleVer(module); // 调用 extractChangedState 时会更新 moduleState
+
     return extractChangedState$1(moduleState, target, {
       prevStateContainer: prevModuleState,
       incStateVer: function incStateVer(key) {
@@ -2917,13 +2925,21 @@
     return _moduleVer[module];
   };
 
-  var incModuleVer = function incModuleVer(module) {
+  var incModuleVer = function incModuleVer(module, val) {
+    if (val === void 0) {
+      val = 1;
+    }
+
     try {
-      _moduleVer[module]++;
+      _moduleVer[module] += val;
     } catch (err) {
-      _moduleVer[module] = 1;
+      _moduleVer[module] = val;
     }
   };
+
+  function replaceMV(mv) {
+    _moduleVer = mv;
+  }
 
   var getStateVer = function getStateVer(module) {
     if (!module) return _stateVer;
@@ -3012,6 +3028,8 @@
       },
       getStateVer: getStateVer,
       getModuleVer: getModuleVer,
+      incModuleVer: incModuleVer,
+      replaceMV: replaceMV,
       setState: function setState(module, partialSharedState, options) {
         return setStateByModule(module, partialSharedState, options);
       },
@@ -3058,13 +3076,13 @@
     handlerKey_handler_: {},
     waKey_uKeyMap_: waKey_uKeyMap_,
     waKey_staticUKeyMap_: waKey_staticUKeyMap_,
-    module_InsCount_: module_InsCount_,
+    module_insCount_: module_insCount_,
     refs: refs,
     info: {
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.0.36',
+      version: '2.1.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -3381,7 +3399,7 @@
       });
     }
 
-    ccContext.module_InsCount_[module] = 0;
+    ccContext.module_insCount_[module] = 0;
   }
 
   /** @typedef {import('../../types').ICtxBase} ICtxBase */
@@ -5482,7 +5500,7 @@
   var makeRefForceUpdate = function makeRefForceUpdate(ref) {
     return function (cb) {
       var ctx = ref.ctx;
-      var newState = Object.assign({}, ctx.unProxyState);
+      var newState = Object.assign({}, ctx.unProxyState, ctx.__$$mstate);
 
       var cbNewState = function cbNewState() {
         return cb && cb(newState);
@@ -5507,7 +5525,7 @@
     var _lifecycle = lifecycle,
         initState = _lifecycle.initState,
         initStateDone = _lifecycle.initStateDone,
-        moduleLoaded = _lifecycle.moduleLoaded; // 对接原来的 moduleConf.init initPost
+        loaded = _lifecycle.loaded; // 对接原来的 moduleConf.init initPost
 
     ccContext.lifecycle._lifecycle[moduleName] = lifecycle;
     var moduleState = getState$1(moduleName);
@@ -5520,8 +5538,8 @@
       })["catch"](catchCcError);
     }
 
-    if (moduleLoaded) {
-      moduleLoaded(makeModuleDispatcher(moduleName), moduleState);
+    if (loaded) {
+      loaded(makeModuleDispatcher(moduleName), moduleState);
     }
   }
 
@@ -7268,6 +7286,82 @@
     }
   }
 
+  var justWarning$6 = justWarning,
+      me$3 = makeError,
+      vbi$4 = verboseInfo,
+      ss = styleStr,
+      cl = color;
+  var runtimeVar$2 = ccContext.runtimeVar,
+      ccUKey_ref_$2 = ccContext.ccUKey_ref_;
+  var ccUKey_insCount = {};
+
+  function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
+    var setRef = function setRef() {
+      ccUKey_ref_$2[ccUniqueKey] = ref;
+    };
+
+    if (ccContext.isHotReloadMode()) incCcKeyInsCount(ccUniqueKey);
+
+    if (delayMs) {
+      setTimeout(setRef, delayMs);
+    } else {
+      setRef();
+    }
+  }
+
+  function incCcKeyInsCount(ccUniqueKey) {
+    safeAdd(ccUKey_insCount, ccUniqueKey, 1);
+  }
+  function decCcKeyInsCount(ccUniqueKey) {
+    safeMinus(ccUKey_insCount, ccUniqueKey, 1);
+  }
+  function getCcKeyInsCount(ccUniqueKey) {
+    return ccUKey_insCount[ccUniqueKey] || 0;
+  }
+  function clearCount() {
+    ccUKey_insCount = {};
+  }
+  function setRef (ref) {
+    var _ref$ctx = ref.ctx,
+        ccClassKey = _ref$ctx.ccClassKey,
+        ccKey = _ref$ctx.ccKey,
+        ccUniqueKey = _ref$ctx.ccUniqueKey;
+
+    if (runtimeVar$2.isDebug) {
+      console.log(ss("register ccKey " + ccUniqueKey + " to CC_CONTEXT"), cl());
+    }
+
+    var isHot = ccContext.isHotReloadMode();
+
+    if (ccUKey_ref_$2[ccUniqueKey]) {
+      var dupErr = function dupErr() {
+        throw me$3(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$4("ccClass:" + ccClassKey + ",ccKey:" + ccKey));
+      };
+
+      if (isHot) {
+        // get existed ins count
+        var insCount = getCcKeyInsCount(ccUniqueKey);
+
+        if (insCount > 1) {
+          // now cc can make sure the ccKey duplicate
+          dupErr();
+        } // just warning
+
+
+        justWarning$6("\n        found ccKey[" + ccKey + "] duplicated in hot reload mode, please make sure your ccKey is unique manually,\n        " + vbi$4("ccClassKey:" + ccClassKey + " ccKey:" + ccKey + " ccUniqueKey:" + ccUniqueKey) + "\n      "); // in webpack hot reload mode, cc works not very well,
+        // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now in unmount func, 
+        // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
+        // so cc set ref later
+
+        setCcInstanceRef(ccUniqueKey, ref, 600);
+      } else {
+        dupErr();
+      }
+    } else {
+      setCcInstanceRef(ccUniqueKey, ref);
+    }
+  }
+
   var justCalledByStartUp = false;
 
   function _clearInsAssociation(recomputed, otherExcludeKeys) {
@@ -7276,11 +7370,27 @@
     }
 
     clearCuRefer();
+    clearCount();
     clearObject(ccContext.event_handlers_);
     clearObject(ccContext.ccUKey_handlerKeys_);
     var ccUKey_ref_ = ccContext.ccUKey_ref_;
     clearObject(ccContext.handlerKey_handler_);
-    clearObject(ccUKey_ref_, otherExcludeKeys);
+    clearObject(ccUKey_ref_, otherExcludeKeys); // 此处故意设置和原来的版本相差几位的数字，
+    // 防止resetClassInsUI调用时类组件实例的版本和模块是相同的
+    // 导致ui更新未同步到store最新数据
+
+    var _ccContext$store = ccContext.store,
+        getModuleVer = _ccContext$store.getModuleVer,
+        incModuleVer = _ccContext$store.incModuleVer,
+        replaceMV = _ccContext$store.replaceMV;
+    var moduleVer = getModuleVer();
+    okeys(moduleVer).forEach(function (m) {
+      var curVer = moduleVer[m];
+      incModuleVer(m, curVer > 5 ? 1 : 6);
+    }); // 用于还原_moduleVer，在resetClassInsUI回调里_moduleVer又变为了 所有的模块版本值为1的奇怪现象.
+    // 全局有没有找到重置_moduleVer的地方.
+
+    var lockedMV = JSON.parse(JSON.stringify(moduleVer));
 
     if (recomputed) {
       var computed = ccContext.computed,
@@ -7303,32 +7413,50 @@
           initModuleWatch(m, watch._watchRaw[m]);
         }
       });
-    }
+    } // resetClassInsUI
+
+
+    return function () {
+      // 安排在下一个循环自我刷新
+      setTimeout(function () {
+        replaceMV(lockedMV);
+        otherExcludeKeys.forEach(function (key) {
+          var ref = ccUKey_ref_[key];
+          ref && ref.ctx.reactForceUpdate();
+        });
+      }, 0);
+    };
   }
 
   function _pickNonCustomizeIns() {
     var ccUKey_ref_ = ccContext.ccUKey_ref_;
     var ccFragKeys = [];
     var ccNonCusKeys = [];
-    okeys(ccUKey_ref_).forEach(function (ccKey) {
-      var ref = ccUKey_ref_[ccKey];
+    var ccClassInsKeys = [];
+    okeys(ccUKey_ref_).forEach(function (refKey) {
+      var ref = ccUKey_ref_[refKey];
 
       if (ref && ref.__$$isMounted === true // 已挂载
       && ref.__$$isUnmounted === false // 未卸载
       ) {
-          var insType = ref.ctx.insType; // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
+          var _ref$ctx = ref.ctx,
+              insType = _ref$ctx.insType,
+              type = _ref$ctx.type; // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
 
           if (insType === CC_FRAGMENT) {
-            ccFragKeys.push(ccKey);
-            ccNonCusKeys.push(ccKey);
+            ccFragKeys.push(refKey);
+            ccNonCusKeys.push(refKey);
           } else if (insType === CC_OB) {
-            ccNonCusKeys.push(ccKey);
+            ccNonCusKeys.push(refKey);
           }
+
+          if (type === CC_CLASS) ccClassInsKeys.push(refKey);
         }
     });
     return {
       ccFragKeys: ccFragKeys,
-      ccNonCusKeys: ccNonCusKeys
+      ccNonCusKeys: ccNonCusKeys,
+      ccClassInsKeys: ccClassInsKeys
     };
   }
 
@@ -7342,20 +7470,28 @@
     clearObject(ccContext.computed._computedDep, toExcludedModules);
     clearObject(ccContext.computed._computedValue, toExcludedModules);
     clearObject(ccContext.watch._watchDep, toExcludedModules);
-    clearObject(ccContext.middlewares);
-    clearObject(ccContext.waKey_uKeyMap_);
+    clearObject(ccContext.middlewares); // class组件实例的依赖要保留，因为它的ref不再被清除（不像function组件那样能在热重载期间能够再次触发unmount和mount）
+
+    var waKey_uKeyMap_ = ccContext.waKey_uKeyMap_;
+    okeys(waKey_uKeyMap_).forEach(function (waKey) {
+      var uKeyMap = waKey_uKeyMap_[waKey];
+      var newUKeyMap = {};
+      okeys(uKeyMap).forEach(function (uKey) {
+        if (uKey.startsWith(CC_CLASS)) {
+          newUKeyMap[uKey] = uKeyMap[uKey];
+        }
+      });
+      waKey_uKeyMap_[waKey] = newUKeyMap;
+    });
     clearObject(ccContext.lifecycle._mountedOnce);
     clearObject(ccContext.lifecycle._willUnmountOnce);
-    clearObject(ccContext.module_InsCount_, [], 0);
+    clearObject(ccContext.module_insCount_, [], 0);
     clearCachedData();
 
     var _pickNonCustomizeIns2 = _pickNonCustomizeIns(),
-        ccFragKeys = _pickNonCustomizeIns2.ccFragKeys,
-        ccNonCusKeys = _pickNonCustomizeIns2.ccNonCusKeys;
+        ccClassInsKeys = _pickNonCustomizeIns2.ccClassInsKeys;
 
-    _clearInsAssociation(false, ccNonCusKeys);
-
-    return ccFragKeys;
+    return _clearInsAssociation(false, ccClassInsKeys);
   }
 
   function clearContextIfHot (clearAll) {
@@ -7364,16 +7500,16 @@
     }
 
     ccContext.info.latestStartupTime = Date.now(); // 热加载模式下，这些CcFragIns随后需要被恢复
+    // let ccFragKeys = [];
 
-    var ccFragKeys = [];
+    var noop$$1 = function noop$$1() {};
 
     if (ccContext.isStartup) {
       if (ccContext.isHotReloadMode()) {
         if (clearAll) {
           console.warn("attention: make sure [[clearContextIfHot]] been called before app rendered!");
           justCalledByStartUp = true;
-          ccFragKeys = _clearAll(clearAll);
-          return ccFragKeys;
+          return _clearAll(clearAll); // return ccFragKeys;
         } else {
           // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
           // 因为在stackblitz的 hot reload 模式下，当用户将启动cc的命令单独放置在一个脚本里，
@@ -7383,31 +7519,381 @@
           // 因为之前已把justCalledByStartUp置为false，则有机会清理实例相关上下文了
           if (justCalledByStartUp) {
             justCalledByStartUp = false;
-            return ccFragKeys;
+            return noop$$1;
           }
 
           var ret = _pickNonCustomizeIns(); // !!!重计算各个模块的computed结果
 
 
-          _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys);
-
-          return ret.ccFragKeys;
+          return _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys); // return ret.ccFragKeys;
+          // return resetClassInsUI;
         }
       } else {
         console.warn("clear failed because of not running under hot reload mode!");
-        return ccFragKeys;
+        return noop$$1;
       }
     } else {
       //还没有启动过，泽只是标记justCalledByStartUp为true
       justCalledByStartUp = true;
-      return ccFragKeys;
+      return noop$$1;
     }
+  }
+
+  // import beforeUnmount from '../core/base/before-unmount';
+  // import initCcFrag from '../core/ref/init-cc-frag';
+
+  var justTip$1 = justTip,
+      bindToWindow$1 = bindToWindow,
+      getErrStackKeywordLoc$1 = getErrStackKeywordLoc;
+  var cachedLocation = '';
+
+  function checkStartup(err) {
+    var info = ccContext.info;
+    var curLocation = getErrStackKeywordLoc$1(err, 'startup', 2); //向下2句找触发run的文件
+
+    if (!curLocation) curLocation = getErrStackKeywordLoc$1(err, 'runConcent', 0);
+
+    var letRunOk = function letRunOk() {
+      ccContext.isHot = true;
+      return clearContextIfHot(true);
+    };
+
+    var now = Date.now();
+
+    var resetClassInsUI = function resetClassInsUI() {},
+        canStartup = true;
+
+    if (!cachedLocation) {
+      cachedLocation = curLocation;
+      info.firstStartupTime = now;
+      info.latestStartupTime = now;
+    } else if (cachedLocation !== curLocation) {
+      var tip = "invalid run api call!(it can only be called once, changing 'call run' line location in HMR will cause this error also, \n    try refresh browser to reload your app to avoid this tip)";
+
+      if (now - info.latestStartupTime < 1000) {
+        throw new Error(tip);
+      } else {
+        if (isOnlineEditor()) {
+          resetClassInsUI = letRunOk();
+          cachedLocation = curLocation;
+        } else {
+          strictWarning(tip);
+          canStartup = false;
+        }
+      }
+    } else {
+      resetClassInsUI = letRunOk();
+    }
+
+    return {
+      canStartup: canStartup,
+      resetClassInsUI: resetClassInsUI
+    };
+  }
+
+  function startup (_temp, _temp2) {
+    var _ref = _temp === void 0 ? {} : _temp,
+        _ref$store = _ref.store,
+        store = _ref$store === void 0 ? {} : _ref$store,
+        _ref$reducer = _ref.reducer,
+        reducer = _ref$reducer === void 0 ? {} : _ref$reducer,
+        _ref$computed = _ref.computed,
+        computed = _ref$computed === void 0 ? {} : _ref$computed,
+        _ref$watch = _ref.watch,
+        watch = _ref$watch === void 0 ? {} : _ref$watch,
+        _ref$lifecycle = _ref.lifecycle,
+        lifecycle = _ref$lifecycle === void 0 ? {} : _ref$lifecycle;
+
+    var _ref2 = _temp2 === void 0 ? {} : _temp2,
+        _ref2$plugins = _ref2.plugins,
+        plugins = _ref2$plugins === void 0 ? [] : _ref2$plugins,
+        _ref2$middlewares = _ref2.middlewares,
+        middlewares = _ref2$middlewares === void 0 ? [] : _ref2$middlewares,
+        _ref2$isStrict = _ref2.isStrict,
+        isStrict = _ref2$isStrict === void 0 ? false : _ref2$isStrict,
+        _ref2$isDebug = _ref2.isDebug,
+        isDebug = _ref2$isDebug === void 0 ? false : _ref2$isDebug,
+        _ref2$errorHandler = _ref2.errorHandler,
+        errorHandler = _ref2$errorHandler === void 0 ? null : _ref2$errorHandler,
+        isHot = _ref2.isHot,
+        _ref2$bindCtxToMethod = _ref2.bindCtxToMethod,
+        bindCtxToMethod = _ref2$bindCtxToMethod === void 0 ? false : _ref2$bindCtxToMethod,
+        _ref2$computedCompare = _ref2.computedCompare,
+        computedCompare = _ref2$computedCompare === void 0 ? false : _ref2$computedCompare,
+        _ref2$watchCompare = _ref2.watchCompare,
+        watchCompare = _ref2$watchCompare === void 0 ? false : _ref2$watchCompare,
+        _ref2$watchImmediate = _ref2.watchImmediate,
+        watchImmediate = _ref2$watchImmediate === void 0 ? false : _ref2$watchImmediate,
+        _ref2$reComputed = _ref2.reComputed,
+        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed,
+        _ref2$extractModuleCh = _ref2.extractModuleChangedState,
+        extractModuleChangedState = _ref2$extractModuleCh === void 0 ? true : _ref2$extractModuleCh,
+        _ref2$extractRefChang = _ref2.extractRefChangedState,
+        extractRefChangedState = _ref2$extractRefChang === void 0 ? false : _ref2$extractRefChang,
+        _ref2$objectValueComp = _ref2.objectValueCompare,
+        objectValueCompare = _ref2$objectValueComp === void 0 ? false : _ref2$objectValueComp,
+        _ref2$nonObjectValueC = _ref2.nonObjectValueCompare,
+        nonObjectValueCompare = _ref2$nonObjectValueC === void 0 ? true : _ref2$nonObjectValueC,
+        _ref2$localStorage = _ref2.localStorage,
+        localStorage = _ref2$localStorage === void 0 ? null : _ref2$localStorage;
+
+    try {
+      throw new Error();
+    } catch (err) {
+      var _checkStartup = checkStartup(err),
+          canStartup = _checkStartup.canStartup,
+          resetClassInsUI = _checkStartup.resetClassInsUI;
+
+      if (!canStartup) return;
+
+      try {
+        justTip$1("cc version " + ccContext.info.version);
+        if (isHot !== undefined) ccContext.isHot = isHot;
+        ccContext.reComputed = reComputed;
+        ccContext.runtimeHandler.errorHandler = errorHandler;
+        var rv = ccContext.runtimeVar;
+        rv.isStrict = isStrict;
+        rv.isDebug = isDebug;
+        rv.computedCompare = computedCompare;
+        rv.watchCompare = watchCompare;
+        rv.watchImmediate = watchImmediate;
+        rv.extractModuleChangedState = extractModuleChangedState;
+        rv.extractRefChangedState = extractRefChangedState;
+        rv.objectValueCompare = objectValueCompare;
+        rv.nonObjectValueCompare = nonObjectValueCompare;
+        rv.bindCtxToMethod = bindCtxToMethod;
+
+        if (localStorage) {
+          ccContext.localStorage = localStorage;
+        } else if (window && window.localStorage) {
+          ccContext.localStorage = window.localStorage;
+        }
+
+        ccContext.recoverRefState();
+        createDispatcher();
+        configStoreState(store);
+        configRootReducer(reducer);
+        configRootComputed(computed);
+        configRootWatch(watch);
+        configRootLifecycle(lifecycle);
+        configMiddlewares(middlewares);
+
+        var bindOthers = function bindOthers(bindTarget) {
+          bindToWindow$1('CC_CONTEXT', ccContext, bindTarget);
+          bindToWindow$1('ccc', ccContext, bindTarget);
+          bindToWindow$1('cccc', ccContext.computed._computedValue, bindTarget);
+          bindToWindow$1('sss', ccContext.store._state, bindTarget);
+        };
+
+        if (window && window.mcc) {
+          setTimeout(function () {
+            //延迟绑定，等待ccns的输入
+            bindOthers(window.mcc[getCcNamespace()]);
+          }, 1200);
+        } else {
+          bindOthers();
+        }
+
+        ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+
+        configPlugins(plugins);
+        resetClassInsUI(); // // 可以理解为类似useConcent里处理double-invoking 以及 async rendering的过程
+        // // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
+        // // 防止在线IDE热加载后，ui和store不同步的问题
+        // ccFragKeys.forEach(key => {
+        //   const ref = ccContext.ccUKey_ref_[key];
+        //   beforeUnmount(ref);
+        //   initCcFrag(ref);
+        //   didMount(ref);
+        // });
+      } catch (err) {
+        if (errorHandler) errorHandler(err);else throw err;
+      }
+    }
+  }
+
+  var isPJO$7 = isPJO,
+      okeys$a = okeys,
+      evalState$2 = evalState;
+
+  var pError = function pError(label) {
+    throw new Error("[[run]]: param error, " + label + " " + NOT_A_JSON);
+  }; // option:
+  // middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
+  // autoCreateDispatcher, bindCtxToMethod,
+  // computedCompare, watchCompare, watchImmediate
+
+  /**
+   * run will call startup
+   * @param {{ [moduleName:string]: config:{state:object|()=>object, reducer:object, watch:object, computed:object, init:object} }} store
+   * @param {{isStrict:boolean}} options
+   */
+
+
+  function _run (store, options) {
+    if (store === void 0) {
+      store = {};
+    }
+
+    if (options === void 0) {
+      options = {};
+    }
+
+    if (!isPJO$7(store)) pError('store');
+    if (!isPJO$7(options)) pError('options');
+    var storeConf = {
+      store: {},
+      reducer: {},
+      watch: {},
+      computed: {},
+      lifecycle: {}
+    };
+
+    var buildStoreConf = function buildStoreConf(m, moduleConf) {
+      var state = moduleConf.state,
+          reducer = moduleConf.reducer,
+          watch = moduleConf.watch,
+          computed = moduleConf.computed;
+
+      if (storeConf.store[m]) {
+        throw new Error("run api error: module" + m + " duplicate");
+      }
+
+      storeConf.store[m] = evalState$2(state);
+      if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
+      storeConf.reducer[m] = reducer;
+      storeConf.watch[m] = watch;
+      storeConf.computed[m] = computed;
+      storeConf.lifecycle[m] = getLifecycle(moduleConf);
+    }; // traversal moduleNames
+
+
+    okeys$a(store).forEach(function (m) {
+      return buildStoreConf(m, store[m]);
+    }); // these modules pushed by configure api
+
+    pendingModules.forEach(function (_ref) {
+      var module = _ref.module,
+          config = _ref.config;
+      justTip("configure pending module[" + module + "]");
+      buildStoreConf(module, config);
+    });
+    pendingModules.length = 0; // clear pending modules
+
+    startup(storeConf, options);
+  }
+
+  function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+
+      return target;
+    };
+
+    return _extends.apply(this, arguments);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _inheritsLoose(subClass, superClass) {
+    subClass.prototype = Object.create(superClass.prototype);
+    subClass.prototype.constructor = subClass;
+    subClass.__proto__ = superClass;
+  }
+
+  var getState$5 = ccContext.store.getState;
+  /** 由首次render触发, 在beforeMount里调用 */
+
+  function triggerComputedAndWatch (ref) {
+    var ctx = ref.ctx; // 取原始对象，防止computeValueForRef里用Object.assign触发依赖收集
+
+    var hasComputedFn = ctx.hasComputedFn,
+        hasWatchFn = ctx.hasWatchFn,
+        connectedModules = ctx.connectedModules,
+        refModule = ctx.module,
+        unProxyState = ctx.unProxyState;
+    var callInfo = makeCallInfo(refModule);
+
+    var cuOrWatch = function cuOrWatch(op) {
+      op(ref, refModule, unProxyState, unProxyState, callInfo, true);
+      connectedModules.forEach(function (m) {
+        var mState = getState$5(m);
+        var tmpCallInfo = makeCallInfo(m);
+        op(ref, m, mState, mState, tmpCallInfo, true);
+      });
+    };
+
+    if (hasComputedFn) cuOrWatch(computeValueForRef);
+    if (hasWatchFn) cuOrWatch(watchKeyForRef);
+  }
+
+  var okeys$b = okeys,
+      makeCuDepDesc$1 = makeCuDepDesc;
+  var runtimeVar$3 = ccContext.runtimeVar;
+  function beforeMount (ref, setup, bindCtxToMethod) {
+    var ctx = ref.ctx;
+    ref.__$$isUnmounted = false; // false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
+
+    ref.__$$isMounted = false; // 未挂载，在didMount时机才置为true，表示已挂载
+    // flag is in before mount setup
+
+    ctx.__$$inBM = true; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
+
+    if (setup) {
+      if (typeof setup !== 'function') throw new Error('type of setup must be function');
+      var settingsObj = setup(ctx) || {};
+      if (!isPJO(settingsObj)) throw new Error('type of setup return result must be an plain json object'); //优先读自己的，再读全局的
+
+      if (bindCtxToMethod === true || runtimeVar$3.bindCtxToMethod === true && bindCtxToMethod !== false) {
+        okeys$b(settingsObj).forEach(function (name) {
+          var settingValue = settingsObj[name];
+          if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
+        });
+      }
+
+      ctx.settings = settingsObj;
+    } //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
+    // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
+
+
+    ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
+    ctx.refComputed = makeCuRefObContainer(ref, null, true, true); // 所有的组件都会自动连接到$$global模块，但是有可能没有使用$$global模块数据做过任何实例计算
+    // 这里需要补齐computedDep.$$global 和 watchDep.$$global 的依赖描述数据
+    // 防止后续逻辑里出错
+
+    var computedDep = ctx.computedDep,
+        watchDep = ctx.watchDep;
+
+    if (!computedDep[MODULE_GLOBAL]) {
+      computedDep[MODULE_GLOBAL] = makeCuDepDesc$1();
+    }
+
+    if (!watchDep[MODULE_GLOBAL]) {
+      watchDep[MODULE_GLOBAL] = makeCuDepDesc$1();
+    }
+
+    triggerComputedAndWatch(ref);
+    ctx.__$$inBM = false;
   }
 
   var moduleName_stateKeys_$2 = ccContext.moduleName_stateKeys_,
       _ccContext$store$3 = ccContext.store,
       getPrevState$1 = _ccContext$store$3.getPrevState,
-      getState$5 = _ccContext$store$3.getState,
+      getState$6 = _ccContext$store$3.getState,
       getStateVer$1 = _ccContext$store$3.getStateVer;
 
   var warn = function warn(key, frag) {
@@ -7519,7 +8005,7 @@
             continue;
           }
 
-          targetCurState = getState$5(module);
+          targetCurState = getState$6(module);
           targetPrevState = _prevState;
         } else {
           targetCurState = curState;
@@ -7590,79 +8076,6 @@
     __$$settedList.length = 0;
   }
 
-  var justWarning$6 = justWarning,
-      me$3 = makeError,
-      vbi$4 = verboseInfo,
-      ss = styleStr,
-      cl = color;
-  var runtimeVar$2 = ccContext.runtimeVar,
-      ccUKey_ref_$2 = ccContext.ccUKey_ref_;
-  var ccUKey_insCount = {};
-
-  function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
-    var setRef = function setRef() {
-      ccUKey_ref_$2[ccUniqueKey] = ref;
-    };
-
-    if (ccContext.isHotReloadMode()) incCcKeyInsCount(ccUniqueKey);
-
-    if (delayMs) {
-      setTimeout(setRef, delayMs);
-    } else {
-      setRef();
-    }
-  }
-
-  function incCcKeyInsCount(ccUniqueKey) {
-    if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 1;else ccUKey_insCount[ccUniqueKey] += 1;
-  }
-  function decCcKeyInsCount(ccUniqueKey) {
-    if (ccUKey_insCount[ccUniqueKey] === undefined) ccUKey_insCount[ccUniqueKey] = 0;else ccUKey_insCount[ccUniqueKey] -= 1;
-  }
-  function getCcKeyInsCount(ccUniqueKey) {
-    if (ccUKey_insCount[ccUniqueKey] === undefined) return 0;else return ccUKey_insCount[ccUniqueKey];
-  }
-  function setRef (ref) {
-    var _ref$ctx = ref.ctx,
-        ccClassKey = _ref$ctx.ccClassKey,
-        ccKey = _ref$ctx.ccKey,
-        ccUniqueKey = _ref$ctx.ccUniqueKey;
-
-    if (runtimeVar$2.isDebug) {
-      console.log(ss("register ccKey " + ccUniqueKey + " to CC_CONTEXT"), cl());
-    }
-
-    var isHot = ccContext.isHotReloadMode();
-
-    if (ccUKey_ref_$2[ccUniqueKey]) {
-      var dupErr = function dupErr() {
-        throw me$3(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi$4("ccClass:" + ccClassKey + ",ccKey:" + ccKey));
-      };
-
-      if (isHot) {
-        // get existed ins count
-        var insCount = getCcKeyInsCount(ccUniqueKey);
-
-        if (insCount > 1) {
-          // now cc can make sure the ccKey duplicate
-          dupErr();
-        } // just warning
-
-
-        justWarning$6("\n        found ccKey[" + ccKey + "] duplicated in hot reload mode, please make sure your ccKey is unique manually,\n        " + vbi$4("ccClassKey:" + ccClassKey + " ccKey:" + ccKey + " ccUniqueKey:" + ccUniqueKey) + "\n      "); // in webpack hot reload mode, cc works not very well,
-        // cc can't set ref immediately, because the ccInstance of ccKey will ummount right now in unmount func, 
-        // cc call unsetCcInstanceRef will lost the right ref in CC_CONTEXT.refs
-        // so cc set ref later
-
-        setCcInstanceRef(ccUniqueKey, ref, 600);
-      } else {
-        dupErr();
-      }
-    } else {
-      setCcInstanceRef(ccUniqueKey, ref);
-    }
-  }
-
   // cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
   // rendering input
@@ -7730,6 +8143,7 @@
 
   var _lifecycle$1 = lifecycle._lifecycle,
       _mountedOnce = lifecycle._mountedOnce;
+  var getModuleVer$3 = ccContext.store.getModuleVer;
   function didMount (ref) {
     afterRender(ref);
     ref.__$$isMounted = true;
@@ -7739,7 +8153,8 @@
         __$$onEvents = _ref$ctx.__$$onEvents,
         __$$staticWaKeys = _ref$ctx.__$$staticWaKeys,
         module = _ref$ctx.module,
-        __$$mstate = _ref$ctx.__$$mstate;
+        __$$mstate = _ref$ctx.__$$mstate,
+        __$$prevModuleVer = _ref$ctx.__$$prevModuleVer;
     setRef(ref);
 
     var __$$staticWaKeyList = okeys(__$$staticWaKeys); // 用于辅助记录依赖映射
@@ -7763,25 +8178,37 @@
     }
 
     triggerSetupEffect(ref, true);
-    safeAdd(module_InsCount_, module, 1);
+    safeAdd(module_insCount_, module, 1);
 
-    if (_mountedOnce[module] === true) {
-      return;
+    if (_lifecycle$1[module].mounted) {
+      // mounted可执行多次
+      if (_mountedOnce[module] !== true && module_insCount_[module] == 1) {
+        var once = _lifecycle$1[module].mounted(makeModuleDispatcher(module), __$$mstate);
+
+        _mountedOnce[module] = getVal(once, true);
+      }
+    } // 组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
+
+
+    if (__$$prevModuleVer !== getModuleVer$3(module)) {
+      ref.ctx.reactForceUpdate();
     }
+  }
 
-    if (module_InsCount_[module] == 1 && _lifecycle$1[module].firstInsMounted) {
-      var once = _lifecycle$1[module].firstInsMounted(makeModuleDispatcher(module), __$$mstate);
+  function didUpdate (ref) {
+    afterRender(ref);
+    triggerSetupEffect(ref); //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
+    //注意一定是先调用triggerSetupEffect，再赋值
 
-      _mountedOnce[module] = getVal(once, true);
-    }
+    ref.ctx.prevState = ref.ctx.unProxyState;
   }
 
   var ccUKey_ref_$3 = ccContext.ccUKey_ref_,
       ccUKey_handlerKeys_$1 = ccContext.ccUKey_handlerKeys_,
-      runtimeVar$3 = ccContext.runtimeVar,
+      runtimeVar$4 = ccContext.runtimeVar,
       handlerKey_handler_$1 = ccContext.handlerKey_handler_;
   function unsetRef (ccUniqueKey) {
-    if (runtimeVar$3.isDebug) {
+    if (runtimeVar$4.isDebug) {
       console.log(styleStr(ccUniqueKey + " unset ref"), color('purple'));
     }
 
@@ -7848,437 +8275,17 @@
     });
 
     unsetRef(ccUniqueKey);
-    module_InsCount_[module] -= 1;
+    module_insCount_[module] -= 1;
 
     if (_willUnmountOnce[module] === true) {
       return;
     }
 
-    if (module_InsCount_[module] === 0 && _lifecycle$2[module].lastInsWillUnmount) {
-      var once = _lifecycle$2[module].lastInsWillUnmount(makeModuleDispatcher(module), __$$mstate);
+    if (module_insCount_[module] === 0 && _lifecycle$2[module].willUnmount) {
+      var once = _lifecycle$2[module].willUnmount(makeModuleDispatcher(module), __$$mstate);
 
       _willUnmountOnce[module] = getVal(once, true);
     }
-  }
-
-  var getState$6 = ccContext.store.getState;
-  /** 由首次render触发, 在beforeMount里调用 */
-
-  function triggerComputedAndWatch (ref) {
-    var ctx = ref.ctx; // 取原始对象，防止computeValueForRef里用Object.assign触发依赖收集
-
-    var hasComputedFn = ctx.hasComputedFn,
-        hasWatchFn = ctx.hasWatchFn,
-        connectedModules = ctx.connectedModules,
-        refModule = ctx.module,
-        unProxyState = ctx.unProxyState;
-    var callInfo = makeCallInfo(refModule);
-
-    var cuOrWatch = function cuOrWatch(op) {
-      op(ref, refModule, unProxyState, unProxyState, callInfo, true);
-      connectedModules.forEach(function (m) {
-        var mState = getState$6(m);
-        var tmpCallInfo = makeCallInfo(m);
-        op(ref, m, mState, mState, tmpCallInfo, true);
-      });
-    };
-
-    if (hasComputedFn) cuOrWatch(computeValueForRef);
-    if (hasWatchFn) cuOrWatch(watchKeyForRef);
-  }
-
-  var okeys$a = okeys,
-      makeCuDepDesc$1 = makeCuDepDesc;
-  var runtimeVar$4 = ccContext.runtimeVar;
-  function beforeMount (ref, setup, bindCtxToMethod) {
-    var ctx = ref.ctx;
-    ref.__$$isUnmounted = false; // false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
-
-    ref.__$$isMounted = false; // 未挂载，在didMount时机才置为true，表示已挂载
-    // flag is in before mount setup
-
-    ctx.__$$inBM = true; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
-
-    if (setup) {
-      if (typeof setup !== 'function') throw new Error('type of setup must be function');
-      var settingsObj = setup(ctx) || {};
-      if (!isPJO(settingsObj)) throw new Error('type of setup return result must be an plain json object'); //优先读自己的，再读全局的
-
-      if (bindCtxToMethod === true || runtimeVar$4.bindCtxToMethod === true && bindCtxToMethod !== false) {
-        okeys$a(settingsObj).forEach(function (name) {
-          var settingValue = settingsObj[name];
-          if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
-        });
-      }
-
-      ctx.settings = settingsObj;
-    } //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
-    // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
-
-
-    ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
-    ctx.refComputed = makeCuRefObContainer(ref, null, true, true); // 所有的组件都会自动连接到$$global模块，但是有可能没有使用$$global模块数据做过任何实例计算
-    // 这里需要补齐computedDep.$$global 和 watchDep.$$global 的依赖描述数据
-    // 防止后续逻辑里出错
-
-    var computedDep = ctx.computedDep,
-        watchDep = ctx.watchDep;
-
-    if (!computedDep[MODULE_GLOBAL]) {
-      computedDep[MODULE_GLOBAL] = makeCuDepDesc$1();
-    }
-
-    if (!watchDep[MODULE_GLOBAL]) {
-      watchDep[MODULE_GLOBAL] = makeCuDepDesc$1();
-    }
-
-    triggerComputedAndWatch(ref);
-    ctx.__$$inBM = false;
-  }
-
-  var getRegisterOptions$1 = getRegisterOptions,
-      evalState$2 = evalState;
-  function initCcFrag (ref) {
-    var props = ref.props;
-    var registerOptions = getRegisterOptions$1(props.register);
-    var module = registerOptions.module,
-        renderKeyClasses = registerOptions.renderKeyClasses,
-        tag = registerOptions.tag,
-        lite = registerOptions.lite,
-        _registerOptions$comp = registerOptions.compareProps,
-        compareProps = _registerOptions$comp === void 0 ? true : _registerOptions$comp,
-        setup = registerOptions.setup,
-        bindCtxToMethod = registerOptions.bindCtxToMethod,
-        _registerOptions$watc = registerOptions.watchedKeys,
-        watchedKeys = _registerOptions$watc === void 0 ? '-' : _registerOptions$watc,
-        _registerOptions$conn = registerOptions.connect,
-        connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
-        _registerOptions$stor = registerOptions.storedKeys,
-        storedKeys = _registerOptions$stor === void 0 ? [] : _registerOptions$stor;
-    var state = evalState$2(registerOptions.state);
-    var ccClassKey = props.ccClassKey,
-        ccKey = props.ccKey,
-        _props$ccOption = props.ccOption,
-        ccOption = _props$ccOption === void 0 ? {} : _props$ccOption,
-        id = props.id;
-    var target_watchedKeys = watchedKeys;
-    var target_ccClassKey = ccClassKey;
-    var target_connect = connect;
-    var insType = CC_CUSTOMIZE; //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
-
-    if (props.__$$regDumb !== true) {
-      insType = CC_FRAGMENT;
-
-      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_CLASS, watchedKeys, connect, true),
-          _ccClassKey = _mapRegistrationInfo._ccClassKey,
-          _connect = _mapRegistrationInfo._connect,
-          _watchedKeys = _mapRegistrationInfo._watchedKeys;
-
-      target_watchedKeys = _watchedKeys;
-      target_ccClassKey = _ccClassKey;
-      target_connect = _connect;
-    }
-
-    buildRefCtx(ref, {
-      ccKey: ccKey,
-      connect: target_connect,
-      state: state,
-      module: module,
-      type: CC_CLASS,
-      insType: insType,
-      storedKeys: storedKeys,
-      watchedKeys: target_watchedKeys,
-      tag: tag,
-      ccClassKey: target_ccClassKey,
-      ccOption: ccOption,
-      id: id
-    }, lite);
-    ref.ctx.reactSetState = makeRefSetState(ref);
-    ref.ctx.reactForceUpdate = makeRefForceUpdate(ref);
-    ref.__$$compareProps = compareProps; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
-    //无需在将要给废弃的componentWillMount里调用beforeMount
-
-    beforeMount(ref, setup, bindCtxToMethod);
-  }
-
-  var justTip$1 = justTip,
-      bindToWindow$1 = bindToWindow,
-      getErrStackKeywordLoc$1 = getErrStackKeywordLoc;
-  var cachedLocation = '';
-
-  function checkStartup(err) {
-    var info = ccContext.info;
-    var curLocation = getErrStackKeywordLoc$1(err, 'startup', 2); //向下2句找触发run的文件
-
-    if (!curLocation) curLocation = getErrStackKeywordLoc$1(err, 'runConcent', 0);
-
-    var letRunOk = function letRunOk() {
-      ccContext.isHot = true;
-      return clearContextIfHot(true);
-    };
-
-    var now = Date.now();
-    var ccFragKeys = [],
-        canStartup = true;
-
-    if (!cachedLocation) {
-      cachedLocation = curLocation;
-      info.firstStartupTime = now;
-      info.latestStartupTime = now;
-    } else if (cachedLocation !== curLocation) {
-      var tip = "invalid run api call!(it can only be called once, changing 'call run' line location in HMR will cause this error also, \n    try refresh browser to reload your app to avoid this tip)";
-
-      if (now - info.latestStartupTime < 1000) {
-        throw new Error(tip);
-      } else {
-        if (isOnlineEditor()) {
-          ccFragKeys = letRunOk();
-          cachedLocation = curLocation;
-        } else {
-          strictWarning(tip);
-          canStartup = false;
-        }
-      }
-    } else {
-      ccFragKeys = letRunOk();
-    }
-
-    return {
-      canStartup: canStartup,
-      ccFragKeys: ccFragKeys
-    };
-  }
-
-  function startup (_temp, _temp2) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        _ref$store = _ref.store,
-        store = _ref$store === void 0 ? {} : _ref$store,
-        _ref$reducer = _ref.reducer,
-        reducer = _ref$reducer === void 0 ? {} : _ref$reducer,
-        _ref$computed = _ref.computed,
-        computed = _ref$computed === void 0 ? {} : _ref$computed,
-        _ref$watch = _ref.watch,
-        watch = _ref$watch === void 0 ? {} : _ref$watch,
-        _ref$lifecycle = _ref.lifecycle,
-        lifecycle = _ref$lifecycle === void 0 ? {} : _ref$lifecycle;
-
-    var _ref2 = _temp2 === void 0 ? {} : _temp2,
-        _ref2$plugins = _ref2.plugins,
-        plugins = _ref2$plugins === void 0 ? [] : _ref2$plugins,
-        _ref2$middlewares = _ref2.middlewares,
-        middlewares = _ref2$middlewares === void 0 ? [] : _ref2$middlewares,
-        _ref2$isStrict = _ref2.isStrict,
-        isStrict = _ref2$isStrict === void 0 ? false : _ref2$isStrict,
-        _ref2$isDebug = _ref2.isDebug,
-        isDebug = _ref2$isDebug === void 0 ? false : _ref2$isDebug,
-        _ref2$errorHandler = _ref2.errorHandler,
-        errorHandler = _ref2$errorHandler === void 0 ? null : _ref2$errorHandler,
-        isHot = _ref2.isHot,
-        _ref2$bindCtxToMethod = _ref2.bindCtxToMethod,
-        bindCtxToMethod = _ref2$bindCtxToMethod === void 0 ? false : _ref2$bindCtxToMethod,
-        _ref2$computedCompare = _ref2.computedCompare,
-        computedCompare = _ref2$computedCompare === void 0 ? false : _ref2$computedCompare,
-        _ref2$watchCompare = _ref2.watchCompare,
-        watchCompare = _ref2$watchCompare === void 0 ? false : _ref2$watchCompare,
-        _ref2$watchImmediate = _ref2.watchImmediate,
-        watchImmediate = _ref2$watchImmediate === void 0 ? false : _ref2$watchImmediate,
-        _ref2$reComputed = _ref2.reComputed,
-        reComputed = _ref2$reComputed === void 0 ? true : _ref2$reComputed,
-        _ref2$extractModuleCh = _ref2.extractModuleChangedState,
-        extractModuleChangedState = _ref2$extractModuleCh === void 0 ? true : _ref2$extractModuleCh,
-        _ref2$extractRefChang = _ref2.extractRefChangedState,
-        extractRefChangedState = _ref2$extractRefChang === void 0 ? false : _ref2$extractRefChang,
-        _ref2$objectValueComp = _ref2.objectValueCompare,
-        objectValueCompare = _ref2$objectValueComp === void 0 ? false : _ref2$objectValueComp,
-        _ref2$nonObjectValueC = _ref2.nonObjectValueCompare,
-        nonObjectValueCompare = _ref2$nonObjectValueC === void 0 ? true : _ref2$nonObjectValueC,
-        _ref2$localStorage = _ref2.localStorage,
-        localStorage = _ref2$localStorage === void 0 ? null : _ref2$localStorage;
-
-    try {
-      throw new Error();
-    } catch (err) {
-      var _checkStartup = checkStartup(err),
-          canStartup = _checkStartup.canStartup,
-          ccFragKeys = _checkStartup.ccFragKeys;
-
-      if (!canStartup) return;
-
-      try {
-        justTip$1("cc version " + ccContext.info.version);
-        if (isHot !== undefined) ccContext.isHot = isHot;
-        ccContext.reComputed = reComputed;
-        ccContext.runtimeHandler.errorHandler = errorHandler;
-        var rv = ccContext.runtimeVar;
-        rv.isStrict = isStrict;
-        rv.isDebug = isDebug;
-        rv.computedCompare = computedCompare;
-        rv.watchCompare = watchCompare;
-        rv.watchImmediate = watchImmediate;
-        rv.extractModuleChangedState = extractModuleChangedState;
-        rv.extractRefChangedState = extractRefChangedState;
-        rv.objectValueCompare = objectValueCompare;
-        rv.nonObjectValueCompare = nonObjectValueCompare;
-        rv.bindCtxToMethod = bindCtxToMethod;
-
-        if (localStorage) {
-          ccContext.localStorage = localStorage;
-        } else if (window && window.localStorage) {
-          ccContext.localStorage = window.localStorage;
-        }
-
-        ccContext.recoverRefState();
-        createDispatcher();
-        configStoreState(store);
-        configRootReducer(reducer);
-        configRootComputed(computed);
-        configRootWatch(watch);
-        configRootLifecycle(lifecycle);
-        configMiddlewares(middlewares);
-
-        var bindOthers = function bindOthers(bindTarget) {
-          bindToWindow$1('CC_CONTEXT', ccContext, bindTarget);
-          bindToWindow$1('ccc', ccContext, bindTarget);
-          bindToWindow$1('cccc', ccContext.computed._computedValue, bindTarget);
-          bindToWindow$1('sss', ccContext.store._state, bindTarget);
-        };
-
-        if (window && window.mcc) {
-          setTimeout(function () {
-            //延迟绑定，等待ccns的输入
-            bindOthers(window.mcc[getCcNamespace()]);
-          }, 1200);
-        } else {
-          bindOthers();
-        }
-
-        ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
-
-        configPlugins(plugins); // 可以理解为类似useConcent里处理double-invoking 以及 async rendering的过程
-        // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
-        // 防止在线IDE热加载后，ui和store不同步的问题
-
-        ccFragKeys.forEach(function (key) {
-          var ref = ccContext.ccUKey_ref_[key];
-          beforeUnmount(ref);
-          initCcFrag(ref);
-          didMount(ref);
-        });
-      } catch (err) {
-        if (errorHandler) errorHandler(err);else throw err;
-      }
-    }
-  }
-
-  var isPJO$7 = isPJO,
-      okeys$b = okeys,
-      evalState$3 = evalState;
-
-  var pError = function pError(label) {
-    throw new Error("[[run]]: param error, " + label + " " + NOT_A_JSON);
-  }; // option:
-  // middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
-  // autoCreateDispatcher, bindCtxToMethod,
-  // computedCompare, watchCompare, watchImmediate
-
-  /**
-   * run will call startup
-   * @param {{ [moduleName:string]: config:{state:object|()=>object, reducer:object, watch:object, computed:object, init:object} }} store
-   * @param {{isStrict:boolean}} options
-   */
-
-
-  function _run (store, options) {
-    if (store === void 0) {
-      store = {};
-    }
-
-    if (options === void 0) {
-      options = {};
-    }
-
-    if (!isPJO$7(store)) pError('store');
-    if (!isPJO$7(options)) pError('options');
-    var storeConf = {
-      store: {},
-      reducer: {},
-      watch: {},
-      computed: {},
-      lifecycle: {}
-    };
-
-    var buildStoreConf = function buildStoreConf(m, moduleConf) {
-      var state = moduleConf.state,
-          reducer = moduleConf.reducer,
-          watch = moduleConf.watch,
-          computed = moduleConf.computed;
-
-      if (storeConf.store[m]) {
-        throw new Error("run api error: module" + m + " duplicate");
-      }
-
-      storeConf.store[m] = evalState$3(state);
-      if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
-      storeConf.reducer[m] = reducer;
-      storeConf.watch[m] = watch;
-      storeConf.computed[m] = computed;
-      storeConf.lifecycle[m] = getLifecycle(moduleConf);
-    }; // traversal moduleNames
-
-
-    okeys$b(store).forEach(function (m) {
-      return buildStoreConf(m, store[m]);
-    }); // these modules pushed by configure api
-
-    pendingModules.forEach(function (_ref) {
-      var module = _ref.module,
-          config = _ref.config;
-      justTip("configure pending module[" + module + "]");
-      buildStoreConf(module, config);
-    });
-    pendingModules.length = 0; // clear pending modules
-
-    startup(storeConf, options);
-  }
-
-  function _extends() {
-    _extends = Object.assign || function (target) {
-      for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];
-
-        for (var key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            target[key] = source[key];
-          }
-        }
-      }
-
-      return target;
-    };
-
-    return _extends.apply(this, arguments);
-  }
-
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-
-    return self;
-  }
-
-  function _inheritsLoose(subClass, superClass) {
-    subClass.prototype = Object.create(superClass.prototype);
-    subClass.prototype.constructor = subClass;
-    subClass.__proto__ = superClass;
-  }
-
-  function didUpdate (ref) {
-    afterRender(ref);
-    triggerSetupEffect(ref); //!!! 将最新的state记录为prevState，方便下一轮渲染完毕执行triggerSetupEffect时做比较用
-    //注意一定是先调用triggerSetupEffect，再赋值
-
-    ref.ctx.prevState = ref.ctx.unProxyState;
   }
 
   /** eslint-disable */
@@ -8323,7 +8330,7 @@
 
   var ccClassDisplayName$1 = ccClassDisplayName,
       shallowDiffers$1 = shallowDiffers,
-      evalState$4 = evalState;
+      evalState$3 = evalState;
 
   var setupErr = function setupErr(info) {
     return new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
@@ -8388,7 +8395,7 @@
             _this = _ToBeExtendedClass.call(this, props, context) || this;
 
             try {
-              var optState = evalState$4(state);
+              var optState = evalState$3(state);
               var thisState = _this.state || {};
               var privState = Object.assign(thisState, optState);
               _this.$$attach = _this.$$attach.bind(_assertThisInitialized(_this)); // props.ccOption
@@ -8563,6 +8570,71 @@
     return register$1({
       connect: connectSpec
     }, ccClassKey);
+  }
+
+  var getRegisterOptions$1 = getRegisterOptions,
+      evalState$4 = evalState;
+  function initCcFrag (ref) {
+    var props = ref.props;
+    var registerOptions = getRegisterOptions$1(props.register);
+    var module = registerOptions.module,
+        renderKeyClasses = registerOptions.renderKeyClasses,
+        tag = registerOptions.tag,
+        lite = registerOptions.lite,
+        _registerOptions$comp = registerOptions.compareProps,
+        compareProps = _registerOptions$comp === void 0 ? true : _registerOptions$comp,
+        setup = registerOptions.setup,
+        bindCtxToMethod = registerOptions.bindCtxToMethod,
+        _registerOptions$watc = registerOptions.watchedKeys,
+        watchedKeys = _registerOptions$watc === void 0 ? '-' : _registerOptions$watc,
+        _registerOptions$conn = registerOptions.connect,
+        connect = _registerOptions$conn === void 0 ? {} : _registerOptions$conn,
+        _registerOptions$stor = registerOptions.storedKeys,
+        storedKeys = _registerOptions$stor === void 0 ? [] : _registerOptions$stor;
+    var state = evalState$4(registerOptions.state);
+    var ccClassKey = props.ccClassKey,
+        ccKey = props.ccKey,
+        _props$ccOption = props.ccOption,
+        ccOption = _props$ccOption === void 0 ? {} : _props$ccOption,
+        id = props.id;
+    var target_watchedKeys = watchedKeys;
+    var target_ccClassKey = ccClassKey;
+    var target_connect = connect;
+    var insType = CC_CUSTOMIZE; //直接使用<CcFragment />构造的cc实例, 尝试提取storedKeys, 然后映射注册信息，（注：registerDumb创建的组件已在外部调用过mapRegistrationInfo）
+
+    if (props.__$$regDumb !== true) {
+      insType = CC_FRAGMENT;
+
+      var _mapRegistrationInfo = mapRegistrationInfo(module, ccClassKey, renderKeyClasses, CC_CLASS, watchedKeys, connect, true),
+          _ccClassKey = _mapRegistrationInfo._ccClassKey,
+          _connect = _mapRegistrationInfo._connect,
+          _watchedKeys = _mapRegistrationInfo._watchedKeys;
+
+      target_watchedKeys = _watchedKeys;
+      target_ccClassKey = _ccClassKey;
+      target_connect = _connect;
+    }
+
+    buildRefCtx(ref, {
+      ccKey: ccKey,
+      connect: target_connect,
+      state: state,
+      module: module,
+      type: CC_CLASS,
+      insType: insType,
+      storedKeys: storedKeys,
+      watchedKeys: target_watchedKeys,
+      tag: tag,
+      ccClassKey: target_ccClassKey,
+      ccOption: ccOption,
+      id: id
+    }, lite);
+    ref.ctx.reactSetState = makeRefSetState(ref);
+    ref.ctx.reactForceUpdate = makeRefForceUpdate(ref);
+    ref.__$$compareProps = compareProps; //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
+    //无需在将要给废弃的componentWillMount里调用beforeMount
+
+    beforeMount(ref, setup, bindCtxToMethod);
   }
 
   var shallowDiffers$2 = shallowDiffers;
@@ -8914,9 +8986,9 @@
 
       return function () {
         var toUnmountRef = ccUKey_ref_$4[getHookCtxCcUKey(hookCtx)];
+        hookCtx.prevCcUKey = null;
 
         if (toUnmountRef) {
-          hookCtx.prevCcUKey = null;
           beforeUnmount(toUnmountRef);
         }
 
@@ -8926,7 +8998,7 @@
     //after every render
 
     effectHandler(function () {
-      replaceSetter(refCtx, hookSetter); // 一定要检查ccUKey_ref_存在了才走didUpdate，热加载模式下会触发卸载
+      replaceSetter(refCtx, hookSetter); // 热加载模式下会触发卸载，这里需要核实ccUKey_ref_
 
       if (!hookRef.isFirstRendered && ccUKey_ref_$4[getHookCtxCcUKey(hookCtx)]) {
         // mock componentDidUpdate
@@ -9348,12 +9420,12 @@
     if (winCc) {
       if (winCc.ccContext && winCc.ccContext.info) {
         var existedVersion = winCc.ccContext.info.version;
-        var nowVersion = ccContext$1.info.version; //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
+        var newVersion = ccContext$1.info.version; //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
         //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
         //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
 
-        if (existedVersion !== nowVersion) {
-          throw new Error("a existed version concent " + existedVersion + " is different with current about to import concent " + nowVersion + ", \n        it may caused by some of your concent-eco-module with older version concent, please reinstall them (concent-*** module)");
+        if (existedVersion !== newVersion) {
+          throw new Error("concent ver conflict! cur[" + existedVersion + "]-new[" + newVersion + "], refresh browser or reinstall some concent-eco-lib");
         }
       }
     }
