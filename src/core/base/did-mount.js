@@ -5,17 +5,19 @@ import { okeys, safeAdd } from '../../support/util';
 import { mapStaticInsM } from '../../cc-context/wakey-ukey-map';
 import module_InsCount_ from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
+import ccContext from '../../cc-context';
 import { makeModuleDispatcher } from '../state/handler-factory';
 import { getVal } from '../../support/util';
 
 const { _lifecycle, _mountedOnce } = lifecycle;
+const { store: { getModuleVer } } = ccContext;
 
 export default function (ref) {
   afterRender(ref);
 
   ref.__$$isMounted = true;
   ref.__$$isUnmounted = false;
-  const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, __$$mstate } = ref.ctx;
+  const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, __$$mstate, __$$prevModuleVer } = ref.ctx;
   setRef(ref);
 
   const __$$staticWaKeyList = okeys(__$$staticWaKeys);
@@ -40,5 +42,10 @@ export default function (ref) {
   if (module_InsCount_[module] == 1 && _lifecycle[module].firstInsMounted) {
     const once = _lifecycle[module].firstInsMounted(makeModuleDispatcher(module), __$$mstate);
     _mountedOnce[module] = getVal(once, true);
+  }
+
+  // hook组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
+  if (__$$prevModuleVer !== getModuleVer(module)) {
+    ref.ctx.reactForceUpdate();
   }
 }

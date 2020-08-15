@@ -3064,7 +3064,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.8.18',
+      version: '2.0.36',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -7346,6 +7346,7 @@
     clearObject(ccContext.waKey_uKeyMap_);
     clearObject(ccContext.lifecycle._mountedOnce);
     clearObject(ccContext.lifecycle._willUnmountOnce);
+    clearObject(ccContext.module_InsCount_, [], 0);
     clearCachedData();
 
     var _pickNonCustomizeIns2 = _pickNonCustomizeIns(),
