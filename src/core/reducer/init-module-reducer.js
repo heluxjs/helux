@@ -1,16 +1,13 @@
 import ccContext from '../../cc-context';
-import * as checker from '../param/checker';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
 
 export default function (module, reducer = {}) {
 
-  const tip = `module[${module}] reducer`;
   if (!util.isPJO(reducer)) {
-    throw new Error(`${tip} ${NOT_A_JSON}`);
+    throw new Error(`module[${module}] reducer ${NOT_A_JSON}`);
   }
-  checker.checkModuleName(module, false, `${tip} is invalid`);
 
   const {
     _reducer, _caller, _fnName_fullFnNames_, _module_fnNames_,

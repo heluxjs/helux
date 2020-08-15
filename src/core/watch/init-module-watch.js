@@ -15,11 +15,9 @@ const { isPJO, safeGet, okeys } = util;
 export default function (module, moduleWatch, append = false) {
   if (!moduleWatch) return;
 
-  const tip = `module[${module}] watch`;
   if (!isPJO(moduleWatch)) {
-    throw new Error(`${tip} ${NOT_A_JSON}`);
+    throw new Error(`module[${module}] watch ${NOT_A_JSON}`);
   }
-  checker.checkModuleName(module, false, `${tip} is invalid`);
 
   const rootWatchDep = ccContext.watch.getRootWatchDep();
   const rootWatchRaw = ccContext.watch.getRootWatchRaw();

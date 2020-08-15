@@ -213,6 +213,7 @@ const ccContext = {
   init: {
     _init: {}
   },
+  lifecycle: {},
   ccUKey_ref_: refs,
   /**
    * key:eventName,  value: Array<{ccKey, identity,  handlerKey}>

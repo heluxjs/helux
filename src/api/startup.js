@@ -51,10 +51,9 @@ export default function (
   {
     store = {},
     reducer = {},
-    init = null,
-    initPost = {},
     computed = {},
     watch = {},
+    lifecycle = {},
   } = {},
   {
     plugins = [],
@@ -110,7 +109,7 @@ export default function (
       boot.configRootReducer(reducer);
       boot.configRootComputed(computed);
       boot.configRootWatch(watch);
-      boot.executeRootInit(init, initPost);
+      boot.executeRootLifecycle(lifecycle);
       boot.configMiddlewares(middlewares);
 
       const bindOthers = (bindTarget) => {

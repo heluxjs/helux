@@ -44,7 +44,7 @@ export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg 
 
 export function checkModuleNameAndState(moduleName, moduleState, moduleMustNotExisted) {
   checkModuleName(moduleName, moduleMustNotExisted);
-  if(!util.isPJO(moduleState)){
+  if (!util.isPJO(moduleState)) {
     throw new Error(`module[${moduleName}]'s state ${NOT_A_JSON}`);
   }
 }

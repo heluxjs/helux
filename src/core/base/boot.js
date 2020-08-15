@@ -12,7 +12,7 @@ import initModuleComputed from '../computed/init-module-computed';
 import catchCcError from './catch-cc-error';
 import { on, clearCbs } from '../plugin';
 
-const { isPJO, okeys, isObject } = util;
+const { isPJO, okeys, isObject, isObjectNull } = util;
 
 function checkObj(rootObj, tag) {
   if (!isPJO(rootObj)) {
@@ -58,23 +58,17 @@ export function configRootWatch(rootWatch) {
   Object.keys(rootWatch).forEach(m => initModuleWatch(m, rootWatch[m]));
 }
 
-export function executeRootInit(init, initPost) {
-  if (!init) return;
-  if (!isPJO(init)) {
-    throw new Error(`init ${NOT_A_JSON}`);
-  }
-
-  okeys(init).forEach(moduleName => {
-    checker.checkModuleName(moduleName, false);
-    const initFn = init[moduleName];
-    if (initFn) {
+export function executeRootLifecycle(lifecycle) {
+  okeys(lifecycle).forEach(moduleName => {
+    const { initState, initStateDone } = lifecycle[moduleName];// 对接原来的 moduleConfo.init initPost
+    if (initState) {
       const moduleState = ccContext.store.getState(moduleName);
-      Promise.resolve().then(() => initFn(moduleState)).then(state => {
-        makeSetStateHandler(moduleName, initPost[moduleName])(state)
+      Promise.resolve().then(() => initState(moduleState)).then(state => {
+        makeSetStateHandler(moduleName, initStateDone)(state)
       }).catch(catchCcError);
     }
   });
-  ccContext.init._init = init;
+  ccContext.lifecycle = lifecycle;
 }
 
 export function configMiddlewares(middlewares) {
@@ -116,8 +110,7 @@ export default {
   configRootReducer,
   configRootComputed,
   configRootWatch,
-  // TODO: add configRootLifecycle
-  executeRootInit,
+  executeRootLifecycle,
   configMiddlewares,
   configPlugins,
 }

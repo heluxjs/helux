@@ -1,5 +1,4 @@
 import ccContext from '../../cc-context';
-import * as checker from '../param/checker';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import { CATE_MODULE, FN_CU } from '../../support/constant';
@@ -13,11 +12,9 @@ const { isPJO } = util;
 export default function (module, computed) {
   if(!computed) return;
 
-  const tip = `module[${module}] computed`;
   if (!isPJO(computed)) {
-    throw new Error(`${tip} ${NOT_A_JSON}`);
+    throw new Error(`module[${module}] computed ${NOT_A_JSON}`);
   }
-  checker.checkModuleName(module, false, `${tip} is invalid`);
 
   const ccComputed = ccContext.computed;
   const rootState = ccContext.store.getState();
