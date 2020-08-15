@@ -3,16 +3,14 @@ import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_VOID } from '../../support/constant';
 import ccContext from '../../cc-context';
-import * as checker from '../param/checker';
 import initModuleState from '../state/init-module-state';
-import { makeSetStateHandler } from '../state/handler-factory';
 import initModuleReducer from '../reducer/init-module-reducer';
 import initModuleWatch from '../watch/init-module-watch';
 import initModuleComputed from '../computed/init-module-computed';
-import catchCcError from './catch-cc-error';
+import initModuleLifecycle from './init-module-lifecycle';
 import { on, clearCbs } from '../plugin';
 
-const { isPJO, okeys, isObject, isObjectNull } = util;
+const { isPJO, okeys, isObject } = util;
 
 function checkObj(rootObj, tag) {
   if (!isPJO(rootObj)) {
@@ -22,7 +20,6 @@ function checkObj(rootObj, tag) {
 
 export function configStoreState(storeState) {
   checkObj(storeState, 'state');
-
   delete storeState[MODULE_VOID];
   delete storeState[MODULE_CC];
 
@@ -55,20 +52,12 @@ export function configRootComputed(rootComputed) {
 
 export function configRootWatch(rootWatch) {
   checkObj(rootWatch, 'watch');
-  Object.keys(rootWatch).forEach(m => initModuleWatch(m, rootWatch[m]));
+  okeys(rootWatch).forEach(m => initModuleWatch(m, rootWatch[m]));
 }
 
-export function executeRootLifecycle(lifecycle) {
-  okeys(lifecycle).forEach(moduleName => {
-    const { initState, initStateDone } = lifecycle[moduleName];// 对接原来的 moduleConfo.init initPost
-    if (initState) {
-      const moduleState = ccContext.store.getState(moduleName);
-      Promise.resolve().then(() => initState(moduleState)).then(state => {
-        makeSetStateHandler(moduleName, initStateDone)(state)
-      }).catch(catchCcError);
-    }
-  });
-  ccContext.lifecycle = lifecycle;
+export function configRootLifecycle(rootLifecycle) {
+  checkObj(rootLifecycle, 'lifecycle');
+  okeys(rootLifecycle).forEach(m => initModuleLifecycle(m, rootLifecycle[m]));
 }
 
 export function configMiddlewares(middlewares) {
@@ -101,7 +90,6 @@ export function configPlugins(plugins) {
       }
     });
     ccContext.pluginNameMap = pluginNameMap;
-    
   }
 }
 
@@ -110,7 +98,7 @@ export default {
   configRootReducer,
   configRootComputed,
   configRootWatch,
-  executeRootLifecycle,
+  configRootLifecycle,
   configMiddlewares,
   configPlugins,
 }

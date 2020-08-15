@@ -109,7 +109,7 @@ export default function (
       boot.configRootReducer(reducer);
       boot.configRootComputed(computed);
       boot.configRootWatch(watch);
-      boot.executeRootLifecycle(lifecycle);
+      boot.configRootLifecycle(lifecycle);
       boot.configMiddlewares(middlewares);
 
       const bindOthers = (bindTarget) => {

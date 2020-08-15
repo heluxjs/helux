@@ -9,9 +9,7 @@ import makeCuRetContainer from '../computed/make-cu-ret-container';
 
 const { isPJO } = util;
 
-export default function (module, computed) {
-  if(!computed) return;
-
+export default function (module, computed = {}) {
   if (!isPJO(computed)) {
     throw new Error(`module[${module}] computed ${NOT_A_JSON}`);
   }

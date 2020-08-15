@@ -1,5 +1,4 @@
 import ccContext from '../../cc-context';
-import * as checker from '../param/checker';
 import * as util from '../../support/util';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import { CATE_MODULE, FN_WATCH } from '../../support/constant';
@@ -12,9 +11,7 @@ const { isPJO, safeGet, okeys } = util;
 /**
  * 设置watch值，过滤掉一些无效的key
  */
-export default function (module, moduleWatch, append = false) {
-  if (!moduleWatch) return;
-
+export default function (module, moduleWatch = {}, append = false) {
   if (!isPJO(moduleWatch)) {
     throw new Error(`module[${module}] watch ${NOT_A_JSON}`);
   }

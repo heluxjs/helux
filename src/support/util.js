@@ -6,7 +6,7 @@ import runtimeVar from '../cc-context/runtime-var';
 const cer = console.error;
 const protoToString = Object.prototype.toString;
 
-export function noop(){}
+export function noop() { }
 
 export function isValueNotNull(value) {
   return !(value === null || value === undefined);
@@ -185,6 +185,14 @@ export function strictWarning(err) {
   }
 }
 
+export function safeAdd(object, key, toAdd) {
+  try {
+    object[key] += toAdd;
+  } catch (err) {
+    object[key] = toAdd;
+  }
+}
+
 export function safeGet(object, key, defaultVal = {}) {
   let childrenObject = object[key];
   if (!childrenObject) {
@@ -245,17 +253,20 @@ export function clearObject(object, excludeKeys = [], reset, deepClear = false) 
     });
     object.length = 0;
     retainKeys.forEach(key => object.push(key));
-  } else Object.keys(object).forEach(key => {
+    return;
+  }
+
+  okeys(object).forEach(key => {
     if (excludeKeys.includes(key)) {
       // do nothing
+      return;
+    }
+    const subMap = object[key];
+    if (deepClear && subMap) {
+      okeys(subMap).forEach(key => delete subMap[key]);
     } else {
-      const subMap = object[key];
-      if (deepClear && subMap) {
-        okeys(subMap).forEach(key => delete subMap[key]);
-      } else {
-        if (reset) object[key] = reset;
-        else delete object[key];
-      }
+      if (reset) object[key] = reset;
+      else delete object[key];
     }
   });
 }
@@ -489,7 +500,7 @@ export function isSymbol(value) {
   )
 }
 
-export function delay(ms=0) {
+export function delay(ms = 0) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -507,4 +518,9 @@ export function getErrStackKeywordLoc(err, keyword, offset = 0) {
   }
 
   return curLocation;
+}
+
+export function getVal(val, defaultVal) {
+  if (val !== undefined) return val;
+  return defaultVal;
 }

@@ -478,19 +478,19 @@ export function makeDispatchHandler(
   }
 }
 
-// for module/init method
-export function makeSetStateHandler(module, initPost) {
-  return state => {
-    const execInitPost = () => {
-      const moduleDispatch = (action, ...args) => {
-        let _action = typeof action === 'string' && !action.includes('/') ? `${module}/${action}` : action;
-        ccDispatch(_action, ...args);
-      }
-      initPost && initPost(moduleDispatch, getState(module));
-    };
+export function makeModuleDispatcher(module) {
+  return (action, ...args) => {
+    let _action = typeof action === 'string' && !action.includes('/') ? `${module}/${action}` : action;
+    ccDispatch(_action, ...args);
+  }
+}
 
+// for moduleConf.init(legency) moduleConf.lifecycle.initState(v2.9+)
+export function makeSetStateHandler(module, initStateDone) {
+  return state => {
+    const execInitDone = () => initStateDone && initStateDone(makeModuleDispatcher(module), getState(module));
     try {
-      innerSetState(module, state, execInitPost);
+      innerSetState(module, state, execInitDone);
     } catch (err) {
       const moduleState = getState(module);
       if (!moduleState) {
@@ -505,7 +505,7 @@ export function makeSetStateHandler(module, initPost) {
       }
 
       util.justTip(`no ccInstance found for module[${module}] currently, cc will just store it, lately ccInstance will pick this state to render`);
-      execInitPost();
+      execInitDone();
     }
   }
 }

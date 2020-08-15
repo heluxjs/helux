@@ -75,6 +75,8 @@ function _clearAll() {
   clearObject(ccContext.watch._watchDep, toExcludedModules);
   clearObject(ccContext.middlewares);
   clearObject(ccContext.waKey_uKeyMap_);
+  clearObject(ccContext.lifecycle._mountedOnce);
+  clearObject(ccContext.lifecycle._willUnmountOnce);
   clearCachedData();
   const { ccFragKeys, ccNonCusKeys } = _pickNonCustomizeIns();
   _clearInsAssociation(false, ccNonCusKeys);

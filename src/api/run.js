@@ -3,8 +3,9 @@ import * as util from '../support/util';
 import { NOT_A_JSON } from '../support/priv-constant';
 import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
+import getLifecycle from '../core/param/get-lifecycle';
 
-const { isPJO, okeys, isObjectNull, evalState } = util;
+const { isPJO, okeys, evalState } = util;
 const pError = label => {
   throw new Error(`[[run]]: param error, ${label} ${NOT_A_JSON}`);
 }
@@ -29,38 +30,33 @@ export default function (store = {}, options = {}) {
     reducer: {},
     watch: {},
     computed: {},
-    init: {},
-    initPost: {},
+    lifecycle: {},
   }
 
-  const buildStoreConf = (m, moduleConf)=>{
-    const { state, reducer = {}, watch, computed, init, initPost } = moduleConf;
-    if(storeConf.store[m]){
+  const buildStoreConf = (m, moduleConf) => {
+    const { state, reducer, watch, computed } = moduleConf;
+    if (storeConf.store[m]) {
       throw new Error(`run api error: module${m} duplicate`);
     }
 
     storeConf.store[m] = evalState(state);
     if (typeof state === 'function') ccContext.moduleName_stateFn_[m] = state;
-    
+
     storeConf.reducer[m] = reducer;
-    if (watch) storeConf.watch[m] = watch;
-    if (computed) storeConf.computed[m] = computed;
-    if (init) storeConf.init[m] = init;
-    if (initPost) storeConf.initPost[m] = initPost;
+    storeConf.watch[m] = watch;
+    storeConf.computed[m] = computed;
+    storeConf.lifecycle[m] = getLifecycle(moduleConf);
   }
 
   // traversal moduleNames
   okeys(store).forEach(m => buildStoreConf(m, store[m]));
 
-  // push by configure api
+  // these modules pushed by configure api
   pendingModules.forEach(({ module, config }) => {
     util.justTip(`configure pending module[${module}]`);
     buildStoreConf(module, config)
   });
 
   pendingModules.length = 0;// clear pending modules
-
-  if (isObjectNull(storeConf.init)) storeConf.init = null;
-
   startup(storeConf, options);
 }

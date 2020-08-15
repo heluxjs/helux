@@ -4,6 +4,8 @@ import watch from './watch-map';
 import runtimeVar from './runtime-var';
 import runtimeHandler from './runtime-handler';
 import { waKey_uKeyMap_, waKey_staticUKeyMap_ } from './wakey-ukey-map';
+import module_InsCount_ from './modue-ins-count-map';
+import lifecycle from './lifecycle';
 import refs from './refs';
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE } from '../support/constant';
 import * as util from '../support/util';
@@ -210,10 +212,7 @@ const ccContext = {
       _state[ccUniqueKey] = mergedState;
     },
   },
-  init: {
-    _init: {}
-  },
-  lifecycle: {},
+  lifecycle,
   ccUKey_ref_: refs,
   /**
    * key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
@@ -228,6 +227,7 @@ const ccContext = {
   handlerKey_handler_: {},
   waKey_uKeyMap_,
   waKey_staticUKeyMap_,
+  module_InsCount_,
   refs,
   info: {
     packageLoadTime: Date.now(),

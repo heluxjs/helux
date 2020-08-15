@@ -1,9 +1,12 @@
-import * as util from '../../support/util';
+import { okeys, getVal } from '../../support/util';
 import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
+import module_InsCount_ from '../../cc-context/modue-ins-count-map';
+import lifecycle from '../../cc-context/lifecycle';
+import { makeModuleDispatcher } from '../state/handler-factory';
 
-const okeys = util.okeys;
+const { _lifecycle, _willUnmountOnce } = lifecycle;
 
 function executeClearCb(cbMap, ctx) {
   const execute = key => {// symbolKey or normalKey
@@ -20,15 +23,15 @@ export default function (ref) {
   //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
   ref.__$$isUnmounted = true;
   const ctx = ref.ctx;
-  const { ccUniqueKey, module, __$$staticWaKeyList } = ctx;
+  const { ccUniqueKey, module, __$$staticWaKeyList, __$$mstate } = ctx;
 
   // 正常情况下只有挂载了组件才会有effect等相关定义
   if (ref.__$$isMounted) {
     const { eid_effectReturnCb_, eid_effectPropsReturnCb_ } = ctx.effectMeta;
-  
+
     executeClearCb(eid_effectReturnCb_, ctx);
     executeClearCb(eid_effectPropsReturnCb_, ctx);
-  
+
     ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
   }
 
@@ -37,7 +40,7 @@ export default function (ref) {
   const waKeys = ctx.getWatchedKeys();// no module prefix
   waKeys.forEach(k => delIns(module, k, ccUniqueKey));
   const connWaKeys = ctx.getConnectWatchedKeys();
-  util.okeys(connWaKeys).map(m => {
+  okeys(connWaKeys).map(m => {
     const waKeys = connWaKeys[m];
     waKeys.forEach(k => delIns(m, k, ccUniqueKey));
   })
@@ -46,4 +49,14 @@ export default function (ref) {
   __$$staticWaKeyList.forEach(modStateKey => delStaticInsM(modStateKey, ccUniqueKey));
 
   unsetRef(ccUniqueKey);
+
+  module_InsCount_[module] -= 1;
+  if (_willUnmountOnce[module] === true) {
+    return;
+  }
+
+  if (module_InsCount_[module] === 0 && _lifecycle[module].lastInsWillUnmount) {
+    const once = _lifecycle[module].lastInsWillUnmount(makeModuleDispatcher(module), __$$mstate);
+    _willUnmountOnce[module] = getVal(once, true);
+  }
 }

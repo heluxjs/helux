@@ -4,7 +4,6 @@ import { NOT_A_JSON } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
 
 export default function (module, reducer = {}) {
-
   if (!util.isPJO(reducer)) {
     throw new Error(`module[${module}] reducer ${NOT_A_JSON}`);
   }

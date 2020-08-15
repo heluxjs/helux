@@ -45,4 +45,6 @@ export default function (module, mState, moduleMustNotExisted = true) {
       if (!globalStateKeys.includes(key)) globalStateKeys.push(key)
     });
   }
+
+  ccContext.module_InsCount_[module] = 0;
 }
