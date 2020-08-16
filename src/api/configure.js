@@ -1,6 +1,6 @@
 import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
-import {  MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
+import { MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
 import { NOT_A_JSON } from '../support/priv-constant';
 import * as util from '../support/util';
 import initModuleState from '../core/state/init-module-state';
@@ -20,7 +20,7 @@ const { isPJO, evalState } = util;
  * @param {string} module
  * @param {{state:object, reducer:object, watch:object, computed:object, init:object}} config
  */
-export default function (module, config) {
+export default function (module, config = {}) {
   if (!ccContext.isStartup) {
     pendingModules.push({ module, config });
     return;
@@ -40,7 +40,7 @@ export default function (module, config) {
   initModuleReducer(module, reducer);
   initModuleComputed(module, computed);
   initModuleWatch(module, watch);
-  initModuleLifecycle(module, getLifecycle(config.lifecyle));
+  initModuleLifecycle(module, getLifecycle(config));
 
   ccContext.moduleName_isConfigured_[module] = true;
   send(SIG_MODULE_CONFIGURED, module);

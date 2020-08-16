@@ -3089,7 +3089,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.1.15',
+      version: '2.9.1',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -5568,6 +5568,10 @@
    */
 
   function configure (module, config) {
+    if (config === void 0) {
+      config = {};
+    }
+
     if (!ccContext.isStartup) {
       pendingModules.push({
         module: module,
@@ -5584,17 +5588,18 @@
       throw new Error('configuring global module is not allowed');
     }
 
-    var state = config.state,
-        reducer = config.reducer,
-        computed = config.computed,
-        watch = config.watch;
+    var _config = config,
+        state = _config.state,
+        reducer = _config.reducer,
+        computed = _config.computed,
+        watch = _config.watch;
     var eState = evalState$1(state);
     if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
     initModuleState(module, eState, true);
     initModuleReducer(module, reducer);
     initModuleComputed(module, computed);
     initModuleWatch(module, watch);
-    initModuleLifecycle(module, getLifecycle(config.lifecyle));
+    initModuleLifecycle(module, getLifecycle(config));
     ccContext.moduleName_isConfigured_[module] = true;
     send(SIG_MODULE_CONFIGURED, module);
   }

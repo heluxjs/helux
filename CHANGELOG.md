@@ -1,3 +1,21 @@
+#### 2020-08-16
+2.9.1 发布
+- 新增`moudleConf.lifecycle`参数
+```js
+type lifecycle = {
+  initState?: typeof init; // legency for ModuleConfig.init
+  initStateDone?: (dispatch: IDispatch, moduleState: any) => any; // legency for ModuleConfig.initPost
+  // insteand of initState and initStateDone, using bellow methods is better way
+  // because you can put the logic to reducer
+  loaded?: (dispatch: IDispatch, moduleState: any) => void;
+  mounted?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
+  willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
+}
+```
+- 调整事件监听时机，组件挂载时才开始监听
+- 重写热加载适配逻辑，不再全部清理refs，保留class组件refs
+- fix： CcFragment 没有动态识别模块
+
 #### 2020-08-11
 2.8.16 发布
 - optimize: 支持`ctc.effect`传递对象型参数
