@@ -159,7 +159,7 @@ const ccContext = {
    */
   globalStateKeys: [
   ],
-  //store里的setState行为会自动触发模块级别的computed、watch函数
+  // store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     appendState: function (module, state) {
       const stateKeys = util.safeGetArray(moduleName_stateKeys_, module);
@@ -171,8 +171,8 @@ const ccContext = {
       ccContext.store.setState(module, state);
     },
     _state,
-    _prevState,//辅助effect逻辑用
-    _stateVer,//触发时，比较state版本，防止死循环
+    _prevState,// 辅助effect逻辑用
+    _stateVer,// 触发时，比较state版本，防止死循环
     getState: function (module) {
       if (module) return getState(module);
       else return _state;

@@ -3,9 +3,6 @@ import ccContext from '../cc-context';
 import createDispatcher from '../core/base/create-dispatcher';
 import * as boot from '../core/base/boot';
 import clearContextIfHot from './clear-context-if-hot';
-// import didMount from '../core/base/did-mount';
-// import beforeUnmount from '../core/base/before-unmount';
-// import initCcFrag from '../core/ref/init-cc-frag';
 
 const { justTip, bindToWindow, getErrStackKeywordLoc } = util;
 let cachedLocation = '';
@@ -28,22 +25,22 @@ function checkStartup(err) {
     info.firstStartupTime = now;
     info.latestStartupTime = now;
   } else if (cachedLocation !== curLocation) {
-    const tip = `invalid run api call!(it can only be called once, changing 'call run' line location in HMR will cause this error also, 
-    try refresh browser to reload your app to avoid this tip)`
+    const tip = `run can only beed called one time, try refresh browser to avoid this error`
     if (now - info.latestStartupTime < 1000) {
       throw new Error(tip);
+    }
+
+    if (util.isOnlineEditor()) {
+      resetClassInsUI = letRunOk();
+      cachedLocation = curLocation;
     } else {
-      if (util.isOnlineEditor()) {
-        resetClassInsUI = letRunOk();
-        cachedLocation = curLocation;
-      } else {
-        util.strictWarning(tip);
-        canStartup = false;
-      }
+      util.strictWarning(tip);
+      canStartup = false;
     }
   } else {
     resetClassInsUI = letRunOk();
   }
+
   return { canStartup, resetClassInsUI };
 }
 
@@ -102,7 +99,6 @@ export default function (
         ccContext.localStorage = window.localStorage;
       }
       ccContext.recoverRefState();
-
       createDispatcher();
       
       boot.configStoreState(store);
@@ -131,15 +127,6 @@ export default function (
       boot.configPlugins(plugins);
 
       resetClassInsUI();
-      // // 可以理解为类似useConcent里处理double-invoking 以及 async rendering的过程
-      // // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
-      // // 防止在线IDE热加载后，ui和store不同步的问题
-      // ccFragKeys.forEach(key => {
-      //   const ref = ccContext.ccUKey_ref_[key];
-      //   beforeUnmount(ref);
-      //   initCcFrag(ref);
-      //   didMount(ref);
-      // });
     } catch (err) {
       if (errorHandler) errorHandler(err);
       else throw err;

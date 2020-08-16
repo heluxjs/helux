@@ -112,12 +112,6 @@ function _parseDescObj(cate, confMeta, descObj) {
         if (depKeys.length === 0) {
           const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey); //consume retKey is stateKey
 
-          // 这段逻辑对于将来的1.6版本有效，即没有指定depKeys，启用同名键规则
-          // let targetDepKeys = [];
-          // if (!depKeys && isStateKey) {
-          //   targetDepKeys = [pureKey];// regenerate depKeys
-          // }
-
           _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
           _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
         } else {// ['foo/b1', 'bar/b1'] or ['b1', 'b2']

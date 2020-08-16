@@ -205,7 +205,7 @@ export default function (ref, params, liteLevel = 5) {
     connectedModules,
 
     // dynamic meta, I don't want user know these props, so let field name start with __$$
-    __$$onEvents,// 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
+    __$$onEvents,// 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
 
     __$$hasModuleState: modStateKeys.length > 0,
     __$$renderStatus: UNSTART,
@@ -390,8 +390,7 @@ export default function (ref, params, liteLevel = 5) {
       ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
     }
     ctx.on = (inputEvent, handler) => {
-      const { name: event, identity } = ev.getEventItem(inputEvent);
-      ev.bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+      __$$onEvents.push({ inputEvent, handler });
     };
   }
 

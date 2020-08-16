@@ -66,7 +66,6 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
 function _pickNonCustomizeIns() {
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
   const ccFragKeys = [];
-  const ccNonCusKeys = [];
   const ccClassInsKeys = [];
   okeys(ccUKey_ref_).forEach(refKey => {
     const ref = ccUKey_ref_[refKey];
@@ -74,18 +73,11 @@ function _pickNonCustomizeIns() {
       && ref.__$$isMounted === true // 已挂载
       && ref.__$$isUnmounted === false // 未卸载
     ) {
-      const { insType, type } = ref.ctx;
-      // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
-      if (insType === CC_FRAGMENT) {
-        ccFragKeys.push(refKey);
-        ccNonCusKeys.push(refKey);
-      } else if (insType === CC_OB) {
-        ccNonCusKeys.push(refKey)
-      }
+      const { type } = ref.ctx;
       if (type === CC_CLASS) ccClassInsKeys.push(refKey);
     }
   })
-  return { ccFragKeys, ccNonCusKeys, ccClassInsKeys };
+  return { ccFragKeys, ccClassInsKeys };
 }
 
 function _clearAll() {
@@ -150,9 +142,7 @@ export default function (clearAll = false) {
   
         const ret = _pickNonCustomizeIns();
         // !!!重计算各个模块的computed结果
-        return _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys);
-        // return ret.ccFragKeys;
-        // return resetClassInsUI;
+        return _clearInsAssociation(ccContext.reComputed, ret.ccClassInsKeys);
       }
     } else {
       console.warn(`clear failed because of not running under hot reload mode!`);

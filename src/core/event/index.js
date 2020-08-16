@@ -9,6 +9,7 @@ function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
   // codesandbox lost default value
   const _identity = identity == undefined ? null : identity;
 
+  // 查找的时候，只负责取，不负责隐式的生成，此次不需要用safeGetArray
   const handlers = event_handlers_[event];
   if (handlers) {
     let filteredHandlers = handlers;
