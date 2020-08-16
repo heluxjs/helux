@@ -1,6 +1,6 @@
 import {
   MODULE_GLOBAL, ERR, CCSYNC_KEY,
-  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK,
+  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK, UNMOUNTED,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
@@ -304,8 +304,8 @@ export default function (ref, params, liteLevel = 5) {
       initialState = initialStateOrCb();
     }
     // 已挂载则不让用户在调用initState
-    if (ref.__$$isMounted) {
-      return justWarning(`initState can only been called before first render period!`);
+    if (ref.__$$ms !== UNMOUNTED) {
+      return justWarning(`initState must been called in setup block!`);
     }
     if (!util.isPJO(state)) {
       return justWarning(`state ${NOT_A_JSON}`);

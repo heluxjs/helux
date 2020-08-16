@@ -16,6 +16,7 @@ const {
   FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
+  UNMOUNTED, MOUNTED,
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
@@ -148,10 +149,7 @@ function triggerReactSetState(
   }
 
   if (
-    // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
-    // targetRef.__$$isMounted === false || // 还未挂载上
-
-    targetRef.__$$isUnmounted === true || // 已卸载
+    targetRef.__$$ms === UNMOUNTED || // 已卸载
     stateFor !== FOR_ONE_INS_FIRSTLY ||
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     (calledBy !== FORCE_UPDATE && isObjectNull(state))
@@ -270,7 +268,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
     if (!ref) return;
 
     // 对于挂载好了还未卸载的实例，才有必要触发重渲染
-    if (ref.__$$isUnmounted === false) {
+    if (ref.__$$ms === MOUNTED) {
       const refCtx = ref.ctx;
 
       const { hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState } =

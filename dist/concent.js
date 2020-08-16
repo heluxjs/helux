@@ -74,6 +74,10 @@
     CC_REDUCER_NOT_A_FUNCTION: 1503
   };
   var ERR_MESSAGE = (_ERR_MESSAGE = {}, _ERR_MESSAGE[ERR.CC_MODULE_NAME_DUPLICATE] = 'module name duplicate!', _ERR_MESSAGE[ERR.CC_MODULE_NOT_FOUND] = "module not found!", _ERR_MESSAGE[ERR.CC_DISPATCH_STRING_INVALID] = "when type param is string, it must be one of these format: (fnName)\u3001(moduleName)/(fnName)", _ERR_MESSAGE[ERR.CC_DISPATCH_PARAM_INVALID] = "dispatch param type is invalid, it must be string or object", _ERR_MESSAGE[ERR.CC_MODULE_NOT_CONNECTED] = "module not been connected by ref", _ERR_MESSAGE[ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE] = "props.ccKey duplicate", _ERR_MESSAGE[ERR.CC_STORED_KEYS_NEED_CCKEY] = 'you must explicitly specify a ccKey for ccInstance when set storedKeys!', _ERR_MESSAGE[ERR.CC_CLASS_KEY_DUPLICATE] = 'ccClassKey duplicate!', _ERR_MESSAGE[ERR.CC_REDUCER_NOT_A_FUNCTION] = "reducer must be a function!", _ERR_MESSAGE);
+  var NOT_MOUNT = 1;
+  var MOUNTED = 2; // 已挂载未卸载
+
+  var UNMOUNTED = 3;
 
   var _cst = /*#__PURE__*/Object.freeze({
     MODULE_GLOBAL: MODULE_GLOBAL,
@@ -116,7 +120,10 @@
     FN_CU: FN_CU,
     FN_WATCH: FN_WATCH,
     ERR: ERR,
-    ERR_MESSAGE: ERR_MESSAGE
+    ERR_MESSAGE: ERR_MESSAGE,
+    NOT_MOUNT: NOT_MOUNT,
+    MOUNTED: MOUNTED,
+    UNMOUNTED: UNMOUNTED
   });
 
   var _moduleName_stateKeys;
@@ -2015,7 +2022,7 @@
   function triggerReRender(ref) {
     if (!ref) return; // 对于挂载好了还未卸载的实例，才有必要触发重渲染
 
-    if (ref.__$$isUnmounted === false) {
+    if (ref.__$$ms === MOUNTED) {
       var refCtx = ref.ctx;
 
       refCtx.__$$ccForceUpdate();
@@ -3004,7 +3011,7 @@
      * committedState keys must been included in globalStateKeys
      */
     globalStateKeys: [],
-    //store里的setState行为会自动触发模块级别的computed、watch函数
+    // store里的setState行为会自动触发模块级别的computed、watch函数
     store: {
       appendState: function appendState(module, state) {
         var stateKeys = safeGetArray(moduleName_stateKeys_, module);
@@ -3017,9 +3024,9 @@
       },
       _state: _state,
       _prevState: _prevState,
-      //辅助effect逻辑用
+      // 辅助effect逻辑用
       _stateVer: _stateVer,
-      //触发时，比较state版本，防止死循环
+      // 触发时，比较state版本，防止死循环
       getState: function getState(module) {
         if (module) return _getState(module);else return _state;
       },
@@ -3748,11 +3755,6 @@
             var _resolveKey3 = _resolveKey(confMeta, callerModule, retKey),
                 _pureKey = _resolveKey3.pureKey,
                 _module2 = _resolveKey3.module; //consume retKey is stateKey
-            // 这段逻辑对于将来的1.6版本有效，即没有指定depKeys，启用同名键规则
-            // let targetDepKeys = [];
-            // if (!depKeys && isStateKey) {
-            //   targetDepKeys = [pureKey];// regenerate depKeys
-            // }
 
 
             _checkRetKeyDup(cate, confMeta, fnUid, _pureKey);
@@ -4383,7 +4385,9 @@
       SIG_STATE_CHANGED$1 = SIG_STATE_CHANGED,
       RENDER_NO_OP$1 = RENDER_NO_OP,
       RENDER_BY_KEY$1 = RENDER_BY_KEY,
-      RENDER_BY_STATE$1 = RENDER_BY_STATE;
+      RENDER_BY_STATE$1 = RENDER_BY_STATE,
+      UNMOUNTED$1 = UNMOUNTED,
+      MOUNTED$1 = MOUNTED;
   var _ccContext$store = ccContext.store,
       storeSetState = _ccContext$store.setState,
       getPrevState = _ccContext$store.getPrevState,
@@ -4554,9 +4558,7 @@
       return nextNoop();
     }
 
-    if ( // 未挂载上不用判断，react自己会安排到更新队列里，等到挂载上时再去触发更新
-    // targetRef.__$$isMounted === false || // 还未挂载上
-    targetRef.__$$isUnmounted === true || // 已卸载
+    if (targetRef.__$$ms === UNMOUNTED$1 || // 已卸载
     stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && isObjectNull$1(state)) {
       return nextNoop();
@@ -4704,7 +4706,7 @@
       var ref = ccUKey_ref_[refKey];
       if (!ref) return; // 对于挂载好了还未卸载的实例，才有必要触发重渲染
 
-      if (ref.__$$isUnmounted === false) {
+      if (ref.__$$ms === MOUNTED$1) {
         var refCtx = ref.ctx;
 
         var _computeValueForRef = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false),
@@ -5674,7 +5676,8 @@
   function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
     // 不用默认参数写法了
     // codesandbox lost default value
-    var _identity = identity == undefined ? null : identity;
+    var _identity = identity == undefined ? null : identity; // 查找的时候，只负责取，不负责隐式的生成，此次不需要用safeGetArray
+
 
     var handlers = event_handlers_[event];
 
@@ -5805,11 +5808,7 @@
             return;
           }
 
-          var fn = handler.fn;
-          if (ref.__$$isMounted) fn.apply(void 0, args);else ref.ctx.__$$onEvents.push({
-            fn: fn,
-            args: args
-          });
+          if (ref.__$$ms === MOUNTED) handler.fn.apply(handler, args);
         }
       }
     });
@@ -6546,7 +6545,7 @@
       connectedModules: connectedModules,
       // dynamic meta, I don't want user know these props, so let field name start with __$$
       __$$onEvents: __$$onEvents,
-      // 当组件还未挂载时，event中心会将事件存到__$$onEvents里，当组件挂载时检查的事件列表并执行，然后清空
+      // 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
       __$$hasModuleState: modStateKeys.length > 0,
       __$$renderStatus: UNSTART,
       __$$curWaKeys: {},
@@ -6649,8 +6648,8 @@
       } // 已挂载则不让用户在调用initState
 
 
-      if (ref.__$$isMounted) {
-        return justWarning$5("initState can only been called before first render period!");
+      if (ref.__$$ms !== UNMOUNTED) {
+        return justWarning$5("initState must been called in setup block!");
       }
 
       if (!isPJO(state)) {
@@ -6839,11 +6838,10 @@
       };
 
       ctx.on = function (inputEvent, handler) {
-        var _ev$getEventItem2 = getEventItem(inputEvent),
-            event = _ev$getEventItem2.name,
-            identity = _ev$getEventItem2.identity;
-
-        bindEventHandlerToCcContext(stateModule, ccClassKey, ccUniqueKey, event, identity, handler);
+        __$$onEvents.push({
+          inputEvent: inputEvent,
+          handler: handler
+        });
       };
     }
 
@@ -7431,31 +7429,17 @@
   function _pickNonCustomizeIns() {
     var ccUKey_ref_ = ccContext.ccUKey_ref_;
     var ccFragKeys = [];
-    var ccNonCusKeys = [];
     var ccClassInsKeys = [];
     okeys(ccUKey_ref_).forEach(function (refKey) {
       var ref = ccUKey_ref_[refKey];
 
-      if (ref && ref.__$$isMounted === true // 已挂载
-      && ref.__$$isUnmounted === false // 未卸载
-      ) {
-          var _ref$ctx = ref.ctx,
-              insType = _ref$ctx.insType,
-              type = _ref$ctx.type; // insType判断实例是由用户直接使用<CcFragment>初始化化的组件实例
-
-          if (insType === CC_FRAGMENT) {
-            ccFragKeys.push(refKey);
-            ccNonCusKeys.push(refKey);
-          } else if (insType === CC_OB) {
-            ccNonCusKeys.push(refKey);
-          }
-
-          if (type === CC_CLASS) ccClassInsKeys.push(refKey);
-        }
+      if (ref && ref.__$$ms === MOUNTED) {
+        var type = ref.ctx.type;
+        if (type === CC_CLASS) ccClassInsKeys.push(refKey);
+      }
     });
     return {
       ccFragKeys: ccFragKeys,
-      ccNonCusKeys: ccNonCusKeys,
       ccClassInsKeys: ccClassInsKeys
     };
   }
@@ -7525,8 +7509,7 @@
           var ret = _pickNonCustomizeIns(); // !!!重计算各个模块的computed结果
 
 
-          return _clearInsAssociation(ccContext.reComputed, ret.ccNonCusKeys); // return ret.ccFragKeys;
-          // return resetClassInsUI;
+          return _clearInsAssociation(ccContext.reComputed, ret.ccClassInsKeys);
         }
       } else {
         console.warn("clear failed because of not running under hot reload mode!");
@@ -7538,9 +7521,6 @@
       return noop$$1;
     }
   }
-
-  // import beforeUnmount from '../core/base/before-unmount';
-  // import initCcFrag from '../core/ref/init-cc-frag';
 
   var justTip$1 = justTip,
       bindToWindow$1 = bindToWindow,
@@ -7568,18 +7548,18 @@
       info.firstStartupTime = now;
       info.latestStartupTime = now;
     } else if (cachedLocation !== curLocation) {
-      var tip = "invalid run api call!(it can only be called once, changing 'call run' line location in HMR will cause this error also, \n    try refresh browser to reload your app to avoid this tip)";
+      var tip = "run can only beed called one time, try refresh browser to avoid this error";
 
       if (now - info.latestStartupTime < 1000) {
         throw new Error(tip);
+      }
+
+      if (isOnlineEditor()) {
+        resetClassInsUI = letRunOk();
+        cachedLocation = curLocation;
       } else {
-        if (isOnlineEditor()) {
-          resetClassInsUI = letRunOk();
-          cachedLocation = curLocation;
-        } else {
-          strictWarning(tip);
-          canStartup = false;
-        }
+        strictWarning(tip);
+        canStartup = false;
       }
     } else {
       resetClassInsUI = letRunOk();
@@ -7697,15 +7677,7 @@
         ccContext.isStartup = true; //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
 
         configPlugins(plugins);
-        resetClassInsUI(); // // 可以理解为类似useConcent里处理double-invoking 以及 async rendering的过程
-        // // 直接实例化的CcFragment需要在boot过程完毕后再次走卸载并挂载的过程，以便数据和store同步，register信息正确
-        // // 防止在线IDE热加载后，ui和store不同步的问题
-        // ccFragKeys.forEach(key => {
-        //   const ref = ccContext.ccUKey_ref_[key];
-        //   beforeUnmount(ref);
-        //   initCcFrag(ref);
-        //   didMount(ref);
-        // });
+        resetClassInsUI();
       } catch (err) {
         if (errorHandler) errorHandler(err);else throw err;
       }
@@ -7846,10 +7818,7 @@
   var runtimeVar$3 = ccContext.runtimeVar;
   function beforeMount (ref, setup, bindCtxToMethod) {
     var ctx = ref.ctx;
-    ref.__$$isUnmounted = false; // false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
-
-    ref.__$$isMounted = false; // 未挂载，在didMount时机才置为true，表示已挂载
-    // flag is in before mount setup
+    ref.__$$ms = NOT_MOUNT; // flag is in before mount setup
 
     ctx.__$$inBM = true; //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
 
@@ -8146,8 +8115,7 @@
   var getModuleVer$3 = ccContext.store.getModuleVer;
   function didMount (ref) {
     afterRender(ref);
-    ref.__$$isMounted = true;
-    ref.__$$isUnmounted = false;
+    ref.__$$ms = MOUNTED;
     var _ref$ctx = ref.ctx,
         ccUniqueKey = _ref$ctx.ccUniqueKey,
         __$$onEvents = _ref$ctx.__$$onEvents,
@@ -8155,7 +8123,24 @@
         module = _ref$ctx.module,
         __$$mstate = _ref$ctx.__$$mstate,
         __$$prevModuleVer = _ref$ctx.__$$prevModuleVer;
-    setRef(ref);
+    setRef(ref); // 确保组件挂载时在绑定事件，以避免同一个组件(通常是function组件, 因为cursor问题)，
+    // 走了 (1)mount ---> (2)mount ---> (1)unmount 时把2本来也要监听的事件清理掉
+    // 同时本身来说，挂载好的组件监听事件才是安全的
+
+    if (__$$onEvents.length > 0) {
+      __$$onEvents.forEach(function (_ref) {
+        var inputEvent = _ref.inputEvent,
+            handler = _ref.handler;
+
+        var _ev$getEventItem = getEventItem(inputEvent),
+            event = _ev$getEventItem.name,
+            identity = _ev$getEventItem.identity;
+
+        bindEventHandlerToCcContext(module, ref.ctx.ccClassKey, ccUniqueKey, event, identity, handler);
+      });
+
+      __$$onEvents.length = 0;
+    }
 
     var __$$staticWaKeyList = okeys(__$$staticWaKeys); // 用于辅助记录依赖映射
 
@@ -8164,18 +8149,7 @@
 
     __$$staticWaKeyList.forEach(function (modStateKey) {
       return mapStaticInsM(modStateKey, ccUniqueKey);
-    }); // 这些事件是组件还未挂载时，就派发过来的，延迟到此刻执行，同时清空
-
-
-    if (__$$onEvents.length > 0) {
-      __$$onEvents.forEach(function (_ref) {
-        var fn = _ref.fn,
-            args = _ref.args;
-        return fn.apply(void 0, args);
-      });
-
-      __$$onEvents.length = 0;
-    }
+    });
 
     triggerSetupEffect(ref, true);
     safeAdd(module_insCount_, module, 1);
@@ -8240,14 +8214,15 @@
   function beforeUnmount (ref) {
     //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
     //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
-    ref.__$$isUnmounted = true;
+    var curMs = ref.__$$ms;
+    ref.__$$ms = UNMOUNTED;
     var ctx = ref.ctx;
     var ccUniqueKey = ctx.ccUniqueKey,
         module = ctx.module,
         __$$staticWaKeyList = ctx.__$$staticWaKeyList,
         __$$mstate = ctx.__$$mstate; // 正常情况下只有挂载了组件才会有effect等相关定义
 
-    if (ref.__$$isMounted) {
+    if (curMs === MOUNTED) {
       var _ctx$effectMeta = ctx.effectMeta,
           eid_effectReturnCb_ = _ctx$effectMeta.eid_effectReturnCb_,
           eid_effectPropsReturnCb_ = _ctx$effectMeta.eid_effectPropsReturnCb_;

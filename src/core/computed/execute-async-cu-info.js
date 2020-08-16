@@ -14,7 +14,7 @@ function triggerReRender(ref) {
   if (!ref) return;
 
   // 对于挂载好了还未卸载的实例，才有必要触发重渲染
-  if (ref.__$$isUnmounted === false) {
+  if (ref.__$$ms === cst.MOUNTED) {
     const refCtx = ref.ctx;
     refCtx.__$$ccForceUpdate();
   }

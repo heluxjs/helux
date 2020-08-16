@@ -9,6 +9,7 @@ import ccContext from '../../cc-context';
 import * as ev from '../event';
 import { makeModuleDispatcher } from '../state/handler-factory';
 import { getVal } from '../../support/util';
+import { MOUNTED } from '../../support/constant';
 
 const { _lifecycle, _mountedOnce } = lifecycle;
 const { store: { getModuleVer } } = ccContext;
@@ -16,8 +17,7 @@ const { store: { getModuleVer } } = ccContext;
 export default function (ref) {
   afterRender(ref);
 
-  ref.__$$isMounted = true;
-  ref.__$$isUnmounted = false;
+  ref.__$$ms = MOUNTED;
   const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, __$$mstate, __$$prevModuleVer } = ref.ctx;
   setRef(ref);
 

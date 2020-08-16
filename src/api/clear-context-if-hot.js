@@ -2,7 +2,7 @@ import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { clearCount } from '../core/ref/set-ref';
-import { MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_FRAGMENT, CC_OB, CC_CLASS } from '../support/constant';
+import { MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER, CC_CLASS, MOUNTED } from '../support/constant';
 import initModuleComputed from '../core/computed/init-module-computed';
 import { clearCuRefer } from '../core/base/find-dep-fns-to-execute';
 import initModuleWatch from '../core/watch/init-module-watch';
@@ -69,10 +69,7 @@ function _pickNonCustomizeIns() {
   const ccClassInsKeys = [];
   okeys(ccUKey_ref_).forEach(refKey => {
     const ref = ccUKey_ref_[refKey];
-    if (ref
-      && ref.__$$isMounted === true // 已挂载
-      && ref.__$$isUnmounted === false // 未卸载
-    ) {
+    if (ref && ref.__$$ms === MOUNTED) {
       const { type } = ref.ctx;
       if (type === CC_CLASS) ccClassInsKeys.push(refKey);
     }

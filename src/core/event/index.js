@@ -1,4 +1,5 @@
 import * as util from '../../support/util';
+import { MOUNTED } from '../../support/constant';
 import ccContext from '../../cc-context';
 
 const { event_handlers_, handlerKey_handler_, ccUKey_handlerKeys_, ccUKey_ref_} = ccContext;
@@ -102,9 +103,7 @@ export function findEventHandlersToPerform(event, ...args) {
         if (canPerform && !canPerform(ref)) {
           return;
         }
-        const fn = handler.fn;
-        if (ref.__$$isMounted) fn(...args);
-        else ref.ctx.__$$onEvents.push({ fn, args });
+        if (ref.__$$ms === MOUNTED) handler.fn(...args);
       }
     }
   });

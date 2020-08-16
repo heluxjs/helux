@@ -1,5 +1,5 @@
 import * as util from '../../support/util';
-import { MODULE_GLOBAL } from '../../support/constant';
+import { MODULE_GLOBAL, NOT_MOUNT } from '../../support/constant';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 import makeCuRetContainer from '../computed/make-cu-ret-container';
@@ -10,10 +10,7 @@ const { runtimeVar } = ccContext;
 
 export default function (ref, setup, bindCtxToMethod) {
   const ctx = ref.ctx;
-
-  ref.__$$isUnmounted = false;// false表示未卸载（不代表已挂载），在willUnmount时机才置为true，表示已卸载
-  ref.__$$isMounted = false;// 未挂载，在didMount时机才置为true，表示已挂载
-
+  ref.__$$ms = NOT_MOUNT;
   // flag is in before mount setup
   ctx.__$$inBM = true;
 

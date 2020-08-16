@@ -82,18 +82,18 @@ export const ERR = {
   CC_REDUCER_NOT_A_FUNCTION: 1503,
 }
 
-
 export const ERR_MESSAGE = {
   [ERR.CC_MODULE_NAME_DUPLICATE]: 'module name duplicate!',
   [ERR.CC_MODULE_NOT_FOUND]: `module not found!`,
   [ERR.CC_DISPATCH_STRING_INVALID]: `when type param is string, it must be one of these format: (fnName)、(moduleName)/(fnName)`,
   [ERR.CC_DISPATCH_PARAM_INVALID]: `dispatch param type is invalid, it must be string or object`,
   [ERR.CC_MODULE_NOT_CONNECTED]: `module not been connected by ref`,
-
   [ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE]: `props.ccKey duplicate`,
   [ERR.CC_STORED_KEYS_NEED_CCKEY]: 'you must explicitly specify a ccKey for ccInstance when set storedKeys!',
-
   [ERR.CC_CLASS_KEY_DUPLICATE]: 'ccClassKey duplicate!',
-
   [ERR.CC_REDUCER_NOT_A_FUNCTION]: `reducer must be a function!`,
 }
+
+export const NOT_MOUNT = 1;
+export const MOUNTED = 2; // 已挂载未卸载
+export const UNMOUNTED = 3;
