@@ -1,6 +1,6 @@
 import {
   MODULE_GLOBAL, ERR, CCSYNC_KEY,
-  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK, UNMOUNTED,
+  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
@@ -303,8 +303,7 @@ export default function (ref, params, liteLevel = 5) {
     if (typeof initialStateOrCb === 'function') {
       initialState = initialStateOrCb();
     }
-    // 已挂载则不让用户在调用initState
-    if (ref.__$$ms !== UNMOUNTED) {
+    if (!ref.ctx.__$$inBM) {
       return justWarning(`initState must been called in setup block!`);
     }
     if (!util.isPJO(state)) {

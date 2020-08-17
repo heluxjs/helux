@@ -3089,7 +3089,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.1',
+      version: '2.9.3',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6650,10 +6650,9 @@
 
       if (typeof initialStateOrCb === 'function') {
         initialState = initialStateOrCb();
-      } // 已挂载则不让用户在调用initState
+      }
 
-
-      if (ref.__$$ms !== UNMOUNTED) {
+      if (!ref.ctx.__$$inBM) {
         return justWarning$5("initState must been called in setup block!");
       }
 

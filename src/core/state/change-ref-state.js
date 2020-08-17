@@ -277,10 +277,9 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
       const { hasDelta: hasDeltaInWa, newCommittedState: waCommittedState } =
         watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
 
-        
-      // computed & watch 过程中提交了新的state，合并到unProxyState里，beforeRender时会利用unProxyState生成最新的obState
-      // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部保证了实例里cu或者wa函数commit提交的
-      // 状态只能是privateStateKey，所以合并到unProxyState是安全的
+      // computed & watch 过程中提交了新的state，合并到 unProxyState 里
+      // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部
+      // 保证了实例里cu或者wa函数commit提交的状态只能是 privateStateKey，所以合并到unProxyState是安全的
       if (hasDeltaInCu || hasDeltaInWa) {
         const changedRefPrivState = Object.assign(cuCommittedState, waCommittedState);
         const refModule = refCtx.module;
@@ -290,6 +289,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
         watchKeyForRef(ref, refModule, refState, changedRefPrivState, callInfo);
 
         Object.assign(refState, changedRefPrivState);
+        Object.assign(refCtx.state, changedRefPrivState);
         refCtx.__$$settedList.push({ module: refModule, keys: okeys(changedRefPrivState) });
       }
 
