@@ -38,7 +38,7 @@ export default function (
   const _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, classKeyPrefix, featureStr, ccClassKey);
 
   // 此处再次获得真正的renderKeyClasses
-  const _renderKeyClasses = getRenderKeyClasses(_ccClassKey, renderKeyClasses);
+  const _renderKeyClasses = getRenderKeyClasses(_ccClassKey, regRenderKeyClasses);
   let ccClassContext = ccClassKey_ccClassContext_[_ccClassKey];
   //做一个判断，有可能是热加载调用
   if (!ccClassContext) {
