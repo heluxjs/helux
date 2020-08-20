@@ -213,6 +213,14 @@ export default function executeDepFns(
             newStateArg = oldStateArg = makeCuObState(initNewState, collectedDepKeys);
           }
 
+          // TODO: fnCtx.connectedState 转为代理对象，用于收集到连接模块的依赖
+          // 让示例 https://codesandbox.io/s/ref-watch-read-connected-state-prb4v?file=/src/App.js 正常工作
+          // 不同的sourceType，创建的connectedState不一样
+          // for module: fnCtx.getComputed, fnCtx.getState，
+          // 此处会检查模块加载顺序，然后appendState创建一个隐含的key，然后在目标模块创建一个watch函数
+          // for ref: fnCtx.connectedState, fnCtx.connectedComputed
+          // 确保 (n,o,f)里的n o总是实例的state
+
           let computedRet;
           // 异步函数首次执行时才去调用它，仅为了收集依赖
           if (isCuFnAsync) {

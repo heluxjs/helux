@@ -1,5 +1,5 @@
 // import hoistNonReactStatic from 'hoist-non-react-statics';
-import React from 'react';
+import * as React from 'react';
 import {
   MODULE_DEFAULT, CC_CLASS, CC_CUSTOMIZE,
 } from '../../support/constant';

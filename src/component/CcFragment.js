@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import * as util from '../support/util';
 import beforeUnmount from '../core/base/before-unmount';
 import didMount from '../core/base/did-mount';

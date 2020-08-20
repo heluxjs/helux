@@ -1340,4 +1340,3 @@ declare let defaultExport: DefaultExport;
 export default defaultExport;
 
 export as namespace cc;
-

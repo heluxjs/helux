@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import CcFragment from '../component/CcFragment';
 import mapRegistrationInfo from '../core/base/map-registration-info';
 import * as util from '../support/util';

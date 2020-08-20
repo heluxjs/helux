@@ -2,7 +2,7 @@
  * http://react.html.cn/docs/strict-mode.html
  * https://frontarm.com/daishi-kato/use-ref-in-concurrent-mode/
  */
-import React from 'react';
+import * as React from 'react';
 import { CC_HOOK, CC_OB, CC_CUSTOMIZE } from '../../support/constant';
 import { NOT_A_JSON } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';

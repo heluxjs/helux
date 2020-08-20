@@ -1,7 +1,7 @@
 /**
  * inspired by mobx's <Observer>{state=>state.name}</Observer>
  */
-import React from 'react';
+import * as React from 'react';
 import { useConcentForOb } from '../core/hook/use-concent';
 
 const obView = () => 'Ob view';

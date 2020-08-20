@@ -4,8 +4,6 @@
   (factory((global.concent = {}),global.React));
 }(this, (function (exports,React) { 'use strict';
 
-  React = React && React.hasOwnProperty('default') ? React['default'] : React;
-
   var _ERR_MESSAGE;
 
   var MODULE_GLOBAL = '$$global';
@@ -2623,7 +2621,14 @@
 
             if (needCollectDep) {
               newStateArg = oldStateArg = makeCuObState(initNewState, collectedDepKeys);
-            }
+            } // TODO: fnCtx.connectedState 转为代理对象，用于收集到连接模块的依赖
+            // 让示例 https://codesandbox.io/s/ref-watch-read-connected-state-prb4v?file=/src/App.js 正常工作
+            // 不同的sourceType，创建的connectedState不一样
+            // for module: fnCtx.getComputed, fnCtx.getState，
+            // 此处会检查模块加载顺序，然后appendState创建一个隐含的key，然后在目标模块创建一个watch函数
+            // for ref: fnCtx.connectedState, fnCtx.connectedComputed
+            // 确保 (n,o,f)里的n o总是实例的state
+
 
             var computedRet; // 异步函数首次执行时才去调用它，仅为了收集依赖
 
@@ -3089,7 +3094,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.3',
+      version: '2.9.5',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4715,9 +4720,9 @@
 
         var _watchKeyForRef = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false),
             hasDeltaInWa = _watchKeyForRef.hasDelta,
-            waCommittedState = _watchKeyForRef.newCommittedState; // computed & watch 过程中提交了新的state，合并到unProxyState里，beforeRender时会利用unProxyState生成最新的obState
-        // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部保证了实例里cu或者wa函数commit提交的
-        // 状态只能是privateStateKey，所以合并到unProxyState是安全的
+            waCommittedState = _watchKeyForRef.newCommittedState; // computed & watch 过程中提交了新的state，合并到 unProxyState 里
+        // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部
+        // 保证了实例里cu或者wa函数commit提交的状态只能是 privateStateKey，所以合并到unProxyState是安全的
 
 
         if (hasDeltaInCu || hasDeltaInWa) {
@@ -4727,6 +4732,7 @@
           computeValueForRef(ref, refModule, refState, changedRefPrivState, callInfo);
           watchKeyForRef(ref, refModule, refState, changedRefPrivState, callInfo);
           Object.assign(refState, changedRefPrivState);
+          Object.assign(refCtx.state, changedRefPrivState);
 
           refCtx.__$$settedList.push({
             module: refModule,
@@ -7162,7 +7168,7 @@
     var _ccClassKey = getCcClassKey(allowNamingDispatcher, module, _connect, classKeyPrefix, featureStr, ccClassKey); // 此处再次获得真正的renderKeyClasses
 
 
-    var _renderKeyClasses = getRenderKeyClasses(_ccClassKey, renderKeyClasses);
+    var _renderKeyClasses = getRenderKeyClasses(_ccClassKey, regRenderKeyClasses);
 
     var ccClassContext = ccClassKey_ccClassContext_$2[_ccClassKey]; //做一个判断，有可能是热加载调用
 
