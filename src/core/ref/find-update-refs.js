@@ -2,11 +2,10 @@ import * as util from '../../support/util';
 import ccContext from '../../cc-context';
 import * as cache from './_cache';
 
-const { okeys } = util;
+const { okeys, isEmptyVal } = util;
 const { ccUKey_ref_, waKey_uKeyMap_, waKey_staticUKeyMap_ } = ccContext;
 
 export default function (moduleName, partialSharedState, renderKeys, renderKeyClasses) {
-
   const sharedStateKeys = okeys(partialSharedState);
   const cacheKey = cache.getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses);
   const cachedResult = cache.getCache(moduleName, cacheKey);
@@ -31,7 +30,7 @@ export default function (moduleName, partialSharedState, renderKeys, renderKeyCl
 
   const tryMatch = (ref, toBelong) => {
     const {
-      renderKey: refRenderKey, ccClassKey: refCcClassKey, ccUniqueKey,
+      renderKey: refRenderKey, ccClassKey: refCcClassKey, ccUniqueKey, props,
     } = ref.ctx;
 
     // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
@@ -39,21 +38,23 @@ export default function (moduleName, partialSharedState, renderKeys, renderKeyCl
       const isRenderKeyMatched = renderKeys.includes(refRenderKey);
 
       // 所有的类实例都受renderKey匹配机制影响
-      if (renderKeyClasses === '*') {
+      // or 携带id生成了renderKey
+      if (renderKeyClasses === '*' || !isEmptyVal(props.id)) {
         if (isRenderKeyMatched) {
           putRef(toBelong, ccUniqueKey);
         }
-      } else {
-        // 这些指定类实例受renderKey机制影响
-        if (renderKeyClasses.includes(refCcClassKey)) {
-          if (isRenderKeyMatched) {
-            putRef(toBelong, ccUniqueKey);
-          }
-        }
-        // 这些实例则不受renderKey机制影响
-        else {
+        return;
+      }
+
+      // 这些指定类实例受renderKey机制影响
+      if (renderKeyClasses.includes(refCcClassKey)) {
+        if (isRenderKeyMatched) {
           putRef(toBelong, ccUniqueKey);
         }
+      }
+      // 这些实例则不受renderKey机制影响
+      else {
+        putRef(toBelong, ccUniqueKey);
       }
     } else {
       putRef(toBelong, ccUniqueKey);

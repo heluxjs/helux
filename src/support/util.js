@@ -63,6 +63,11 @@ export function isAsyncFn(fn) {
   return false;
 }
 
+// 0 算有效值, undefined null ''算空值
+export function isEmptyVal(val) {
+  return !val && val !== 0;
+}
+
 export function extractRenderKey(renderKey) {
   if (!renderKey && renderKey !== 0) return [];
   if (Array.isArray(renderKey)) return renderKey;

@@ -322,6 +322,10 @@
     }
 
     return false;
+  } // 0 算有效值, undefined null ''算空值
+
+  function isEmptyVal(val) {
+    return !val && val !== 0;
   }
   function extractRenderKey(renderKey) {
     if (!renderKey && renderKey !== 0) return [];
@@ -3099,7 +3103,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.11',
+      version: '2.2.2',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4279,11 +4283,13 @@
     return executeDepFns(ref, stateModule, refModule, oldState, curDepComputedFns, deltaCommittedState, newState, deltaCommittedState, callInfo, isBeforeMount, FN_CU, CATE_REF, computedContainer, mergeToDelta);
   }
 
-  var okeys$4 = okeys;
+  var okeys$4 = okeys,
+      isEmptyVal$1 = isEmptyVal;
   var ccUKey_ref_ = ccContext.ccUKey_ref_,
       waKey_uKeyMap_$2 = ccContext.waKey_uKeyMap_,
       waKey_staticUKeyMap_$2 = ccContext.waKey_staticUKeyMap_;
   function findUpdateRefs (moduleName, partialSharedState, renderKeys, renderKeyClasses) {
+    console.log('==> findUpdateRefs');
     var sharedStateKeys = okeys$4(partialSharedState);
     var cacheKey = getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses);
     var cachedResult = getCache(moduleName, cacheKey);
@@ -4313,26 +4319,32 @@
       var _ref$ctx = ref.ctx,
           refRenderKey = _ref$ctx.renderKey,
           refCcClassKey = _ref$ctx.ccClassKey,
-          ccUniqueKey = _ref$ctx.ccUniqueKey; // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
+          ccUniqueKey = _ref$ctx.ccUniqueKey,
+          props = _ref$ctx.props;
+      console.log("renderKeyClasses " + renderKeyClasses + " refCcClassKey " + refCcClassKey); // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
 
       if (renderKeys.length) {
         var isRenderKeyMatched = renderKeys.includes(refRenderKey); // 所有的类实例都受renderKey匹配机制影响
+        // or 携带id生成了renderKey
 
-        if (renderKeyClasses === '*') {
+        if (renderKeyClasses === '*' || !isEmptyVal$1(props.id)) {
           if (isRenderKeyMatched) {
             putRef(toBelong, ccUniqueKey);
           }
-        } else {
-          // 这些指定类实例受renderKey机制影响
-          if (renderKeyClasses.includes(refCcClassKey)) {
-            if (isRenderKeyMatched) {
-              putRef(toBelong, ccUniqueKey);
-            }
-          } // 这些实例则不受renderKey机制影响
-          else {
-              putRef(toBelong, ccUniqueKey);
-            }
+
+          return;
         }
+
+        console.log('current renderKey'); // 这些指定类实例受renderKey机制影响
+
+        if (renderKeyClasses.includes(refCcClassKey)) {
+          if (isRenderKeyMatched) {
+            putRef(toBelong, ccUniqueKey);
+          }
+        } // 这些实例则不受renderKey机制影响
+        else {
+            putRef(toBelong, ccUniqueKey);
+          }
       } else {
         putRef(toBelong, ccUniqueKey);
       }
@@ -4459,6 +4471,7 @@
         _ref$delay = _ref.delay,
         delay$$1 = _ref$delay === void 0 ? -1 : _ref$delay;
 
+    console.log('==> changeRefState');
     if (state === undefined) return;
 
     if (!isPJO$3(state)) {
@@ -4554,6 +4567,8 @@
   }
 
   function triggerReactSetState(targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, next) {
+    console.log('==> triggerReactSetState');
+
     var nextNoop = function nextNoop() {
       return next && next(RENDER_NO_OP$1, state);
     };
@@ -4674,6 +4689,8 @@
   }
 
   function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKeys) {
+    console.log('==> broadcastState');
+
     if (!partialSharedState) {
       // null
       return;
@@ -8813,6 +8830,18 @@
     }, ccClassKey);
   }
 
+  var firstCall = true;
+  var isStrictMode = false;
+  function isStrict (cursor) {
+    // 首次调用，即可确认是不是严格模式了
+    if (firstCall) {
+      firstCall = false;
+      isStrictMode = cursor % 2 === 0;
+    }
+
+    return isStrictMode;
+  }
+
   /**
    * http://react.html.cn/docs/strict-mode.html
    * https://frontarm.com/daishi-kato/use-ref-in-concurrent-mode/
@@ -8983,7 +9012,8 @@
 
     effectHandler(function () {
       var hookCtx = hookRef.hookCtx;
-      hookCtx.ef = 1; // mock componentWillUnmount
+      hookCtx.ef = 1; // 辅助非StrictMode包裹的区域，在随后的判断里可以逃出被删除逻辑
+      // mock componentWillUnmount
 
       return function () {
         var toUnmountRef = ccUKey_ref_$4[getHookCtxCcUKey(hookCtx)];
@@ -9013,17 +9043,21 @@
       // 这里通过触发beforeUnmount来清理多余的依赖
 
 
-      if (!hookCtx.clearPrev) {
+      var cursor = hookCtx.cursor;
+
+      if (isStrict(cursor) && !hookCtx.clearPrev) {
         hookCtx.clearPrev = true;
-        var _cursor = hookCtx.cursor;
-        var prevCursor = _cursor - 1;
+        var prevCursor = cursor - 1;
         var prevHookCtx = cursor_hookCtx_[prevCursor];
 
         if (prevHookCtx && prevHookCtx.ef === 0) {
-          delete cursor_hookCtx_[prevCursor]; // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
-          // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
+          // 确保是同一个类型的实例
+          if (prevHookCtx.hookRef.ctx.ccClassKey === hookCtx.hookRef.ctx.ccClassKey) {
+            delete cursor_hookCtx_[prevCursor]; // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
+            // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
 
-          beforeUnmount(prevHookCtx.hookRef);
+            beforeUnmount(prevHookCtx.hookRef);
+          }
         }
       }
     });
