@@ -171,7 +171,6 @@ export type TAuto = '-';
 export type DepKeys = string[] | TStar | TAuto;
 
 // type EvSyncReturn = (event: React.ChangeEvent<HTMLInputElement>) => void;
-type SyncReturn = IAnyObj | boolean;
 
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 
@@ -521,9 +520,9 @@ export interface ICtxBase {
   forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;
-  sync: (string: string, value?: typeof syncCb | any, renderKey?: RenderKey, delay?: string) => SyncReturn;
-  syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: RenderKey, delay?: string) => SyncReturn;
-  syncInt: (string: string, value?: typeof syncCb | number, renderKey?: RenderKey, delay?: string) => SyncReturn;
+  sync: (string: string, value?: typeof syncCb | any, renderKey?: RenderKey, delay?: string) => IAnyFn;
+  syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: RenderKey, delay?: string) => IAnyFn;
+  syncInt: (string: string, value?: typeof syncCb | number, renderKey?: RenderKey, delay?: string) => IAnyFn;
   syncAs: (string: string, value?: typeof asCb | any, renderKey?: RenderKey, delay?: string) => any;
   set: (string: string, value: any, renderKey?: RenderKey, delay?: string) => void;
   setBool: (string: string, renderKey?: RenderKey, delay?: string) => void;
