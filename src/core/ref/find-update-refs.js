@@ -5,10 +5,10 @@ import * as cache from './_cache';
 const { okeys } = util;
 const { ccUKey_ref_, waKey_uKeyMap_, waKey_staticUKeyMap_ } = ccContext;
 
-export default function (moduleName, partialSharedState, renderKey, renderKeyClasses) {
+export default function (moduleName, partialSharedState, renderKeys, renderKeyClasses) {
 
   const sharedStateKeys = okeys(partialSharedState);
-  const cacheKey = cache.getCacheKey(moduleName, sharedStateKeys, renderKey, renderKeyClasses);
+  const cacheKey = cache.getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses);
   const cachedResult = cache.getCache(moduleName, cacheKey);
   if (cachedResult) {
     return { sharedStateKeys, result: cachedResult };
@@ -35,8 +35,8 @@ export default function (moduleName, partialSharedState, renderKey, renderKeyCla
     } = ref.ctx;
 
     // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
-    if (renderKey) {
-      const isRenderKeyMatched = refRenderKey === renderKey;
+    if (renderKeys) {
+      const isRenderKeyMatched = renderKeys.includes(refRenderKey);
 
       // 所有的类实例都受renderKey匹配机制影响
       if (renderKeyClasses === '*') {

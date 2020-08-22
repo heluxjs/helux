@@ -141,10 +141,12 @@ export type SettingsCType<SetupFn, Ctx extends ICtxBase = ICtxBase> =
 
 export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
+type RenderKey = string | string[];
+
 interface IDispatchOptions {
   silent?: boolean;
   lazy?: boolean;
-  renderKey?: string;
+  renderKey?: RenderKey;
   delay?: number;// pick this delay first if user pass
 }
 type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
@@ -279,7 +281,7 @@ type MyReturnType<F extends (...args) => any> = ReturnType<F> extends Promise<in
     type PayloadType<FnName extends string> = (Parameters<reducerFnType<FnName>>)[0];
     type reducerFnResultType<FnName extends string> = ReturnType<reducerFnType<FnName>>;
  */
-type RenderKeyOrOpts = string | IDispatchOptions;
+type RenderKeyOrOpts = RenderKey | IDispatchOptions;
 declare function refCtxDispatch<RdFn extends IReducerFn>
   (type: string, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn>
@@ -519,12 +521,12 @@ export interface ICtxBase {
   forceUpdate: typeof refCtxForceUpdate;
   setGlobalState: typeof refCtxSetGlobalState;
   setModuleState: typeof refCtxSetModuleState;
-  sync: (string: string, value?: typeof syncCb | any, renderKey?: string, delay?: string) => SyncReturn;
-  syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: string, delay?: string) => SyncReturn;
-  syncInt: (string: string, value?: typeof syncCb | number, renderKey?: string, delay?: string) => SyncReturn;
-  syncAs: (string: string, value?: typeof asCb | any, renderKey?: string, delay?: string) => any;
-  set: (string: string, value: any, renderKey?: string, delay?: string) => void;
-  setBool: (string: string, renderKey?: string, delay?: string) => void;
+  sync: (string: string, value?: typeof syncCb | any, renderKey?: RenderKey, delay?: string) => SyncReturn;
+  syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: RenderKey, delay?: string) => SyncReturn;
+  syncInt: (string: string, value?: typeof syncCb | number, renderKey?: RenderKey, delay?: string) => SyncReturn;
+  syncAs: (string: string, value?: typeof asCb | any, renderKey?: RenderKey, delay?: string) => any;
+  set: (string: string, value: any, renderKey?: RenderKey, delay?: string) => void;
+  setBool: (string: string, renderKey?: RenderKey, delay?: string) => void;
   readonly settings: IAnyObj;
 }
 

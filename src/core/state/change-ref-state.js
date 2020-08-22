@@ -60,7 +60,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
  */
 export default function (state, {
   module, skipMiddleware = false, payload, stateChangedCb,
-  reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey = '', delay = -1 } = {}, targetRef
+  reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, targetRef
 ) {
   if (state === undefined) return;
 
@@ -69,10 +69,12 @@ export default function (state, {
     return;
   }
 
+  const targetRenderKey = util.extractRenderKey(renderKey);
+
   const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
   const stateFor = getStateFor(module, refModule);
-  const callInfo = { payload, renderKey, ccKey, module, fnName };
-  
+  const callInfo = { payload, renderKey: targetRenderKey, ccKey, module, fnName };
+
   // 在triggerReactSetState之前把状态存储到store，
   // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
   // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
@@ -89,12 +91,12 @@ export default function (state, {
   const ignoreRender = !hasPrivState && !!sharedState;
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback,
+  triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender, reactCallback,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
 
       const passToMiddleware = {
-        calledBy, type, payload, renderKey, delay, ccKey, ccUniqueKey,
+        calledBy, type, payload, renderKey: targetRenderKey, delay, ccKey, ccUniqueKey,
         committedState, refModule, module, fnName,
         sharedState: sharedState || {}, // 给一个空壳对象，防止用户直接用的时候报错null
       };
@@ -122,7 +124,7 @@ export default function (state, {
         } else {
           send(SIG_STATE_CHANGED, {
             calledBy, type, committedState, sharedState: realShare || {},
-            module, ccUniqueKey, renderKey
+            module, ccUniqueKey, renderKey: targetRenderKey
           });
         }
 
@@ -130,7 +132,7 @@ export default function (state, {
         if (stateChangedCb) stateChangedCb();
 
         // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, renderKey, delay);
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, delay);
       });
 
     }
@@ -138,7 +140,7 @@ export default function (state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback, next
+  targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, next
 ) {
   const nextNoop = () => next && next(RENDER_NO_OP, state);
   const refCtx = targetRef.ctx;
@@ -160,10 +162,10 @@ function triggerReactSetState(
   const { module: stateModule, storedKeys, ccUniqueKey } = refCtx;
   let renderType = RENDER_BY_STATE;
 
-  if (renderKey) {//if user specify renderKey
+  if (renderKeys) {//if user specify renderKeys
     renderType = RENDER_BY_KEY;
-    if (refCtx.renderKey !== renderKey) {// current instance can been rendered only if current instance's ccKey equal renderKey
-    return nextNoop();
+    if (renderKeys.includes(refCtx.renderKey)) {// current instance can been rendered only if ctx.renderKey included in renderKeys
+      return nextNoop();
     }
   }
 
@@ -218,9 +220,9 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
   return { partialState, hasDelta: false, hasPrivState };
 }
 
-function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey, delay) {
+function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay) {
   const startBroadcastState = () => {
-    broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey);
+    broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys);
   };
 
   if (delay > 0) {
@@ -231,7 +233,7 @@ function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRend
   }
 }
 
-function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKey) {
+function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKeys) {
   if (!partialSharedState) {// null
     return;
   }
@@ -243,7 +245,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
 
   const {
     sharedStateKeys, result: { belong: belongRefKeys, connect: connectRefKeys }
-  } = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses);
+  } = findUpdateRefs(moduleName, partialSharedState, renderKeys, renderKeyClasses);
 
   const renderedInBelong = {};
   belongRefKeys.forEach(refKey => {

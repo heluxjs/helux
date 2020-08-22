@@ -102,7 +102,7 @@ export default function register({
         $$attach(childRef) {
           const ctx = this.ctx;
           ctx.childRef = childRef;
-          childRef.ctx = ctx;// 让代理属性的目标组件即可从this.props 也可从 this 访问 ctx
+          childRef.ctx = ctx;// 让代理属性的目标组件访问ctx时，既可以写 this.props.ctx 也可以写 this.ctx
 
           // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
           childRef.setState = ctx.setState;

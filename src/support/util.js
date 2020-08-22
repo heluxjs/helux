@@ -41,7 +41,7 @@ export function isPJO(obj, canBeArray = false) {
   const isArr = Array.isArray(obj);
   const isObj = isObject(obj);
 
-  return canBeArray ? (isObj || isArr) : isObj;
+  return canBeArray ? (isArr || isObj) : isObj;
 }
 
 export function isAsyncFn(fn) {
@@ -63,6 +63,11 @@ export function isAsyncFn(fn) {
   return false;
 }
 
+export function extractRenderKey(renderKey) {
+  if (!renderKey) return [];
+  if (Array.isArray(renderKey)) return renderKey;
+  return [];
+}
 
 export function makeError(code, extraMessage) {
   let message = '';
@@ -452,7 +457,7 @@ export function isOnlineEditor() {
 }
 
 export function makeCallInfo(module) {
-  return { payload: null, renderKey: '', delay: -1, module, fnName: '' }
+  return { payload: null, renderKey: [], delay: -1, module, fnName: '' }
 }
 
 export function evalState(state = {}) {
