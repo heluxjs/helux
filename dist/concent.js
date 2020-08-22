@@ -3099,7 +3099,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.10',
+      version: '2.9.11',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -5105,20 +5105,21 @@
           dispatchSilent: silentDispatch,
           rootState: getState(),
           globalState: getState(MODULE_GLOBAL),
-          //指的是目标模块的state
+          // 指的是目标模块的state
           moduleState: moduleState,
-          //指的是目标模块的的moduleComputed
+          // 指的是目标模块的的moduleComputed
           moduleComputed: _computedValue$3[targetModule] || {},
-          //利用dispatch调用自动生成的setState
-          setState: function setState$$1(state) {
+          // 利用dispatch调用自动生成的setState
+          setState: function setState$$1(state, r, d) {
+            var targetR = r !== 0 ? r || renderKey : r;
+            var targetD = d !== 0 ? d || delay$$1 : d;
             return _dispatch('setState', state, {
               silent: isSilent,
-              renderKey: renderKey,
-              delay: delay$$1
+              renderKey: targetR,
+              delay: targetD
             });
           },
-          //透传上下文参数给IDispatchOptions,
-          //!!!指的是调用源cc类实例的ctx
+          // !!!指的是调用源cc类实例的ctx
           refCtx: callerRef.ctx // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
           // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
 
@@ -5136,10 +5137,10 @@
       }
 
       var handleReturnState = function handleReturnState(partialState) {
-        chainId_depth_[chainId] = chainId_depth_[chainId] - 1; //调用结束减1
+        chainId_depth_[chainId] = chainId_depth_[chainId] - 1; // 调用结束减1
 
         var curDepth = chainId_depth_[chainId];
-        var isFirstDepth = curDepth === 1; //调用结束就记录
+        var isFirstDepth = curDepth === 1; // 调用结束就记录
 
         setAllChainState(chainId, targetModule, partialState);
         var commitStateList = [];
@@ -5154,7 +5155,7 @@
           }); // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
 
           if (isChainIdLazy(chainId)) {
-            //来自于惰性派发的调用
+            // 来自于惰性派发的调用
             if (!isFirstDepth) {
               // 某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
               setChainState(chainId, targetModule, partialState);
@@ -5189,7 +5190,7 @@
         });
 
         if (isSourceCall) {
-          //源头dispatch or invoke结束调用
+          // 源头dispatch or invoke结束调用
           removeChainState(chainId);
           removeAllChainState(chainId);
         }

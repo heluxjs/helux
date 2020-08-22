@@ -16,6 +16,7 @@ import * as hf from '../state/handler-factory';
 import { isPJO, getRegisterOptions, evalState } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
+import isStrict from './is-strict';
 
 const { ccUKey_ref_ } = ccContext;
 const cursor_hookCtx_ = {};
@@ -147,7 +148,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   // after first render of hookRef just created 
   effectHandler(() => {
     const hookCtx = hookRef.hookCtx;
-    hookCtx.ef = 1;
+    hookCtx.ef = 1;// 辅助非StrictMode包裹的区域，在随后的判断里可以逃出被删除逻辑
 
     // mock componentWillUnmount
     return () => {
@@ -174,16 +175,19 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
     // 虽然未存储到refs上，但是收集到的依赖存储到了waKey_uKeyMap_上
     // 这里通过触发beforeUnmount来清理多余的依赖
-    if (!hookCtx.clearPrev) {
+    const cursor = hookCtx.cursor;
+    if (isStrict(cursor) && !hookCtx.clearPrev) {
       hookCtx.clearPrev = true;
-      const cursor = hookCtx.cursor;
       const prevCursor = cursor - 1;
       const prevHookCtx = cursor_hookCtx_[prevCursor];
       if (prevHookCtx && prevHookCtx.ef === 0) {
-        delete cursor_hookCtx_[prevCursor];
-        // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
-        // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
-        beforeUnmount(prevHookCtx.hookRef);
+        // 确保是同一个类型的实例
+        if (prevHookCtx.hookRef.ctx.ccClassKey === hookCtx.hookRef.ctx.ccClassKey) {
+          delete cursor_hookCtx_[prevCursor];
+          // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
+          // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
+          beforeUnmount(prevHookCtx.hookRef);
+        }
       }
     }
   });
