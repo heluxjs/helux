@@ -65,7 +65,7 @@ English | [简体中文](./README.zh-CN.md)
 - [Dep collection of computed](./examples/dep-collection-of-computed.md)
 - [Combine reducers](./examples/combine-reducers.md)
 - [Composition api](./examples/composition-api.md) 
-- [Life cycle method](./examples/life-cycle-method.md) 
+- [Ref lifecycle method](./examples/life-cycle-method.md) 
 - [Flexible top api](./examples/flexible-top-api.md)
 
 ### Real world
