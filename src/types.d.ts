@@ -141,7 +141,7 @@ export type SettingsCType<SetupFn, Ctx extends ICtxBase = ICtxBase> =
 
 export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
-type RenderKey = string | string[];
+type RenderKey = string | number | Array<string | number>[];
 
 interface IDispatchOptions {
   silent?: boolean;
@@ -151,7 +151,7 @@ interface IDispatchOptions {
 }
 type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
-  renderKeyOrOptions?: string | IDispatchOptions,
+  renderKeyOrOptions?: RenderKey | IDispatchOptions,
   delay?: number,
 ) => ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>> : unknown;
 
@@ -160,7 +160,7 @@ export type ReducerType<T extends IAnyObj> = T['setState'] extends Function ? {
   readonly [K in keyof T]: ReducerMethod<T, K>;
 } : {
   readonly [K in keyof T]: ReducerMethod<T, K>;
-} & { setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: string | IDispatchOptions, delay?: number) => Promise<P> }
+} & { setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => Promise<P> }
 
 export interface EvMapBase {
   [key: string]: any[];
@@ -456,7 +456,7 @@ export interface ICtxBase {
   // ref can rewrite these 4 props by ccOption
   readonly persistStoredKeys: boolean;
   readonly storedKeys: string[];
-  readonly renderKey: string;
+  readonly renderKey: string | number;
   readonly tag: string;
 
   readonly mapped: IAnyObj;
@@ -861,7 +861,7 @@ interface StoreConfig {
 
 type MidCtx = {
   calledBy: CalledBy, type: string, payload: any,
-  renderKey: string, delay: number, ccKey: string, ccUniqueKey: string,
+  renderKey: Array<string | number>[], delay: number, ccKey: string, ccUniqueKey: string,
   committedState: object, sharedState: object | null,
   refModule: string, module: string, fnName: string,
   modState: (key: string, value: any) => void,
@@ -890,7 +890,7 @@ type SigStateChangedData = {
     sharedState: IAnyObj | null,
     module: string,
     ccUniqueKey: string,
-    renderKey: string,
+    renderKey: Array<string | number>[],
   }
 };
 
@@ -935,7 +935,7 @@ interface RunOptions {
 
 export interface IActionCtxBase {
   callInfo: {
-    renderKey: string;
+    renderKey: Array<string | number>[];
     delay: number;
     fnName: string;
     type: string;
@@ -953,7 +953,7 @@ export interface IActionCtxBase {
   globalState: IAnyObj;
   moduleState: IAnyObj;
   moduleComputed: IAnyObj;
-  setState: (obj: IAnyObj) => Promise<IAnyObj>;
+  setState: (obj: IAnyObj, renderKey?: RenderKey, delay?: number) => Promise<IAnyObj>;
   refCtx: IAnyObj;
 }
 
@@ -970,7 +970,7 @@ export interface IActionCtx<
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : {};
   rootState: RootState;
   globalState: RootState[MODULE_GLOBAL];
-  setState: <T extends Partial<FullState>>(obj: T) => Promise<T>;
+  setState: <T extends Partial<FullState>>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
   refCtx: RefCtx;
 }
 
@@ -1208,7 +1208,7 @@ export function configure(moduleName: string, moduleConfig: ModuleConfig): void;
 
 export function cloneModule(newModule: string, existingModule: string, overwriteModuleConfig?: ModuleConfig): void;
 
-export function setState<RootState, ModuleState>(moduleName: keyof RootState, state: Partial<ModuleState>, renderKey?: string, delay?: number): void;
+export function setState<RootState, ModuleState>(moduleName: keyof RootState, state: Partial<ModuleState>, renderKey?: RenderKey, delay?: number): void;
 
 export function setGlobalState<GlobalState>(state: Partial<GlobalState>): void;
 
@@ -1220,7 +1220,7 @@ export function getComputed<T>(moduleName?: string): T;
 
 export function getGlobalComputed<T>(): T;
 
-export function set(keyPath: string, value: any, renderKey?: string, delay?: number): void;
+export function set(keyPath: string, value: any, renderKey?: RenderKey, delay?: number): void;
 
 // only work for top api cc.dispatch
 interface IDispatchExtra {
@@ -1230,7 +1230,7 @@ interface IDispatchExtra {
   refModule?: string;
 }
 
-declare function ccDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: string | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
+declare function ccDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: RenderKey | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
 export type IDispatch = typeof ccDispatch;
 
 export declare const dispatch: IDispatch;
@@ -1272,7 +1272,7 @@ export declare const cst: CcCst;
 export class CcFragment<P extends IAnyObj, Ctx extends ICtxBase> extends
   Component<{
     register: IRegBaseFrag<P, Ctx>, ccKey?: string, ccClassKey?: string,
-    ccOption?: { storedKeys?: string[], renderKey?: string, persistStoredKeys?: boolean, tag?: string }
+    ccOption?: { storedKeys?: string[], renderKey?: string | number, persistStoredKeys?: boolean, tag?: string }
   }, any> { }
 
 /**

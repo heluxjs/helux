@@ -64,9 +64,9 @@ export function isAsyncFn(fn) {
 }
 
 export function extractRenderKey(renderKey) {
-  if (!renderKey) return [];
+  if (!renderKey && renderKey !== 0) return [];
   if (Array.isArray(renderKey)) return renderKey;
-  return [];
+  return [renderKey];
 }
 
 export function makeError(code, extraMessage) {

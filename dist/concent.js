@@ -302,7 +302,7 @@
 
     var isArr = Array.isArray(obj);
     var isObj = isObject(obj);
-    return canBeArray ? isObj || isArr : isObj;
+    return canBeArray ? isArr || isObj : isObj;
   }
   function isAsyncFn(fn) {
     if (!fn) return false; // @see https://github.com/tj/co/blob/master/index.js
@@ -322,6 +322,11 @@
     }
 
     return false;
+  }
+  function extractRenderKey(renderKey) {
+    if (!renderKey && renderKey !== 0) return [];
+    if (Array.isArray(renderKey)) return renderKey;
+    return [renderKey];
   }
   function makeError(code, extraMessage) {
     var message = '';
@@ -754,7 +759,7 @@
   function makeCallInfo(module) {
     return {
       payload: null,
-      renderKey: '',
+      renderKey: [],
       delay: -1,
       module: module,
       fnName: ''
@@ -3094,7 +3099,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.5',
+      version: '2.9.10',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -3348,18 +3353,15 @@
   function createModuleNode(moduleName) {
     key_findResult_[moduleName] = {};
   }
-  function getCacheKey(moduleName, sharedStateKeys, renderKey, renderKeyClasses) {
-    if (renderKey === void 0) {
-      renderKey = '';
-    }
-
+  function getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses) {
     if (renderKeyClasses === void 0) {
       renderKeyClasses = [];
     }
 
+    var renderKeyStr = renderKeys ? renderKeys.join(',') : '';
     var featureStr1 = sharedStateKeys.sort().join(',');
     var featureStr2 = renderKeyClasses === '*' ? '*' : renderKeyClasses.sort().join(',');
-    return moduleName + "/" + featureStr1 + "/" + renderKey + "/" + featureStr2;
+    return moduleName + "/" + featureStr1 + "/" + renderKeyStr + "/" + featureStr2;
   }
   function getCache(moduleName, key) {
     return key_findResult_[moduleName][key];
@@ -4281,9 +4283,9 @@
   var ccUKey_ref_ = ccContext.ccUKey_ref_,
       waKey_uKeyMap_$2 = ccContext.waKey_uKeyMap_,
       waKey_staticUKeyMap_$2 = ccContext.waKey_staticUKeyMap_;
-  function findUpdateRefs (moduleName, partialSharedState, renderKey, renderKeyClasses) {
+  function findUpdateRefs (moduleName, partialSharedState, renderKeys, renderKeyClasses) {
     var sharedStateKeys = okeys$4(partialSharedState);
-    var cacheKey = getCacheKey(moduleName, sharedStateKeys, renderKey, renderKeyClasses);
+    var cacheKey = getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses);
     var cachedResult = getCache(moduleName, cacheKey);
 
     if (cachedResult) {
@@ -4313,8 +4315,8 @@
           refCcClassKey = _ref$ctx.ccClassKey,
           ccUniqueKey = _ref$ctx.ccUniqueKey; // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
 
-      if (renderKey) {
-        var isRenderKeyMatched = refRenderKey === renderKey; // 所有的类实例都受renderKey匹配机制影响
+      if (renderKeys.length) {
+        var isRenderKeyMatched = renderKeys.includes(refRenderKey); // 所有的类实例都受renderKey匹配机制影响
 
         if (renderKeyClasses === '*') {
           if (isRenderKeyMatched) {
@@ -4453,8 +4455,7 @@
         calledBy = _ref$calledBy === void 0 ? SET_STATE$1 : _ref$calledBy,
         _ref$fnName = _ref.fnName,
         fnName = _ref$fnName === void 0 ? '' : _ref$fnName,
-        _ref$renderKey = _ref.renderKey,
-        renderKey = _ref$renderKey === void 0 ? '' : _ref$renderKey,
+        renderKey = _ref.renderKey,
         _ref$delay = _ref.delay,
         delay$$1 = _ref$delay === void 0 ? -1 : _ref$delay;
 
@@ -4465,6 +4466,7 @@
       return;
     }
 
+    var targetRenderKey = extractRenderKey(renderKey);
     var _targetRef$ctx = targetRef.ctx,
         refModule = _targetRef$ctx.module,
         ccUniqueKey = _targetRef$ctx.ccUniqueKey,
@@ -4472,7 +4474,7 @@
     var stateFor = getStateFor(module, refModule);
     var callInfo = {
       payload: payload,
-      renderKey: renderKey,
+      renderKey: targetRenderKey,
       ccKey: ccKey,
       module: module,
       fnName: fnName
@@ -4498,13 +4500,13 @@
 
     var ignoreRender = !hasPrivState && !!sharedState; // source ref will receive the whole committed state 
 
-    triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback, // committedState means final committedState
+    triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender, reactCallback, // committedState means final committedState
     function (renderType, committedState, updateRef) {
       var passToMiddleware = {
         calledBy: calledBy,
         type: type,
         payload: payload,
-        renderKey: renderKey,
+        renderKey: targetRenderKey,
         delay: delay$$1,
         ccKey: ccKey,
         ccUniqueKey: ccUniqueKey,
@@ -4539,19 +4541,19 @@
             sharedState: realShare || {},
             module: module,
             ccUniqueKey: ccUniqueKey,
-            renderKey: renderKey
+            renderKey: targetRenderKey
           });
         } // 无论是否真的有状态改变，此回调都会被触发
 
 
         if (stateChangedCb) stateChangedCb(); // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
 
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, renderKey, delay$$1);
+        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, delay$$1);
       });
     });
   }
 
-  function triggerReactSetState(targetRef, callInfo, renderKey, calledBy, state, stateFor, ignoreRender, reactCallback, next) {
+  function triggerReactSetState(targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, next) {
     var nextNoop = function nextNoop() {
       return next && next(RENDER_NO_OP$1, state);
     };
@@ -4574,12 +4576,12 @@
         ccUniqueKey = refCtx.ccUniqueKey;
     var renderType = RENDER_BY_STATE$1;
 
-    if (renderKey) {
-      //if user specify renderKey
+    if (renderKeys.length) {
+      // if user specify renderKeys
       renderType = RENDER_BY_KEY$1;
 
-      if (refCtx.renderKey !== renderKey) {
-        // current instance can been rendered only if current instance's ccKey equal renderKey
+      if (renderKeys.includes(refCtx.renderKey)) {
+        // current instance can been rendered only if ctx.renderKey included in renderKeys
         return nextNoop();
       }
     }
@@ -4658,9 +4660,9 @@
     };
   }
 
-  function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey, delay$$1) {
+  function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay$$1) {
     var startBroadcastState = function startBroadcastState() {
-      broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKey);
+      broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys);
     };
 
     if (delay$$1 > 0) {
@@ -4671,7 +4673,7 @@
     }
   }
 
-  function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKey) {
+  function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKeys) {
     if (!partialSharedState) {
       // null
       return;
@@ -4685,7 +4687,7 @@
         ccClassKey = _targetRef$ctx2.ccClassKey;
     var renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
 
-    var _findUpdateRefs = findUpdateRefs(moduleName, partialSharedState, renderKey, renderKeyClasses),
+    var _findUpdateRefs = findUpdateRefs(moduleName, partialSharedState, renderKeys, renderKeyClasses),
         sharedStateKeys = _findUpdateRefs.sharedStateKeys,
         _findUpdateRefs$resul = _findUpdateRefs.result,
         belongRefKeys = _findUpdateRefs$resul.belong,
@@ -4698,7 +4700,7 @@
       var refUKey = ref.ctx.ccUniqueKey;
       if (refUKey === currentCcUKey && !allowOriInsRender) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
 
-      triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, false);
+      triggerReactSetState(ref, callInfo, [], 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, false);
       renderedInBelong[refKey] = 1;
     });
     var prevModuleState = getPrevState(moduleName);
@@ -8440,7 +8442,7 @@
           _proto.$$attach = function $$attach(childRef) {
             var ctx = this.ctx;
             ctx.childRef = childRef;
-            childRef.ctx = ctx; // 让代理属性的目标组件即可从this.props 也可从 this 访问 ctx
+            childRef.ctx = ctx; // 让代理属性的目标组件访问ctx时，既可以写 this.props.ctx 也可以写 this.ctx
             // 让孩子引用的setState forceUpdate 指向父容器事先构造好的setState forceUpdate
 
             childRef.setState = ctx.setState;
@@ -9114,7 +9116,7 @@
   }
 
   function throwApiCallError() {
-    throw new Error("api doc: cc.setState(module:string, state:object, renderKey:string, delayMs?:number, skipMiddleware?:boolean, throwError?:boolean)");
+    throw new Error("api doc: cc.setState(module:string, state:object, renderKey:string | string[], delayMs?:number, skipMiddleware?:boolean, throwError?:boolean)");
   }
 
   function _setState$1 (module, state, renderKey, delayMs, skipMiddleware, throwError) {

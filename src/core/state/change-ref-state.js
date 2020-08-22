@@ -162,7 +162,7 @@ function triggerReactSetState(
   const { module: stateModule, storedKeys, ccUniqueKey } = refCtx;
   let renderType = RENDER_BY_STATE;
 
-  if (renderKeys) {//if user specify renderKeys
+  if (renderKeys.length) {// if user specify renderKeys
     renderType = RENDER_BY_KEY;
     if (renderKeys.includes(refCtx.renderKey)) {// current instance can been rendered only if ctx.renderKey included in renderKeys
       return nextNoop();
@@ -255,7 +255,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
 
     if (refUKey === currentCcUKey && !allowOriInsRender) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
-    triggerReactSetState(ref, callInfo, null, 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, false);
+    triggerReactSetState(ref, callInfo, [], 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, false);
     renderedInBelong[refKey] = 1;
   });
 

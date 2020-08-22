@@ -35,7 +35,7 @@ export default function (moduleName, partialSharedState, renderKeys, renderKeyCl
     } = ref.ctx;
 
     // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
-    if (renderKeys) {
+    if (renderKeys.length) {
       const isRenderKeyMatched = renderKeys.includes(refRenderKey);
 
       // 所有的类实例都受renderKey匹配机制影响

@@ -249,14 +249,18 @@ export function invokeWith(userLogicFn, executionContext, payload) {
 
         rootState: getState(),
         globalState: getState(MODULE_GLOBAL),
-        //指的是目标模块的state
+        // 指的是目标模块的state
         moduleState,
-        //指的是目标模块的的moduleComputed
+        // 指的是目标模块的的moduleComputed
         moduleComputed: _computedValue[targetModule] || {},
 
-        //利用dispatch调用自动生成的setState
-        setState: (state) => dispatch('setState', state, { silent: isSilent, renderKey, delay }),//透传上下文参数给IDispatchOptions,
-        //!!!指的是调用源cc类实例的ctx
+        // 利用dispatch调用自动生成的setState
+        setState: (state, r, d) => {
+          const targetR = r !== 0 ? (r || renderKey) : r;
+          const targetD = d !== 0 ? (d || delay) : d;
+          return dispatch('setState', state, { silent: isSilent, renderKey: targetR, delay: targetD });
+        },
+        // !!!指的是调用源cc类实例的ctx
         refCtx: callerRef.ctx,
         // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
         // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
@@ -268,11 +272,11 @@ export function invokeWith(userLogicFn, executionContext, payload) {
     }
 
     const handleReturnState = partialState => {
-      chainId_depth_[chainId] = chainId_depth_[chainId] - 1;//调用结束减1
+      chainId_depth_[chainId] = chainId_depth_[chainId] - 1;// 调用结束减1
       const curDepth = chainId_depth_[chainId];
       const isFirstDepth = curDepth === 1;
 
-      //调用结束就记录
+      // 调用结束就记录
       setAllChainState(chainId, targetModule, partialState);
 
       let commitStateList = [];
@@ -281,12 +285,12 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         send(SIG_FN_END, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
 
         // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
-        if (isChainIdLazy(chainId)) {//来自于惰性派发的调用
+        if (isChainIdLazy(chainId)) {// 来自于惰性派发的调用
           if (!isFirstDepth) {// 某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
             setChainState(chainId, targetModule, partialState);
           } else {// 合并状态一次性提交到store并派发到组件实例
             if (isChainExited(chainId)) {
-              //丢弃本次状态，不做任何处理
+              // 丢弃本次状态，不做任何处理
             } else {
               commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
               removeChainState(chainId);
@@ -306,7 +310,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         }
       });
 
-      if (isSourceCall) {//源头dispatch or invoke结束调用
+      if (isSourceCall) {// 源头dispatch or invoke结束调用
         removeChainState(chainId);
         removeAllChainState(chainId);
       }

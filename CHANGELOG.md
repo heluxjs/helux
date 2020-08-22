@@ -1,4 +1,11 @@
 #### 2020-08-16
+2.9.8 发布
+- 支持多个renderKey
+```js
+cts.mr.someMethod(payload, ['1', '2']);//这次调用仅影响这两个id的视图
+```
+
+#### 2020-08-16
 2.9.1 发布
 - 新增`moudleConf.lifecycle`参数
 ```js
