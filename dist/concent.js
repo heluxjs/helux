@@ -3103,7 +3103,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.2.2',
+      version: '2.9.13',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4289,7 +4289,6 @@
       waKey_uKeyMap_$2 = ccContext.waKey_uKeyMap_,
       waKey_staticUKeyMap_$2 = ccContext.waKey_staticUKeyMap_;
   function findUpdateRefs (moduleName, partialSharedState, renderKeys, renderKeyClasses) {
-    console.log('==> findUpdateRefs');
     var sharedStateKeys = okeys$4(partialSharedState);
     var cacheKey = getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses);
     var cachedResult = getCache(moduleName, cacheKey);
@@ -4320,8 +4319,7 @@
           refRenderKey = _ref$ctx.renderKey,
           refCcClassKey = _ref$ctx.ccClassKey,
           ccUniqueKey = _ref$ctx.ccUniqueKey,
-          props = _ref$ctx.props;
-      console.log("renderKeyClasses " + renderKeyClasses + " refCcClassKey " + refCcClassKey); // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
+          props = _ref$ctx.props; // 如果调用方携带renderKey发起修改状态动作，则需要匹配renderKey做更新
 
       if (renderKeys.length) {
         var isRenderKeyMatched = renderKeys.includes(refRenderKey); // 所有的类实例都受renderKey匹配机制影响
@@ -4333,9 +4331,8 @@
           }
 
           return;
-        }
+        } // 这些指定类实例受renderKey机制影响
 
-        console.log('current renderKey'); // 这些指定类实例受renderKey机制影响
 
         if (renderKeyClasses.includes(refCcClassKey)) {
           if (isRenderKeyMatched) {
@@ -4471,7 +4468,6 @@
         _ref$delay = _ref.delay,
         delay$$1 = _ref$delay === void 0 ? -1 : _ref$delay;
 
-    console.log('==> changeRefState');
     if (state === undefined) return;
 
     if (!isPJO$3(state)) {
@@ -4567,8 +4563,6 @@
   }
 
   function triggerReactSetState(targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, next) {
-    console.log('==> triggerReactSetState');
-
     var nextNoop = function nextNoop() {
       return next && next(RENDER_NO_OP$1, state);
     };
@@ -4689,8 +4683,6 @@
   }
 
   function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, renderKeys) {
-    console.log('==> broadcastState');
-
     if (!partialSharedState) {
       // null
       return;
