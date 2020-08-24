@@ -204,3 +204,6 @@ ___
 ___
 ## How concent component ins works
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)
+
+## Welcome to join in Qgroup to konw more
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/17.png)
