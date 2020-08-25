@@ -56,7 +56,7 @@ English | [简体中文](./README.zh-CN.md)
 
 </div>
 
-Definitely the simplest❤️ but strongest⚡️ state management for react, it is predictable、progressive and efficient.
+Definitely the ❤️ simplest but ⚡️ strongest state management for react, it is predictable、progressive and efficient.
 
 ## ✨features
 * The simplest code(no annoying mapXXX process)
