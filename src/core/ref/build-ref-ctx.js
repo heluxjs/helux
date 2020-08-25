@@ -338,7 +338,7 @@ export default function (ref, params, liteLevel = 5) {
     ctx.privStateKeys = util.removeArrElements(okeys(newRefState), modStateKeys);
 
     ctx.unProxyState = ctx.prevState = newRefState;
-    ref.state = ctx.state = Object.assign(ctx.state, newRefState);
+    ref.state = Object.assign(ctx.state, newRefState);
   }
 
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
