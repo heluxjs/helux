@@ -1,3 +1,4 @@
+/** @typedef {import('../../types-inner').IRefCtx} IRefCtx */
 import { START } from '../../support/priv-constant';
 import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
 import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
@@ -18,24 +19,27 @@ import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 //  cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
 
 export default function (ref, module, key, isForModule) {
+  // 这个key不是模块的stateKey，则忽略依赖记录
+  if (!moduleName_stateKeys_[module].includes(key)) {
+    return;
+  }
+  /** @type IRefCtx */
   const refCtx = ref.ctx;
-
   if (
-    refCtx.__$$inBM === true || // 还处于beforeMount步骤
-    refCtx.__$$renderStatus === START
+    refCtx.__$$inBM === true // 还处于beforeMount步骤
+    || refCtx.__$$renderStatus === START
   ) {
 
     const ccUniqueKey = refCtx.ccUniqueKey;
+    const waKey = makeWaKey(module, key);
+    // 未挂载时，是refWatch 或者 refComputed 函数里读取了moduleComputed的值间接推导出来的依赖stateKey
+    // 则写到static块里，防止依赖丢失
+    if (refCtx.__$$inBM === true) {
+      refCtx.__$$staticWaKeys[waKey] = 1;
+      return;
+    }
+
     if (!isForModule) {// for ref connect
-      const waKey = makeWaKey(module, key);
-
-      // 未挂载时，是refWatch 或者 refComputed 函数里读取了moduleComputed的值间接推导出来的依赖stateKey
-      // 则写到static块里，防止依赖丢失
-      if (refCtx.__$$inBM === true) {
-        refCtx.__$$staticWaKeys[waKey] = 1;
-        return;
-      }
-
       // 处于非自动收集状态则忽略，依赖在buildRefCtx时已记录
       if (refCtx.connect[module] !== '-') return;
 
@@ -55,22 +59,6 @@ export default function (ref, module, key, isForModule) {
         __$$nextCompareConnWaKeyCount[module]++;
       }
     } else {// for ref module
-      const refModule = refCtx.module;
-
-      // 这个stateKey不是模块的stateKey，则忽略依赖记录
-      // 此处不能用privStateKeys来判断，用户有可能动态的写入新的key
-      // if(!refCtx.privStateKeys.includes(key)){
-      if (!moduleName_stateKeys_[refModule].includes(key)) {
-        return;
-      }
-
-      const waKey = makeWaKey(refModule, key);
-
-      if (refCtx.__$$inBM === true) {
-        refCtx.__$$staticWaKeys[waKey] = 1;
-        return;
-      }
-
       // 处于非自动收集状态则忽略
       if (refCtx.watchedKeys !== '-') return;
 

@@ -1,4 +1,9 @@
 #### 2020-08-16
+2.9.15 发布
+- optimize: 优化 update-dep写法
+- optimize: 使用代理优化 `moduleReducer`和`connectedReducer`生成过程
+- fix: 组件使用connect时不能正确触发`lifecyle.mounted`和`lifecyle.willUnmount`方法
+
 2.9.8 发布
 - 支持多个renderKey
 ```js
@@ -15,6 +20,7 @@ type lifecycle = {
   // insteand of initState and initStateDone, using bellow methods is better way
   // because you can put the logic to reducer
   loaded?: (dispatch: IDispatch, moduleState: any) => void;
+  // first ins belong cur module will trigger
   mounted?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
   willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
 }

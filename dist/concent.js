@@ -2179,6 +2179,7 @@
     return _executeCuInfo.apply(this, arguments);
   }
 
+  /** @typedef {import('../../types-inner').IRefCtx} IRefCtx */
   //  cur: {} compare: {a:2, b:2, c:2} compareCount=3 nextCompare:{}
   //
   //  receive cur in rendering period as below
@@ -2194,23 +2195,29 @@
   //  cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
 
   function updateDep (ref, module, key, isForModule) {
+    // 这个key不是模块的stateKey，则忽略依赖记录
+    if (!moduleName_stateKeys_[module].includes(key)) {
+      return;
+    }
+    /** @type IRefCtx */
+
+
     var refCtx = ref.ctx;
 
-    if (refCtx.__$$inBM === true || // 还处于beforeMount步骤
-    refCtx.__$$renderStatus === START) {
+    if (refCtx.__$$inBM === true // 还处于beforeMount步骤
+    || refCtx.__$$renderStatus === START) {
       var ccUniqueKey = refCtx.ccUniqueKey;
+      var waKey = makeWaKey(module, key); // 未挂载时，是refWatch 或者 refComputed 函数里读取了moduleComputed的值间接推导出来的依赖stateKey
+      // 则写到static块里，防止依赖丢失
+
+      if (refCtx.__$$inBM === true) {
+        refCtx.__$$staticWaKeys[waKey] = 1;
+        return;
+      }
 
       if (!isForModule) {
         // for ref connect
-        var waKey = makeWaKey(module, key); // 未挂载时，是refWatch 或者 refComputed 函数里读取了moduleComputed的值间接推导出来的依赖stateKey
-        // 则写到static块里，防止依赖丢失
-
-        if (refCtx.__$$inBM === true) {
-          refCtx.__$$staticWaKeys[waKey] = 1;
-          return;
-        } // 处于非自动收集状态则忽略，依赖在buildRefCtx时已记录
-
-
+        // 处于非自动收集状态则忽略，依赖在buildRefCtx时已记录
         if (refCtx.connect[module] !== '-') return;
         var __$$curConnWaKeys = refCtx.__$$curConnWaKeys,
             __$$compareConnWaKeys = refCtx.__$$compareConnWaKeys,
@@ -2227,27 +2234,12 @@
         }
       } else {
         // for ref module
-        var refModule = refCtx.module; // 这个stateKey不是模块的stateKey，则忽略依赖记录
-        // 此处不能用privStateKeys来判断，用户有可能动态的写入新的key
-        // if(!refCtx.privStateKeys.includes(key)){
-
-        if (!moduleName_stateKeys_[refModule].includes(key)) {
-          return;
-        }
-
-        var _waKey = makeWaKey(refModule, key);
-
-        if (refCtx.__$$inBM === true) {
-          refCtx.__$$staticWaKeys[_waKey] = 1;
-          return;
-        } // 处于非自动收集状态则忽略
-
-
+        // 处于非自动收集状态则忽略
         if (refCtx.watchedKeys !== '-') return;
         var __$$curWaKeys = refCtx.__$$curWaKeys,
             __$$compareWaKeys = refCtx.__$$compareWaKeys,
             __$$nextCompareWaKeys = refCtx.__$$nextCompareWaKeys;
-        mapInsM(_waKey, ccUniqueKey);
+        mapInsM(waKey, ccUniqueKey);
         __$$curWaKeys[key] = 1;
         __$$compareWaKeys[key] = 1;
 
@@ -3103,7 +3095,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.14',
+      version: '2.9.15',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6335,8 +6327,8 @@
   }
 
   var _ccContext$reducer = ccContext.reducer,
-      _module_fnNames_ = _ccContext$reducer._module_fnNames_,
       _caller = _ccContext$reducer._caller,
+      _module_fnNames_ = _ccContext$reducer._module_fnNames_,
       refStore$1 = ccContext.refStore,
       getModuleStateKeys$3 = ccContext.getModuleStateKeys,
       _ccContext$store$2 = ccContext.store,
@@ -6345,7 +6337,6 @@
   var okeys$7 = okeys,
       me$1 = makeError,
       vbi$3 = verboseInfo,
-      safeGet$2 = safeGet,
       isObject$1 = isObject,
       isBool$1 = isBool,
       justWarning$5 = justWarning,
@@ -6403,6 +6394,24 @@
     var waKeys = watchedKeys === '*' ? getModuleStateKeys$3(module) : watchedKeys;
     waKeys.forEach(function (stateKey) {
       return mapIns(module, stateKey, ccUniqueKey);
+    });
+  }
+
+  function makeProxyReducer(m, dispatch) {
+    // 此处代理对象仅用于log时可以打印出目标模块reducer函数集合
+    return new Proxy(_caller[m] || {}, {
+      get: function get(target, fnName) {
+        var fnNames = _module_fnNames_[m];
+
+        if (fnNames.includes(fnName)) {
+          return function (payload, rkeyOrOption, delay$$1) {
+            return dispatch(m + "/" + fnName, payload, rkeyOrOption, delay$$1);
+          };
+        } else {
+          // 可能是原型链上的其他方法或属性调用
+          return target[fnName];
+        }
+      }
     });
   } //调用buildFragmentRefCtx 之前，props参数已被处理过
 
@@ -6550,6 +6559,10 @@
 
     var computedDep = {},
         watchDep = {};
+    var allModules = connectedModules.slice(); // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
+    // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
+
+    noDupPush$1(allModules, module);
     var props = getOutProps(ref.props);
     var now = Date.now();
     var ctx = {
@@ -6566,6 +6579,7 @@
       privStateKeys: privStateKeys,
       connect: connect,
       connectedModules: connectedModules,
+      allModules: allModules,
       // dynamic meta, I don't want user know these props, so let field name start with __$$
       __$$onEvents: __$$onEvents,
       // 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
@@ -6618,7 +6632,7 @@
       moduleComputed: moduleComputed,
       globalComputed: globalComputed,
       connectedComputed: connectedComputed,
-      moduleReducer: {},
+      moduleReducer: null,
       connectedReducer: {},
       reducer: {},
       // api meta data
@@ -6951,29 +6965,21 @@
     } // 构造完毕ctx后，开始创建reducer，和可观察connectedState
 
 
-    var moduleReducer = ctx.moduleReducer,
-        connectedReducer = ctx.connectedReducer,
+    var connectedReducer = ctx.connectedReducer,
         __$$curConnWaKeys = ctx.__$$curConnWaKeys,
         __$$compareConnWaKeys = ctx.__$$compareConnWaKeys,
         __$$compareConnWaKeyCount = ctx.__$$compareConnWaKeyCount,
         __$$nextCompareConnWaKeys = ctx.__$$nextCompareConnWaKeys,
-        __$$nextCompareConnWaKeyCount = ctx.__$$nextCompareConnWaKeyCount;
-    var allModules = connectedModules.slice(); // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
-    // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
+        __$$nextCompareConnWaKeyCount = ctx.__$$nextCompareConnWaKeyCount; // 实例所属模块或连接模块是否处于自动观察状态
 
-    noDupPush$1(allModules, module);
     var __$$autoWatch = false; // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
-    // 为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
+    // 只绑定所属的模块和已连接的模块的reducer方法
 
     allModules.forEach(function (m) {
-      var reducerObj;
-
       if (m === module) {
-        reducerObj = moduleReducer;
-        if (module === MODULE_GLOBAL) connectedReducer[MODULE_GLOBAL] = moduleReducer;
+        ctx.moduleReducer = makeProxyReducer(m, dispatch);
       } else {
-        // todo: 如果connectedReducer不在意调用者是谁，该属性可以删掉或者不用直接指向reducer，节省初始化refCtx的开销
-        reducerObj = safeGet$2(connectedReducer, m);
+        connectedReducer[m] = makeProxyReducer(m, dispatch);
       }
 
       var connectDesc = connect[m];
@@ -6997,13 +7003,6 @@
 
         connectedState[m] = _moduleState;
       }
-
-      var fnNames = _module_fnNames_[m] || [];
-      fnNames.forEach(function (fnName) {
-        reducerObj[fnName] = function (payload, rkeyOrOption, delay$$1) {
-          return dispatch(m + "/" + fnName, payload, rkeyOrOption, delay$$1);
-        };
-      });
     });
     ctx.reducer = _caller; //alias
 
@@ -8135,6 +8134,25 @@
   var _lifecycle$1 = lifecycle._lifecycle,
       _mountedOnce = lifecycle._mountedOnce;
   var getModuleVer$3 = ccContext.store.getModuleVer;
+
+  function triggerLifecyleMounted(allModules, mstate) {
+    var handleOneModule = function handleOneModule(m) {
+      safeAdd(module_insCount_, m, 1);
+      var moduleLifecycle = _lifecycle$1[m];
+      if (!moduleLifecycle) return;
+      var mounted = moduleLifecycle.mounted;
+      if (!mounted) return;
+      if (_mountedOnce[m] === true) return;
+
+      if (module_insCount_[m] == 1) {
+        var once = mounted(makeModuleDispatcher(m), mstate);
+        _mountedOnce[m] = getVal(once, true);
+      }
+    };
+
+    allModules.forEach(handleOneModule);
+  }
+
   function didMount (ref) {
     afterRender(ref);
     ref.__$$ms = MOUNTED;
@@ -8143,6 +8161,7 @@
         __$$onEvents = _ref$ctx.__$$onEvents,
         __$$staticWaKeys = _ref$ctx.__$$staticWaKeys,
         module = _ref$ctx.module,
+        allModules = _ref$ctx.allModules,
         __$$mstate = _ref$ctx.__$$mstate,
         __$$prevModuleVer = _ref$ctx.__$$prevModuleVer;
     setRef(ref); // 确保组件挂载时在绑定事件，以避免同一个组件(通常是function组件, 因为cursor问题)，
@@ -8174,17 +8193,7 @@
     });
 
     triggerSetupEffect(ref, true);
-    safeAdd(module_insCount_, module, 1);
-
-    if (_lifecycle$1[module].mounted) {
-      // mounted可执行多次
-      if (_mountedOnce[module] !== true && module_insCount_[module] == 1) {
-        var once = _lifecycle$1[module].mounted(makeModuleDispatcher(module), __$$mstate);
-
-        _mountedOnce[module] = getVal(once, true);
-      }
-    } // 组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
-
+    triggerLifecyleMounted(allModules, __$$mstate); // 组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
 
     if (__$$prevModuleVer !== getModuleVer$3(module)) {
       ref.ctx.reactForceUpdate();
@@ -8233,14 +8242,33 @@
     okeys(cbMap).forEach(execute);
   }
 
+  function triggerLifecyleWillUnmount(allModules, mstate) {
+    var handleOneModule = function handleOneModule(m) {
+      module_insCount_[m] -= 1;
+      var moduleLifecycle = _lifecycle$2[m].willUnmount;
+      if (!moduleLifecycle) return;
+      var willUnmount = moduleLifecycle.willUnmount;
+      if (!willUnmount) return;
+      if (_willUnmountOnce[m] === true) return;
+
+      if (module_insCount_[m] === 0) {
+        var once = willUnmount(makeModuleDispatcher(m), mstate);
+        _willUnmountOnce[m] = getVal(once, true);
+      }
+    };
+
+    allModules.forEach(handleOneModule);
+  }
+
   function beforeUnmount (ref) {
-    //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
-    //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
+    // 标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
+    // Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
     var curMs = ref.__$$ms;
     ref.__$$ms = UNMOUNTED;
     var ctx = ref.ctx;
     var ccUniqueKey = ctx.ccUniqueKey,
         module = ctx.module,
+        allModules = ctx.allModules,
         __$$staticWaKeyList = ctx.__$$staticWaKeyList,
         __$$mstate = ctx.__$$mstate; // 正常情况下只有挂载了组件才会有effect等相关定义
 
@@ -8272,17 +8300,7 @@
     });
 
     unsetRef(ccUniqueKey);
-    module_insCount_[module] -= 1;
-
-    if (_willUnmountOnce[module] === true) {
-      return;
-    }
-
-    if (module_insCount_[module] === 0 && _lifecycle$2[module].willUnmount) {
-      var once = _lifecycle$2[module].willUnmount(makeModuleDispatcher(module), __$$mstate);
-
-      _willUnmountOnce[module] = getVal(once, true);
-    }
+    triggerLifecyleWillUnmount(allModules, __$$mstate);
   }
 
   /** eslint-disable */

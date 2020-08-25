@@ -10,7 +10,7 @@ import { makeModuleDispatcher } from '../state/handler-factory';
 const { _lifecycle, _willUnmountOnce } = lifecycle;
 
 function executeClearCb(cbMap, ctx) {
-  const execute = key => {// symbolKey or normalKey
+  const execute = key => { // symbolKey or normalKey
     const cb = cbMap[key];
     if (typeof cb === 'function') cb(ctx);
   }
@@ -19,13 +19,32 @@ function executeClearCb(cbMap, ctx) {
   okeys(cbMap).forEach(execute);
 }
 
+function triggerLifecyleWillUnmount(allModules, mstate) {
+  const handleOneModule = (m) => {
+    module_insCount_[m] -= 1;
+    const moduleLifecycle = _lifecycle[m].willUnmount;
+    if (!moduleLifecycle) return;
+    const willUnmount = moduleLifecycle.willUnmount;
+    if (!willUnmount) return;
+    if (_willUnmountOnce[m] === true) return;
+
+    if (module_insCount_[m] === 0) {
+      const once = willUnmount(makeModuleDispatcher(m), mstate);
+      _willUnmountOnce[m] = getVal(once, true);
+    }
+  }
+
+  allModules.forEach(handleOneModule);
+}
+
+
 export default function (ref) {
-  //标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
-  //Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
+  // 标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
+  // Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
   const curMs = ref.__$$ms;
   ref.__$$ms = UNMOUNTED;
   const ctx = ref.ctx;
-  const { ccUniqueKey, module, __$$staticWaKeyList, __$$mstate } = ctx;
+  const { ccUniqueKey, module, allModules, __$$staticWaKeyList, __$$mstate } = ctx;
 
   // 正常情况下只有挂载了组件才会有effect等相关定义
   if (curMs === MOUNTED) {
@@ -49,13 +68,5 @@ export default function (ref) {
 
   unsetRef(ccUniqueKey);
 
-  module_insCount_[module] -= 1;
-  if (_willUnmountOnce[module] === true) {
-    return;
-  }
-
-  if (module_insCount_[module] === 0 && _lifecycle[module].willUnmount) {
-    const once = _lifecycle[module].willUnmount(makeModuleDispatcher(module), __$$mstate);
-    _willUnmountOnce[module] = getVal(once, true);
-  }
+  triggerLifecyleWillUnmount(allModules, __$$mstate);
 }

@@ -439,6 +439,7 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
 export interface ICtxBase {
   // module: '$$default';
   readonly module: PropKey;
+  readonly allModules: string[];
   /** component type */
   readonly type: CC_CLASS | CC_HOOK;
   /** component instance type */

@@ -14,11 +14,30 @@ import { MOUNTED } from '../../support/constant';
 const { _lifecycle, _mountedOnce } = lifecycle;
 const { store: { getModuleVer } } = ccContext;
 
+function triggerLifecyleMounted(allModules, mstate) {
+  const handleOneModule = (m) => {
+    safeAdd(module_insCount_, m, 1);
+
+    const moduleLifecycle = _lifecycle[m];
+    if (!moduleLifecycle) return;
+    const mounted = moduleLifecycle.mounted;
+    if (!mounted) return;
+    if (_mountedOnce[m] === true) return;
+
+    if (module_insCount_[m] == 1) {
+      const once = mounted(makeModuleDispatcher(m), mstate);
+      _mountedOnce[m] = getVal(once, true);
+    }
+  }
+
+  allModules.forEach(handleOneModule);
+}
+
 export default function (ref) {
   afterRender(ref);
 
   ref.__$$ms = MOUNTED;
-  const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, __$$mstate, __$$prevModuleVer } = ref.ctx;
+  const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, allModules, __$$mstate, __$$prevModuleVer } = ref.ctx;
   setRef(ref);
 
   // 确保组件挂载时在绑定事件，以避免同一个组件(通常是function组件, 因为cursor问题)，
@@ -39,15 +58,7 @@ export default function (ref) {
   __$$staticWaKeyList.forEach(modStateKey => mapStaticInsM(modStateKey, ccUniqueKey));
 
   triggerSetupEffect(ref, true);
-
-  safeAdd(module_insCount_, module, 1);
-  if (_lifecycle[module].mounted) {
-    // mounted可执行多次
-    if (_mountedOnce[module] !== true && module_insCount_[module] == 1) {
-      const once = _lifecycle[module].mounted(makeModuleDispatcher(module), __$$mstate);
-      _mountedOnce[module] = getVal(once, true);
-    }
-  }
+  triggerLifecyleMounted(allModules, __$$mstate);
 
   // 组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
   if (__$$prevModuleVer !== getModuleVer(module)) {

@@ -1,4 +1,7 @@
 import { ICtxBase, IAnyFnInObj } from './types';
+import { UNSTART, START, END } from './support/priv-constant';
+
+type RenderStatus = typeof UNSTART | typeof START | typeof END;
 
 export type IRefCtx = ICtxBase & {
   /**
@@ -13,4 +16,9 @@ export type IRefCtx = ICtxBase & {
    * value: cuFn
    */
   computedRetKeyFns: IAnyFnInObj,
+  /** is in before mount step */
+  __$$inBM: boolean;
+  __$$renderStatus: RenderStatus;
+  /** 静态的观察依赖key列表，在实例didMount时会一次性记录这些静态依赖 */
+  __$$staticWaKeys: string[];
 };

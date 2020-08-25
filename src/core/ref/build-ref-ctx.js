@@ -19,14 +19,13 @@ import __sync from '../base/sync';
 import { getStoredKeys } from '../param/extractor';
 
 const {
-  reducer: { _module_fnNames_, _caller },
-  refStore,
-  getModuleStateKeys,
+  reducer: { _caller, _module_fnNames_ },
+  refStore, getModuleStateKeys,
   store: { getState, getModuleVer },
 } = ccContext;
 
 const {
-  okeys, makeError: me, verboseInfo: vbi, safeGet, isObject, isBool,
+  okeys, makeError: me, verboseInfo: vbi, isObject, isBool,
   justWarning, isObjectNull, isValueNotNull, noDupPush,
 } = util;
 
@@ -78,6 +77,21 @@ const getConnectWatchedKeys = (ctx, module) => {
 function recordDep(ccUniqueKey, module, watchedKeys) {
   const waKeys = watchedKeys === '*' ? getModuleStateKeys(module) : watchedKeys;
   waKeys.forEach(stateKey => mapIns(module, stateKey, ccUniqueKey));
+}
+
+function makeProxyReducer(m, dispatch) {
+  // 此处代理对象仅用于log时可以打印出目标模块reducer函数集合
+  return new Proxy((_caller[m] || {}), {
+    get: (target, fnName) => {
+      const fnNames = _module_fnNames_[m];
+      if (fnNames.includes(fnName)) {
+        return (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
+      } else {
+        // 可能是原型链上的其他方法或属性调用
+        return target[fnName];
+      }
+    },
+  })
 }
 
 //调用buildFragmentRefCtx 之前，props参数已被处理过
@@ -186,6 +200,10 @@ export default function (ref, params, liteLevel = 5) {
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
   // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
+  const allModules = connectedModules.slice();
+  // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
+  // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
+  noDupPush(allModules, module);
 
   const props = getOutProps(ref.props);
   const now = Date.now();
@@ -203,6 +221,7 @@ export default function (ref, params, liteLevel = 5) {
     privStateKeys,
     connect,
     connectedModules,
+    allModules,
 
     // dynamic meta, I don't want user know these props, so let field name start with __$$
     __$$onEvents,// 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
@@ -257,7 +276,7 @@ export default function (ref, params, liteLevel = 5) {
     globalComputed,
     connectedComputed,
 
-    moduleReducer: {},
+    moduleReducer: null,
     connectedReducer: {},
     reducer: {},
 
@@ -449,27 +468,20 @@ export default function (ref, params, liteLevel = 5) {
 
   // 构造完毕ctx后，开始创建reducer，和可观察connectedState
   const {
-    moduleReducer, connectedReducer,
+    connectedReducer,
     __$$curConnWaKeys, __$$compareConnWaKeys, __$$compareConnWaKeyCount,
     __$$nextCompareConnWaKeys, __$$nextCompareConnWaKeyCount,
   } = ctx;
-  const allModules = connectedModules.slice();
 
-  // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
-  // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
-  noDupPush(allModules, module);
-
+  // 实例所属模块或连接模块是否处于自动观察状态
   let __$$autoWatch = false;
   // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
-  // 为了性能考虑，只绑定所属的模块和已连接的模块的reducer方法
+  // 只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
-    let reducerObj;
     if (m === module) {
-      reducerObj = moduleReducer;
-      if (module === MODULE_GLOBAL) connectedReducer[MODULE_GLOBAL] = moduleReducer;
+      ctx.moduleReducer = makeProxyReducer(m, dispatch);
     } else {
-      // todo: 如果connectedReducer不在意调用者是谁，该属性可以删掉或者不用直接指向reducer，节省初始化refCtx的开销
-      reducerObj = safeGet(connectedReducer, m);
+      connectedReducer[m] = makeProxyReducer(m, dispatch);
     }
 
     const connectDesc = connect[m];
@@ -478,7 +490,6 @@ export default function (ref, params, liteLevel = 5) {
 
       if (connectDesc === '-') {// auto watch
         __$$autoWatch = true;
-
         __$$curConnWaKeys[m] = {};
         __$$compareConnWaKeys[m] = {};
         __$$compareConnWaKeyCount[m] = 0;
@@ -492,13 +503,9 @@ export default function (ref, params, liteLevel = 5) {
       else {
         recordDep(ccUniqueKey, m, connectDesc);
       }
+      
       connectedState[m] = moduleState;
     }
-
-    const fnNames = _module_fnNames_[m] || [];
-    fnNames.forEach(fnName => {
-      reducerObj[fnName] = (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
-    });
   });
   ctx.reducer = _caller;
 
