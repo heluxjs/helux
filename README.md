@@ -155,18 +155,18 @@ ReactDOM.render(
 
 ## ✨Advanced fetures
 * **support dependency collection**，use `Proxy`&`defineProperty` in v2.3+ to support dependency collection
-* **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component。
-* **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by `setState` directly.；[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
-* **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene。
-* **flexible data consumption granularity**，your can consume multi model data with state key level dependency.。
-* **progressive**，except `setState`, you can also use `dispatch` or `invoke` to change state, separate your business logic and ui completely.。[from class to function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
-* **enhance component ability**，support ref level computed 、watch、emit&on、setup etc(setup is is inspired by vue3)。
-* **highly consistent coding experience**，no matter class component or function component, they can enjoy the same api calling。[multi ways to define component](https://stackblitz.com/edit/cc-4-render-mode)
+* **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component.
+* **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by `setState` directly.[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
+* **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene.
+* **flexible data consumption granularity**，your can consume multi model data with state key level dependency.
+* **progressive**，except `setState`, you can also use `dispatch` or `invoke` to change state, separate your business logic and ui completely.[from class to function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
+* **enhance component ability**，support ref level computed 、watch、emit&on、setup etc(setup is is inspired by vue3).
+* **highly consistent coding experience**，no matter class component or function component, they can enjoy the same api calling.[multi ways to define component](https://stackblitz.com/edit/cc-4-render-mode)
 * **high performance rendering mechanism**，working based on dependency mark、ref collection and state broadcast，built-in renderKey、lazyDispatch、delayBroadcast feature.。[long list exact upate](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[state batch commit](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[high frequency input&delay broadcast](https://stackblitz.com/edit/concent-delay-broadcast)
 * **clean dom hierarchy**，use reverse inheritance strategy for class component by default, to let your react dom tree keep clean。
-* **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.。
-* **de-centralization model configuration**，except for configuring models with `run`, user can also call `configure` api to configure you model definition near your component, that means you can publish your component to npm with your component model。
-* **model clone**，allow user clone new model by existed model, to meet the abstract factory need.。
+* **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.
+* **de-centralization model configuration**，except for configuring models with `run`, user can also call `configure` api to configure you model definition near your component, that means you can publish your component to npm with your component model.
+* **model clone**，allow user clone new model by existed model, to meet the abstract factory need.
 * **fully typescript support**，writing [elegant ts code](https://codesandbox.io/s/concent-guide-ts-zrxd5) with concent is easy.
 
 [simple demo 1](https://codesandbox.io/s/hello-concent-egb4d)
