@@ -58,8 +58,8 @@ English | [简体中文](./README.zh-CN.md)
 
 Definitely the ❤️ simplest but ⚡️ strongest state management for react, it is predictable、progressive and efficient.
 
-## ✨features
-* The simplest code(no annoying mapXXX process)
+## ✨Features
+* Render context injected automatically(no any annoying boilerplate code)
 * [Dependency collection](https://codesandbox.io/s/dep-collection-uiqzn) at runtime(state & computed)
 * Unified logic reuse of class and function components
 * Optional [Compostion api](https://github.com/concentjs/concent/blob/master/examples/composition-api.md) support
