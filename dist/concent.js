@@ -3095,7 +3095,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.15',
+      version: '2.9.17',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -6701,7 +6701,7 @@
       ctx.stateKeys = okeys$7(newRefState);
       ctx.privStateKeys = removeArrElements(okeys$7(newRefState), modStateKeys);
       ctx.unProxyState = ctx.prevState = newRefState;
-      ref.state = ctx.state = Object.assign(ctx.state, newRefState);
+      ref.state = Object.assign(ctx.state, newRefState);
     }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
 
 

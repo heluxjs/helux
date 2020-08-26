@@ -1230,7 +1230,7 @@ interface IDispatchExtra {
   refModule?: string;
 }
 
-declare function ccDispatch<T>(type: string | TypeDesc, payload?: any, renderKey?: RenderKey | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
+declare function ccDispatch<T>(type: string | Function | TypeDesc, payload?: any, renderKey?: RenderKey | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
 export type IDispatch = typeof ccDispatch;
 
 export declare const dispatch: IDispatch;
