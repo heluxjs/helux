@@ -136,50 +136,53 @@ export default function App(){
 
 ### Complete examples
 
-- Move logic to reducer and define `computed`、`watch`、`lifecycle`
+- Move logic to `reducer` and define `computed`、`watch`、`lifecycle`, [edit this demo]
+> try edit [this demo](https://codesandbox.io/s/example-modular-1-rw95j)、 👉[better js demo](https://codesandbox.io/s/example-modular-2-czn17)、👉[better ts demo](https://codesandbox.io/s/example-modular-3-zl57s)
 ```js
+import { run, defWatch } from 'concent';
+
 run({
   counter: {
     state: { num: 1, numBig: 100 },
     computed: {
-      numx2: ({num})=> num * 2,// only num changed will trigger this fn
-      numx2plusBig: ({numBig}, o, f)=> f.cuVal + numBig,// reuse computed reslult
+      numx2: ({ num }) => num * 2, // only num changed will trigger this fn
+      numx2plusBig: ({ numBig }, o, f) => f.cuVal.numx2 + numBig // reuse computed reslult
     },
     reducer: {
-      initState: ()=> ({num: 8, numBig: 800});
-      add: (payload, moduleState, actionCtx)=> ({num: moduleState.num + 1});
-      addBig: (p, m, ac)=> ({numBig: m.numBig + 100});
-      asyncAdd: async ()=>{
+      initState: () => ({ num: 8, numBig: 800 }),
+      add: (payload, moduleState, actionCtx) => ({ num: moduleState.num + 1 }),
+      addBig: (p, m, ac) => ({ numBig: m.numBig + 100 }),
+      asyncAdd: async (p, m, ac) => {
         await delay(1000);
-        return {num: moduleState.num + 1};
+        return { num: m.num + 1 };
       },
-      addSmallAndBig: (p, m, ac)=>{
-        await ac.dispatch('add');// hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
-        await ac.dispatch('addBig');
+      addSmallAndBig: async (p, m, ac) => {
+        await ac.dispatch("add"); // hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        await ac.dispatch("addBig");
       }
     },
     watch: {
-      numChange: ({num}, o)=> console.log(`from ${o.num} to {num}`)
+      numChange: defWatch(({ num }, o) => console.log(`from ${o.num} to ${num}`), {immediate:true})
     },
-    lifecycle:{
-      loaded: (dispatch)=> dispatch('initState'),// when module loaded
-      mounted: (dispatch)=> dispatch('initState'),// when any first ins of counter module mounted will trigger this
-      willUnmount: (dispatch)=> dispatch('initState'),// when last ins of counter module unmount will trigger this
+    lifecycle: {
+      // loaded: (dispatch) => dispatch("initState"), // when module loaded
+      mounted: (dispatch) => dispatch("initState"), // when any first ins of counter module mounted will trigger this
+      willUnmount: (dispatch) => dispatch("initState") // when last ins of counter module unmount will trigger this
     }
-  },
+  }
 });
 
-@register('counter')
-class DemoCls extends React.Component{
-  render(){
-    return <button onClick={this.ctx.mr.add}>{this.state.num}</button>
+@register("counter")
+class DemoCls extends React.Component {
+  render() {
+    // mr is short of moduleReducer, now you call all counter module reducer fns by mr
+    return <button onClick={this.ctx.mr.add}>{this.state.num}</button>;
   }
 }
 
-function DemoFn(){
-  // mr is short of moduleReducer, now you call all counter module reducer fns by mr
-  const { state, mr } = useConcent('counter');
-  return <button onClick={mr.add}>{state.num}</button>
+function DemoFn() {
+  const { moduleComputed, mr } = useConcent("counter");
+  return <button onClick={mr.add}>numx2plusBig: {moduleComputed.numx2plusBig}</button>;
 }
 ```
 
