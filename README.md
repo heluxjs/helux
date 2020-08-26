@@ -136,7 +136,7 @@ export default function App(){
 
 ### Complete examples
 
-- Move logic to `reducer` and define `computed`、`watch`、`lifecycle`, [edit this demo]
+- Move logic to `reducer` and define `computed`、`watch`、`lifecycle`
 > try edit [this demo](https://codesandbox.io/s/example-modular-1-rw95j)、 👉[better js demo](https://codesandbox.io/s/example-modular-2-czn17)、👉[better ts demo](https://codesandbox.io/s/example-modular-3-zl57s)
 ```js
 import { run, defWatch } from 'concent';
