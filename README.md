@@ -84,8 +84,7 @@ visit official website [https://concentjs.github.io/concent-doc](https://concent
 ## 📦Quick start
 Make sure you have installed [nodejs](http://nodejs.cn/download/)。
 
-### Install concent
-Install `concent` with npm command in your project directory.
+### Install
 
 ```sh
 $ npm i --save concent
@@ -97,11 +96,10 @@ or yarn command
 $ yarn add concent
 ```
 
-### Define module
-Use `run` to define a module.
-
+### Minimal example
 ```js
 import { run } from 'concent';
+import { register, useConcent } from 'concent';
 
 run({
   counter: {// declare a moudle named 'counter'
@@ -109,15 +107,6 @@ run({
   },
   // you can also put another module here.
 });
-
-```
-
-### Cosume state & change state
-Use `register` to specify a module for class component, or `useConcent`for function component.
-> it will let concent konw which module current component belong to.
-
-```js
-import { register, useConcent } from 'concent';
 
 @register('counter')
 class DemoCls extends React.Component{
@@ -134,22 +123,64 @@ function DemoFn(){
   const inc = ()=> setState({num: state.num + 1});
   return <button onClick={inc}>{state.num}</button>
 }
-```
 
-### Initialize component
-There is no need to wrap the root component with a `Provider`, you can just initialize the concent component any where you want, [here](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js) you can view the demo.
-
-```jsx
-const rootElement = document.getElementById("root");
-ReactDOM.render(
-  <React.StrictMode>
+export default function App(){
+  return (
     <div>
       <ClsComp />
       <FnComp />
     </div>
-  </React.StrictMode>,
-  rootElement
-);
+  );
+}
+```
+
+### Complete examples
+
+- Move logic to reducer and define `computed`、`watch`、`lifecycle`
+```js
+run({
+  counter: {
+    state: { num: 1, numBig: 100 },
+    computed: {
+      numx2: ({num})=> num * 2,// only num changed will trigger this fn
+      numx2plusBig: ({numBig}, o, f)=> f.cuVal + numBig,// reuse computed reslult
+    },
+    reducer: {
+      initState: ()=> ({num: 8, numBig: 800});
+      add: (payload, moduleState, actionCtx)=> ({num: moduleState.num + 1});
+      addBig: (p, m, ac)=> ({numBig: m.numBig + 100});
+      asyncAdd: async ()=>{
+        await delay(1000);
+        return {num: moduleState.num + 1};
+      },
+      addSmallAndBig: (p, m, ac)=>{
+        await ac.dispatch('add');// hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        await ac.dispatch('addBig');
+      }
+    },
+    watch: {
+      numChange: ({num}, o)=> console.log(`from ${o.num} to {num}`)
+    },
+    lifecycle:{
+      loaded: (dispatch)=> dispatch('initState'),// when module loaded
+      mounted: (dispatch)=> dispatch('initState'),// when any first ins of counter module mounted will trigger this
+      willUnmount: (dispatch)=> dispatch('initState'),// when last ins of counter module unmount will trigger this
+    }
+  },
+});
+
+@register('counter')
+class DemoCls extends React.Component{
+  render(){
+    return <button onClick={this.ctx.mr.add}>{this.state.num}</button>
+  }
+}
+
+function DemoFn(){
+  // mr is short of moduleReducer, now you call all counter module reducer fns by mr
+  const { state, mr } = useConcent('counter');
+  return <button onClick={mr.add}>{state.num}</button>
+}
 ```
 
 ## 💻 Playground
