@@ -21,8 +21,8 @@ type lifecycle = {
   // because you can put the logic to reducer
   loaded?: (dispatch: IDispatch, moduleState: any) => void;
   // first ins belong cur module will trigger
-  mounted?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
-  willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
+  mounted?: (dispatch: IDispatch, moduleState: any) => void | undefined;
+  willUnmount?: (dispatch: IDispatch, moduleState: any) => void | undefined;
 }
 ```
 - 调整事件监听时机，组件挂载时才开始监听

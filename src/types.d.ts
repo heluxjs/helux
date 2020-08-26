@@ -850,8 +850,8 @@ type ModuleConfig = {
     // insteand of initState and initStateDone, using bellow methods is better way
     // because you can put the logic to reducer
     loaded?: (dispatch: IDispatch, moduleState: any) => void;
-    mounted?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
-    willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | undefined;
+    mounted?: (dispatch: IDispatch, moduleState: any) => boolean | void;
+    willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | void;
   }
 }
 
