@@ -175,7 +175,7 @@ run({
 @register("counter")
 class DemoCls extends React.Component {
   render() {
-    // mr is short of moduleReducer, now you call all counter module reducer fns by mr
+    // mr is short of moduleReducer, now you can call all counter module reducer fns by mr
     return <button onClick={this.ctx.mr.add}>{this.state.num}</button>;
   }
 }
