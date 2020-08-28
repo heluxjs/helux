@@ -70,6 +70,7 @@ export default function (state, {
   }
 
   const targetRenderKey = util.extractRenderKey(renderKey);
+  const targetDelay = (renderKey && renderKey.delay) ? renderKey.delay : delay;
 
   const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
   const stateFor = getStateFor(module, refModule);
@@ -96,7 +97,7 @@ export default function (state, {
     (renderType, committedState, updateRef) => {
 
       const passToMiddleware = {
-        calledBy, type, payload, renderKey: targetRenderKey, delay, ccKey, ccUniqueKey,
+        calledBy, type, payload, renderKey: targetRenderKey, targetDelay, ccKey, ccUniqueKey,
         committedState, refModule, module, fnName,
         sharedState: sharedState || {}, // 给一个空壳对象，防止用户直接用的时候报错null
       };
@@ -132,7 +133,7 @@ export default function (state, {
         if (stateChangedCb) stateChangedCb();
 
         // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
-        if (realShare) triggerBroadcastState(stateFor, callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, delay);
+        if (realShare) triggerBroadcastState(stateFor, callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, targetDelay);
       });
 
     }

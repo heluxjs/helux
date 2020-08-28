@@ -45,8 +45,8 @@
   var RENDER_NO_OP = 1;
   var RENDER_BY_KEY = 2;
   var RENDER_BY_STATE = 3;
-  var FOR_ONE_INS_FIRSTLY = 1;
-  var FOR_ALL_INS_OF_A_MOD = 2; // 暂时用不到
+  var FOR_CUR_MOD = 1;
+  var FOR_ANOTHER_MOD = 2; // 暂时用不到
   // export const EFFECT_AVAILABLE = 1;
   // export const EFFECT_STOPPED = 0;
 
@@ -105,8 +105,8 @@
     RENDER_NO_OP: RENDER_NO_OP,
     RENDER_BY_KEY: RENDER_BY_KEY,
     RENDER_BY_STATE: RENDER_BY_STATE,
-    FOR_ONE_INS_FIRSTLY: FOR_ONE_INS_FIRSTLY,
-    FOR_ALL_INS_OF_A_MOD: FOR_ALL_INS_OF_A_MOD,
+    FOR_CUR_MOD: FOR_CUR_MOD,
+    FOR_ANOTHER_MOD: FOR_ANOTHER_MOD,
     DISPATCH: DISPATCH,
     SET_STATE: SET_STATE,
     SET_MODULE_STATE: SET_MODULE_STATE,
@@ -326,11 +326,20 @@
 
   function isEmptyVal(val) {
     return !val && val !== 0;
-  }
+  } // renderKey 可能是 IDispatchOptions
+
   function extractRenderKey(renderKey) {
-    if (!renderKey && renderKey !== 0) return [];
-    if (Array.isArray(renderKey)) return renderKey;
-    return [renderKey];
+    var getRkey = function getRkey(key) {
+      if (!key && key !== 0) return [];
+      if (Array.isArray(key)) return key;
+      return null;
+    };
+
+    var targetRenderKey = getRkey(renderKey);
+    if (targetRenderKey) return targetRenderKey;
+    if (typeof renderKey === 'object') targetRenderKey = getRkey(renderKey.renderKey);
+    if (targetRenderKey) return targetRenderKey;
+    return [renderKey]; // 是一个具体的string 或 number
   }
   function makeError(code, extraMessage) {
     var message = '';
@@ -3095,7 +3104,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.17',
+      version: '2.9.19',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -4386,8 +4395,8 @@
       isObjectNull$1 = isObjectNull,
       computeFeature$1 = computeFeature,
       okeys$5 = okeys;
-  var FOR_ONE_INS_FIRSTLY$1 = FOR_ONE_INS_FIRSTLY,
-      FOR_ALL_INS_OF_A_MOD$1 = FOR_ALL_INS_OF_A_MOD,
+  var FOR_CUR_MOD$1 = FOR_CUR_MOD,
+      FOR_ANOTHER_MOD$1 = FOR_ANOTHER_MOD,
       FORCE_UPDATE$1 = FORCE_UPDATE,
       SET_STATE$1 = SET_STATE,
       SIG_STATE_CHANGED$1 = SIG_STATE_CHANGED,
@@ -4403,10 +4412,10 @@
       middlewares = ccContext.middlewares,
       ccClassKey_ccClassContext_ = ccContext.ccClassKey_ccClassContext_,
       refStore = ccContext.refStore,
-      getModuleStateKeys$1 = ccContext.getModuleStateKeys; //触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
+      getModuleStateKeys$1 = ccContext.getModuleStateKeys; // 触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是 FOR_ANOTHER_MOD
 
   function getStateFor(targetModule, refModule) {
-    return targetModule === refModule ? FOR_ONE_INS_FIRSTLY$1 : FOR_ALL_INS_OF_A_MOD$1;
+    return targetModule === refModule ? FOR_CUR_MOD$1 : FOR_ANOTHER_MOD$1;
   }
 
   function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
@@ -4468,6 +4477,7 @@
     }
 
     var targetRenderKey = extractRenderKey(renderKey);
+    var targetDelay = renderKey && renderKey.delay ? renderKey.delay : delay$$1;
     var _targetRef$ctx = targetRef.ctx,
         refModule = _targetRef$ctx.module,
         ccUniqueKey = _targetRef$ctx.ccUniqueKey,
@@ -4481,7 +4491,7 @@
       fnName: fnName
     }; // 在triggerReactSetState之前把状态存储到store，
     // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-    // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
+    // const passedRef = stateFor === FOR_CUR_MOD ? targetRef : null;
     // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
 
     var _syncCommittedStateTo = syncCommittedStateToStore(module, state, {
@@ -4508,7 +4518,7 @@
         type: type,
         payload: payload,
         renderKey: targetRenderKey,
-        delay: delay$$1,
+        targetDelay: targetDelay,
         ccKey: ccKey,
         ccUniqueKey: ccUniqueKey,
         committedState: committedState,
@@ -4549,7 +4559,7 @@
 
         if (stateChangedCb) stateChangedCb(); // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
 
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, delay$$1);
+        if (realShare) triggerBroadcastState(stateFor, callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, targetDelay);
       });
     });
   }
@@ -4567,7 +4577,7 @@
     }
 
     if (targetRef.__$$ms === UNMOUNTED$1 || // 已卸载
-    stateFor !== FOR_ONE_INS_FIRSTLY$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
+    stateFor !== FOR_CUR_MOD$1 || //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     calledBy !== FORCE_UPDATE$1 && isObjectNull$1(state)) {
       return nextNoop();
     }
@@ -4661,9 +4671,20 @@
     };
   }
 
-  function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay$$1) {
+  function triggerBroadcastState(stateFor, callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay$$1) {
+    var passAllowOri = allowOriInsRender;
+
+    if (delay$$1 > 0) {
+      if (passAllowOri) {
+        // 优先将当前实例渲染了
+        triggerReactSetState(targetRef, callInfo, [], SET_STATE$1, sharedState, stateFor, false);
+      }
+
+      passAllowOri = false; // 置为false，后面的runLater里不会再次触发当前实例渲染
+    }
+
     var startBroadcastState = function startBroadcastState() {
-      broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys);
+      broadcastState(callInfo, targetRef, sharedState, passAllowOri, moduleName, renderKeys);
     };
 
     if (delay$$1 > 0) {
@@ -4701,7 +4722,7 @@
       var refUKey = ref.ctx.ccUniqueKey;
       if (refUKey === currentCcUKey && !allowOriInsRender) return; // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
 
-      triggerReactSetState(ref, callInfo, [], 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY$1, false);
+      triggerReactSetState(ref, callInfo, [], 'broadcastState', partialSharedState, FOR_CUR_MOD$1, false);
       renderedInBelong[refKey] = 1;
     });
     var prevModuleState = getPrevState(moduleName);
