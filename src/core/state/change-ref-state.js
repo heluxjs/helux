@@ -12,7 +12,7 @@ import { send } from '../plugin';
 
 const { isPJO, justWarning, isObjectNull, computeFeature, okeys } = util;
 const {
-  FOR_ONE_INS_FIRSTLY, FOR_ALL_INS_OF_A_MOD,
+  FOR_CUR_MOD, FOR_ANOTHER_MOD,
   FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
@@ -23,9 +23,9 @@ const {
   refStore, getModuleStateKeys,
 } = ccContext;
 
-//触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是FOR_ALL_INS_OF_A_MOD
+// 触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是 FOR_ANOTHER_MOD
 function getStateFor(targetModule, refModule) {
-  return targetModule === refModule ? FOR_ONE_INS_FIRSTLY : FOR_ALL_INS_OF_A_MOD;
+  return targetModule === refModule ? FOR_CUR_MOD : FOR_ANOTHER_MOD;
 }
 
 function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
@@ -77,7 +77,7 @@ export default function (state, {
 
   // 在triggerReactSetState之前把状态存储到store，
   // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
-  // const passedRef = stateFor === FOR_ONE_INS_FIRSTLY ? targetRef : null;
+  // const passedRef = stateFor === FOR_CUR_MOD ? targetRef : null;
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
   const {
     partialState: sharedState, hasDelta, hasPrivState
@@ -132,7 +132,7 @@ export default function (state, {
         if (stateChangedCb) stateChangedCb();
 
         // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
-        if (realShare) triggerBroadcastState(callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, delay);
+        if (realShare) triggerBroadcastState(stateFor, callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, delay);
       });
 
     }
@@ -152,7 +152,7 @@ function triggerReactSetState(
 
   if (
     targetRef.__$$ms === UNMOUNTED || // 已卸载
-    stateFor !== FOR_ONE_INS_FIRSTLY ||
+    stateFor !== FOR_CUR_MOD ||
     //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     (calledBy !== FORCE_UPDATE && isObjectNull(state))
   ) {
@@ -220,9 +220,17 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
   return { partialState, hasDelta: false, hasPrivState };
 }
 
-function triggerBroadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay) {
+function triggerBroadcastState(stateFor, callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay) {
+  let passAllowOri = allowOriInsRender;
+  if (delay > 0) {
+    if (passAllowOri) {// 优先将当前实例渲染了
+      triggerReactSetState(targetRef, callInfo, [], SET_STATE, sharedState, stateFor, false);
+    }
+    passAllowOri = false;// 置为false，后面的runLater里不会再次触发当前实例渲染
+  }
+
   const startBroadcastState = () => {
-    broadcastState(callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys);
+    broadcastState(callInfo, targetRef, sharedState, passAllowOri, moduleName, renderKeys);
   };
 
   if (delay > 0) {
@@ -255,7 +263,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
 
     if (refUKey === currentCcUKey && !allowOriInsRender) return;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
-    triggerReactSetState(ref, callInfo, [], 'broadcastState', partialSharedState, FOR_ONE_INS_FIRSTLY, false);
+    triggerReactSetState(ref, callInfo, [], 'broadcastState', partialSharedState, FOR_CUR_MOD, false);
     renderedInBelong[refKey] = 1;
   });
 

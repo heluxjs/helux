@@ -46,8 +46,8 @@ export const RENDER_BY_KEY = 2;
 export const RENDER_BY_STATE = 3;
 
 
-export const FOR_ONE_INS_FIRSTLY = 1;
-export const FOR_ALL_INS_OF_A_MOD = 2;
+export const FOR_CUR_MOD = 1;
+export const FOR_ANOTHER_MOD = 2;
 
 // 暂时用不到
 // export const EFFECT_AVAILABLE = 1;

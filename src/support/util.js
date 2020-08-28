@@ -68,10 +68,20 @@ export function isEmptyVal(val) {
   return !val && val !== 0;
 }
 
+// renderKey 可能是 IDispatchOptions
 export function extractRenderKey(renderKey) {
-  if (!renderKey && renderKey !== 0) return [];
-  if (Array.isArray(renderKey)) return renderKey;
-  return [renderKey];
+  const getRkey = (key) => {
+    if (!key && key !== 0) return [];
+    if (Array.isArray(key)) return key;
+    return null;
+  }
+
+  let targetRenderKey = getRkey(renderKey);
+  if (targetRenderKey) return targetRenderKey;
+  if (typeof renderKey === 'object') targetRenderKey = getRkey(renderKey.renderKey);
+  if (targetRenderKey) return targetRenderKey;
+
+  return [renderKey];// 是一个具体的string 或 number
 }
 
 export function makeError(code, extraMessage) {
