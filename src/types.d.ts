@@ -141,7 +141,7 @@ export type SettingsCType<SetupFn, Ctx extends ICtxBase = ICtxBase> =
 
 export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
-type RenderKey = string | number | Array<string | number>[];
+type RenderKey = string | number | Array<string | number>;
 
 interface IDispatchOptions {
   silent?: boolean;
