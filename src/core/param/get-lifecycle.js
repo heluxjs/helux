@@ -8,7 +8,8 @@
 
 export default function (legencyModuleConf) {
   const lifeCycleCopy = Object.assign({}, legencyModuleConf.lifecycle);
+  // 优先取lifecycle里的initState、initStateDone，不存在的话再去对接原来外层的init、initPost定义
   if (!lifeCycleCopy.initState) lifeCycleCopy.initState = legencyModuleConf.init;
-  if (!lifeCycleCopy.initPost) lifeCycleCopy.initStateDone = legencyModuleConf.initPost;
+  if (!lifeCycleCopy.initStateDone) lifeCycleCopy.initStateDone = legencyModuleConf.initPost;
   return lifeCycleCopy;
 }
