@@ -56,7 +56,135 @@ English | [简体中文](./README.zh-CN.md)
 
 </div>
 
-❤️ Build-in **dependency collection**, a predictable、zero-cost-use、progressive、high performance's react develop framework 
+Definitely the ❤️ simplest but ⚡️ strongest state management for react, it is predictable、progressive and efficient.
+
+## ✨Features
+* Render context injected automatically(no any annoying boilerplate code)
+* [Dependency collection](https://codesandbox.io/s/dep-collection-uiqzn) at runtime(state & computed)
+* Unified logic reuse of class and function components
+* Optional [Compostion api](https://github.com/concentjs/concent/blob/master/examples/composition-api.md) support
+* Optional [modular development](https://codesandbox.io/s/concent-guide-xvcej) support(state、reducer、computed、watch、lifecycle)
+* High performance [renderKey mechanism](https://codesandbox.io/s/render-key-dwrx1)
+* Centralization and De-centralization module configuration both support
+* Dynamic module configuration support
+* Module clone support
+* [Reducer combination](https://github.com/concentjs/concent/blob/master/examples/combine-reducers.md) support
+* Event system support
+* Middleware and plugin is support
+* [React Devtools](https://github.com/concentjs/concent-plugin-redux-devtool) support
+* Hot-reload support
+* Compatible with Redux ecology
+* [SSR&Nextjs](https://github.com/concentjs/ssr-demo-1) support
+* React-native support
+* [Very friendly typeScript](https://codesandbox.io/s/concent-guide-ts-zrxd5) support
+
+## Docs
+visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
+
+## 📦Quick start
+Make sure you have installed [nodejs](http://nodejs.cn/download/)。
+
+### Install
+
+```sh
+$ npm i --save concent
+```
+
+or yarn command
+
+```sh
+$ yarn add concent
+```
+
+### Minimal example
+```js
+import { run } from 'concent';
+import { register, useConcent } from 'concent';
+
+run({
+  counter: {// declare a moudle named 'counter'
+    state: { num: 1, numBig: 100 }, // define state
+  },
+  // you can also put another module here.
+});
+
+@register('counter')
+class DemoCls extends React.Component{
+  // commit state to store and broadcast to other refs which also belong to counter module
+  inc = ()=> this.setState({num: this.state.num + 1})
+  render(){
+    // here if read num, it means current ins render dep keys is ['num']
+    return <button onClick={this.inc}>{this.state.num}</button>
+  }
+}
+
+function DemoFn(){
+  const { state, setState } = useConcent('counter');
+  const inc = ()=> setState({num: state.num + 1});
+  return <button onClick={inc}>{state.num}</button>
+}
+
+export default function App(){
+  return (
+    <div>
+      <ClsComp />
+      <FnComp />
+    </div>
+  );
+}
+```
+
+### Complete examples
+
+- Move logic to `reducer` and define `computed`、`watch`、`lifecycle`
+> try edit [this demo](https://codesandbox.io/s/example-modular-1-rw95j)、 👉[better js demo](https://codesandbox.io/s/example-modular-2-czn17)、👉[better ts demo](https://codesandbox.io/s/example-modular-3-zl57s)
+```js
+import { run, defWatch } from 'concent';
+
+run({
+  counter: {
+    state: { num: 1, numBig: 100 },
+    computed: {
+      numx2: ({ num }) => num * 2, // only num changed will trigger this fn
+      numx2plusBig: ({ numBig }, o, f) => f.cuVal.numx2 + numBig // reuse computed reslult
+    },
+    reducer: {
+      initState: () => ({ num: 8, numBig: 800 }),
+      add: (payload, moduleState, actionCtx) => ({ num: moduleState.num + 1 }),
+      addBig: (p, m, ac) => ({ numBig: m.numBig + 100 }),
+      asyncAdd: async (p, m, ac) => {
+        await delay(1000);
+        return { num: m.num + 1 };
+      },
+      addSmallAndBig: async (p, m, ac) => {
+        await ac.dispatch("add"); // hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        await ac.dispatch("addBig");
+      }
+    },
+    watch: {
+      numChange: defWatch(({ num }, o) => console.log(`from ${o.num} to ${num}`), {immediate:true})
+    },
+    lifecycle: {
+      // loaded: (dispatch) => dispatch("initState"), // when module loaded
+      mounted: (dispatch) => dispatch("initState"), // when any first ins of counter module mounted will trigger this
+      willUnmount: (dispatch) => dispatch("initState") // when last ins of counter module unmount will trigger this
+    }
+  }
+});
+
+@register("counter")
+class DemoCls extends React.Component {
+  render() {
+    // mr is short of moduleReducer, now you can call all counter module reducer fns by mr
+    return <button onClick={this.ctx.mr.add}>{this.state.num}</button>;
+  }
+}
+
+function DemoFn() {
+  const { moduleComputed, mr } = useConcent("counter");
+  return <button onClick={mr.add}>numx2plusBig: {moduleComputed.numx2plusBig}</button>;
+}
+```
 
 ## 💻 Playground
 
@@ -75,102 +203,6 @@ English | [简体中文](./README.zh-CN.md)
 - [Calculator-concent](https://codesandbox.io/s/react-calculator-8hvqw) **vs** [Calculator-hook](https://codesandbox.io/s/react-calculator-84f2m)
 - [Concent query list](https://codesandbox.io/s/query-react-list-00mkd) & [Concent Shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [Hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
 - [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
-
-## Docs
-visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
-
-
-## 📦Quick start
-Make sure you have installed [nodejs](http://nodejs.cn/download/)。
-
-### Install concent
-Install `concent` with npm command in your project directory.
-
-```sh
-$ npm i --save concent
-```
-
-or yarn command
-
-```sh
-$ yarn add concent
-```
-
-### Define module
-Use `run` to define a module.
-
-```js
-import { run } from 'concent';
-
-run({
-  counter: {// declare a moudle named 'counter'
-    state: { num: 1, numBig: 100 }, // define state
-  },
-  // you can also put another module here.
-});
-
-```
-
-### Cosume state & change state
-Use `register` to specify a module for class component, or `useConcent`for function component.
-> it will let concent konw which module current component belong to.
-
-```js
-import { register, useConcent } from 'concent';
-
-@register('counter')
-class DemoCls extends React.Component{
-  // now setState can commit state to store 
-  // and broadcast state to other refs which also belong to counter module
-  inc = ()=> this.setState({num: this.state.num + 1})
-  render(){
-    // here if read num, it means current ins render dep keys is ['num']
-    const { num } = this.state;
-    // render logic
-  }
-}
-
-function DemoFn(){
-  const { state, setState } = useConcent('counter');
-  const inc = ()=> setState({num: state.num + 1});
-  // render logic
-}
-```
-
-### Initialize component
-There is no need to wrap the root component with a `Provider`, you can just initialize the concent component any where you want, [here](https://codesandbox.io/s/rvc-demo2-vg3uh?file=/src/index.js) you can view the demo.
-
-```jsx
-const rootElement = document.getElementById("root");
-ReactDOM.render(
-  <React.StrictMode>
-    <div>
-      <ClsComp />
-      <FnComp />
-    </div>
-  </React.StrictMode>,
-  rootElement
-);
-```
-
-## ✨Advanced fetures
-* **support dependency collection**，use `Proxy`&`defineProperty` in v2.3+ to support dependency collection
-* **simple core api**，use `run` to load model configuration, use `register` to decorate class component, or use `useConcent` in function component.
-* **zero-cost-use**，no `Provider` any more, the decorated component can be interactive with store by `setState` directly.[hello-concent](https://stackblitz.com/edit/cc-course-hello-concent-simple)
-* **friendly model configuration**，except state, you can also define reducer、computed、watch and init optionally to cover all your scene.
-* **flexible data consumption granularity**，your can consume multi model data with state key level dependency.
-* **progressive**，except `setState`, you can also use `dispatch` or `invoke` to change state, separate your business logic and ui completely.[from class to function](https://stackblitz.com/edit/cc-multi-ways-to-wirte-code)
-* **enhance component ability**，support ref level computed 、watch、emit&on、setup etc(setup is is inspired by vue3).
-* **highly consistent coding experience**，no matter class component or function component, they can enjoy the same api calling.[multi ways to define component](https://stackblitz.com/edit/cc-4-render-mode)
-* **high performance rendering mechanism**，working based on dependency mark、ref collection and state broadcast，built-in renderKey、lazyDispatch、delayBroadcast feature.。[long list exact upate](https://stackblitz.com/edit/concent-render-key?file=BookItem.js)、[state batch commit](https://stackblitz.com/edit/concent-lazy-dispatch?file=runConcent.js)、[high frequency input&delay broadcast](https://stackblitz.com/edit/concent-delay-broadcast)
-* **clean dom hierarchy**，use reverse inheritance strategy for class component by default, to let your react dom tree keep clean。
-* **middleware and plugin is supported**，allow user customize middleware to intercept data changing behavior to do something else, allow user customize plugin to enhance concent ability.
-* **de-centralization model configuration**，except for configuring models with `run`, user can also call `configure` api to configure you model definition near your component, that means you can publish your component to npm with your component model.
-* **model clone**，allow user clone new model by existed model, to meet the abstract factory need.
-* **fully typescript support**，writing [elegant ts code](https://codesandbox.io/s/concent-guide-ts-zrxd5) with concent is easy.
-
-[simple demo 1](https://codesandbox.io/s/hello-concent-egb4d)
-[simple demo 2](https://codesandbox.io/s/dep-collection-uiqzn)
 
 ## Eco system
 
@@ -204,6 +236,3 @@ ___
 ___
 ## How concent component ins works
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)
-
-## Welcome to join in Qgroup to konw more
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/article-img/rmc-comparison/17.png)
