@@ -3104,7 +3104,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.21',
+      version: '2.9.22',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -5582,9 +5582,10 @@
    * 如果是ts工程，则需要将init逻辑迁移到 lifecycle.initState 里，initPost 迁移到 lifecycle.initStateDone 里
    */
   function getLifecycle (legencyModuleConf) {
-    var lifeCycleCopy = Object.assign({}, legencyModuleConf.lifecycle);
+    var lifeCycleCopy = Object.assign({}, legencyModuleConf.lifecycle); // 优先取lifecycle里的initState、initStateDone，不存在的话再去对接原来外层的init、initPost定义
+
     if (!lifeCycleCopy.initState) lifeCycleCopy.initState = legencyModuleConf.init;
-    if (!lifeCycleCopy.initPost) lifeCycleCopy.initStateDone = legencyModuleConf.initPost;
+    if (!lifeCycleCopy.initStateDone) lifeCycleCopy.initStateDone = legencyModuleConf.initPost;
     return lifeCycleCopy;
   }
 
