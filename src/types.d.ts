@@ -1179,7 +1179,7 @@ export function useConcent<Props extends IAnyObj = {}, RefCtx extends ICtxBase =
 export function useConcent<
   Props extends IAnyObj,
   RefCtx extends ICtxBase,
-  T extends IAnyObj | NoMap,
+  T extends IAnyObj | NoMap = NoMap,
   PrivState extends FnState | NoPrivState = NoPrivState
 >(
   registerOptions:
