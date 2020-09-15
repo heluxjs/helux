@@ -106,10 +106,14 @@ interface IReducerFn {
 // !!!use infer
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
-export type ComputedValType<T> = {
+// T can be ctx=>CuSpec or CuSpec
+export type ComputedValType<T> = T extends IAnyFn ? ({
+  readonly [K in keyof ReturnType<T>]: ReturnType<T>[K] extends IAnyFn ? GetPromiseT<ReturnType<T>[K]> :
+  (ReturnType<T>[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<T>[K]['fn']> : never);
+}) : ({
   readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<T[K]> :
   (T[K] extends IComputedFnSimpleDesc ? GetPromiseT<T[K]['fn']> : never);
-}
+});
 
 export type SettingsType<SetupFn> = SetupFn extends IAnyFn ?
   (ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>) :
