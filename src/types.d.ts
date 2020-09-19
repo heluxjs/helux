@@ -106,14 +106,10 @@ interface IReducerFn {
 // !!!use infer
 export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
 
-// T can be ctx=>CuSpec or CuSpec
-export type ComputedValType<T> = T extends IAnyFn ? ({
-  readonly [K in keyof ReturnType<T>]: ReturnType<T>[K] extends IAnyFn ? GetPromiseT<ReturnType<T>[K]> :
-  (ReturnType<T>[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<T>[K]['fn']> : never);
-}) : ({
+export type ComputedValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<T[K]> :
   (T[K] extends IComputedFnSimpleDesc ? GetPromiseT<T[K]['fn']> : never);
-});
+}
 
 export type SettingsType<SetupFn> = SetupFn extends IAnyFn ?
   (ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>) :
@@ -263,9 +259,6 @@ declare function refCtxOff(eventDesc: [string, string?]): void;
 declare function refCtxOff(eventDesc: { name: string, identity?: string }): void;
 
 export type GetPromiseT<F extends (...args: any) => any> = F extends (...args: any) => Promise<infer T> ? T : ReturnType<F>;
-type MyReturnType<F extends (...args) => any> = ReturnType<F> extends Promise<infer T>
-  ? T
-  : ReturnType<F>
 
 /**
  * 
@@ -280,7 +273,6 @@ type MyReturnType<F extends (...args) => any> = ReturnType<F> extends Promise<in
       FnName extends 'aaa' ? typeof aaa :
       FnName extends 'bbb' ? typeof bbb :
       null;
-
     type PayloadType<FnName extends string> = (Parameters<reducerFnType<FnName>>)[0];
     type reducerFnResultType<FnName extends string> = ReturnType<reducerFnType<FnName>>;
  */
@@ -302,7 +294,7 @@ declare function refCtxInvoke<UserFn extends IReducerFn>
   (fn: { module: string, fn: UserFn }, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 
 declare function refCtxSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-declare function refCtxSetState<FullState = {}>(cb: (prevFullState: FullState) => IAnyObj, renderKey?: RenderKeyOrOpts, delay?: number): void;
+declare function refCtxSetState<FullState = {}>(cb: (prevFullState: FullState, props: IAnyObj) => IAnyObj, renderKey?: RenderKeyOrOpts, delay?: number): void;
 declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
@@ -701,7 +693,7 @@ interface _IFnCtx {// 方便 ctx.computed({....}) 定义计算描述体时，可
   deltaCommittedState: IAnyObj;
   cuVal: any;
   refCtx: any;
-  setInitialVal: (initialVal) => void;
+  setInitialVal: (initialVal: any) => void;
   commit: GetFnCtxCommit<any>;
   commitCu: GetFnCtxCommitCu<any>;
 }
@@ -960,7 +952,7 @@ export interface IActionCtxBase {
   globalState: IAnyObj;
   moduleState: IAnyObj;
   moduleComputed: IAnyObj;
-  setState: (obj: IAnyObj, renderKey?: RenderKey, delay?: number) => Promise<IAnyObj>;
+  setState: <T extends Partial<IAnyObj>>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
   refCtx: IAnyObj;
 }
 
