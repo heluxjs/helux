@@ -134,6 +134,11 @@
   "unpkg": "dist/concent.js",
   "version": "2.9.30",
   "dependencies": {
-    "node-fetch": "^2.6.1"
+    "acorn": "^8.0.1",
+    "kind-of": "^6.0.3",
+    "mixin-deep": "^2.0.1",
+    "node-fetch": "^2.6.1",
+    "set-value": "^3.0.2",
+    "yargs-parser": "^20.0.0"
   }
 }
