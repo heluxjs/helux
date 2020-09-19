@@ -263,15 +263,14 @@ ccContext.recoverRefState = function () {
 
   const lsLen = localStorage.length;
   const _refStoreState = ccContext.refStore._state;
-  for (let i = 0; i < lsLen; i++) {
-    const lsKey = localStorage.key(i);
-    if (lsKey.startsWith('CCSS_')) {
-      try {
-        _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
-      } catch (err) {
-        console.error(err);
-      }
+  try {
+    for (let i = 0; i < lsLen; i++) {
+      const lsKey = localStorage.key(i);
+      if (!lsKey.startsWith('CCSS_')) return;
+      _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
     }
+  } catch (err) {
+    console.error(err);
   }
 }
 
