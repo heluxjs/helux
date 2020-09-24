@@ -77,7 +77,7 @@ export default function (
     if (!canStartup) return;
 
     try {
-      justTip(`cc version ${ccContext.info.version}`);
+      justTip(`concent version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
       ccContext.runtimeHandler.errorHandler = errorHandler;

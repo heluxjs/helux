@@ -99,9 +99,11 @@
     "replace redux"
   ],
   "license": "MIT",
+  "name": "concent",
   "main": "lib/index.js",
   "module": "es/index.js",
-  "name": "concent",
+  "types": "src/types.d.ts",
+  "unpkg": "dist/concent.js",
   "npmFileMap": [
     {
       "basePath": "/dist/",
@@ -130,8 +132,6 @@
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
     "test": "jest"
   },
-  "types": "src/types.d.ts",
-  "unpkg": "dist/concent.js",
   "version": "2.9.30",
   "dependencies": {
     "acorn": "^8.0.1",
