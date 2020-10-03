@@ -3104,7 +3104,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.30',
+      version: '2.9.31',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -3128,16 +3128,14 @@
     var lsLen = localStorage.length;
     var _refStoreState = ccContext.refStore._state;
 
-    for (var i = 0; i < lsLen; i++) {
-      var lsKey = localStorage.key(i);
-
-      if (lsKey.startsWith('CCSS_')) {
-        try {
-          _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
-        } catch (err) {
-          console.error(err);
-        }
+    try {
+      for (var i = 0; i < lsLen; i++) {
+        var lsKey = localStorage.key(i);
+        if (!lsKey.startsWith('CCSS_')) return;
+        _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
       }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -7670,7 +7668,7 @@
       if (!canStartup) return;
 
       try {
-        justTip$1("cc version " + ccContext.info.version);
+        justTip$1("concent version " + ccContext.info.version);
         if (isHot !== undefined) ccContext.isHot = isHot;
         ccContext.reComputed = reComputed;
         ccContext.runtimeHandler.errorHandler = errorHandler;

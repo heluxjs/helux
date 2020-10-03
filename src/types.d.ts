@@ -952,7 +952,7 @@ export interface IActionCtxBase {
   globalState: IAnyObj;
   moduleState: IAnyObj;
   moduleComputed: IAnyObj;
-  setState: <T extends Partial<IAnyObj>>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
+  setState: <T>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
   refCtx: IAnyObj;
 }
 
