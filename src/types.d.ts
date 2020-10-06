@@ -1203,7 +1203,11 @@ export function useConcent<
   ccClassKey?: string,
 ): RefCtx;
 
-export function configure(moduleName: string, moduleConfig: ModuleConfig): void;
+
+declare function configure(moduleName: string, moduleConfig: ModuleConfig): void;
+declare function configure(storeConfig: StoreConfig): void;
+
+export const configure: typeof configure;
 
 export function cloneModule(newModule: string, existingModule: string, overwriteModuleConfig?: ModuleConfig): void;
 

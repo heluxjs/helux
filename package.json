@@ -1,6 +1,6 @@
 {
   "_from": "concent@2.9.29",
-  "_id": "concent@2.9.32",
+  "_id": "concent@2.9.33",
   "_inBundle": false,
   "_integrity": "sha512-TJefAAOPXi/jAwGmyP6uvuicELheE/jtIgAeAv/XYE9oVMufH5InppObuqIWoVF6ZhtWIMwNbcQR3k86avAfRA==",
   "_location": "/concent",
@@ -19,7 +19,7 @@
     "#USER",
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/concent/-/concent-2.9.32.tgz",
+  "_resolved": "https://registry.npmjs.org/concent/-/concent-2.9.33.tgz",
   "_shasum": "b45142aee99bf47b61074d6c09437e954dc1e7ad",
   "_spec": "concent@2.9.25",
   "_where": "/Users/fancy/Desktop/code/work/toufang",
@@ -132,7 +132,7 @@
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
     "test": "jest"
   },
-  "version": "2.9.32",
+  "version": "2.9.33",
   "dependencies": {
     "acorn": "^8.0.1",
     "kind-of": "^6.0.3",
