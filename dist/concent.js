@@ -3104,7 +3104,7 @@
       packageLoadTime: Date.now(),
       firstStartupTime: '',
       latestStartupTime: '',
-      version: '2.9.32',
+      version: '2.9.33',
       author: 'fantasticsoul',
       emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
       tag: 'glaxy'
@@ -5588,13 +5588,14 @@
   }
 
   var isPJO$5 = isPJO,
-      evalState$1 = evalState;
+      evalState$1 = evalState,
+      okeys$7 = okeys;
   /**
-   * @description configure module、state、option to cc
+   * @description configure module、state etc to cc
    * @author zzk
    * @export
    * @param {string} module
-   * @param {{state:object, reducer:object, watch:object, computed:object, init:object}} config
+   * @param {{state:object, reducer:object, watch:object, computed:object, lifecycle:object}} config - when module type is string
    */
 
   function configure (module, config) {
@@ -5602,36 +5603,46 @@
       config = {};
     }
 
-    if (!ccContext.isStartup) {
-      pendingModules.push({
-        module: module,
-        config: config
+    var confOneMoudle = function confOneMoudle(module, config) {
+      if (!ccContext.isStartup) {
+        pendingModules.push({
+          module: module,
+          config: config
+        });
+        return;
+      }
+
+      if (!isPJO$5(config)) {
+        throw new Error("param config " + NOT_A_JSON);
+      }
+
+      if (module === MODULE_GLOBAL) {
+        throw new Error('configuring global module is not allowed');
+      }
+
+      var state = config.state,
+          reducer = config.reducer,
+          computed = config.computed,
+          watch = config.watch;
+      var eState = evalState$1(state);
+      if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
+      initModuleState(module, eState, true);
+      initModuleReducer(module, reducer);
+      initModuleComputed(module, computed);
+      initModuleWatch(module, watch);
+      initModuleLifecycle(module, getLifecycle(config));
+      ccContext.moduleName_isConfigured_[module] = true;
+      send(SIG_MODULE_CONFIGURED, module);
+    }; // now module is part of store conf
+
+
+    if (isPJO$5(module)) {
+      okeys$7(module).forEach(function (moduleName) {
+        return confOneMoudle(moduleName, module[moduleName]);
       });
-      return;
+    } else {
+      confOneMoudle(module, config);
     }
-
-    if (!isPJO$5(config)) {
-      throw new Error("param config " + NOT_A_JSON);
-    }
-
-    if (module === MODULE_GLOBAL) {
-      throw new Error('configuring global module is not allowed');
-    }
-
-    var _config = config,
-        state = _config.state,
-        reducer = _config.reducer,
-        computed = _config.computed,
-        watch = _config.watch;
-    var eState = evalState$1(state);
-    if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
-    initModuleState(module, eState, true);
-    initModuleReducer(module, reducer);
-    initModuleComputed(module, computed);
-    initModuleWatch(module, watch);
-    initModuleLifecycle(module, getLifecycle(config));
-    ccContext.moduleName_isConfigured_[module] = true;
-    send(SIG_MODULE_CONFIGURED, module);
   }
 
   function tagReducerFn(reducerFns, moduleName) {
@@ -6354,7 +6365,7 @@
       _ccContext$store$2 = ccContext.store,
       getState$4 = _ccContext$store$2.getState,
       getModuleVer$2 = _ccContext$store$2.getModuleVer;
-  var okeys$7 = okeys,
+  var okeys$8 = okeys,
       me$1 = makeError,
       vbi$3 = verboseInfo,
       isObject$1 = isObject,
@@ -6378,7 +6389,7 @@
 
   var getWatchedKeys = function getWatchedKeys(ctx) {
     if (ctx.watchedKeys === '-') {
-      if (ctx.__$$renderStatus === START) return okeys$7(ctx.__$$compareWaKeys);else return okeys$7(ctx.__$$curWaKeys);
+      if (ctx.__$$renderStatus === START) return okeys$8(ctx.__$$compareWaKeys);else return okeys$8(ctx.__$$curWaKeys);
     } else return ctx.watchedKeys;
   };
 
@@ -6388,7 +6399,7 @@
     var isConnectArr = Array.isArray(connect);
 
     var getModuleWaKeys = function getModuleWaKeys(m) {
-      if (ctx.__$$renderStatus === START) return okeys$7(ctx.__$$compareConnWaKeys[m]);else return okeys$7(ctx.__$$curConnWaKeys[m]);
+      if (ctx.__$$renderStatus === START) return okeys$8(ctx.__$$compareConnWaKeys[m]);else return okeys$8(ctx.__$$curConnWaKeys[m]);
     };
 
     var getWKeys = function getWKeys(module) {
@@ -6508,8 +6519,8 @@
     var refStoredState = refStore$1._state[ccUniqueKey] || {};
     var mergedState = Object.assign({}, state, refStoredState, mstate);
     ref.state = mergedState;
-    var stateKeys = okeys$7(mergedState);
-    var connectedModules = okeys$7(connect);
+    var stateKeys = okeys$8(mergedState);
+    var connectedModules = okeys$8(connect);
     var connectedState = {};
     var connectedComputed = {};
     connectedModules.forEach(function (m) {
@@ -6520,7 +6531,7 @@
     var globalComputed = connectedComputed[MODULE_GLOBAL];
     var globalState = makeObState(ref, getState$4(MODULE_GLOBAL), MODULE_GLOBAL, false); // extract privStateKeys
 
-    var privStateKeys = removeArrElements(okeys$7(state), modStateKeys);
+    var privStateKeys = removeArrElements(okeys$8(state), modStateKeys);
     var moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true); // declare cc state series api
 
     var changeState = function changeState(state, option) {
@@ -6718,8 +6729,8 @@
 
       var newRefState = Object.assign({}, state, initialState, refStoredState, mstate); // 更新stateKeys，防止遗漏新的私有stateKey
 
-      ctx.stateKeys = okeys$7(newRefState);
-      ctx.privStateKeys = removeArrElements(okeys$7(newRefState), modStateKeys);
+      ctx.stateKeys = okeys$8(newRefState);
+      ctx.privStateKeys = removeArrElements(okeys$8(newRefState), modStateKeys);
       ctx.unProxyState = ctx.prevState = newRefState;
       ref.state = Object.assign(ctx.state, newRefState);
     }; // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
@@ -7076,13 +7087,13 @@
       }
   }
 
-  var okeys$8 = okeys;
+  var okeys$9 = okeys;
   /**
    * 根据connect,watchedKeys,以及用户提供的原始renderKeyClasses 计算 特征值
    */
 
   function getFeatureStr (belongModule, connectSpec, renderKeyClasses) {
-    var moduleNames = okeys$8(connectSpec);
+    var moduleNames = okeys$9(connectSpec);
     moduleNames.sort();
     var classesStr;
     if (renderKeyClasses === '*') classesStr = '*';else classesStr = renderKeyClasses.slice().join(',');
@@ -7234,7 +7245,7 @@
   }
 
   var isPJO$6 = isPJO,
-      okeys$9 = okeys,
+      okeys$a = okeys,
       isObject$2 = isObject;
 
   function checkObj(rootObj, tag) {
@@ -7249,7 +7260,7 @@
     delete storeState[MODULE_CC];
     if (!isObject$2(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
     if (!isObject$2(storeState[MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
-    var moduleNames = okeys$9(storeState);
+    var moduleNames = okeys$a(storeState);
     var len = moduleNames.length;
 
     for (var i = 0; i < len; i++) {
@@ -7266,25 +7277,25 @@
     checkObj(rootReducer, 'reducer');
     if (!isObject$2(rootReducer[MODULE_DEFAULT])) rootReducer[MODULE_DEFAULT] = {};
     if (!isObject$2(rootReducer[MODULE_GLOBAL])) rootReducer[MODULE_GLOBAL] = {};
-    okeys$9(rootReducer).forEach(function (m) {
+    okeys$a(rootReducer).forEach(function (m) {
       return initModuleReducer(m, rootReducer[m]);
     });
   }
   function configRootComputed(rootComputed) {
     checkObj(rootComputed, 'computed');
-    okeys$9(rootComputed).forEach(function (m) {
+    okeys$a(rootComputed).forEach(function (m) {
       return initModuleComputed(m, rootComputed[m]);
     });
   }
   function configRootWatch(rootWatch) {
     checkObj(rootWatch, 'watch');
-    okeys$9(rootWatch).forEach(function (m) {
+    okeys$a(rootWatch).forEach(function (m) {
       return initModuleWatch(m, rootWatch[m]);
     });
   }
   function configRootLifecycle(rootLifecycle) {
     checkObj(rootLifecycle, 'lifecycle');
-    okeys$9(rootLifecycle).forEach(function (m) {
+    okeys$a(rootLifecycle).forEach(function (m) {
       return initModuleLifecycle(m, rootLifecycle[m]);
     });
   }
@@ -7726,7 +7737,7 @@
   }
 
   var isPJO$7 = isPJO,
-      okeys$a = okeys,
+      okeys$b = okeys,
       evalState$2 = evalState;
 
   var pError = function pError(label) {
@@ -7781,7 +7792,7 @@
     }; // traversal moduleNames
 
 
-    okeys$a(store).forEach(function (m) {
+    okeys$b(store).forEach(function (m) {
       return buildStoreConf(m, store[m]);
     }); // these modules pushed by configure api
 
@@ -7854,7 +7865,7 @@
     if (hasWatchFn) cuOrWatch(watchKeyForRef);
   }
 
-  var okeys$b = okeys,
+  var okeys$c = okeys,
       makeCuDepDesc$1 = makeCuDepDesc;
   var runtimeVar$3 = ccContext.runtimeVar;
   function beforeMount (ref, setup, bindCtxToMethod) {
@@ -7869,7 +7880,7 @@
       if (!isPJO(settingsObj)) throw new Error('type of setup return result must be an plain json object'); //优先读自己的，再读全局的
 
       if (bindCtxToMethod === true || runtimeVar$3.bindCtxToMethod === true && bindCtxToMethod !== false) {
-        okeys$b(settingsObj).forEach(function (name) {
+        okeys$c(settingsObj).forEach(function (name) {
           var settingValue = settingsObj[name];
           if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
         });

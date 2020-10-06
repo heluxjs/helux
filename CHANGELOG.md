@@ -1,3 +1,12 @@
+#### 2020-10-06
+2.9.33 发布
+- feat: `configure`支持传入partcialStoreConf，采用object时，意味着一次调用可以配置多个模块
+```js
+configure('oneMod', {state: {name:'xxx'} } );
+// or
+configure({oneMod: {state: {name: 'xxx'} } });
+```
+
 #### 2020-08-28
 2.9.20 发布
 - fix: `delay`逻辑因为`renderKey`调整失去作用
