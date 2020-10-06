@@ -831,7 +831,7 @@ type TypeDesc = {
 declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Partial<T>;
 declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Promise<Partial<T>>;
 
-type ModuleConfig = {
+export type ModuleConfig = {
   state: Object;
   reducer?: {
     [fnName: string]: IReducerFn;
@@ -854,11 +854,11 @@ type ModuleConfig = {
   }
 }
 
-interface StoreConfig {
+export interface StoreConfig {
   [moduleName: string]: ModuleConfig;
 }
 
-type MidCtx = {
+export type MidCtx = {
   calledBy: CalledBy, type: string, payload: any,
   renderKey: Array<string | number>[], delay: number, ccKey: string, ccUniqueKey: string,
   committedState: object, sharedState: object | null,
