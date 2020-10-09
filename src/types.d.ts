@@ -308,7 +308,7 @@ declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
 declare function refCtxGetConnectWatchedKeys(module: string): string[];
 
 
-declare function reducerSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
+declare function reducerSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): Promise<IAnyObj | undefined>;
 
 /**
  * <V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
@@ -1204,10 +1204,10 @@ export function useConcent<
 ): RefCtx;
 
 
-declare function configure(moduleName: string, moduleConfig: ModuleConfig): void;
-declare function configure(storeConfig: StoreConfig): void;
+declare function configureModule(moduleName: string, moduleConfig: ModuleConfig): void;
+declare function configureModule(storeConfig: StoreConfig): void;
 
-export const configure: typeof configure;
+export const configure: typeof configureModule;
 
 export function cloneModule(newModule: string, existingModule: string, overwriteModuleConfig?: ModuleConfig): void;
 
@@ -1315,7 +1315,7 @@ declare type DefaultExport = {
   connectDumb: typeof connectDumb,
   registerHookComp: typeof registerHookComp,
   useConcent: typeof useConcent,
-  configure: typeof configure,
+  configure: typeof configureModule,
   cloneModule: typeof cloneModule,
   set: typeof set,
   setState: typeof setState,
