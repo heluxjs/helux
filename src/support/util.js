@@ -261,7 +261,7 @@ export function safeAssignToMap(container, key, objectToBeenAssign) {
 }
 
 export function computeFeature(ccUniqueKey, state) {
-  const stateKeys = Object.keys(state);
+  const stateKeys = okeys(state);
   const stateKeysStr = stateKeys.sort().join('|');
   return `${ccUniqueKey}/${stateKeysStr}`;
 }

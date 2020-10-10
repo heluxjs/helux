@@ -366,7 +366,7 @@ export function dispatch({
   }
   const reducerFn = targetReducerMap[type];
   if (!reducerFn) {
-    const fns = Object.keys(targetReducerMap);
+    const fns = okeys(targetReducerMap);
     return __innerCb(new Error(`no reducer fn found for [${inputModule}/${type}], is these fn you want:${fns}`));
   }
 

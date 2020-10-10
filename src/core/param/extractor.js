@@ -6,7 +6,7 @@ import * as checker from './checker';
 
 const { getModuleStateKeys } = ccContext;
 
-const { verifyKeys, verboseInfo: vbi } = util;
+const { verifyKeys, verboseInfo: vbi, okeys } = util;
 
 export function getStoredKeys(belongMotule, refPrivState, ccOptionStoredKeys, regStoredKeys) {
   const targetStoredKeys = ccOptionStoredKeys || regStoredKeys;
@@ -17,7 +17,7 @@ export function getStoredKeys(belongMotule, refPrivState, ccOptionStoredKeys, re
   const moduleStateKeys = getModuleStateKeys(belongMotule);
   if (targetStoredKeys === '*') {
     // refPrivState里可能含有moduleStateKey，需要进一步过滤
-    return Object.keys(refPrivState).filter(k => !moduleStateKeys.includes(k));
+    return okeys(refPrivState).filter(k => !moduleStateKeys.includes(k));
   } else {
     checker.checkStoredKeys(belongMotule, targetStoredKeys);
     return targetStoredKeys;

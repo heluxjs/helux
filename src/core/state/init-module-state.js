@@ -5,6 +5,8 @@ import * as checker from '../param/checker';
 import guessDuplicate from '../base/guess-duplicate';
 import * as refCache from '../ref/_cache';
 
+const { safeAssignToMap, okeys, safeGet } = util;
+
 export default function (module, mState, moduleMustNotExisted = true) {
   refCache.createModuleNode(module);
   //force MODULE_VOID state as {}
@@ -21,9 +23,9 @@ export default function (module, mState, moduleMustNotExisted = true) {
   const rootStateVer = ccStore.getStateVer();
   const rootModuleVer = ccStore.getModuleVer();
   const prevRootState = ccStore.getPrevState();
-  util.safeAssignToMap(rootState, module, state);
-  util.safeAssignToMap(prevRootState, module, state);
-  rootStateVer[module] = util.okeys(state).reduce((map, key) => {
+  safeAssignToMap(rootState, module, state);
+  safeAssignToMap(prevRootState, module, state);
+  rootStateVer[module] = okeys(state).reduce((map, key) => {
     map[key] = 1;
     return map;
   }, {});
@@ -32,11 +34,11 @@ export default function (module, mState, moduleMustNotExisted = true) {
   // 把_computedValueOri safeGet从init-module-computed调整到此处
   // 防止用户不定义任何computed，而只是定义watch时报错undefined
   const cu = ccContext.computed;
-  util.safeGet(cu._computedDep, module, util.makeCuDepDesc());
-  util.safeGet(cu._computedValue, module);
-  util.safeGet(cu._computedValueOri, module);
+  safeGet(cu._computedDep, module, util.makeCuDepDesc());
+  safeGet(cu._computedValue, module);
+  safeGet(cu._computedValueOri, module);
 
-  const stateKeys = Object.keys(state);
+  const stateKeys = okeys(state);
   ccContext.moduleName_stateKeys_[module] = stateKeys;
 
   if (module === MODULE_GLOBAL) {

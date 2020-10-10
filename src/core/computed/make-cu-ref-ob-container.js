@@ -5,7 +5,7 @@
 import updateDep from '../ref/update-dep';
 import computedMap from '../../cc-context/computed-map';
 import { CATE_MODULE } from '../../support/constant';
-import { justWarning, isAsyncFn } from '../../support/util';
+import { justWarning, isAsyncFn, okeys } from '../../support/util';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -111,7 +111,7 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
         // 由refComputed.{keyName}取值触发
         if (isRefCu) {
           const computedDep = ref.ctx.computedDep;
-          Object.keys(computedDep).forEach(m => {
+          okeys(computedDep).forEach(m => {
             writeRetKeyDep(computedDep[m], ref, m, retKey, isForModule);
           });
         }
