@@ -3,7 +3,7 @@
 ## About dep collection of state
 
 Concent will collect all component ins's data dep in their every render period.
-> `state` is a proxy object, for helping concent collect every instantce's dep keys in every render period, that makes become true
+> `state` is a proxy object, for helping concent collect every instantce's dep keys in every render period, that makes exact update become true
 
 Try click toggle button and then click add button, see the change of `renderCount`
 
