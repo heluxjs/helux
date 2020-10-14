@@ -1,7 +1,10 @@
 .DS_Store
 **/.DS_Store
-node_modules/
-es/*
+
+node_modules
+dist
+lib
+es
 
 TODO.md
 TIPME.md

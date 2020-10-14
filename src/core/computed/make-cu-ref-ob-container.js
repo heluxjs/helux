@@ -13,15 +13,16 @@ const { _computedValueOri, _computedValue, _computedRaw, _computedDep } = comput
 
 // refModuleCuDep 来自 ref.ctx.computedDep
 function writeRetKeyDep(refModuleCuDep, ref, module, retKey, isForModule) {
-  const retKey_stateKeys_ = refModuleCuDep.retKey_stateKeys_;
   // 所有组件都自动连接到$$global模块，但是未必有对$$global模块的retKey依赖
-  if (!retKey_stateKeys_) return;
-
+  const retKey_stateKeys_ = refModuleCuDep.retKey_stateKeys_ || {};
   const stateKeys = retKey_stateKeys_[retKey] || [];
 
+  
   stateKeys.forEach(stateKey => {
     updateDep(ref, module, stateKey, isForModule);
-  })
+  });
+
+  // TODO: retKey_otherModStateKeys_  ---> updateDep(ref, module, stateKey, false);
 }
 
 /** 

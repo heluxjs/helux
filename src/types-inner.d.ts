@@ -21,4 +21,7 @@ export type IRefCtx = ICtxBase & {
   __$$renderStatus: RenderStatus;
   /** 静态的观察依赖key列表，在实例didMount时会一次性记录这些静态依赖 */
   __$$staticWaKeys: string[];
+
+  // 当前实例观察的key map
+  __$$curWaKeys: {},
 };

@@ -118,6 +118,11 @@ export default function (state, {
         // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
 
         const realShare = saveSharedState(module, passToMiddleware.sharedState, true);
+
+        // TODO: 查看其它模块的cu函数里读取了当前模块的state或computed作为输入产生了的新的计算结果
+        // 然后做相应的关联更新 {'$$global/key1': {foo: ['cuKey1', 'cuKey2'] } }
+        // code here
+
         updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP && !realShare) {

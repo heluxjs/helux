@@ -50,6 +50,7 @@ export default function (ref, module, key, isForModule) {
         __$$nextCompareConnWaKeyCount,
       } = refCtx;
 
+      // TODO: 考虑用 waKey 写在map里
       mapInsM(waKey, ccUniqueKey);
       __$$curConnWaKeys[module][key] = 1;
       __$$compareConnWaKeys[module][key] = 1;
