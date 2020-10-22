@@ -98,8 +98,7 @@ $ yarn add concent
 
 ### Minimal example
 ```js
-import { run } from 'concent';
-import { register, useConcent } from 'concent';
+import { run, register, useConcent } from 'concent';
 
 run({
   counter: {// declare a moudle named 'counter'
