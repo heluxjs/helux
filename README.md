@@ -145,7 +145,8 @@ run({
         return { num: m.num + 1 };
       },
       addSmallAndBig: async (p, m, ac) => {
-        await ac.dispatch("add"); // hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        // hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        await ac.dispatch("add"); 
         await ac.dispatch("addBig");
       }
     },
@@ -153,9 +154,9 @@ run({
       numChange: defWatch(({ num }, o) => console.log(`from ${o.num} to ${num}`), {immediate:true})
     },
     lifecycle: {
-      // loaded: (dispatch) => dispatch("initState"), // when module loaded
-      mounted: (dispatch) => dispatch("initState"), // when any first ins of counter module mounted will trigger this
-      willUnmount: (dispatch) => dispatch("initState") // when last ins of counter module unmount will trigger this
+      // loaded: (dispatch) => dispatch("initState"), // triggered when module loaded
+      mounted: (dispatch) => dispatch("initState"), // triggered when the first ins of counter module mounted
+      willUnmount: (dispatch) => dispatch("initState") // triggered when the last ins of counter module unmount
     }
   }
 });
