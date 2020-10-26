@@ -10,7 +10,7 @@ English | [简体中文](./README.zh-CN.md)
 <br/>
 
 <!--- 额外包一个p标签，防止某些md解析器自己包一个p标签，进而破坏样式 --->
-<div style="display:flex; flex-wrap: wrap; justify-content: center;">
+<div style="display:flex; flex-wrap: wrap;">
   <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/package-json/v/concentjs/concent/master.svg?label=npm%20version' alt='npm version' height='18'>
   </a>
