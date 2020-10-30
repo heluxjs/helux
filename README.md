@@ -11,49 +11,38 @@ English | [简体中文](./README.zh-CN.md)
 
 <!--- 额外包一个p标签，防止某些md解析器自己包一个p标签，进而破坏样式 --->
 <div style="display:flex; flex-wrap: wrap">
-
   <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/package-json/v/concentjs/concent/master.svg?label=npm%20version' alt='npm version' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/issues/concentjs/concent.svg' alt='issues open' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/npm/dw/concent.svg?label=downloads' alt='downloads' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/last-commit/concentjs/concent.svg' alt='last commit' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/commit-activity/m/concentjs/concent.svg' alt='commit activity' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/npm/l/concent.svg' alt='license:MIT' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <!--   i don't konw why this badge message is wrong -->
   <!--   <img src='https://img.shields.io/bundlephobia/minzip/concent/1.4.1.svg' alt='mini bundle size' height='18'> -->
   <img src='https://img.shields.io/badge/minzipped-18kb-brightgreen' alt='mini bundle size' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/package-json/dependency-version/concentjs/concent/co.svg' alt='co version' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/followers/fantasticsoul.svg?style=social' alt='followers' height='18'>
   </a>
-
   <a href='#' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/stars/concentjs/concent.svg?style=social' alt='concent star' height='18'>
   </a>
-
 </div>
 
 Definitely the ❤️ simplest but ⚡️ strongest state management for react, it is predictable、progressive and efficient.
@@ -134,10 +123,11 @@ export default function App(){
 }
 ```
 
-### Complete examples
+### Complete example
 
 - Move logic to `reducer` and define `computed`、`watch`、`lifecycle`
 > try edit [this demo](https://codesandbox.io/s/example-modular-1-rw95j)、 👉[better js demo](https://codesandbox.io/s/example-modular-2-czn17)、👉[better ts demo](https://codesandbox.io/s/example-modular-3-zl57s)
+
 ```js
 import { run, defWatch } from 'concent';
 
@@ -234,5 +224,6 @@ ___
 * [concent 骚操作之组件创建&状态更新](https://juejin.im/post/5dbe3f18f265da4d3429a439)
 * [使用concent，体验一把渐进式地重构react应用之旅](https://juejin.im/post/5d64f504e51d4561c94b0ff8)
 ___
+
 ## How concent component ins works
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)

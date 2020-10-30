@@ -436,9 +436,8 @@ export default function (ref, params, liteLevel = 5) {
         throw new Error(`${eType('second')} array, null, or undefined`);
       }
 
-      let modDepKeys = null;
+      const modDepKeys = [];
       if (!isProp && _depKeys) {
-        modDepKeys = [];
         _depKeys.forEach(depKey => {
           let modDepKey;
           if (depKey.includes('/')) {

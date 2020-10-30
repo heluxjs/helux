@@ -1,9 +1,11 @@
 .DS_Store
 **/.DS_Store
+.vscode
 
 node_modules
 dist
 lib
+es/*
 
 TODO.md
 TIPME.md

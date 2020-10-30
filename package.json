@@ -1,28 +1,4 @@
 {
-  "_from": "concent@2.9.29",
-  "_id": "concent@2.9.35",
-  "_inBundle": false,
-  "_integrity": "sha512-TJefAAOPXi/jAwGmyP6uvuicELheE/jtIgAeAv/XYE9oVMufH5InppObuqIWoVF6ZhtWIMwNbcQR3k86avAfRA==",
-  "_location": "/concent",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "version",
-    "registry": true,
-    "raw": "concent@2.9.25",
-    "name": "concent",
-    "escapedName": "concent",
-    "rawSpec": "2.9.25",
-    "saveSpec": null,
-    "fetchSpec": "2.9.25"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/concent/-/concent-2.9.35.tgz",
-  "_shasum": "b45142aee99bf47b61074d6c09437e954dc1e7ad",
-  "_spec": "concent@2.9.25",
-  "_where": "/Users/fancy/Desktop/code/work/toufang",
   "author": {
     "name": "fantasticsoul",
     "email": "624313307@qq.com",
@@ -37,8 +13,13 @@
     "url": "https://github.com/concentjs/concent/issues"
   },
   "bundleDependencies": false,
+  "peerDependencies": {
+    "@types/react": "^16.9.13",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
   "deprecated": false,
-  "description": "Build-in dependency collection, a predictable、zero-cost-use、progressive、high performance's react develop framework",
+  "description": "control your react component state in a funny way, every react instance of different class if they were registered in concent own the ability of knowing and syncing each other's state, just have a try and discover more^_^",
   "devDependencies": {
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
@@ -48,12 +29,10 @@
     "@babel/plugin-transform-react-jsx": "^7.0.0",
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
-    "@babel/preset-react": "^7.9.4",
     "@babel/runtime": "^7.5.4",
-    "acorn": "^8.0.4",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
-    "codecov": "^3.7.1",
+    "codecov": "^3.0.2",
     "create-react-class": "^15.6.3",
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
@@ -66,25 +45,17 @@
     "glob": "^7.1.1",
     "jest": "^23.6.0",
     "jest-dom": "^1.12.0",
-    "kind-of": "^6.0.3",
-    "mixin-deep": "^2.0.1",
-    "node-fetch": "^2.6.1",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
     "rimraf": "^2.6.2",
     "rollup": "^0.66.5",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.1.3",
-    "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-uglify": "^6.0.0",
     "semver": "^5.5.0",
-    "set-value": "^3.0.2",
-    "uglify-js": "3.5.8",
-    "yargs-parser": "^20.2.1"
+    "uglify-js": "3.5.8"
   },
   "files": [
     "dist",
@@ -105,11 +76,11 @@
     "replace redux"
   ],
   "license": "MIT",
-  "name": "concent",
-  "main": "lib/index.js",
-  "module": "es/index.js",
+  "unpkg": "dist/concent-test.js",
   "types": "src/types.d.ts",
-  "unpkg": "dist/concent.js",
+  "main": "src/index.js",
+  "module": "es/index.js",
+  "name": "concent-test",
   "npmFileMap": [
     {
       "basePath": "/dist/",
@@ -118,26 +89,21 @@
       ]
     }
   ],
-  "npmName": "concent",
-  "peerDependencies": {
-    "@types/react": "^16.9.13",
-    "react": "^16.8.6"
-  },
+  "npmName": "concent-test",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/concentjs/concent.git"
   },
   "scripts": {
-    "about_build_es": "if use 'cross-env BABEL_ENV=es babel src --out-dir es', it will cause error of can not create class without new error",
     "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
     "build:es": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-cpway": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-rightway": "cross-env BABEL_ENV=es babel src --out-dir es",
-    "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.js",
-    "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
+    "about_build_es": "if use 'cross-env BABEL_ENV=es babel src --out-dir es', it will cause error of can not create class without new error",
+    "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent-test.js",
+    "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent-test.min.js",
     "test": "jest"
   },
-  "version": "2.9.35",
-  "dependencies": {}
+  "version": "2.3.7"
 }
