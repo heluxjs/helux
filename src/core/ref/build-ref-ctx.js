@@ -421,19 +421,19 @@ export default function (ref, params, liteLevel = 5) {
     const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare = false, immediate = true) => {
       if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
 
-      // depKeys 为null 和 undefined 会自动转为[], 表示无任何依赖，每一轮都执行的副作用
-      let _depKeys = depKeysOrOpt || [];
+      // depKeys 为 null 和 undefined, 表示无任何依赖，每一轮都执行的副作用
+      let _depKeys = depKeysOrOpt;
       //对于effectProps 第三位参数就是immediate
       let _compare = compare;
       let _immediate = isProp ? compare : immediate;
 
       if (isObject(depKeysOrOpt)) {
-        _depKeys = depKeysOrOpt.depKeys || [],
+        _depKeys = depKeysOrOpt.depKeys,
           _compare = isBool(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
         _immediate = isBool(depKeysOrOpt.immediate) ? depKeysOrOpt.immediate : immediate;
       }
 
-      if (!Array.isArray(_depKeys)) {
+      if (_depKeys !== undefined && _depKeys !== null && !Array.isArray(_depKeys)) {
         throw new Error(`${eType('second')} array, null, or undefined`);
       }
 

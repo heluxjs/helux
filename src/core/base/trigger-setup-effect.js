@@ -52,11 +52,13 @@ export default function (ref, callByDidMount) {
     // if (status === EFFECT_STOPPED) return;
 
     // todo, 优化为effectDep模式, 利用differStateKeys去命中执行函数
-    const { modDepKeys, compare, fn, eId } = item;
-    const keysLen = modDepKeys.length;
-    if (keysLen === 0) {
+    const { modDepKeys, depKeys, compare, fn, eId } = item;
+    if (!depKeys) {
       return toBeExecutedFns.push({ fn, eId });
     }
+    
+    const keysLen = modDepKeys.length;
+    if (keysLen === 0) return;
 
     const mappedSettedKey = mapSettedList(__$$settedList);
     let shouldEffectExecute = false;
@@ -120,11 +122,11 @@ export default function (ref, callByDidMount) {
   const toBeExecutedPropFns = [];
   effectPropsItems.forEach(item => {
     const { depKeys, fn, eId } = item;
-    const keysLen = depKeys.length;
-    if (keysLen === 0) {// prop dep key
+    if (!depKeys) {
       return toBeExecutedPropFns.push({ fn, eId });
     }
 
+    const keysLen = depKeys.length;
     let shouldEffectExecute = false;
     for (let i = 0; i < keysLen; i++) {
       const key = depKeys[i];
