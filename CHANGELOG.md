@@ -1,3 +1,7 @@
+#### 2020-10-30
+2.9.36 发布
+- feat: 新增`ctx.globalReducer`和`ctx.gr`属性，方便实例里可直接调用global模块的reducer函数
+
 #### 2020-10-06
 2.9.33 发布
 - feat: `configure`支持传入partcialStoreConf，采用object时，意味着一次调用可以配置多个模块

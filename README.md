@@ -10,7 +10,7 @@ English | [简体中文](./README.zh-CN.md)
 <br/>
 
 <!--- 额外包一个p标签，防止某些md解析器自己包一个p标签，进而破坏样式 --->
-<div style="display:flex; flex-wrap: wrap">
+<div style="display:flex; flex-wrap: wrap;">
   <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.5rem;'>
   <img src='https://img.shields.io/github/package-json/v/concentjs/concent/master.svg?label=npm%20version' alt='npm version' height='18'>
   </a>
@@ -87,8 +87,7 @@ $ yarn add concent
 
 ### Minimal example
 ```js
-import { run } from 'concent';
-import { register, useConcent } from 'concent';
+import { run, register, useConcent } from 'concent';
 
 run({
   counter: {// declare a moudle named 'counter'
@@ -129,7 +128,7 @@ export default function App(){
 > try edit [this demo](https://codesandbox.io/s/example-modular-1-rw95j)、 👉[better js demo](https://codesandbox.io/s/example-modular-2-czn17)、👉[better ts demo](https://codesandbox.io/s/example-modular-3-zl57s)
 
 ```js
-import { run, defWatch } from 'concent';
+import { run, register, useConcent, defWatch } from 'concent';
 
 run({
   counter: {
@@ -147,7 +146,8 @@ run({
         return { num: m.num + 1 };
       },
       addSmallAndBig: async (p, m, ac) => {
-        await ac.dispatch("add"); // hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        // hate string literal? see https://codesandbox.io/s/combine-reducers-better-7u3t9
+        await ac.dispatch("add"); 
         await ac.dispatch("addBig");
       }
     },
@@ -155,9 +155,9 @@ run({
       numChange: defWatch(({ num }, o) => console.log(`from ${o.num} to ${num}`), {immediate:true})
     },
     lifecycle: {
-      // loaded: (dispatch) => dispatch("initState"), // when module loaded
-      mounted: (dispatch) => dispatch("initState"), // when any first ins of counter module mounted will trigger this
-      willUnmount: (dispatch) => dispatch("initState") // when last ins of counter module unmount will trigger this
+      // loaded: (dispatch) => dispatch("initState"), // triggered when module loaded
+      mounted: (dispatch) => dispatch("initState"), // triggered when the first ins of counter module mounted
+      willUnmount: (dispatch) => dispatch("initState") // triggered when the last ins of counter module unmount
     }
   }
 });
@@ -165,7 +165,7 @@ run({
 @register("counter")
 class DemoCls extends React.Component {
   render() {
-    // mr is short of moduleReducer, now you can call all counter module reducer fns by mr
+    // mr is short of moduleReducer, now you can call counter module's all reducer fns by mr
     return <button onClick={this.ctx.mr.add}>{this.state.num}</button>;
   }
 }
