@@ -277,6 +277,7 @@ export default function (ref, params, liteLevel = 5) {
     connectedComputed,
 
     moduleReducer: null,
+    globalReducer: null,
     connectedReducer: {},
     reducer: {},
 
@@ -502,14 +503,16 @@ export default function (ref, params, liteLevel = 5) {
       else {
         recordDep(ccUniqueKey, m, connectDesc);
       }
-      
+
       connectedState[m] = moduleState;
     }
   });
   ctx.reducer = _caller;
+  ctx.globalReducer = connectedReducer[MODULE_GLOBAL];
 
-  //alias
+  // alias
   ctx.mr = ctx.moduleReducer;
+  ctx.gr = ctx.globalReducer;
   ctx.cr = ctx.connectedReducer;
   ctx.r = ctx.reducer;
 

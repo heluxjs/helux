@@ -477,9 +477,11 @@ export interface ICtxBase {
   readonly connectedComputed: any;
 
   readonly moduleReducer: any;
+  readonly globalReducer: any;
   readonly connectedReducer: any;
   readonly reducer: any;
   readonly mr: any;// alias of moduleReducer
+  readonly gr: any;// alias of globalReducer
   readonly cr: any;// alias of connectedReducer
   readonly r: any;// alias of reducer
 
@@ -611,6 +613,8 @@ export interface ICtx
   readonly moduleState: RootState[ModuleName];
   readonly reducer: RootReducer;
   readonly r: RootReducer;
+  readonly globalReducer: RootReducer[MODULE_GLOBAL];
+  readonly gr: RootReducer[MODULE_GLOBAL];
   readonly moduleReducer: ModuleName extends keyof RootReducer ? (
     RootReducer[ModuleName]['setState'] extends Function ?
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof reducerSetState }
