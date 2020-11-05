@@ -1,3 +1,4 @@
+/** @typedef {import('../types').ModuleConfig} ModuleConfig */
 import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
 import { MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
@@ -14,14 +15,14 @@ import { send } from '../core/plugin';
 const { isPJO, evalState, okeys } = util;
 
 /**
- * @description configure module、state etc to cc
+ * @description configure module associate params
  * @author zzk
  * @export
- * @param {string} module
- * @param {{state:object, reducer:object, watch:object, computed:object, lifecycle:object}} config - when module type is string
+ * @param {string | {[module:string]: ModuleConfig}} module
+ * @param {ModuleConfig} config - when module type is string
  */
 export default function (module, config = {}) {
-  const confOneMoudle = (module, config) => {
+  const confOneMoudle = (module, /** @type ModuleConfig*/config) => {
     if (!ccContext.isStartup) {
       pendingModules.push({ module, config });
       return;

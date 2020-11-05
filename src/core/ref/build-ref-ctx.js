@@ -478,10 +478,12 @@ export default function (ref, params, liteLevel = 5) {
   // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
   // 只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
+    const rd =  makeProxyReducer(m, dispatch);
     if (m === module) {
-      ctx.moduleReducer = makeProxyReducer(m, dispatch);
+      ctx.moduleReducer = rd;
+      if (m === MODULE_GLOBAL) connectedReducer[m] = rd;
     } else {
-      connectedReducer[m] = makeProxyReducer(m, dispatch);
+      connectedReducer[m] = rd;
     }
 
     const connectDesc = connect[m];
