@@ -226,4 +226,4 @@ ___
 ___
 
 ## How concent component ins works
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-component-lifecycle.png)
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-core-process.png)
