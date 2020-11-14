@@ -123,7 +123,7 @@ export default function register({
           // 属性代理模式，必需在组件consturctor里调用 props.$$attach(this)
           // you must call it in next line of state assign expression 
           if (isPropsProxy && !this.ctx.childRef) {
-            throw new Error(`forget call props.$$attach(this) in consturctor when set isPropsProxy true`);
+            throw new Error(`forget call props.$$attach(this) in constructor when set isPropsProxy true`);
           }
 
           if (super.componentDidMount) super.componentDidMount();
