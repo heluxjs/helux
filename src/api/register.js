@@ -22,7 +22,7 @@ import { getRegisterOptions } from '../support/util';
  *    class BasicForms extends PureComponent {
  *      constructor(props, context) {
  *        super(props, context);
- *        props.$$attach(this);// must call $$attach at last line of consturctor block
+ *        props.$$attach(this);// must call $$attach at last line of constructor block
  *      }
  *      render(){
  *        this.ctx.moduleComputed; //now you can get render ctx supplied by concent
