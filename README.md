@@ -45,7 +45,25 @@ English | [简体中文](./README.zh-CN.md)
   </a>
 </div>
 
-Definitely the ❤️ simplest but ⚡️ strongest state management for react, it is predictable、progressive and efficient.
+⚡️ State management that tailored for react, it is simple、predictable、progressive and efficient.
+
+## 💻 Playground
+
+### Key features snippet
+- [Dep collection of state](./examples/dep-collection-of-state.md)
+- [Dep collection of computed](./examples/dep-collection-of-computed.md)
+- [Combine reducers](./examples/combine-reducers.md)
+- [Composition api](./examples/composition-api.md) 
+- [Ref lifecycle method](./examples/life-cycle-method.md) 
+- [Flexible top api](./examples/flexible-top-api.md)
+
+### Real world
+- [A standard js project with concent-eco lib](https://codesandbox.io/s/concent-guide-xvcej)
+- [A standard ts project with concent-eco lib](https://codesandbox.io/s/concent-guide-ts-zrxd5)
+- [Todo-mvc-concent](https://codesandbox.io/s/todoapp-react-concent-fvgvc) **vs** [Todo-mvc-redux](https://codesandbox.io/s/github/blacksonic/todoapp-react-hooks)
+- [Calculator-concent](https://codesandbox.io/s/react-calculator-8hvqw) **vs** [Calculator-hook](https://codesandbox.io/s/react-calculator-84f2m)
+- [Concent query list](https://codesandbox.io/s/query-react-list-00mkd) & [Concent Shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [Hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
+- [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
 
 ## ✨Features
 * Render context injected automatically(no any annoying boilerplate code)
@@ -175,24 +193,6 @@ function DemoFn() {
   return <button onClick={mr.add}>numx2plusBig: {moduleComputed.numx2plusBig}</button>;
 }
 ```
-
-## 💻 Playground
-
-### Key features snippet
-- [Dep collection of state](./examples/dep-collection-of-state.md)
-- [Dep collection of computed](./examples/dep-collection-of-computed.md)
-- [Combine reducers](./examples/combine-reducers.md)
-- [Composition api](./examples/composition-api.md) 
-- [Ref lifecycle method](./examples/life-cycle-method.md) 
-- [Flexible top api](./examples/flexible-top-api.md)
-
-### Real world
-- [A standard js project with concent-eco lib](https://codesandbox.io/s/concent-guide-xvcej)
-- [A standard ts project with concent-eco lib](https://codesandbox.io/s/concent-guide-ts-zrxd5)
-- [Todo-mvc-concent](https://codesandbox.io/s/todoapp-react-concent-fvgvc) **vs** [Todo-mvc-redux](https://codesandbox.io/s/github/blacksonic/todoapp-react-hooks)
-- [Calculator-concent](https://codesandbox.io/s/react-calculator-8hvqw) **vs** [Calculator-hook](https://codesandbox.io/s/react-calculator-84f2m)
-- [Concent query list](https://codesandbox.io/s/query-react-list-00mkd) & [Concent Shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [Hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
-- [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
 
 ## Eco system
 
