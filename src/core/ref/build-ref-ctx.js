@@ -266,6 +266,7 @@ export default function (ref, params, liteLevel = 5) {
     // for class: can pass value to extra one time
     extra,
     staticExtra: {},
+    settings: {},
 
     // computed result containers
     refComputed: {},// 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换
