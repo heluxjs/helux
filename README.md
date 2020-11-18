@@ -2,7 +2,7 @@ English | [简体中文](./README.zh-CN.md)
 
 <p align="center">
   <a href="https://concentjs.github.io/concent-doc">
-    <img width="500" src="https://raw.githubusercontent.com/concentjs/concent-site/master/img/banner.png">
+    <img width="500" src="https://raw.githubusercontent.com/concentjs/concent-site/master/img/concent-logo.png">
   </a>
 </p>
 
