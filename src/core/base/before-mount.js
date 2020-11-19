@@ -11,7 +11,7 @@ const { runtimeVar } = ccContext;
 export default function (ref, setup, bindCtxToMethod) {
   const ctx = ref.ctx;
   ref.__$$ms = NOT_MOUNT;
-  // flag is in before mount setup
+  // flag ref is at before mount step
   ctx.__$$inBM = true;
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
@@ -28,7 +28,7 @@ export default function (ref, setup, bindCtxToMethod) {
         if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
       });
     }
-    ctx.settings = settingsObj;
+    Object.assign(ctx.settings, settingsObj);
   }
 
   //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
