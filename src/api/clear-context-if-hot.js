@@ -123,7 +123,7 @@ export default function (clearAll = false) {
       if (clearAll) {
         console.warn(`attention: make sure [[clearContextIfHot]] been called before app rendered!`);
         justCalledByStartUp = true;
-        return _clearAll(clearAll);
+        return _clearAll();
         // return ccFragKeys;
       } else {
         // 如果刚刚被startup调用，则随后的调用只是把justCalledByStartUp标记为false
