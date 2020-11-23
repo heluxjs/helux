@@ -1,3 +1,7 @@
+#### 2020-11-23
+2.10.1 发布
+- fix: 错误维护的refCache，导致当组件在连接模块时如果指定了watchedKeys，再次挂载时不会被触发渲染
+
 #### 2020-10-30
 2.9.36 发布
 - feat: 新增`ctx.globalReducer`和`ctx.gr`属性，方便实例里可直接调用global模块的reducer函数

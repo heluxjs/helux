@@ -3,6 +3,7 @@ import { MOUNTED, UNMOUNTED } from '../../support/constant';
 import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
+import * as refCache from '../ref/_cache';
 import module_insCount_ from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
 import { makeModuleDispatcher } from '../state/handler-factory';
@@ -65,6 +66,9 @@ export default function (ref) {
 
   // 删除记录的静态依赖
   __$$staticWaKeyList.forEach(modStateKey => delStaticInsM(modStateKey, ccUniqueKey));
+
+  // let findUpdateRefs cache expire
+  allModules.forEach(refCache.createModuleNode);
 
   unsetRef(ccUniqueKey);
 

@@ -19,21 +19,24 @@ import { delIns } from '../../cc-context/wakey-ukey-map';
 // cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
 
 /** 删除依赖 */
-function delDep(compareWaKeys, compareWaKeyCount, module, ccUniqueKey ){
-  let shouldLetCacheExpire = false;
+function delDep(compareWaKeys, compareWaKeyCount, module, ccUniqueKey) {
   const waKeys = okeys(compareWaKeys);
-  waKeys.forEach(waKey=>{// no module prefix
-    if(compareWaKeys[waKey] === 2 ){//这个key在这轮渲染结束后没有命中，说明视图不再对它有依赖
+  const waKeyKen = waKeys.length;
+  if (waKeyKen === 0) return;
+
+  let shouldLetCacheExpire = false;
+  waKeys.forEach(waKey => {// no module prefix
+    if (compareWaKeys[waKey] === 2) {//这个key在这轮渲染结束后没有命中，说明视图不再对它有依赖
       shouldLetCacheExpire = true;
       delIns(module, waKey, ccUniqueKey);
     }
   });
-  if(waKeys.length > compareWaKeyCount){//大于最初记录的key数量，有新增
+  if (waKeys.length > compareWaKeyCount) {//大于最初记录的key数量，有新增
     shouldLetCacheExpire = true;
   }
 
   // let find result cache expire
-  if(shouldLetCacheExpire){
+  if (shouldLetCacheExpire) {
     cache.createModuleNode(module);
   }
 }
@@ -41,29 +44,24 @@ function delDep(compareWaKeys, compareWaKeyCount, module, ccUniqueKey ){
 export default function (ref) {
   const ctx = ref.ctx;
   ctx.__$$renderStatus = END;
-  
-  // 不处于收集观察依赖
-  if (!ctx.__$$autoWatch) {
-    return;
-  }
-  
+
   const {
     module: refModule, connectedModules, connect, ccUniqueKey,
-    __$$compareWaKeys,
-    __$$compareWaKeyCount,
-
-    __$$compareConnWaKeys,
-    __$$compareConnWaKeyCount,
+    __$$compareWaKeys, __$$compareWaKeyCount,
+    __$$compareConnWaKeys, __$$compareConnWaKeyCount,
   } = ctx;
 
-  delDep(__$$compareWaKeys, __$$compareWaKeyCount, refModule, ccUniqueKey );
+  // if ref is autoWatch status, should del belong module dep dynamically after every render period
+  if (ctx.__$$autoWatch) {
+    delDep(__$$compareWaKeys, __$$compareWaKeyCount, refModule, ccUniqueKey);
+  }
 
-  connectedModules.forEach(m=>{
-    // 非自动收集，不用处理
-    if (connect[m] !== '-') return;
-
-    const __$$compareWaKeys = __$$compareConnWaKeys[m];
-    const __$$compareWaKeyCount = __$$compareConnWaKeyCount[m];
-    delDep(__$$compareWaKeys, __$$compareWaKeyCount, m, ccUniqueKey );
+  connectedModules.forEach(m => {
+    // if ref is autoWatch status, should del connected module dep dynamically after every render period
+    if (connect[m] === '-') {
+      const __$$compareWaKeys = __$$compareConnWaKeys[m];
+      const __$$compareWaKeyCount = __$$compareConnWaKeyCount[m];
+      delDep(__$$compareWaKeys, __$$compareWaKeyCount, m, ccUniqueKey);
+    }
   });
 }
