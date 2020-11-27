@@ -17,7 +17,7 @@ function _mapIns(mapContainer, waKey, ccUniqueKey) {
 }
 
 export function makeWaKey(module, stateKey) {
-  return `${module}/${stateKey}`
+  return `${module}/${stateKey}`;
 }
 
 export function mapIns(module, stateKey, ccUniqueKey) {

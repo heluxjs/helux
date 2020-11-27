@@ -254,7 +254,7 @@ export default function (ref, params, liteLevel = 5) {
     // collected mapProps result
     mapped: {},
 
-    prevState: mergedState,
+    prevState: Object.assign({}, mergedState),
     // state
     state: makeObState(ref, mergedState, stateModule, true),
     unProxyState: mergedState,// 没有proxy化的state
