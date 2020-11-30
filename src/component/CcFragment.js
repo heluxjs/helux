@@ -73,7 +73,6 @@ class CcFragment extends React.Component {
       return view;
     }
   }
-
 }
 
 export default CcFragment;

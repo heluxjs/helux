@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 
 // 依赖收集写入的映射
 export const waKey_uKeyMap_ = {};

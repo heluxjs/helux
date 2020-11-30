@@ -2,7 +2,7 @@ import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 
 const {
-  moduleName_stateKeys_,
+  moduleName2stateKeys,
   store: { getPrevState, getState, getStateVer }
 } = ccContext;
 
@@ -18,26 +18,26 @@ function mapSettedList(settedList) {
 export default function (ref, callByDidMount) {
   const ctx = ref.ctx;
   const {
-    effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_,
+    effectItems, eid2effectReturnCb, effectPropsItems, eid2effectPropsReturnCb,
   } = ctx.effectMeta;
   const { __$$prevMoStateVer, __$$settedList, module: refModule } = ctx;
 
-  const makeItemHandler = (eid_cleanCb_, isFirstCall, needJudgeImmediate) => item => {
+  const makeItemHandler = (eid2cleanCb, isFirstCall, needJudgeImmediate) => item => {
     const { fn, eId, immediate } = item;
     if (needJudgeImmediate) {
       if (immediate === false) return;
     }
-    const prevCb = eid_cleanCb_[eId];
+    const prevCb = eid2cleanCb[eId];
     if (prevCb) prevCb(ctx);// let ctx.effect have the totally same behavior with useEffect
 
     const cb = fn(ctx, isFirstCall);
-    eid_cleanCb_[eId] = cb;//不管有没有返回，都要覆盖之前的结果
+    eid2cleanCb[eId] = cb;//不管有没有返回，都要覆盖之前的结果
   };
 
   if (callByDidMount) {
     // flag isFirstCall as true
-    effectItems.forEach(makeItemHandler(eid_effectReturnCb_, true, true));
-    effectPropsItems.forEach(makeItemHandler(eid_effectPropsReturnCb_, true, true));
+    effectItems.forEach(makeItemHandler(eid2effectReturnCb, true, true));
+    effectPropsItems.forEach(makeItemHandler(eid2effectPropsReturnCb, true, true));
     return;
   }
 
@@ -81,7 +81,7 @@ export default function (ref, callByDidMount) {
           warn(key, `module[${module}]`);
           continue;
         }
-        if (!moduleName_stateKeys_[module].includes(unmoduledKey)) {
+        if (!moduleName2stateKeys[module].includes(unmoduledKey)) {
           warn(key, `unmoduledKey[${unmoduledKey}]`);
           continue;
         }
@@ -110,11 +110,10 @@ export default function (ref, callByDidMount) {
     if (shouldEffectExecute) {
       toBeExecutedFns.push({ fn, eId });
     }
-
   });
 
   // flag isFirstCall as false, start to run state effect fns
-  toBeExecutedFns.forEach(makeItemHandler(eid_effectReturnCb_, false, false));
+  toBeExecutedFns.forEach(makeItemHandler(eid2effectReturnCb, false, false));
 
   // start handle effect meta data of props keys
   const prevProps = ctx.prevProps;
@@ -139,7 +138,7 @@ export default function (ref, callByDidMount) {
   });
 
   // flag isFirstCall as false, start to run prop effect fns
-  toBeExecutedPropFns.forEach(makeItemHandler(eid_effectPropsReturnCb_, false, false));
+  toBeExecutedPropFns.forEach(makeItemHandler(eid2effectPropsReturnCb, false, false));
 
   // clear settedList
   __$$settedList.length = 0;

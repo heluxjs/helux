@@ -1,11 +1,11 @@
+/* eslint-disable camelcase */
 import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
 const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
 const { runtimeVar, ccUKey_ref_ } = ccContext;
-let ccUKey_insCount = {};
-
+let ccUKey2insCount = {};
 
 function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
   const setRef = () => {
@@ -22,19 +22,19 @@ function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
 }
 
 export function incCcKeyInsCount(ccUniqueKey) {
-  util.safeAdd(ccUKey_insCount, ccUniqueKey, 1);
+  util.safeAdd(ccUKey2insCount, ccUniqueKey, 1);
 }
 
 export function decCcKeyInsCount(ccUniqueKey) {
-  util.safeMinus(ccUKey_insCount, ccUniqueKey, 1);
+  util.safeMinus(ccUKey2insCount, ccUniqueKey, 1);
 }
 
 export function getCcKeyInsCount(ccUniqueKey) {
-  return ccUKey_insCount[ccUniqueKey] || 0;
+  return ccUKey2insCount[ccUniqueKey] || 0;
 }
 
 export function clearCount(){
-  ccUKey_insCount = {};
+  ccUKey2insCount = {};
 }
 
 export default function (ref) {

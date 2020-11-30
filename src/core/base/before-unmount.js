@@ -4,7 +4,7 @@ import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
 import unsetRef from '../ref/unset-ref';
 import * as refCache from '../ref/_cache';
-import module_insCount_ from '../../cc-context/modue-ins-count-map';
+import module2insCount from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
 import { makeModuleDispatcher } from '../state/handler-factory';
 
@@ -22,14 +22,14 @@ function executeClearCb(cbMap, ctx) {
 
 function triggerLifecyleWillUnmount(allModules, mstate) {
   const handleOneModule = (m) => {
-    module_insCount_[m] -= 1;
+    module2insCount[m] -= 1;
     const moduleLifecycle = _lifecycle[m].willUnmount;
     if (!moduleLifecycle) return;
     const willUnmount = moduleLifecycle.willUnmount;
     if (!willUnmount) return;
     if (_willUnmountOnce[m] === true) return;
 
-    if (module_insCount_[m] === 0) {
+    if (module2insCount[m] === 0) {
       const once = willUnmount(makeModuleDispatcher(m), mstate);
       _willUnmountOnce[m] = getVal(once, true);
     }
@@ -49,9 +49,9 @@ export default function (ref) {
 
   // 正常情况下只有挂载了组件才会有effect等相关定义
   if (curMs === MOUNTED) {
-    const { eid_effectReturnCb_, eid_effectPropsReturnCb_ } = ctx.effectMeta;
-    executeClearCb(eid_effectReturnCb_, ctx);
-    executeClearCb(eid_effectPropsReturnCb_, ctx);
+    const { eid2effectReturnCb, eid2effectPropsReturnCb } = ctx.effectMeta;
+    executeClearCb(eid2effectReturnCb, ctx);
+    executeClearCb(eid2effectPropsReturnCb, ctx);
     ev.offEventHandlersByCcUniqueKey(ccUniqueKey);
   }
 

@@ -15,7 +15,8 @@ import beforeUnMount from './before-unmount';
 import beforeRender from '../ref/before-render';
 
 const { ccClassDisplayName, shallowDiffers, evalState } = util;
-const setupErr = info => new Error('can not defined setup both in register options and class body ' + '--verbose:' + info);
+const setupErr = info =>
+  new Error(`can not defined setup both in register options and class body, --verbose: ${info}`);
 
 export default function register({
   module = MODULE_DEFAULT,
@@ -62,23 +63,22 @@ export default function register({
             // props.ccOption
             const params = Object.assign({}, props, {
               module: _module, tag, state: privState, type: CC_CLASS, insType: CC_CUSTOMIZE,
-              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys, persistStoredKeys, extra,
+              watchedKeys: _watchedKeys, ccClassKey: _ccClassKey, connect: _connect, storedKeys,
+              persistStoredKeys, extra,
             });
             buildRefCtx(this, params, lite);
             this.ctx.reactSetState = hf.makeRefSetState(this);
             this.ctx.reactForceUpdate = hf.makeRefForceUpdate(this);
 
             if (setup && (this.$$setup || staticSetup)) {
-              throw setupErr('ccUniqueKey ' + this.ctx.ccUniqueKey);
+              throw setupErr(`ccUniqueKey ${this.ctx.ccUniqueKey}`);
             }
-
 
             if (!isPropsProxy) {
               if (this.$$setup) this.$$setup = this.$$setup.bind(this);
               beforeMount(this, setup || this.$$setup || staticSetup, false);
             }
             // isPropsProxy为true时，延迟到$$attach里执行beforeMount
-
           } catch (err) {
             catchCcError(err);
           }
@@ -113,7 +113,7 @@ export default function register({
           }
 
           if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
-          if (setup && (childRef.$$setup || staticSetup)) throw setupErr('ccUniqueKey ' + ctx.ccUniqueKey);
+          if (setup && (childRef.$$setup || staticSetup)) throw setupErr(`ccUniqueKey ${ctx.ccUniqueKey}`);
           beforeMount(this, setup || childRef.$$setup || staticSetup, false);
 
           beforeRender(this);

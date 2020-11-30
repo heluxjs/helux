@@ -1,13 +1,12 @@
 
 
 export default function (key, refModule, stateModule, connectSpecLike, moduleStateKeys) {
-  let skip = false;
   let keyModule = '';
   let stateKey = key;
 
   // !!! 只有带/的key，才会进入此逻辑
   if (key.includes('/')) {// moduledKey : 'foo/f1'
-    let [tmpKeyModule, unmoduledKey] = key.split('/');
+    const [tmpKeyModule, unmoduledKey] = key.split('/');
     stateKey = unmoduledKey;
     // 'foo/f1': keyModule为foo  , /f1'：keyModule为${refModule}
     keyModule = tmpKeyModule || refModule;
@@ -34,5 +33,5 @@ export default function (key, refModule, stateModule, connectSpecLike, moduleSta
     }
   }
 
-  return { skip, stateKey, keyModule };
+  return { skip: false, stateKey, keyModule };
 }

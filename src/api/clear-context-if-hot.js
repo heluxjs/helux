@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { clearObject, okeys, makeCuDepDesc } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
@@ -82,7 +83,8 @@ function _clearAll() {
 
   // 在codesandbox里，按标准模式组织的代码，如果只是修改了runConcent里相关联的代码，pages目录下的configure调用不会被再次触发的
   // 所以是来自configure调用配置的模块则不参与清理，防止报错
-  const toExcludedModules = okeys(ccContext.moduleName_isConfigured_).concat([MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER]);
+  const toExcludedModules = okeys(ccContext.moduleName2isConfigured)
+    .concat([MODULE_DEFAULT, MODULE_CC, MODULE_GLOBAL, MODULE_CC_ROUTER]);
 
   clearObject(ccContext.reducer._reducer, toExcludedModules);
   clearObject(ccContext.store._state, toExcludedModules, {}, true);

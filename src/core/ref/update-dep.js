@@ -1,6 +1,6 @@
 /** @typedef {import('../../types-inner').IRefCtx} IRefCtx */
 import { START } from '../../support/priv-constant';
-import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
+import moduleName2stateKeys from '../../cc-context/statekeys-map';
 import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 
 //  before render
@@ -20,7 +20,7 @@ import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 
 export default function (ref, module, key, isForModule) {
   // 这个key不是模块的stateKey，则忽略依赖记录
-  if (!moduleName_stateKeys_[module].includes(key)) {
+  if (!moduleName2stateKeys[module].includes(key)) {
     return;
   }
   /** @type IRefCtx */

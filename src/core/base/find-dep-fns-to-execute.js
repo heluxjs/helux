@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import {
   makeCommitHandler, okeys, justWarning, makeCuPackedValue,
   safeGet, safeGetArray, noDupPush, isAsyncFn, noop,
@@ -10,7 +11,7 @@ import executeAsyncCuInfo from '../computed/execute-async-cu-info';
 import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
 import cuMap from '../../cc-context/computed-map';
 import waMap from '../../cc-context/watch-map';
-import moduleName_stateKeys_ from '../../cc-context/statekeys-map';
+import moduleName2stateKeys from '../../cc-context/statekeys-map';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 
 const noCommit = (tip, asIs) => justWarning(`${tip} call commit or commitCu as it is ${asIs}`);
@@ -29,7 +30,7 @@ function getCuRetKeyRSListMap(sourceType, module, ccUniqueKey) {
 }
 
 function getCuRetKeyRSList(cuRetKey, sourceType, module, ccUniqueKey) {
-  let map = getCuRetKeyRSListMap(sourceType, module, ccUniqueKey);
+  const map = getCuRetKeyRSListMap(sourceType, module, ccUniqueKey);
   return safeGetArray(map, cuRetKey);
 }
 
@@ -92,7 +93,7 @@ function getRetKeyFnMap(refCtx, sourceType, stateModule) {
   if (sourceType === CATE_REF) {
     return refCtx.computedRetKeyFns;
   } else {
-    let moduleDep = cuMap._computedDep[stateModule] || {};
+    const moduleDep = cuMap._computedDep[stateModule] || {};
     return moduleDep.retKey_fn_ || {};
   }
 }
@@ -131,7 +132,9 @@ export default function executeDepFns(
 
   // while循环结束后，收集到的所有的新增或更新state
   const committedStateInWhile = {};
-  const nextTickCuInfo = { sourceType, ref, module: stateModule, fns: [], fnAsync: [], fnRetKeys: [], cuRetContainer: computedContainer };
+  const nextTickCuInfo = {
+    sourceType, ref, module: stateModule, fns: [], fnAsync: [], fnRetKeys: [], cuRetContainer: computedContainer,
+  };
 
   let whileCount = 0;
   let curStateForComputeFn = committedState;
@@ -184,7 +187,9 @@ export default function executeDepFns(
       const referInfo = { hasAsyncCuRefer: false };
       if (needCollectDep) {
         // 替换cuVal，以便动态的收集到computed&watch函数里读取cuVal时计算相关依赖
-        fnCtx.cuVal = getSimpleObContainer(retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys, referInfo);
+        fnCtx.cuVal = getSimpleObContainer(
+          retKey, sourceType, fnType, stateModule, refCtx, collectedCuRetKeys, referInfo
+        );
       }
 
       if (fnType === FN_CU) {
@@ -210,7 +215,8 @@ export default function executeDepFns(
 
           // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
           if (needCollectDep) {
-            newStateArg = oldStateArg = makeCuObState(initNewState, collectedDepKeys);
+            oldStateArg = makeCuObState(initNewState, collectedDepKeys);
+            newStateArg = oldStateArg;
           }
 
           // TODO: fnCtx.connectedState 转为代理对象，用于收集到连接模块的依赖
@@ -240,10 +246,11 @@ export default function executeDepFns(
                 throw new Error(`async ${keyInfo} forget call setInitialVal`);
               }
               computedRet = initialVal;
+            } else {
+              // 不做任何新的计算，还是赋值原来的结果
+              // 新的结果等待 asyncComputedMgr 来计算并触发相关实例重渲染
+              computedRet = computedContainer[retKey];
             }
-            // 不做任何新的计算，还是赋值原来的结果
-            // 新的结果等待 asyncComputedMgr 来计算并触发相关实例重渲染
-            else computedRet = computedContainer[retKey];
 
             // 替换掉setInitialVal，使其失效
             fnCtx.setInitialVal = noop;
@@ -271,8 +278,7 @@ export default function executeDepFns(
             mapRSList(retKey, collectedCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule);
           }
         }
-
-      } else {// watch
+      } else { // watch
         let tmpInitNewState = initNewState;
         let tmpOldState = oldState;
 
@@ -337,7 +343,6 @@ export default function executeDepFns(
 
         clearCu();
       }
-
     });
 
     // 这里一次性处理所有computed or watch函数提交了然后合并后的state
@@ -371,7 +376,7 @@ export default function executeDepFns(
       const ensureCommittedState = (fnCommittedState) => {
         // !!! 确保实例里调用commit只能提交privState片段，模块里调用commit只能提交moduleState片段
         // !!! 同时确保privState里的key是事先声明过的，而不是动态添加的
-        const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName_stateKeys_[stateModule];
+        const stateKeys = sourceType === 'ref' ? refCtx.privStateKeys : moduleName2stateKeys[stateModule];
         const { partialState, ignoredStateKeys } = extractStateByKeys(fnCommittedState, stateKeys, true);
 
         if (ignoredStateKeys.length) {
@@ -411,7 +416,6 @@ export default function executeDepFns(
             assignCuState(validCommittedState, true);
           }
         }
-
       }
     }
 

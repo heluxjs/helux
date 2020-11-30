@@ -8,15 +8,14 @@ import * as refCache from '../ref/_cache';
 const { safeAssignToMap, okeys, safeGet } = util;
 
 export default function (module, mState, moduleMustNotExisted = true) {
-  refCache.createModuleNode(module);
   //force MODULE_VOID state as {}
-  let state = module === MODULE_VOID ? {} : mState;
-
+  const state = module === MODULE_VOID ? {} : mState;
   try {
     checker.checkModuleNameAndState(module, state, moduleMustNotExisted);
   } catch (err) {
     guessDuplicate(err, module, 'state');
   }
+  refCache.createModuleNode(module);
 
   const ccStore = ccContext.store;
   const rootState = ccStore.getState();
@@ -39,7 +38,7 @@ export default function (module, mState, moduleMustNotExisted = true) {
   safeGet(cu._computedValueOri, module);
 
   const stateKeys = okeys(state);
-  ccContext.moduleName_stateKeys_[module] = stateKeys;
+  ccContext.moduleName2stateKeys[module] = stateKeys;
 
   if (module === MODULE_GLOBAL) {
     const globalStateKeys = ccContext.globalStateKeys;

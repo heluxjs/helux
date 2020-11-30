@@ -909,6 +909,7 @@ interface RunOptions {
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false
   isStrict?: boolean;
+  logError?: boolean; // if print error message with console.error, default is true
   errorHandler?: (err: Error) => void;
   bindCtxToMethod?: boolean;// default false
   computedCompare?: boolean;// default is false, trigger computed if set

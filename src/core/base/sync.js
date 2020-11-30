@@ -12,7 +12,7 @@ export default function (spec, ref, e) {
   const refCtx = ref.ctx;
   const refModule = refCtx.module;
 
-  let mockE = buildMockEvent(spec, e, refCtx);
+  const mockE = buildMockEvent(spec, e, refCtx);
   if (!mockE) return;//参数无效 例如 <input onChange={this.sync}/> 导致
 
   const currentTarget = mockE.currentTarget;

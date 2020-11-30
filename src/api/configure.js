@@ -33,7 +33,6 @@ export default function (module, config = {}) {
     if (module === MODULE_GLOBAL) {
       throw new Error('configuring global module is not allowed');
     }
-
     const { state, reducer, computed, watch } = config;
     const eState = evalState(state);
     if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
@@ -44,11 +43,11 @@ export default function (module, config = {}) {
     initModuleWatch(module, watch);
     initModuleLifecycle(module, getLifecycle(config));
 
-    ccContext.moduleName_isConfigured_[module] = true;
+    ccContext.moduleName2isConfigured[module] = true;
     send(SIG_MODULE_CONFIGURED, module);
   }
 
-  // now module is part of store conf
+  // now module is an object that includes partial store conf
   if (isPJO(module)) {
     okeys(module).forEach(moduleName => confOneMoudle(moduleName, module[moduleName]));
   } else {

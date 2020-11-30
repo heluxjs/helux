@@ -43,7 +43,7 @@ const getWatchedKeys = (ctx) => {
     if (ctx.__$$renderStatus === START) return okeys(ctx.__$$compareWaKeys);
     else return okeys(ctx.__$$curWaKeys);
   }
-  else return ctx.watchedKeys;
+  return ctx.watchedKeys;
 }
 
 const getConnectWatchedKeys = (ctx, module) => {
@@ -69,7 +69,9 @@ const getConnectWatchedKeys = (ctx, module) => {
   if (module) return getWKeys(module);
   else {
     const cKeys = {};
-    connectedModules.forEach(m => { cKeys[m] = getWKeys(m) });
+    connectedModules.forEach((m) => {
+      cKeys[m] = getWKeys(m)
+    });
     return cKeys;
   }
 }
@@ -101,9 +103,9 @@ function makeProxyReducer(m, dispatch) {
  */
 export default function (ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
-  let {
-    ccClassKey, ccKey = '', module, type, insType, extra = {}, id,
-    state, storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {}, tag = '', ccOption = {},
+  const {
+    ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, extra = {}, tag = '',
+    storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {},
   } = params;
 
   const stateModule = module;
@@ -124,7 +126,8 @@ export default function (ref, params, liteLevel = 5) {
   }
 
   const refOption = {};
-  refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined ? persistStoredKeys : ccOption.persistStoredKeys;
+  refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined
+    ? persistStoredKeys : ccOption.persistStoredKeys;
   refOption.tag = ccOption.tag || tag;
 
   // pick ccOption tag first, register tag second
@@ -146,7 +149,7 @@ export default function (ref, params, liteLevel = 5) {
   const mstate = getState(module);
 
   // recover ref state
-  let refStoredState = refStore._state[ccUniqueKey] || {};
+  const refStoredState = refStore._state[ccUniqueKey] || {};
   const mergedState = Object.assign({}, state, refStoredState, mstate);
   ref.state = mergedState;
   const stateKeys = okeys(mergedState);
@@ -155,7 +158,9 @@ export default function (ref, params, liteLevel = 5) {
   const connectedState = {};
 
   const connectedComputed = {};
-  connectedModules.forEach(m => { connectedComputed[m] = makeCuRefObContainer(ref, m, false) });
+  connectedModules.forEach((m) => {
+    connectedComputed[m] = makeCuRefObContainer(ref, m, false);
+  });
   const moduleComputed = makeCuRefObContainer(ref, module);
   // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
   const globalComputed = connectedComputed[MODULE_GLOBAL];
@@ -193,8 +198,8 @@ export default function (ref, params, liteLevel = 5) {
 
   const __$$onEvents = [];
   const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}
-  const eid_effectReturnCb_ = {}, eid_effectPropsReturnCb_ = {};// fn
-  const effectMeta = { effectItems, eid_effectReturnCb_, effectPropsItems, eid_effectPropsReturnCb_ };
+  const eid2effectReturnCb = {}, eid2effectPropsReturnCb = {};// fn
+  const effectMeta = { effectItems, eid2effectReturnCb, effectPropsItems, eid2effectPropsReturnCb };
   const refs = {};
 
   // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
@@ -339,7 +344,8 @@ export default function (ref, params, liteLevel = 5) {
     ctx.stateKeys = okeys(newRefState);
     ctx.privStateKeys = util.removeArrElements(okeys(newRefState), modStateKeys);
 
-    ctx.unProxyState = ctx.prevState = newRefState;
+    ctx.prevState = Object.assign({}, newRefState);
+    ctx.unProxyState = newRefState;
     ref.state = Object.assign(ctx.state, newRefState);
   }
 
@@ -376,7 +382,8 @@ export default function (ref, params, liteLevel = 5) {
           const key = `${e}|${val}|${rkey}|${delay}`;
           let boundFn = cachedBoundFns[key];
           if (!boundFn) {
-            boundFn = cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
+            cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
+            boundFn = cachedBoundFns[key];
           }
           return boundFn;
         }
@@ -459,7 +466,9 @@ export default function (ref, params, liteLevel = 5) {
         });
       }
       // 对于effectProps来说是不会读取compare属性来用的
-      const effectItem = { fn, isProp, depKeys: _depKeys, modDepKeys, eId: getEId(), compare: _compare, immediate: _immediate };
+      const effectItem = {
+        fn, isProp, depKeys: _depKeys, modDepKeys, eId: getEId(), compare: _compare, immediate: _immediate,
+      };
       targetEffectItems.push(effectItem);
     };
 
@@ -501,9 +510,8 @@ export default function (ref, params, liteLevel = 5) {
 
         if (m === MODULE_GLOBAL) moduleState = ctx.globalState;
         else moduleState = makeObState(ref, moduleState, m);
-      }
-      // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
-      else {
+      } else {
+        // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
         recordDep(ccUniqueKey, m, connectDesc);
       }
 

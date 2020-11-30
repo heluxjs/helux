@@ -23,8 +23,8 @@ const cursor_hookCtx_ = {};
 let refCursor = 1;
 
 function getUsableCursor() {
-  let toReturn = refCursor;
-  return toReturn; 
+  const toReturn = refCursor;
+  return toReturn;
 }
 function incCursor() {
   refCursor = refCursor + 1;
@@ -112,8 +112,9 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const hookCtx = hookCtxContainer.current;
   
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
-  let { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
-  
+  let { state: iState = {} } = _registerOption;
+  const { props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
+
   const reactUseState = React.useState;
   if (!reactUseState) {
     throw new Error(tip);
@@ -123,7 +124,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
   
-  const cref = (ref) => buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
+  const cref = (ref) =>
+    buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
   
   let hookRef;
   // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref

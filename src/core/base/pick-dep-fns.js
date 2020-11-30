@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { differStateKeys, safeGet, okeys, isObjectNull } from '../../support/util';
 
 function getCacheDataContainer(){
@@ -70,7 +71,7 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   }
 
   //用setted + changed + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
-  const cacheKey = setted.join(',') + '|' + changed.join(',') + '|' + stateModule;
+  const cacheKey = `${setted.join(',')}|${changed.join(',')}|${stateModule}`;
 
   // 要求用户必须在setup里静态的定义完computed & watch，动态的调用computed & watch的回调因为缓存原因不会被触发
   const tmpNode = cacheArea_pickedRetKeys_[cate][type];
@@ -129,17 +130,16 @@ function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, state
           const { fn, compare, depKeys, sort } = retKey_fn_[retKey];
 
           let canPick;
-          let isValChanged = changedStateKeys.includes(stateKey);
+          const isValChanged = changedStateKeys.includes(stateKey);
 
           // 检测出发生了变化，就一定pick
           if (isValChanged) {
             canPick = true;
-          }
-          // 对于未采用 immutable写法的object是检测不出是否改变的，
-          // 因为指向同一个引用，isValChanged一定是false
-          // 所以如果compare 为true，则要求用户严格采用immutable写法
-          // 为false的话，进入到这里，是已经set的key，canPick一定为true
-          else {
+          } else {
+            // 对于未采用 immutable写法的object是检测不出是否改变的，
+            // 因为指向同一个引用，isValChanged一定是false
+            // 所以如果compare 为true，则要求用户严格采用immutable写法
+            // 为false的话，进入到这里，是已经set的key，canPick一定为true
             canPick = compare ? isValChanged : true;
           }
 

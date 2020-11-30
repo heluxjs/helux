@@ -22,10 +22,13 @@ export default function (module, computed = {}) {
 
   rootComputedRaw[module] = computed;
   const moduleState = rootState[module];
-  configureDepFns(CATE_MODULE, { type: FN_CU, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed);
+  configureDepFns(
+    CATE_MODULE, { type: FN_CU, module, stateKeys: util.okeys(moduleState), dep: rootComputedDep }, computed
+  );
 
   const d = ccContext.getDispatcher();
-  const curDepComputedFns = (committedState, isBeforeMount) => pickDepFns(isBeforeMount, CATE_MODULE, FN_CU, rootComputedDep, module, moduleState, committedState);
+  const curDepComputedFns = (committedState, isBeforeMount) =>
+    pickDepFns(isBeforeMount, CATE_MODULE, FN_CU, rootComputedDep, module, moduleState, committedState);
 
   // 在init-module-state那里已safeGet, 这里可以安全的直接读取
   const cuOri = ccComputed._computedValueOri[module];

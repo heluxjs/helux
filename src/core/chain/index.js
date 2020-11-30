@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { okeys } from '../../support/util';
 
 let id = 0;
@@ -17,7 +18,10 @@ export function getChainId() {
 function __setChainState(chainId, targetModule, partialState, targetId_msMap) {
   if (partialState) {
     let moduleStateMap = targetId_msMap[chainId];
-    if (!moduleStateMap) moduleStateMap = targetId_msMap[chainId] = {};
+    if (!moduleStateMap) {
+      moduleStateMap = {};
+      targetId_msMap[chainId] = moduleStateMap;
+    }
 
     const state = moduleStateMap[targetModule];
     if (!state) {

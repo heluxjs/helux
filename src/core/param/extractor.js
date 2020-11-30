@@ -47,7 +47,7 @@ export function getWatchedStateKeys(module, ccClassKey, regWatchedKeys) {
 }
 
 export function getConnect(regConnect) {
-  let targetConnect = regConnect || {};// codesandbox lost default value
+  const targetConnect = regConnect || {};// codesandbox lost default value
 
   if (!util.isPJO(targetConnect, true)) {
     throw new Error(`param connect type error, it ${NOT_A_JSON} or string array`);
@@ -57,7 +57,9 @@ export function getConnect(regConnect) {
   let finalConnect = {};
   if (isArr || typeof targetConnect === 'string') {
     const connectedModules = isArr ? targetConnect : targetConnect.split(',');
-    connectedModules.forEach(m => { finalConnect[m] = '-' });//标识自动收集观察依赖
+    connectedModules.forEach(m => {
+      finalConnect[m] = '-'; //标识自动收集观察依赖
+    });
   } else {
     finalConnect = regConnect;
   }

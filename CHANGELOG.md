@@ -1,3 +1,10 @@
+#### 2020-11-30
+2.10.2 发布
+- chore: 删除多余的内置api `setValue`
+- fix: 未暴露 `getGlobalComputed`
+- chore: 整理一些内部的map型变量命名规则
+- chore: 新增测试文件
+
 #### 2020-11-23
 2.10.1 发布
 - fix: 错误维护的refCache，导致当组件在连接模块时如果指定了watchedKeys，再次挂载时不会被触发渲染

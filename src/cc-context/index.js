@@ -1,4 +1,5 @@
-import moduleName_stateKeys_ from './statekeys-map';
+/* eslint-disable camelcase */
+import moduleName2stateKeys from './statekeys-map';
 import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
@@ -56,7 +57,7 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
 const saveSharedState = (module, toSave, needExtract = false) => {
   let target = toSave;
   if (needExtract) {
-    const { partialState } = extractStateByKeys(toSave, moduleName_stateKeys_[module], true);
+    const { partialState } = extractStateByKeys(toSave, moduleName2stateKeys[module], true);
     target = partialState;
   }
 
@@ -136,9 +137,9 @@ const ccContext = {
   moduleName_stateFn_: {
   },
   // 映射好模块的状态所有key并缓存住，用于提高性能
-  moduleName_stateKeys_,
+  moduleName2stateKeys,
   // 记录模块是不是通过configure配置的
-  moduleName_isConfigured_: {
+  moduleName2isConfigured: {
   },
   /**
    * ccClassContext:{
@@ -162,7 +163,7 @@ const ccContext = {
   // store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     appendState: function (module, state) {
-      const stateKeys = util.safeGetArray(moduleName_stateKeys_, module);
+      const stateKeys = util.safeGetArray(moduleName2stateKeys, module);
       okeys(state).forEach(k => {
         if (!stateKeys.includes(k)) {
           stateKeys.push(k);
@@ -240,7 +241,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.10.1',
+    version: '2.10.2',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glaxy',
@@ -254,7 +255,7 @@ const ccContext = {
   permanentDispatcher: null,
   localStorage: null,
   recoverRefState: () => { },
-  getModuleStateKeys: (m) => ccContext.moduleName_stateKeys_[m],
+  getModuleStateKeys: (m) => ccContext.moduleName2stateKeys[m],
 }
 
 ccContext.recoverRefState = function () {

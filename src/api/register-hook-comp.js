@@ -5,6 +5,7 @@ import { getRegisterOptions } from '../support/util';
 export default function registerHookComp(options, ccClassKey) {
   let _options = getRegisterOptions(options);
   if (typeof _options.state === 'function') {
+    _options = Object.assign({}, _options);
     _options.state = _options.state();
   }
 
@@ -33,7 +34,7 @@ export default function registerHookComp(options, ccClassKey) {
     }
   }
 
-  let Dumb = _options.render;
+  const Dumb = _options.render;
   if (Dumb) {
     return buildCcHookComp(Dumb);
   } else {

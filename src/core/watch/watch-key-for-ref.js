@@ -8,13 +8,7 @@ export default function (ref, stateModule, oldState, deltaCommittedState, callIn
   if (!refCtx.hasWatchFn) return { hasDelta: false, newCommittedState: {} };
 
   const newState = Object.assign({}, oldState, deltaCommittedState);
-
-  const { watchDep, module: refModule, ccUniqueKey } = refCtx;
-  let computedContainer = refCtx.refComputed;
-  // if (stateModule !== refModule) {
-  //   // 由changeRefState/broadcastState触发的connectedRefs 触发的watch
-  //   computedContainer = refCtx.connectedComputed[stateModule];
-  // }
+  const { watchDep, module: refModule, ccUniqueKey, refComputed: computedContainer } = refCtx;
 
   const curDepWatchFns = (committedState, isBeforeMount) => pickDepFns(
     isBeforeMount, CATE_REF, FN_WATCH, watchDep, stateModule, oldState, committedState, ccUniqueKey

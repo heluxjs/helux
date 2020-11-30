@@ -1,9 +1,6 @@
-export function delay(ms = 1000) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
-export function makeStoreConfig(moduleName) {
-  return {
+export function makeStoreConfig(moduleName, genNormalModule=true) {
+  const conf =  {
     [moduleName]: {
       state: () => ({
         name: moduleName,
@@ -19,12 +16,23 @@ export function makeStoreConfig(moduleName) {
         }
       },
       computed: {
-        name(name) {
-          return `name_${name}`
-        }
+        name({ name }) {
+          return `name_${name}`;
+        },
+        info({ info }) {
+          return `cu_${info.addr}`;
+        },
       }
-    }
+    },
+  };
+
+  if (genNormalModule) {
+    conf.withNormalStateDeclaration = {
+      state: { name: 'for testing cloneModule' },
+    };
   }
+
+  return conf;
 }
 
 export function toError(err) {
@@ -35,4 +43,8 @@ export function toError(err) {
 export function extractMessage(err) {
   if (typeof err === 'string') return err;
   else return err.message;
+}
+
+export function delay(ms = 1000) {
+  return new Promise(r => setTimeout(r, ms));
 }

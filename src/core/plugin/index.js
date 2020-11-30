@@ -13,10 +13,10 @@ import {
 } from '../../support/constant';
 
 const sigs = [
-  SIG_FN_START, 
-  SIG_FN_END, 
-  SIG_FN_QUIT, 
-  SIG_FN_ERR, 
+  SIG_FN_START,
+  SIG_FN_END,
+  SIG_FN_QUIT,
+  SIG_FN_ERR,
   SIG_MODULE_CONFIGURED,
   SIG_STATE_CHANGED,
   SIG_ASYNC_COMPUTED_START,
@@ -26,16 +26,16 @@ const sigs = [
   SIG_ASYNC_COMPUTED_BATCH_END,
 ];
 
-const sig_cbs_ = {};
+const sig2cbs = {};
 
-sigs.forEach(sig => sig_cbs_[sig] = []);
+sigs.forEach(sig => sig2cbs[sig] = []);
 
-function _pushSigCb(sigMap, sigOrSigs, cb){
+function _pushSigCb(sigMap, sigOrSigs, cb) {
   function pushCb(sig, cb) {
     const cbs = sigMap[sig];
-    if(cb){
+    if (cb) {
       cbs.push(cb);
-    }else{
+    } else {
       console.warn(`invalid sig[${sig}]`);
     }
   }
@@ -50,14 +50,14 @@ function _pushSigCb(sigMap, sigOrSigs, cb){
 }
 
 export function clearCbs() {
-  sigs.forEach(sig => sig_cbs_[sig].length = 0);
+  sigs.forEach(sig => sig2cbs[sig].length = 0);
 }
 
 export function send(sig, payload) {
-  const cbs = sig_cbs_[sig];
+  const cbs = sig2cbs[sig];
   cbs.forEach(cb => cb({ sig, payload }));
 }
 
 export function on(sigOrSigs, cb) {
-  _pushSigCb(sig_cbs_, sigOrSigs, cb)
+  _pushSigCb(sig2cbs, sigOrSigs, cb)
 }

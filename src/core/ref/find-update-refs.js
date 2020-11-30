@@ -51,9 +51,8 @@ export default function (moduleName, partialSharedState, renderKeys, renderKeyCl
         if (isRenderKeyMatched) {
           putRef(toBelong, ccUniqueKey);
         }
-      }
-      // 这些实例则不受renderKey机制影响
-      else {
+      } else {
+        // 这些实例则不受renderKey机制影响
         putRef(toBelong, ccUniqueKey);
       }
     } else {

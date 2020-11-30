@@ -34,15 +34,17 @@ export default (newModule, existingModule, moduleOverideConf = {}) => {
   if (!stateFn) {
     throw new Error(`target module[${existingModule}] state must be a function when use cloneModule`);
   }
-  let stateCopy = stateFn();
+  const stateCopy = stateFn();
   Object.assign(stateCopy, evalState(state));
 
-  let reducerOriginal = ccContext.reducer._reducer[existingModule];
+  const originalReducer = ccContext.reducer._reducer[existingModule];
   // attach  __fnName  __stateModule, 不能污染原函数的dispatch逻辑里需要的__stateModule
-  const taggedReducerCopy = Object.assign(tagReducerFn(reducerOriginal, newModule), tagReducerFn(reducer, newModule));
+  const taggedReducerCopy = Object.assign(tagReducerFn(originalReducer, newModule), tagReducerFn(reducer, newModule));
   const computedCopy = Object.assign({}, ccContext.computed._computedRaw[existingModule], computed);
   const watchCopy = Object.assign({}, ccContext.watch._watchRaw[existingModule], watch);
-  const lifecycleCopy = Object.assign({}, ccContext.lifecycle._lifecycle[existingModule], getLifecycle(moduleOverideConf));
+  const lifecycleCopy = Object.assign(
+    {}, ccContext.lifecycle._lifecycle[existingModule], getLifecycle(moduleOverideConf)
+  );
 
   const confObj = {
     state: stateCopy,

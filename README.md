@@ -36,6 +36,12 @@ English | [简体中文](./README.zh-CN.md)
   <!--   <img src='https://img.shields.io/bundlephobia/minzip/concent/1.4.1.svg' alt='mini bundle size' height='18'> -->
   <img src='https://img.shields.io/badge/minzipped-18kb-brightgreen' alt='mini bundle size' height='18'>
   </a>
+  <a href='#' style='margin: 0 0.5rem;'>
+  <img src='https://img.shields.io/github/followers/fantasticsoul.svg?style=social' alt='followers' height='18'>
+  </a>
+  <a href='#' style='margin: 0 0.5rem;'>
+  <img src='https://img.shields.io/github/stars/concentjs/concent.svg?style=social' alt='concent star' height='18'>
+  </a>
 </div>
 
 ## 🐮Introduction
@@ -217,4 +223,3 @@ ___
 ## 👅License
 
 concent is released under the MIT License. [http://www.opensource.org/licenses/mit-license](http://www.opensource.org/licenses/mit-license)
-

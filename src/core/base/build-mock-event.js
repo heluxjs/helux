@@ -53,15 +53,19 @@ export default (spec, e, refCtx) => {
     } else {
       if (typeof val === 'function') {
         // moduleState指的是所修改的目标模块的state
-        const syncRet = val(value, keyPath, { event: e, module, moduleState: mState, fullKeyPath, state: refState, refCtx });
+        const syncRet = val(
+          value, keyPath, { event: e, module, moduleState: mState, fullKeyPath, state: refState, refCtx },
+        );
 
         if (syncRet != undefined) {
           if (type === 'as') value = syncRet;// value is what cb returns;
           else {
             const retType = typeof syncRet;
             if (retType === 'boolean') {
-              // if return true, let noAutoExtract = false, so this cb will not block state update, and cc will extract partial state automatically
-              // if return false, let noAutoExtract = true, but now extraState is still null, so this cb will block state update
+              // if return true, let noAutoExtract = false, 
+              // so this cb will not block state update, and cc will extract partial state automatically
+              // if return false, let noAutoExtract = true, but now extraState is still null, 
+              // so this cb will block state update
               noAutoExtract = !syncRet;
             } else if (retType === 'object') {
               noAutoExtract = true;
@@ -74,7 +78,6 @@ export default (spec, e, refCtx) => {
           if (type === 'as') noAutoExtract = true;// if syncAs return undefined, will block update
           // else continue update and value is just extracted above
         }
-
       } else {
         value = val;
       }
@@ -96,16 +99,19 @@ export default (spec, e, refCtx) => {
 
       const dataSetDelay = dataset.ccdelay;
       if (dataSetDelay) {
-        try { ccdelay = parseInt(dataSetDelay); } catch (err) {
+        try {
+          ccdelay = parseInt(dataSetDelay);
+        } catch (err) {
           // do nothing
         }
       }
-
     } else {
-      //<Input onChange={this.sync}/> is invalid
+      // <Input onChange={this.sync}/> is invalid
       return null;
     }
   }
 
-  return { currentTarget: { value, extraState, noAutoExtract, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool };
+  return {
+    currentTarget: { value, extraState, noAutoExtract, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool,
+  };
 }

@@ -29,12 +29,13 @@ export default function (module, reducer = {}) {
   reducerFnNames.forEach(name => {
     // avoid hot reload
     if (!fnNames.includes(name)) fnNames.push(name);
-    let fullFnName = `${module}/${name}`;
+    const fullFnName = `${module}/${name}`;
     const list = util.safeGetArray(_fnName_fullFnNames_, name);
     // avoid hot reload
     if (!list.includes(fullFnName)) list.push(fullFnName);
 
-    subReducerCaller[name] = (payload, renderKeyOrOptions, delay) => dispatch(fullFnName, payload, renderKeyOrOptions, delay);
+    subReducerCaller[name] = (payload, renderKeyOrOptions, delay) =>
+      dispatch(fullFnName, payload, renderKeyOrOptions, delay);
 
     const reducerFn = newReducer[name];
     if (typeof reducerFn !== 'function') {
@@ -55,6 +56,5 @@ export default function (module, reducer = {}) {
     // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
     // 暂不考虑，因为cloneModule怎么处理，因为它们指向的是用一个函数
     // reducerFn.stateModule = module;
-
   });
 }

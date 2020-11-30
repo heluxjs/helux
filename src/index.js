@@ -9,9 +9,9 @@ import _configure from './api/configure';
 import _setGlobalState from './api/set-global-state';
 import _setState from './api/set-state';
 import _set from './api/set';
-import _setValue from './api/set-val';
 import _getState from './api/get-state';
 import _getGlobalState from './api/get-global-state';
+import _getGlobalComputed from './api/get-global-computed';
 import _getComputed from './api/get-computed';
 import _emit from './api/emit';
 import _off from './api/off';
@@ -46,10 +46,10 @@ export const configure = _configure;
 export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const set = _set;
-export const setValue = _setValue;
 export const getState = _getState;
 export const getGlobalState = _getGlobalState;
 export const getComputed = _getComputed;
+export const getGlobalComputed = _getGlobalComputed;
 export const emit = _emit;
 export const off = _off;
 export const dispatch = _dispatch;
@@ -89,10 +89,10 @@ const defaultExport = {
   setGlobalState,
   setState,
   set,
-  setValue,
   getGlobalState,
   getState,
   getComputed,
+  getGlobalComputed,
   ccContext,
   execute,
   executeAll,

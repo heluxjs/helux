@@ -3,7 +3,7 @@ import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
 import { NOT_A_JSON, CU_KEY } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
-const cer = console.error;
+const cer = (...args) => runtimeVar.logError && console.error(...args);
 const protoToString = Object.prototype.toString;
 
 export function noop() { }
@@ -31,6 +31,7 @@ export function isBool(val) {
 }
 
 export function isObject(obj) {
+  if (!obj) return false; // undefined null etc...
   const str = protoToString.call(obj);
   // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
   return str === '[object Object]' || str === '[object Module]';
@@ -131,6 +132,7 @@ export function makeHandlerKey(ccUniqueKey, eventName, identity) {
 }
 
 export function isModuleNameValid(moduleName) {
+  if (!moduleName) return false;
   return /^[\$\#\&a-zA-Z0-9_-]+$/.test(moduleName);
 }
 

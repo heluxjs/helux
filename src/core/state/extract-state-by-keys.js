@@ -14,7 +14,9 @@ function setPartialState(partialState, state, key) {
 export default function (state, stateKeys = [], returnNullIfEmpty = false, needIgnored = false) {
   let partialState = {}, ignoredStateKeys = [], missKeyInState = false;
   if (!isPJO(state)) {
-    return { partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true, ignoredStateKeys, missKeyInState };
+    return {
+      partialState: returnNullIfEmpty ? null : partialState, isStateEmpty: true, ignoredStateKeys, missKeyInState,
+    };
   }
   let isStateEmpty = true;
 

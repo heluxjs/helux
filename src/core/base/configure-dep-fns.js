@@ -8,7 +8,7 @@ import ccContext from '../../cc-context';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 import uuid from './uuid';
 
-const { moduleName_stateKeys_, runtimeVar } = ccContext;
+const { moduleName2stateKeys, runtimeVar } = ccContext;
 let sortFactor = 1;
 
 /**
@@ -120,14 +120,15 @@ function _parseDescObj(cate, confMeta, descObj) {
           _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
 
           // 给depKeys按module分类，此时它们都指向同一个retKey，同一个fn，但是会被分配ctx.computedDep或者watchDep的不同映射里
-          const module_depKeys_ = {};
+          const module2depKeys = {};
           // ['foo/b1', 'bar/b1']
           depKeys.forEach(depKey => {
-            // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为
-            // 映射同名依赖仅发生在传入retKey的时候
-            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey); //consume depKey is stateKey
+            // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为，映射同名依赖仅发生在传入retKey的时候
+            // consume depKey is stateKey
+            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey); 
 
-            // ok: retKey: 'xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2'], some stateKey belong to foo, some belong to bar
+            // ok: retKey: 'xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2'], 
+            //     some stateKey belong to foo, some belong to bar
             // ok: retKey: 'foo/xxxx' depKeys:['f1', 'f2'], all stateKey belong to foo
             // ok: retKey: 'foo/xxxx' depKeys:['foo/f1', 'foo/f2'], all stateKey belong to foo
 
@@ -135,9 +136,11 @@ function _parseDescObj(cate, confMeta, descObj) {
             // not ok: retKey: 'foo/xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2']
 
             if (stateKeyModule && module !== stateKeyModule) {
-              throw new Error(`including slash both in retKey[${retKey}] and depKey[${depKey}] founded, but their module is different`);
+              throw new Error(
+                `found slash both in retKey[${retKey}] and depKey[${depKey}], but their module is different`
+              );
             }
-            const depKeys = safeGetArray(module_depKeys_, module);
+            const depKeys = safeGetArray(module2depKeys, module);
             if (!isStateKey) {
               throw new Error(`depKey[${depKey}] invalid, module[${module}] doesn't include its stateKey[${pureKey}]`);
             }else{
@@ -149,16 +152,15 @@ function _parseDescObj(cate, confMeta, descObj) {
             depKeys.push(pureKey);
           });
 
-          okeys(module_depKeys_).forEach(m => {
+          okeys(module2depKeys).forEach(m => {
             // 指向同一个fn，允许重复
-            _mapDepDesc(cate, confMeta, m, pureKey, fn, module_depKeys_[m], immediate, compare, lazy, sort);
+            _mapDepDesc(cate, confMeta, m, pureKey, fn, module2depKeys[m], immediate, compare, lazy, sort);
           });
         }
       }
     }else{
       justWarning(`retKey[${retKey}] item type error`);
     }
-
   });
 }
 
@@ -241,10 +243,9 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
   if (depKeys === '-') return;
 
   const allKeyDep = depKeys === '*';
-
-  let targetDepKeys = allKeyDep ? ['*'] : depKeys;
+  const targetDepKeys = allKeyDep ? ['*'] : depKeys;
   if (allKeyDep) {
-    retKey_stateKeys_[retKey] = moduleName_stateKeys_[module];
+    retKey_stateKeys_[retKey] = moduleName2stateKeys[module];
   }
 
   targetDepKeys.forEach(sKey => {
@@ -269,7 +270,7 @@ function _resolveKey(confMeta, module, retKey, mapSameName = false) {
   }
 
   let stateKeys;
-  const moduleStateKeys = moduleName_stateKeys_[targetModule];
+  const moduleStateKeys = moduleName2stateKeys[targetModule];
   if (targetModule === confMeta.module) {
     // 此时computed & watch观察的是对象的所有stateKeys
     stateKeys = confMeta.stateKeys;

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { CC_FRAGMENT, CC_CUSTOMIZE, CC_CLASS } from '../../support/constant';
 import mapRegistrationInfo from '../base/map-registration-info';
 import beforeMount from '../base/before-mount';

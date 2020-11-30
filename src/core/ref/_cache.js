@@ -1,10 +1,10 @@
 
-const key_findResult_ = {
+const key2findResult = {
 };
 
 
-export function createModuleNode(moduleName){
-  key_findResult_[moduleName] = {};
+export function createModuleNode(moduleName) {
+  key2findResult[moduleName] = {};
 }
 
 export function getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyClasses = []) {
@@ -15,9 +15,9 @@ export function getCacheKey(moduleName, sharedStateKeys, renderKeys, renderKeyCl
 }
 
 export function getCache(moduleName, key) {
-  return key_findResult_[moduleName][key];
+  return key2findResult[moduleName][key];
 }
 
 export function setCache(moduleName, key, result) {
-  key_findResult_[moduleName][key] = result;
+  key2findResult[moduleName][key] = result;
 }

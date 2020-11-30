@@ -3,7 +3,7 @@ import setRef from '../ref/set-ref';
 import afterRender from '../ref/after-render';
 import { okeys, safeAdd } from '../../support/util';
 import { mapStaticInsM } from '../../cc-context/wakey-ukey-map';
-import module_insCount_ from '../../cc-context/modue-ins-count-map';
+import module2insCount from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
 import ccContext from '../../cc-context';
 import * as ev from '../event';
@@ -16,7 +16,7 @@ const { store: { getModuleVer } } = ccContext;
 
 function triggerLifecyleMounted(allModules, mstate) {
   const handleOneModule = (m) => {
-    safeAdd(module_insCount_, m, 1);
+    safeAdd(module2insCount, m, 1);
 
     const moduleLifecycle = _lifecycle[m];
     if (!moduleLifecycle) return;
@@ -24,7 +24,7 @@ function triggerLifecyleMounted(allModules, mstate) {
     if (!mounted) return;
     if (_mountedOnce[m] === true) return;
 
-    if (module_insCount_[m] == 1) {
+    if (module2insCount[m] == 1) {
       const once = mounted(makeModuleDispatcher(m), mstate);
       _mountedOnce[m] = getVal(once, true);
     }

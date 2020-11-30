@@ -25,7 +25,7 @@ function checkStartup(err) {
     info.firstStartupTime = now;
     info.latestStartupTime = now;
   } else if (cachedLocation !== curLocation) {
-    const tip = `run can only beed called one time, try refresh browser to avoid this error`
+    const tip = `run can only been called one time, try refresh browser to avoid this error`
     if (now - info.latestStartupTime < 1000) {
       throw new Error(tip);
     }
@@ -55,8 +55,10 @@ export default function (
   {
     plugins = [],
     middlewares = [],
-    isStrict = false,//consider every error will be throwed by cc? it is dangerous for a running react app
+    // consider every error will be throwed by cc? be careful when app in prod mode
+    isStrict = false,
     isDebug = false,
+    logError = true,
     errorHandler = null,
     isHot,
     bindCtxToMethod = false,
@@ -74,7 +76,9 @@ export default function (
     throw new Error();
   } catch (err) {
     const { canStartup, resetClassInsUI } = checkStartup(err);
-    if (!canStartup) return;
+    if (!canStartup) {
+      return;
+    }
 
     try {
       justTip(`concent version ${ccContext.info.version}`);
@@ -84,6 +88,7 @@ export default function (
       const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
+      rv.logError = logError;
       rv.computedCompare = computedCompare;
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;

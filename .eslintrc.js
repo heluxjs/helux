@@ -17,7 +17,8 @@ module.exports = {
     browser: true,
     es6: true,
   },
-  rules:{
+  rules: {
     'constructor-super': 0,
+    camelcase: 0,
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /**
  * 为每一个实例单独建立了一个获取计算结果的观察容器，方便写入依赖
  */
@@ -69,12 +70,10 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
   // create cuVal
   return new Proxy(oriCuContainer, {
     get: function (target, otherRetKey) {
-
       const fnInfo = `${sourceType} ${fnType} retKey[${retKey}]`;
       // 1 防止用户从 cuVal读取不存在的key
       // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，所以这里强制用户要注意计算函数的书写顺序
       if (hasOwnProperty.call(oriCuContainer, otherRetKey)) {
-
         if (isAsyncFn(computedRaw[otherRetKey])) {
           referInfo.hasAsyncCuRefer = true;
           //  不允许读取异步计算函数结果做二次计算，隔离一切副作用，确保依赖关系简单和纯粹
@@ -105,22 +104,18 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
   // 为普通的计算结果容器建立代理对象
   return new Proxy(oriCuContainer, {
     get: function (target, retKey) {
-
       // 防止用户从 cuVal读取不存在的key
       if (hasOwnProperty.call(oriCuContainer, retKey)) {
-        
         // 由refComputed.{keyName}取值触发
         if (isRefCu) {
           const computedDep = ref.ctx.computedDep;
           okeys(computedDep).forEach(m => {
             writeRetKeyDep(computedDep[m], ref, m, retKey, isForModule);
           });
-        }
-        // 由moduleComputed.{keyName} 或者 connectedComputed.{moduleName}.{keyName} 取值触发
-        else {
+        } else {
+          // 由moduleComputed.{keyName} 或者 connectedComputed.{moduleName}.{keyName} 取值触发
           writeRetKeyDep(_computedDep[module], ref, module, retKey, isForModule);
         }
-
       }
       // 从已定义defineProperty的计算结果容器里获取结果
       return oriCuObContainer[retKey]

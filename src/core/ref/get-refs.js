@@ -1,8 +1,9 @@
+/* eslint-disable camelcase */
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
 
 export default function () {
-  let refs = [];
+  const refs = [];
   const ccUKey_ref_ = ccContext.ccUKey_ref_;
   const ccKeys = util.okeys(ccUKey_ref_);
   ccKeys.forEach(k => {

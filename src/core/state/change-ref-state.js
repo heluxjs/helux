@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /** @typedef {import('../../types').ICtxBase} ICtxBase */
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
@@ -95,7 +96,6 @@ export default function (state, {
   triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender, reactCallback,
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
-
       const passToMiddleware = {
         calledBy, type, payload, renderKey: targetRenderKey, targetDelay, ccKey, ccUniqueKey,
         committedState, refModule, module, fnName,
@@ -110,13 +110,11 @@ export default function (state, {
       };
 
       callMiddlewares(skipMiddleware, passToMiddleware, () => {
-
         // 到这里才触发调用saveSharedState存储模块状态和updateRef更新调用实例，注这两者前后顺序不能调换
         // 因为updateRef里的beforeRender需要把最新的模块状态合进来
         // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，且不会再触发computed&watch
         // 调用此接口请明确知道后果,
         // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
-
         const realShare = saveSharedState(module, passToMiddleware.sharedState, true);
 
         // TODO: 查看其它模块的cu函数里读取了当前模块的state或computed作为输入产生了的新的计算结果
@@ -138,9 +136,10 @@ export default function (state, {
         if (stateChangedCb) stateChangedCb();
 
         // ignoreRender 为true 等效于 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
-        if (realShare) triggerBroadcastState(stateFor, callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, targetDelay);
+        if (realShare) triggerBroadcastState(
+          stateFor, callInfo, targetRef, realShare, ignoreRender, module, targetRenderKey, targetDelay
+        );
       });
-
     }
   );
 }
@@ -157,10 +156,10 @@ function triggerReactSetState(
   }
 
   if (
-    targetRef.__$$ms === UNMOUNTED || // 已卸载
-    stateFor !== FOR_CUR_MOD ||
-    //确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
-    (calledBy !== FORCE_UPDATE && isObjectNull(state))
+    targetRef.__$$ms === UNMOUNTED  // 已卸载
+    || stateFor !== FOR_CUR_MOD
+    // 确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
+    || (calledBy !== FORCE_UPDATE && isObjectNull(state))
   ) {
     return nextNoop();
   }
@@ -170,7 +169,8 @@ function triggerReactSetState(
 
   if (renderKeys.length) {// if user specify renderKeys
     renderType = RENDER_BY_KEY;
-    if (renderKeys.includes(refCtx.renderKey)) {// current instance can been rendered only if ctx.renderKey included in renderKeys
+    if (renderKeys.includes(refCtx.renderKey)) {
+      // current instance can been rendered only if ctx.renderKey included in renderKeys
       return nextNoop();
     }
   }
@@ -182,7 +182,7 @@ function triggerReactSetState(
         const { partialState: entireStoredState } = extractStateByKeys(refState, storedKeys);
         const currentStoredState = Object.assign({}, entireStoredState, partialState);
         if (ccContext.localStorage) {
-          ccContext.localStorage.setItem('CCSS_' + ccUniqueKey, JSON.stringify(currentStoredState));
+          ccContext.localStorage.setItem(`CCSS_${ccUniqueKey}`, JSON.stringify(currentStoredState));
         }
       }
       refStore.setState(ccUniqueKey, partialState);
@@ -226,7 +226,9 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
   return { partialState, hasDelta: false, hasPrivState };
 }
 
-function triggerBroadcastState(stateFor, callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay) {
+function triggerBroadcastState(
+  stateFor, callInfo, targetRef, sharedState, allowOriInsRender, moduleName, renderKeys, delay
+) {
   let passAllowOri = allowOriInsRender;
   if (delay > 0) {
     if (passAllowOri) {// 优先将当前实例渲染了
@@ -286,12 +288,12 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
     // 对于挂载好了还未卸载的实例，才有必要触发重渲染
     if (ref.__$$ms === MOUNTED) {
       const refCtx = ref.ctx;
-
-      const { hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState } =
-        computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
-
-      const { hasDelta: hasDeltaInWa, newCommittedState: waCommittedState } =
-        watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
+      const {
+        hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState,
+      } = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
+      const {
+        hasDelta: hasDeltaInWa, newCommittedState: waCommittedState,
+      } = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
 
       // computed & watch 过程中提交了新的state，合并到 unProxyState 里
       // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部
@@ -314,5 +316,4 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
       refCtx.__$$ccForceUpdate();
     }
   });
-
 }

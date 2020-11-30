@@ -67,7 +67,9 @@ export function checkKeys(module, keys, keyShouldBeModuleStateKey = true, extraI
   const moduleStateKeys = getModuleStateKeys(module);
   keys.forEach(sKey => {
     const keyInModuleState = moduleStateKeys.includes(sKey);
-    const throwErr = () => { throw new Error(keyTip(sKey, keyword)) };
+    const throwErr = () => {
+      throw new Error(keyTip(sKey, keyword));
+    };
 
     if (keyShouldBeModuleStateKey) {
       (!keyInModuleState) && throwErr();
