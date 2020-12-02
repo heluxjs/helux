@@ -1,5 +1,5 @@
-import { run, cst, getGlobalState, getState } from '../src/index';
-import { makeStoreConfig } from './util';
+import { run, cst, getGlobalState, getState } from '../../src/index';
+import { makeStoreConfig } from '../util';
 
 describe('test top api getComputed', async () => {
   const models = makeStoreConfig('foo');

@@ -1,5 +1,5 @@
-import { run, configure, ccContext, setState, getState, getComputed, clearContextIfHot } from '../src/index';
-import { makeStoreConfig } from './util';
+import { run, configure, ccContext, setState, getState, getComputed, clearContextIfHot } from '../../src/index';
+import { makeStoreConfig } from '../util';
 
 describe('test top api run', () => {
   beforeEach(() => {

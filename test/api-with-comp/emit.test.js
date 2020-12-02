@@ -1,8 +1,8 @@
 import React from 'react';
 import { mount } from 'enzyme';
-import './testSetup';
-import { run, useConcent, emit, register } from '../src/index';
-import { makeStoreConfig, delay } from './util';
+import '../testSetup';
+import { run, useConcent, emit, register } from '../../src/index';
+import { makeStoreConfig, delay } from '../util';
 
 
 run(makeStoreConfig('foo'), { logError: false });

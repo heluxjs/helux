@@ -1,5 +1,5 @@
-import { run, reducer, getState, configure } from '../src/index';
-import { makeStoreConfig } from './util';
+import { run, reducer, getState, configure } from '../../src/index';
+import { makeStoreConfig } from '../util';
 
 const Foo = 'foo';
 

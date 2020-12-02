@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { mount } from 'enzyme';
-import './testSetup';
-import { run, useConcent, getState, dispatch, register } from '../src/index';
-import { makeStoreConfig } from './util';
+import '../testSetup';
+import { run, useConcent, getState, dispatch, register } from '../../src/index';
+import { makeStoreConfig } from '../util';
 
 const models = makeStoreConfig('foo');
 let container;
@@ -37,7 +37,7 @@ const executeTestLogicWithEnzyme = (Comp) => {
   expect(h1Wrap.text()).toBe(nameOld);
 
   // Test second render
-  const nameNew = 'nameNew_' + Date.now();
+  const nameNew = `nameNew_${Date.now()}`;
   act(() => {
     dispatch(models.foo.reducer.changeName, nameNew);
   });

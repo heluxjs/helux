@@ -1,4 +1,14 @@
 
+export function getTestModels() {
+  return {
+    test: {
+      state: {
+        name: 'name',
+      }
+    }
+  };
+}
+
 export function makeStoreConfig(moduleName, genNormalModule=true) {
   const conf =  {
     [moduleName]: {

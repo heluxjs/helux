@@ -1,9 +1,9 @@
-import './testSetup';
+import '../testSetup';
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { mount } from 'enzyme';
-import { makeStoreConfig } from './util';
-import { run, useConcent, getState, reducer, register } from '../src/index';
+import { makeStoreConfig } from '../util';
+import { run, useConcent, getState, reducer, register } from '../../src/index';
 
 const Foo = 'foo';
 
@@ -15,7 +15,7 @@ function executeTestLogic(Comp) {
   expect(h1Wrap.text()).toBe(nameOld);
 
   // Test second render
-  const nameNew = 'nameNew_' + Date.now();
+  const nameNew = `nameNew_${Date.now()}`;
   act(() => {
     reducer[Foo].changeName(nameNew);
   });

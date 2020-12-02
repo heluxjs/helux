@@ -1,5 +1,5 @@
-import { run, useConcent } from '../src/index';
-import { makeStoreConfig } from './util';
+import { run, useConcent } from '../../src/index';
+import { makeStoreConfig } from '../util';
 
 const Foo = 'foo';
 

@@ -1,5 +1,5 @@
-import { run, appendState, getState, setState } from '../src/index';
-import { has } from './util';
+import { run, appendState, getState, setState } from '../../src/index';
+import { has } from '../util';
 
 const models = {
   test: {

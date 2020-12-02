@@ -1,5 +1,5 @@
-import { run, cst, getState } from '../src/index';
-import { makeStoreConfig } from './util';
+import { run, cst, getState } from '../../src/index';
+import { makeStoreConfig } from '../util';
 
 const Foo = 'foo';
 

@@ -1,5 +1,5 @@
-import { run, configure, getState, getComputed, dispatch } from '../src/index';
-import { makeStoreConfig, extractMessage } from './util';
+import { run, configure, getState, getComputed, dispatch } from '../../src/index';
+import { makeStoreConfig, extractMessage } from '../util';
 
 const Foo = 'foo';
 
