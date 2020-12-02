@@ -11,6 +11,11 @@ describe('test top api configure', () => {
   });
 
 
+  test('configure should be a function', () => {
+    expect(configure).toBeInstanceOf(Function);
+  });
+
+  
   test('configure with one fn param', () => {
     configure({
       foo2: {

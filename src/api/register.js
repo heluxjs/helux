@@ -38,7 +38,7 @@ import { getRegisterOptions } from '../support/util';
  * online example here: https://codesandbox.io/s/register-in-multi-decrator-j4nr2
  */
 export default function (registerOption, ccClassKey) {
-  let _registerOption = getRegisterOptions(registerOption);
+  const _registerOption = getRegisterOptions(registerOption);
   delete _registerOption.__checkStartUp;
   delete _registerOption.__calledBy;
 

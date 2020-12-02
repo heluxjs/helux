@@ -163,6 +163,7 @@ const ccContext = {
   // store里的setState行为会自动触发模块级别的computed、watch函数
   store: {
     appendState: function (module, state) {
+      if (!moduleName2stateKeys[module]) throw new Error(`module[${module}] not configured`);
       const stateKeys = util.safeGetArray(moduleName2stateKeys, module);
       okeys(state).forEach(k => {
         if (!stateKeys.includes(k)) {

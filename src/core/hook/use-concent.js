@@ -19,7 +19,7 @@ import isRegChanged from '../param/is-reg-changed';
 import isStrict from './is-strict';
 
 const { ccUKey_ref_ } = ccContext;
-const cursor_hookCtx_ = {};
+const cursor2hookCtx = {};
 let refCursor = 1;
 
 function getUsableCursor() {
@@ -44,7 +44,7 @@ function CcHook(state, hookSetter, props, hookCtx) {
 // rState: resolvedState, iState: initialState
 function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
   incCursor();
-  cursor_hookCtx_[hookCtx.cursor] = hookCtx;
+  cursor2hookCtx[hookCtx.cursor] = hookCtx;
 
   // when single file demo in hmr mode trigger buildRef, rState is 0 
   // so here call evalState again
@@ -112,7 +112,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const hookCtx = hookCtxContainer.current;
   
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
-  let { state: iState = {} } = _registerOption;
+  const { state: iState = {} } = _registerOption;
   const { props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
 
   const reactUseState = React.useState;
@@ -139,7 +139,9 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     } else {
       const refCtx = hookRef.ctx;
       refCtx.prevProps = refCtx.props;
-      hookRef.props = refCtx.props = props;
+      // avoid no-multi-assign warning
+      refCtx.props = props;
+      hookRef.props = props;
       refCtx.extra = extra;
     }
   }
@@ -159,7 +161,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       if (toUnmountRef) {
         beforeUnmount(toUnmountRef);
       }
-      delete cursor_hookCtx_[cursor];
+      delete cursor2hookCtx[cursor];
     }
   }, [hookRef]);// 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
 
@@ -181,11 +183,11 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     if (isStrict(cursor) && !hookCtx.clearPrev) {
       hookCtx.clearPrev = true;
       const prevCursor = cursor - 1;
-      const prevHookCtx = cursor_hookCtx_[prevCursor];
+      const prevHookCtx = cursor2hookCtx[prevCursor];
       if (prevHookCtx && prevHookCtx.ef === 0) {
         // 确保是同一个类型的实例
         if (prevHookCtx.hookRef.ctx.ccClassKey === hookCtx.hookRef.ctx.ccClassKey) {
-          delete cursor_hookCtx_[prevCursor];
+          delete cursor2hookCtx[prevCursor];
           // 让来自于concent的渲染通知只触发一次, 注意prevHookRef没有被重复触发过diMount逻辑
           // 所以直接用prevHookCtx.hookRef来执行beforeUnmount
           beforeUnmount(prevHookCtx.hookRef);

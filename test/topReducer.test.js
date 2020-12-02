@@ -3,12 +3,12 @@ import { makeStoreConfig } from './util';
 
 const Foo = 'foo';
 
-describe('test top property reducer', async () => {
+describe('test top property reducer', () => {
   beforeAll(() => {
     run(makeStoreConfig('foo'), { logError: false });
   });
 
-  
+
   test('root reducer should include module methods that configured by run', () => {
     expect(reducer[Foo].changeName).toBeInstanceOf(Function);
     expect(reducer[Foo].setState).toBeInstanceOf(Function);
@@ -16,9 +16,10 @@ describe('test top property reducer', async () => {
 
 
   test('root reducer should include module methods that configured by configure', () => {
-    configure(makeStoreConfig('bar', false));
-    expect(reducer['bar'].changeName).toBeInstanceOf(Function);
-    expect(reducer['bar'].setState).toBeInstanceOf(Function);
+    const Bar = 'bar';
+    configure(makeStoreConfig(Bar, false));
+    expect(reducer[Bar].changeName).toBeInstanceOf(Function);
+    expect(reducer[Bar].setState).toBeInstanceOf(Function);
   });
 
 
@@ -27,8 +28,8 @@ describe('test top property reducer', async () => {
   });
 
 
-  test('root reducer methods should work', async () => {
-    await reducer[Foo].changeName('newName');
+  test('root reducer methods should work', () => {
+    reducer[Foo].changeName('newName');
     const fooState = getState(Foo);
     expect(fooState.name).toBe('newName');
   });

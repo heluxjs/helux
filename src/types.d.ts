@@ -904,7 +904,7 @@ declare function ccPluginOn(sig: string | string[], callback: (data: { sig: stri
 interface Plugin {
   install: (on: typeof ccPluginOn) => { name: string };
 }
-interface RunOptions {
+export interface RunOptions {
   middlewares?: ((midCtx: MidCtx, next: Function) => void)[];
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false

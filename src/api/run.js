@@ -1,3 +1,4 @@
+/** @typedef {import('../types').ModuleConfig} ModuleConfig */
 import startup from './startup';
 import * as util from '../support/util';
 import { NOT_A_JSON } from '../support/priv-constant';
@@ -10,15 +11,10 @@ const pError = label => {
   throw new Error(`[[run]]: param error, ${label} ${NOT_A_JSON}`);
 }
 
-// option:
-// middlewares, plugins, isStrict, isDebug, errorHandler, isHot,
-// autoCreateDispatcher, bindCtxToMethod,
-// computedCompare, watchCompare, watchImmediate
-
 /**
  * run will call startup
- * @param {{ [moduleName:string]: config:{state:object|()=>object, reducer:object, watch:object, computed:object, init:object} }} store
- * @param {{isStrict:boolean}} options
+ * @param {{ [moduleName:string]: ModuleConfig }} store
+ * @param {import('../types').RunOptions} options
  */
 
 export default function (store = {}, options = {}) {

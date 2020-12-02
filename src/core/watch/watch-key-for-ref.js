@@ -3,7 +3,9 @@ import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
 import { CATE_REF, FN_WATCH } from '../../support/constant';
 
 // deltaCommittedState 是computed透传的变量引用，用于继续收集可能新增或者更新的状态
-export default function (ref, stateModule, oldState, deltaCommittedState, callInfo, isBeforeMount = false, mergeToDelta) {
+export default function (
+  ref, stateModule, oldState, deltaCommittedState, callInfo, isBeforeMount = false, mergeToDelta,
+) {
   const refCtx = ref.ctx;
   if (!refCtx.hasWatchFn) return { hasDelta: false, newCommittedState: {} };
 

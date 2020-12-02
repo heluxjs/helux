@@ -13,7 +13,8 @@ import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 //  cur: {a:1, c:1, d:1} compare: {a:1, b:2, c:1, d:1} compareCount=4 nextCompare:{a:2, c:2, d:2}
 //
 //  then concent know 'b' should delete from dep because its value is 2, 
-//  if compare key count become bigger than previous render(4>3) or compare key values include 2, then cache will be expired
+//  if compare key count become bigger than previous render(4>3) or compare key values include 2, 
+//  then cache will be expired
 //
 //  before next render, assign nextCompare to compare, clear cur and nextCompare
 //  cur: {} compare: {a:2, c:2, d:2} compareCount=3 nextCompare:{}
@@ -29,7 +30,6 @@ export default function (ref, module, key, isForModule) {
     refCtx.__$$inBM === true // 还处于beforeMount步骤
     || refCtx.__$$renderStatus === START
   ) {
-
     const ccUniqueKey = refCtx.ccUniqueKey;
     const waKey = makeWaKey(module, key);
     // 未挂载时，是refWatch 或者 refComputed 函数里读取了moduleComputed的值间接推导出来的依赖stateKey

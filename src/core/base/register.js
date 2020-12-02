@@ -50,7 +50,6 @@ export default function register({
       const staticSetup = ToBeExtendedClass.$$setup;
 
       const _CcClass = class CcClass extends ToBeExtendedClass {
-
         constructor(props, context) {
           super(props, context);
           try {

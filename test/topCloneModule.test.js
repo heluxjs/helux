@@ -1,4 +1,4 @@
-import { run, cloneModule, getState, getComputed, reducer, dispatch } from '../src/index';
+import { run, cloneModule, getState, getComputed, reducer } from '../src/index';
 import { makeStoreConfig } from './util';
 
 const Foo = 'foo';

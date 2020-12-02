@@ -48,3 +48,7 @@ export function extractMessage(err) {
 export function delay(ms = 1000) {
   return new Promise(r => setTimeout(r, ms));
 }
+
+export function has(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
