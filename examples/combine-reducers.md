@@ -5,7 +5,7 @@
 - `effect function` is Asynchronous function
 - `pure function` is synchronous function
 
-attention that athrough you can change state by `ctx.setState` directly, but if you have many logic code before set new partial state, recommend you put them to reducer
+attention that athrough you can change state by `ctx.setState` directly, but if you have many logic code before setting a new partial state, recommend you put them to reducer
 
 ```jsx
 import { run, useConcent } from "concent";
