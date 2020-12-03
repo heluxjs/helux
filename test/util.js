@@ -97,7 +97,7 @@ export function makeComp(module, setup) {
 }
 
 
-export function mountCompThenTestValue(Comp, compareItems, options = {}) {
+export function mountCompThenAssertValue(Comp, compareItems, options = {}) {
   let { nodeName = 'h1', clickAction } = options;
   const compWrap = mount(<Comp />);
 
@@ -126,6 +126,6 @@ export function mountCompThenTestValue(Comp, compareItems, options = {}) {
   });
 };
 
-export function mountCompThenTestH2Value(Comp, compareItems) {
-  mountCompThenTestValue(Comp, compareItems, { nodeName: 'h2' })
+export function mountCompThenAssertH2Value(Comp, compareItems) {
+  mountCompThenAssertValue(Comp, compareItems, { nodeName: 'h2' })
 }

@@ -2,7 +2,7 @@ import '../testSetup';
 import React from 'react';
 import { mount } from 'enzyme';
 import { run, getState, useConcent } from '../../src/index';
-import { getTestModels, mountCompThenTestH2Value as mountCompThenTestValue, makeComp } from '../util';
+import { getTestModels, mountCompThenAssertH2Value as mountCompThenAssertValue, makeComp } from '../util';
 
 const models = getTestModels();
 run(models, { logError: false, isStrict: true });
@@ -28,8 +28,8 @@ describe('test ctx api computed', () => {
     const compareItems = [
       { key: 'prefixedName', compareValue: `hi_${getState('test').name}`, eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   }
   test('define ref computed with (cuKey, fn), take module state as input', () => {
     const setup = (ctx) => {
@@ -72,8 +72,8 @@ describe('test ctx api computed', () => {
     const compareItems = [
       { key: 'prefixedName', compareValue: `hi_privName`, eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   }
   test('define ref computed with (cuKey, fn), take private state as input', () => {
     const setup = (ctx) => {
@@ -110,8 +110,8 @@ describe('test ctx api computed', () => {
       { key: 'prefixedPrivName', compareValue: `hi_priv_privName`, eq: true },
       { key: 'prefixedModuleName', compareValue: `hi_module_${getState('test').name}`, eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   }
   test('define ref computed with (cuKey, fn), take module state and private state as input both', () => {
     const setup = (ctx) => {
@@ -169,7 +169,7 @@ describe('test ctx api computed', () => {
       { key: 'doubleAge', compareValue: getState('test').age * 2, eq: true, valueType: 'number' },
       { key: 'x4Age', compareValue: getState('test').age * 4, eq: true, valueType: 'number' },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   });
 });

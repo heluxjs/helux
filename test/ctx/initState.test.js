@@ -2,7 +2,7 @@ import React from 'react';
 import { mount } from 'enzyme';
 import '../testSetup';
 import { run, useConcent, getState, register } from '../../src/index';
-import { getTestModels, mountCompThenTestValue, makeComp } from '../util';
+import { getTestModels, mountCompThenAssertValue, makeComp } from '../util';
 
 const models = getTestModels();
 run(models, { logError: false });
@@ -18,8 +18,8 @@ describe('test ctx api initState', () => {
     const compareItems = [
       { key: 'name', compareValue: getState('test').name, eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   });
 
 
@@ -33,8 +33,8 @@ describe('test ctx api initState', () => {
     const compareItems = [
       { key: 'privName', compareValue: privName, eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   });
 
   
@@ -48,8 +48,8 @@ describe('test ctx api initState', () => {
     const compareItems = [
       { key: 'privName', compareValue: privName, eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   });
 
 
@@ -65,8 +65,8 @@ describe('test ctx api initState', () => {
       { key: 'privName', compareValue: nameNewForPriv, eq: true },
       { key: 'name', compareValue: nameNewForModule, eq: false },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   });
 
 

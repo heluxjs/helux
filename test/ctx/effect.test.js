@@ -2,44 +2,46 @@
 import React from 'react';
 import '../testSetup';
 import { run, useConcent, register } from '../../src/index';
-import { getTestModels, mountCompThenTestValue } from '../util';
+import { okeys } from '../../src/support/util';
+import { getTestModels, mountCompThenAssertValue } from '../util';
 
 const models = getTestModels();
 run(models, { logError: false });
 
 
 export function makeComp(module, setup) {
-  const View = ({ state, changeNum }) => {
+  const View = ({ state, changeNum, settings }) => {
     return (
       <div>
         <h1 className="didMount">{state.didMount}</h1>
         <h1 className="num">{state.num}</h1>
         <h1 className="numBig">{state.numBig}</h1>
         <button onClick={changeNum}>changeNum</button>
+        {okeys(settings).map(key => <button key={key} className={key} onClick={settings[key]}>key</button>)}
       </div>
     );
   };
 
   const CompFn = () => {
-    const { state, setState } = useConcent({ module, setup });
+    const { state, setState, settings } = useConcent({ module, setup });
     const changeNum = () => setState({ num: 20 });
-    return <View state={state} changeNum={changeNum} />;
+    return <View state={state} changeNum={changeNum} settings={settings} />;
   };
   const CompCls = register({ module, setup })(
     class extends React.Component {
       changeNum = () => this.setState({ num: 20 }); // or this.ctx.setState
       render() {
-        const { state } = this.ctx;
-        return <View state={state} changeNum={this.changeNum} />;
+        const { state, settings } = this.ctx;
+        return <View state={state} changeNum={this.changeNum} settings={settings} />;
       }
     }
   );
   const CompClsWithConstChangeNum = register({ module, setup })(
     class extends React.Component {
       render() {
-        const { state, setState } = this.ctx;
+        const { state, setState, settings } = this.ctx;
         const changeNum = () => setState({ num: 20 });
-        return <View state={state} changeNum={changeNum} />;
+        return <View state={state} changeNum={changeNum} settings={settings} />;
       }
     }
   );
@@ -60,8 +62,8 @@ describe('test ctx api effect', () => {
     const compareItems = [
       { key: 'didMount', compareValue: 'didMount', eq: true },
     ];
-    mountCompThenTestValue(CompFn, compareItems);
-    mountCompThenTestValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
   });
 
 
@@ -87,10 +89,68 @@ describe('test ctx api effect', () => {
         buttonWrap.simulate('click');
       },
     };
-    mountCompThenTestValue(CompFn, compareItems, options);
-    mountCompThenTestValue(CompCls, compareItems, options);
-    mountCompThenTestValue(CompClsWithConstChangeNum, compareItems, options);
+    mountCompThenAssertValue(CompFn, compareItems, options);
+    mountCompThenAssertValue(CompCls, compareItems, options);
+    mountCompThenAssertValue(CompClsWithConstChangeNum, compareItems, options);
   });
 
 
+  test('when immediate is true, effect should not work in frist render', () => {
+    const setup = (/** @type Ctx */ctx) => {
+      ctx.initState({ didMount: '', num: 1, numBig: 10 });
+      ctx.effect(() => {
+        ctx.setState({ numBig: 100 });
+      }, { depKeys: ['num'], immediate: false }); // default is true
+    };
+    const { CompFn, CompCls, CompClsWithConstChangeNum } = makeComp('test', setup);
+
+    const compareItems = [
+      { key: 'numBig', compareValue: 10, eq: true, valueType:'number' },
+    ];
+    mountCompThenAssertValue(CompFn, compareItems);
+    mountCompThenAssertValue(CompCls, compareItems);
+    mountCompThenAssertValue(CompClsWithConstChangeNum, compareItems);
+  });
+
+
+  const testCompareLogicWithDifferentValue = (compare, shouldBe) => {
+    const setup = (/** @type Ctx */ctx) => {
+      ctx.initState({ didMount: '', num: 1, numBig: 10, info: { addr: 'bj' } });
+      ctx.effect(
+        () => {
+          ctx.setState({ numBig: 100 });
+        },
+        // default compare is true， set immediate false to avoid trigger this effect at first render
+        { depKeys: ['info'], compare, immediate: false }
+      ); 
+
+      return {
+        changeInfo() {
+          const { info } = ctx.state;
+          info.addr = 'newAddr';
+          ctx.setState({ info });
+        },
+      };
+    };
+    const { CompFn, CompCls, CompClsWithConstChangeNum } = makeComp('test', setup);
+
+    const compareItems = [
+      { key: 'numBig', compareValue: shouldBe, eq: true, valueType:'number' },
+    ];
+    const options = {
+      clickAction: (compWrap) => {
+        const buttonWrap = compWrap.find('button.changeInfo');
+        buttonWrap.simulate('click');
+      },
+    };
+    mountCompThenAssertValue(CompFn, compareItems, options);
+    mountCompThenAssertValue(CompCls, compareItems, options);
+    mountCompThenAssertValue(CompClsWithConstChangeNum, compareItems, options);
+  };
+  test('when compare is false, effect should work even pass the same ref in partial state', () => {
+    testCompareLogicWithDifferentValue(false, 100);
+  });
+  test('when compare is true, effect should not work if pass the same ref in partial state', () => {
+    testCompareLogicWithDifferentValue(true, 10);
+  });
 });
