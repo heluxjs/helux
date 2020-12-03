@@ -1,3 +1,9 @@
+#### 2020-12-03
+2.10.3 发布
+- feature: 支持传入`react-dom/test-utils`的`act`句柄给`RunOptions.act`参数，避免测试模式提示act警告
+- fix: `lifecycle.willUnmount`未能正确工作
+- fix: `lifecycle.initStateDone`当未定义`lifecycle.initState`时未能正确工作
+
 #### 2020-11-30
 2.10.2 发布
 - chore: 删除多余的内置api `setValue`
@@ -35,7 +41,7 @@ configure({oneMod: {state: {name: 'xxx'} } });
 2.9.8 发布
 - 支持多个renderKey
 ```js
-cts.mr.someMethod(payload, ['1', '2']);//这次调用仅影响这两个id的视图
+ctx.mr.someMethod(payload, ['1', '2']);//这次调用仅影响这两个id的视图
 ```
 
 #### 2020-08-16

@@ -117,6 +117,7 @@ export default function (ref, params, liteLevel = 5) {
 
   // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
   // 做个保护判断，防止 ctx = {}
+  // const act = runtimeHandler.act;// for react-test-utils
   if (!isCtxNull && existedCtx.ccUniqueKey) {
     __boundSetState = existedCtx.__boundSetState;
     __boundForceUpdate = existedCtx.__boundForceUpdate;

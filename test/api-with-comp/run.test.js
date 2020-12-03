@@ -1,7 +1,9 @@
-import React from 'react';
-import { mount } from 'enzyme';
 import '../testSetup';
+import React from 'react';
+import { act } from 'react-dom/test-utils';
+import { mount } from 'enzyme';
 import { run, useConcent, register, getState } from '../../src/index';
+import { delay } from '../util';
 
 const key2Idx = {};
 const numList = [100, 200, 300];
@@ -37,8 +39,18 @@ run({
         return false;
       },
     },
-  }
-}, { logError: false });
+  },
+  test3: {
+    state: { num: 0 },
+    lifecycle: {
+      // this will cause use act warning, so use initState + initStateDone to mock initState return new state
+      async initState() {
+        await delay(1000);
+        return { num: 100 };
+      },
+    },
+  },
+}, { logError: false, act }); // pass act to runOptions to avoid act warning when call initState in test mode
 
 describe('test top api run with react component', () => {
   test('when a fisrt ins of class component mounted, it should trigger lifecyle.mounted only one time', () => {
@@ -59,6 +71,7 @@ describe('test top api run with react component', () => {
     // still 100
     expect(h1Wrap2nd.text()).toBe(String(100));
   });
+
 
   test('lifecyle.mounted and willUnmount will been called multi times when it returns false', () => {
     const CompCls = register({ module: 'test2' })(
@@ -102,5 +115,36 @@ describe('test top api run with react component', () => {
 
     wrap3th.unmount();
     expect(getState('test2').num).toBe(0);
+  });
+
+
+  test('async lifecyle.initState will re-render comp-ins', async() => {
+    const CompCls = register({ module: 'test3' })(
+      class extends React.Component {
+        render() {
+          return <h1>{this.state.num}</h1>
+        }
+      }
+    );
+    const CompFn = () => {
+      const ctx = useConcent({ module: 'test3' });
+      return <h1>{ctx.state.num}</h1>
+    };
+    const wrap = mount(<CompCls />);
+    const wrap2 = mount(<CompFn />);
+
+    await delay(500);
+    expect(getState('test3').num).toBe(0);
+    const h1Wrap = wrap.find('h1');
+    expect(h1Wrap.text()).toBe(String(0));
+
+    const h1Wrap2 = wrap2.find('h1');
+    expect(h1Wrap2.text()).toBe(String(0));
+
+    await delay(1500);
+    // after initState invoked
+    expect(getState('test3').num).toBe(100);
+    expect(h1Wrap.text()).toBe(String(100));
+    expect(h1Wrap2.text()).toBe(String(100));
   });
 });

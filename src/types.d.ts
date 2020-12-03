@@ -911,6 +911,7 @@ export interface RunOptions {
   isHot?: boolean;// default is false
   isStrict?: boolean;
   logError?: boolean; // if print error message with console.error, default is true
+  act?: IAnyFn; // avoid act warning when call lifecycle.initState in test mode
   errorHandler?: (err: Error) => void;
   bindCtxToMethod?: boolean;// default false
   computedCompare?: boolean;// default is false, trigger computed if set

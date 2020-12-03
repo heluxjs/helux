@@ -71,6 +71,7 @@ export default function (
     objectValueCompare  = false,
     nonObjectValueCompare  = true,
     localStorage = null,
+    act = null,
   } = {}) {
   try {
     throw new Error();
@@ -85,6 +86,7 @@ export default function (
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
       ccContext.runtimeHandler.errorHandler = errorHandler;
+      ccContext.runtimeHandler.act = act;
       const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
