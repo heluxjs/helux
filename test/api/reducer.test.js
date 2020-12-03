@@ -1,17 +1,28 @@
-import { run, reducer, getState, configure } from '../../src/index';
+import { run, reducer, getState, configure, cst } from '../../src/index';
 import { makeStoreConfig } from '../util';
 
 const Foo = 'foo';
+const models = makeStoreConfig(Foo);
+run(models, { logError: false });
 
 describe('test top property reducer', () => {
-  beforeAll(() => {
-    run(makeStoreConfig('foo'), { logError: false });
+  test('root reducer should include built-in keys', () => {
+    expect(reducer[cst.MODULE_GLOBAL]).toBeTruthy();
+    expect(reducer[cst.MODULE_DEFAULT]).toBeTruthy();
   });
 
 
   test('root reducer should include module methods that configured by run', () => {
     expect(reducer[Foo].changeName).toBeInstanceOf(Function);
     expect(reducer[Foo].setState).toBeInstanceOf(Function);
+  });
+
+
+  test('foo module reducer fns should have been tagged', () => {
+    const fooReducer = models[Foo].reducer;
+    expect(fooReducer.changeName.__fnName).toBe('changeName');
+    expect(fooReducer.changeName.__stateModule).toBe(Foo);
+    expect(fooReducer.changeName.__isAsync).toBe(false);
   });
 
 

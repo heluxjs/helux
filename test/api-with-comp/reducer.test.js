@@ -3,7 +3,7 @@ import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { mount } from 'enzyme';
 import { makeStoreConfig } from '../util';
-import { run, useConcent, getState, reducer, register } from '../../src/index';
+import { run, useConcent, getState, reducer, register, cst } from '../../src/index';
 
 const Foo = 'foo';
 
@@ -22,12 +22,10 @@ function executeTestLogic(Comp) {
   expect(h1Wrap.text()).toBe(nameNew);
 }
 
+const models = makeStoreConfig('foo');
+run(models, { logError: false });
+
 describe('test top property reducer', () => {
-  beforeAll(() => {
-    run(makeStoreConfig('foo'), { logError: false });
-  });
-
-
   test('call reducer.{moduleName}.{fn} should change function component state', () => {
     function Comp() {
       const { state } = useConcent('foo');

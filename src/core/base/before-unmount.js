@@ -23,7 +23,7 @@ function executeClearCb(cbMap, ctx) {
 function triggerLifecyleWillUnmount(allModules, mstate) {
   const handleOneModule = (m) => {
     module2insCount[m] -= 1;
-    const moduleLifecycle = _lifecycle[m].willUnmount;
+    const moduleLifecycle = _lifecycle[m];
     if (!moduleLifecycle) return;
     const willUnmount = moduleLifecycle.willUnmount;
     if (!willUnmount) return;
