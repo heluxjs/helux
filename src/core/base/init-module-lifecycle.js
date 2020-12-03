@@ -10,13 +10,19 @@ export default function (moduleName, lifecycle = {}) {
   ccContext.lifecycle._lifecycle[moduleName] = lifecycle;
   const moduleState = getState(moduleName);
 
+  const d = makeModuleDispatcher(moduleName);
+  // loaded just means that moudle state、reducer、watch、computed configuration were recorded to ccContext
+  // so it is called before initState
+  if (loaded) {
+    loaded(d, moduleState);
+  }
+
   if (initState) {
     Promise.resolve().then(() => initState(moduleState)).then(state => {
       makeSetStateHandler(moduleName, initStateDone)(state);
     }).catch(catchCcError);
-  }
-
-  if (loaded) {
-    loaded(makeModuleDispatcher(moduleName), moduleState);
+  } else {
+    // make sure initStateDone will be alway called no matther initState difined or not
+    initStateDone && initStateDone(d, moduleState);
   }
 }

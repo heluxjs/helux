@@ -1,5 +1,5 @@
 import { run, configure, ccContext, setState, getState, getComputed, clearContextIfHot, reducer } from '../../src/index';
-import { makeStoreConfig } from '../util';
+import { makeStoreConfig, delay } from '../util';
 
 describe('test top api run', () => {
   beforeEach(() => {
@@ -90,5 +90,113 @@ describe('test top api run', () => {
       },
     });
     expect(reducer['test'].setState).toBeInstanceOf(Function);
+  });
+  
+
+  test('lifecycle.initState should work', () => {
+    run({
+      test: {
+        state: { num: 1, numBig: 100 },
+        lifecycle: {
+          initState(state) {
+            expect(state.num).toBe(1);
+            expect(state.numBig).toBe(100);
+            return { num: 2, numBig: 200 };
+          },
+          initStateDone(dispatch, state) {
+            expect(state.num).toBe(2);
+            expect(state.numBig).toBe(200);
+          },
+        },
+      },
+    });
+  });
+  
+
+  test('async lifecycle.initState should work', () => {
+    run({
+      test: {
+        state: { num: 1, numBig: 100 },
+        lifecycle: {
+          async initState(state) {
+            expect(state.num).toBe(1);
+            expect(state.numBig).toBe(100);
+            return { num: 2, numBig: 200 };
+          },
+          initStateDone(dispatch, state) {
+            expect(state.num).toBe(2);
+            expect(state.numBig).toBe(200);
+          },
+        },
+      },
+    });
+  });
+  
+
+  test('initStateDone param dispatch should work', async () => {
+    const models = {
+      test: {
+        state: { num: 1, numBig: 100 },
+        reducer: {
+          changeNum(num) {
+            return { num };
+          }
+        },
+        lifecycle: {
+          async initState(state) {
+            return { num: 2, numBig: 200 };
+          },
+          async initStateDone(dispatch, state) {
+            dispatch('changeNum', 300); // dispatch string leterial
+            await delay(500);
+            expect(getState('test').num).toBe(300);
+
+            dispatch(models.test.reducer.changeNum, 3000); // dispatch reducer fn
+            await delay(500);
+            expect(getState('test').num).toBe(3000);
+          },
+        },
+      },
+    };
+    run(models);
+  });
+    
+
+  test('initStateDone should been called even no initState defined', () => {
+    let called = false;
+    const models = {
+      test2: {
+        state: { num: 1, numBig: 100 },
+        lifecycle: {
+          initStateDone(dispatch, state) {
+            expect(state.num).toBe(1);
+            expect(state.numBig).toBe(100);
+            called = true;
+          },
+        },
+      },
+    };
+    run(models);
+    expect(called).toBe(true);
+  });
+      
+
+  test('lifecycle.loaded called before lifecycle.initState', () => {
+    let sig = 0;
+    const models = {
+      test2: {
+        state: { num: 1, numBig: 100 },
+        lifecycle: {
+          loaded(){
+            sig = 1;
+          },
+          initState(dispatch, state) {
+            sig = 2;
+          },
+        },
+      },
+    };
+    run(models);
+    expect(sig).toBe(1);
   });
 });

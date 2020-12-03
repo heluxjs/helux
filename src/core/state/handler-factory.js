@@ -497,9 +497,9 @@ export function makeModuleDispatcher(module) {
 // for moduleConf.init(legency) moduleConf.lifecycle.initState(v2.9+)
 export function makeSetStateHandler(module, initStateDone) {
   return state => {
-    const execInitDone = () => initStateDone && initStateDone(makeModuleDispatcher(module), getState(module));
+    const execInitDoneWrap = () => initStateDone && initStateDone(makeModuleDispatcher(module), getState(module));
     try {
-      innerSetState(module, state, execInitDone);
+      innerSetState(module, state, execInitDoneWrap);
     } catch (err) {
       const moduleState = getState(module);
       if (!moduleState) {
@@ -514,7 +514,7 @@ export function makeSetStateHandler(module, initStateDone) {
       }
 
       util.justTip(`no ccInstance found for module[${module}] currently, cc will just store it, lately ccInstance will pick this state to render`);
-      execInitDone();
+      execInitDoneWrap();
     }
   }
 }
