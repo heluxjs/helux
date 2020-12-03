@@ -1,3 +1,4 @@
+/** @typedef {import('../../types-inner').IRefCtx} Ctx */
 import {
   okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO, justWarning,
   makeCuDepDesc, safeGetThenNoDupPush, makeFnDesc,
@@ -43,13 +44,14 @@ computed(ctx=>{ return cuDesc}
 
 // cate: module | ref
 export default function (cate, confMeta, item, handler, depKeysOrOpt) {
+  /** @type Ctx */
   const ctx = confMeta.refCtx;
   const type = confMeta.type;
-  if (cate === CATE_REF) {
-    if (!ctx.__$$inBM) {
-      justWarning(`${cate} ${type} must been called in setup block`);
-      return;
-    }
+  if (cate === CATE_REF && !ctx.__$$inBM) {
+    const tip = `${cate} ${type} must been called in setup block`;
+    if (runtimeVar.isStrict) throw new Error(tip);
+    justWarning(tip);
+    return;
   }
 
   if (!item) return;

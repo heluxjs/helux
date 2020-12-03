@@ -2,50 +2,11 @@ import React from 'react';
 import { mount } from 'enzyme';
 import '../testSetup';
 import { run, useConcent, getState, register } from '../../src/index';
-import { okeys } from '../../src/support/util';
-import { getTestModels } from '../util';
+import { getTestModels, mountCompThenTestValue, makeComp } from '../util';
 
 const models = getTestModels();
 run(models, { logError: false });
 
-function makeComp(module, setup) {
-  const CompFn = () => {
-    const { state } = useConcent({ module, setup });
-    return (
-      <div>
-        {okeys(state).map(key => <h1 key={key} className={key}>{state[key]}</h1>)}
-      </div>
-    );
-  };
-  const CompCls = register({ module, setup })(
-    class extends React.Component {
-      render() {
-        const { state } = this.ctx;
-        return (
-          <div>
-            {okeys(state).map(key => <h1 key={key} className={key}>{state[key]}</h1>)}
-          </div>
-        );
-      }
-    }
-  );
-
-  return { CompFn, CompCls };
-}
-
-function mountCompThenTestState(Comp, compareItems) {
-  const compWrap = mount(<Comp />);
-  compareItems.forEach(item => {
-    const { key, compareValue, eq } = item;
-    const h1NameWrap = compWrap.find(`h1.${key}`);
-    const uiValue = h1NameWrap.text();
-    if (eq) {
-      expect(uiValue === compareValue).toBeTruthy();
-    } else {
-      expect(uiValue !== compareValue).toBeTruthy();
-    }
-  });
-};
 
 describe('test ctx api initState', () => {
   test('initState should not overwrite test module state when passed object includes module state key', () => {
@@ -57,8 +18,8 @@ describe('test ctx api initState', () => {
     const compareItems = [
       { key: 'name', compareValue: getState('test').name, eq: true },
     ];
-    mountCompThenTestState(CompFn, compareItems);
-    mountCompThenTestState(CompCls, compareItems);
+    mountCompThenTestValue(CompFn, compareItems);
+    mountCompThenTestValue(CompCls, compareItems);
   });
 
 
@@ -72,8 +33,8 @@ describe('test ctx api initState', () => {
     const compareItems = [
       { key: 'privName', compareValue: privName, eq: true },
     ];
-    mountCompThenTestState(CompFn, compareItems);
-    mountCompThenTestState(CompCls, compareItems);
+    mountCompThenTestValue(CompFn, compareItems);
+    mountCompThenTestValue(CompCls, compareItems);
   });
 
   
@@ -87,8 +48,8 @@ describe('test ctx api initState', () => {
     const compareItems = [
       { key: 'privName', compareValue: privName, eq: true },
     ];
-    mountCompThenTestState(CompFn, compareItems);
-    mountCompThenTestState(CompCls, compareItems);
+    mountCompThenTestValue(CompFn, compareItems);
+    mountCompThenTestValue(CompCls, compareItems);
   });
 
 
@@ -104,8 +65,8 @@ describe('test ctx api initState', () => {
       { key: 'privName', compareValue: nameNewForPriv, eq: true },
       { key: 'name', compareValue: nameNewForModule, eq: false },
     ];
-    mountCompThenTestState(CompFn, compareItems);
-    mountCompThenTestState(CompCls, compareItems);
+    mountCompThenTestValue(CompFn, compareItems);
+    mountCompThenTestValue(CompCls, compareItems);
   });
 
 

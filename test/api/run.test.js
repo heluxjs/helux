@@ -1,4 +1,4 @@
-import { run, configure, ccContext, setState, getState, getComputed, clearContextIfHot } from '../../src/index';
+import { run, configure, ccContext, setState, getState, getComputed, clearContextIfHot, reducer } from '../../src/index';
 import { makeStoreConfig } from '../util';
 
 describe('test top api run', () => {
@@ -80,5 +80,15 @@ describe('test top api run', () => {
     // when runOptins.computedCompare is false, info cu will been triggered
     // cause the key info is hited
     expect(infoCuBefore !== infoAfter).toBeTruthy();
+  });
+
+  
+  test('setState should been injected to reducer fns automatically after run', () => {
+    run({
+      test: {
+        state: { num: 1 },
+      },
+    });
+    expect(reducer['test'].setState).toBeInstanceOf(Function);
   });
 });

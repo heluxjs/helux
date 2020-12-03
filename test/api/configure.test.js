@@ -1,4 +1,4 @@
-import { run, configure, getState, getComputed, dispatch } from '../../src/index';
+import { run, configure, getState, getComputed, dispatch, reducer } from '../../src/index';
 import { makeStoreConfig, extractMessage } from '../util';
 
 const Foo = 'foo';
@@ -89,5 +89,14 @@ describe('test top api configure', () => {
     expect(foo5State.name === toChangeName).toBeTruthy();
     expect(foo5State.remark === 'nameRemark').toBeTruthy();
     expect(foo5Cu.prefixedName === '$$newName').toBeTruthy();
+  });
+
+  test('setState should been injected to reducer fns automatically after configure', () => {
+    configure({
+      test: {
+        state: { num: 1 },
+      },
+    });
+    expect(reducer['test'].setState).toBeInstanceOf(Function);
   });
 });
