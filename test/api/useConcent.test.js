@@ -7,7 +7,7 @@ describe('test top api useConcent', () => {
   const models = makeStoreConfig(Foo);
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
   });
 
 

@@ -1,5 +1,5 @@
 /**
- * this file is prepared for setState、setModuleState
+ * this file is prepared for setState、setModuleState、invoke
  */
 
 /** @typedef {import('../../src/types-inner').IRefCtx} Ctx */
@@ -204,7 +204,7 @@ export async function testDelayForItemClick(makeChangeStateHandler) {
     expect(wrap2Book1RenderCount + 1).toBe(wrap2Book1RenderCountClk);
     expect(wrap3Book1RenderCount + 1).toBe(wrap3Book1RenderCountClk);
     expect(wrap4Book1RenderCount + 1).toBe(wrap4Book1RenderCountClk);
-    console.log('execute to end');
+    // console.log('execute to end');
     wrapList.forEach(wrap => wrap.unmount());
   };
 
@@ -319,7 +319,7 @@ export async function testRenderKeyForContainerClick(makeChangeStateHandler) {
     expect(wrap2Book2RenderCount).toBe(wrap2Book2RenderCountClk);
     expect(wrap3Book2RenderCount).toBe(wrap3Book2RenderCountClk);
     expect(wrap4Book2RenderCount).toBe(wrap4Book2RenderCountClk);
-    console.log('execute to end');
+    // console.log('execute to end');
     wrapList.forEach(wrap => wrap.unmount());
   };
 

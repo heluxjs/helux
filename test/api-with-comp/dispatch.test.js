@@ -47,7 +47,7 @@ const executeTestLogicWithEnzyme = (Comp) => {
 
 describe('test top api dispatch', () => {
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
   });
 
   beforeEach(() => {

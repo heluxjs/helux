@@ -6,7 +6,7 @@ describe('test top api getComputed', async () => {
   const fooModel = models.foo;
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
   });
 
   

@@ -19,6 +19,9 @@ export function getTestModels() {
       computed: {
         bookMap: ({ books }) => books.reduce((map, item) => { map[item.id] = item; return map }, {}),
       },
+      reducer: {
+        setState: state => state,
+      },
     }
   };
 }

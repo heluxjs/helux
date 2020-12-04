@@ -6,7 +6,7 @@ export default {
   // like componentDidCatch in react 16.*
   isStrict: false,
   isDebug: false,
-  logError: true,
+  log: true,
   computedCompare: false,// 针对object值的比较规则
   watchCompare: false,// 针对object值的比较规则
   watchImmediate: false,

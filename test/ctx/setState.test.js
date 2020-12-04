@@ -6,7 +6,7 @@ import { getTestModels } from '../util';
 import * as tcs from './_testChangeState'
 
 const models = getTestModels();
-run(models, { logError: false, act });
+run(models, { log: false, act });
 
 describe('test ctx api setState', () => {
   test('pass empty state should do nothing', () => {

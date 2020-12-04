@@ -4,7 +4,7 @@ import { makeStoreConfig, delay } from '../util';
 describe('test top api run', () => {
   beforeEach(() => {
     // let run can work for all test block
-    ccContext.runtimeVar.logError = false;
+    ccContext.runtimeVar.log = false;
     ccContext.isHot = true;
     clearContextIfHot();
     ccContext.info.latestStartupTime = 0;

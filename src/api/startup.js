@@ -58,7 +58,7 @@ export default function (
     // consider every error will be throwed by cc? be careful when app in prod mode
     isStrict = false,
     isDebug = false,
-    logError = true,
+    log = true,
     errorHandler = null,
     isHot,
     bindCtxToMethod = false,
@@ -82,15 +82,16 @@ export default function (
     }
 
     try {
+      const rv = ccContext.runtimeVar;
+      rv.log = log;
+
       justTip(`concent version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
       if (errorHandler) ccContext.runtimeHandler.errorHandler = errorHandler;
       ccContext.runtimeHandler.act = act;
-      const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
-      rv.logError = logError;
       rv.computedCompare = computedCompare;
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;

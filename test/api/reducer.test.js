@@ -3,7 +3,7 @@ import { makeStoreConfig } from '../util';
 
 const Foo = 'foo';
 const models = makeStoreConfig(Foo);
-run(models, { logError: false });
+run(models, { log: false });
 
 describe('test top property reducer', () => {
   test('root reducer should include built-in keys', () => {

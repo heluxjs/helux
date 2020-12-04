@@ -7,7 +7,7 @@ describe('test top api configure', () => {
   const models = makeStoreConfig(Foo);
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
   });
 
 

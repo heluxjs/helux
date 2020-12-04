@@ -12,7 +12,7 @@ describe('test top api appendState', () => {
   let testState;
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
     testState = getState('test');
   });
 

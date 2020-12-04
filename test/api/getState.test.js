@@ -5,7 +5,7 @@ const Foo = 'foo';
 
 describe('test top api getState', async () => {
   beforeAll(() => {
-    run(makeStoreConfig('foo'), { logError: false });
+    run(makeStoreConfig('foo'), { log: false });
   });
 
   

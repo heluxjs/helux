@@ -23,7 +23,7 @@ function executeTestLogic(Comp) {
 }
 
 const models = makeStoreConfig('foo');
-run(models, { logError: false });
+run(models, { log: false });
 
 describe('test top property reducer', () => {
   test('call reducer.{moduleName}.{fn} should change function component state', () => {

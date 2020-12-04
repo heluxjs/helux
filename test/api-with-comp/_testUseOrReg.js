@@ -23,7 +23,7 @@ const models = {
     state: { num: 100 },
   },
 };
-const runOptions = { logError: false, act };
+const runOptions = { log: false, act };
 
 function makeComp(isFnComp, regParams, View) {
   const Comp = isFnComp

@@ -7,7 +7,7 @@ describe('test top api setState', async () => {
   let fooState;
 
   beforeAll(() => {
-    run(makeStoreConfig('foo'), { logError: false });
+    run(makeStoreConfig('foo'), { log: false });
     fooState = getState(Foo);
   });
 

@@ -407,7 +407,6 @@ export function makeDispatchHandler(
 
     const paramObjType = typeof paramObj;
     let _type, _cb;
-
     let _module = defaultModule;
 
     const callInvoke = () => {
@@ -415,7 +414,7 @@ export function makeDispatchHandler(
         callerRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, chainId2depth }
       );
       return iHandler(paramObj, payload, _renderKey, _delay);
-    }
+    };
 
     if (paramObjType && paramObjType === 'object') {
       if (Array.isArray(paramObj)) {
@@ -427,9 +426,19 @@ export function makeDispatchHandler(
           return callInvoke();
         }
       } else {
-        const { module, type, cb } = paramObj;
+        const { module, fn, type, cb } = paramObj;
         if (module) _module = module;
-        _type = type;
+        if (fn && fn.__fnName) {
+          _type = fn.__fnName;
+          // 未指定module，才默认走 reducer函数的所属模块
+          if (!module) _module = fn.__stateModule;
+        } else {
+          if (typeof type !== 'string') {
+            catchCcError(new Error('dispatchDesc.type must be string'));
+            return;
+          }
+          _type = type;
+        }
         _cb = cb;
       }
     } else if (paramObjType === 'string' || paramObjType === 'function') {

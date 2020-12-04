@@ -3,7 +3,7 @@ import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
 import { NOT_A_JSON, CU_KEY } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
-const cer = (...args) => runtimeVar.logError && console.error(...args);
+const cer = (...args) => runtimeVar.log && console.error(...args);
 const protoToString = Object.prototype.toString;
 
 export function noop() { }
@@ -195,6 +195,7 @@ export function justWarning(err) {
 }
 
 export function justTip(msg, tipColor = 'green') {
+  if (!runtimeVar.log) return;
   console.log(tipStart('TIP'));
   console.log(`%c${msg}`, `color:${tipColor};border:1px solid ${tipColor};`);
 }

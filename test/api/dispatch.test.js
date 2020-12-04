@@ -8,7 +8,7 @@ describe('test top api dispatch', () => {
   let fooState;
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
     fooState = getState(Foo);
   });
 

@@ -283,6 +283,8 @@ declare function refCtxDispatch<RdFn extends IReducerFn>
   (type: RdFn, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn, FullState extends IAnyObj = {}>
   (type: { module?: string, fn: RdFn, cb?: (state: FullState) => void }, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
+declare function refCtxDispatch<RdFn extends IReducerFn, FullState extends IAnyObj = {}>
+  (type: { module?: string, type: string, cb?: (state: FullState) => void }, payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 declare function refCtxDispatch<RdFn extends IReducerFn>
   (type: [string, RdFn], payload?: (Parameters<RdFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<RdFn>>;
 
@@ -911,7 +913,7 @@ export interface RunOptions {
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false
   isStrict?: boolean;
-  logError?: boolean; // if print error message with console.error, default is true
+  log?: boolean; // if print error message with console.error, default is true
   act?: IAnyFn; // avoid act warning in test mode
   errorHandler?: (err: Error) => void;
   bindCtxToMethod?: boolean;// default false

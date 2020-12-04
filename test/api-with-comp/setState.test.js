@@ -4,7 +4,7 @@ import { getTestModels } from '../util';
 import * as tcs from '../ctx/_testChangeState'
 
 const models = getTestModels();
-run(models, { logError: false, act });
+run(models, { log: false, act });
 const module = 'test';
 
 describe('', ()=>{

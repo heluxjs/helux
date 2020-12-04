@@ -8,7 +8,7 @@ const models = getTestModels();
 const errList = [];
 
 run(models, {
-  logError: false,
+  log: false,
   isStrict: true,
   errorHandler: (err) => {
     errList.push(err);

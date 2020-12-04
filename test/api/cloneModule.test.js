@@ -9,7 +9,7 @@ describe('test top api cloneModule', () => {
   const models = makeStoreConfig(Foo);
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
   });
 
   test('clone non-existing source module is not allowed', () => {

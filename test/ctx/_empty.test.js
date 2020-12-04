@@ -9,7 +9,7 @@ import { okeys } from '../../src/support/util';
 import { getTestModels } from '../util';
 
 const models = getTestModels();
-run(models, { logError: false });
+run(models, { log: false });
 
 
 describe('test ctx api ', () => {

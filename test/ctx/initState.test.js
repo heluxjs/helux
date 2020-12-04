@@ -5,7 +5,7 @@ import { run, useConcent, getState, register } from '../../src/index';
 import { getTestModels, mountCompThenAssertValue, makeComp } from '../util';
 
 const models = getTestModels();
-run(models, { logError: false });
+run(models, { log: false });
 
 
 describe('test ctx api initState', () => {

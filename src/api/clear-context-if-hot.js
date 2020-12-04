@@ -123,7 +123,7 @@ export default function (clearAll = false) {
   if (ccContext.isStartup) {
     if (ccContext.isHotReloadMode()) {
       if (clearAll) {
-        console.warn(`attention: make sure [[clearContextIfHot]] been called before app rendered!`);
+        if (ccContext.runtimeVar.log) console.warn(`attention: make sure [[clearContextIfHot]] been called before app rendered!`);
         justCalledByStartUp = true;
         return _clearAll();
         // return ccFragKeys;

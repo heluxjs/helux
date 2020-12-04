@@ -7,7 +7,7 @@ describe('test top api getComputed', async () => {
   const models = makeStoreConfig('foo');
 
   beforeAll(() => {
-    run(models, { logError: false });
+    run(models, { log: false });
   });
 
   

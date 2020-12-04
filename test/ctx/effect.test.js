@@ -6,7 +6,7 @@ import { okeys } from '../../src/support/util';
 import { getTestModels, mountCompThenAssertValue } from '../util';
 
 const models = getTestModels();
-run(models, { logError: false });
+run(models, { log: false });
 
 
 export function makeComp(module, setup) {

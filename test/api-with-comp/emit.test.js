@@ -5,7 +5,7 @@ import { run, useConcent, emit, register } from '../../src/index';
 import { makeStoreConfig, delay } from '../util';
 
 
-run(makeStoreConfig('foo'), { logError: false });
+run(makeStoreConfig('foo'), { log: false });
 
 describe('test top api emit with react component', () => {
   test('emit should have effect on function component', async () => {
