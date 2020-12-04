@@ -8,45 +8,45 @@ import * as tcs from './_testChangeState'
 const models = getTestModels();
 run(models, { logError: false, act });
 
-describe('test ctx api setState', () => {
+describe('test ctx api setModuleState', () => {
   test('pass empty state should do nothing', () => {
-    tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.setState());
+    tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.setModuleState());
   });
 
 
   test('pass valid state should trigger comp-ins re-render', () => {
-    tcs.testPassInvalidState((/** @type Ctx*/ctx) => () => ctx.setState({ name: Date.now() }));
+    tcs.testPassInvalidState((/** @type Ctx*/ctx) => () => ctx.setModuleState(ctx.module, { name: Date.now() }));
   });
 
 
   test('pass state and cb, cb should be called, cb state param should be updated', () => {
     tcs.testPassInvalidStateAndCb((/** @type Ctx*/ctx) => () => {
       const name = Date.now();
-      ctx.setState({ name }, (state) => {
+      ctx.setModuleState(ctx.module, { name }, (state) => {
         expect(name).toBe(state.name);
-        ctx.setState({ age: 22 });
+        ctx.setModuleState(ctx.module, { age: 22 });
       });
     });
   });
 
 
   test('renderKey should work', async () => {
-    await tcs.testRenderKey((ctx, toUpdate, bookId) => () => {
-      ctx.setState(toUpdate, null, bookId);
+    await tcs.testRenderKey((/** @type Ctx*/ctx, toUpdate, bookId) => () => {
+      ctx.setModuleState(ctx.module, toUpdate, null, bookId);
     });
   });
 
 
   test('renderKey and delay should work for item click', async () => {
-    await tcs.testDelayForItemClick((ctx, toUpdate, bookId) => () => {
-      ctx.setState(toUpdate, null, bookId, 500);
+    await tcs.testDelayForItemClick((/** @type Ctx*/ctx, toUpdate, bookId) => () => {
+      ctx.setModuleState(ctx.module, toUpdate, null, bookId, 500);
     });
   });
 
 
   test('renderKey should work for container click', async () => {
-    await tcs.testRenderKeyForContainerClick((ctx, toUpdate, bookId) => () => {
-      ctx.setState(toUpdate, null, bookId);
+    await tcs.testRenderKeyForContainerClick((/** @type Ctx*/ctx, toUpdate, bookId) => () => {
+      ctx.setModuleState(ctx.module, toUpdate, null, bookId);
     });
   });
 });

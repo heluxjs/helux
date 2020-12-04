@@ -1,4 +1,4 @@
 
 export default {
-  errorHandler: null,
+  errorHandler: (err) => { throw err },
 }

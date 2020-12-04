@@ -5,22 +5,27 @@ import { run, getState, useConcent } from '../../src/index';
 import { getTestModels, mountCompThenAssertH2Value as mountCompThenAssertValue, makeComp } from '../util';
 
 const models = getTestModels();
-run(models, { logError: false, isStrict: true });
+const errList = [];
+
+run(models, {
+  logError: false,
+  isStrict: true,
+  errorHandler: (err) => {
+    errList.push(err);
+  },
+});
 
 
 describe('test ctx api computed', () => {
   test('computed should only been called in setup block', () => {
-    try {
-      const CompFn = () => {
-        const { computed, refComputed: rcu } = useConcent({ state: { num: 1 } });
-        computed('doubleNum', ({ num }) => num * 2);
-        return <h1>{rcu.doubleNum}</h1>
-      };
-      mount(<CompFn />);
-    } catch (err) {
-      // this error will been throwed in strict mode
-      expect(err.message).toMatch(/(?=ref computed must been called in setup block)/);
-    }
+    const CompFn = () => {
+      const { computed, refComputed: rcu } = useConcent({ state: { num: 1 } });
+      computed('doubleNum', ({ num }) => num * 2);
+      return <h1>{rcu.doubleNum}</h1>
+    };
+    const warp = mount(<CompFn />);
+    expect(warp.find('h1').text()).toBeFalsy();
+    expect(errList[0].message).toMatch(/(?=ref computed must been called in setup block)/);
   });
 
   const testlogic1 = (setup) => {

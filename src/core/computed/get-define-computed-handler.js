@@ -1,6 +1,8 @@
 import configureDepFns from '../base/configure-dep-fns';
 import { CATE_REF, FN_CU } from '../../support/constant';
+import ccContext from '../../cc-context';
 
+const { runtimeHandler } = ccContext
 
 export default function (refCtx) {
   return (computedItem, computedHandler, depKeysOrOpt) => {
@@ -11,6 +13,10 @@ export default function (refCtx) {
     };
 
     refCtx.__$$cuOrWaCalled = true;
-    configureDepFns(CATE_REF, confMeta, computedItem, computedHandler, depKeysOrOpt);
+    try {
+      configureDepFns(CATE_REF, confMeta, computedItem, computedHandler, depKeysOrOpt);
+    } catch (err) {
+      runtimeHandler.errorHandler(err);
+    }
   };
 }

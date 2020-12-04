@@ -85,7 +85,7 @@ export default function (
       justTip(`concent version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
-      ccContext.runtimeHandler.errorHandler = errorHandler;
+      if (errorHandler) ccContext.runtimeHandler.errorHandler = errorHandler;
       ccContext.runtimeHandler.act = act;
       const rv = ccContext.runtimeVar;
       rv.isStrict = isStrict;
