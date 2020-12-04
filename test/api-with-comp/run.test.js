@@ -43,14 +43,13 @@ run({
   test3: {
     state: { num: 0 },
     lifecycle: {
-      // this will cause use act warning, so use initState + initStateDone to mock initState return new state
       async initState() {
         await delay(1000);
         return { num: 100 };
       },
     },
   },
-}, { logError: false, act }); // pass act to runOptions to avoid act warning when call initState in test mode
+}, { logError: false, act }); // pass act to runOptions to avoid act warning in test mode
 
 describe('test top api run with react component', () => {
   test('when a fisrt ins of class component mounted, it should trigger lifecyle.mounted only one time', () => {

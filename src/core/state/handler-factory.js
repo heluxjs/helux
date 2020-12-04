@@ -24,6 +24,7 @@ const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer },
   computed: { _computedValue },
+  runtimeHandler,
 } = ccContext;
 const me = makeError;
 const vbi = verboseInfo;
@@ -496,7 +497,7 @@ export function makeModuleDispatcher(module) {
 
 // for moduleConf.init(legency) moduleConf.lifecycle.initState(v2.9+)
 export function makeSetStateHandler(module, initStateDone) {
-  const handler = state => {
+  return state => {
     const execInitDoneWrap = () => initStateDone && initStateDone(makeModuleDispatcher(module), getState(module));
     try {
       if (!state) return void execInitDoneWrap();
@@ -518,12 +519,6 @@ export function makeSetStateHandler(module, initStateDone) {
       execInitDoneWrap();
     }
   };
-
-  const act = ccContext.runtimeHandler.act;
-  if (act) {
-    return (state) => act(() => handler(state));
-  }
-  return handler;
 }
 
 export const makeRefSetState = (ref) => (partialState, cb) => {
@@ -535,13 +530,20 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
   // 让ctx.state始终保持同一个引用，使setup里可以安全的解构state反复使用
   ctx.state = Object.assign(ctx.state, partialState);
 
-  if (ctx.type === CC_HOOK) {
-    ctx.__boundSetState(newState);
-    cbNewState();
-  } else {
-    // 此处注意原始的react class setSate [,callback] 不会提供latestState
-    ctx.__boundSetState(partialState, cbNewState);
-  }
+  const act = runtimeHandler.act;
+  const update = ()=>{
+    if (ctx.type === CC_HOOK) {
+      ctx.__boundSetState(newState);
+      cbNewState();
+    } else {
+      // 此处注意原始的react class setSate [,callback] 不会提供latestState
+      ctx.__boundSetState(partialState, cbNewState);
+    }
+  };
+
+  // for rest-test-utils
+  if (act) act(update);
+  else update();
 }
 
 export const makeRefForceUpdate = (ref) => (cb) => {

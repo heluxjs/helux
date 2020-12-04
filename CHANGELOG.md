@@ -1,8 +1,9 @@
 #### 2020-12-03
 2.10.3 发布
 - feature: 支持传入`react-dom/test-utils`的`act`句柄给`RunOptions.act`参数，避免测试模式提示act警告
-- fix: `lifecycle.willUnmount`未能正确工作
-- fix: `lifecycle.initStateDone`当未定义`lifecycle.initState`时未能正确工作
+- fix: `lifecycle.willUnmount`未能正确工作【detected by test】
+- fix: `lifecycle.initStateDone`当未定义`lifecycle.initState`时未能正确工作【detected by test】
+- fix: `setState`在只更新模块状态时，回调未被执行【detected by test】
 
 #### 2020-11-30
 2.10.2 发布

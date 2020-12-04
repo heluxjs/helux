@@ -147,7 +147,7 @@ export default function startTest(describeTitle, isFnComp = true) {
     });
 
 
-  test('no matter how regParams like, comp should read global state and global computed', () => {
+  test('no matter how regParams like, comp should read global state and global computed correctly', () => {
     const Comp = makeComp(isFnComp, null, ({ ctx: { globalState, globalComputed } }) => {
       return (
         <div>

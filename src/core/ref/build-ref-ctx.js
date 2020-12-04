@@ -171,9 +171,9 @@ export default function (ref, params, liteLevel = 5) {
   const moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true);
 
   // declare cc state series api
-  const changeState = (state, option) => {
-    changeRefState(state, option, ref);
-  }
+  const changeState = (state, options) => {
+    changeRefState(state, options, ref);
+  };
   const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
     changeState(state, { calledBy, module, renderKey, delay, reactCallback });
   };
@@ -183,13 +183,14 @@ export default function (ref, params, liteLevel = 5) {
   const setState = (p1, p2, p3, p4, p5) => {
     const p1Type = typeof p1;
     if (p1Type === 'string') {
-      //p1: module, p2: state, p3: cb, p4: rkey, p5: delay
+      // p1: module, p2: state, p3: cb, p4: rkey, p5: delay
       setModuleState(p1, p2, p3, p4, p5);
     } else if (p1Type === 'function') {
+      // p1: stateFn, p2: rkey, p3: delay
       const newState = p1(Object.assign({}, ctx.unProxyState), ctx.props);
       _setState(stateModule, newState, SET_STATE, p2, p3, p4);
     } else {
-      //p1: state, p2: cb, p3: rkey, p4: delay
+      // p1: state, p2: cb, p3: rkey, p4: delay
       _setState(stateModule, p1, SET_STATE, p2, p3, p4);
     }
   };
@@ -312,7 +313,7 @@ export default function (ref, params, liteLevel = 5) {
       return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
     },
 
-    // below only can be called by cc or updated by cc in existed period, not expose in d.ts
+    // below methods only can be called by cc or updated by cc in existed period, not expose in d.ts
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
     __$$settedList: [],//[{module:string, keys:string[]}, ...]

@@ -1,3 +1,4 @@
+/** @typedef {import('enzyme').ReactWrapper<any, Readonly<{}>} Wrap */
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { mount } from 'enzyme';
@@ -10,7 +11,14 @@ export function getTestModels() {
       state: {
         name: 'name',
         age: 18,
-      }
+        books: [
+          { id:1, name: 'concent', author: 'zzk', publishTime: '2019' },
+          { id:2, name: 'concent-lite', author: 'fancy', publishTime: '2020' },
+        ],
+      },
+      computed: {
+        bookMap: ({ books }) => books.reduce((map, item) => { map[item.id] = item; return map }, {}),
+      },
     }
   };
 }
@@ -74,7 +82,11 @@ export function makeComp(module, setup) {
     const { refComputed: rcu, state } = useConcent({ module, setup });
     return (
       <div>
-        {okeys(state).map(key => <h1 key={key} className={key}>{state[key]}</h1>)}
+        {okeys(state).map(key => {
+          const val = state[key];
+          if (typeof val === 'object') return '';
+          return <h1 key={key} className={key}>{state[key]}</h1>;
+        })}
         {okeys(rcu).map(key => <h2 key={key} className={key}>{rcu[key]}</h2>)}
       </div>
     );
@@ -85,7 +97,11 @@ export function makeComp(module, setup) {
         const { refComputed: rcu, state } = this.ctx;
         return (
           <div>
-            {okeys(state).map(key => <h1 key={key} className={key}>{state[key]}</h1>)}
+            {okeys(state).map(key => {
+              const val = state[key];
+              if (typeof val === 'object') return '';
+              return <h1 key={key} className={key}>{state[key]}</h1>;
+            })}
             {okeys(rcu).map(key => <h2 key={key} className={key}>{rcu[key]}</h2>)}
           </div>
         );
@@ -129,3 +145,11 @@ export function mountCompThenAssertValue(Comp, compareItems, options = {}) {
 export function mountCompThenAssertH2Value(Comp, compareItems) {
   mountCompThenAssertValue(Comp, compareItems, { nodeName: 'h2' })
 }
+
+export function toNum(str) {
+  return parseInt(str, 10);
+}
+
+export function getWrapNum(/** @type Wrap */wrap, selector) {
+  return toNum(wrap.find(selector).text());
+};
