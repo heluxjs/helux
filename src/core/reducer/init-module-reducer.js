@@ -28,11 +28,11 @@ export default function (module, reducer = {}) {
   const reducerFnNames = util.okeys(newReducer);
   reducerFnNames.forEach(name => {
     // avoid hot reload
-    if (!fnNames.includes(name)) fnNames.push(name);
+    util.noDupPush(fnNames, name);
     const fullFnName = `${module}/${name}`;
     const list = util.safeGetArray(_fnName2fullFnNames, name);
     // avoid hot reload
-    if (!list.includes(fullFnName)) list.push(fullFnName);
+    util.noDupPush(list, fullFnName);
 
     subReducerCaller[name] = (payload, renderKeyOrOptions, delay) =>
       dispatch(fullFnName, payload, renderKeyOrOptions, delay);
