@@ -35,7 +35,7 @@ export default function (module, config = {}) {
     }
     const { state, reducer, computed, watch } = config;
     const eState = evalState(state);
-    if (typeof state === 'function') ccContext.moduleName_stateFn_[module] = state;
+    if (typeof state === 'function') ccContext.moduleName2stateFn[module] = state;
 
     initModuleState(module, eState, true);
     initModuleReducer(module, reducer);

@@ -9,7 +9,7 @@ export default function (module, reducer = {}) {
   }
 
   const {
-    _reducer, _caller, _fnName_fullFnNames_, _module_fnNames_,
+    _reducer, _caller, _fnName2fullFnNames, _module2fnNames,
     // _reducerRefCaller, _lazyReducerRefCaller,
   } = ccContext.reducer;
 
@@ -20,7 +20,7 @@ export default function (module, reducer = {}) {
   const subReducerCaller = util.safeGet(_caller, module);
   // const subReducerRefCaller = util.safeGet(_reducerRefCaller, module);
 
-  const fnNames = util.safeGetArray(_module_fnNames_, module);
+  const fnNames = util.safeGetArray(_module2fnNames, module);
 
   // 自动附加一个setState在reducer里
   if (!newReducer.setState) newReducer.setState = payload => payload;
@@ -30,7 +30,7 @@ export default function (module, reducer = {}) {
     // avoid hot reload
     if (!fnNames.includes(name)) fnNames.push(name);
     const fullFnName = `${module}/${name}`;
-    const list = util.safeGetArray(_fnName_fullFnNames_, name);
+    const list = util.safeGetArray(_fnName2fullFnNames, name);
     // avoid hot reload
     if (!list.includes(fullFnName)) list.push(fullFnName);
 

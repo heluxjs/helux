@@ -4,10 +4,10 @@ import * as util from '../../support/util';
 
 export default function () {
   const refs = [];
-  const ccUKey_ref_ = ccContext.ccUKey_ref_;
-  const ccKeys = util.okeys(ccUKey_ref_);
+  const ccUKey2ref = ccContext.ccUKey2ref;
+  const ccKeys = util.okeys(ccUKey2ref);
   ccKeys.forEach(k => {
-    const ref = ccUKey_ref_[k];
+    const ref = ccUKey2ref[k];
     if (ref && !ref.__$$isUnmounted) refs.push(ref);
   });
   return refs;

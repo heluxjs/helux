@@ -2,7 +2,7 @@ import * as util from '../../support/util';
 import { MOUNTED } from '../../support/constant';
 import ccContext from '../../cc-context';
 
-const { event_handlers_, handlerKey_handler_, ccUKey_handlerKeys_, ccUKey_ref_} = ccContext;
+const { event2handlers, handlerKey2handler, ccUKey2handlerKeys, ccUKey2ref} = ccContext;
 const { makeHandlerKey, safeGetArray, justWarning } = util;
 
 function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
@@ -11,7 +11,7 @@ function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
   const _identity = identity == undefined ? null : identity;
 
   // 查找的时候，只负责取，不负责隐式的生成，此次不需要用safeGetArray
-  const handlers = event_handlers_[event];
+  const handlers = event2handlers[event];
   if (handlers) {
     let filteredHandlers = handlers;
 
@@ -35,36 +35,36 @@ function _deleteEventHandlers(handlers) {
   const toDeleteEventNames = [];
   handlers.forEach(item => {
     const { handlerKey, ccUniqueKey, event } = item;
-    delete handlerKey_handler_[handlerKey];//delete mapping of handlerKey_handler_;
+    delete handlerKey2handler[handlerKey];//delete mapping of handlerKey2handler;
     toDeleteHandlerKeyMap[handlerKey] = 1;
     toDeleteCcUniqueKeyMap[ccUniqueKey] = 1;
     if (!toDeleteEventNames.includes(event)) toDeleteEventNames.push(event);
   });
 
   toDeleteEventNames.forEach(event => {
-    const eHandlers = event_handlers_[event];
+    const eHandlers = event2handlers[event];
     if (eHandlers) {
       eHandlers.forEach((h, idx) => {
         const { ccUniqueKey } = h;
         if (toDeleteCcUniqueKeyMap[ccUniqueKey] === 1) {
           eHandlers[idx] = null;
-          delete ccUKey_handlerKeys_[ccUniqueKey];//delete mapping of ccUKey_handlerKeys_;
+          delete ccUKey2handlerKeys[ccUniqueKey];//delete mapping of ccUKey2handlerKeys;
         }
       });
-      event_handlers_[event] = eHandlers.filter(v => v !== null);//delete eHandlers null element
+      event2handlers[event] = eHandlers.filter(v => v !== null);//delete eHandlers null element
     }
   });
 }
 
 
 export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler) {
-  const handlers = safeGetArray(event_handlers_, event);
+  const handlers = safeGetArray(event2handlers, event);
   if (typeof handler !== 'function') {
     return justWarning(`event ${event}'s handler is not a function!`);
   }
 
   const handlerKey = makeHandlerKey(ccUniqueKey, event, identity);
-  const handlerKeys = safeGetArray(ccUKey_handlerKeys_, ccUniqueKey);
+  const handlerKeys = safeGetArray(ccUKey2handlerKeys, ccUniqueKey);
   const targetHandlerIndex = handlers.findIndex(v => v.handlerKey === handlerKey);
   // user call ctx.on for a same event in a same instance more than once
   const handlerItem = { event, module, ccClassKey, ccUniqueKey, identity, handlerKey, fn: handler };
@@ -75,7 +75,7 @@ export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, eve
     handlers.push(handlerItem);
     handlerKeys.push(handlerKey);
   }
-  handlerKey_handler_[handlerKey] = handlerItem;
+  handlerKey2handler[handlerKey] = handlerItem;
 }
 
 export function findEventHandlersToPerform(event, ...args) {
@@ -94,11 +94,11 @@ export function findEventHandlersToPerform(event, ...args) {
 
   const handlers = _findEventHandlers(_event, _module, _ccClassKey, _ccUniqueKey, _identity);
   handlers.forEach(({ ccUniqueKey, handlerKey }) => {
-    const ref = ccUKey_ref_[ccUniqueKey];
+    const ref = ccUKey2ref[ccUniqueKey];
     if (ref && handlerKey) {//  confirm the instance is mounted and handler is not been offed
       if (ref.__$$isUnmounted) return;
 
-      const handler = handlerKey_handler_[handlerKey];
+      const handler = handlerKey2handler[handlerKey];
       if (handler) {
         if (canPerform && !canPerform(ref)) {
           return;
@@ -115,10 +115,10 @@ export function findEventHandlersToOff(event, { module, ccClassKey, ccUniqueKey,
 }
 
 export function offEventHandlersByCcUniqueKey(ccUniqueKey) {
-  const handlerKeys = ccUKey_handlerKeys_[ccUniqueKey];
+  const handlerKeys = ccUKey2handlerKeys[ccUniqueKey];
   if (handlerKeys) {
     const toDeleteHandlers = [];
-    handlerKeys.forEach(k => toDeleteHandlers.push(handlerKey_handler_[k]));
+    handlerKeys.forEach(k => toDeleteHandlers.push(handlerKey2handler[k]));
     _deleteEventHandlers(toDeleteHandlers);
   }
 }

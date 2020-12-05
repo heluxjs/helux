@@ -30,7 +30,7 @@ export default (newModule, existingModule, moduleOverideConf = {}) => {
   checker.checkModuleNameBasically(newModule);
   checker.checkModuleName(existingModule, false);
 
-  const stateFn = ccContext.moduleName_stateFn_[existingModule];
+  const stateFn = ccContext.moduleName2stateFn[existingModule];
   if (!stateFn) {
     throw new Error(`target module[${existingModule}] state must be a function when use cloneModule`);
   }

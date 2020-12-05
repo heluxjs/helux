@@ -50,7 +50,7 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
     }
 
     if (module === '*') {
-      const fullFnNames = ccContext.reducer._fnName_fullFnNames_[fnName];
+      const fullFnNames = ccContext.reducer._fnName2fullFnNames[fnName];
       if (!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {

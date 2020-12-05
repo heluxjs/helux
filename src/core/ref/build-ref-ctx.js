@@ -19,7 +19,7 @@ import __sync from '../base/sync';
 import { getStoredKeys } from '../param/extractor';
 
 const {
-  reducer: { _caller, _module_fnNames_ },
+  reducer: { _caller, _module2fnNames },
   refStore, getModuleStateKeys,
   store: { getState, getModuleVer },
 } = ccContext;
@@ -85,7 +85,7 @@ function makeProxyReducer(m, dispatch) {
   // 此处代理对象仅用于log时可以打印出目标模块reducer函数集合
   return new Proxy((_caller[m] || {}), {
     get: (target, fnName) => {
-      const fnNames = _module_fnNames_[m];
+      const fnNames = _module2fnNames[m];
       if (fnNames.includes(fnName)) {
         return (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
       } else {

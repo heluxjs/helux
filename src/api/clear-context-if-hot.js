@@ -13,11 +13,11 @@ let justCalledByStartUp = false;
 function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   clearCuRefer();
   clearCount();
-  clearObject(ccContext.event_handlers_);
-  clearObject(ccContext.ccUKey_handlerKeys_);
-  const ccUKey_ref_ = ccContext.ccUKey_ref_;
-  clearObject(ccContext.handlerKey_handler_);
-  clearObject(ccUKey_ref_, otherExcludeKeys);
+  clearObject(ccContext.event2handlers);
+  clearObject(ccContext.ccUKey2handlerKeys);
+  const ccUKey2ref = ccContext.ccUKey2ref;
+  clearObject(ccContext.handlerKey2handler);
+  clearObject(ccUKey2ref, otherExcludeKeys);
   // 此处故意设置和原来的版本相差几位的数字，
   // 防止resetClassInsUI调用时类组件实例的版本和模块是相同的
   // 导致ui更新未同步到store最新数据
@@ -57,7 +57,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
     setTimeout(() => {
       replaceMV(lockedMV);
       otherExcludeKeys.forEach(key => {
-        const ref = ccUKey_ref_[key];
+        const ref = ccUKey2ref[key];
         ref && ref.ctx.reactForceUpdate();
       });
     }, 0);
@@ -65,11 +65,11 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
 }
 
 function _pickNonCustomizeIns() {
-  const ccUKey_ref_ = ccContext.ccUKey_ref_;
+  const ccUKey2ref = ccContext.ccUKey2ref;
   const ccFragKeys = [];
   const ccClassInsKeys = [];
-  okeys(ccUKey_ref_).forEach(refKey => {
-    const ref = ccUKey_ref_[refKey];
+  okeys(ccUKey2ref).forEach(refKey => {
+    const ref = ccUKey2ref[refKey];
     if (ref && ref.__$$ms === MOUNTED) {
       const { type } = ref.ctx;
       if (type === CC_CLASS) ccClassInsKeys.push(refKey);
@@ -94,21 +94,21 @@ function _clearAll() {
   clearObject(ccContext.middlewares);
 
   // class组件实例的依赖要保留，因为它的ref不再被清除（不像function组件那样能在热重载期间能够再次触发unmount和mount）
-  const waKey_uKeyMap_ = ccContext.waKey_uKeyMap_;
-  okeys(waKey_uKeyMap_).forEach(waKey => {
-    const uKeyMap = waKey_uKeyMap_[waKey];
+  const waKey2uKeyMap = ccContext.waKey2uKeyMap;
+  okeys(waKey2uKeyMap).forEach(waKey => {
+    const uKeyMap = waKey2uKeyMap[waKey];
     const newUKeyMap = {};
     okeys(uKeyMap).forEach(uKey => {
       if (uKey.startsWith(CC_CLASS)) {
         newUKeyMap[uKey] = uKeyMap[uKey];
       }
     });
-    waKey_uKeyMap_[waKey] = newUKeyMap;
+    waKey2uKeyMap[waKey] = newUKeyMap;
   });
 
   clearObject(ccContext.lifecycle._mountedOnce);
   clearObject(ccContext.lifecycle._willUnmountOnce);
-  clearObject(ccContext.module_insCount_, [], 0);
+  clearObject(ccContext.module2insCount, [], 0);
   clearCachedData();
   const { ccClassInsKeys } = _pickNonCustomizeIns();
   return _clearInsAssociation(false, ccClassInsKeys);

@@ -10,16 +10,16 @@ const ignoreIt = `if this message doesn't matter, you can ignore it`;
  * pick one ccInstance ref randomly
  */
 export default function (module, mustBelongToModule = false) {
-  const { ccUKey_ref_ } = ccContext;
+  const { ccUKey2ref } = ccContext;
 
   let oneRef = null;
   if (module) {
     checkModuleName(module, false);
-    const ukeys = okeys(ccUKey_ref_);
+    const ukeys = okeys(ccUKey2ref);
     const len = ukeys.length;
     for (let i = 0; i < len; i++) {
       /** @type {{ctx:ICtxBase}} */
-      const ref = ccUKey_ref_[ukeys[i]];
+      const ref = ccUKey2ref[ukeys[i]];
       if (ref.ctx.module === module) {
         oneRef = ref;
         break;

@@ -18,7 +18,7 @@ import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
 import isStrict from './is-strict';
 
-const { ccUKey_ref_ } = ccContext;
+const { ccUKey2ref } = ccContext;
 const cursor2hookCtx = {};
 let refCursor = 1;
 
@@ -133,7 +133,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     hookCtx.regOpt = _registerOption;
     hookRef = cref();
   } else {
-    hookRef = ccUKey_ref_[hookCtx.ccUKey];
+    hookRef = ccUKey2ref[hookCtx.ccUKey];
     if (!hookRef) {// single file demo in hot reload mode
       hookRef = cref();
     } else {
@@ -156,7 +156,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
 
     // mock componentWillUnmount
     return () => {
-      const toUnmountRef = ccUKey_ref_[getHookCtxCcUKey(hookCtx)];
+      const toUnmountRef = ccUKey2ref[getHookCtxCcUKey(hookCtx)];
       hookCtx.prevCcUKey = null;
       if (toUnmountRef) {
         beforeUnmount(toUnmountRef);
@@ -169,7 +169,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   effectHandler(() => {
     replaceSetter(refCtx, hookSetter);
     // 热加载模式下会触发卸载，这里需要核实ccUKey_ref_
-    if (!hookRef.isFirstRendered && ccUKey_ref_[getHookCtxCcUKey(hookCtx)]) {// mock componentDidUpdate
+    if (!hookRef.isFirstRendered && ccUKey2ref[getHookCtxCcUKey(hookCtx)]) {// mock componentDidUpdate
       didUpdate(hookRef);
     } else {// mock componentDidMount
       hookRef.isFirstRendered = false;

@@ -3,12 +3,12 @@
 import { makeCuPackedValue, okeys, delay } from '../../support/util';
 import * as cst from '../../support/constant';
 import * as waKeyMap from '../../cc-context/wakey-ukey-map';
-import ccUKey_ref_ from '../../cc-context/refs';
+import ccUKey2ref from '../../cc-context/refs';
 import runtimeHandler from '../../cc-context/runtime-handler';
 import { CATE_REF } from '../../support/constant';
 import { send } from '../plugin/index';
 
-const { waKey_uKeyMap_, waKey_staticUKeyMap_ } = waKeyMap;
+const { waKey2uKeyMap, waKey2staticUKeyMap } = waKeyMap;
 
 function triggerReRender(ref) {
   if (!ref) return;
@@ -70,12 +70,12 @@ export default async function executeCuInfo(cuInfo) {
       stateKeys.forEach(stateKey => {
         const waKey = `${module}/${stateKey}`;
         // 利用assign不停的去重
-        Object.assign(uKeyMap, waKey_uKeyMap_[waKey], waKey_staticUKeyMap_[waKey]);
+        Object.assign(uKeyMap, waKey2uKeyMap[waKey], waKey2staticUKeyMap[waKey]);
       });
       const uKeys = okeys(uKeyMap);
 
       uKeys.forEach(refKey => {
-        triggerReRender(ccUKey_ref_[refKey]);
+        triggerReRender(ccUKey2ref[refKey]);
       });
     } else {
       triggerReRender(ref);

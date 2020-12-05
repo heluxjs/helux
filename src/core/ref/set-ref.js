@@ -4,12 +4,12 @@ import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
 const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
-const { runtimeVar, ccUKey_ref_ } = ccContext;
+const { runtimeVar, ccUKey2ref } = ccContext;
 let ccUKey2insCount = {};
 
 function setCcInstanceRef(ccUniqueKey, ref, delayMs) {
   const setRef = () => {
-    ccUKey_ref_[ccUniqueKey] = ref;
+    ccUKey2ref[ccUniqueKey] = ref;
   }
 
   if (ccContext.isHotReloadMode()) incCcKeyInsCount(ccUniqueKey);
@@ -44,7 +44,7 @@ export default function (ref) {
   }
 
   const isHot = ccContext.isHotReloadMode();
-  if (ccUKey_ref_[ccUniqueKey]) {
+  if (ccUKey2ref[ccUniqueKey]) {
     const dupErr = () => {
       throw me(ERR.CC_CLASS_INSTANCE_KEY_DUPLICATE, vbi(`ccClass:${ccClassKey},ccKey:${ccKey}`));
     }

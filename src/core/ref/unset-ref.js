@@ -3,8 +3,8 @@ import { decCcKeyInsCount } from './set-ref';
 import { styleStr, color } from '../../support/util';
 
 const {
-  ccUKey_ref_, ccUKey_handlerKeys_, runtimeVar,
-  handlerKey_handler_,
+  ccUKey2ref, ccUKey2handlerKeys, runtimeVar,
+  handlerKey2handler,
 } = ccContext;
 
 export default function (ccUniqueKey) {
@@ -12,13 +12,13 @@ export default function (ccUniqueKey) {
     console.log(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
   }
 
-  delete ccUKey_ref_[ccUniqueKey];
+  delete ccUKey2ref[ccUniqueKey];
   if (ccContext.isHotReloadMode()) decCcKeyInsCount(ccUniqueKey);
 
-  const handlerKeys = ccUKey_handlerKeys_[ccUniqueKey];
+  const handlerKeys = ccUKey2handlerKeys[ccUniqueKey];
   if (handlerKeys) {
     handlerKeys.forEach(hKey => {
-      delete handlerKey_handler_[hKey];
+      delete handlerKey2handler[hKey];
     });
   }
 }

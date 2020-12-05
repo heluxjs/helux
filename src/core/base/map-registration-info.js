@@ -8,7 +8,7 @@ import * as util from '../../support/util';
 import { MODULE_DEFAULT } from '../../support/constant';
 
 const {
-  ccClassKey_ccClassContext_,
+  ccClassKey2Context,
 } = ccContext;
 
 function checkCcStartupOrNot() {
@@ -39,11 +39,11 @@ export default function (
 
   // 此处再次获得真正的renderKeyClasses
   const _renderKeyClasses = getRenderKeyClasses(_ccClassKey, regRenderKeyClasses);
-  let ccClassContext = ccClassKey_ccClassContext_[_ccClassKey];
+  let ccClassContext = ccClassKey2Context[_ccClassKey];
   //做一个判断，有可能是热加载调用
   if (!ccClassContext) {
     ccClassContext = util.makeCcClassContext(module, _ccClassKey, _renderKeyClasses);
-    ccClassKey_ccClassContext_[_ccClassKey] = ccClassContext;
+    ccClassKey2Context[_ccClassKey] = ccClassContext;
   }
 
   return { _module: module, _connect, _ccClassKey, _watchedKeys };

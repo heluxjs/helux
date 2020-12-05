@@ -2,16 +2,16 @@
 import ccContext from '../../cc-context';
 import { okeys } from '../../support/util';
 
-const { ccUKey_ref_ } = ccContext;
+const { ccUKey2ref } = ccContext;
 
 export default function (ccClassKey) {
   const refs = [];
-  const ukeys = okeys(ccUKey_ref_);
+  const ukeys = okeys(ccUKey2ref);
   const len = ukeys.length;
 
   for (let i = 0; i < len; i++) {
     /** @type {{ctx:ICtxBase}} */
-    const ref = ccUKey_ref_[ukeys[i]];
+    const ref = ccUKey2ref[ukeys[i]];
     if (ref.ctx.ccClassKey === ccClassKey) {
       refs.push(ref);
     }

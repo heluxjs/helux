@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 
 // 依赖收集写入的映射
-export const waKey_uKeyMap_ = {};
+export const waKey2uKeyMap = {};
 
 // 依赖标记写入的映射，是一个实例化完成就会固化的依赖
 // 不采取一开始映射好全部waKey的形式，而是采用safeGet动态添加map映射
-export const waKey_staticUKeyMap_ = {};
+export const waKey2staticUKeyMap = {};
 
 function _mapIns(mapContainer, waKey, ccUniqueKey) {
   try {
@@ -22,11 +22,11 @@ export function makeWaKey(module, stateKey) {
 }
 
 export function mapIns(module, stateKey, ccUniqueKey) {
-  _mapIns(waKey_uKeyMap_, makeWaKey(module, stateKey), ccUniqueKey);
+  _mapIns(waKey2uKeyMap, makeWaKey(module, stateKey), ccUniqueKey);
 }
 
 export function mapInsM(modStateKey, ccUniqueKey) {
-  _mapIns(waKey_uKeyMap_, modStateKey, ccUniqueKey);
+  _mapIns(waKey2uKeyMap, modStateKey, ccUniqueKey);
 }
 
 export function delIns(module, stateKey, ccUniqueKey) {
@@ -35,23 +35,23 @@ export function delIns(module, stateKey, ccUniqueKey) {
 
 export function delInsM(modStateKey, ccUniqueKey) {
   try {
-    delete waKey_uKeyMap_[modStateKey][ccUniqueKey];
+    delete waKey2uKeyMap[modStateKey][ccUniqueKey];
   } catch (err) {
     // do nothing
   }
 }
 
 export function mapStaticIns(module, stateKey, ccUniqueKey) {
-  _mapIns(waKey_staticUKeyMap_, makeWaKey(module, stateKey), ccUniqueKey);
+  _mapIns(waKey2staticUKeyMap, makeWaKey(module, stateKey), ccUniqueKey);
 }
 
 export function mapStaticInsM(modStateKey, ccUniqueKey) {
-  _mapIns(waKey_staticUKeyMap_, modStateKey, ccUniqueKey);
+  _mapIns(waKey2staticUKeyMap, modStateKey, ccUniqueKey);
 }
 
 export function delStaticInsM(modStateKey, ccUniqueKey) {
   try {
-    delete waKey_staticUKeyMap_[modStateKey][ccUniqueKey];
+    delete waKey2staticUKeyMap[modStateKey][ccUniqueKey];
   } catch (err) { 
     // do nothing
   }

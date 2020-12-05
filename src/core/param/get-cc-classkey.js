@@ -3,7 +3,7 @@ import { CC_PREFIX, MODULE_DEFAULT, CC_DISPATCHER, ERR } from '../../support/con
 import * as util from '../../support/util';
 
 const { isObjectNull, makeError:me } = util
-const { featureStr_classKey_, userClassKey_featureStr_, ccClassKey_ccClassContext_ } = ccContext;
+const { featureStr2classKey, userClassKey2featureStr, ccClassKey2Context } = ccContext;
 
 let cursor = 0;
 
@@ -16,14 +16,14 @@ export default function (allowNamingDispatcher, module, connect, prefix, feature
     }
 
     const prefixedFeatureStr = `${prefix}:${featureStr}`;
-    let _classKey = featureStr_classKey_[prefixedFeatureStr];
+    let _classKey = featureStr2classKey[prefixedFeatureStr];
     if (_classKey) {
       return _classKey;
     }
 
     cursor++;
     _classKey = `${prefix}${cursor}`;
-    featureStr_classKey_[prefixedFeatureStr] = _classKey;
+    featureStr2classKey[prefixedFeatureStr] = _classKey;
     return _classKey;
   }
 
@@ -41,15 +41,15 @@ export default function (allowNamingDispatcher, module, connect, prefix, feature
     }
   }
 
-  const clsCtx = ccClassKey_ccClassContext_[classKey];
+  const clsCtx = ccClassKey2Context[classKey];
   if (clsCtx) {
-    const fStr = userClassKey_featureStr_[classKey];
+    const fStr = userClassKey2featureStr[classKey];
     if (fStr !== featureStr) {
       //不允许，特征值不一样的class指定相同的ccClassKey
       throw me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:[${classKey}] duplicate`);
     }
   } else {
-    userClassKey_featureStr_[classKey] = featureStr;
+    userClassKey2featureStr[classKey] = featureStr;
   }
 
   return classKey;

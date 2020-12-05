@@ -4,8 +4,8 @@ import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
 import runtimeHandler from './runtime-handler';
-import { waKey_uKeyMap_, waKey_staticUKeyMap_ } from './wakey-ukey-map';
-import module_insCount_ from './modue-ins-count-map';
+import { waKey2uKeyMap, waKey2staticUKeyMap } from './wakey-ukey-map';
+import module2insCount from './modue-ins-count-map';
 import lifecycle from './lifecycle';
 import refs from './refs';
 import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, FN_CU, FN_WATCH } from '../support/constant';
@@ -23,10 +23,14 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
   const moduleComputedValue = _computedValue[module];
 
   const rootComputedDep = computed.getRootComputedDep();
-  const curDepComputedFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState);
+  const curDepComputedFns = (committedState, isFirstCall) => pickDepFns(
+    isFirstCall, CATE_MODULE, 'computed', rootComputedDep, module, moduleState, committedState
+  );
 
   const rootWatchDep = watch.getRootWatchDep();
-  const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState);
+  const curDepWatchFns = (committedState, isFirstCall) => pickDepFns(
+    isFirstCall, CATE_MODULE, 'watch', rootWatchDep, module, moduleState, committedState
+  );
 
   const callerRef = ref || getDispatcher();
   const refModule = callerRef.module;
@@ -134,7 +138,7 @@ const ccContext = {
   isHot: false,
   reComputed: true,
   isStartup: false,
-  moduleName_stateFn_: {
+  moduleName2stateFn: {
   },
   // 映射好模块的状态所有key并缓存住，用于提高性能
   moduleName2stateKeys,
@@ -150,7 +154,7 @@ const ccContext = {
    *   renderKeyClasses, 
    * }
   */
-  ccClassKey_ccClassContext_: {
+  ccClassKey2Context: {
   },
   /**
    * globalStateKeys is maintained by cc automatically,
@@ -207,8 +211,8 @@ const ccContext = {
     },
     _caller: {},
     // _reducerRefCaller: {},//为实例准备的reducer caller
-    _fnName_fullFnNames_: {},
-    _module_fnNames_: {}
+    _fnName2fullFnNames: {},
+    _module2fnNames: {}
   },
   computed,
   watch,
@@ -222,21 +226,21 @@ const ccContext = {
     },
   },
   lifecycle,
-  ccUKey_ref_: refs,
+  ccUKey2ref: refs,
   /**
    * key:eventName,  value: Array<{ccKey, identity,  handlerKey}>
    */
-  event_handlers_: {},
-  ccUKey_handlerKeys_: {},
+  event2handlers: {},
+  ccUKey2handlerKeys: {},
   /**
-   * to avoid memory leak, the handlerItem of event_handlers_ just store handlerKey, 
+   * to avoid memory leak, the handlerItem of event2handlers just store handlerKey, 
    * it is a ref that towards ccUniqueKeyEvent_handler_'s key
    * when component unmounted, its handler will been removed
    */
-  handlerKey_handler_: {},
-  waKey_uKeyMap_,
-  waKey_staticUKeyMap_,
-  module_insCount_,
+  handlerKey2handler: {},
+  waKey2uKeyMap,
+  waKey2staticUKeyMap,
+  module2insCount,
   refs,
   info: {
     packageLoadTime: Date.now(),
@@ -245,11 +249,11 @@ const ccContext = {
     version: '2.10.2',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
-    tag: 'glaxy',
+    tag: 'glory',
   },
 
-  featureStr_classKey_: {},
-  userClassKey_featureStr_: {},
+  featureStr2classKey: {},
+  userClassKey2featureStr: {},
   middlewares: [],
   plugins: [],
   pluginNameMap: {},

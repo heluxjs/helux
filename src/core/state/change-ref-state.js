@@ -20,7 +20,7 @@ const {
   UNMOUNTED, MOUNTED,
 } = cst;
 const {
-  store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey_ccClassContext_,
+  store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey2Context,
   refStore, getModuleStateKeys,
 } = ccContext;
 
@@ -254,11 +254,11 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
   if (!partialSharedState) {// null
     return;
   }
-  const ccUKey_ref_ = ccContext.ccUKey_ref_;
+  const ccUKey2ref = ccContext.ccUKey2ref;
 
   /** @type ICtxBase */
   const { ccUniqueKey: currentCcUKey, ccClassKey } = targetRef.ctx;
-  const renderKeyClasses = ccClassKey_ccClassContext_[ccClassKey].renderKeyClasses;
+  const renderKeyClasses = ccClassKey2Context[ccClassKey].renderKeyClasses;
 
   const {
     sharedStateKeys, result: { belong: belongRefKeys, connect: connectRefKeys }
@@ -266,7 +266,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
 
   const renderedInBelong = {};
   belongRefKeys.forEach(refKey => {
-    const ref = ccUKey_ref_[refKey];
+    const ref = ccUKey2ref[refKey];
     if (!ref) return;
     const refUKey = ref.ctx.ccUniqueKey;
 
@@ -289,7 +289,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
       return;
     }
 
-    const ref = ccUKey_ref_[refKey];
+    const ref = ccUKey2ref[refKey];
     if (!ref) return;
 
     // 对于挂载好了还未卸载的实例，才有必要触发重渲染
