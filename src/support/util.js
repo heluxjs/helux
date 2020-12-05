@@ -45,7 +45,7 @@ export function isPJO(obj, canBeArray = false) {
   return canBeArray ? (isArr || isObj) : isObj;
 }
 
-export function isAsyncFn(fn, fnName) {
+export function isAsyncFn(fn, fnName, asyncKeys = []) {
   if (!fn) return false;
 
   // @see https://github.com/tj/co/blob/master/index.js
@@ -67,7 +67,7 @@ export function isAsyncFn(fn, fnName) {
    *     return _asyncFn.apply(this, arguments);
    *  }
    */
-  if (runtimeVar.asyncCuKeys.includes(fnName || fn.__fnName)) {
+  if (asyncKeys.includes(fnName)) {
     return true;
   }
 

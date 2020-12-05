@@ -12,6 +12,7 @@ import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
 import cuMap from '../../cc-context/computed-map';
 import waMap from '../../cc-context/watch-map';
 import moduleName2stateKeys from '../../cc-context/statekeys-map';
+import rv from '../../cc-context/runtime-var';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 
 const noCommit = (tip, asIs) => justWarning(`${tip} call commit or commitCu as it is ${asIs}`);
@@ -193,7 +194,7 @@ export default function executeDepFns(
       }
 
       if (fnType === FN_CU) {
-        const isCuFnAsync = isAsyncFn(fn, retKey);
+        const isCuFnAsync = isAsyncFn(fn, retKey, rv.asyncCuKeys);
 
         if (isLazy || isCuFnAsync) {
           // lazyComputed 和 asyncComputed 不能调用commit commitCu，以隔绝副作用
