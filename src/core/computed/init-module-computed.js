@@ -19,6 +19,8 @@ export default function (module, computed = {}) {
   const rootComputedValue = ccComputed.getRootComputedValue();
   const rootComputedDep = ccComputed.getRootComputedDep();
   const rootComputedRaw = ccComputed.getRootComputedRaw();
+  // 在init-module-state那里已safeGet, 这里可以安全的直接读取
+  const cuOri = ccComputed._computedValueOri[module];
 
   rootComputedRaw[module] = computed;
   const moduleState = rootState[module];
@@ -30,14 +32,16 @@ export default function (module, computed = {}) {
   const curDepComputedFns = (committedState, isBeforeMount) =>
     pickDepFns(isBeforeMount, CATE_MODULE, FN_CU, rootComputedDep, module, moduleState, committedState);
 
-  // 在init-module-state那里已safeGet, 这里可以安全的直接读取
-  const cuOri = ccComputed._computedValueOri[module];
   rootComputedValue[module] = makeCuRetContainer(computed, cuOri);
   const moduleComputedValue = rootComputedValue[module];
 
-  findDepFnsToExecute(
-    d, module, d && d.ctx.module, moduleState, curDepComputedFns,
-    moduleState, moduleState, moduleState, util.makeCallInfo(module), true,
-    FN_CU, CATE_MODULE, moduleComputedValue,
-  );
+  try {
+    findDepFnsToExecute(
+      d, module, d && d.ctx.module, moduleState, curDepComputedFns,
+      moduleState, moduleState, moduleState, util.makeCallInfo(module), true,
+      FN_CU, CATE_MODULE, moduleComputedValue,
+    );
+  } catch (err) {
+    ccContext.runtimeHandler.tryHandleError(err);
+  }
 }

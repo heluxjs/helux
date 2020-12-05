@@ -4,7 +4,7 @@ import {
   MODULE_DEFAULT, CC_CLASS, CC_CUSTOMIZE,
 } from '../../support/constant';
 import * as util from '../../support/util';
-import catchCcError from './catch-cc-error';
+import runtimeHandler from '../../cc-context/runtime-handler';
 import * as hf from '../state/handler-factory';
 import mapRegistrationInfo from './map-registration-info';
 import buildRefCtx from '../ref/build-ref-ctx';
@@ -79,7 +79,7 @@ export default function register({
             }
             // isPropsProxy为true时，延迟到$$attach里执行beforeMount
           } catch (err) {
-            catchCcError(err);
+            runtimeHandler.tryHandleError(err);
           }
         }
 
@@ -164,6 +164,6 @@ export default function register({
       return _CcClass;
     }
   } catch (err) {
-    catchCcError(err);
+    runtimeHandler.tryHandleError(err);
   }
 }

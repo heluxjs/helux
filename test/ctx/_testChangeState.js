@@ -1,5 +1,5 @@
 /**
- * this file is prepared for setState、setModuleState、invoke
+ * this file is prepared for setState、setModuleState、invoke、dispatch
  */
 
 /** @typedef {import('../../src/types-inner').IRefCtx} Ctx */

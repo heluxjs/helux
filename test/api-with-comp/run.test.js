@@ -2,8 +2,8 @@ import '../testSetup';
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { mount } from 'enzyme';
-import { run, useConcent, register, getState } from '../../src/index';
-import { delay } from '../util';
+import { run, useConcent, register, getState, getComputed } from '../../src/index';
+import { delay, getWrapNum } from '../util';
 
 const key2Idx = {};
 const numList = [100, 200, 300];
@@ -41,7 +41,11 @@ run({
     },
   },
   test3: {
-    state: { num: 0 },
+    state: { num: 1, numBig: 100 },
+    computed: {
+      numx2: ({ num }) => num * 2,
+      numx10PlusNumBig: ({ numBig }, o, f) => 5 * f.cuVal.numx2 + numBig,
+    },
     lifecycle: {
       async initState() {
         await delay(1000);
@@ -52,14 +56,55 @@ run({
 }, { log: false, act }); // pass act to runOptions to avoid act warning in test mode
 
 describe('test top api run with react component', () => {
-  test('when a fisrt ins of class component mounted, it should trigger lifecyle.mounted only one time', () => {
-    const CompCls = register({ module: 'test' })(
+  test('module computed should work', () => {
+    expect(getComputed('test3').numx2).toBe(2);
+    expect(getComputed('test3').numx10PlusNumBig).toBe(110);
+  });
+
+
+  test('component ins should read module computed', () => {
+    const View = ({ moduleComputed }) => (
+      <div>
+        <h1>{moduleComputed.numx2}</h1>
+        <h2>{moduleComputed.numx10PlusNumBig}</h2>
+      </div>
+    );
+    const CompCls = register('test3')(
+      class extends React.Component {
+        render() {
+          return <View moduleComputed={this.ctx.moduleComputed} />;
+        }
+      });
+    const CompFn = () => {
+      const { moduleComputed } = useConcent('test3');
+      return <View moduleComputed={moduleComputed} />;
+    };
+
+    const compClsWrap = mount(<CompCls />);
+    const compFnWrap = mount(<CompFn />);
+    const numx2 = getComputed('test3').numx2;
+    const numx10PlusNumBig = getComputed('test3').numx10PlusNumBig;
+
+    expect(numx2).toBe(getWrapNum(compClsWrap, 'h1'));
+    expect(numx2).toBe(getWrapNum(compFnWrap, 'h1'));
+    expect(numx10PlusNumBig).toBe(getWrapNum(compClsWrap, 'h2'));
+    expect(numx10PlusNumBig).toBe(getWrapNum(compFnWrap, 'h2'));
+  });
+
+
+  test('when the fisrt ins of class component mounted, it should trigger lifecyle.mounted only one time', () => {
+    const CompCls = register('test')(
       class extends React.Component {
         render() {
           return <h1>{this.state.num}</h1>
         }
       }
     );
+    const CompFn = () => {
+      const { state } = useConcent('test');
+      return <h1>{state.num}</h1>
+    };
+
     const wrap = mount(<CompCls />);
     const h1Wrap = wrap.find('h1');
     expect(h1Wrap.text()).toBe(String(100));
@@ -69,6 +114,13 @@ describe('test top api run with react component', () => {
     const h1Wrap2nd = wrap2nd.find('h1');
     // still 100
     expect(h1Wrap2nd.text()).toBe(String(100));
+
+    // unmount all ins, then mount one
+    wrap.unmount();
+    wrap2nd.unmount();
+    const wrap3th = mount(<CompFn />);
+    const h1Wrap3th = wrap3th.find('h1');
+    expect(h1Wrap3th.text()).toBe(String(100));
   });
 
 
@@ -118,7 +170,7 @@ describe('test top api run with react component', () => {
 
 
   test('async lifecyle.initState will re-render comp-ins', async() => {
-    const CompCls = register({ module: 'test3' })(
+    const CompCls = register('test3')(
       class extends React.Component {
         render() {
           return <h1>{this.state.num}</h1>
@@ -126,19 +178,19 @@ describe('test top api run with react component', () => {
       }
     );
     const CompFn = () => {
-      const ctx = useConcent({ module: 'test3' });
+      const ctx = useConcent('test3');
       return <h1>{ctx.state.num}</h1>
     };
     const wrap = mount(<CompCls />);
     const wrap2 = mount(<CompFn />);
 
     await delay(500);
-    expect(getState('test3').num).toBe(0);
+    expect(getState('test3').num).toBe(1);
     const h1Wrap = wrap.find('h1');
-    expect(h1Wrap.text()).toBe(String(0));
+    expect(h1Wrap.text()).toBe(String(1));
 
     const h1Wrap2 = wrap2.find('h1');
-    expect(h1Wrap2.text()).toBe(String(0));
+    expect(h1Wrap2.text()).toBe(String(1));
 
     await delay(1500);
     // after initState invoked

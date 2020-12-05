@@ -72,6 +72,7 @@ export default function (
     nonObjectValueCompare  = true,
     localStorage = null,
     act = null,
+    asyncCuKeys = null,
   } = {}) {
   try {
     throw new Error();
@@ -90,6 +91,7 @@ export default function (
       ccContext.reComputed = reComputed;
       if (errorHandler) ccContext.runtimeHandler.errorHandler = errorHandler;
       ccContext.runtimeHandler.act = act;
+      rv.asyncCuKeys = asyncCuKeys || [];
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
       rv.computedCompare = computedCompare;
@@ -136,8 +138,7 @@ export default function (
 
       resetClassInsUI();
     } catch (err) {
-      if (errorHandler) errorHandler(err);
-      else throw err;
+      ccContext.runtimeHandler.tryHandleError(err);
     }
   }
 }

@@ -4,8 +4,8 @@ import { makeCuPackedValue, okeys, delay } from '../../support/util';
 import * as cst from '../../support/constant';
 import * as waKeyMap from '../../cc-context/wakey-ukey-map';
 import ccUKey_ref_ from '../../cc-context/refs';
+import runtimeHandler from '../../cc-context/runtime-handler';
 import { CATE_REF } from '../../support/constant';
-import catchCcError from '../base/catch-cc-error';
 import { send } from '../plugin/index';
 
 const { waKey_uKeyMap_, waKey_staticUKeyMap_ } = waKeyMap;
@@ -59,7 +59,7 @@ export default async function executeCuInfo(cuInfo) {
         send(cst.SIG_ASYNC_COMPUTED_ERR, toSend);
         send(cst.SIG_ASYNC_COMPUTED_BATCH_END, toSend);
       }
-      catchCcError(err);
+      runtimeHandler.tryHandleError(err);
     }
 
     if (isModule) {
@@ -81,6 +81,6 @@ export default async function executeCuInfo(cuInfo) {
       triggerReRender(ref);
     }
   } catch (err) {
-    catchCcError(err);
+    runtimeHandler.tryHandleError(err);
   }
 }

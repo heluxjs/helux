@@ -6,7 +6,6 @@ import {
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import catchCcError from '../base/catch-cc-error';
 import ccDispatch from '../base/dispatch';
 import {
   getChainId, setChainState, setAllChainState, setAndGetChainStateList,
@@ -24,7 +23,7 @@ const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer },
   computed: { _computedValue },
-  runtimeHandler,
+  runtimeHandler, runtimeVar,
 } = ccContext;
 const me = makeError;
 const vbi = verboseInfo;
@@ -90,8 +89,7 @@ function handleCcFnError(err, __innerCb) {
   if (err) {
     if (__innerCb) __innerCb(err);
     else {
-      justWarning(err);
-      if (ccContext.runtimeHandler.errorHandler) ccContext.runtimeHandler.errorHandler(err);
+      ccContext.runtimeHandler.tryHandleError(err);
     }
   }
 }
@@ -100,7 +98,7 @@ function _promisifyCcFn(ccFn, userLogicFn, executionContext, payload) {
   return new Promise((resolve, reject) => {
     const _executionContext = Object.assign(executionContext, { __innerCb: _promiseErrorHandler(resolve, reject) });
     ccFn(userLogicFn, _executionContext, payload);
-  }).catch(catchCcError);
+  }).catch(runtimeHandler.tryHandleError);
 }
 
 function __promisifiedInvokeWith(userLogicFn, executionContext, payload) {
@@ -366,12 +364,13 @@ export function dispatch({
 ) {
   const targetReducerMap = _reducer[inputModule];
   if (!targetReducerMap) {
-    return __innerCb(new Error(`no reducerMap found for module:[${inputModule}]`));
+    return __innerCb(new Error(`no reducerMap found for module:[${inputModule}]`))
   }
   const reducerFn = targetReducerMap[type];
   if (!reducerFn) {
     const fns = okeys(targetReducerMap);
-    return __innerCb(new Error(`no reducer fn found for [${inputModule}/${type}], is these fn you want:${fns}`));
+    const err = new Error(`no reducer fn found for [${inputModule}/${type}], is these fn you want:${fns}`);
+    return __innerCb(err);
   }
 
   const executionContext = {
@@ -434,7 +433,7 @@ export function makeDispatchHandler(
           if (!module) _module = fn.__stateModule;
         } else {
           if (typeof type !== 'string') {
-            catchCcError(new Error('dispatchDesc.type must be string'));
+            runtimeHandler.tryHandleError(new Error('dispatchDesc.type must be string'));
             return;
           }
           _type = type;
@@ -492,7 +491,14 @@ export function makeDispatchHandler(
         chainId: _chainId, oriChainId: _oriChainId, chainId2depth
         // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
       });
-    }).catch(catchCcError);
+    }).catch(err => {
+      if (runtimeVar.isStrict) {
+        console.log(runtimeHandler.tryHandleError);
+        runtimeHandler.tryHandleError(err);
+      } else {
+        justWarning(err);
+      }
+    });
     return p;
   }
 }

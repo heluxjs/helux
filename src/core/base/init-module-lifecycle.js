@@ -1,7 +1,6 @@
 
 import ccContext from '../../cc-context';
 import { makeSetStateHandler, makeModuleDispatcher } from '../state/handler-factory';
-import catchCcError from './catch-cc-error';
 
 const getState = ccContext.store.getState;
 
@@ -20,7 +19,7 @@ export default function (moduleName, lifecycle = {}) {
   if (initState) {
     Promise.resolve().then(() => initState(moduleState)).then(state => {
       makeSetStateHandler(moduleName, initStateDone)(state);
-    }).catch(catchCcError);
+    }).catch(ccContext.runtimeHandler.tryHandleError);
   } else {
     // make sure initStateDone will be alway called no matther initState difined or not
     initStateDone && initStateDone(d, moduleState);

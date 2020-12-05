@@ -118,7 +118,7 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
         }
       }
       // 从已定义defineProperty的计算结果容器里获取结果
-      return oriCuObContainer[retKey]
+      return oriCuObContainer[retKey];
     },
     set: function (target, retKey, value) {
       target[retKey] = value;

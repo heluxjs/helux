@@ -13,6 +13,7 @@ import _getState from './api/get-state';
 import _getGlobalState from './api/get-global-state';
 import _getGlobalComputed from './api/get-global-computed';
 import _getComputed from './api/get-computed';
+import _debugComputed from './api/debug-computed';
 import _emit from './api/emit';
 import _off from './api/off';
 import _dispatch from './api/dispatch';
@@ -49,6 +50,7 @@ export const set = _set;
 export const getState = _getState;
 export const getGlobalState = _getGlobalState;
 export const getComputed = _getComputed;
+export const debugComputed = _debugComputed;
 export const getGlobalComputed = _getGlobalComputed;
 export const emit = _emit;
 export const off = _off;
@@ -92,6 +94,7 @@ const defaultExport = {
   getGlobalState,
   getState,
   getComputed,
+  debugComputed,
   getGlobalComputed,
   ccContext,
   execute,

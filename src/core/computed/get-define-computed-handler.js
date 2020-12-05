@@ -16,7 +16,7 @@ export default function (refCtx) {
     try {
       configureDepFns(CATE_REF, confMeta, computedItem, computedHandler, depKeysOrOpt);
     } catch (err) {
-      runtimeHandler.errorHandler(err);
+      runtimeHandler.tryHandleError(err);
     }
   };
 }

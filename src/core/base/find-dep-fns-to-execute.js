@@ -193,7 +193,7 @@ export default function executeDepFns(
       }
 
       if (fnType === FN_CU) {
-        const isCuFnAsync = isAsyncFn(fn);
+        const isCuFnAsync = isAsyncFn(fn, retKey);
 
         if (isLazy || isCuFnAsync) {
           // lazyComputed 和 asyncComputed 不能调用commit commitCu，以隔绝副作用

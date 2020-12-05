@@ -45,7 +45,7 @@ export function isPJO(obj, canBeArray = false) {
   return canBeArray ? (isArr || isObj) : isObj;
 }
 
-export function isAsyncFn(fn) {
+export function isAsyncFn(fn, fnName) {
   if (!fn) return false;
 
   // @see https://github.com/tj/co/blob/master/index.js
@@ -56,8 +56,18 @@ export function isAsyncFn(fn) {
   }
 
   //有可能成降级编译成 __awaiter格式的了 或者 _regenerator
-  var fnStr = fn.toString();
+  const fnStr = fn.toString();
   if (fnStr.indexOf('_awaiter') >= 0 || fnStr.indexOf('_regenerator') >= 0) {
+    return true;
+  }
+
+  /**
+   * 上面的判定过程目前对这种编译结果是无效的，所以要求用户在runOptins里传入 asyncCuKeys 来标记异步计算函数
+   * function asyncFn(_x, _x2, _x3) {
+   *     return _asyncFn.apply(this, arguments);
+   *  }
+   */
+  if (runtimeVar.asyncCuKeys.includes(fnName || fn.__fnName)) {
     return true;
   }
 

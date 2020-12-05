@@ -940,6 +940,14 @@ export interface RunOptions {
   objectValueCompare?: boolean;// default is false
   nonObjectValueCompare?: boolean;// default is true
   localStorage?: any;// localStorage lib, in browser it will be window.localStorage by default, in rn, user should pass one
+  /**
+   * currently an async cu fun will be computed to below template in babel:
+   * function asyncFn(_x, _x2, _x3) {
+   *     return _asyncFn.apply(this, arguments);
+   *  }
+   *  so if you want your async cu fn work well after compiled, you must specify async-cu-keys
+   */
+  asyncCuKeys?: string[],
 }
 
 export interface IActionCtxBase {
@@ -1231,6 +1239,8 @@ export function getGlobalState<RootState extends IRootBase>(): RootState['$$glob
 
 export function getComputed<T>(moduleName?: string): T;
 
+export function debugComputed<T>(moduleName: string): T;
+
 export function getGlobalComputed<T>(): T;
 
 export function set(keyPath: string, value: any, renderKey?: RenderKey, delay?: number): void;
@@ -1333,6 +1343,7 @@ declare type DefaultExport = {
   getState: typeof getState,
   getGlobalState: typeof getGlobalState,
   getComputed: typeof getComputed,
+  debugComputed: typeof debugComputed,
   getGlobalComputed: typeof getGlobalComputed,
   getRefs: typeof getRefs,
   dispatch: typeof dispatch,

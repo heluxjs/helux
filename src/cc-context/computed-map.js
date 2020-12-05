@@ -15,6 +15,7 @@ const _computedRaw = {};
 
 export default {
   _computedValueOri,
+  // 在 init-module-computed 时，会将key对应的值赋为经defineProperty处理过的对象
   _computedValue,
   _computedRaw,
   _computedDep,

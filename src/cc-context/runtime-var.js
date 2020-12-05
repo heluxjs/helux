@@ -1,6 +1,7 @@
 
 // 后续在逐步迁移其他的
 export default {
+  asyncCuKeys: [],
   // if isStrict is true, every error will be throw out instead of console.error, 
   // but this may crash your app, make sure you have a nice error handling way,
   // like componentDidCatch in react 16.*
