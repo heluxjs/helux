@@ -169,12 +169,15 @@ run({
       }
     },
     watch: {
-      numChange: defWatch(({ num }, o) => console.log(`from ${o.num} to ${num}`), {immediate:true})
+      numChange: defWatch(({ num }, o) => console.log(`from ${o.num} to ${num}`), {immediate:true}),
+      numChangeWithoutImmediate: ({ num }, o) => console.log(`from ${o.num} to ${num}`),
     },
     lifecycle: {
-      // loaded: (dispatch) => dispatch("initState"), // triggered when module loaded
-      mounted: (dispatch) => dispatch("initState"), // triggered when the first ins of counter module mounted
-      willUnmount: (dispatch) => dispatch("initState") // triggered when the last ins of counter module unmount
+      // loaded: (dispatch) => dispatch("initState"), // [optional] triggered when module loaded
+      // initState: async (moduleState) => {/** async logic */ return{num:666}}, // [optional] allow user load state async
+      // initStateDone: (dispatch) => dispatch("addSmallAndBig"), // [optional] call any reducer fn after initState done
+      mounted: (dispatch) => dispatch("initState"), // [optional] triggered when the first ins of counter module mounted
+      willUnmount: (dispatch) => dispatch("initState") // [optional] triggered when the last ins of counter module unmount
     }
   }
 });
