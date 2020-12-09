@@ -17,8 +17,8 @@ function getCacheDataContainer(){
 
 let cacheArea_pickedRetKeys_ = getCacheDataContainer();
 
-function _wrapFn(retKey, retKey_fn_, isLazy) {
-  const { fn, depKeys, sort } = retKey_fn_[retKey];
+function _wrapFn(retKey, retKey2fn, isLazy) {
+  const { fn, depKeys, sort } = retKey2fn[retKey];
   return { retKey, fn, depKeys, isLazy, sort };
 }
 
@@ -37,37 +37,37 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
 
   // 针对type module， init-module-state时，已对_computedValueOri赋值了默认cuDesc，
   // 所以此时可以安全的直接判断非关系，而不用担心 {}对象存在
-  if (isObjectNull(moduleDep)) return { pickedFns, setted: [], changed: [], retKey_stateKeys_: {} };
+  if (isObjectNull(moduleDep)) return { pickedFns, setted: [], changed: [], retKey2stateKeys: {} };
 
-  const { retKey_fn_, retKey_lazy_, stateKey_retKeys_, retKey_stateKeys_, fnCount } = moduleDep;
+  const { retKey2fn, retKey2lazy, stateKey2retKeys, retKey2stateKeys, fnCount } = moduleDep;
 
   /** 首次调用 */
   if (isBeforeMount) {
-    const retKeys = okeys(retKey_fn_);
+    const retKeys = okeys(retKey2fn);
     const setted = okeys(committedState);
     const changed = setted;
     if (type === 'computed') {
       return {
-        pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey])).sort(sortCb), 
-        setted, changed, retKey_stateKeys_,
+        pickedFns: retKeys.map(retKey => _wrapFn(retKey, retKey2fn, retKey2lazy[retKey])).sort(sortCb), 
+        setted, changed, retKey2stateKeys,
       };
     }
     
     // for watch
     retKeys.forEach(retKey => {
-      const { fn, immediate, depKeys, sort } = retKey_fn_[retKey];
+      const { fn, immediate, depKeys, sort } = retKey2fn[retKey];
       if (immediate) pickedFns.push({ retKey, fn, depKeys, sort });
     });
 
     pickedFns.sort(sortCb);
-    return { pickedFns, setted, changed, retKey_stateKeys_ };
+    return { pickedFns, setted, changed, retKey2stateKeys };
   }
 
   // 这些目标stateKey的值发生了变化
   const { setted, changed } = differStateKeys(oldState, committedState);
 
   if (setted.length === 0) {
-    return { pickedFns, setted: [], changed: [], retKey_stateKeys_: {} };
+    return { pickedFns, setted: [], changed: [], retKey2stateKeys: {} };
   }
 
   //用setted + changed + module 作为键，缓存对应的pickedFns，这样相同形状的committedState再次进入此函数时，方便快速直接命中pickedFns
@@ -81,30 +81,30 @@ export default function (isBeforeMount, cate, type, depDesc, stateModule, oldSta
   if (cachedPickedRetKeys) {
     // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
     return {
-      pickedFns: cachedPickedRetKeys.map(retKey => _wrapFn(retKey, retKey_fn_, retKey_lazy_[retKey])),
-      setted, changed, retKey_stateKeys_,
+      pickedFns: cachedPickedRetKeys.map(retKey => _wrapFn(retKey, retKey2fn, retKey2lazy[retKey])),
+      setted, changed, retKey2stateKeys,
     };
   }
 
-  _pickFn(pickedFns, setted, changed, retKey_fn_, stateKey_retKeys_, retKey_lazy_, fnCount);
+  _pickFn(pickedFns, setted, changed, retKey2fn, stateKey2retKeys, retKey2lazy, fnCount);
   cachePool[cacheKey] = pickedFns.map(v => v.retKey);
 
    // todo, for 2.5, call checkFnByDepPath with variable depKey_pathDepKeys_
-  return { pickedFns, setted, changed, retKey_stateKeys_ };
+  return { pickedFns, setted, changed, retKey2stateKeys };
 }
 
 
-function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, stateKey_retKeys_, retKey_lazy_, fnCount) {
+function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey2fn, stateKey2retKeys, retKey2lazy, fnCount) {
   if (settedStateKeys.length === 0) return;
 
   // 把*的函数先全部挑出来, 有key的值发生变化了或者有设值行为
-  const starRetKeys = stateKey_retKeys_['*'];
+  const starRetKeys = stateKey2retKeys['*'];
   if (starRetKeys) {
     const isKeyValChanged = changedStateKeys.length > 0;
 
     starRetKeys.forEach(retKey => {
-      const { fn, compare, depKeys, sort } = retKey_fn_[retKey];
-      const toPush = { retKey, fn, depKeys, isLazy: retKey_lazy_[retKey], sort };
+      const { fn, compare, depKeys, sort } = retKey2fn[retKey];
+      const toPush = { retKey, fn, depKeys, isLazy: retKey2lazy[retKey], sort };
       if (compare) {
         if (isKeyValChanged) pickedFns.push(toPush);
         return;
@@ -119,7 +119,7 @@ function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, state
     const len = settedStateKeys.length;
     for (let i = 0; i < len; i++) {
       const stateKey = settedStateKeys[i];
-      const retKeys = stateKey_retKeys_[stateKey];
+      const retKeys = stateKey2retKeys[stateKey];
 
       //发生变化了的stateKey不一定在依赖列表里
       if (!retKeys) continue;
@@ -127,7 +127,7 @@ function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, state
       retKeys.forEach(retKey => {
         //没有挑过的方法才挑出来
         if (!retKey_picked_[retKey]) {
-          const { fn, compare, depKeys, sort } = retKey_fn_[retKey];
+          const { fn, compare, depKeys, sort } = retKey2fn[retKey];
 
           let canPick;
           const isValChanged = changedStateKeys.includes(stateKey);
@@ -145,7 +145,7 @@ function _pickFn(pickedFns, settedStateKeys, changedStateKeys, retKey_fn_, state
 
           if (canPick) {
             retKey_picked_[retKey] = true;
-            pickedFns.push({ retKey, fn, depKeys, isLazy: retKey_lazy_[retKey], sort });
+            pickedFns.push({ retKey, fn, depKeys, isLazy: retKey2lazy[retKey], sort });
           }
         }
       });

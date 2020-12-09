@@ -27,7 +27,7 @@ export default async function executeCuInfo(cuInfo) {
     if (len === 0) return;
 
     await delay();
-    const { sourceType, ref, module, fnAsync, fnRetKeys, cuRetContainer, retKey_stateKeys_ } = cuInfo;
+    const { sourceType, ref, module, fnAsync, fnRetKeys, cuRetContainer, retKey2stateKeys } = cuInfo;
     const isModule = sourceType !== CATE_REF;
 
     let stateKeys = [];
@@ -50,7 +50,7 @@ export default async function executeCuInfo(cuInfo) {
         cuRetContainer[retKey] = makeCuPackedValue(false, ret);
         send(cst.SIG_ASYNC_COMPUTED_END, { module, retKey });
 
-        if (isModule) stateKeys = stateKeys.concat(retKey_stateKeys_[retKey]);
+        if (isModule) stateKeys = stateKeys.concat(retKey2stateKeys[retKey]);
       }
       send(cst.SIG_ASYNC_COMPUTED_BATCH_END, { module });
     } catch (err) {

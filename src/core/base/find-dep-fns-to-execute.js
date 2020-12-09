@@ -62,13 +62,13 @@ function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, 
     cuModDep = safeGet(cuDep, stateModule);
     modDep = safeGet(depDesc, stateModule);
   }
-  const stateKey_retKeys_ = safeGet(modDep, 'stateKey_retKeys_');
-  const retKey_stateKeys_ = safeGet(modDep, 'retKey_stateKeys_');
+  const stateKey2retKeys = safeGet(modDep, 'stateKey2retKeys');
+  const retKey2stateKeys = safeGet(modDep, 'retKey2stateKeys');
 
   const updateRelationship = (depKeys) => {
-    const stateKeys = safeGetArray(retKey_stateKeys_, retKey);
+    const stateKeys = safeGetArray(retKey2stateKeys, retKey);
     depKeys.forEach(sKey => {
-      const retKeys = safeGetArray(stateKey_retKeys_, sKey);
+      const retKeys = safeGetArray(stateKey2retKeys, sKey);
 
       // 此处判断一下retKeys，谨防用户直接在computed里操作obState, 这里拿到的sKey是一堆原型链上key，如`valueOf`等
       if (Array.isArray(retKeys) && !retKeys.includes(retKey)) retKeys.push(retKey);
@@ -82,8 +82,8 @@ function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, 
   } else {// keys is retKeys, 将retKeys里各自retKey的stateKeys转移给目标retKey
     keys.forEach(sourceRetKey => {
       // 这里取的是cu模块的retKey_stateKeys_
-      const retKey_stateKeys_ = safeGet(cuModDep, 'retKey_stateKeys_');
-      const sourceStateKeys = retKey_stateKeys_[sourceRetKey] || [];
+      const retKey2stateKeys = safeGet(cuModDep, 'retKey2stateKeys');
+      const sourceStateKeys = retKey2stateKeys[sourceRetKey] || [];
       updateRelationship(sourceStateKeys);
     });
   }
@@ -95,17 +95,17 @@ function getRetKeyFnMap(refCtx, sourceType, stateModule) {
     return refCtx.computedRetKeyFns;
   } else {
     const moduleDep = cuMap._computedDep[stateModule] || {};
-    return moduleDep.retKey_fn_ || {};
+    return moduleDep.retKey2fn || {};
   }
 }
 
 function mapRSList(cuRetKey, referCuRetKeys, refCtx, ccUniqueKey, sourceType, stateModule) {
   const cuRetKey_referStaticCuRetKeys_ = getCuRetKeyRSListMap(cuRetKey, sourceType, stateModule, ccUniqueKey);
-  const retKey_fn_ = getRetKeyFnMap(refCtx, sourceType, stateModule);
+  const retKey2fn = getRetKeyFnMap(refCtx, sourceType, stateModule);
   const referStaticCuRetKeys = safeGetArray(cuRetKey_referStaticCuRetKeys_, cuRetKey);
 
   referCuRetKeys.forEach(referCuRetKey => {
-    const fnDesc = retKey_fn_[referCuRetKey];
+    const fnDesc = retKey2fn[referCuRetKey];
     // 直接引用
     if (fnDesc.isStatic) {
       referStaticCuRetKeys.push(referCuRetKey);
@@ -146,8 +146,8 @@ export default function executeDepFns(
     // 因为beforeMountFlag为true的情况下，finder里调用的pickDepFns会挑出所有函数，
     // 这里必需保证只有第一次循环的时候取isFirstCall的实际值，否则一定取false，（要不然就陷入无限死循环，每一次都是true，每一次都挑出所有dep函数执行）
     const beforeMountFlag = whileCount === 1 ? isFirstCall : false;
-    const { pickedFns, setted, changed, retKey_stateKeys_ } = finder(curStateForComputeFn, beforeMountFlag);
-    nextTickCuInfo.retKey_stateKeys_ = retKey_stateKeys_;
+    const { pickedFns, setted, changed, retKey2stateKeys } = finder(curStateForComputeFn, beforeMountFlag);
+    nextTickCuInfo.retKey2stateKeys = retKey2stateKeys;
 
     if (!pickedFns.length) break;
 
@@ -317,13 +317,13 @@ export default function executeDepFns(
       const committedCuRet = getRetKeyCu();
 
       if (committedCuRet) {
-        const retKey_fn_ = getRetKeyFnMap(refCtx, sourceType, stateModule);
+        const retKey2fn = getRetKeyFnMap(refCtx, sourceType, stateModule);
 
         okeys(committedCuRet).forEach(cuRetKey => {
           // 模块计算函数里调用commitCu只能修改模块计算retKey
           // 实例计算函数里调用commitCu只能修改实例计算retKey
 
-          const fnDesc = retKey_fn_[cuRetKey];
+          const fnDesc = retKey2fn[cuRetKey];
           if (!fnDesc) justWarning(`commitCu:${tip} commit [${cuRetKey}], it is not defined`);
           // 由committedCu提交的值，可以统一当作非lazy值set回去，方便取的时候直接取
           else {
@@ -393,7 +393,7 @@ export default function executeDepFns(
 
         // watch里提交了新的片段state，再次过一遍computed、watch函数
         if (fnType === FN_WATCH) {
-          // const stateKey_retKeys_ = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
+          // const stateKey2retKeys = getStateKeyRetKeysMap(refCtx, sourceType, stateModule);
           const computedDep = getCuDep(refCtx, sourceType, stateModule);
 
           const finder = (committedState, isBeforeMount) => pickDepFns(

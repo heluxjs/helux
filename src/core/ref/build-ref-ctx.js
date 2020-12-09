@@ -204,8 +204,8 @@ export default function (ref, params, liteLevel = 5) {
   const effectMeta = { effectItems, eid2effectReturnCb, effectPropsItems, eid2effectPropsReturnCb };
   const refs = {};
 
-  // depDesc = {stateKey_retKeys_: {}, retKey_fn_:{}}
-  // computedDep or watchDep  : { [module:string] : { stateKey_retKeys_: {}, retKey_fn_: {}, immediateRetKeys: [] } }
+  // depDesc = {stateKey2retKeys: {}, retKey2fn:{}}
+  // computedDep or watchDep  : { [module:string] : { stateKey2retKeys: {}, retKey2fn: {}, immediateRetKeys: [] } }
   const computedDep = {}, watchDep = {};
   const allModules = connectedModules.slice();
   // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，

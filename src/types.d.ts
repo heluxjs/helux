@@ -856,7 +856,8 @@ export type ModuleConfig = {
     // insteand of initState and initStateDone, using bellow methods is better way
     // because you can put the logic to reducer
     loaded?: (dispatch: IDispatch, moduleState: any) => void;
-    // return excuteOne, default is true, that means mounted will only been called one time
+    // return triggerOnce, default is true, 
+    // that means mounted will only been called one time if match the condition
     mounted?: (dispatch: IDispatch, moduleState: any) => boolean | void;
     willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | void;
   }

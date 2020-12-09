@@ -62,7 +62,8 @@ export function isAsyncFn(fn, fnName, asyncKeys = []) {
   }
 
   /**
-   * 上面的判定过程目前对这种编译结果是无效的，所以要求用户在runOptins里传入 asyncCuKeys 来标记异步计算函数
+   * 上面的判定过程目前对这种编译结果是无效的，
+   * 所以要求用户传入相应的asyncKeys来辅助判断，通常是由在runOptins里传入
    * function asyncFn(_x, _x2, _x3) {
    *     return _asyncFn.apply(this, arguments);
    *  }
@@ -114,11 +115,11 @@ export function makeCuPackedValue(isLazy, result, needCompute, fn, newState, old
 
 export function makeCuDepDesc() {
   return {
-    retKey_fn_: {},
-    retKey_lazy_: {},
-    stateKey_retKeys_: {},
+    retKey2fn: {},
+    retKey2lazy: {},
+    stateKey2retKeys: {},
     // 用于辅助依赖收集系统更新依赖之用，render逻辑书写 refCompute.*** moduleCompted.*** connectedCompute.yy.** 时触发
-    retKey_stateKeys_: {},
+    retKey2stateKeys: {},
     fnCount: 0
   };
 }
@@ -364,7 +365,6 @@ export function bindToWindow(key, toBindObj, targetObj) {
  * 浅比较两个对象
  * come from : https://github.com/developit/preact-compat/blob/7c5de00e7c85e2ffd011bf3af02899b63f699d3a/src/index.js#L349
  */
-
 export function shallowDiffers(a, b) {
   for (let i in a) if (!(i in b)) return true;
   for (let i in b) if (a[i] !== b[i]) return true;

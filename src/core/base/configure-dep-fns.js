@@ -184,10 +184,10 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
 function _mapSameNameRetKey(confMeta, module, retKey, isModuleStateKey) {
   const dep = confMeta.dep;
   const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
-  const { stateKey_retKeys_, retKey_stateKeys_ } = moduleDepDesc;
+  const { stateKey2retKeys, retKey2stateKeys } = moduleDepDesc;
 
-  safeGetThenNoDupPush(stateKey_retKeys_, retKey, retKey);
-  safeGetThenNoDupPush(retKey_stateKeys_, retKey, retKey);
+  safeGetThenNoDupPush(stateKey2retKeys, retKey, retKey);
+  safeGetThenNoDupPush(retKey2stateKeys, retKey, retKey);
 
   // 记录依赖
   isModuleStateKey && _mapIns(confMeta, module, retKey)
@@ -204,7 +204,7 @@ function _mapIns(confMeta, module, retKey) {
 function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, compare, lazy, sort) {
   const dep = confMeta.dep;
   const moduleDepDesc = safeGet(dep, module, makeCuDepDesc());
-  const { retKey_fn_, stateKey_retKeys_, retKey_lazy_, retKey_stateKeys_ } = moduleDepDesc;
+  const { retKey2fn, stateKey2retKeys, retKey2lazy, retKey2stateKeys } = moduleDepDesc;
 
   const isStatic = Array.isArray(depKeys) && depKeys.length === 0;
 
@@ -218,20 +218,20 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
 
   const fnDesc = { fn, immediate, compare, depKeys, sort: targetSort, isStatic };
   // retKey作为将计算结果映射到refComputed | moduleComputed 里的key
-  if (retKey_fn_[retKey]) {
+  if (retKey2fn[retKey]) {
     if (cate !== CATE_REF) {// 因为热加载，对于module computed 定义总是赋值最新的，
-      retKey_fn_[retKey] = fnDesc;
-      retKey_lazy_[retKey] = lazy;
+      retKey2fn[retKey] = fnDesc;
+      retKey2lazy[retKey] = lazy;
     }
     // do nothing
   } else {
-    retKey_fn_[retKey] = fnDesc;
-    retKey_lazy_[retKey] = lazy;
+    retKey2fn[retKey] = fnDesc;
+    retKey2lazy[retKey] = lazy;
     moduleDepDesc.fnCount++;
   }
   
   if (cate === CATE_REF) {
-    confMeta.retKeyFns[retKey] = retKey_fn_[retKey];
+    confMeta.retKeyFns[retKey] = retKey2fn[retKey];
   }
   
   const refCtx = confMeta.refCtx;
@@ -240,20 +240,20 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
     else refCtx.hasWatchFn = true;
   }
 
-  //处于自动收集依赖状态，首次遍历完计算函数后之后再去写stateKey_retKeys_, retKey_stateKeys_
+  //处于自动收集依赖状态，首次遍历完计算函数后之后再去写stateKey_retKeys_, retKey2stateKeys
   // in find-dep-fns-to-execute.js setStateKeyRetKeysMap
   if (depKeys === '-') return;
 
   const allKeyDep = depKeys === '*';
   const targetDepKeys = allKeyDep ? ['*'] : depKeys;
   if (allKeyDep) {
-    retKey_stateKeys_[retKey] = moduleName2stateKeys[module];
+    retKey2stateKeys[retKey] = moduleName2stateKeys[module];
   }
 
   targetDepKeys.forEach(sKey => {
-    if (!allKeyDep) safeGetThenNoDupPush(retKey_stateKeys_, retKey, sKey);
+    if (!allKeyDep) safeGetThenNoDupPush(retKey2stateKeys, retKey, sKey);
     //一个依赖key列表里的stateKey会对应着多个结果key
-    safeGetThenNoDupPush(stateKey_retKeys_, sKey, retKey);
+    safeGetThenNoDupPush(stateKey2retKeys, sKey, retKey);
   });
 }
 

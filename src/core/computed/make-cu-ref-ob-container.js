@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 /**
  * 为每一个实例单独建立了一个获取计算结果的观察容器，方便写入依赖
  */
@@ -15,8 +14,8 @@ const { _computedValueOri, _computedValue, _computedRaw, _computedDep } = comput
 // refModuleCuDep 来自 ref.ctx.computedDep
 function writeRetKeyDep(refModuleCuDep, ref, module, retKey, isForModule) {
   // 所有组件都自动连接到$$global模块，但是未必有对$$global模块的retKey依赖
-  const retKey_stateKeys_ = refModuleCuDep.retKey_stateKeys_ || {};
-  const stateKeys = retKey_stateKeys_[retKey] || [];
+  const retKey2stateKeys = refModuleCuDep.retKey2stateKeys || {};
+  const stateKeys = retKey2stateKeys[retKey] || [];
 
   
   stateKeys.forEach(stateKey => {
