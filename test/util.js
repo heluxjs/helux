@@ -12,8 +12,8 @@ export function getTestModels() {
         name: 'name',
         age: 18,
         books: [
-          { id:1, name: 'concent', author: 'zzk', publishTime: '2019' },
-          { id:2, name: 'concent-lite', author: 'fancy', publishTime: '2020' },
+          { id: 1, name: 'concent', author: 'zzk', publishTime: '2019' },
+          { id: 2, name: 'concent-lite', author: 'fancy', publishTime: '2020' },
         ],
       },
       computed: {
@@ -82,7 +82,7 @@ export function has(obj, key) {
 
 export function makeComp(module, setup) {
   const CompFn = () => {
-    const { refComputed: rcu, state } = useConcent({ module, setup });
+    const { refComputed: rcu, state, settings } = useConcent({ module, setup });
     return (
       <div>
         {okeys(state).map(key => {
@@ -91,13 +91,14 @@ export function makeComp(module, setup) {
           return <h1 key={key} className={key}>{state[key]}</h1>;
         })}
         {okeys(rcu).map(key => <h2 key={key} className={key}>{rcu[key]}</h2>)}
+        <button onClick={settings.onBtnClick}>onBtnClick</button>
       </div>
     );
   };
   const CompCls = register({ module, setup })(
     class extends React.Component {
       render() {
-        const { refComputed: rcu, state } = this.ctx;
+        const { refComputed: rcu, state, settings } = this.ctx;
         return (
           <div>
             {okeys(state).map(key => {
@@ -106,6 +107,7 @@ export function makeComp(module, setup) {
               return <h1 key={key} className={key}>{state[key]}</h1>;
             })}
             {okeys(rcu).map(key => <h2 key={key} className={key}>{rcu[key]}</h2>)}
+            <button onClick={settings.onBtnClick}>onBtnClick</button>
           </div>
         );
       }
@@ -115,17 +117,17 @@ export function makeComp(module, setup) {
   return { CompFn, CompCls };
 }
 
-
-export function mountCompThenAssertValue(Comp, compareItems, options = {}) {
+/**
+ * 
+ * @param {*} Comp 
+ * @param {{key:string, compareValue:any, eq:boolean}} compareItems 
+ * @param {{nodeName:string, clickAction: (warp:Wrap)=>void}} options 
+ */
+export function mountCompThenAssertValue(Comp, compareItems = [], options = {}) {
   let { nodeName = 'h1', clickAction } = options;
   const compWrap = mount(<Comp />);
 
-  if (clickAction) {
-    // https://reactjs.org/docs/test-utils.html#act
-    act(() => {
-      clickAction(compWrap);
-    });
-  }
+  clickAction && clickAction(compWrap);
 
   // console.log(compWrap.debug());
   compareItems.forEach(item => {

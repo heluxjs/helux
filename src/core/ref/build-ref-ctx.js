@@ -297,7 +297,7 @@ export default function (ref, params, liteLevel = 5) {
     watchRetKeyFns: {},//不按模块分类，映射的watchRetKey_fn_
     execute: null,
     effectMeta,
-    retKey_fnUid_: {},
+    retKey2fnUid: {},
 
     // api
     reactSetState: noop,//等待重写

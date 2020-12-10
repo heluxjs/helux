@@ -60,6 +60,7 @@ export default function (
     isDebug = false,
     log = true,
     errorHandler = null,
+    warningHandler = null,
     isHot,
     bindCtxToMethod = false,
     computedCompare = false,// 表示针对object值需不需要比较
@@ -84,13 +85,15 @@ export default function (
 
     try {
       const rv = ccContext.runtimeVar;
+      const rh = ccContext.runtimeHandler;
       rv.log = log;
 
       justTip(`concent version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
-      if (errorHandler) ccContext.runtimeHandler.errorHandler = errorHandler;
-      ccContext.runtimeHandler.act = act;
+      rh.errorHandler = errorHandler;
+      rh.warningHandler = warningHandler;
+      rh.act = act;
       rv.asyncCuKeys = asyncCuKeys || [];
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;

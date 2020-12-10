@@ -1,4 +1,4 @@
 /**
- * private variable, not bind in ccContext
+ * private variable, not bind to ccContext
  */
 export default [];

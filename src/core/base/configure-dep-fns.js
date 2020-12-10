@@ -1,6 +1,6 @@
 /** @typedef {import('../../types-inner').IRefCtx} Ctx */
 import {
-  okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO, justWarning,
+  okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO,
   makeCuDepDesc, safeGetThenNoDupPush, makeFnDesc,
 } from '../../support/util';
 import { ERR, CATE_REF, FN_CU } from '../../support/constant';
@@ -9,7 +9,7 @@ import ccContext from '../../cc-context';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 import uuid from './uuid';
 
-const { moduleName2stateKeys, runtimeVar } = ccContext;
+const { moduleName2stateKeys, runtimeVar, runtimeHandler } = ccContext;
 let sortFactor = 1;
 
 /**
@@ -49,8 +49,7 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
   const type = confMeta.type;
   if (cate === CATE_REF && !ctx.__$$inBM) {
     const tip = `${cate} ${type} must been called in setup block`;
-    if (runtimeVar.isStrict) throw new Error(tip);
-    justWarning(tip);
+    runtimeHandler.tryHandleWarning(new Error(tip));
     return;
   }
 
@@ -65,11 +64,14 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
     _descObj = item;
   } else if (itype === FUNCTION) {
     _descObj = item(ctx);
-    if (!isPJO(_descObj)) throw new Error(`type of ${type} callback result must be an object`);
+    if (!isPJO(_descObj)) {
+      runtimeHandler.tryHandleWarning(new Error(`type of ${type} callback result must be an object`));
+      return;
+    }
   }
 
   if (!_descObj) {
-    justWarning(`${cate} ${type} param type error`);
+    runtimeHandler.tryHandleWarning(new Error(`${cate} ${type} param type error`));
     return;
   }
 
@@ -78,7 +80,8 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
 
 function _parseDescObj(cate, confMeta, descObj) {
   const { computedCompare, watchCompare, watchImmediate } = runtimeVar;
-  //读全局的默认值
+  const { tryHandleWarning } = runtimeHandler;
+  // 读全局的默认值
   const defaultCompare = confMeta.type === FN_CU ? computedCompare : watchCompare;
   const callerModule = confMeta.module;
 
@@ -107,19 +110,24 @@ function _parseDescObj(cate, confMeta, descObj) {
         const mapSameName = depKeys === '-' && retKeyDep;
         const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey, mapSameName);
 
-        _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+        const err = _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+        if (err) return tryHandleWarning(err);
+
         // when retKey is '/xxxx', here need pass xxxx as retKey
         _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
       } else {
         if (depKeys.length === 0) {
-          const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey); //consume retKey is stateKey
+          const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey); // consume retKey is stateKey
 
-          _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+          const err = _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+          if (err) return tryHandleWarning(err);
+
           _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
-        } else {// ['foo/b1', 'bar/b1'] or ['b1', 'b2']
+        } else { // ['foo/b1', 'bar/b1'] or ['b1', 'b2']
           const { pureKey, moduleOfKey } = _resolveKey(confMeta, callerModule, retKey);
           const stateKeyModule = moduleOfKey;
-          _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+          const err = _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
+          if (err) return tryHandleWarning(err);
 
           // 给depKeys按module分类，此时它们都指向同一个retKey，同一个fn，但是会被分配ctx.computedDep或者watchDep的不同映射里
           const module2depKeys = {};
@@ -160,23 +168,24 @@ function _parseDescObj(cate, confMeta, descObj) {
           });
         }
       }
-    }else{
-      justWarning(`retKey[${retKey}] item type error`);
+    } else {
+      tryHandleWarning(`retKey[${retKey}] item type error`);
     }
   });
 }
 
+
+// just return an error if key dup
 function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
   if (cate === CATE_REF) {
-    const { ccUniqueKey, retKey_fnUid_ } = confMeta.refCtx;
+    const { ccUniqueKey, retKey2fnUid } = confMeta.refCtx;
     const type = confMeta.type;
     const typedRetKey = `${type}_${retKey}`;
-    const mappedFn = retKey_fnUid_[typedRetKey];
+    const mappedFn = retKey2fnUid[typedRetKey];
     if (mappedFn) {
-      throw new Error(`ccUKey[${ccUniqueKey}], retKey[${retKey}] duplicate in ref ${type}`);
-    } else {
-      retKey_fnUid_[typedRetKey] = fnUid;
+      return new Error(`ccUKey[${ccUniqueKey}], retKey[${retKey}] duplicate in ref ${type}`);
     }
+    retKey2fnUid[typedRetKey] = fnUid;
   }
 }
 

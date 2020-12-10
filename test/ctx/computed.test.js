@@ -6,12 +6,16 @@ import { getTestModels, mountCompThenAssertH2Value as mountCompThenAssertValue, 
 
 const models = getTestModels();
 const errList = [];
+const warningList = [];
 
 run(models, {
   log: false,
   isStrict: true,
   errorHandler: (err) => {
     errList.push(err);
+  },
+  warningHandler: (err) => {
+    warningList.push(err);
   },
 });
 
@@ -25,7 +29,7 @@ describe('test ctx api computed', () => {
     };
     const warp = mount(<CompFn />);
     expect(warp.find('h1').text()).toBeFalsy();
-    expect(errList[0].message).toMatch(/(?=ref computed must been called in setup block)/);
+    expect(warningList[0].message).toMatch(/(?=ref computed must been called in setup block)/);
   });
 
   const testlogic1 = (setup) => {

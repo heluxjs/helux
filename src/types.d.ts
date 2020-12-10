@@ -915,8 +915,12 @@ export interface RunOptions {
   isHot?: boolean;// default is false
   isStrict?: boolean;
   log?: boolean; // if print error message with console.error, default is true
-  act?: IAnyFn; // avoid act warning in test mode
+  act?: IAnyFn; // should pass act avoid warning if in test mode, see https://reactjs.org/docs/test-utils.html#act
   errorHandler?: (err: Error) => void;
+  /**
+   * this kind of error will not lead to app crash, but should let developer know it
+   */
+  warningHandler?: (err: Error) => void;
   bindCtxToMethod?: boolean;// default false
   computedCompare?: boolean;// default is false, trigger computed if set
   watchCompare?: boolean;// default is false, trigger watch if set

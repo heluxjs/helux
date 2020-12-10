@@ -493,7 +493,6 @@ export function makeDispatchHandler(
       });
     }).catch(err => {
       if (runtimeVar.isStrict) {
-        console.log(runtimeHandler.tryHandleError);
         runtimeHandler.tryHandleError(err);
       } else {
         justWarning(err);
