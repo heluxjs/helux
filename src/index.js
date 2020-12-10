@@ -74,6 +74,7 @@ export const defLazyComputed = (fn, defOptions) => {
   return desc;
 }
 export const defComputedVal = (val) => ({ fn: () => val, depKeys: [] });
+/** @type {import('./types').defWatch} */
 export const defWatch = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
 
 const defaultExport = {

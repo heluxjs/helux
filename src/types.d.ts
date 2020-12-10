@@ -1290,6 +1290,9 @@ export function defLazyComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase =
 export function defLazyComputed<CuRet>
   (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
+  /**
+   * retKeyDep: default is true, when key is same as state key, it will be a dep
+   */
 type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
 
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
