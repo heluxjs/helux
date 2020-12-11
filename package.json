@@ -117,6 +117,6 @@
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
     "test": "jest"
   },
-  "version": "2.10.2",
+  "version": "2.10.4",
   "dependencies": {}
 }

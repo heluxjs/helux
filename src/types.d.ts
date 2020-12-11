@@ -1290,9 +1290,9 @@ export function defLazyComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase =
 export function defLazyComputed<CuRet>
   (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
-  /**
-   * retKeyDep: default is true, when key is same as state key, it will be a dep
-   */
+/**
+ * retKeyDep: default is true, when key is same as state key, it will be a dep
+ */
 type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
 
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
@@ -1332,6 +1332,37 @@ export function getRefs<Ctx extends ICtxBase>(): Ctx[];
  * @param overwriteModuleConfig overwriteModuleConfig will been merged to existingModuleConfig
  */
 export function cloneModule(newModuleName: string, existingModuleName: string, overwriteModuleConfig?: ModuleConfig): void;
+
+//////////////////////////////////////////////////
+// type helper
+//////////////////////////////////////////////////
+export type IncludeModelKey<Models, ModelKey> = ModelKey extends keyof Models ? true : false;
+
+export type GetRootState<Models extends { [key: string]: ModuleConfig }> = {
+  [key in keyof Models]: StateType<Models[key]["state"]>
+}
+  & { [cst.MODULE_VOID]: {} }
+  & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
+  & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
+
+export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
+  [key in keyof Models]: "reducer" extends keyof Models[key] ?
+  (Models[key]["reducer"] extends IAnyObj ? ReducerType<Models[key]["reducer"]> : {})
+  : {};
+}
+  & { [cst.MODULE_VOID]: {} }
+  & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
+  & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
+
+
+export type GetRootComputed<Models extends { [key: string]: ModuleConfig }> = {
+  [key in keyof Models]: "computed" extends keyof Models[key] ?
+  (Models[key]["computed"] extends IAnyObj ? ComputedValType<Models[key]["computed"]> : {})
+  : {};
+}
+  & { [cst.MODULE_VOID]: {} }
+  & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
+  & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 declare type DefaultExport = {
   ccContext: any,
