@@ -8,7 +8,7 @@ import * as refCache from '../ref/_cache';
 const { safeAssignToMap, okeys, safeGet } = util;
 
 export default function (module, mState, moduleMustNotExisted = true) {
-  //force MODULE_VOID state as {}
+  // force MODULE_VOID state as {}
   const state = module === MODULE_VOID ? {} : mState;
   try {
     checker.checkModuleNameAndState(module, state, moduleMustNotExisted);

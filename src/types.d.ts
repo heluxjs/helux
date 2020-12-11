@@ -610,9 +610,10 @@ export interface ICtx
   readonly globalComputed: RootCu[MODULE_GLOBAL];
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
-  readonly state: RootState[ModuleName] & PrivState;
-  readonly unProxyState: RootState[ModuleName] & PrivState;
-  readonly prevState: RootState[ModuleName] & PrivState;
+  // because module state may over write privstate, so put PrivState in frist place here
+  readonly state: PrivState & RootState[ModuleName];
+  readonly unProxyState: PrivState & RootState[ModuleName];
+  readonly prevState: PrivState & RootState[ModuleName];
   readonly moduleState: RootState[ModuleName];
   readonly reducer: RootReducer;
   readonly r: RootReducer;
@@ -1363,6 +1364,7 @@ export type GetRootComputed<Models extends { [key: string]: ModuleConfig }> = {
   & { [cst.MODULE_VOID]: {} }
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
+
 
 declare type DefaultExport = {
   ccContext: any,
