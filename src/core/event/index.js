@@ -2,7 +2,7 @@ import * as util from '../../support/util';
 import { MOUNTED } from '../../support/constant';
 import ccContext from '../../cc-context';
 
-const { event2handlers, handlerKey2handler, ccUKey2handlerKeys, ccUKey2ref} = ccContext;
+const { event2handlers, handlerKey2handler, ccUKey2handlerKeys, ccUKey2ref } = ccContext;
 const { makeHandlerKey, safeGetArray, justWarning } = util;
 
 function _findEventHandlers(event, module, ccClassKey, ccUniqueKey, identity) {
