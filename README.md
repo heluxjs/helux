@@ -16,6 +16,9 @@ English | [简体中文](./README.zh-CN.md)
   <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.2rem;'>
   <img src='https://img.shields.io/github/package-json/v/concentjs/concent/master.svg?label=npm%20version' alt='npm version' height='18'>
   </a>
+  <a href='https://travis-ci.org/concentjs/concent' style='margin: 0 0.2rem;'>
+  <img src='https://travis-ci.org/concentjs/concent.svg?branch=master' alt='build' height='18'>
+  </a>
   <a href='#' style='margin: 0 0.2rem;'>
   <img src='https://img.shields.io/github/issues/concentjs/concent.svg' alt='issues open' height='18'>
   </a>
