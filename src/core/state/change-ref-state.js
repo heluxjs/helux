@@ -97,7 +97,7 @@ export default function (state, {
     // committedState means final committedState
     (renderType, committedState, updateRef) => {
       const passToMiddleware = {
-        calledBy, type, payload, renderKey: targetRenderKey, targetDelay, ccKey, ccUniqueKey,
+        calledBy, type, payload, renderKey: targetRenderKey, delay: targetDelay, ccKey, ccUniqueKey,
         committedState, refModule, module, fnName,
         sharedState: sharedState || {}, // 给一个空壳对象，防止用户直接用的时候报错null
       };
