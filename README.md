@@ -70,6 +70,8 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 * React-native support
 
 ## 💻 Playground
+### Templates
+- [cra-template-concent-ts](https://github.com/concentjs/cra-template-concent-ts)
 
 ### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
@@ -86,9 +88,6 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 - [Calculator-concent](https://codesandbox.io/s/react-calculator-8hvqw) **vs** [Calculator-hook](https://codesandbox.io/s/react-calculator-84f2m)
 - [Concent query list](https://codesandbox.io/s/query-react-list-00mkd) & [Concent Shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [Hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
 - [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
-
-### Templates
-- [TTT](htts://github.com/concentjs/cra-template-concent-ts)
 
 ## 👨🏽‍Docs
 Visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
