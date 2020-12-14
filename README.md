@@ -87,11 +87,11 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 - [Concent query list](https://codesandbox.io/s/query-react-list-00mkd) & [Concent Shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [Hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
 - [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
 
+## Templates
+- [cra-template-concent-ts](htts://github.com/concentjs/cra-template-concent-ts)
+
 ## 👨🏽‍Docs
 Visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
-
-## Templates
-Visitl template [htts://github.com/concentjs/cra-template-concent-ts](htts://github.com/concentjs/cra-template-concent-ts).
 
 ## 📦Quick start
 Make sure you have installed [nodejs](http://nodejs.cn/download/)。
