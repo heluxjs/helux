@@ -90,7 +90,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 ## 👨🏽‍Docs
 visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
-## 📄 Templates
+## 📄Templates
 Visit [cra-template-concent-ts](htts://github.com/concentjs/cra-template-concent-ts).
 
 ## 📦Quick start
