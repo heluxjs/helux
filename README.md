@@ -88,7 +88,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 - [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
 
 ### Templates
-- [cra-template-concent-ts](htts://github.com/concentjs/cra-template-concent-ts)
+- [CRA_TEMPLATE](htts://github.com/concentjs/cra-template-concent-ts)
 
 ## 👨🏽‍Docs
 Visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
