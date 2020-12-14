@@ -91,7 +91,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 Visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
 ## Templates
-Visit [template-concent-ts](htts://github.com/concentjs/cra-template-concent-ts).
+Visitl template [htts://github.com/concentjs/cra-template-concent-ts](htts://github.com/concentjs/cra-template-concent-ts).
 
 ## 📦Quick start
 Make sure you have installed [nodejs](http://nodejs.cn/download/)。
