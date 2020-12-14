@@ -4,7 +4,7 @@ import {
   makeCuDepDesc, safeGetThenNoDupPush, makeFnDesc,
 } from '../../support/util';
 import { ERR, CATE_REF, FN_CU } from '../../support/constant';
-import { FUNCTION } from '../../support/priv-constant';
+import { FN } from '../../support/priv-constant';
 import ccContext from '../../cc-context';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 import uuid from './uuid';
@@ -59,10 +59,10 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
   let _descObj;
   if (itype === 'string') {// retKey
     if (isPJO(handler)) _descObj = { [item]: handler };
-    else if (typeof handler === FUNCTION) _descObj = { [item]: makeFnDesc(handler, depKeysOrOpt) };
+    else if (typeof handler === FN) _descObj = { [item]: makeFnDesc(handler, depKeysOrOpt) };
   } else if (isPJO(item)) {
     _descObj = item;
-  } else if (itype === FUNCTION) {
+  } else if (itype === FN) {
     _descObj = item(ctx);
     if (!isPJO(_descObj)) {
       runtimeHandler.tryHandleWarning(new Error(`type of ${type} callback result must be an object`));
@@ -90,7 +90,7 @@ function _parseDescObj(cate, confMeta, descObj) {
     const vType = typeof val;
 
     let targetItem = val;
-    if (vType === FUNCTION) {
+    if (vType === FN) {
       targetItem = { fn: val };
     }
 

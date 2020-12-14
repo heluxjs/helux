@@ -1,7 +1,7 @@
 
 
 import * as util from '../../support/util';
-import { NOT_A_JSON, STR_ARR_OR_STAR } from '../../support/priv-constant';
+import { INAJ, STR_ARR_OR_STAR } from '../../support/priv-constant';
 import { ERR, MODULE_GLOBAL } from '../../support/constant';
 import ccContext from '../../cc-context';
 
@@ -45,7 +45,7 @@ export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg 
 export function checkModuleNameAndState(moduleName, moduleState, moduleMustNotExisted) {
   checkModuleName(moduleName, moduleMustNotExisted);
   if (!util.isPJO(moduleState)) {
-    throw new Error(`module[${moduleName}]'s state ${NOT_A_JSON}`);
+    throw new Error(`module[${moduleName}]'s state ${INAJ}`);
   }
 }
 

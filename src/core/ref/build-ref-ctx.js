@@ -5,7 +5,7 @@ import {
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
 import * as util from '../../support/util';
-import { NOT_A_JSON, UNSTART, START } from '../../support/priv-constant';
+import { INAJ, UNSTART, START } from '../../support/priv-constant';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
 import changeRefState from '../state/change-ref-state';
@@ -335,7 +335,7 @@ export default function (ref, params, liteLevel = 5) {
       return justWarning(`initState must been called in setup block!`);
     }
     if (!util.isPJO(state)) {
-      return justWarning(`state ${NOT_A_JSON}`);
+      return justWarning(`state ${INAJ}`);
     }
     if (ctx.__$$cuOrWaCalled) {
       return justWarning(`initState must been called before computed or watch`);

@@ -4,7 +4,7 @@
  */
 import * as React from 'react';
 import { CC_HOOK, CC_OB, CC_CUSTOMIZE } from '../../support/constant';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { INAJ } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
 import mapRegistrationInfo from '../base/map-registration-info';
@@ -202,7 +202,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   if (mapProps) {
     const mapped = mapProps(refCtx);
     if (!isPJO(mapped)) {
-      throw new Error(`mapProps ret ${NOT_A_JSON}`)
+      throw new Error(`mapProps ret ${INAJ}`)
     }
     refCtx.mapped = mapped;
   }

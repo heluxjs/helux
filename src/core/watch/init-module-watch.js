@@ -1,6 +1,6 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { INAJ } from '../../support/priv-constant';
 import { CATE_MODULE, FN_WATCH } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
@@ -13,7 +13,7 @@ const { isPJO, safeGet, okeys } = util;
  */
 export default function (module, moduleWatch = {}, append = false) {
   if (!isPJO(moduleWatch)) {
-    throw new Error(`module[${module}] watch ${NOT_A_JSON}`);
+    throw new Error(`module[${module}] watch ${INAJ}`);
   }
 
   const rootWatchDep = ccContext.watch.getRootWatchDep();

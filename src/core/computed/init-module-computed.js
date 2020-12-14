@@ -1,6 +1,6 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { INAJ } from '../../support/priv-constant';
 import { CATE_MODULE, FN_CU } from '../../support/constant';
 import configureDepFns from '../base/configure-dep-fns';
 import findDepFnsToExecute from '../base/find-dep-fns-to-execute';
@@ -11,7 +11,7 @@ const { isPJO } = util;
 
 export default function (module, computed = {}) {
   if (!isPJO(computed)) {
-    throw new Error(`module[${module}] computed ${NOT_A_JSON}`);
+    throw new Error(`module[${module}] computed ${INAJ}`);
   }
 
   const ccComputed = ccContext.computed;

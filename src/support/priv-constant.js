@@ -6,8 +6,10 @@ export const UNSTART = '0';
 export const START = '1';
 export const END = '2';
 
-export const FUNCTION = 'function';
+export const FN = 'function';
 
-export const NOT_A_JSON = 'is not a plain json object!';
+export const INAF = `is not a ${FN}`;
+
+export const INAJ = 'is not a plain json object!';
 
 export const STR_ARR_OR_STAR = 'should be an string array or *!';

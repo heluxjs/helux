@@ -1,14 +1,14 @@
 /** @typedef {import('../types').ModuleConfig} ModuleConfig */
 import startup from './startup';
 import * as util from '../support/util';
-import { NOT_A_JSON } from '../support/priv-constant';
+import { INAJ } from '../support/priv-constant';
 import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
 import getLifecycle from '../core/param/get-lifecycle';
 
 const { isPJO, okeys, evalState } = util;
 const pError = label => {
-  throw new Error(`[[run]]: param error, ${label} ${NOT_A_JSON}`);
+  throw new Error(`[[run]]: param error, ${label} ${INAJ}`);
 }
 
 /**

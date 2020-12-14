@@ -2,7 +2,7 @@
 /** @typedef {import('../../types').ICtxBase} ICtxBase */
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { INAJ, INAF } from '../../support/priv-constant';
 import runLater from '../base/run-later';
 import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
@@ -42,7 +42,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
           index++;
           if (typeof middlewareFn === 'function') middlewareFn(passToMiddleware, next);
           else {
-            justWarning(`found one middleware is not a function`);
+            justWarning(`found one middleware ${INAF}`);
             next();
           }
         }
@@ -66,7 +66,7 @@ export default function (state, {
   if (state === undefined) return;
 
   if (!isPJO(state)) {
-    justWarning(`your committed state ${NOT_A_JSON}`);
+    justWarning(`your committed state ${INAJ}`);
     return;
   }
 

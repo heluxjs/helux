@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
-import { NOT_A_JSON, CU_KEY } from './priv-constant';
+import { INAJ, CU_KEY, FN } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
 const cer = (...args) => runtimeVar.log && console.error(...args);
@@ -45,12 +45,16 @@ export function isPJO(obj, canBeArray = false) {
   return canBeArray ? (isArr || isObj) : isObj;
 }
 
+export function isFn(maybeFn) {
+  return typeof maybeFn === FN;
+}
+
 export function isAsyncFn(fn, fnName, asyncKeys = []) {
   if (!fn) return false;
 
   // @see https://github.com/tj/co/blob/master/index.js
   // obj.constructor.name === 'AsyncFunction'
-  let isAsync = protoToString.call(fn) === '[object AsyncFunction]' || 'function' == typeof fn.then;
+  let isAsync = protoToString.call(fn) === '[object AsyncFunction]' || FN == typeof fn.then;
   if (isAsync === true) {
     return true;
   }
@@ -491,7 +495,7 @@ export function makeCallInfo(module) {
 export function evalState(state = {}) {
   const ret = typeof state === 'function' ? state() : state;
   if (!isPJO(ret)) {
-    throw new Error(`state ${NOT_A_JSON}`);
+    throw new Error(`state ${INAJ}`);
   }
   return ret;
 }

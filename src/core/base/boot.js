@@ -1,6 +1,6 @@
 
 import * as util from '../../support/util';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { INAJ } from '../../support/priv-constant';
 import { MODULE_GLOBAL, MODULE_DEFAULT, MODULE_CC, MODULE_VOID } from '../../support/constant';
 import ccContext from '../../cc-context';
 import initModuleState from '../state/init-module-state';
@@ -14,7 +14,7 @@ const { isPJO, okeys, isObject } = util;
 
 function checkObj(rootObj, tag) {
   if (!isPJO(rootObj)) {
-    throw new Error(`${tag} ${NOT_A_JSON}`);
+    throw new Error(`${tag} ${INAJ}`);
   }
 }
 

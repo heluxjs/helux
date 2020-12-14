@@ -1,11 +1,11 @@
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
-import { NOT_A_JSON } from '../../support/priv-constant';
+import { INAJ, INAF } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
 
 export default function (module, reducer = {}) {
   if (!util.isPJO(reducer)) {
-    throw new Error(`module[${module}] reducer ${NOT_A_JSON}`);
+    throw new Error(`module[${module}] reducer ${INAJ}`);
   }
 
   const {
@@ -39,7 +39,7 @@ export default function (module, reducer = {}) {
 
     const reducerFn = newReducer[name];
     if (typeof reducerFn !== 'function') {
-      throw new Error(`reducer key[${name}] 's value is not a function`);
+      throw new Error(`module[${module}] reducer[${name}] ${INAF}`);
     } else {
       let targetFn = reducerFn;
       if (reducerFn.__fnName) {// 将某个已载入到模块a的reducer再次载入到模块b

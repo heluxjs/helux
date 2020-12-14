@@ -2,7 +2,7 @@
 import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
 import { MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
-import { NOT_A_JSON } from '../support/priv-constant';
+import { INAJ } from '../support/priv-constant';
 import * as util from '../support/util';
 import initModuleState from '../core/state/init-module-state';
 import initModuleReducer from '../core/reducer/init-module-reducer';
@@ -28,7 +28,7 @@ export default function (module, config = {}) {
       return;
     }
     if (!isPJO(config)) {
-      throw new Error(`param config ${NOT_A_JSON}`);
+      throw new Error(`param config ${INAJ}`);
     }
     if (module === MODULE_GLOBAL) {
       throw new Error('configuring global module is not allowed');

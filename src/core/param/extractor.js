@@ -1,5 +1,5 @@
 import { CC_DISPATCHER, MODULE_GLOBAL } from '../../support/constant';
-import { STR_ARR_OR_STAR, NOT_A_JSON } from '../../support/priv-constant';
+import { STR_ARR_OR_STAR, INAJ } from '../../support/priv-constant';
 import * as util from '../../support/util';
 import ccContext from '../../cc-context';
 import * as checker from './checker';
@@ -50,7 +50,7 @@ export function getConnect(regConnect) {
   const targetConnect = regConnect || {};// codesandbox lost default value
 
   if (!util.isPJO(targetConnect, true)) {
-    throw new Error(`param connect type error, it ${NOT_A_JSON} or string array`);
+    throw new Error(`param connect type error, it ${INAJ} or string array`);
   }
   const isArr = Array.isArray(targetConnect);
 

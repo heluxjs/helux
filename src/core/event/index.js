@@ -1,5 +1,6 @@
 import * as util from '../../support/util';
 import { MOUNTED } from '../../support/constant';
+import { INAF } from '../../support/priv-constant';
 import ccContext from '../../cc-context';
 
 const { event2handlers, handlerKey2handler, ccUKey2handlerKeys, ccUKey2ref } = ccContext;
@@ -60,7 +61,7 @@ function _deleteEventHandlers(handlers) {
 export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler) {
   const handlers = safeGetArray(event2handlers, event);
   if (typeof handler !== 'function') {
-    return justWarning(`event ${event}'s handler is not a function!`);
+    return justWarning(`event ${event}'s handler ${INAF}!`);
   }
 
   const handlerKey = makeHandlerKey(ccUniqueKey, event, identity);
