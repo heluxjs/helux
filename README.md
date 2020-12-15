@@ -71,6 +71,19 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 
 ## 💻 Playground
 
+### Templates
+- [cra-template-concent-ts](https://github.com/concentjs/cra-template-concent-ts)
+
+install by npx command
+```sh
+$ npx create-react-app my-app --template cra-template-concent-ts
+```
+or clone its source code by git command
+```sh
+$ git clone https://github.com/concentjs/cra-project-concent-ts
+```
+
+
 ### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
 - [Dep collection of computed](./examples/dep-collection-of-computed.md)
@@ -87,8 +100,8 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 - [Concent query list](https://codesandbox.io/s/query-react-list-00mkd) & [Concent Shared query list](https://codesandbox.io/s/query-react-list-shared-state-l3fhb) **vs** [Hook query list](https://codesandbox.io/s/elastic-dhawan-qw7m4)
 - [Concent-nextjs-ssr](https://github.com/concentjs/ssr-demo-1)
 
-## 👨🏽‍💻 Docs
-visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
+## 👨🏽‍Docs
+Visit official website [https://concentjs.github.io/concent-doc](https://concentjs.github.io/concent-doc) to learn more.
 
 ## 📦Quick start
 Make sure you have installed [nodejs](http://nodejs.cn/download/)。
