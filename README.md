@@ -73,6 +73,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 
 ### Templates
 - [cra-template-concent-ts](https://github.com/concentjs/cra-template-concent-ts)
+
 install by npx command
 ```sh
 $ npx create-react-app my-app --template cra-template-concent-ts
