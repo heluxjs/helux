@@ -2,6 +2,7 @@
  * 为每一个实例单独建立了一个获取计算结果的观察容器，方便写入依赖
  */
 /**@typedef {import('../../types-inner').IRefCtx} ICtx*/
+/**@typedef {import('../../types-inner').IRef} IRef*/
 import updateDep from '../ref/update-dep';
 import computedMap from '../../cc-context/computed-map';
 import rv from '../../cc-context/runtime-var';
@@ -10,7 +11,7 @@ import { justWarning, isAsyncFn, okeys } from '../../support/util';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-const { _computedValueOri, _computedValue, _computedRaw, _computedDep } = computedMap;
+const { _computedRawValues, _computedValues, _computedRaw, _computedDep } = computedMap;
 
 // refModuleCuDep 来自 ref.ctx.computedDep
 function writeRetKeyDep(refModuleCuDep, ref, module, retKey, isForModule) {
@@ -34,9 +35,9 @@ function writeRetKeyDep(refModuleCuDep, ref, module, retKey, isForModule) {
   用户读取cuVal的结果时，收集到当前计算函对其他计算函数的依赖关系
   
     module:
-      function fullName(n, o, f){
-          return n.firstName + n.lastName;
-      }
+    function fullName(n, o, f){
+        return n.firstName + n.lastName;
+    }
     
     // 此时funnyName依赖是 firstName lastName age
     function funnyName(n, o, f){
@@ -58,12 +59,12 @@ function writeRetKeyDep(refModuleCuDep, ref, module, retKey, isForModule) {
 export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@type ICtx*/refCtx, retKeys, referInfo) {
   let oriCuContainer, oriCuObContainer, computedRaw;
   if (CATE_MODULE === sourceType) {
-    oriCuContainer = _computedValueOri[module];
-    oriCuObContainer = _computedValue[module];
+    oriCuContainer = _computedRawValues[module];
+    oriCuObContainer = _computedValues[module];
     computedRaw = _computedRaw[module];
   } else {
-    oriCuContainer = refCtx.refCuPackedValues;
-    oriCuObContainer = refCtx.refCuRetContainer;
+    oriCuContainer = refCtx.refComputedRawValues;
+    oriCuObContainer = refCtx.refComputedValues;
     computedRaw = refCtx.computedRetKeyFns;
   }
 
@@ -94,20 +95,27 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
   });
 }
 
-// isForModule : true for module , false for connect
+
+/**
+ * 创建一个具有依赖收集行为的计算结果获取容器
+ * @param {IRef} ref 
+ * @param {string} module 
+ * @param {boolean} isForModule - true: belong to one module, false: connect other modules
+ * @param {boolean} isRefCu 
+ */
 export default function (ref, module, isForModule = true, isRefCu = false) {
   const ctx = ref.ctx;
-  const moduleCuRetWrapper = _computedValue[module];
+  const moduleCuRetContainer = _computedValues[module];
 
   // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
-  const oriCuContainer = isRefCu ? ctx.refCuPackedValues : _computedValueOri[module];
+  const oriCuContainer = isRefCu ? ctx.refComputedRawValues : _computedRawValues[module];
   if (!oriCuContainer) return {};
 
-  // refComputed 的 cuRetWrapper 是在setup执行完毕后会被替换成填充满属性的新引用 refCuRetContainer
-  // 见 before-mount里: ctx.refCuRetContainer =....
+  // refComputed 的 cuRetWrapper 是在setup执行完毕后会被替换成填充满属性的新引用 refComputedValues
+  // 见 before-mount里: ctx.refComputedValues =....
   // 所以需要在get时现取，而不能在闭包作用域内提前缓存起来反复使用
-  const getCuRetWrapper = () => {
-    return isRefCu ? ctx.refCuRetContainer : moduleCuRetWrapper;
+  const getCuRetContainer = () => {
+    return isRefCu ? ctx.refComputedValues : moduleCuRetContainer;
   };
 
   // 为普通的计算结果容器建立代理对象
@@ -127,7 +135,7 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
         }
       }
       // 从已定义defineProperty的计算结果容器里获取结果
-      const cuRetWrapper = getCuRetWrapper();
+      const cuRetWrapper = getCuRetContainer();
       return cuRetWrapper[retKey];
     },
     set: function (target, retKey, value) {

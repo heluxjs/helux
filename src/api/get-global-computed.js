@@ -1,8 +1,8 @@
 import ccContext from '../cc-context';
 import { MODULE_GLOBAL } from '../support/constant';
 
-const _computedValue = ccContext.computed._computedValue;
+const _computedValues = ccContext.computed._computedValues;
 
 export default () => {
-  return _computedValue[MODULE_GLOBAL];
+  return _computedValues[MODULE_GLOBAL];
 }

@@ -34,8 +34,8 @@ export default function (module, mState, moduleMustNotExisted = true) {
   // 防止用户不定义任何computed，而只是定义watch时报错undefined
   const cu = ccContext.computed;
   safeGet(cu._computedDep, module, util.makeCuDepDesc());
-  safeGet(cu._computedValue, module);
-  safeGet(cu._computedValueOri, module);
+  safeGet(cu._computedValues, module);
+  safeGet(cu._computedRawValues, module);
 
   const stateKeys = okeys(state);
   ccContext.moduleName2stateKeys[module] = stateKeys;

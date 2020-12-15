@@ -33,7 +33,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
 
   if (recomputed) {
     const { computed, watch } = ccContext;
-    const computedValue = computed._computedValue;
+    const computedValue = computed._computedValues;
     const watchDep = watch._watchDep;
     const modules = okeys(ccContext.store._state);
     modules.forEach(m => {
@@ -89,7 +89,7 @@ function _clearAll() {
   clearObject(ccContext.reducer._reducer, toExcludedModules);
   clearObject(ccContext.store._state, toExcludedModules, {}, true);
   clearObject(ccContext.computed._computedDep, toExcludedModules);
-  clearObject(ccContext.computed._computedValue, toExcludedModules);
+  clearObject(ccContext.computed._computedValues, toExcludedModules);
   clearObject(ccContext.watch._watchDep, toExcludedModules);
   clearObject(ccContext.middlewares);
 

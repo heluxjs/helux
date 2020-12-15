@@ -20,7 +20,7 @@ export default function (module, computed = {}) {
   const rootComputedDep = ccComputed.getRootComputedDep();
   const rootComputedRaw = ccComputed.getRootComputedRaw();
   // 在init-module-state那里已safeGet, 这里可以安全的直接读取
-  const cuOri = ccComputed._computedValueOri[module];
+  const cuOri = ccComputed._computedRawValues[module];
 
   rootComputedRaw[module] = computed;
   const moduleState = rootState[module];

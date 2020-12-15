@@ -1,21 +1,46 @@
+/** @typedef {import('./types').IAnyObj} IAnyObj */
+/** @typedef {import('./types').IFnCtxBase} IFnCtxBase */
 import { ICtxBase, IAnyFnInObj } from './types';
 import { UNSTART, START, END } from './support/priv-constant';
 
 type RenderStatus = typeof UNSTART | typeof START | typeof END;
 
+
+export interface ComputedPackedValue {
+  needCompute: boolean;
+  fn: Function;
+  newState: IAnyObj;
+  oldState: IAnyObj;
+  fnCtx: IFnCtxBase;
+  isLazy: boolean;
+  result: any;
+}
+
+interface DepDesc {
+  stateKey2retKeys: Record<string, string[]>;
+  retKey2fn: Record<string, Function>;
+  immediateRetKeys: string[];
+}
+
 export type IRefCtx = ICtxBase & {
-  refCuRetContainer: any;
   /**
-   * 原始的计算结果容器，在beforeMount阶段对 refComputedValue 包裹 defineProperty 时，
-   * 会用 refComputedOri 来存储 refComputedValue 的值
+   * 经 defineProperty 处理过的对象，用于获取 refComputedRawValues 里的 packedValue
    */
-  refCuPackedValues: any;
+  refComputedValues: Record<string, any>;
+  /**
+   * 辅助 refComputedValues 取值，避免 get 死循环
+   */
+  refComputedRawValues: Record<string, ComputedPackedValue>;
   /**
    * 不按模块分类，映射的cuRetKey_fn_
    * key: cuRetKey
    * value: cuFn
    */
-  computedRetKeyFns: IAnyFnInObj,
+  computedRetKeyFns: IAnyFnInObj;
+
+  computedDep: { [module: string]: DepDesc };
+  watchDep: { [module: string]: DepDesc };
+
   /** is in before mount step */
   __$$inBM: boolean;
   __$$renderStatus: RenderStatus;
@@ -25,3 +50,8 @@ export type IRefCtx = ICtxBase & {
   // 当前实例观察的key map
   __$$curWaKeys: {},
 };
+
+
+export interface IRef {
+  ctx: IRefCtx;
+}

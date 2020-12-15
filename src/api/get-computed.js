@@ -1,8 +1,8 @@
 import ccContext from '../cc-context';
 
-const _computedValue = ccContext.computed._computedValue;
+const _computedValues = ccContext.computed._computedValues;
 
 export default module => {
-  if (module) return _computedValue[module];
-  else return _computedValue;
+  if (module) return _computedValues[module];
+  else return _computedValues;
 }

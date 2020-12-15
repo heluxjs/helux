@@ -14,13 +14,13 @@ import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
 import extractStateByKeys from '../core/state/extract-state-by-keys';
 
-const { _computedValue } = computed;
+const { _computedValues } = computed;
 const { okeys, extractChangedState } = util;
 const getDispatcher = () => ccContext.permanentDispatcher;
 
 const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false } = {}) => {
   const moduleState = getState(module);
-  const moduleComputedValue = _computedValue[module];
+  const moduleComputedValue = _computedValues[module];
 
   const rootComputedDep = computed.getRootComputedDep();
   const curDepComputedFns = (committedState, isFirstCall) => pickDepFns(

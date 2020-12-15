@@ -22,7 +22,7 @@ const { verboseInfo, makeError, justWarning, isPJO, okeys } = util;
 const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer },
-  computed: { _computedValue },
+  computed: { _computedValues },
   runtimeHandler, runtimeVar,
 } = ccContext;
 const me = makeError;
@@ -255,7 +255,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         // 指的是目标模块的state
         moduleState,
         // 指的是目标模块的的moduleComputed
-        moduleComputed: _computedValue[targetModule] || {},
+        moduleComputed: _computedValues[targetModule] || {},
 
         // 利用dispatch调用自动生成的setState
         setState: (state, r, d) => {

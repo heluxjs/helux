@@ -124,7 +124,7 @@ export default function (
       const bindOthers = (bindTarget) => {
         bindToWindow('CC_CONTEXT', ccContext, bindTarget);
         bindToWindow('ccc', ccContext, bindTarget);
-        bindToWindow('cccc', ccContext.computed._computedValue, bindTarget);
+        bindToWindow('cccc', ccContext.computed._computedValues, bindTarget);
         bindToWindow('sss', ccContext.store._state, bindTarget);
       }
       if (window && window.mcc) {

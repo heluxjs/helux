@@ -1,3 +1,4 @@
+/** @typedef {import('../../types-inner').IRefCtx} ICtx */
 import {
   MODULE_GLOBAL, ERR, CCSYNC_KEY,
   SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK,
@@ -96,6 +97,7 @@ function makeProxyReducer(m, dispatch) {
   })
 }
 
+
 function bindCtxToRef(isCtxNull, ref, ctx) {
   if (isCtxNull) ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
@@ -128,253 +130,24 @@ function bindCtxToRef(isCtxNull, ref, ctx) {
   }
 }
 
-//调用buildFragmentRefCtx 之前，props参数已被处理过
-/**
- * 构建refCtx，附加到ref上
- * liteLevel 越小，绑定的方法越少
- */
-export default function (ref, params, liteLevel = 5) {
-  // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
-  const {
-    ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, extra = {}, tag = '',
-    storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {},
-  } = params;
-
-  const stateModule = module;
-  const existedCtx = ref.ctx;
-  const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
-  const modStateKeys = getModuleStateKeys(stateModule);
-
-  let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
-
-  // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
-  // 做个保护判断，防止 ctx = {}
-  // const act = runtimeHandler.act;// for react-test-utils
-  if (!isCtxNull && existedCtx.ccUniqueKey) {
-    __boundSetState = existedCtx.__boundSetState;
-    __boundForceUpdate = existedCtx.__boundForceUpdate;
-  } else if (type !== CC_HOOK) {
-    __boundSetState = ref.setState.bind(ref);
-    __boundForceUpdate = ref.forceUpdate.bind(ref);
-  }
-
-  const refOption = {};
-  refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined
-    ? persistStoredKeys : ccOption.persistStoredKeys;
-  refOption.tag = ccOption.tag || tag;
-
-  // pick ccOption tag first, register tag second
-  const ccUniqueKey = computeCcUniqueKey(ccClassKey, ccKey, refOption.tag);
-  // 没有设定renderKey的话读id，最后才默认renderKey为ccUniqueKey
-  refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
-
-  refOption.storedKeys = getStoredKeys(stateModule, state, ccOption.storedKeys, storedKeys);
-
-  //用户使用ccKey属性的话，必需显示的指定ccClassKey
-  if (ccKey && !ccClassKey) {
-    throw new Error(`missing ccClassKey while init a cc ins with ccKey[${ccKey}]`);
-  }
-
-  if (refOption.storedKeys.length > 0) {
-    if (!ccKey) throw me(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi(`ccClassKey[${ccClassKey}]`));
-  }
-
-  const mstate = getState(module);
-
-  // recover ref state
-  const refStoredState = refStore._state[ccUniqueKey] || {};
-  const mergedState = Object.assign({}, state, refStoredState, mstate);
-  ref.state = mergedState;
-  const stateKeys = okeys(mergedState);
-
-  const connectedModules = okeys(connect);
-  const connectedState = {};
-
-  const connectedComputed = {};
-  connectedModules.forEach((m) => {
-    connectedComputed[m] = makeCuRefObContainer(ref, m, false);
-  });
-  const moduleComputed = makeCuRefObContainer(ref, module);
-  // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
-  const globalComputed = connectedComputed[MODULE_GLOBAL];
-  const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
-  // extract privStateKeys
-  const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
-  const moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true);
-
-  // declare cc state series api
-  const changeState = (state, options) => {
-    changeRefState(state, options, ref);
-  };
-  const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
-    changeState(state, { calledBy, module, renderKey, delay, reactCallback });
-  };
-  const setModuleState = (module, state, reactCallback, renderKey, delay) => {
-    _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
-  };
-  const setState = (p1, p2, p3, p4, p5) => {
-    const p1Type = typeof p1;
-    if (p1Type === 'string') {
-      // p1: module, p2: state, p3: cb, p4: rkey, p5: delay
-      setModuleState(p1, p2, p3, p4, p5);
-    } else if (p1Type === 'function') {
-      // p1: stateFn, p2: rkey, p3: delay
-      const newState = p1(Object.assign({}, ctx.unProxyState), ctx.props);
-      _setState(stateModule, newState, SET_STATE, p2, p3, p4);
-    } else {
-      // p1: state, p2: cb, p3: rkey, p4: delay
-      _setState(stateModule, p1, SET_STATE, p2, p3, p4);
-    }
-  };
-  const forceUpdate = (reactCallback, renderKey, delay) => {
-    _setState(stateModule, ref.unProxyState, FORCE_UPDATE, reactCallback, renderKey, delay);
-  };
-
-  const __$$onEvents = [];
-  const effectItems = [], effectPropsItems = [];// {fn:function, status:0, eId:'', immediate:true}
-  const eid2effectReturnCb = {}, eid2effectPropsReturnCb = {};// fn
-  const effectMeta = { effectItems, eid2effectReturnCb, effectPropsItems, eid2effectPropsReturnCb };
-  const refs = {};
-
-  // depDesc = {stateKey2retKeys: {}, retKey2fn:{}}
-  // computedDep or watchDep  : { [module:string] : { stateKey2retKeys: {}, retKey2fn: {}, immediateRetKeys: [] } }
-  const computedDep = {}, watchDep = {};
-  const allModules = connectedModules.slice();
-  // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
-  // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
-  noDupPush(allModules, module);
-
-  const props = getOutProps(ref.props);
-  const now = Date.now();
-  const ctx = {
-    // static params
-    type,
-    insType,
-    module,
-    ccClassKey,
-    ccKey,
-    ccUniqueKey,
-    renderCount: 0,
-    initTime: now,
-    watchedKeys,
-    privStateKeys,
-    connect,
-    connectedModules,
-    allModules,
-
-    // dynamic meta, I don't want user know these props, so let field name start with __$$
-    __$$onEvents,// 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
-
-    __$$hasModuleState: modStateKeys.length > 0,
-    __$$renderStatus: UNSTART,
-
-    __$$curWaKeys: {},
-    __$$compareWaKeys: {},
-    __$$compareWaKeyCount: 0,// write before render
-    __$$nextCompareWaKeys: {},
-    __$$nextCompareWaKeyCount: 0,
-
-    __$$curConnWaKeys: {},
-    __$$compareConnWaKeys: {},
-    __$$compareConnWaKeyCount: {},
-    __$$nextCompareConnWaKeys: {},
-    __$$nextCompareConnWaKeyCount: {},
-
-    __$$staticWaKeys: {},// 用于快速的去重记录
-    __$$staticWaKeyList: [],// 在实例didMount时由__$$staticWaKeys计算得出，用于辅助清理依赖映射
-
-    persistStoredKeys: refOption.persistStoredKeys,
-    storedKeys: refOption.storedKeys,
-    renderKey: refOption.renderKey,
-    tag: refOption.tag,
-
-    prevProps: props,
-    props,
-    // collected mapProps result
-    mapped: {},
-
-    prevState: Object.assign({}, mergedState),
-    // state
-    state: makeObState(ref, mergedState, stateModule, true),
-    unProxyState: mergedState,// 没有proxy化的state
-    moduleState,
-    __$$mstate: mstate,// 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
-    globalState,
-    connectedState,
-    // for function: can pass value to extra in every render period
-    // for class: can pass value to extra one time
-    extra,
-    staticExtra: {},
-    settings: {},
-
-    refCuRetContainer: {}, // 包裹了defineProperty后的结果集
-    // 原始的计算结果容器，在beforeMount阶段对 refComputedValue 包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
-    refCuPackedValues: {},
-    moduleComputed,
-    globalComputed,
-    connectedComputed,
-
-    moduleReducer: null,
-    globalReducer: null,
-    connectedReducer: {},
-    reducer: {},
-
-    // api meta data
-    stateKeys,
-    computedDep,
-    computedRetKeyFns: {},
-    watchDep,
-    watchRetKeyFns: {},//不按模块分类，映射的watchRetKey_fn_
-    execute: null,
-    effectMeta,
-    retKey2fnUid: {},
-
-    // api
-    reactSetState: noop,//等待重写
-    __boundSetState,
-    reactForceUpdate: noop,//等待重写
-    __boundForceUpdate,
-    setState,
-    setModuleState,
-    forceUpdate,
-    changeState,// not expose in d.ts
-    refs,
-    useRef: (refName) => {
-      return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
-    },
-
-    // below methods only can be called by cc or updated by cc in existed period, not expose in d.ts
-    __$$ccSetState: hf.makeCcSetStateHandler(ref),
-    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
-    __$$settedList: [],//[{module:string, keys:string[]}, ...]
-    __$$prevMoStateVer: {},
-    __$$prevModuleVer: getModuleVer(stateModule),
-    __$$cuOrWaCalled: false,
-  };
-  bindCtxToRef(isCtxNull, ref, ctx);
-  // computed result containers
-  ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
-
-  ref.setState = setState;
-  ref.forceUpdate = forceUpdate;
-
+function bindInitStateHandler(ref, ctx, registryState, refStoredState, mstate, modStateKeys) {
   // allow user have a chance to define state in setup block;
   ctx.initState = (initialStateOrCb) => {
     let initialState = initialStateOrCb;
     if (typeof initialStateOrCb === 'function') {
       initialState = initialStateOrCb();
     }
-    if (!ref.ctx.__$$inBM) {
+    if (!ctx.__$$inBM) {
       return justWarning(`initState must been called in setup block!`);
     }
-    if (!util.isPJO(state)) {
+    if (!util.isPJO(registryState)) {
       return justWarning(`state ${INAJ}`);
     }
     if (ctx.__$$cuOrWaCalled) {
       return justWarning(`initState must been called before computed or watch`);
     }
 
-    const newRefState = Object.assign({}, state, initialState, refStoredState, mstate);
+    const newRefState = Object.assign({}, registryState, initialState, refStoredState, mstate);
     // 更新stateKeys，防止遗漏新的私有stateKey
     ctx.stateKeys = okeys(newRefState);
     ctx.privStateKeys = util.removeArrElements(okeys(newRefState), modStateKeys);
@@ -383,7 +156,10 @@ export default function (ref, params, liteLevel = 5) {
     ctx.unProxyState = newRefState;
     ref.state = Object.assign(ctx.state, newRefState);
   }
+}
 
+
+function bindModApis(ref, ctx, stateModule, liteLevel, setState) {
   // 创建dispatch需要ref.ctx里的ccClassKey相关信息, 所以这里放在ref.ctx赋值之后在调用makeDispatchHandler
   const dispatch = hf.makeDispatchHandler(ref, false, false, stateModule);
   ctx.dispatch = dispatch;
@@ -401,10 +177,14 @@ export default function (ref, params, liteLevel = 5) {
     ctx.invokeSilent = ctx.silentInvoke;// alias of silentInvoke
 
     ctx.setGlobalState = (state, reactCallback, renderKey, delay) => {
-      _setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
+      setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
     };
   }
+  return dispatch;
+}
 
+
+function bindSyncApis(ref, ctx, liteLevel) {
   if (liteLevel > 2) {// level 3, assign async api
     const cachedBoundFns = {};
 
@@ -413,16 +193,16 @@ export default function (ref, params, liteLevel = 5) {
         const valType = typeof val;
         if (isValueNotNull(val) && (valType === 'object' || valType === 'function')) {
           return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
-        } else {
-          const key = `${e}|${val}|${rkey}|${delay}`;
-          let boundFn = cachedBoundFns[key];
-          if (!boundFn) {
-            cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
-            boundFn = cachedBoundFns[key];
-          }
-          return boundFn;
         }
-      }
+
+        const key = `${e}|${val}|${rkey}|${delay}`;
+        let boundFn = cachedBoundFns[key];
+        if (!boundFn) {
+          cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
+          boundFn = cachedBoundFns[key];
+        }
+        return boundFn;
+      };
 
       // case: <input data-ccsync="foo/f1" onChange={ctx.sync} />
       __sync({ type: 'val' }, ref, e);
@@ -440,7 +220,10 @@ export default function (ref, params, liteLevel = 5) {
       __sync({ [CCSYNC_KEY]: ccsync, type: 'bool', delay, rkey }, ref);
     };
   }
+}
 
+
+function bindEventApis(ctx, liteLevel, ccUniqueKey) {
   if (liteLevel > 3) {// level 4, assign event api
     ctx.emit = (event, ...args) => {
       ev.findEventHandlersToPerform(ev.getEventItem(event), ...args);
@@ -452,9 +235,16 @@ export default function (ref, params, liteLevel = 5) {
       ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
     }
     ctx.on = (inputEvent, handler) => {
-      __$$onEvents.push({ inputEvent, handler });
+      ctx.__$$onEvents.push({ inputEvent, handler });
     };
   }
+}
+
+
+function bindEnhanceApis(ctx, liteLevel, stateModule) {
+  const effectItems = [], effectPropsItems = []; // {fn:function, status:0, eId:'', immediate:true}
+  const eid2effectReturnCb = {}, eid2effectPropsReturnCb = {};// fn
+  ctx.effectMeta = { effectItems, eid2effectReturnCb, effectPropsItems, eid2effectPropsReturnCb };
 
   if (liteLevel > 4) {// level 5, assign enhance api
     ctx.execute = handler => ctx.execute = handler;
@@ -510,10 +300,13 @@ export default function (ref, params, liteLevel = 5) {
     ctx.effect = makeEffectHandler(effectItems, false);
     ctx.effectProps = makeEffectHandler(effectPropsItems, true);
   }
+}
 
-  // 构造完毕ctx后，开始创建reducer，和可观察connectedState
+
+function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, allModules, dispatch ) {
+  // 构造完毕ctx后，开始创建 reducer，和可观察 connectedState
   const {
-    connectedReducer,
+    connectedReducer, connectedState,
     __$$curConnWaKeys, __$$compareConnWaKeys, __$$compareConnWaKeyCount,
     __$$nextCompareConnWaKeys, __$$nextCompareConnWaKeyCount,
   } = ctx;
@@ -569,6 +362,235 @@ export default function (ref, params, liteLevel = 5) {
     recordDep(ccUniqueKey, module, watchedKeys);
   }
   ctx.__$$autoWatch = __$$autoWatch;
+}
+
+/**
+ * 构建refCtx，附加到ref上
+ * liteLevel 越小，绑定的方法越少
+ */
+export default function (ref, params, liteLevel = 5) {
+  // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
+  const {
+    ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, extra = {}, tag = '',
+    storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {},
+  } = params;
+
+  const stateModule = module;
+  const existedCtx = ref.ctx;
+  const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
+  const modStateKeys = getModuleStateKeys(stateModule);
+
+  let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
+
+  // 如果已存在ctx，则直接指向原来的__bound，否则会造成无限递归调用栈溢出
+  // 做个保护判断，防止 ctx = {}
+  // const act = runtimeHandler.act;// for react-test-utils
+  if (!isCtxNull && existedCtx.ccUniqueKey) {
+    __boundSetState = existedCtx.__boundSetState;
+    __boundForceUpdate = existedCtx.__boundForceUpdate;
+  } else if (type !== CC_HOOK) {
+    __boundSetState = ref.setState.bind(ref);
+    __boundForceUpdate = ref.forceUpdate.bind(ref);
+  }
+
+  const refOption = {};
+  refOption.persistStoredKeys = ccOption.persistStoredKeys === undefined
+    ? persistStoredKeys : ccOption.persistStoredKeys;
+  refOption.tag = ccOption.tag || tag;
+
+  // pick ccOption tag first, register tag second
+  const ccUniqueKey = computeCcUniqueKey(ccClassKey, ccKey, refOption.tag);
+  // 没有设定renderKey的话读id，最后才默认renderKey为ccUniqueKey
+  refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
+  refOption.storedKeys = getStoredKeys(stateModule, state, ccOption.storedKeys, storedKeys);
+
+  //用户使用ccKey属性的话，必需显示的指定ccClassKey
+  if (ccKey && !ccClassKey) {
+    throw new Error(`missing ccClassKey while init a cc ins with ccKey[${ccKey}]`);
+  }
+
+  if (refOption.storedKeys.length > 0) {
+    if (!ccKey) throw me(ERR.CC_STORED_KEYS_NEED_CCKEY, vbi(`ccClassKey[${ccClassKey}]`));
+  }
+  const mstate = getState(module);
+
+  // recover ref state
+  const refStoredState = refStore._state[ccUniqueKey] || {};
+  const mergedState = Object.assign({}, state, refStoredState, mstate);
+  ref.state = mergedState;
+  const stateKeys = okeys(mergedState);
+
+  const connectedModules = okeys(connect);
+
+  const connectedComputed = {};
+  connectedModules.forEach((m) => {
+    connectedComputed[m] = makeCuRefObContainer(ref, m, false);
+  });
+  const moduleComputed = makeCuRefObContainer(ref, module);
+  // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
+  const globalComputed = connectedComputed[MODULE_GLOBAL];
+  const globalState = makeObState(ref, getState(MODULE_GLOBAL), MODULE_GLOBAL, false);
+  // extract privStateKeys
+  const privStateKeys = util.removeArrElements(okeys(state), modStateKeys);
+  const moduleState = module === MODULE_GLOBAL ? globalState : makeObState(ref, mstate, module, true);
+
+  // declare cc state series api
+  const changeState = (state, options) => {
+    changeRefState(state, options, ref);
+  };
+  const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
+    changeState(state, { calledBy, module, renderKey, delay, reactCallback });
+  };
+  const setModuleState = (module, state, reactCallback, renderKey, delay) => {
+    _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
+  };
+  const setState = (p1, p2, p3, p4, p5) => {
+    const p1Type = typeof p1;
+    if (p1Type === 'string') {
+      // p1: module, p2: state, p3: cb, p4: rkey, p5: delay
+      setModuleState(p1, p2, p3, p4, p5);
+    } else if (p1Type === 'function') {
+      // p1: stateFn, p2: rkey, p3: delay
+      const newState = p1(Object.assign({}, ctx.unProxyState), ctx.props);
+      _setState(stateModule, newState, SET_STATE, p2, p3, p4);
+    } else {
+      // p1: state, p2: cb, p3: rkey, p4: delay
+      _setState(stateModule, p1, SET_STATE, p2, p3, p4);
+    }
+  };
+  const forceUpdate = (reactCallback, renderKey, delay) => {
+    _setState(stateModule, ref.unProxyState, FORCE_UPDATE, reactCallback, renderKey, delay);
+  };
+
+  const refs = {};
+
+  const allModules = connectedModules.slice();
+  // 已在change-ref-state里做优化，支持组件即属于又连接同一个模块，不会照成冗余渲染，
+  // 所以此处allModules包含了module对渲染性能无影响，不过代码的语义上会照成重复的表达
+  noDupPush(allModules, module);
+
+  const props = getOutProps(ref.props);
+  const now = Date.now();
+  const ctx = {
+    // static params
+    type,
+    insType,
+    module,
+    ccClassKey,
+    ccKey,
+    ccUniqueKey,
+    renderCount: 0,
+    initTime: now,
+    watchedKeys,
+    privStateKeys,
+    connect,
+    connectedModules,
+    allModules,
+
+    // dynamic meta, I don't want user know these props, so let field name start with __$$
+    __$$onEvents: [],// 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
+
+    __$$hasModuleState: modStateKeys.length > 0,
+    __$$renderStatus: UNSTART,
+
+    __$$curWaKeys: {},
+    __$$compareWaKeys: {},
+    __$$compareWaKeyCount: 0,// write before render
+    __$$nextCompareWaKeys: {},
+    __$$nextCompareWaKeyCount: 0,
+
+    __$$curConnWaKeys: {},
+    __$$compareConnWaKeys: {},
+    __$$compareConnWaKeyCount: {},
+    __$$nextCompareConnWaKeys: {},
+    __$$nextCompareConnWaKeyCount: {},
+
+    __$$staticWaKeys: {},// 用于快速的去重记录
+    __$$staticWaKeyList: [],// 在实例didMount时由__$$staticWaKeys计算得出，用于辅助清理依赖映射
+
+    persistStoredKeys: refOption.persistStoredKeys,
+    storedKeys: refOption.storedKeys,
+    renderKey: refOption.renderKey,
+    tag: refOption.tag,
+
+    prevProps: props,
+    props,
+    // collected mapProps result
+    mapped: {},
+
+    prevState: Object.assign({}, mergedState),
+    // state
+    state: makeObState(ref, mergedState, stateModule, true),
+    unProxyState: mergedState,// 没有proxy化的state
+    moduleState,
+    __$$mstate: mstate,// 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
+    globalState,
+    connectedState: {},
+    // for function: can pass value to extra in every render period
+    // for class: can pass value to extra one time
+    extra,
+    staticExtra: {},
+    settings: {},
+
+    /** @type ICtx['refComputedValues'] */
+    refComputedValues: {},
+    /** @type ICtx['refComputedRawValues'] */
+    refComputedRawValues: {},
+    moduleComputed,
+    globalComputed,
+    connectedComputed,
+
+    moduleReducer: null,
+    globalReducer: null,
+    connectedReducer: {},
+    reducer: {},
+
+    // api meta data
+    stateKeys,
+    /** @type ICtx['computedDep'] */
+    computedDep: {},
+    computedRetKeyFns: {},
+     /** @type ICtx['watchDep'] */
+    watchDep: {},
+    watchRetKeyFns: {},// 不按模块分类，映射的 watchRetKey2fns
+    execute: null,
+    retKey2fnUid: {},
+
+    // api
+    reactSetState: noop,//等待重写
+    __boundSetState,
+    reactForceUpdate: noop,//等待重写
+    __boundForceUpdate,
+    setState,
+    setModuleState,
+    forceUpdate,
+    changeState,// not expose in d.ts
+    refs,
+    useRef: (refName) => {
+      return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
+    },
+
+    // below methods only can be called by cc or updated by cc in existed period, not expose in d.ts
+    __$$ccSetState: hf.makeCcSetStateHandler(ref),
+    __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
+    __$$settedList: [],//[{module:string, keys:string[]}, ...]
+    __$$prevMoStateVer: {},
+    __$$prevModuleVer: getModuleVer(stateModule),
+    __$$cuOrWaCalled: false,
+  };
+  bindCtxToRef(isCtxNull, ref, ctx);
+  // computed result containers
+  ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
+
+  ref.setState = setState;
+  ref.forceUpdate = forceUpdate;
+
+  bindInitStateHandler(ref, ctx, state, refStoredState, mstate, modStateKeys);
+  const dispatch = bindModApis(ref, ctx, stateModule, liteLevel, _setState);
+  bindSyncApis(ref, ctx, liteLevel);
+  bindEventApis(ctx, liteLevel, ccUniqueKey);
+  bindEnhanceApis(ctx, liteLevel, stateModule);
+  fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, allModules, dispatch);
 
   // 始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
