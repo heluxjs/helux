@@ -70,9 +70,18 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 * React-native support
 
 ## 💻 Playground
+
 ### Templates
 - [cra-template-concent-ts](https://github.com/concentjs/cra-template-concent-ts)
-> User can execute npm command `npx create-react-app my-app --template cra-template-concent-ts` to install this tempalte, or clone it by git command `git clone https://github.com/concentjs/cra-project-concent-ts`
+install by npx command
+```sh
+$ npx create-react-app my-app --template cra-template-concent-ts
+```
+or clone its source code by git command
+```sh
+$ git clone https://github.com/concentjs/cra-project-concent-ts
+```
+
 
 ### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
