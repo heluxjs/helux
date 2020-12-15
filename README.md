@@ -82,6 +82,7 @@ or clone its source code by git command
 ```sh
 $ git clone https://github.com/concentjs/cra-project-concent-ts
 ```
+see [online demo](https://codesandbox.io/s/cra-template-concent-ts-2x347)
 
 
 ### Key features snippet
