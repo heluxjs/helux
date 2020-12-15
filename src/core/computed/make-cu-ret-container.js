@@ -2,20 +2,21 @@ import { CU_KEY } from '../../support/priv-constant';
 import { makeCuPackedValue, okeys, justWarning } from '../../support/util';
 
 /**
- * 提供给用户使用，从存储的打包计算结果里获取目标计算结果的容器
+ * 提供给用户使用，从存储的打包计算对象里获取目标计算结果的容器
  * ------------------------------------------------------------------------------------
  * 触发get时，会从打包对象里获取目标计算结果，
  * 打包对象按 ${retKey} 放置在originalCuContainer里，
- * 对于refComputed，originalCuContainer 是 ctx.refComputedOri
+ * 对于refComputed，originalCuContainer 是 ctx.refCuPackedValues
  * 对于moduleComputed，originalCuContainer 是  concentContext.ccComputed._computedValueOri.{$module}
  */
 export default function (computed, originalCuContainer) {
-  const moduleComputedValue = {};
+  // it may prepare for refComputed or moduleComputed
+  const computedValues = {};
   okeys(computed).forEach(key => {
     // 用这个对象来存其他信息, 避免get无限递归，
     originalCuContainer[key] = makeCuPackedValue();
 
-    Object.defineProperty(moduleComputedValue, key, {
+    Object.defineProperty(computedValues, key, {
       get: function () {
         // 防止用户传入未定义的key
         const value = originalCuContainer[key] || {};
@@ -53,5 +54,5 @@ export default function (computed, originalCuContainer) {
     })
   });
 
-  return moduleComputedValue;
+  return computedValues;
 }

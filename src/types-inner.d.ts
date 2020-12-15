@@ -4,12 +4,12 @@ import { UNSTART, START, END } from './support/priv-constant';
 type RenderStatus = typeof UNSTART | typeof START | typeof END;
 
 export type IRefCtx = ICtxBase & {
+  refCuRetContainer: any;
   /**
-   *  原始的计算结果容器，在beforeMount阶段对refComputedValue包裹defineProperty时，
-   *  会用refComputedOri来存储refComputedValue的值
+   * 原始的计算结果容器，在beforeMount阶段对 refComputedValue 包裹 defineProperty 时，
+   * 会用 refComputedOri 来存储 refComputedValue 的值
    */
-  refComputedOri: any;
-  refComputedValue: any;
+  refCuPackedValues: any;
   /**
    * 不按模块分类，映射的cuRetKey_fn_
    * key: cuRetKey

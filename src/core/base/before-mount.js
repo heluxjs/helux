@@ -1,9 +1,10 @@
 import * as util from '../../support/util';
 import { MODULE_GLOBAL, NOT_MOUNT } from '../../support/constant';
+import { INAJ, INAF } from '../../support/priv-constant';
 import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 import makeCuRetContainer from '../computed/make-cu-ret-container';
-import makeCuRefObContainer from '../computed/make-cu-ref-ob-container';
+// import makeCuRefObContainer from '../computed/make-cu-ref-ob-container';
 
 const { okeys, makeCuDepDesc } = util;
 const { runtimeVar } = ccContext;
@@ -16,10 +17,11 @@ export default function (ref, setup, bindCtxToMethod) {
 
   //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
-    if (typeof setup !== 'function') throw new Error('type of setup must be function');
+    const tip = 'type of setup';
+    if (typeof setup !== 'function') throw new Error(`${tip} ${INAF}`);
 
     const settingsObj = setup(ctx) || {};
-    if (!util.isPJO(settingsObj)) throw new Error('type of setup return result must be an plain json object');
+    if (!util.isPJO(settingsObj)) throw new Error(`${tip} return result ${INAJ}`);
 
     //优先读自己的，再读全局的
     if (bindCtxToMethod === true || (runtimeVar.bindCtxToMethod === true && bindCtxToMethod !== false)) {
@@ -32,9 +34,8 @@ export default function (ref, setup, bindCtxToMethod) {
   }
 
   //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
-  // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入computedRetKeyFns等元数据
-  ctx.refComputedValue = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedOri);
-  ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
+  // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入 computedRetKeyFns 等元数据
+  ctx.refCuRetContainer = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refCuPackedValues);
   
   // 所有的组件都会自动连接到$$global模块，但是有可能没有使用$$global模块数据做过任何实例计算
   // 这里需要补齐computedDep.$$global 和 watchDep.$$global 的依赖描述数据

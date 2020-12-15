@@ -96,6 +96,38 @@ function makeProxyReducer(m, dispatch) {
   })
 }
 
+function bindCtxToRef(isCtxNull, ref, ctx) {
+  if (isCtxNull) ref.ctx = ctx;
+  // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
+  else {
+    // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
+    const {
+      __$$curWaKeys,
+      __$$compareWaKeys,
+      __$$compareWaKeyCount,
+      __$$nextCompareWaKeys,
+      __$$nextCompareWaKeyCount,
+      __$$curConnWaKeys,
+      __$$compareConnWaKeys,
+      __$$compareConnWaKeyCount,
+      __$$nextCompareConnWaKeys,
+      __$$nextCompareConnWaKeyCount,
+    } = ref.ctx;
+    Object.assign(ref.ctx, ctx, {
+      __$$curWaKeys,
+      __$$compareWaKeys,
+      __$$compareWaKeyCount,
+      __$$nextCompareWaKeys,
+      __$$nextCompareWaKeyCount,
+      __$$curConnWaKeys,
+      __$$compareConnWaKeys,
+      __$$compareConnWaKeyCount,
+      __$$nextCompareConnWaKeys,
+      __$$nextCompareConnWaKeyCount,
+    });
+  }
+}
+
 //调用buildFragmentRefCtx 之前，props参数已被处理过
 /**
  * 构建refCtx，附加到ref上
@@ -275,11 +307,9 @@ export default function (ref, params, liteLevel = 5) {
     staticExtra: {},
     settings: {},
 
-    // computed result containers
-    refComputed: {},// 有依赖收集行为的结果容器，此时还说一个普通对象，在beforeMount时会被替换
-    refComputedValue: {}, // 包裹了defineProperty后的结果容器
-    // 原始的计算结果容器，在beforeMount阶段对refComputedValue包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
-    refComputedOri: {},
+    refCuRetContainer: {}, // 包裹了defineProperty后的结果集
+    // 原始的计算结果容器，在beforeMount阶段对 refComputedValue 包裹defineProperty时，会用refComputedOri来存储refComputedValue的值
+    refCuPackedValues: {},
     moduleComputed,
     globalComputed,
     connectedComputed,
@@ -321,6 +351,9 @@ export default function (ref, params, liteLevel = 5) {
     __$$prevModuleVer: getModuleVer(stateModule),
     __$$cuOrWaCalled: false,
   };
+  bindCtxToRef(isCtxNull, ref, ctx);
+  // computed result containers
+  ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
 
   ref.setState = setState;
   ref.forceUpdate = forceUpdate;
@@ -490,7 +523,7 @@ export default function (ref, params, liteLevel = 5) {
   // 向实例的reducer里绑定方法，key:{module} value:{reducerFn}
   // 只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
-    const rd =  makeProxyReducer(m, dispatch);
+    const rd = makeProxyReducer(m, dispatch);
     if (m === module) {
       ctx.moduleReducer = rd;
       if (m === MODULE_GLOBAL) connectedReducer[m] = rd;
@@ -540,34 +573,4 @@ export default function (ref, params, liteLevel = 5) {
   // 始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
   ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ref.ctx || ctx, module);
-
-  if (isCtxNull) ref.ctx = ctx;
-  // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
-  else {
-    // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
-    const {
-      __$$curWaKeys,
-      __$$compareWaKeys,
-      __$$compareWaKeyCount,
-      __$$nextCompareWaKeys,
-      __$$nextCompareWaKeyCount,
-      __$$curConnWaKeys,
-      __$$compareConnWaKeys,
-      __$$compareConnWaKeyCount,
-      __$$nextCompareConnWaKeys,
-      __$$nextCompareConnWaKeyCount,
-    } = ref.ctx;
-    Object.assign(ref.ctx, ctx, {
-      __$$curWaKeys,
-      __$$compareWaKeys,
-      __$$compareWaKeyCount,
-      __$$nextCompareWaKeys,
-      __$$nextCompareWaKeyCount,
-      __$$curConnWaKeys,
-      __$$compareConnWaKeys,
-      __$$compareConnWaKeyCount,
-      __$$nextCompareConnWaKeys,
-      __$$nextCompareConnWaKeyCount,
-    });
-  }
 }

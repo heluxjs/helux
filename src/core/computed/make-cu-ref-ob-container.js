@@ -4,6 +4,7 @@
 /**@typedef {import('../../types-inner').IRefCtx} ICtx*/
 import updateDep from '../ref/update-dep';
 import computedMap from '../../cc-context/computed-map';
+import rv from '../../cc-context/runtime-var';
 import { CATE_MODULE } from '../../support/constant';
 import { justWarning, isAsyncFn, okeys } from '../../support/util';
 
@@ -61,8 +62,8 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
     oriCuObContainer = _computedValue[module];
     computedRaw = _computedRaw[module];
   } else {
-    oriCuContainer = refCtx.refComputedOri;
-    oriCuObContainer = refCtx.refComputedValue;
+    oriCuContainer = refCtx.refCuPackedValues;
+    oriCuObContainer = refCtx.refCuRetContainer;
     computedRaw = refCtx.computedRetKeyFns;
   }
 
@@ -73,9 +74,9 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
       // 1 防止用户从 cuVal读取不存在的key
       // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，所以这里强制用户要注意计算函数的书写顺序
       if (hasOwnProperty.call(oriCuContainer, otherRetKey)) {
-        if (isAsyncFn(computedRaw[otherRetKey])) {
+        if (isAsyncFn(computedRaw[otherRetKey], otherRetKey, rv.asyncCuKeys)) {
           referInfo.hasAsyncCuRefer = true;
-          //  不允许读取异步计算函数结果做二次计算，隔离一切副作用，确保依赖关系简单和纯粹
+          // 不允许读取异步计算函数结果做二次计算，隔离一切副作用，确保依赖关系简单和纯粹
           // throw new Error(`${fnInfo},  get an async retKey[${otherRetKey}] from cuVal is not allowed`);
         }
 
@@ -84,7 +85,7 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
         justWarning(`${fnInfo} get cuVal invalid retKey[${otherRetKey}]`)
       }
 
-      // 从已定义defineProperty的计算结果容器里获取结果
+      // 从已定义 defineProperty 的计算结果容器里获取结果
       return oriCuObContainer[otherRetKey];
     },
     set: function () {
@@ -95,10 +96,19 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
 
 // isForModule : true for module , false for connect
 export default function (ref, module, isForModule = true, isRefCu = false) {
+  const ctx = ref.ctx;
+  const moduleCuRetWrapper = _computedValue[module];
+
   // 注意isRefCu为true时，beforeMount时做了相关的赋值操作，保证了读取ref.ctx下目标属性是安全的
-  const oriCuContainer = isRefCu ? ref.ctx.refComputedOri : _computedValueOri[module];
-  const oriCuObContainer = isRefCu ? ref.ctx.refComputedValue : _computedValue[module];
+  const oriCuContainer = isRefCu ? ctx.refCuPackedValues : _computedValueOri[module];
   if (!oriCuContainer) return {};
+
+  // refComputed 的 cuRetWrapper 是在setup执行完毕后会被替换成填充满属性的新引用 refCuRetContainer
+  // 见 before-mount里: ctx.refCuRetContainer =....
+  // 所以需要在get时现取，而不能在闭包作用域内提前缓存起来反复使用
+  const getCuRetWrapper = () => {
+    return isRefCu ? ctx.refCuRetContainer : moduleCuRetWrapper;
+  };
 
   // 为普通的计算结果容器建立代理对象
   return new Proxy(oriCuContainer, {
@@ -117,7 +127,8 @@ export default function (ref, module, isForModule = true, isRefCu = false) {
         }
       }
       // 从已定义defineProperty的计算结果容器里获取结果
-      return oriCuObContainer[retKey];
+      const cuRetWrapper = getCuRetWrapper();
+      return cuRetWrapper[retKey];
     },
     set: function (target, retKey, value) {
       target[retKey] = value;

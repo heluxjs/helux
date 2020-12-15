@@ -1,3 +1,24 @@
+#### 2020-12-15
+2.10.11 发布
+- fix: `refComputed`如果提前在setup里解构，会取值错误
+```js
+// before 2.10.11
+function setup({refComputed, computed}){
+  computed({
+    xx:()=>2,
+  });
+  return {
+    log(){
+      // refComputed.xx is undefined
+    }
+  };
+}
+
+// after 2.10.11+
+// refComputed.xx is 2
+```
+- fix: `init-module-lifecyle`做保护判断
+
 #### 2020-12-03
 2.10.3 发布
 - feature: 支持传入`react-dom/test-utils`的`act`句柄给`RunOptions.act`参数，避免测试模式提示act警告
