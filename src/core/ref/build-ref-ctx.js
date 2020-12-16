@@ -47,7 +47,7 @@ const getWatchedKeys = (ctx) => {
   return ctx.watchedKeys;
 }
 
-const getConnectWatchedKeys = (ctx, module) => {
+const getConnectWatchedKeys = (ctx, moduleName) => {
   const { connect, connectedModules } = ctx;
   const isConnectArr = Array.isArray(connect);
 
@@ -56,18 +56,18 @@ const getConnectWatchedKeys = (ctx, module) => {
     else return okeys(ctx.__$$curConnWaKeys[m]);
   }
 
-  const getWKeys = (module) => {
+  const getWKeys = (moduleName) => {
     if (isConnectArr) {// auto observe connect modules
-      return getModuleWaKeys(module);
+      return getModuleWaKeys(moduleName);
     } else {
-      const waKeys = connect[module];
-      if (waKeys === '*') return getModuleStateKeys(module);
-      else if (waKeys === '-') return getModuleWaKeys(module);
+      const waKeys = connect[moduleName];
+      if (waKeys === '*') return getModuleStateKeys(moduleName);
+      else if (waKeys === '-') return getModuleWaKeys(moduleName);
       else return waKeys;
     }
   }
 
-  if (module) return getWKeys(module);
+  if (moduleName) return getWKeys(moduleName);
   else {
     const cKeys = {};
     connectedModules.forEach((m) => {
@@ -77,9 +77,9 @@ const getConnectWatchedKeys = (ctx, module) => {
   }
 }
 
-function recordDep(ccUniqueKey, module, watchedKeys) {
-  const waKeys = watchedKeys === '*' ? getModuleStateKeys(module) : watchedKeys;
-  waKeys.forEach(stateKey => mapIns(module, stateKey, ccUniqueKey));
+function recordDep(ccUniqueKey, moduleName, watchedKeys) {
+  const waKeys = watchedKeys === '*' ? getModuleStateKeys(moduleName) : watchedKeys;
+  waKeys.forEach(stateKey => mapIns(moduleName, stateKey, ccUniqueKey));
 }
 
 function makeProxyReducer(m, dispatch) {
@@ -94,47 +94,45 @@ function makeProxyReducer(m, dispatch) {
         return target[fnName];
       }
     },
-  })
+  });
 }
 
 
 function bindCtxToRef(isCtxNull, ref, ctx) {
-  if (isCtxNull) ref.ctx = ctx;
+  if (isCtxNull) return ref.ctx = ctx;
   // 适配热加载或者异步渲染里, 需要清理ctx里运行时收集的相关数据，重新分配即可
-  else {
-    // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
-    const {
-      __$$curWaKeys,
-      __$$compareWaKeys,
-      __$$compareWaKeyCount,
-      __$$nextCompareWaKeys,
-      __$$nextCompareWaKeyCount,
-      __$$curConnWaKeys,
-      __$$compareConnWaKeys,
-      __$$compareConnWaKeyCount,
-      __$$nextCompareConnWaKeys,
-      __$$nextCompareConnWaKeyCount,
-    } = ref.ctx;
-    Object.assign(ref.ctx, ctx, {
-      __$$curWaKeys,
-      __$$compareWaKeys,
-      __$$compareWaKeyCount,
-      __$$nextCompareWaKeys,
-      __$$nextCompareWaKeyCount,
-      __$$curConnWaKeys,
-      __$$compareConnWaKeys,
-      __$$compareConnWaKeyCount,
-      __$$nextCompareConnWaKeys,
-      __$$nextCompareConnWaKeyCount,
-    });
-  }
+  // 这里需要把第一次渲染期间已经收集好的依赖再次透传给ref.ctx
+  const {
+    __$$curWaKeys,
+    __$$compareWaKeys,
+    __$$compareWaKeyCount,
+    __$$nextCompareWaKeys,
+    __$$nextCompareWaKeyCount,
+    __$$curConnWaKeys,
+    __$$compareConnWaKeys,
+    __$$compareConnWaKeyCount,
+    __$$nextCompareConnWaKeys,
+    __$$nextCompareConnWaKeyCount,
+  } = ref.ctx;
+  Object.assign(ref.ctx, ctx, {
+    __$$curWaKeys,
+    __$$compareWaKeys,
+    __$$compareWaKeyCount,
+    __$$nextCompareWaKeys,
+    __$$nextCompareWaKeyCount,
+    __$$curConnWaKeys,
+    __$$compareConnWaKeys,
+    __$$compareConnWaKeyCount,
+    __$$nextCompareConnWaKeys,
+    __$$nextCompareConnWaKeyCount,
+  });
 }
 
 function bindInitStateHandler(ref, ctx, registryState, refStoredState, mstate, modStateKeys) {
-  // allow user have a chance to define state in setup block;
+  // allow user have a chance to define state in setup block
   ctx.initState = (initialStateOrCb) => {
     let initialState = initialStateOrCb;
-    if (typeof initialStateOrCb === 'function') {
+    if (util.isFn(initialStateOrCb)) {
       initialState = initialStateOrCb();
     }
     if (!ctx.__$$inBM) {
@@ -155,7 +153,7 @@ function bindInitStateHandler(ref, ctx, registryState, refStoredState, mstate, m
     ctx.prevState = Object.assign({}, newRefState);
     ctx.unProxyState = newRefState;
     ref.state = Object.assign(ctx.state, newRefState);
-  }
+  };
 }
 
 
@@ -164,17 +162,17 @@ function bindModApis(ref, ctx, stateModule, liteLevel, setState) {
   const dispatch = hf.makeDispatchHandler(ref, false, false, stateModule);
   ctx.dispatch = dispatch;
 
-  if (liteLevel > 1) {// level 2, assign these mod data api
+  if (liteLevel > 1) { // level 2, assign these mod data api
     ctx.lazyDispatch = hf.makeDispatchHandler(ref, true, false, stateModule);
     ctx.silentDispatch = hf.makeDispatchHandler(ref, false, true, stateModule);
-    ctx.dispatchLazy = ctx.lazyDispatch;// alias of lazyDispatch
-    ctx.dispatchSilent = ctx.silentDispatch;// alias of silentDispatch
+    ctx.dispatchLazy = ctx.lazyDispatch; // alias of lazyDispatch
+    ctx.dispatchSilent = ctx.silentDispatch; // alias of silentDispatch
 
     ctx.invoke = hf.makeInvokeHandler(ref);
     ctx.lazyInvoke = hf.makeInvokeHandler(ref, { isLazy: true });
     ctx.silentInvoke = hf.makeInvokeHandler(ref, { isLazy: false, isSilent: true });
-    ctx.invokeLazy = ctx.lazyInvoke;// alias of lazyInvoke
-    ctx.invokeSilent = ctx.silentInvoke;// alias of silentInvoke
+    ctx.invokeLazy = ctx.lazyInvoke; // alias of lazyInvoke
+    ctx.invokeSilent = ctx.silentInvoke; // alias of silentInvoke
 
     ctx.setGlobalState = (state, reactCallback, renderKey, delay) => {
       setState(MODULE_GLOBAL, state, SET_STATE, reactCallback, renderKey, delay);
@@ -202,7 +200,7 @@ function bindSyncApis(ref, ctx, liteLevel) {
           boundFn = cachedBoundFns[key];
         }
         return boundFn;
-      };
+      }
 
       // case: <input data-ccsync="foo/f1" onChange={ctx.sync} />
       __sync({ type: 'val' }, ref, e);
@@ -233,7 +231,7 @@ function bindEventApis(ctx, liteLevel, ccUniqueKey) {
       // 这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
       const { name, identity } = ev.getEventItem(event);
       ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
-    }
+    };
     ctx.on = (inputEvent, handler) => {
       ctx.__$$onEvents.push({ inputEvent, handler });
     };
@@ -243,10 +241,10 @@ function bindEventApis(ctx, liteLevel, ccUniqueKey) {
 
 function bindEnhanceApis(ctx, liteLevel, stateModule) {
   const effectItems = [], effectPropsItems = []; // {fn:function, status:0, eId:'', immediate:true}
-  const eid2effectReturnCb = {}, eid2effectPropsReturnCb = {};// fn
+  const eid2effectReturnCb = {}, eid2effectPropsReturnCb = {}; // fn
   ctx.effectMeta = { effectItems, eid2effectReturnCb, effectPropsItems, eid2effectPropsReturnCb };
 
-  if (liteLevel > 4) {// level 5, assign enhance api
+  if (liteLevel > 4) { // level 5, assign enhance api
     ctx.execute = handler => ctx.execute = handler;
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
@@ -303,7 +301,7 @@ function bindEnhanceApis(ctx, liteLevel, stateModule) {
 }
 
 
-function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, allModules, dispatch ) {
+function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, stateModule, allModules, dispatch) {
   // 构造完毕ctx后，开始创建 reducer，和可观察 connectedState
   const {
     connectedReducer, connectedState,
@@ -317,7 +315,7 @@ function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, allModul
   // 只绑定所属的模块和已连接的模块的reducer方法
   allModules.forEach(m => {
     const rd = makeProxyReducer(m, dispatch);
-    if (m === module) {
+    if (m === stateModule) {
       ctx.moduleReducer = rd;
       if (m === MODULE_GLOBAL) connectedReducer[m] = rd;
     } else {
@@ -359,7 +357,7 @@ function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, allModul
     __$$autoWatch = true;
   } else {
     // 开始记录依赖
-    recordDep(ccUniqueKey, module, watchedKeys);
+    recordDep(ccUniqueKey, stateModule, watchedKeys);
   }
   ctx.__$$autoWatch = __$$autoWatch;
 }
@@ -550,7 +548,7 @@ export default function (ref, params, liteLevel = 5) {
     /** @type ICtx['computedDep'] */
     computedDep: {},
     computedRetKeyFns: {},
-     /** @type ICtx['watchDep'] */
+    /** @type ICtx['watchDep'] */
     watchDep: {},
     watchRetKeyFns: {},// 不按模块分类，映射的 watchRetKey2fns
     execute: null,
@@ -567,19 +565,18 @@ export default function (ref, params, liteLevel = 5) {
     changeState,// not expose in d.ts
     refs,
     useRef: (refName) => {
-      return ref => refs[refName] = { current: ref };// keep the same shape with hook useRef
+      return ref => refs[refName] = { current: ref }; // keep the same shape with hook useRef
     },
 
     // below methods only can be called by cc or updated by cc in existed period, not expose in d.ts
     __$$ccSetState: hf.makeCcSetStateHandler(ref),
     __$$ccForceUpdate: hf.makeCcForceUpdateHandler(ref),
-    __$$settedList: [],//[{module:string, keys:string[]}, ...]
+    __$$settedList: [], // [{module:string, keys:string[]}, ...]
     __$$prevMoStateVer: {},
     __$$prevModuleVer: getModuleVer(stateModule),
     __$$cuOrWaCalled: false,
   };
   bindCtxToRef(isCtxNull, ref, ctx);
-  // computed result containers
   ctx.refComputed = makeCuRefObContainer(ref, null, true, true);
 
   ref.setState = setState;
@@ -590,9 +587,9 @@ export default function (ref, params, liteLevel = 5) {
   bindSyncApis(ref, ctx, liteLevel);
   bindEventApis(ctx, liteLevel, ccUniqueKey);
   bindEnhanceApis(ctx, liteLevel, stateModule);
-  fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, allModules, dispatch);
+  fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, stateModule, allModules, dispatch);
 
   // 始终优先取ref上指向的ctx，对于在热加载模式下的hook组件实例，那里面有的最近一次渲染收集的依赖信息才是正确的
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
-  ctx.getConnectWatchedKeys = (module) => getConnectWatchedKeys(ref.ctx || ctx, module);
+  ctx.getConnectWatchedKeys = (moduleName) => getConnectWatchedKeys(ref.ctx || ctx, moduleName);
 }

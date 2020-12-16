@@ -99,9 +99,9 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
 /**
  * 创建一个具有依赖收集行为的计算结果获取容器
  * @param {IRef} ref 
- * @param {string} module 
+ * @param {string} module - 模块名称
  * @param {boolean} isForModule - true: belong to one module, false: connect other modules
- * @param {boolean} isRefCu 
+ * @param {boolean} isRefCu - 为ref创建
  */
 export default function (ref, module, isForModule = true, isRefCu = false) {
   const ctx = ref.ctx;

@@ -37,10 +37,14 @@ export type IRefCtx = ICtxBase & {
    * value: cuFn
    */
   computedRetKeyFns: IAnyFnInObj;
-
-  computedDep: { [module: string]: DepDesc };
-  watchDep: { [module: string]: DepDesc };
-
+  /**
+   * key: moduleName
+   */
+  computedDep: Record<string, DepDesc>;
+  /**
+   * key: moduleName
+   */
+  watchDep: Record<string, DepDesc>;
   /** is in before mount step */
   __$$inBM: boolean;
   __$$renderStatus: RenderStatus;
