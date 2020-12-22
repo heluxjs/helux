@@ -76,7 +76,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 
 install by npx command
 ```sh
-$ npx create-react-app my-app --template cra-template-concent-ts
+$ npx create-react-app my-app --template concent-ts
 ```
 or clone its source code by git command
 ```sh
