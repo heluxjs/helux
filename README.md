@@ -53,6 +53,7 @@ Concent is an amazing state management tool, supported by a healthy middleware e
 
 Concent encourages simplicity. It saves you the hassle of creating boilerplate code and gives powerful tools with a moderate learning curve, suitable for both experienced and inexperienced developers alike.
 
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-re-render-process.png)
 
 ## ✨Features
 * Render context injected automatically (no any annoying boilerplate code)
