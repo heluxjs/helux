@@ -241,8 +241,9 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 ___
 
 ## Who is using it
-
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png)
+<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms">
+  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png"></img>
+</a>
 
 ## 👅License
 
