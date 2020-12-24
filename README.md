@@ -241,11 +241,11 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 ___
 
 ## Who is using it
-<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="blank">
+<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank">
   <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png"></img>
 </a>
 
-<a href="https://wink.org/" target="blank">
+<a href="https://wink.org/" target="_blank">
   <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winlogo.png"></img>
 </a>
 
