@@ -121,6 +121,7 @@ $ yarn add concent
 ```
 
 ### Minimal example
+See how easy it is to use concent to manage react state.
 ```js
 import { run, register, useConcent } from 'concent';
 
@@ -143,7 +144,7 @@ class DemoCls extends React.Component{
   }
 }
 function DemoFn(){
-  const { state, setState } = useConcent('counter'); // 👈  call useConcent hook in fn component
+  const { state, setState } = useConcent('counter'); // 👈 call useConcent hook in fn component
   const inc = ()=> setState({num: state.num + 1});
   return <button onClick={inc}>{state.num}</button>
 }
