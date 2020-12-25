@@ -254,7 +254,7 @@ ___
         </a>
         <br/>
         <a target="_blank" href="https://wink.org">
-          <b>Win V</b>
+          <b>wink</b>
         </a> 
       </td>
     </tr>
