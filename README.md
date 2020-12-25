@@ -248,7 +248,7 @@ ___
   <b>tcb-cms-admin</b>
 </a>
 
-<a href="https://wink.org/" target="_blank" style="display:inline-block; text-align:center;">
+<a href="https://wink.org/" target="_blank" style="border:1px solid red">
   <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="150px"></img>
   <br/>
   <b>win v</b>
