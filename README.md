@@ -247,7 +247,7 @@ ___
 </a>
 
 <a href="https://wink.org/" target="_blank">
-  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winlogo.png"></img>
+  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winlogo.png" width="200px"></img>
 </a>
 
 
