@@ -242,17 +242,23 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 ___
 
 ## Who is using it
-<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank" style="display:inline-block; text-align:center;">
-  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png" width="150px"></img>
-  <br/>
-  <b>tcb-cms-admin</b>
-</a>
 
-<a href="https://wink.org/" target="_blank" style="border:1px solid red">
-  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="150px"></img>
-  <br/>
-  <b>win v</b>
-</a>
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank>
+        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png" width="100px;" alt="tcb-cms-admin"/>
+        <br /><sub><b>tcb-cms-admin</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://wink.org" target="_blank>
+        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="100px;" alt="Hi 头像"/><br />
+        <sub><b>win v</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 
 ## 👅License
