@@ -242,12 +242,16 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 ___
 
 ## Who is using it
-<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank">
+<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank" width="150px">
   <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png"></img>
+  <br/>
+  <b>tcb-cms-admin</b>
 </a>
 
 <a href="https://wink.org/" target="_blank">
-  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="200px"></img>
+  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="150px"></img>
+  <br/>
+  <b>win v</b>
 </a>
 
 
