@@ -247,13 +247,13 @@ ___
   <tr>
     <td align="center">
       <a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank>
-        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png" width="100px;" alt="tcb-cms-admin"></img>
+        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png" width="100px;" alt="tcb-cms-admin"/>
         <br /><sub><b>tcb-cms-admin</b></sub>
       </a>
     </td>
     <td align="center">
       <a href="https://wink.org" target="_blank>
-        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="100px;" alt="Hi 头像"/></img>
+        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="100px;" alt="win v"/>
         <br /><sub><b>win v</b></sub>
       </a>
     </td>
