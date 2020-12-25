@@ -124,6 +124,7 @@ $ yarn add concent
 ```js
 import { run, register, useConcent } from 'concent';
 
+// 1️⃣ Configure models
 run({
   counter: {// declare a moudle named 'counter'
     state: { num: 1, numBig: 100 }, // define state
@@ -131,7 +132,8 @@ run({
   // you can also put another module here.
 });
 
-@register('counter')
+// 2️⃣  Now the react component can work with concent
+@register('counter') // 👈 decorate your component with register
 class DemoCls extends React.Component{
   // commit state to store and broadcast to other refs which also belong to counter module
   inc = ()=> this.setState({num: this.state.num + 1})
@@ -140,20 +142,10 @@ class DemoCls extends React.Component{
     return <button onClick={this.inc}>{this.state.num}</button>
   }
 }
-
 function DemoFn(){
-  const { state, setState } = useConcent('counter');
+  const { state, setState } = useConcent('counter'); // 👈  call useConcent hook in fn component
   const inc = ()=> setState({num: state.num + 1});
   return <button onClick={inc}>{state.num}</button>
-}
-
-export default function App(){
-  return (
-    <div>
-      <ClsComp />
-      <FnComp />
-    </div>
-  );
 }
 ```
 
