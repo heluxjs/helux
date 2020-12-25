@@ -245,19 +245,26 @@ ___
 
 <table>
   <tr>
-    <td align="center">
-      <a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank>
-        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png" width="100px;" alt="tcb-cms-admin"/>
-        <br /><sub><b>tcb-cms-admin</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://wink.org" target="_blank>
-        <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png" width="100px;" alt="win v"/>
-        <br /><sub><b>win v</b></sub>
-      </a>
-    </td>
-  </tr>
+      <td align="center">
+        <a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank">
+          <img width="140px;" src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png"></img>
+        </a>
+        <br/>
+        <a target="_blank" href="https://github.com/TencentCloudBase/cloudbase-extension-cms">
+          <img width="15px;" src="https://emojipedia-us.s3.amazonaws.com/content/2020/04/05/octocat-github-emojipedia.png"></img>
+          <b>tcb-admin</b>
+        </a> 
+      </td>
+      <td align="center">
+         <a href="https://wink.org/" target="_blank">
+          <img width="140px;" src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png"></img>
+        </a>
+        <br/>
+        <a target="_blank" href="https://wink.org">
+          <b>Win V</b>
+        </a> 
+      </td>
+    </tr>
 </table>
 
 
