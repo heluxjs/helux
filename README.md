@@ -242,8 +242,8 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 ___
 
 ## Who is using it
-<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank" width="150px">
-  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png"></img>
+<a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank">
+  <img src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png" width="150px"></img>
   <br/>
   <b>tcb-cms-admin</b>
 </a>
