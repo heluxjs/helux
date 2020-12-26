@@ -207,16 +207,6 @@ function DemoFn() {
 }
 ```
 
-## 🐚Architecture diagram
-
-#### How concent component ins works
-
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-core-process.png)
-
-#### With middleware and plugin mechanism, you can easily cutomize your common handler for non logic code, or migrate `redux` eco lib.
-
-![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
-
 ## 🎲Eco-lib examples
 
 ### Use with react router
@@ -234,7 +224,7 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 [concent-plugin-loading online demo](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
 
-## Who is using it
+## 🐚Who is using it
 
 <table>
   <tr>
