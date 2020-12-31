@@ -53,6 +53,7 @@ Concent is an amazing state management tool, supported by a healthy middleware e
 
 Concent encourages simplicity. It saves you the hassle of creating boilerplate code and gives powerful tools with a moderate learning curve, suitable for both experienced and inexperienced developers alike.
 
+![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-re-render-process.png)
 
 ## ✨Features
 * Render context injected automatically (no any annoying boilerplate code)
@@ -120,9 +121,11 @@ $ yarn add concent
 ```
 
 ### Minimal example
+See how easy it is to use concent to manage react state.
 ```js
 import { run, register, useConcent } from 'concent';
 
+// 1️⃣ Configure models
 run({
   counter: {// declare a moudle named 'counter'
     state: { num: 1, numBig: 100 }, // define state
@@ -130,7 +133,8 @@ run({
   // you can also put another module here.
 });
 
-@register('counter')
+// 2️⃣  Now the react component can work with concent
+@register('counter') // 👈 decorate your component with register
 class DemoCls extends React.Component{
   // commit state to store and broadcast to other refs which also belong to counter module
   inc = ()=> this.setState({num: this.state.num + 1})
@@ -139,20 +143,10 @@ class DemoCls extends React.Component{
     return <button onClick={this.inc}>{this.state.num}</button>
   }
 }
-
 function DemoFn(){
-  const { state, setState } = useConcent('counter');
+  const { state, setState } = useConcent('counter'); // 👈 call useConcent hook in fn component
   const inc = ()=> setState({num: state.num + 1});
   return <button onClick={inc}>{state.num}</button>
-}
-
-export default function App(){
-  return (
-    <div>
-      <ClsComp />
-      <FnComp />
-    </div>
-  );
 }
 ```
 
@@ -213,17 +207,7 @@ function DemoFn() {
 }
 ```
 
-## 🐚Architecture diagram
-
-#### How concent component ins works
-
-![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc/cc-core-process.png)
-
-#### With middleware and plugin mechanism, you can easily cutomize your common handler for non logic code, or migrate `redux` eco lib.
-
-![](https://raw.githubusercontent.com/concentjs/concent-site/master/img/cc-core.png)
-
-## 🎲Code example
+## 🎲Eco-lib examples
 
 ### Use with react router
 Details see here [react-router-concent](https://github.com/concentjs/react-router-concent)，expose `history`，you can call it anywhere in your app to enjoy the imperative navigation jump.
@@ -239,6 +223,33 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 
 [concent-plugin-loading online demo](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
+
+## 🐚Who is using it
+
+<table>
+  <tr>
+      <td align="center">
+        <a href="https://github.com/TencentCloudBase/cloudbase-extension-cms" target="_blank">
+          <img width="140px;" src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cloudbase.png"></img>
+        </a>
+        <br/>
+        <a target="_blank" href="https://github.com/TencentCloudBase/cloudbase-extension-cms">
+          <img width="15px;" src="https://emojipedia-us.s3.amazonaws.com/content/2020/04/05/octocat-github-emojipedia.png"></img>
+          <b>tcb-admin</b>
+        </a> 
+      </td>
+      <td align="center">
+         <a href="https://wink.org/" target="_blank">
+          <img width="140px;" src="https://raw.githubusercontent.com/fantasticsoul/assets/master/img/winvlogo.png"></img>
+        </a>
+        <br/>
+        <a target="_blank" href="https://wink.org">
+          <b>wink</b>
+        </a> 
+      </td>
+    </tr>
+</table>
+
 
 ## 👅License
 
