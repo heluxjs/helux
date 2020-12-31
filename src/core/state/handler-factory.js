@@ -50,7 +50,7 @@ function paramCallBackShouldNotSupply(module, currentModule) {
 }
 
 function _promiseErrorHandler(resolve, reject) {
-  return (err, ...args) => err ? reject(err) : resolve(...args);
+  return (err, ...args) => (err ? reject(err) : resolve(...args));
 }
 
 //忽略掉传递进来的chainId，chainDepth，重新生成它们，源头调用了lazyDispatch或者ctx里调用了lazyDispatch，就会触发此逻辑

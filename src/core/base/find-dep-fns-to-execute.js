@@ -125,7 +125,7 @@ const STOP_FN = Symbol('sf');
 // initDeltaCommittedState 会在整个过程里收集所有的提交状态
 export default function executeDepFns(
   ref = {}, stateModule, refModule, oldState, finder,
-  committedState, initNewState, initDeltaCommittedState, callInfo, isFirstCall,
+  committedState, initialNewState, initDeltaCommittedState, callInfo, isFirstCall,
   fnType, sourceType, computedContainer, mergeToDelta = true
 ) {
   const refCtx = ref.ctx;
@@ -210,13 +210,13 @@ export default function executeDepFns(
         }
 
         if (isLazy) {
-          computedContainer[retKey] = makeCuPackedValue(isLazy, null, true, fn, initNewState, oldState, fnCtx);
+          computedContainer[retKey] = makeCuPackedValue(isLazy, null, true, fn, initialNewState, oldState, fnCtx);
         } else {
-          let newStateArg = initNewState, oldStateArg = oldState;
+          let newStateArg = initialNewState, oldStateArg = oldState;
 
           // 首次计算时，new 和 old是同一个对象，方便用于收集depKeys
           if (needCollectDep) {
-            oldStateArg = makeCuObState(initNewState, collectedDepKeys);
+            oldStateArg = makeCuObState(initialNewState, collectedDepKeys);
             newStateArg = oldStateArg;
           }
 
@@ -258,7 +258,7 @@ export default function executeDepFns(
             fnCtx.commit = () => noCommit(tip, 'async computed or it refers async computed ret');
             fnCtx.commitCu = fnCtx.commit;
 
-            //安排到nextTickCuInfo里，while结束后单独触发它们挨个按需计算
+            // 安排到nextTickCuInfo里，while结束后单独触发它们挨个按需计算
             nextTickCuInfo.fns.push(() => fn(newStateArg, oldStateArg, fnCtx));
             nextTickCuInfo.fnAsync.push(isCuFnAsync);
             nextTickCuInfo.fnRetKeys.push(retKey);
@@ -280,12 +280,12 @@ export default function executeDepFns(
           }
         }
       } else { // watch
-        let tmpInitNewState = initNewState;
+        let tmpInitNewState = initialNewState;
         let tmpOldState = oldState;
 
         // 首次触发watch时，才传递ob对象，用于收集依赖
         if (needCollectDep) {
-          tmpInitNewState = makeCuObState(initNewState, collectedDepKeys);
+          tmpInitNewState = makeCuObState(initialNewState, collectedDepKeys);
           //new 和 old是同一个对象，方便用于收集depKeys
           tmpOldState = tmpInitNewState;
         }
@@ -360,7 +360,7 @@ export default function executeDepFns(
         Object.assign(committedStateInWhile, curStateForComputeFn);
 
         if (mergeToDelta) {
-          Object.assign(initNewState, curStateForComputeFn);
+          Object.assign(initialNewState, curStateForComputeFn);
           Object.assign(initDeltaCommittedState, curStateForComputeFn);
         } else {
           // 强行置为null，结束while循环  
@@ -404,7 +404,7 @@ export default function executeDepFns(
           // 一轮watch函数执行结束，去触发对应的computed计算
           const { hasDelta, newCommittedState } = executeDepFns(
             ref, stateModule, refModule, oldState, finder,
-            partialState, initNewState, initDeltaCommittedState, callInfo,
+            partialState, initialNewState, initDeltaCommittedState, callInfo,
             false, // 再次由watch发起的computed函数查找调用，irFirstCall，一定是false
             FN_CU, sourceType, computedContainer
           );

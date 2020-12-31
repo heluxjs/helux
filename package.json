@@ -118,6 +118,5 @@
     "test": "jest"
   },
   "version": "2.10.12",
-  "dependencies": {
-  }
+  "dependencies": {}
 }

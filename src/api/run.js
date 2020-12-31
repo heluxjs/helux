@@ -27,7 +27,7 @@ export default function (store = {}, options = {}) {
     watch: {},
     computed: {},
     lifecycle: {},
-  }
+  };
 
   const buildStoreConf = (m, moduleConf) => {
     const { state, reducer, watch, computed } = moduleConf;
@@ -42,7 +42,7 @@ export default function (store = {}, options = {}) {
     storeConf.watch[m] = watch;
     storeConf.computed[m] = computed;
     storeConf.lifecycle[m] = getLifecycle(moduleConf);
-  }
+  };
 
   // traversal moduleNames
   okeys(store).forEach(m => buildStoreConf(m, store[m]));
