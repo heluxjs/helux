@@ -13,37 +13,40 @@ English | [简体中文](./README.zh-CN.md)
 
 <!--- 额外包一个p标签，防止某些md解析器自己包一个p标签，进而破坏样式 --->
 <div style="display:flex; flex-wrap: wrap;">
-  <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.2rem;'>
+  <a href='https://www.npmjs.com/package/concent' style='margin: 0 0.2rem;' />
   <img src='https://img.shields.io/github/package-json/v/concentjs/concent/master.svg?label=npm%20version' alt='npm version' height='18'>
   </a>
   <a href='https://travis-ci.org/concentjs/concent' style='margin: 0 0.2rem;'>
-  <img src='https://travis-ci.org/concentjs/concent.svg?branch=master' alt='build' height='18'>
+  <img src='https://travis-ci.org/concentjs/concent.svg?branch=master' alt='build' height='18' />
   </a>
   <a href='#' style='margin: 0 0.2rem;'>
-  <img src='https://img.shields.io/github/issues/concentjs/concent.svg' alt='issues open' height='18'>
+  <img src='https://img.shields.io/github/issues/concentjs/concent.svg' alt='issues open' height='18' />
   </a>
   <a href='#' style='margin: 0 0.2rem;'>
-  <img src='https://img.shields.io/npm/dw/concent.svg?label=downloads' alt='downloads' height='18'>
+  <img src='https://img.shields.io/npm/dw/concent.svg?label=downloads' alt='downloads' height='18' />
   </a>
   <a href='#' style='margin: 0 0.2rem;'>
-  <img src='https://img.shields.io/github/last-commit/concentjs/concent.svg' alt='last commit' height='18'>
+  <img src='https://img.shields.io/github/last-commit/concentjs/concent.svg' alt='last commit' height='18' />
   </a>
   <a href='#' style='margin: 0 0.2rem;'>
-  <img src='https://img.shields.io/github/commit-activity/m/concentjs/concent.svg' alt='commit activity' height='18'>
+  <img src='https://img.shields.io/github/commit-activity/m/concentjs/concent.svg' alt='commit activity' height='18' />
   </a>
   <a href='#' style='margin: 0 0.2rem;'>
-  <img src='https://img.shields.io/npm/l/concent.svg' alt='license:MIT' height='18'>
+  <img src='https://img.shields.io/npm/l/concent.svg' alt='license:MIT' height='18' />
   </a>
   <a href='#' style='margin: 0 0.2rem;'>
   <!--   i don't konw why this badge message is wrong -->
   <!--   <img src='https://img.shields.io/bundlephobia/minzip/concent/1.4.1.svg' alt='mini bundle size' height='18'> -->
-  <img src='https://img.shields.io/badge/minzipped-18kb-brightgreen' alt='mini bundle size' height='18'>
+  <img src='https://img.shields.io/badge/minzipped-18kb-brightgreen' alt='mini bundle size' height='18' />
   </a>
   <a href='#' style='margin: 0 0.5rem;'>
-  <img src='https://img.shields.io/github/followers/fantasticsoul.svg?style=social' alt='followers' height='18'>
+  <img src='https://img.shields.io/github/followers/fantasticsoul.svg?style=social' alt='followers' height='18' />
   </a>
   <a href='#' style='margin: 0 0.5rem;'>
-  <img src='https://img.shields.io/github/stars/concentjs/concent.svg?style=social' alt='concent star' height='18'>
+  <img src='https://img.shields.io/github/stars/concentjs/concent.svg?style=social' alt='concent star' height='18' />
+  </a>
+  <a href='https://coveralls.io/github/concentjs/concent?branch=master'>
+    <img src='https://coveralls.io/repos/github/concentjs/concent/badge.svg?branch=master' alt='Coverage Status' />
   </a>
 </div>
 
