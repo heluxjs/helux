@@ -1,5 +1,9 @@
 node_modules
 **/.DS_Store
+.coveralls.yml
+.vscode
+
+coverage
 
 TODO.md
 TIPME.md

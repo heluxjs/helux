@@ -31,6 +31,7 @@
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
     "codecov": "^3.7.1",
+    "coveralls": "^3.1.0",
     "create-react-class": "^15.6.3",
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
@@ -115,7 +116,8 @@
     "build:es-rightway": "cross-env BABEL_ENV=es babel src --out-dir es",
     "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.js",
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
-    "test": "jest"
+    "test": "jest",
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
   },
   "version": "2.10.12",
   "dependencies": {}
