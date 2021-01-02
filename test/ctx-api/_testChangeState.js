@@ -10,7 +10,7 @@ import { mount } from 'enzyme';
 import '../testSetup';
 import { useConcent, getState, register } from '../../src/index';
 import { delay } from '../../src/support/util';
-import { getWrapNum } from '../util';
+import { getWrapNum, getWrapText } from '../util';
 
 function makeTestComp(makeClickHandler) {
   const Book = React.memo((props) => {
@@ -35,6 +35,16 @@ function makeTestComp(makeClickHandler) {
         <h1>{renderCount}</h1>
         <h2>{state.name}</h2>
         <h3>{state.age}</h3>
+        <h4 className="asValue">{state.asValue}</h4>
+        <h4 className="grade">{state.grade}</h4>
+        <h4 className="grade2">{state.grade2}</h4>
+        <h4 className="isBig">{state.isBig + ''}</h4>
+        <h4 className="isBig2">{state.isBig2 + ''}</h4>
+        <h4 className="isBig3">{state.isBig3}</h4>
+        <h4 className="nest_isBig">{state.nest.isBig + ''}</h4>
+        <h4 className="nestArr_0">{state.nestArr[0] + ''}</h4>
+        <h4 className="nestArr_1">{state.nestArr[1] + ''}</h4>
+        <h4 className="nestObjArr_0_isBig">{state.nestObjArr[0].isBig + ''}</h4>
         <button className="comp" onClick={handleClick}>click me</button>
         {state.books.map(item => <Book key={item.id} id={item.id} />)}
       </div>
@@ -175,9 +185,7 @@ export async function testDelayForItemClick(makeChangeStateHandler) {
   };
   const executeClick = (/** @type Wrap[]*/[wrap1]) => {
     // only pick one ins to click
-    act(() => {
-      wrap1.find('button.book1').simulate('click');
-    });
+    wrap1.find('button.book1').simulate('click');
   };
   const afterClick = async (/** @type Wrap[]*/wrapList, beforeClickRet) => {
     const [wrap1, wrap2, wrap3, wrap4] = wrapList;
@@ -288,9 +296,7 @@ export async function testRenderKeyForContainerClick(makeChangeStateHandler) {
   };
   const executeClick = (/** @type Wrap[]*/[wrap1]) => {
     // only pick one ins to click
-    act(() => {
       wrap1.find('button.comp').simulate('click');
-    });
   };
   const afterClick = async (/** @type Wrap[]*/wrapList, beforeClickRet) => {
     const [wrap1, wrap2, wrap3, wrap4] = wrapList;
@@ -325,5 +331,43 @@ export async function testRenderKeyForContainerClick(makeChangeStateHandler) {
 
   const { CompFn, CompCls } = makeTestComp(makeClickHandler);
   const CompList = [CompFn, CompCls, CompFn, CompCls];
+  await mountThenClick(CompList, { beforeClick, executeClick, afterClick });
+}
+
+// for sync api
+export async function testSyncApi(makeChangeStateHandler, syncKeySelector, custCompare) {
+  const makeClickHandler = (/** @type Ctx*/ctx) => () => {
+    const changeState = makeChangeStateHandler(ctx);
+    changeState();
+  };
+
+  const beforeClick = (/** @type Wrap[]*/[wrap1, wrap2]) => {
+    const wrap1IsBig = getWrapText(wrap1, syncKeySelector);
+    const wrap2IsBig = getWrapText(wrap2, syncKeySelector);
+    return {
+      wrap1IsBig, wrap2IsBig,
+    };
+  };
+
+  const executeClick = (/** @type Wrap[]*/[wrap1]) => {
+    // only pick one ins to click
+    wrap1.find('button.comp').simulate('click');
+  };
+  const afterClick = async (/** @type Wrap[]*/wrapList, beforeClickRet) => {
+    const [wrap1, wrap2] = wrapList;
+    const { wrap1IsBig, wrap2IsBig } = beforeClickRet;
+
+    const wrap1IsBigClk = getWrapText(wrap1, syncKeySelector);
+    const wrap2IsBigClk = getWrapText(wrap2, syncKeySelector);
+    expect(wrap1IsBig === wrap1IsBigClk).toBeFalsy();
+    expect(wrap2IsBig === wrap2IsBigClk).toBeFalsy();
+
+    if (custCompare) {
+      custCompare()
+    }
+  };
+
+  const { CompFn, CompCls } = makeTestComp(makeClickHandler);
+  const CompList = [CompFn, CompCls];
   await mountThenClick(CompList, { beforeClick, executeClick, afterClick });
 }

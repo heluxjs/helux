@@ -11,6 +11,19 @@ export function getTestModels() {
       state: {
         name: 'name',
         age: 18,
+        grade: 19,
+        grade2: 190,
+        asValue: '',
+        isBig: false,
+        isBig2: false,
+        isBig3: 'not bool',
+        nest: {
+          isBig: false,
+        },
+        nestArr: [false, 'xxx'],
+        nestObjArr: [{ isBig: false }, { isBig: false }],
+        arr: [1, 2, 3],
+        objArr: [{ num: 1 }, { num: 2 }],
         books: [
           { id: 1, name: 'concent', author: 'zzk', publishTime: '2019' },
           { id: 2, name: 'concent-lite', author: 'fancy', publishTime: '2020' },
@@ -158,4 +171,8 @@ export function toNum(str) {
 
 export function getWrapNum(/** @type Wrap */wrap, selector) {
   return toNum(wrap.find(selector).text());
+};
+
+export function getWrapText(/** @type Wrap */wrap, selector) {
+  return wrap.find(selector).text();
 };
