@@ -31,14 +31,16 @@ function incCursor() {
 }
 
 function CcHook(state, hookSetter, props, hookCtx) {
-  //new CcHook时，这里锁定的hookSetter就是后面一直可以用的setter
-  //如果存在期一直替换hookSetter，反倒会造成打开react-dev-tool，点击面板里的dom后，视图便不再更新的bug
+  // new CcHook时，这里锁定的hookSetter就是后面一直可以用的setter
+  // 如果存在期一直替换hookSetter，反倒会造成打开react-dev-tool，点击面板里的dom后，视图便不再更新的bug
   this.setState = hookSetter;
   this.forceUpdate = hookSetter;
   this.state = state;
   this.isFirstRendered = true;
   this.props = props;
   this.hookCtx = hookCtx;
+  // just like class component
+  this.refs = {};
 }
 
 // rState: resolvedState, iState: initialState
@@ -86,8 +88,9 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
     const ref = React.useRef(null);
     refCtx.refs[refName] = ref;
+    hookRef.refs[refName] = ref;
     return ref;
-  }
+  };
 
   return hookRef;
 }

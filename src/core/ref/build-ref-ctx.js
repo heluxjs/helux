@@ -228,9 +228,12 @@ function bindEventApis(ctx, liteLevel, ccUniqueKey) {
     };
     // 默认off掉当前实例对某个事件名的所有监听
     ctx.off = (event, { module, ccClassKey, ccUniqueKey: inputCcUkey = ccUniqueKey } = {}) => {
+      let targetCcUkey = inputCcUkey;
+      // 传递了 module 或者 ccClassKey的话，清理掉targetCcUkey，表示off的目标要扩大
+      if (module || ccClassKey) targetCcUkey = '';
       // 这里刻意不为identity赋默认值，如果是undefined，表示off掉所有监听
       const { name, identity } = ev.getEventItem(event);
-      ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: inputCcUkey, identity });
+      ev.findEventHandlersToOff(name, { module, ccClassKey, ccUniqueKey: targetCcUkey, identity });
     };
     ctx.on = (inputEvent, handler) => {
       ctx.__$$onEvents.push({ inputEvent, handler });
@@ -565,7 +568,11 @@ export default function (ref, params, liteLevel = 5) {
     changeState,// not expose in d.ts
     refs,
     useRef: (refName) => {
-      return ref => refs[refName] = { current: ref }; // keep the same shape with hook useRef
+      return nodeRef => {
+        // keep the same shape with hook useRef
+        refs[refName] = { current: nodeRef };
+        ref.refs && (ref.refs[refName] = { current: nodeRef });
+      };
     },
 
     // below methods only can be called by cc or updated by cc in existed period, not expose in d.ts

@@ -443,9 +443,12 @@ export function removeArrElements(arr, toRemoveArr) {
 export function getRegisterOptions(options = {}) {
   if (typeof options === 'string') {
     return { module: options };
-  } else {
-    return Object.assign({ module: MODULE_DEFAULT }, options);
   }
+  if (options) {
+    if (options.module) return Object.assign({ module: MODULE_DEFAULT }, options);
+    return Object.assign(options, { module: MODULE_DEFAULT });
+  }
+  return { module: MODULE_DEFAULT };
 }
 
 let ccns = '';

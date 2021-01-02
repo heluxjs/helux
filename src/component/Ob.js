@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useConcentForOb } from '../core/hook/use-concent';
 
-const obView = () => 'Ob view';
+const obView = () => 'miss render prop or children';
 
 let TargetComp = () => React.createElement('h1', {}, 'Ob component needs react ver lte 16.8');
 

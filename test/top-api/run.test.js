@@ -1,4 +1,7 @@
-import { run, configure, ccContext, setState, getState, getComputed, clearContextIfHot, reducer, debugComputed } from '../../src/index';
+import {
+  run, configure, ccContext, setState, getState, getComputed,
+  clearContextIfHot, reducer, debugComputed, cst,
+} from '../../src/index';
 import { makeStoreConfig, delay } from '../util';
 
 const errorList = [];
@@ -18,7 +21,20 @@ describe('test top api run', () => {
 
   test('check ccContext default params', () => {
     expect(ccContext.runtimeVar.computedCompare === false).toBeTruthy();
-  })
+  });
+
+
+  test('configure plugin', () => {
+    const aPlugin = {
+      install: (on) => {
+        on(cst.SIG_FN_START, ({ sig, payload }) => {
+          console.log(sig, payload)
+        });
+        return { name: 'a-plugin' };
+      }
+    };
+    run({}, { plugins: [aPlugin] });
+  });
 
   
   test('calling run api twice should throw error', () => {

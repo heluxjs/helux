@@ -254,9 +254,14 @@ declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(even
 declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: [string, string?], ...args: EvMap[EvName]): void;
 declare function refCtxEmit<EvMap extends EvMapBase, EvName extends string>(eventDesc: EventDesc, ...args: EvMap[EvName]): void;
 
-declare function refCtxOff(eventName: string): void;
-declare function refCtxOff(eventDesc: [string, string?]): void;
-declare function refCtxOff(eventDesc: { name: string, identity?: string }): void;
+export interface OffOptions {
+  module?: string;
+  ccClassKey?: string;
+  ccUniqueKey?: string;
+}
+declare function refCtxOff(eventName: string, offOptions?: OffOptions): void;
+declare function refCtxOff(eventDesc: [string, string?], offOptions?: OffOptions): void;
+declare function refCtxOff(eventDesc: { name: string, identity?: string }, offOptions?: OffOptions): void;
 
 export type GetPromiseT<F extends (...args: any) => any> = F extends (...args: any) => Promise<infer T> ? T : ReturnType<F>;
 
@@ -764,6 +769,7 @@ type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] | readonly (
   // !!! currently I do not know how to pass ${moduleName} to evaluate target type in object value
   // something like (keyof RootState[moduleName] )[] but it is wrong writing
   { [moduleName in (keyof RootState)]?: TStar | TAuto | string[] };
+
 export interface RegisterOptions<
   P extends IAnyObj,
   RootState extends IRootBase,
@@ -1244,7 +1250,10 @@ export function getGlobalState<RootState extends IRootBase>(): RootState['$$glob
 
 export function getComputed<T>(moduleName?: string): T;
 
-export function debugComputed<T>(moduleName: string): T;
+/**
+ * for printing cu object in console as plain json object
+ */
+export function debugComputed<T>(moduleName?: string): T;
 
 export function getGlobalComputed<T>(): T;
 
@@ -1323,10 +1332,10 @@ export function Ob(props: { classKey?: string, module?: string, connect?: string
  */
 export declare const reducer: IAnyFnInObj;
 
-export function getRefs<Ctx extends ICtxBase>(): Ctx[];
+export function getRefs<Ctx extends ICtxBase>(classKey?: string): Ctx[];
 
 /**
- * 
+ *
  * @param newModuleName 
  * @param existingModuleName 
  * @param overwriteModuleConfig overwriteModuleConfig will been merged to existingModuleConfig

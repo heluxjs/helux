@@ -17,6 +17,7 @@ export function getTestModels() {
         ],
       },
       computed: {
+        nameAndAge: ({ name, age }) => `${name}${age}`,
         bookMap: ({ books }) => books.reduce((map, item) => { map[item.id] = item; return map }, {}),
       },
       reducer: {

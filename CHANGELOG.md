@@ -1,3 +1,26 @@
+#### 2021-01-02
+2.10.13 发布
+- feature: 支持 ins.refs 直接访问 useRef收集到的ref
+```js
+// before 2.10.13
+@register({setup})
+class Demo(){
+  componentDidMount(){
+    console.log(this.refs); // {}
+  }
+  render(){
+    const { uesRef } = this.ctx;
+    return <h1 ref={uesRef('h1Ref')}>hello refs</h1>
+  }
+}
+
+// now
+  componentDidMount(){
+    console.log(this.refs); // { h1Ref: { current: {...} } }
+  }
+```
+- feature: `getRefs`支持传入`classKey`去匹配
+
 #### 2020-12-15
 2.10.11 发布
 - fix: `refComputed`如果提前在setup里解构，会取值错误

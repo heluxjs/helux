@@ -1,7 +1,7 @@
 import { act } from 'react-dom/test-utils';
 import { run, setState } from '../../src/index';
 import { getTestModels } from '../util';
-import * as tcs from '../ctx/_testChangeState'
+import * as tcs from '../ctx-api/_testChangeState'
 
 const models = getTestModels();
 run(models, { log: false, act });

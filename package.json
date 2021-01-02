@@ -117,8 +117,9 @@
     "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.js",
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
     "test": "jest",
+    "cov": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
   },
-  "version": "2.10.12",
+  "version": "2.10.14",
   "dependencies": {}
 }
