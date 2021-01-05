@@ -356,6 +356,12 @@ declare function refCtxComputed(multiFn: (ctx: ICtxBase) => MultiComputed): void
 
 type VorB = void | boolean;
 /**
+ * retKeyDep: default is true, when key is same as state key, it will be a dep
+ */
+type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
+type DepKeysOrOpts = DepKeys | DefWatchOptions;
+
+/**
  * 
  * @param retKey 
  * @param watchFn 
@@ -363,11 +369,11 @@ type VorB = void | boolean;
  * @param {boolean} compare defalut is true
  * @param {boolean} immediate defalut is false
  */
-declare function refCtxWatch(retKey: string, fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean): void;
+declare function refCtxWatch(retKey: string, fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeysOrOpts?: DepKeysOrOpts): void;
 declare function refCtxWatch(retKey: string, fnDesc: { fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean, retKeyDep?: boolean }): void;
 
 declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefWatchFn<F, RefFullState>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean): void;
+  (retKey: string, fn: RefWatchFn<F, RefFullState>, depKeysOrOpts?: DepKeysOrOpts): void;
 declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
   (retKey: string, fnDesc: { fn: RefWatchFn<F, RefFullState>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean, retKeyDep?: boolean }): void;
 
@@ -1298,11 +1304,6 @@ export function defLazyComputed<V extends IAnyObj, CuRet, F extends IFnCtxBase =
   (fn: (newState: V, oldState: V, fnCtx: F) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 export function defLazyComputed<CuRet>
   (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
-
-/**
- * retKeyDep: default is true, when key is same as state key, it will be a dep
- */
-type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
 
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
   (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, defOptions?: DepKeys | DefWatchOptions): WatchFnDesc;

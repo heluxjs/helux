@@ -59,7 +59,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
 /**
  * 修改状态入口函数
  */
-export default function (state, {
+function changeRefState(state, {
   module, skipMiddleware = false, payload, stateChangedCb,
   reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, targetRef
 ) {
@@ -323,4 +323,30 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
       refCtx.__$$ccForceUpdate();
     }
   });
+}
+
+export default function startChangeRefState(state, options, ref) {
+  /**
+   * 避免死循环，利用 setTimeout 将执行流程放到下一轮事件循环里
+   *  在 <= v2.10.13之前
+   *  1 watch回调里执行 setState 导致无限死循环
+   *  2 setup 块里直接执行 setState 导致无限死循环
+   * 
+   *  以 watch为例：
+   * function setup({watch, setState, initState}){
+   *   initState({privKey: 2});
+   *   watch('num', ()=>{
+   *     // 因为watch是在组件渲染前执行，当设置immediate为true时
+   *     // 组件处于 beforeMount 步骤，cUKey2Ref并未记录具体的ref,
+   *     // 此时回调里调用setState会导致 use-concent 140判断失败后
+   *     // 然后一直触发 cref函数，一直进入新的 beforeMount流程
+   *     setState({privKey:1});
+   *   }, {immediate:true});
+   * }
+   */
+  if (ref.ctx.__$$inBM) {
+    setTimeout(() => startChangeRefState(state, options, ref), 0);
+    return;
+  }
+  changeRefState(state, options, ref);
 }

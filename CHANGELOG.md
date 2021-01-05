@@ -1,3 +1,29 @@
+####
+- fix: 直接在 setup 块里调用`setState`或者在`immediate=ture`时的`watch`回调里调用`setState`会导致死循环
+```js
+/**
+ * 避免死循环，利用 setTimeout 将执行流程放到下一轮事件循环里
+ *  在 <= v2.11.3之前
+ *  1 watch回调里执行 setState 导致无限死循环
+ *  2 setup 块里直接执行 setState 导致无限死循环
+ *  尽管这是一种不推荐的写法，但如果用户这样写了，采取setTimeout措施让其推导下一轮事件循环执行
+ *  ?? 或许将来直接忽略这种 setState 行为
+ * 
+ *  以 watch为例：
+ * function setup({watch, setState, initState}){
+ *   initState({privKey: 2});
+ *   watch('num', ()=>{
+ *     // 因为watch是在组件渲染前执行，当设置immediate为true时
+ *     // 组件处于 beforeMount 步骤，cUKey2Ref并未记录具体的ref,
+ *     // 此时回调里调用setState会导致 use-concent 140判断失败后
+ *     // 然后一直触发 cref函数，一直进入新的 beforeMount流程
+ *     setState({privKey:1});
+ *   }, {immediate:true});
+ * }
+ */
+```
+- chore: 修正 `refCtxWatch` 类型描述
+
 #### 2021-01-02
 2.10.13 发布
 - feature: 支持 ins.refs 直接访问 useRef收集到的ref
