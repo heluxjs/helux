@@ -13,29 +13,30 @@
     "url": "https://github.com/concentjs/concent/issues"
   },
   "bundleDependencies": false,
-  "peerDependencies": {
-    "@types/react": "^16.9.13",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6"
-  },
   "deprecated": false,
-  "description": "control your react component state in a funny way, every react instance of different class if they were registered in concent own the ability of knowing and syncing each other's state, just have a try and discover more^_^",
+  "description": "Build-in dependency collection, a predictable、zero-cost-use、progressive、high performance's react develop framework",
   "devDependencies": {
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-proposal-decorators": "^7.1.2",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-transform-react-display-name": "^7.0.0",
     "@babel/plugin-transform-react-jsx": "^7.0.0",
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
+    "@babel/preset-react": "^7.9.4",
     "@babel/runtime": "^7.5.4",
+    "acorn": "^8.0.4",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
-    "codecov": "^3.0.2",
+    "codecov": "^3.7.1",
+    "coveralls": "^3.1.0",
     "create-react-class": "^15.6.3",
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.5",
     "es3ify": "^0.2.0",
     "eslint": "^4.19.1",
     "eslint-config-prettier": "^3.1.0",
@@ -45,17 +46,25 @@
     "glob": "^7.1.1",
     "jest": "^23.6.0",
     "jest-dom": "^1.12.0",
+    "kind-of": "^6.0.3",
+    "mixin-deep": "^2.0.1",
+    "node-fetch": "^2.6.1",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "rimraf": "^2.6.2",
     "rollup": "^0.66.5",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.1.3",
+    "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-uglify": "^6.0.0",
     "semver": "^5.5.0",
-    "uglify-js": "3.5.8"
+    "set-value": "^3.0.2",
+    "uglify-js": "3.5.8",
+    "yargs-parser": "^20.2.1"
   },
   "files": [
     "dist",
@@ -76,11 +85,11 @@
     "replace redux"
   ],
   "license": "MIT",
-  "unpkg": "dist/concent-test.js",
-  "types": "src/types.d.ts",
+  "name": "concent",
   "main": "lib/index.js",
   "module": "es/index.js",
-  "name": "concent-test",
+  "types": "src/types.d.ts",
+  "unpkg": "dist/concent.js",
   "npmFileMap": [
     {
       "basePath": "/dist/",
@@ -89,21 +98,28 @@
       ]
     }
   ],
-  "npmName": "concent-test",
+  "npmName": "concent",
+  "peerDependencies": {
+    "@types/react": "^16.9.13",
+    "react": "^16.8.6"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/concentjs/concent.git"
   },
   "scripts": {
+    "about_build_es": "if use 'cross-env BABEL_ENV=es babel src --out-dir es', it will cause error of can not create class without new error",
     "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
     "build:es": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-cpway": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-rightway": "cross-env BABEL_ENV=es babel src --out-dir es",
-    "about_build_es": "if use 'cross-env BABEL_ENV=es babel src --out-dir es', it will cause error of can not create class without new error",
-    "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent-test.js",
-    "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent-test.min.js",
-    "test": "jest"
+    "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.js",
+    "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
+    "test": "jest",
+    "cov": "jest --coverage",
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
   },
-  "version": "2.4.1"
+  "version": "2.11.8",
+  "dependencies": {}
 }

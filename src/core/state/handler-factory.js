@@ -557,10 +557,11 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
   ctx.state = Object.assign(ctx.state, partialState);
 
   const act = runtimeHandler.act;
-  const update = ()=>{
+  const update = () => {
     if (ctx.type === CC_HOOK) {
       ctx.__boundSetState(newState);
-      cbNewState();
+      // 保持和class组件callback一样的行为，即组件渲染后再触发callback
+      setTimeout(cbNewState, 0);
     } else {
       // 此处注意原始的react class setSate [,callback] 不会提供latestState
       ctx.__boundSetState(partialState, cbNewState);
