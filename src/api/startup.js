@@ -62,6 +62,7 @@ export default function (
     errorHandler = null,
     warningHandler = null,
     isHot,
+    alwaysRenderCaller = true,
     bindCtxToMethod = false,
     computedCompare = false,// 表示针对object值需不需要比较
     watchCompare = false,// 表示针对object值需不需要比较
@@ -95,6 +96,7 @@ export default function (
       rh.warningHandler = warningHandler;
       rh.act = act;
       rv.asyncCuKeys = asyncCuKeys || [];
+      rv.alwaysRenderCaller = alwaysRenderCaller;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
       rv.computedCompare = computedCompare;

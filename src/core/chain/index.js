@@ -40,8 +40,8 @@ export function setAllChainState(chainId, targetModule, partialState) {
   __setChainState(chainId, targetModule, partialState, normalChainId_moduleStateMap_)
 }
 
-export function setAndGetChainStateList(chainId, targetModule, partialState) {
-  setChainState(chainId, targetModule, partialState);
+export function setAndGetChainStateList(isC2Result, chainId, targetModule, partialState) {
+  if (!isC2Result) setChainState(chainId, targetModule, partialState);
   return getChainStateList(chainId);
 }
 

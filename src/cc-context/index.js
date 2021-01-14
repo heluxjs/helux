@@ -18,7 +18,7 @@ const { _computedValues } = computed;
 const { okeys, extractChangedState } = util;
 const getDispatcher = () => ccContext.permanentDispatcher;
 
-const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false } = {}) => {
+const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false, force } = {}) => {
   const moduleState = getState(module);
   const moduleComputedValue = _computedValues[module];
 
@@ -49,7 +49,7 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
   );
 
   if (!noSave) {
-    saveSharedState(module, deltaCommittedState);
+    saveSharedState(module, deltaCommittedState, null, force);
   }
 
   return {
@@ -58,7 +58,7 @@ const setStateByModule = (module, committedState, { ref = null, callInfo = {}, n
   };
 }
 
-const saveSharedState = (module, toSave, needExtract = false) => {
+const saveSharedState = (module, toSave, needExtract = false, force) => {
   let target = toSave;
   if (needExtract) {
     const { partialState } = extractStateByKeys(toSave, moduleName2stateKeys[module], true);
@@ -73,7 +73,7 @@ const saveSharedState = (module, toSave, needExtract = false) => {
   return extractChangedState(moduleState, target, {
     prevStateContainer: prevModuleState,
     incStateVer: key => incStateVer(module, key),
-  });
+  }, force);
 }
 
 const getState = (module) => {
@@ -246,7 +246,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.11.3',
+    version: '2.4.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',

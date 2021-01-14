@@ -440,7 +440,10 @@ export default function (ref, params, liteLevel = 5) {
     changeRefState(state, options, ref);
   };
   const _setState = (module, state, calledBy, reactCallback, renderKey, delay) => {
-    changeState(state, { calledBy, module, renderKey, delay, reactCallback });
+    const options = { calledBy, module, reactCallback };
+    if (util.isObject(renderKey)) Object.assign(options, renderKey); // 丢弃delay，renderKeyAsOpt里的delay
+    else Object.assign(options, { renderKey, delay });
+    changeState(state, options);
   };
   const setModuleState = (module, state, reactCallback, renderKey, delay) => {
     _setState(module, state, SET_MODULE_STATE, reactCallback, renderKey, delay);
@@ -571,7 +574,6 @@ export default function (ref, params, liteLevel = 5) {
       return nodeRef => {
         // keep the same shape with hook useRef
         refs[refName] = { current: nodeRef };
-        ref.refs && (ref.refs[refName] = { current: nodeRef });
       };
     },
 

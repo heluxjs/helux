@@ -1,4 +1,27 @@
-####
+#### 2021-01-07
+2.11.7 发布
+- feature: 添加`force`参数，允许用户传递一个相同的值情况下更新所有消费该数据的组件
+```js
+run({
+  counter: {
+    state: { num: 1 },
+  }
+});
+
+// 以下方式仅引起调用者更新
+ctx.setState({num:1});
+ctx.mr.setState({num:1});
+ctx.dispatch('setState', {num:1});
+
+// 加上force参数，触发所有组件读取到了num的组件更新
+ctx.setState({num:1}, null, {force:true});
+ctx.mr.setState({num:1}, {force:true});
+ctx.dispatch('setState', {num:1}, {force:true});
+```
+示例链接：
+
+#### 2021-01-06
+2.11.3 发布
 - fix: 直接在 setup 块里调用`setState`或者在`immediate=ture`时的`watch`回调里调用`setState`会导致死循环
 ```js
 /**

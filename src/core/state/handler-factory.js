@@ -106,10 +106,10 @@ function __promisifiedInvokeWith(userLogicFn, executionContext, payload) {
 }
 
 function __invoke(userLogicFn, option, payload) {
-  const { callerRef, delay, renderKey, calledBy, module, chainId, oriChainId, chainId2depth, isSilent } = option;
+  const { callerRef, delay, renderKey, force, calledBy, module, chainId, oriChainId, chainId2depth, isSilent } = option;
   return __promisifiedInvokeWith(userLogicFn, {
     callerRef, context: true, module, calledBy, fnName: userLogicFn.name,
-    delay, renderKey, chainId, oriChainId, chainId2depth, isSilent,
+    delay, renderKey, force, chainId, oriChainId, chainId2depth, isSilent,
   }, payload);
 }
 
@@ -135,13 +135,15 @@ export function makeInvokeHandler(
   return (firstParam, payload, inputRKey, inputDelay) => {
     let _isLazy = isLazy, _isSilent = isSilent;
     let _renderKey = '', _delay = inputDelay != undefined ? inputDelay : delay;
+    let _force = false;
 
     if (isPJO(inputRKey)) {
-      const { lazy, silent, renderKey, delay } = inputRKey;
+      const { lazy, silent, renderKey, delay, force } = inputRKey;
       lazy !== undefined && (_isLazy = lazy);
       silent !== undefined && (_isSilent = silent);
       renderKey !== undefined && (_renderKey = renderKey);
       delay !== undefined && (_delay = delay);
+      _force = force;
     } else {
       _renderKey = inputRKey;
     }
@@ -151,6 +153,7 @@ export function makeInvokeHandler(
     const option = {
       callerRef, calledBy: INVOKE, module: callerRef.ctx.module, isSilent: _isSilent,
       chainId: _chainId, oriChainId: _oriChainId, chainId2depth, delay: _delay, renderKey: _renderKey,
+      force: _force,
     };
 
     // eslint-disable-next-line
@@ -197,7 +200,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
   const callerModule = callerRef.ctx.module;
   const {
     module: targetModule = callerModule, context = false,
-    cb, __innerCb, type, calledBy, fnName = '', delay = -1, renderKey,
+    cb, __innerCb, type, calledBy, fnName = '', delay = -1, renderKey, force = false,
     chainId, oriChainId, chainId2depth, isSilent
     // sourceModule
   } = executionContext;
@@ -236,7 +239,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
 
       actionContext = {
         callInfo: {
-          renderKey, delay, fnName, type, calledBy
+          renderKey, delay, fnName, type, calledBy, force,
         },
         module: targetModule,
         callerModule,
@@ -278,39 +281,36 @@ export function invokeWith(userLogicFn, executionContext, payload) {
       chainId2depth[chainId] = chainId2depth[chainId] - 1;// 调用结束减1
       const curDepth = chainId2depth[chainId];
       const isFirstDepth = curDepth === 1;
-
+      const isC2Result = stOrPromisedSt && stOrPromisedSt.__c2Result;
       // 调用结束就记录
       setAllChainState(chainId, targetModule, partialState);
-
       let commitStateList = [];
 
       if (isSilent === false) {
         send(SIG_FN_END, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
 
         // targetModule, sourceModule相等与否不用判断了，chainState里按模块为key去记录提交到不同模块的state
-        if (isChainIdLazy(chainId)) {// 来自于惰性派发的调用
-          if (!isFirstDepth) {// 某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
+        if (isChainIdLazy(chainId)) { // 来自于惰性派发的调用
+          if (!isFirstDepth) { // 某条链还在往下调用中，没有回到第一层，暂存状态，直到回到第一层才提交
             setChainState(chainId, targetModule, partialState);
-          } else {// 合并状态一次性提交到store并派发到组件实例
+          } else { // 合并状态一次性提交到store并派发到组件实例
             if (isChainExited(chainId)) {
               // 丢弃本次状态，不做任何处理
             } else {
-              commitStateList = setAndGetChainStateList(chainId, targetModule, partialState);
+              setAndGetChainStateList(isC2Result, chainId, targetModule, partialState);
               removeChainState(chainId);
             }
           }
         } else {
-          commitStateList = [{ module: targetModule, state: partialState }];
+          if (!isC2Result) commitStateList = [{ module: targetModule, state: partialState }];
         }
       }
 
       commitStateList.forEach(v => {
-        if (v.state) {
-          changeRefState(v.state, {
-            renderKey, module: v.module, reactCallback: newCb, type,
-            calledBy, fnName, delay, payload
-          }, callerRef);
-        }
+        changeRefState(v.state, {
+          renderKey, module: v.module, reactCallback: newCb, type,
+          calledBy, fnName, delay, payload, force,
+        }, callerRef);
       });
 
       if (isSourceCall) {// 源头dispatch or invoke结束调用
@@ -359,7 +359,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
 }
 
 export function dispatch({
-  callerRef, module: inputModule, renderKey, isSilent,
+  callerRef, module: inputModule, renderKey, isSilent, force,
   type, payload, cb: reactCallback, __innerCb, delay = -1, chainId, oriChainId, chainId2depth } = {}
 ) {
   const targetReducerMap = _reducer[inputModule];
@@ -374,7 +374,7 @@ export function dispatch({
   }
 
   const executionContext = {
-    callerRef, module: inputModule, type,
+    callerRef, module: inputModule, type, force,
     cb: reactCallback, context: true, __innerCb, calledBy: DISPATCH, delay, renderKey, isSilent,
     chainId, oriChainId, chainId2depth
   };
@@ -390,14 +390,16 @@ export function makeDispatchHandler(
     let isLazy = inputIsLazy, isSilent = inputIsSilent;
     let _renderKey = '';
     let _delay = userInputDelay || delay;
+    let _force = false;
 
     if (isPJO(userInputRKey)) {
       _renderKey = defaultRenderKey;
-      const { lazy, silent, renderKey, delay } = userInputRKey;
+      const { lazy, silent, renderKey, delay, force } = userInputRKey;
       lazy !== undefined && (isLazy = lazy);
       silent !== undefined && (isSilent = silent);
       renderKey !== undefined && (_renderKey = renderKey);
       delay !== undefined && (_delay = delay);
+      _force = force;
     } else {
       _renderKey = userInputRKey || defaultRenderKey;
     }
@@ -410,9 +412,9 @@ export function makeDispatchHandler(
 
     const callInvoke = () => {
       const iHandler = makeInvokeHandler(
-        callerRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, chainId2depth }
+        callerRef, { chainId: _chainId, oriChainId: _oriChainId, isLazy, isSilent, chainId2depth }
       );
-      return iHandler(paramObj, payload, _renderKey, _delay);
+      return iHandler(paramObj, payload, { renderKey: _renderKey, delay: _delay, force: _force });
     };
 
     if (paramObjType && paramObjType === 'object') {
@@ -477,7 +479,7 @@ export function makeDispatchHandler(
 
     if (_module === '*') {
       return ccDispatch(`*/${_type}`, payload,
-        { silent: isSilent, lazy: isLazy, renderKey: _renderKey },
+        { silent: isSilent, lazy: isLazy, renderKey: _renderKey, force: _force },
         _delay,
         { refModule: callerRef.ctx.module }, // in name of refModule to call dispatch handler
       );
@@ -487,7 +489,7 @@ export function makeDispatchHandler(
       dispatch({
         callerRef, module: _module, type: _type, payload,
         cb: _cb, __innerCb: _promiseErrorHandler(resolve, reject),
-        delay: _delay, renderKey: _renderKey, isSilent,
+        delay: _delay, renderKey: _renderKey, isSilent, force: _force,
         chainId: _chainId, oriChainId: _oriChainId, chainId2depth
         // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
       });
@@ -498,6 +500,16 @@ export function makeDispatchHandler(
         justWarning(err);
       }
     });
+
+    /**
+     * 用于帮助concent识别出这是用户直接返回的Promise对象，减少一次冗余的渲染
+     *   function demoMethod(p,m,ac){
+     *     // ac.setState已经触发了一次渲染
+     *     // demoMethod可以不用再触发渲染了
+     *     return ac.setState({num1:1}); 
+     *   }
+     */
+    p.__c2Result = true;
     return p;
   }
 }

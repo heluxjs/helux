@@ -21,7 +21,7 @@ const {
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey2Context,
-  refStore, getModuleStateKeys,
+  refStore, getModuleStateKeys, runtimeVar
 } = ccContext;
 
 // 触发修改状态的实例所属模块和目标模块不一致的时候，stateFor是 FOR_ANOTHER_MOD
@@ -56,14 +56,19 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
   }
 }
 
+// 调用者优先取 alwaysRenderCaller，再去force参数
+function getCallerForce(force) {
+  return runtimeVar.alwaysRenderCaller || force;
+}
+
 /**
  * 修改状态入口函数
  */
 function changeRefState(state, {
-  module, skipMiddleware = false, payload, stateChangedCb,
+  module, skipMiddleware = false, payload, stateChangedCb, force = false,
   reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, targetRef
 ) {
-  if (state === undefined) return;
+  if (!state) return;
 
   if (!isPJO(state)) {
     justWarning(`your committed state ${INAJ}`);
@@ -75,7 +80,7 @@ function changeRefState(state, {
 
   const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
   const stateFor = getStateFor(module, refModule);
-  const callInfo = { calledBy, payload, renderKey: targetRenderKey, ccKey, module, fnName };
+  const callInfo = { calledBy, payload, renderKey: targetRenderKey, force, ccKey, module, fnName };
 
   // 在triggerReactSetState之前把状态存储到store，
   // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
@@ -83,7 +88,7 @@ function changeRefState(state, {
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
   const {
     partialState: sharedState, hasDelta, hasPrivState
-  } = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true });
+  } = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true, force });
 
   if (hasDelta) {
     Object.assign(state, sharedState);
@@ -93,18 +98,20 @@ function changeRefState(state, {
   const ignoreRender = !hasPrivState && !!sharedState;
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender, reactCallback,
-    // committedState means final committedState
-    (renderType, committedState, updateRef) => {
+  triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender,
+    reactCallback, getCallerForce(force), (renderType, committedState, updateRef) => {
+      // committedState means final committedState
       const passToMiddleware = {
         calledBy, type, payload, renderKey: targetRenderKey, delay: targetDelay, ccKey, ccUniqueKey,
         committedState, refModule, module, fnName,
         sharedState: sharedState || {}, // 给一个空壳对象，防止用户直接用的时候报错null
       };
 
+      let modStateCalled = false;
       // 修改或新增状态值
       // 修改并不会再次触发compute&watch过程，请明确你要修改的目的
       passToMiddleware.modState = (key, val) => {
+        modStateCalled = true;
         passToMiddleware.committedState[key] = val;
         passToMiddleware.sharedState[key] = val;
       };
@@ -115,7 +122,8 @@ function changeRefState(state, {
         // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，且不会再触发computed&watch
         // 调用此接口请明确知道后果,
         // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
-        const realShare = saveSharedState(module, passToMiddleware.sharedState, true);
+        const midSharedState = passToMiddleware.sharedState;
+        const realShare = saveSharedState(module, midSharedState, modStateCalled, force);
 
         // TODO: 查看其它模块的cu函数里读取了当前模块的state或computed作为输入产生了的新的计算结果
         // 然后做相应的关联更新 {'$$global/key1': {foo: ['cuKey1', 'cuKey2'] } }
@@ -125,7 +133,10 @@ function changeRefState(state, {
         updateRef && updateRef();
 
         if (renderType === RENDER_NO_OP && !realShare) {
-          // do nothing
+          if (ignoreRender) {
+            // 此时updateRef 为 null, 需要给补上一次机会为caller执行 triggerReactSetState
+            triggerReactSetState(targetRef, callInfo, [], SET_STATE, midSharedState, stateFor, false, reactCallback, getCallerForce(force));
+          }
         } else {
           send(SIG_STATE_CHANGED, {
             calledBy, type, committedState, sharedState: realShare || {},
@@ -138,7 +149,7 @@ function changeRefState(state, {
 
         // 当前上下文的ignoreRender 为true 等效于这里的入参 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
         if (realShare) triggerBroadcastState(
-          stateFor, callInfo, targetRef, realShare, ignoreRender, module, reactCallback, targetRenderKey, targetDelay
+          stateFor, callInfo, targetRef, realShare, ignoreRender, module, reactCallback, targetRenderKey, targetDelay, force
         );
       });
     }
@@ -146,7 +157,7 @@ function changeRefState(state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, next
+  targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, force, next
 ) {
   const nextNoop = () => next && next(RENDER_NO_OP, state);
   const refCtx = targetRef.ctx;
@@ -196,12 +207,14 @@ function triggerReactSetState(
 
   const ccSetState = () => {
     // 使用 unProxyState ，避免触发get
-    const changedState = util.extractChangedState(refCtx.unProxyState, deltaCommittedState)
+    let myChangedState;
+    if (force === true) myChangedState = deltaCommittedState;
+    else myChangedState = util.extractChangedState(refCtx.unProxyState, deltaCommittedState)
 
-    if (changedState) {
+    if (myChangedState) {
       // 记录stateKeys，方便triggerRefEffect之用
-      refCtx.__$$settedList.push({ module: stateModule, keys: okeys(changedState) });
-      refCtx.__$$ccSetState(changedState, reactCallback);
+      refCtx.__$$settedList.push({ module: stateModule, keys: okeys(myChangedState) });
+      refCtx.__$$ccSetState(myChangedState, reactCallback);
     }
   }
 
@@ -228,18 +241,18 @@ function syncCommittedStateToStore(moduleName, committedState, options) {
 }
 
 function triggerBroadcastState(
-  stateFor, callInfo, targetRef, sharedState, allowOriInsRender, moduleName, reactCallback, renderKeys, delay
+  stateFor, callInfo, targetRef, sharedState, allowOriInsRender, moduleName, reactCallback, renderKeys, delay, force
 ) {
   let passAllowOri = allowOriInsRender;
   if (delay > 0) {
-    if (passAllowOri) {// 优先将当前实例渲染了
-      triggerReactSetState(targetRef, callInfo, [], SET_STATE, sharedState, stateFor, false, reactCallback);
+    if (passAllowOri) { // 优先将当前实例渲染了
+      triggerReactSetState(targetRef, callInfo, [], SET_STATE, sharedState, stateFor, false, reactCallback, getCallerForce(force));
     }
-    passAllowOri = false;// 置为false，后面的runLater里不会再次触发当前实例渲染
+    passAllowOri = false; // 置为false，后面的runLater里不会再次触发当前实例渲染
   }
 
   const startBroadcastState = () => {
-    broadcastState(callInfo, targetRef, sharedState, passAllowOri, moduleName, reactCallback, renderKeys);
+    broadcastState(callInfo, targetRef, sharedState, passAllowOri, moduleName, reactCallback, renderKeys, force);
   };
 
   if (delay > 0) {
@@ -250,7 +263,9 @@ function triggerBroadcastState(
   }
 }
 
-function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, reactCallback, renderKeys) {
+function broadcastState(
+  callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, reactCallback, renderKeys, force
+) {
   if (!partialSharedState) {// null
     return;
   }
@@ -278,7 +293,7 @@ function broadcastState(callInfo, targetRef, partialSharedState, allowOriInsRend
       rcb = reactCallback;
       calledBy = callInfo.calledBy;
     }
-    triggerReactSetState(ref, callInfo, [], calledBy, partialSharedState, FOR_CUR_MOD, false, rcb);
+    triggerReactSetState(ref, callInfo, [], calledBy, partialSharedState, FOR_CUR_MOD, false, rcb, force);
     renderedInBelong[refKey] = 1;
   });
 

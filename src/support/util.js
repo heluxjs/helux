@@ -375,7 +375,7 @@ export function shallowDiffers(a, b) {
   return false;
 }
 
-export function extractChangedState(oldState, partialNewState, moduleOpt) {
+export function extractChangedState(oldState, partialNewState, moduleOpt, force) {
   let changedState = {};
 
   let setted = false;
@@ -395,12 +395,16 @@ export function extractChangedState(oldState, partialNewState, moduleOpt) {
       const valType = typeof newVal;
 
       let isNotEqual = true;
-      if (valType !== 'object') {
-        // 比较非object类型的值
-        if (nonObjectValueCompare) isNotEqual = oldVal !== newVal;
+      if (force === true) { // let isNotEqual always be true
+        // pass
       } else {
-        // 比较object类型的值
-        if (objectValueCompare) isNotEqual = oldVal !== newVal;
+        if (valType !== 'object') {
+          // 比较非object类型的值
+          if (nonObjectValueCompare) isNotEqual = oldVal !== newVal;
+        } else {
+          // 比较object类型的值
+          if (objectValueCompare) isNotEqual = oldVal !== newVal;
+        }
       }
 
       if (isNotEqual) {

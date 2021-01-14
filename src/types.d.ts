@@ -144,6 +144,10 @@ export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 type RenderKey = string | number | Array<string | number>;
 
 interface IDispatchOptions {
+  /**
+   * force update module state, bydefaut is false
+   */
+  force: boolean;
   silent?: boolean;
   lazy?: boolean;
   renderKey?: RenderKey;
@@ -933,11 +937,17 @@ export interface RunOptions {
    * this kind of error will not lead to app crash, but should let developer know it
    */
   warningHandler?: (err: Error) => void;
-  bindCtxToMethod?: boolean;// default false
-  computedCompare?: boolean;// default is false, trigger computed if set
-  watchCompare?: boolean;// default is false, trigger watch if set
-  watchImmediate?: boolean;// default is false
-  reComputed?: boolean;// default is true
+  bindCtxToMethod?: boolean; // default false
+  /**
+   * default is true
+   * it means no matter state changed or not, if a ref call setState or mr.{method}
+   * it will always been rendered
+   */
+  alwaysRenderCaller: boolean;
+  computedCompare?: boolean; // default is false, trigger computed if set
+  watchCompare?: boolean; // default is false, trigger watch if set
+  watchImmediate?: boolean; // default is false
+  reComputed?: boolean; // default is true
   extractModuleChangedState?: boolean;// default is true
   extractRefChangedState?: boolean;// default is false
   /**

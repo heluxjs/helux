@@ -8,6 +8,7 @@ export default {
   isStrict: false,
   isDebug: false,
   log: true,
+  alwaysRenderCaller: true,
   computedCompare: false,// 针对object值的比较规则
   watchCompare: false,// 针对object值的比较规则
   watchImmediate: false,

@@ -39,8 +39,6 @@ function CcHook(state, hookSetter, props, hookCtx) {
   this.isFirstRendered = true;
   this.props = props;
   this.hookCtx = hookCtx;
-  // just like class component
-  this.refs = {};
 }
 
 // rState: resolvedState, iState: initialState
@@ -88,7 +86,6 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
     const ref = React.useRef(null);
     refCtx.refs[refName] = ref;
-    hookRef.refs[refName] = ref;
     return ref;
   };
 
