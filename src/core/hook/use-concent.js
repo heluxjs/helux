@@ -13,7 +13,7 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
-import { isPJO, getRegisterOptions, evalState } from '../../support/util';
+import { isPJO, getRegisterOptions, evalState , isObject} from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
 import isStrict from './is-strict';
@@ -113,7 +113,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   
   // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   const { state: iState = {} } = _registerOption;
-  const { props = {}, mapProps, layoutEffect = false, extra = {} } = _registerOption;
+  const { props = {}, mapProps, layoutEffect = false, extra } = _registerOption;
 
   const reactUseState = React.useState;
   if (!reactUseState) {
@@ -139,10 +139,11 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     } else {
       const refCtx = hookRef.ctx;
       refCtx.prevProps = refCtx.props;
-      // avoid no-multi-assign warning
       refCtx.props = props;
       hookRef.props = props;
-      refCtx.extra = extra;
+      if (isObject(extra)) {
+        refCtx.extra = Object.assign(refCtx.extra, extra);
+      }
     }
   }
 

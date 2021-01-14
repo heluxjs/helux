@@ -572,7 +572,7 @@ export interface IRefCtx<
   ConnectedState extends IAnyObj = {},
   ConnectedReducer extends IAnyObj = {},
   ConnectedComputed extends IAnyObj = {},
-  ExtraType extends [any, any] | [any] = [any, any],
+  ExtraType extends [IAnyObj, any] | [IAnyObj] = [IAnyObj, any],
   >
   extends ICtxBase {
   readonly props: Props;

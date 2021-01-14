@@ -372,7 +372,7 @@ function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, stateMod
 export default function (ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   const {
-    ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, extra = {}, tag = '',
+    ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, tag = '',
     storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {},
   } = params;
 
@@ -532,7 +532,7 @@ export default function (ref, params, liteLevel = 5) {
     connectedState: {},
     // for function: can pass value to extra in every render period
     // for class: can pass value to extra one time
-    extra,
+    extra: isObject(params.extra) ? params.extra : {},
     staticExtra: {},
     settings: {},
 
