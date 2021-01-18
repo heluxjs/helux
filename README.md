@@ -76,7 +76,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 ## 💻 Playground
 
 ### Templates
-- [cra-template-concent-ts](https://github.com/concentjs/cra-template-concent-ts)
+- [cra-template-concent-ts](https://codesandbox.io/s/cra-template-concent-ts-2x347)
 
 install by npx command
 ```sh
@@ -86,8 +86,6 @@ or clone its source code by git command
 ```sh
 $ git clone https://github.com/concentjs/cra-project-concent-ts
 ```
-see [online demo](https://codesandbox.io/s/cra-template-concent-ts-2x347)
-
 
 ### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
