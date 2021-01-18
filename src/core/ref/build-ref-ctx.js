@@ -252,18 +252,20 @@ function bindEnhanceApis(ctx, liteLevel, stateModule) {
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
 
-    const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare = false, immediate = true) => {
+    const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare, immediate = true) => {
       if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
+      const compareForEf = compare === undefined ? false : compare;
+      // 对于effectProps 第三位参数就是immediate, 不传的话，默认是true
+      const immediateForEfProp = compare === undefined ? true : compare;
 
       // depKeys 为 null 和 undefined, 表示无任何依赖，每一轮都执行的副作用
       let _depKeys = depKeysOrOpt;
-      //对于effectProps 第三位参数就是immediate
-      let _compare = compare;
-      let _immediate = isProp ? compare : immediate;
+      let _compare = compareForEf;
+      let _immediate = isProp ? immediateForEfProp : immediate;
 
       if (isObject(depKeysOrOpt)) {
-        _depKeys = depKeysOrOpt.depKeys,
-          _compare = isBool(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
+        _depKeys = depKeysOrOpt.depKeys;
+        _compare = isBool(depKeysOrOpt.compare) ? depKeysOrOpt.compare : compare;
         _immediate = isBool(depKeysOrOpt.immediate) ? depKeysOrOpt.immediate : immediate;
       }
 
