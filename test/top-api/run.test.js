@@ -169,17 +169,14 @@ describe('test top api run', () => {
         state: { num: 1, numBig: 100 },
         reducer: {
           changeNum(num) {
-            console.log('--->>>>> changeNum', num);
             return { num };
           },
         },
         lifecycle: {
           async initState(state) {
-            console.log('--->>>>> initState');
             return { num: 2, numBig: 200 };
           },
           async initStateDone(dispatch, state) {
-            console.log('--->>>>> initStateDone');
             await dispatch('changeNum', 300); // dispatch string leterial
             expect(getState('tmpModule').num).toBe(300);
 
