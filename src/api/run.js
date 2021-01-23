@@ -49,10 +49,13 @@ export default function (store = {}, options = {}) {
 
   // these modules pushed by configure api
   pendingModules.forEach(({ module, config }) => {
+    // user put this module to run api again, here ignore this one
+    if (storeConf.store[module]) return;
+
     util.justTip(`configure pending module[${module}]`);
-    buildStoreConf(module, config)
+    buildStoreConf(module, config);
   });
 
-  pendingModules.length = 0;// clear pending modules
+  pendingModules.length = 0; // clear pending modules
   startup(storeConf, options);
 }

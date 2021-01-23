@@ -61,7 +61,7 @@ export function send(sig, payload) {
       cb({ sig, payload })
     } catch (err) {
       // plugin error should not abort dispatch process
-      // for letting plugin error isolate, I have to put try catch block in for loop
+      // for letting plugin error be isolate, I have to put try catch block in for loop
       runtimeHandler.tryHandleError(err, true);
     }
   });
