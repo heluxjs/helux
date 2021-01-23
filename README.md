@@ -46,7 +46,7 @@ English | [简体中文](./README.zh-CN.md)
     <img src='https://img.shields.io/github/stars/concentjs/concent.svg?style=social' alt='concent star' height='18' />
   </a>
   <a href='https://coveralls.io/github/concentjs/concent'>
-    <img src='https://coveralls.io/repos/github/concentjs/concent/badge.svg' alt='Coverage Status' />
+    <img src='https://s3.amazonaws.com/assets.coveralls.io/badges/coveralls_78.svg' alt='Coverage Status' />
   </a>
 </div>
 
