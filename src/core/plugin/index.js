@@ -55,13 +55,16 @@ export function clearCbs() {
 }
 
 export function send(sig, payload) {
-  try {
-    const cbs = sig2cbs[sig];
-    cbs.forEach(cb => cb({ sig, payload }));
-  } catch (err) {
-    // plugin error should not abort dispatch process
-    runtimeHandler.tryHandleError(err, true);
-  }
+  const cbs = sig2cbs[sig];
+  cbs.forEach(cb => {
+    try {
+      cb({ sig, payload })
+    } catch (err) {
+      // plugin error should not abort dispatch process
+      // for letting plugin error isolate, I have to put try catch block in for loop
+      runtimeHandler.tryHandleError(err, true);
+    }
+  });
 }
 
 export function on(sigOrSigs, cb) {
