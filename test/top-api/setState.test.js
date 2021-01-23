@@ -28,6 +28,11 @@ describe('test top api setState', async () => {
   });
 
 
+  test('passing an non plain json state has no effect', () => {
+    setState(Foo, 2);
+  });
+
+
   test('passing one state key has effect', () => {
     setState(Foo, { undeclaredKey: 222 });
     expect(fooState.undeclaredKey).toEqual(undefined);

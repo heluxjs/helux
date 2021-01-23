@@ -1,0 +1,3 @@
+
+window = undefined;
+global = {};

@@ -1,6 +1,6 @@
 import {
   run, configure, ccContext, setState, getState, getComputed,
-  clearContextIfHot, reducer, debugComputed, cst,
+  clearContextIfHot, reducer, cst,
 } from '../../src/index';
 import { makeStoreConfig, delay } from '../util';
 
@@ -28,9 +28,8 @@ describe('test top api run', () => {
     const aPlugin = {
       install: (on) => {
         on(cst.SIG_FN_START, ({ sig, payload }) => {
-          expect(payload.calldeBy !== undefined).toBeTruthy();
+          expect(payload.calledBy !== undefined).toBeTruthy();
           expect(payload.module !== undefined).toBeTruthy();
-          // console.log(sig, payload);
         });
         return { name: 'a-plugin' };
       }
@@ -40,11 +39,29 @@ describe('test top api run', () => {
 
 
   test('configure cc-like module should throw error', () => {
-    // try {
-    //   run({ '$$ccHi': { state: {} } }, { log: false });
-    // } catch (err) {
-    //   expect(err.message).toMatch(/(?=a built-in module name)/);
-    // }
+    try {
+      run({ $$ccHi: { state: {} } }, { log: false });
+    } catch (err) {
+      expect(err.message).toMatch(/(?=a built-in module name)/);
+    }
+  });
+
+
+  test('configure null module name should throw error', () => {
+    try {
+      run({ '': { state: {} } }, { log: false });
+    } catch (err) {
+      expect(err.message).toMatch(/(?=writing is invalid)/);
+    }
+  });
+
+
+  test('configure non plain json module state should throw error', () => {
+    try {
+      run({ test: { state: 2 } }, { log: false });
+    } catch (err) {
+      expect(err.message).toMatch(/(?=is not a plain json object)/);
+    }
   });
 
 
@@ -55,6 +72,39 @@ describe('test top api run', () => {
     } catch (err) {
       expect(err.message).toMatch(/(?=run can only been called one time)/);
     }
+  });
+
+
+  test('configure middleares should work', () => {
+    let mid1HitCount = 0;
+    let mid2HitCount = 0;
+    run(makeStoreConfig('foo'), {
+      log: false, middlewares: [
+        (info, next) => {
+          mid1HitCount += 1;
+          next();
+        },
+        (info, next) => {
+          mid2HitCount += 1;
+          next();
+        },
+        (info, next) => {
+          info.modState('tag', 'dangerously modTagInMiddleware');
+          next();
+        },
+        5, // this item is not a function , so it will be ignored
+      ]
+    });
+    setState('foo', { age: 19 });
+    expect(mid1HitCount).toBe(1);
+    expect(mid2HitCount).toBe(1);
+
+    setState('foo', { age: 19 }, '', -1, true);
+    // mid1HitCount is still 1 cause skipMiddleware arg is true
+    expect(mid1HitCount === 1).toBeTruthy();
+    expect(mid2HitCount === 1).toBeTruthy();
+
+    expect(getState('foo').tag === 'dangerously modTagInMiddleware').toBeTruthy();
   });
 
 
