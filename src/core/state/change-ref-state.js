@@ -35,7 +35,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
     if (len > 0) {
       let index = 0;
       const next = () => {
-        if (index === len) {// all middlewares been executed
+        if (index === len) { // all middlewares been executed
           cb();
         } else {
           const middlewareFn = middlewares[index];
@@ -46,7 +46,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
             next();
           }
         }
-      }
+      };
       next();
     } else {
       cb();
@@ -168,7 +168,7 @@ function triggerReactSetState(
   }
 
   if (
-    targetRef.__$$ms === UNMOUNTED  // 已卸载
+    targetRef.__$$ms === UNMOUNTED // 已卸载
     || stateFor !== FOR_CUR_MOD
     // 确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     || (calledBy !== FORCE_UPDATE && isObjectNull(state))

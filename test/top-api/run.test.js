@@ -36,7 +36,7 @@ describe('test top api run', () => {
     run({}, { plugins: [aPlugin] });
   });
 
-  
+
   test('calling run api twice should throw error', () => {
     try {
       run(makeStoreConfig('foo'), { log: false });

@@ -32,14 +32,14 @@ function makeComp(compRegType, regParams, View) {
   if (compRegType === 1) {
     return () => {
       const ctx = useConcent(regParams);
-      return <View ctx={ctx} />
+      return <View ctx={ctx} />;
     };
   }
   if (compRegType === 2) {
     return register(regParams)(
       class extends React.Component {
         render() {
-          return <View ctx={this.ctx} />
+          return <View ctx={this.ctx} />;
         }
       }
     );

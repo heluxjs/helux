@@ -14,7 +14,7 @@ function executeClearCb(cbMap, ctx) {
   const execute = key => { // symbolKey or normalKey
     const cb = cbMap[key];
     if (typeof cb === 'function') cb(ctx);
-  }
+  };
 
   Object.getOwnPropertySymbols(cbMap).forEach(execute);
   okeys(cbMap).forEach(execute);
@@ -33,7 +33,7 @@ function triggerLifecyleWillUnmount(allModules, mstate) {
       const once = willUnmount(makeModuleDispatcher(m), mstate);
       _willUnmountOnce[m] = getVal(once, true);
     }
-  }
+  };
 
   allModules.forEach(handleOneModule);
 }
@@ -62,7 +62,7 @@ export default function (ref) {
   okeys(connWaKeys).map(m => {
     const waKeys = connWaKeys[m];
     waKeys.forEach(k => delIns(m, k, ccUniqueKey));
-  })
+  });
 
   // 删除记录的静态依赖
   __$$staticWaKeyList.forEach(modStateKey => delStaticInsM(modStateKey, ccUniqueKey));

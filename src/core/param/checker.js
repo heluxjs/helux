@@ -31,11 +31,11 @@ export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg 
   checkModuleNameBasically(moduleName);
   if (moduleName !== MODULE_GLOBAL) {
     if (moduleMustNotExisted) {
-      if (util.isObjectNotNull(_state[moduleName])) {//但是却存在了
+      if (util.isObjectNotNull(_state[moduleName])) { // 但是却存在了
         throw makeError(ERR.CC_MODULE_NAME_DUPLICATE, vbi(_vbiMsg));
       }
     } else {
-      if (!_state[moduleName]) {//实际上却不存在
+      if (!_state[moduleName]) { // 实际上却不存在
         throw makeError(ERR.CC_MODULE_NOT_FOUND, vbi(_vbiMsg));
       }
     }
@@ -57,7 +57,7 @@ export function checkStoredKeys(belongModule, storedKeys) {
     checkKeys(belongModule, storedKeys, false, 'storedKeys invalid ');
     return;
   }
-  throw new Error(`storedKeys type err, ${STR_ARR_OR_STAR}`)
+  throw new Error(`storedKeys type err, ${STR_ARR_OR_STAR}`);
 }
 
 export function checkKeys(module, keys, keyShouldBeModuleStateKey = true, extraInfo = '') {

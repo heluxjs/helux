@@ -41,12 +41,11 @@ class CcFragment extends React.Component {
   }
 
   componentWillUnmount() {
-    if (super.componentWillUnmount) super.componentWillUnmount();
     beforeUnmount(this);
   }
 
   render() {
-    //注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
+    // 注意这里，一定要每次都取最新的绑在ctx上，确保交给renderProps的ctx参数里的state和props是最新的
     const thisProps = this.props;
     this.ctx.prevProps = this.ctx.props;
     this.ctx.props = getOutProps(thisProps);
@@ -59,7 +58,7 @@ class CcFragment extends React.Component {
       const { __$$regDumb, register = {} } = thisProps;
       const ctx = this.ctx;
 
-      if (__$$regDumb !== true && register.mapProps) {//直接使用<CcFragment />实例化
+      if (__$$regDumb !== true && register.mapProps) { // 直接使用<CcFragment />实例化
         ctx.mapped = register.mapProps(ctx) || {};
         return view(ctx.mapped) || nullSpan;
       }
@@ -67,7 +66,7 @@ class CcFragment extends React.Component {
       return view(ctx) || nullSpan;
     } else {
       if (React.isValidElement(view)) {
-        //直接传递dom，无论state怎么改变都不会再次触发渲染
+        // 直接传递dom，无论state怎么改变都不会再次触发渲染
         throw new Error(`CcFragment's children can not b a react dom `);
       }
       return view;

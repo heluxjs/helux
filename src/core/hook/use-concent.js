@@ -13,10 +13,10 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
-import { isPJO, getRegisterOptions, evalState , isObject} from '../../support/util';
+import { isPJO, getRegisterOptions, evalState, isObject, shallowDiffers } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
-import isStrict from './is-strict';
+import isStrict, { markFalse } from './is-strict';
 
 const { ccUKey2ref } = ccContext;
 const cursor2hookCtx = {};
@@ -103,6 +103,9 @@ function getHookCtxCcUKey(hookCtx) {
 
 const tip = 'react version is LTE 16.8';
 
+// TODO, 访问 process.env.NODE_ENV 非生产模式为没有传tag的组件自动创建loc
+// 用于辅助判断 isStrictMode 是否正确
+
 function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
   const _registerOption = getRegisterOptions(registerOption);
@@ -186,6 +189,13 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       const prevCursor = cursor - 1;
       const prevHookCtx = cursor2hookCtx[prevCursor];
       if (prevHookCtx && prevHookCtx.ef === 0) {
+        // 根组件useConcent 根组件包裹的子组件也useConcent
+        // 此时先触发子组件的effectHandler，同时cursor也是2
+        // 浅比较一下两者的注册参数，可以反推出是非strict模式
+        if (shallowDiffers(prevHookCtx.regOpt, hookCtx.regOpt)) {
+          return markFalse();
+        }
+
         // 确保是同一个类型的实例
         if (prevHookCtx.hookRef.ctx.ccClassKey === hookCtx.hookRef.ctx.ccClassKey) {
           delete cursor2hookCtx[prevCursor];

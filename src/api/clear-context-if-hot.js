@@ -26,7 +26,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
   okeys(moduleVer).forEach(m => {
     const curVer = moduleVer[m];
     incModuleVer(m, (curVer > 5 ? 1 : 6));
-  })
+  });
   // 用于还原_moduleVer，在resetClassInsUI回调里_moduleVer又变为了 所有的模块版本值为1的奇怪现象.
   // 全局有没有找到重置_moduleVer的地方.
   const lockedMV = JSON.parse(JSON.stringify(moduleVer));
@@ -61,7 +61,7 @@ function _clearInsAssociation(recomputed = false, otherExcludeKeys) {
         ref && ref.ctx.reactForceUpdate();
       });
     }, 0);
-  }
+  };
 }
 
 function _pickNonCustomizeIns() {
@@ -74,7 +74,7 @@ function _pickNonCustomizeIns() {
       const { type } = ref.ctx;
       if (type === CC_CLASS) ccClassInsKeys.push(refKey);
     }
-  })
+  });
   return { ccFragKeys, ccClassInsKeys };
 }
 
@@ -148,7 +148,7 @@ export default function (clearAll = false) {
       return noop;
     }
   }else{
-    //还没有启动过，泽只是标记justCalledByStartUp为true
+    // 还没有启动过，泽只是标记justCalledByStartUp为true
     justCalledByStartUp = true;
     return noop;
   }

@@ -20,13 +20,13 @@ export default (spec, e, refCtx) => {
   const type = spec.type;
   let noAutoExtract = false;
 
-  if (syncKey !== undefined) {//来自sync生成的setter函数调用 即 sync('xxxKey')
+  if (syncKey !== undefined) { // 来自sync生成的setter函数调用 即 sync('xxxKey')
     ccsync = syncKey;
     ccdelay = spec.delay;
     ccrkey = spec.rkey;
 
     // type 'bool', 'val', 'int', 'as'
-    ccint = type === 'int';//convert to int
+    ccint = type === 'int'; // convert to int
     isToggleBool = type === 'bool';
 
     let keyPath, fullKeyPath, module;
@@ -46,7 +46,7 @@ export default (spec, e, refCtx) => {
     const fullState = module !== refModule ? mState : refState;
     value = type === 'bool' ? !getValueByKeyPath(fullState, keyPath) : getValFromEvent(e);
 
-    //优先从spec里取，取不到的话，从e里面分析并提取
+    // 优先从spec里取，取不到的话，从e里面分析并提取
     const val = spec.val;
     if (val === undefined) {
       // do nothing
@@ -82,9 +82,9 @@ export default (spec, e, refCtx) => {
         value = val;
       }
     }
-  } else {//来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
+  } else { // 来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
     const se = convertToStandardEvent(e);
-    if (se) {// e is event
+    if (se) { // e is event
       const currentTarget = se.currentTarget;
       value = currentTarget.value;
       const dataset = currentTarget.dataset;
@@ -114,4 +114,4 @@ export default (spec, e, refCtx) => {
   return {
     currentTarget: { value, extraState, noAutoExtract, dataset: { ccsync, ccint, ccdelay, ccrkey } }, isToggleBool,
   };
-}
+};

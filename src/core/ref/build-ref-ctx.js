@@ -45,7 +45,7 @@ const getWatchedKeys = (ctx) => {
     else return okeys(ctx.__$$curWaKeys);
   }
   return ctx.watchedKeys;
-}
+};
 
 const getConnectWatchedKeys = (ctx, moduleName) => {
   const { connect, connectedModules } = ctx;
@@ -54,10 +54,10 @@ const getConnectWatchedKeys = (ctx, moduleName) => {
   const getModuleWaKeys = (m) => {
     if (ctx.__$$renderStatus === START) return okeys(ctx.__$$compareConnWaKeys[m]);
     else return okeys(ctx.__$$curConnWaKeys[m]);
-  }
+  };
 
   const getWKeys = (moduleName) => {
-    if (isConnectArr) {// auto observe connect modules
+    if (isConnectArr) { // auto observe connect modules
       return getModuleWaKeys(moduleName);
     } else {
       const waKeys = connect[moduleName];
@@ -65,17 +65,17 @@ const getConnectWatchedKeys = (ctx, moduleName) => {
       else if (waKeys === '-') return getModuleWaKeys(moduleName);
       else return waKeys;
     }
-  }
+  };
 
   if (moduleName) return getWKeys(moduleName);
   else {
     const cKeys = {};
     connectedModules.forEach((m) => {
-      cKeys[m] = getWKeys(m)
+      cKeys[m] = getWKeys(m);
     });
     return cKeys;
   }
-}
+};
 
 function recordDep(ccUniqueKey, moduleName, watchedKeys) {
   const waKeys = watchedKeys === '*' ? getModuleStateKeys(moduleName) : watchedKeys;
@@ -183,7 +183,7 @@ function bindModApis(ref, ctx, stateModule, liteLevel, setState) {
 
 
 function bindSyncApis(ref, ctx, liteLevel) {
-  if (liteLevel > 2) {// level 3, assign async api
+  if (liteLevel > 2) { // level 3, assign async api
     const cachedBoundFns = {};
 
     const doSync = (e, val, rkey, delay, type) => {
@@ -204,7 +204,7 @@ function bindSyncApis(ref, ctx, liteLevel) {
 
       // case: <input data-ccsync="foo/f1" onChange={ctx.sync} />
       __sync({ type: 'val' }, ref, e);
-    }
+    };
 
     ctx.sync = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'val');
     ctx.syncBool = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'bool');
@@ -222,7 +222,7 @@ function bindSyncApis(ref, ctx, liteLevel) {
 
 
 function bindEventApis(ctx, liteLevel, ccUniqueKey) {
-  if (liteLevel > 3) {// level 4, assign event api
+  if (liteLevel > 3) { // level 4, assign event api
     ctx.emit = (event, ...args) => {
       ev.findEventHandlersToPerform(ev.getEventItem(event), ...args);
     };
@@ -407,7 +407,7 @@ export default function (ref, params, liteLevel = 5) {
   refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
   refOption.storedKeys = getStoredKeys(stateModule, state, ccOption.storedKeys, storedKeys);
 
-  //用户使用ccKey属性的话，必需显示的指定ccClassKey
+  // 用户使用ccKey属性的话，必需显示的指定ccClassKey
   if (ccKey && !ccClassKey) {
     throw new Error(`missing ccClassKey while init a cc ins with ccKey[${ccKey}]`);
   }

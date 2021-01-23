@@ -1,4 +1,4 @@
-import * as util from '../../support/util'
+import * as util from '../../support/util';
 import uuid from './uuid';
 
 const { makeUniqueCcKey } = util;

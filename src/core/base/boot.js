@@ -63,7 +63,7 @@ export function configRootLifecycle(rootLifecycle) {
 export function configMiddlewares(middlewares) {
   if (middlewares.length > 0) {
     const ccMiddlewares = ccContext.middlewares;
-    ccMiddlewares.length = 0;//防止热加载重复多次载入middlewares
+    ccMiddlewares.length = 0; // 防止热加载重复多次载入middlewares
     middlewares.forEach(m => ccMiddlewares.push(m));
   }
 }
@@ -71,8 +71,8 @@ export function configMiddlewares(middlewares) {
 export function configPlugins(plugins) {
   if (plugins.length > 0) {
     const ccPlugins = ccContext.plugins;
-    ccPlugins.length = 0;//防止热加载重复多次载入plugins
-    clearCbs();//清理掉已映射好的插件回调
+    ccPlugins.length = 0; // 防止热加载重复多次载入plugins
+    clearCbs(); // 清理掉已映射好的插件回调
 
     const pluginNameMap = {};
     plugins.forEach(p => {
@@ -101,4 +101,4 @@ export default {
   configRootLifecycle,
   configMiddlewares,
   configPlugins,
-}
+};

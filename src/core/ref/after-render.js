@@ -25,13 +25,13 @@ function delDep(compareWaKeys, compareWaKeyCount, module, ccUniqueKey) {
   if (waKeyKen === 0) return;
 
   let shouldLetCacheExpire = false;
-  waKeys.forEach(waKey => {// no module prefix
-    if (compareWaKeys[waKey] === 2) {//这个key在这轮渲染结束后没有命中，说明视图不再对它有依赖
+  waKeys.forEach(waKey => { // no module prefix
+    if (compareWaKeys[waKey] === 2) { // 这个key在这轮渲染结束后没有命中，说明视图不再对它有依赖
       shouldLetCacheExpire = true;
       delIns(module, waKey, ccUniqueKey);
     }
   });
-  if (waKeys.length > compareWaKeyCount) {//大于最初记录的key数量，有新增
+  if (waKeys.length > compareWaKeyCount) { // 大于最初记录的key数量，有新增
     shouldLetCacheExpire = true;
   }
 

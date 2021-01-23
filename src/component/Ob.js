@@ -16,14 +16,14 @@ if (React.memo) {
     } else if (!module && !connect) {
       throw new Error(`module or connect should been supplied`);
     }
-  
+
     const view = render || children || obView;
     const register = module ? { module } : { connect };
     // 设置为1，最小化ctx够造过程，仅附加状态数据，衍生数据、和reducer相关函数
     register.lite = 1;
     const ctx = useConcentForOb(register, classKey);
     const { mr, cr, r } = ctx;
-  
+
     let state, computed;
     if (module) {
       state = ctx.moduleState;
@@ -32,10 +32,9 @@ if (React.memo) {
       state = ctx.connectedState;
       computed = ctx.connectedComputed;
     }
-  
+
     return view([state, computed, { mr, cr, r }]);
   })
 }
 
 export default TargetComp;
-

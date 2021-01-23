@@ -57,7 +57,7 @@ export default function (cate, confMeta, item, handler, depKeysOrOpt) {
   const itype = typeof item;
 
   let _descObj;
-  if (itype === 'string') {// retKey
+  if (itype === 'string') { // retKey
     if (isPJO(handler)) _descObj = { [item]: handler };
     else if (typeof handler === FN) _descObj = { [item]: makeFnDesc(handler, depKeysOrOpt) };
   } else if (isPJO(item)) {
@@ -199,7 +199,7 @@ function _mapSameNameRetKey(confMeta, module, retKey, isModuleStateKey) {
   safeGetThenNoDupPush(retKey2stateKeys, retKey, retKey);
 
   // 记录依赖
-  isModuleStateKey && _mapIns(confMeta, module, retKey)
+  isModuleStateKey && _mapIns(confMeta, module, retKey);
 }
 
 function _mapIns(confMeta, module, retKey) {

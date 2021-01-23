@@ -25,7 +25,7 @@ describe('test ctx api computed', () => {
     const CompFn = () => {
       const { computed, refComputed: rcu } = useConcent({ state: { num: 1 } });
       computed('doubleNum', ({ num }) => num * 2);
-      return <h1>{rcu.doubleNum}</h1>
+      return <h1>{rcu.doubleNum}</h1>;
     };
     const warp = mount(<CompFn />);
     expect(warp.find('h1').text()).toBeFalsy();
@@ -39,13 +39,13 @@ describe('test ctx api computed', () => {
     ];
     mountCompThenAssertValue(CompFn, compareItems);
     mountCompThenAssertValue(CompCls, compareItems);
-  }
+  };
   test('define ref computed with (cuKey, fn), take module state as input', () => {
     const setup = (ctx) => {
       ctx.computed('prefixedName', ({ name }) => {
         return `hi_${name}`;
       });
-    }
+    };
     testlogic1(setup);
   });
   test('define ref computed with (cuKey, fnDesc), take module state as input', () => {
@@ -53,7 +53,7 @@ describe('test ctx api computed', () => {
       ctx.computed('prefixedName', {
         fn: ({ name }) => `hi_${name}`,
       });
-    }
+    };
     testlogic1(setup);
   });
   test('define ref computed with (cuDesc), take module state as input', () => {
@@ -61,7 +61,7 @@ describe('test ctx api computed', () => {
       ctx.computed({
         prefixedName: ({ name }) => `hi_${name}`,
       });
-    }
+    };
     testlogic1(setup);
   });
   test('define ref computed with (cuDesc) include fnDesc, take module state as input', () => {
@@ -71,7 +71,7 @@ describe('test ctx api computed', () => {
           fn: ({ name }) => `hi_${name}`,
         },
       });
-    }
+    };
     testlogic1(setup);
   });
 
@@ -83,14 +83,14 @@ describe('test ctx api computed', () => {
     ];
     mountCompThenAssertValue(CompFn, compareItems);
     mountCompThenAssertValue(CompCls, compareItems);
-  }
+  };
   test('define ref computed with (cuKey, fn), take private state as input', () => {
     const setup = (ctx) => {
       ctx.initState({ privName: 'privName' });
       ctx.computed('prefixedName', ({ privName }) => {
         return `hi_${privName}`;
       });
-    }
+    };
     testlogic2(setup);
   });
   test('define ref computed with (cuKey, fnDesc), take private state as input', () => {
@@ -99,16 +99,16 @@ describe('test ctx api computed', () => {
       ctx.computed('prefixedName', {
         fn: ({ privName }) => `hi_${privName}`,
       });
-    }
+    };
     testlogic2(setup);
   });
   test('define ref computed with (cuDesc), take private state as input', () => {
     const setup = (ctx) => {
       ctx.initState({ privName: 'privName' });
       ctx.computed({
-        'prefixedName': ({ privName }) => `hi_${privName}`,
+        prefixedName: ({ privName }) => `hi_${privName}`,
       });
-    }
+    };
     testlogic2(setup);
   });
 
@@ -121,7 +121,7 @@ describe('test ctx api computed', () => {
     ];
     mountCompThenAssertValue(CompFn, compareItems);
     mountCompThenAssertValue(CompCls, compareItems);
-  }
+  };
   test('define ref computed with (cuKey, fn), take module state and private state as input both', () => {
     const setup = (ctx) => {
       ctx.initState({ privName: 'privName' });

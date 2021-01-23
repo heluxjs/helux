@@ -20,7 +20,7 @@ export default function (ref, setup, bindCtxToMethod) {
   // flag ref is at before mount step
   ctx.__$$inBM = true;
 
-  //先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
+  // 先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
     const tip = 'type of setup';
     if (typeof setup !== 'function') throw new Error(`${tip} ${INAF}`);
@@ -28,7 +28,7 @@ export default function (ref, setup, bindCtxToMethod) {
     const settingsObj = setup(ctx) || {};
     if (!util.isPJO(settingsObj)) throw new Error(`${tip} return result ${INAJ}`);
 
-    //优先读自己的，再读全局的
+    // 优先读自己的，再读全局的
     if (bindCtxToMethod === true || (runtimeVar.bindCtxToMethod === true && bindCtxToMethod !== false)) {
       okeys(settingsObj).forEach(name => {
         const settingValue = settingsObj[name];
@@ -38,7 +38,7 @@ export default function (ref, setup, bindCtxToMethod) {
     Object.assign(ctx.settings, settingsObj);
   }
 
-  //!!! 把拦截了setter getter的计算结果容器赋值给refComputed
+  // !!! 把拦截了setter getter的计算结果容器赋值给refComputed
   // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入 computedRetKeyFns 等元数据
   ctx.refComputedValues = makeCuRetContainer(ctx.computedRetKeyFns, ctx.refComputedRawValues);
   

@@ -53,13 +53,13 @@ function makeTestComp(makeClickHandler) {
 
   const CompFn = () => {
     const ctx = useConcent({ module: 'test', renderKeyClasses: '*' }, 'BookFnBox');
-    return <View handleClick={makeClickHandler(ctx)} ctx={ctx} />
+    return <View handleClick={makeClickHandler(ctx)} ctx={ctx} />;
   };
   const CompCls = register({ module: 'test', renderKeyClasses: '*' }, 'BookClsBox')(
     class extends React.Component {
       render() {
         const ctx = this.ctx;
-        return <View handleClick={makeClickHandler(ctx)} ctx={ctx} />
+        return <View handleClick={makeClickHandler(ctx)} ctx={ctx} />;
       }
     }
   );
