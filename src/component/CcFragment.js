@@ -67,7 +67,7 @@ class CcFragment extends React.Component {
     } else {
       if (React.isValidElement(view)) {
         // 直接传递dom，无论state怎么改变都不会再次触发渲染
-        throw new Error(`CcFragment's children can not b a react dom `);
+        throw new Error(`CcFragment's children can not b a react dom`);
       }
       return view;
     }

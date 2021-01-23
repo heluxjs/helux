@@ -28,12 +28,23 @@ describe('test top api run', () => {
     const aPlugin = {
       install: (on) => {
         on(cst.SIG_FN_START, ({ sig, payload }) => {
-          console.log(sig, payload)
+          expect(payload.calldeBy !== undefined).toBeTruthy();
+          expect(payload.module !== undefined).toBeTruthy();
+          // console.log(sig, payload);
         });
         return { name: 'a-plugin' };
       }
     };
     run({}, { plugins: [aPlugin] });
+  });
+
+
+  test('configure cc-like module should throw error', () => {
+    // try {
+    //   run({ '$$ccHi': { state: {} } }, { log: false });
+    // } catch (err) {
+    //   expect(err.message).toMatch(/(?=a built-in module name)/);
+    // }
   });
 
 
@@ -154,25 +165,26 @@ describe('test top api run', () => {
 
   test('initStateDone param dispatch should work', async () => {
     const models = {
-      test: {
+      tmpModule: {
         state: { num: 1, numBig: 100 },
         reducer: {
           changeNum(num) {
+            console.log('--->>>>> changeNum', num);
             return { num };
-          }
+          },
         },
         lifecycle: {
           async initState(state) {
+            console.log('--->>>>> initState');
             return { num: 2, numBig: 200 };
           },
           async initStateDone(dispatch, state) {
-            dispatch('changeNum', 300); // dispatch string leterial
-            await delay(500);
-            expect(getState('test').num).toBe(300);
+            console.log('--->>>>> initStateDone');
+            await dispatch('changeNum', 300); // dispatch string leterial
+            expect(getState('tmpModule').num).toBe(300);
 
-            dispatch(models.test.reducer.changeNum, 3000); // dispatch reducer fn
-            await delay(500);
-            expect(getState('test').num).toBe(3000);
+            await dispatch(models.tmpModule.reducer.changeNum, 3000); // dispatch reducer fn
+            expect(getState('tmpModule').num).toBe(3000);
           },
         },
       },
@@ -249,7 +261,6 @@ describe('test top api run', () => {
         state: { num: 1, numBig: 2, age: 2 },
         computed: {
           numx2: ({ num }, o, f) => {
-            console.log('trigger');
             f.commit({ numBig: 100, age: 100 });
             return num * 2;
           }

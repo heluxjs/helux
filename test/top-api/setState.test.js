@@ -24,14 +24,14 @@ describe('test top api setState', async () => {
   test('passing an undeclared state key has no effect', () => {
     setState(Foo, { undeclaredKey: 222 });
     expect(fooState.undeclaredKey).toEqual(undefined);
-    expect(Object.keys(fooState).length).toEqual(3);
+    expect(Object.keys(fooState).length).toEqual(4);
   });
 
 
   test('passing one state key has effect', () => {
     setState(Foo, { undeclaredKey: 222 });
     expect(fooState.undeclaredKey).toEqual(undefined);
-    expect(Object.keys(fooState).length).toEqual(3);
+    expect(Object.keys(fooState).length).toEqual(4);
   });
 
 

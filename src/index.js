@@ -118,7 +118,6 @@ const defaultExport = {
 let multiCcContainer = null;
 
 export function bindCcToMcc(name) {
-  console.log(window.mcc);
   if (!multiCcContainer) {
     throw new Error('current env is not multi concent ins mode');
   }

@@ -14,7 +14,7 @@ export function checkModuleNameBasically(moduleName) {
     throw new Error(`module[${moduleName}] writing is invalid!`);
   }
   if (isModuleNameCcLike(moduleName)) {
-    throw new Error(`'$$cc' is a built-in module name for concent`);
+    throw new Error(`'$$cc' is a built-in module name`);
   }
 }
 

@@ -36,7 +36,13 @@ export function getTestModels() {
       reducer: {
         setState: state => state,
       },
-    }
+    },
+    test2: {
+      state: () => ({ desc: 'module test2' }),
+    },
+    test3: {
+      state: () => ({ desc: 'module test3' }),
+    },
   };
 }
 
@@ -49,12 +55,25 @@ export function makeStoreConfig(moduleName, genNormalModule = true) {
         info: {
           addr: 'bj',
           email: 'x@concent.com',
-        }
+        },
+        tag: 'hi',
       }),
       reducer: {
         changeName(name, moduleState, ctx) {
           return { name };
-        }
+        },
+        changeAge(p, moduleState) {
+          const { age } = moduleState;
+          return { age: age + 1 };
+        },
+        async combine2Fn(p, m, ac) {
+          await ac.dispatch('changeName');
+          await ac.dispatch('changeAge');
+        },
+        async combine2FnLazy(tag, m, ac) {
+          await ac.dispatch('combine2Fn', { lazy: true });
+          return { tag };
+        },
       },
       computed: {
         name({ name }) {

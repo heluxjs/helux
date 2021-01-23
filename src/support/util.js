@@ -153,7 +153,7 @@ export function isModuleNameValid(moduleName) {
 
 export function isModuleNameCcLike(moduleName) {
   const name = moduleName.toLowerCase();
-  return name === MODULE_CC;
+  return name.startsWith(MODULE_CC);
 }
 
 export function verboseInfo(info) {

@@ -39,9 +39,32 @@ describe('test top property reducer', () => {
   });
 
 
+  test('root reducer methods should return Promise', async () => {
+    const partial = await reducer[Foo].changeName('newName');
+    expect(partial.name).toBe('newName');
+  });
+
+
   test('root reducer methods should work', () => {
     reducer[Foo].changeName('newName');
     const fooState = getState(Foo);
     expect(fooState.name).toBe('newName');
+  });
+
+
+  test('call combined reducer', () => {
+    reducer[Foo].combine2Fn();
+  });
+
+
+  test('call combined reducer with lazy', () => {
+    reducer[Foo].combine2Fn(null, { lazy: true });
+  });
+
+
+  test('call combined reducer which set lazy in reducer', async () => {
+    await reducer[Foo].combine2FnLazy('tag666');
+    const fooState = getState(Foo);
+    expect(fooState.tag).toBe('tag666');
   });
 });

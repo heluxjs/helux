@@ -37,13 +37,10 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
         ref = pickOneRef(module);
       } else if (refModule) {
         ref = pickOneRef(refModule);
-      } else {
-        ref = pickOneRef();
       }
-
+      
       if (!ref) {
-        justWarning(`no ref found`);
-        return resolve();
+        ref = pickOneRef();
       }
 
       dispatchFn = ref.ctx.dispatch;

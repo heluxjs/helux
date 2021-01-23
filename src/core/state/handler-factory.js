@@ -211,8 +211,9 @@ export function invokeWith(userLogicFn, executionContext, payload) {
     let actionContext = {};
     let isSourceCall = false;
     isSourceCall = chainId === oriChainId && chainId2depth[chainId] === 1;
+
     if (context) {
-      //调用前先加1
+      // 调用前先加1
       chainId2depth[chainId] = chainId2depth[chainId] + 1;
 
       // !!!makeDispatchHandler的dispatch lazyDispatch将源头的isSilent 一致透传下去
@@ -226,7 +227,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         callerRef, true, isSilent, targetModule, renderKey, delay, chainId, oriChainId, chainId2depth
       );
 
-      //oriChainId, chainId2depth 一直携带下去，设置isLazy，会重新生成chainId
+      // oriChainId, chainId2depth 一直携带下去，设置isLazy，会重新生成chainId
       const invoke = makeInvokeHandler(callerRef, { delay, chainId, oriChainId, chainId2depth });
       const lazyInvoke = makeInvokeHandler(callerRef, { isLazy: true, delay, oriChainId, chainId2depth });
       const silentInvoke = makeInvokeHandler(
@@ -243,7 +244,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         },
         module: targetModule,
         callerModule,
-        committedStateMap,//一次ref dispatch调用，所经过的所有reducer的返回结果收集
+        committedStateMap, // 一次ref dispatch调用，所经过的所有reducer的返回结果收集
         committedState,
 
         invoke, lazyInvoke, silentInvoke,
@@ -517,7 +518,7 @@ export function makeDispatchHandler(
 export function makeModuleDispatcher(module) {
   return (action, ...args) => {
     const _action = typeof action === 'string' && !action.includes('/') ? `${module}/${action}` : action;
-    ccDispatch(_action, ...args);
+    return ccDispatch(_action, ...args);
   }
 }
 

@@ -11,6 +11,7 @@ import {
   SIG_ASYNC_COMPUTED_BATCH_START,
   SIG_ASYNC_COMPUTED_BATCH_END,
 } from '../../support/constant';
+import ccContext from '../../cc-context';
 
 const sigs = [
   SIG_FN_START,
@@ -54,8 +55,13 @@ export function clearCbs() {
 }
 
 export function send(sig, payload) {
-  const cbs = sig2cbs[sig];
-  cbs.forEach(cb => cb({ sig, payload }));
+  try {
+    const cbs = sig2cbs[sig];
+    cbs.forEach(cb => cb({ sig, payload }));
+  } catch (err) {
+    // plugin error should not abort dispatch process
+    ccContext.runtimeHandler.tryHandleError(err, true);
+  }
 }
 
 export function on(sigOrSigs, cb) {
