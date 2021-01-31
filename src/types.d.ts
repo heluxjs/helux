@@ -616,10 +616,10 @@ type GetConnComputed<Mods extends RootModule, Conn extends keyof Mods> = {
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 
 export interface IRefCtxM<Props extends IAnyObj, M extends ModuleDesc, Se = {}, RefCu = {}>
-  extends IRefCtx<Props, {}, GetSubType<M, 'state'>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu> {
+  extends IRefCtx<Props, {}, StateType<M['state']>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu> {
 }
 export interface IRefCtxMS<Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj = {}, Se = {}, RefCu = {}>
-  extends IRefCtx<Props, St, GetSubType<M, 'state'>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu> {
+  extends IRefCtx<Props, St, StateType<M['state']>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu> {
 }
 export interface IRefCtxS<Props extends IAnyObj, St extends IAnyObj = {}, Se = {}, RefCu = {}>
   extends IRefCtx<Props, St, {}, {}, {}, Se, RefCu> {
@@ -628,7 +628,7 @@ export interface IRefCtxMConn<
   Props extends IAnyObj, M extends ModuleDesc, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}
   >
   extends IRefCtx<
-  Props, {}, GetSubType<M, 'state'>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu,
+  Props, {}, StateType<M['state']>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu,
   GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
   > {
 }
@@ -637,7 +637,7 @@ export interface IRefCtxMSConn<
   Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {},
   >
   extends IRefCtx<
-  Props, St, GetSubType<M, 'state'>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu,
+  Props, St, StateType<M['state']>, GetSubType<M, 'reducer'>, GetSubType<M, 'computed'>, Se, RefCu,
   GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
   > {
 }
