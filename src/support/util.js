@@ -49,17 +49,17 @@ export function isFn(maybeFn) {
   return typeof maybeFn === FN;
 }
 
-export function isAsyncFn(fn, fnName, asyncKeys = []) {
+export function isAsyncFn(fn, asyncKey) {
   if (!fn) return false;
 
   // @see https://github.com/tj/co/blob/master/index.js
   // obj.constructor.name === 'AsyncFunction'
-  let isAsync = protoToString.call(fn) === '[object AsyncFunction]' || FN == typeof fn.then;
+  let isAsync = protoToString.call(fn) === '[object AsyncFunction]' || isFn(fn.then);
   if (isAsync === true) {
     return true;
   }
 
-  //有可能成降级编译成 __awaiter格式的了 或者 _regenerator
+  // 有可能成降级编译成 __awaiter格式的了 或者 _regenerator
   const fnStr = fn.toString();
   if (fnStr.indexOf('_awaiter') >= 0 || fnStr.indexOf('_regenerator') >= 0) {
     return true;
@@ -67,12 +67,13 @@ export function isAsyncFn(fn, fnName, asyncKeys = []) {
 
   /**
    * 上面的判定过程目前对这种编译结果是无效的，
-   * 所以要求用户传入相应的asyncKeys来辅助判断，通常是由在runOptins里传入
    * function asyncFn(_x, _x2, _x3) {
    *     return _asyncFn.apply(this, arguments);
    *  }
+   * 所以要求用户传入相应的asyncKeys来辅助判断，由runOptins里传入
    */
-  if (asyncKeys.includes(fnName)) {
+
+  if (asyncKey && runtimeVar.asyncCuKeys.includes(asyncKey)) {
     return true;
   }
 
@@ -97,7 +98,7 @@ export function extractRenderKey(renderKey) {
   if (typeof renderKey === 'object') targetRenderKey = getRkey(renderKey.renderKey);
   if (targetRenderKey) return targetRenderKey;
 
-  return [renderKey];// 是一个具体的string 或 number
+  return [renderKey]; // 是一个具体的string 或 number
 }
 
 export function makeError(code, extraMessage) {
@@ -500,7 +501,7 @@ export function makeCallInfo(module) {
 }
 
 export function evalState(state = {}) {
-  const ret = typeof state === 'function' ? state() : state;
+  const ret = isFn(state) ? state() : state;
   if (!isPJO(ret)) {
     throw new Error(`state ${INAJ}`);
   }

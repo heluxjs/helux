@@ -40,7 +40,7 @@ function callMiddlewares(skipMiddleware, passToMiddleware, cb) {
         } else {
           const middlewareFn = middlewares[index];
           index++;
-          if (typeof middlewareFn === 'function') middlewareFn(passToMiddleware, next);
+          if (util.isFn(middlewareFn)) middlewareFn(passToMiddleware, next);
           else {
             justWarning(`found one middleware ${INAF}`);
             next();

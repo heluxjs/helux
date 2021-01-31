@@ -111,8 +111,9 @@ export type ComputedValType<T> = {
   (T[K] extends IComputedFnSimpleDesc ? GetPromiseT<T[K]['fn']> : never);
 }
 
-export type SettingsType<SetupFn> = SetupFn extends IAnyFn ?
-  (ReturnType<SetupFn> extends void ? {} : ReturnType<SetupFn>) :
+export type SetupFn = (ctx: ICtxBase) => IAnyObj | void;
+export type SettingsType<Fn> = Fn extends SetupFn ?
+  (ReturnType<Fn> extends void ? {} : ReturnType<Fn>) :
   {};
 
 /**
@@ -125,19 +126,17 @@ type Tail<L extends C2List> =
   ? LTail
   : never
 type GetRestItemsType<A extends Array<any>> = Exclude<A, A[0]>;
-// where set bindCtxToMethod as true, user should use SettingsCType to infer ctx.settings type
-export type SettingsCType<SetupFn, Ctx extends ICtxBase = ICtxBase> =
-  SetupFn extends IAnyFn ? (
-    ReturnType<SetupFn> extends IAnyObj ? (
-      { [key in keyof ReturnType<SetupFn>]:
-        (
-          ReturnType<SetupFn>[key] extends IAnyFn ?
-          (...p: GetRestItemsType<Tail<Parameters<ReturnType<SetupFn>[key]>>>) => ReturnType<ReturnType<SetupFn>[key]> :
-          ReturnType<SetupFn>[key]
-        )
-      }
-    ) : {}
-  ) : {};
+// when set bindCtxToMethod as true, user should use SettingsCType to infer ctx.settings type
+export type SettingsCType<Fn extends SetupFn, Ctx extends ICtxBase = ICtxBase> =
+  ReturnType<Fn> extends IAnyObj ? (
+    { [key in keyof ReturnType<Fn>]:
+      (
+        ReturnType<Fn>[key] extends IAnyFn ?
+        (...p: GetRestItemsType<Tail<Parameters<ReturnType<Fn>[key]>>>) => ReturnType<ReturnType<Fn>[key]> :
+        ReturnType<Fn>[key]
+      )
+    }
+  ) : {}
 
 export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
@@ -909,6 +908,8 @@ type TypeDesc = {
 declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Partial<T>;
 declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Promise<Partial<T>>;
 
+/** default is true */
+export type TriggerOnce = boolean | void;
 export type ModuleConfig = {
   state: Object;
   reducer?: {
@@ -929,8 +930,8 @@ export type ModuleConfig = {
     loaded?: (dispatch: IDispatch, moduleState: any) => void;
     // return triggerOnce, default is true, 
     // that means mounted will only been called one time if match the condition
-    mounted?: (dispatch: IDispatch, moduleState: any) => boolean | void;
-    willUnmount?: (dispatch: IDispatch, moduleState: any) => boolean | void;
+    mounted?: (dispatch: IDispatch, moduleState: any) => TriggerOnce;
+    willUnmount?: (dispatch: IDispatch, moduleState: any) => TriggerOnce;
   }
 }
 

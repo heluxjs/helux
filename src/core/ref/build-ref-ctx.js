@@ -253,7 +253,7 @@ function bindEnhanceApis(ctx, liteLevel, stateModule) {
     ctx.computed = getDefineComputedHandler(ctx);
 
     const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare, immediate = true) => {
-      if (typeof fn !== 'function') throw new Error(`${eType('first')} function`);
+      if (!util.isFn(fn)) throw new Error(`${eType('first')} function`);
       const compareForEf = compare === undefined ? false : compare;
       // 对于effectProps 第三位参数就是immediate, 不传的话，默认是true
       const immediateForEfProp = compare === undefined ? true : compare;

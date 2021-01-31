@@ -60,7 +60,7 @@ function _deleteEventHandlers(handlers) {
 
 export function bindEventHandlerToCcContext(module, ccClassKey, ccUniqueKey, event, identity, handler) {
   const handlers = safeGetArray(event2handlers, event);
-  if (typeof handler !== 'function') {
+  if (!util.isFn(handler)) {
     return justWarning(`event ${event}'s handler ${INAF}!`);
   }
 

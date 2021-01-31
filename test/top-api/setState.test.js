@@ -11,7 +11,7 @@ describe('test top api setState', async () => {
     fooState = getState(Foo);
   });
 
-  
+
   test('passing an undeclared module name is not allowed', ()=>{
     try {
       setState('undeclared module name', { bar: 222 });

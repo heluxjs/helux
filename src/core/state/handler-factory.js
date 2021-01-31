@@ -185,7 +185,7 @@ export function makeInvokeHandler(
         _module = module;
       }
 
-      if (typeof _fn != 'function') throw err;
+      if (!util.isFn(_fn)) throw err;
       if (_module) option.module = _module;//某个模块的实例修改了另外模块的数据
 
       return __invoke(_fn, option, payload)

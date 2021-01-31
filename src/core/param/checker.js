@@ -26,7 +26,7 @@ export function checkModuleNameBasically(moduleName) {
  * @param {boolean} [moduleMustNotExisted=true] - true 要求模块应该不存在 ,false 要求模块状态应该已存在
  */
 export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg = '') {
-  const _vbiMsg = vbiMsg || `module[${moduleName}]`
+  const _vbiMsg = vbiMsg || `module[${moduleName}]`;
   const _state = store._state;
   checkModuleNameBasically(moduleName);
   if (moduleName !== MODULE_GLOBAL) {

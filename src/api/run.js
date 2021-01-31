@@ -6,17 +6,16 @@ import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
 import getLifecycle from '../core/param/get-lifecycle';
 
-const { isPJO, okeys, evalState } = util;
+const { isPJO, okeys, evalState, isFn } = util;
 const pError = label => {
   throw new Error(`[[run]]: param error, ${label} ${INAJ}`);
-}
+};
 
 /**
  * run will call startup
  * @param {{ [moduleName:string]: ModuleConfig }} store
  * @param {import('../types').RunOptions} options
  */
-
 export default function (store = {}, options = {}) {
   if (!isPJO(store)) pError('store');
   if (!isPJO(options)) pError('options');
@@ -32,11 +31,11 @@ export default function (store = {}, options = {}) {
   const buildStoreConf = (m, moduleConf) => {
     const { state, reducer, watch, computed } = moduleConf;
     if (storeConf.store[m]) {
-      throw new Error(`run api error: module${m} duplicate`);
+      throw new Error(`run api error: module[${m}] duplicate`);
     }
 
     storeConf.store[m] = evalState(state);
-    if (typeof state === 'function') ccContext.moduleName2stateFn[m] = state;
+    if (isFn(state)) ccContext.moduleName2stateFn[m] = state;
 
     storeConf.reducer[m] = reducer;
     storeConf.watch[m] = watch;
@@ -47,9 +46,9 @@ export default function (store = {}, options = {}) {
   // traversal moduleNames
   okeys(store).forEach(m => buildStoreConf(m, store[m]));
 
-  // these modules pushed by configure api
+  // these modules pushed by configure api before calling run
   pendingModules.forEach(({ module, config }) => {
-    // user put this module to run api again, here ignore this one
+    // user put this module to run api 1th models param again, here just ignore this one
     if (storeConf.store[module]) return;
 
     util.justTip(`configure pending module[${module}]`);

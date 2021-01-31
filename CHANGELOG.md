@@ -1,20 +1,30 @@
+#### 2021-01-24
+2.11.15 发布
+- refactor: 允许在`run`之前通过`configure`配置的模块再次放入`run`过程中配置，此时`configure`配置的模块会被自动忽略
+> 因为在`run`之前通过`configure`配置的模块进入了`pending-modules`，所以可以轻易的被忽略，这样设计将非常方便用户在不修改一行的代码情况下，提升页面模块或者组件模块到根目录models下，项目依然能够能够正常运行，同时也能获得全局翻遍的智能类型推导
+- refactor：插件模块`send`函数独立捕捉每一个插件运行的错误，让相互之间互不影响
+- refactor: `RunOptions.asyncCuKeys`配置需要携带模块前缀并用斜线分开
+```js
+run(models, {asyncCuKeys:['foo/computeSomeKey']});
+```
+
 #### 2021-01-23
 2.11.14 发布
-= refactor: 插件内部执行不影响`dispatch`流程
+- refactor: 插件内部执行不影响`dispatch`流程
 
 #### 2021-01-21
 2.11.12 发布
-= refactor: 调整判断`isStrictMode`的逻辑
+- refactor: 调整判断`isStrictMode`的逻辑
 
 #### 2021-01-20
 2.11.11 发布
-= types: 新增`IRefCtxM`系列的内置类型，方便一些使用`configure`接口配置模块的组件为自己的ctx装配类型
+- types: 新增`IRefCtxM`系列的内置类型，方便一些使用`configure`接口配置模块的组件为自己的ctx装配类型
 > 此时组件并不关心也不需要感知整个根model的形状
 
 
 #### 2021-01-19
 2.11.10 发布
-= fix: 修复`effectProps`的immediate参数默认值不对问题
+- fix: 修复`effectProps`的immediate参数默认值不对问题
 
 #### 2021-01-07
 2.11.7 发布

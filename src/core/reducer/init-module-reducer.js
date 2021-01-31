@@ -38,7 +38,7 @@ export default function (module, reducer = {}) {
       dispatch(fullFnName, payload, renderKeyOrOptions, delay);
 
     const reducerFn = newReducer[name];
-    if (typeof reducerFn !== 'function') {
+    if (!util.isFn(reducerFn)) {
       throw new Error(`module[${module}] reducer[${name}] ${INAF}`);
     } else {
       let targetFn = reducerFn;

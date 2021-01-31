@@ -1,10 +1,10 @@
 import * as React from 'react';
 import useConcent from './use-concent';
-import { getRegisterOptions } from '../support/util';
+import { getRegisterOptions, isFn } from '../support/util';
 
 export default function registerHookComp(options, ccClassKey) {
   let _options = getRegisterOptions(options);
-  if (typeof _options.state === 'function') {
+  if (isFn(_options.state)) {
     _options = Object.assign({}, _options);
     _options.state = _options.state();
   }

@@ -5,7 +5,6 @@
 /**@typedef {import('../../types-inner').IRef} IRef*/
 import updateDep from '../ref/update-dep';
 import computedMap from '../../cc-context/computed-map';
-import rv from '../../cc-context/runtime-var';
 import { CATE_MODULE } from '../../support/constant';
 import { justWarning, isAsyncFn, okeys } from '../../support/util';
 
@@ -75,7 +74,7 @@ export function getSimpleObContainer(retKey, sourceType, fnType, module, /**@typ
       // 1 防止用户从 cuVal读取不存在的key
       // 2 首次按序执行所有的computed函数时，前面的计算函数取取不到后面的计算结果，收集不到依赖，所以这里强制用户要注意计算函数的书写顺序
       if (hasOwnProperty.call(oriCuContainer, otherRetKey)) {
-        if (isAsyncFn(computedRaw[otherRetKey], otherRetKey, rv.asyncCuKeys)) {
+        if (isAsyncFn(computedRaw[otherRetKey], `${module}/${otherRetKey}`)) {
           referInfo.hasAsyncCuRefer = true;
           // 不允许读取异步计算函数结果做二次计算，隔离一切副作用，确保依赖关系简单和纯粹
           // throw new Error(`${fnInfo},  get an async retKey[${otherRetKey}] from cuVal is not allowed`);

@@ -6,7 +6,7 @@ import triggerComputedAndWatch from './trigger-computed-and-watch';
 import ccContext from '../../cc-context';
 import makeCuRetContainer from '../computed/make-cu-ret-container';
 
-const { okeys, makeCuDepDesc } = util;
+const { okeys, makeCuDepDesc, isFn } = util;
 const { runtimeVar } = ccContext;
 
 /**
@@ -23,7 +23,7 @@ export default function (ref, setup, bindCtxToMethod) {
   // 先调用setup，setup可能会定义computed,watch，同时也可能调用ctx.reducer,所以setup放在fill reducer之后
   if (setup) {
     const tip = 'type of setup';
-    if (typeof setup !== 'function') throw new Error(`${tip} ${INAF}`);
+    if (!isFn(setup)) throw new Error(`${tip} ${INAF}`);
 
     const settingsObj = setup(ctx) || {};
     if (!util.isPJO(settingsObj)) throw new Error(`${tip} return result ${INAJ}`);
@@ -32,7 +32,7 @@ export default function (ref, setup, bindCtxToMethod) {
     if (bindCtxToMethod === true || (runtimeVar.bindCtxToMethod === true && bindCtxToMethod !== false)) {
       okeys(settingsObj).forEach(name => {
         const settingValue = settingsObj[name];
-        if (typeof settingValue === 'function') settingsObj[name] = settingValue.bind(ref, ctx);
+        if (isFn(settingValue)) settingsObj[name] = settingValue.bind(ref, ctx);
       });
     }
     Object.assign(ctx.settings, settingsObj);

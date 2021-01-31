@@ -1,4 +1,4 @@
-import { okeys, getVal } from '../../support/util';
+import { okeys, getVal, isFn } from '../../support/util';
 import { MOUNTED, UNMOUNTED } from '../../support/constant';
 import { delIns, delStaticInsM } from '../../cc-context/wakey-ukey-map';
 import * as ev from '../event';
@@ -13,7 +13,7 @@ const { _lifecycle, _willUnmountOnce } = lifecycle;
 function executeClearCb(cbMap, ctx) {
   const execute = key => { // symbolKey or normalKey
     const cb = cbMap[key];
-    if (typeof cb === 'function') cb(ctx);
+    if (isFn(cb)) cb(ctx);
   };
 
   Object.getOwnPropertySymbols(cbMap).forEach(execute);

@@ -12,7 +12,7 @@ import initModuleLifecycle from '../core/base/init-module-lifecycle';
 import getLifecycle from '../core/param/get-lifecycle';
 import { send } from '../core/plugin';
 
-const { isPJO, evalState, okeys } = util;
+const { isPJO, evalState, okeys, isFn } = util;
 
 /**
  * @description configure module associate params
@@ -35,7 +35,7 @@ export default function (module, config = {}) {
     }
     const { state, reducer, computed, watch } = config;
     const eState = evalState(state);
-    if (typeof state === 'function') ccContext.moduleName2stateFn[module] = state;
+    if (isFn(state)) ccContext.moduleName2stateFn[module] = state;
 
     initModuleState(module, eState, true);
     initModuleReducer(module, reducer);

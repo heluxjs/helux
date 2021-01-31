@@ -333,7 +333,7 @@ describe('test top api run', () => {
         },
       },
     };
-    run(models, { log: false, asyncCuKeys: ['numAsyncRet'], errorHandler: err => errorList.push(err) });
+    run(models, { log: false, asyncCuKeys: ['test6/numAsyncRet'], errorHandler: err => errorList.push(err) });
     expect(errorList[0].message).toMatch(/(?=forget call setInitialVal)/);
   });
 
@@ -352,7 +352,7 @@ describe('test top api run', () => {
         },
       },
     };
-    run(models, { log: false, asyncCuKeys: ['numAsyncRet'] });
+    run(models, { log: false, asyncCuKeys: ['test5/numAsyncRet'] });
     expect(getComputed('test5').numAsyncRet).toBe(2);
     await delay(1500); // here must lte 1500
     expect(getComputed('test5').numAsyncRet).toBe(100);

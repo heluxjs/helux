@@ -8,7 +8,7 @@ import initCcFrag from '../core/ref/init-cc-frag';
 import beforeRender from '../core/ref/before-render';
 import isRegChanged from '../core/param/is-reg-changed';
 
-const { shallowDiffers } = util;
+const { shallowDiffers, isFn } = util;
 const nullSpan = React.createElement('span', { style: { display: 'none' } });
 
 class CcFragment extends React.Component {
@@ -53,7 +53,7 @@ class CcFragment extends React.Component {
     const { children, render } = thisProps;
     const view = render || children;
 
-    if (typeof view === 'function') {
+    if (isFn(view)) {
       beforeRender(this);
       const { __$$regDumb, register = {} } = thisProps;
       const ctx = this.ctx;

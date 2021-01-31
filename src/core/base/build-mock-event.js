@@ -1,5 +1,5 @@
 import { CCSYNC_KEY } from '../../support/constant';
-import { convertToStandardEvent, justWarning, getValueByKeyPath } from '../../support/util';
+import { convertToStandardEvent, justWarning, getValueByKeyPath, isFn } from '../../support/util';
 import ccContext from '../../cc-context';
 
 const { store: { getState } } = ccContext;
@@ -51,7 +51,7 @@ export default (spec, e, refCtx) => {
     if (val === undefined) {
       // do nothing
     } else {
-      if (typeof val === 'function') {
+      if (isFn(val)) {
         // moduleState指的是所修改的目标模块的state
         const syncRet = val(
           value, keyPath, { event: e, module, moduleState: mState, fullKeyPath, state: refState, refCtx },

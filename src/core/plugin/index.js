@@ -44,7 +44,7 @@ function _pushSigCb(sigMap, sigOrSigs, cb) {
   if (Array.isArray(sigOrSigs)) {
     sigOrSigs.forEach(sig => {
       pushCb(sig, cb);
-    })
+    });
   } else {
     pushCb(sigOrSigs, cb);
   }
@@ -61,12 +61,12 @@ export function send(sig, payload) {
       cb({ sig, payload })
     } catch (err) {
       // plugin error should not abort dispatch process
-      // for letting plugin error be isolate, I have to put try catch block in for loop
+      // for letting plugin error be isolate, I have to put try catch block in forEach loop
       runtimeHandler.tryHandleError(err, true);
     }
   });
 }
 
 export function on(sigOrSigs, cb) {
-  _pushSigCb(sig2cbs, sigOrSigs, cb)
+  _pushSigCb(sig2cbs, sigOrSigs, cb);
 }
