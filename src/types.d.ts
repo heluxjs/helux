@@ -156,7 +156,7 @@ export interface IDispatchOptions {
 export interface ReducerCallerParams{
   module: string,
   fnName: string,
-  payload: P,
+  payload: any,
   renderKey: any,
   delay: any,
 }
@@ -192,7 +192,8 @@ export type ReducerCallerType<T extends IAnyObj> = T['setState'] extends Functio
   }
 }
 
-export type ReducerGhostType<Ghosts extends readonly string[], Reducer> = { [key in Ghosts[number]]: Reducer };
+// attention here omit Ghosts[number]
+export type ReducerGhostType<Ghosts extends readonly string[], Reducer> = { [key in Ghosts[number]]: Omit<Reducer, Ghosts[number]> };
 
 export interface EvMapBase {
   [key: string]: any[];
@@ -662,7 +663,7 @@ export interface ModuleDesc {
   state: IAnyObj;
   reducer?: IAnyFnInObj;
   computed?: IAnyFnInObj;
-  ghosts?: string[] | readonly string[];
+  ghosts?: readonly string[];
   watch?: IAnyFnInObj;
 }
 interface RootModule {
@@ -670,11 +671,11 @@ interface RootModule {
 }
 
 type GetSubType<T, K> = K extends keyof T ? T[K] : {};
+type GetSubArrType<T, K> = K extends keyof T ? T[K] : [];
 type GetSubRdType<M extends ModuleDesc> = ReducerType<GetSubType<M, 'reducer'>>;
 type GetSubRdCallerType<M extends ModuleDesc> = ReducerCallerType<GetSubType<M, 'reducer'>>;
-type GetSubRdGhostType<M extends ModuleDesc> = ReducerGhostType<GetSubType<M, 'ghosts'>, GetSubRdType<M>>;
+type GetSubRdGhostType<M extends ModuleDesc> = ReducerGhostType<GetSubArrType<M, 'ghosts'>, GetSubRdType<M>>;
 type GetSubCuType<M extends ModuleDesc> = ComputedValType<GetSubType<M, 'computed'>>;
-
 
 type GetConnState<Mods extends RootModule, Conn extends keyof Mods> = {
   [key in Conn]: StateType<Mods[key]["state"]>
@@ -797,7 +798,7 @@ export interface ICtxCommon<
   RootState extends IRootBase = IRootBase,
   Extra extends [any, any] | [any] = [any, any],
   > extends ICtx<
-  RootState, {}, {}, Props, PrivState,
+  RootState, {}, {}, {}, {}, Props, PrivState,
   MODULE_DEFAULT, MODULE_VOID, Settings, RefComputed, {}, Extra
   > { }
 
@@ -807,6 +808,8 @@ export interface ICtxDefault
   <
   RootState extends IRootBase = IRootBase,
   RootReducer extends { [key in keyof RootState]?: any } = IRootBase,
+  RootReducerCaller extends { [key in keyof RootState]?: any } = IRootBase,
+  RootReducerGhost extends { [key in keyof RootState]?: any } = IRootBase,
   RootCu extends { [key in keyof RootState]?: any } = IRootBase,
   Props = {},
   PrivState extends IAnyObj = {},
@@ -819,7 +822,7 @@ export interface ICtxDefault
   >
   extends ICtx
   <
-  RootState, RootReducer, RootCu, Props, PrivState,
+  RootState, RootReducer, RootReducerCaller, RootReducerGhost, RootCu, Props, PrivState,
   ModuleName, ConnectedModules, Settings, RefComputed, Mapped, Extra
   > {
   // __key_as_hint_your_ctx_is_not_default__: 'your component is belong to $$default module by default, but you give a type Ctx which not belong to $$default module',
@@ -1529,7 +1532,7 @@ export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig }>
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
-export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, RootReducer> = {
+export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, RootReducer extends { [K in keyof Models]: any }> = {
   [key in keyof Models]: "ghosts" extends keyof Models[key] ?
   (Models[key]["ghosts"] extends string[] ? { [ghostKey in ArrItemsType<Models[key]["ghosts"]>]: RootReducer[key] } : {})
   : {};
