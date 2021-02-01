@@ -1,6 +1,4 @@
-/** @typedef {import('./types').IAnyObj} IAnyObj */
-/** @typedef {import('./types').IFnCtxBase} IFnCtxBase */
-import { ICtxBase, IAnyFnInObj } from './types';
+import { ICtxBase, IAnyFnInObj, IAnyObj, IFnCtxBase } from './types';
 import { UNSTART, START, END } from './support/priv-constant';
 
 type RenderStatus = typeof UNSTART | typeof START | typeof END;

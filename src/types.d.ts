@@ -98,7 +98,7 @@ interface IComputedFnSimpleDesc {
   retKeyDep?: boolean;
 }
 
-interface IReducerFn {
+export interface IReducerFn {
   // let configure works well, set actionCtx generic type any
   (payload: any, moduleState: any, actionCtx: IActionCtx<any, any, any, any, any>): any | Promise<any>;
 }
