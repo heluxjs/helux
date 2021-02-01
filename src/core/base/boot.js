@@ -38,11 +38,11 @@ export function configStoreState(storeState) {
 /**
  * @param {{[moduleName:string]:{[reducerFnType:string]:function}}} rootReducer 
  */
-export function configRootReducer(rootReducer) {
+export function configRootReducer(rootReducer, rootGhost) {
   checkObj(rootReducer, 'reducer');
   if (!isObject(rootReducer[MODULE_DEFAULT])) rootReducer[MODULE_DEFAULT] = {};
   if (!isObject(rootReducer[MODULE_GLOBAL])) rootReducer[MODULE_GLOBAL] = {};
-  okeys(rootReducer).forEach(m => initModuleReducer(m, rootReducer[m]));
+  okeys(rootReducer).forEach(m => initModuleReducer(m, rootReducer[m], rootGhost[m]));
 }
 
 export function configRootComputed(rootComputed) {

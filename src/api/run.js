@@ -23,13 +23,14 @@ export default function (store = {}, options = {}) {
   const storeConf = {
     store: {},
     reducer: {},
+    ghost: {},
     watch: {},
     computed: {},
     lifecycle: {},
   };
 
   const buildStoreConf = (m, moduleConf) => {
-    const { state, reducer, watch, computed } = moduleConf;
+    const { state, reducer, watch, computed, ghosts = [] } = moduleConf;
     if (storeConf.store[m]) {
       throw new Error(`run api error: module[${m}] duplicate`);
     }
@@ -38,6 +39,7 @@ export default function (store = {}, options = {}) {
     if (isFn(state)) ccContext.moduleName2stateFn[m] = state;
 
     storeConf.reducer[m] = reducer;
+    storeConf.ghost[m] = ghosts;
     storeConf.watch[m] = watch;
     storeConf.computed[m] = computed;
     storeConf.lifecycle[m] = getLifecycle(moduleConf);

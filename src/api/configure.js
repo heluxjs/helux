@@ -33,12 +33,12 @@ export default function (module, config = {}) {
     if (module === MODULE_GLOBAL) {
       throw new Error('configuring global module is not allowed');
     }
-    const { state, reducer, computed, watch } = config;
+    const { state, reducer, computed, watch, ghosts = [] } = config;
     const eState = evalState(state);
     if (isFn(state)) ccContext.moduleName2stateFn[module] = state;
 
     initModuleState(module, eState, true);
-    initModuleReducer(module, reducer);
+    initModuleReducer(module, reducer, ghosts);
     initModuleComputed(module, computed);
     initModuleWatch(module, watch);
     initModuleLifecycle(module, getLifecycle(config));

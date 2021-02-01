@@ -212,7 +212,8 @@ const ccContext = {
     _caller: {},
     // _reducerRefCaller: {},//为实例准备的reducer caller
     _fnName2fullFnNames: {},
-    _module2fnNames: {}
+    _module2fnNames: {},
+    _module2Ghosts: {},
   },
   computed,
   watch,
@@ -246,7 +247,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.11.15',
+    version: '2.12.1',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',

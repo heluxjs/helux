@@ -48,6 +48,7 @@ export default function (
   {
     store = {},
     reducer = {},
+    ghost = {},
     computed = {},
     watch = {},
     lifecycle = {},
@@ -117,7 +118,7 @@ export default function (
       createDispatcher();
       
       boot.configStoreState(store);
-      boot.configRootReducer(reducer);
+      boot.configRootReducer(reducer, ghost);
       boot.configRootComputed(computed);
       boot.configRootWatch(watch);
       boot.configRootLifecycle(lifecycle);

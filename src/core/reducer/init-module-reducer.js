@@ -3,13 +3,13 @@ import * as util from '../../support/util';
 import { INAJ, INAF } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
 
-export default function (module, reducer = {}) {
+export default function (module, reducer = {}, ghosts = []) {
   if (!util.isPJO(reducer)) {
     throw new Error(`module[${module}] reducer ${INAJ}`);
   }
 
   const {
-    _reducer, _caller, _fnName2fullFnNames, _module2fnNames,
+    _reducer, _caller, _fnName2fullFnNames, _module2fnNames, _module2Ghosts
     // _reducerRefCaller, _lazyReducerRefCaller,
   } = ccContext.reducer;
 
@@ -21,6 +21,10 @@ export default function (module, reducer = {}) {
   // const subReducerRefCaller = util.safeGet(_reducerRefCaller, module);
 
   const fnNames = util.safeGetArray(_module2fnNames, module);
+  util.safeGet(_module2Ghosts, module, ghosts.slice());
+  ghosts.forEach(ghostFnName => {
+    if (!reducer[ghostFnName]) throw new Error(`ghost[${ghostFnName}] not exist`);
+  });
 
   // 自动附加一个setState在reducer里
   if (!newReducer.setState) newReducer.setState = payload => payload;

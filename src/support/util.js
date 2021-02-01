@@ -248,8 +248,8 @@ export function safeGet(object, key, defaultVal = {}) {
   return childrenObject;
 }
 
-export function safeGetArray(object, key) {
-  return safeGet(object, key, []);
+export function safeGetArray(object, key, defaultVal = []) {
+  return safeGet(object, key, defaultVal);
 }
 
 export function noDupPush(arr, strItem) {

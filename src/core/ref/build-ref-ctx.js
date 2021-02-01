@@ -20,7 +20,7 @@ import __sync from '../base/sync';
 import { getStoredKeys } from '../param/extractor';
 
 const {
-  reducer: { _caller, _module2fnNames },
+  reducer: { _caller, _module2fnNames, _module2Ghosts },
   refStore, getModuleStateKeys,
   store: { getState, getModuleVer },
 } = ccContext;
@@ -82,13 +82,22 @@ function recordDep(ccUniqueKey, moduleName, watchedKeys) {
   waKeys.forEach(stateKey => mapIns(moduleName, stateKey, ccUniqueKey));
 }
 
-function makeProxyReducer(m, dispatch) {
+function makeProxyReducer(m, dispatch, reducerFnType = 0, ghostFnName) {
   // 此处代理对象仅用于log时可以打印出目标模块reducer函数集合
   return new Proxy((_caller[m] || {}), {
     get: (target, fnName) => {
       const fnNames = _module2fnNames[m];
       if (fnNames.includes(fnName)) {
-        return (payload, rkeyOrOption, delay) => dispatch(`${m}/${fnName}`, payload, rkeyOrOption, delay);
+        // renderKey: rkeyOrOption
+        return (payload, renderKey, delay) => {
+          const callerParams = { module: m, fnName, payload, renderKey, delay };
+          if (reducerFnType === 0) return dispatch(`${m}/${fnName}`, payload, renderKey, delay);
+          if (reducerFnType === 1) return callerParams;
+          if (reducerFnType === 2) {
+            if (fnName === ghostFnName) return justWarning(`the target fn[${fnName}] can't be a ghost`);
+            return dispatch(`${m}/${ghostFnName}`, callerParams, renderKey, delay);
+          }
+        }
       } else {
         // 可能是原型链上的其他方法或属性调用
         return target[fnName];
@@ -322,6 +331,11 @@ function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, stateMod
     const rd = makeProxyReducer(m, dispatch);
     if (m === stateModule) {
       ctx.moduleReducer = rd;
+      ctx.mrc = makeProxyReducer(m, dispatch, 1);
+      const ghosts = _module2Ghosts[m] || [];
+      ghosts.forEach(ghostFnName => {
+        ctx.mrg[ghostFnName] = makeProxyReducer(m, dispatch, 2, ghostFnName);
+      });
       if (m === MODULE_GLOBAL) connectedReducer[m] = rd;
     } else {
       connectedReducer[m] = rd;
@@ -547,6 +561,9 @@ export default function (ref, params, liteLevel = 5) {
     connectedComputed,
 
     moduleReducer: null,
+    mrc: null,// 仅生成描述体，moduleReducerCaller
+    /** ghost reducer map */
+    mrg: {},
     globalReducer: null,
     connectedReducer: {},
     reducer: {},

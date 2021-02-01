@@ -142,7 +142,7 @@ export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
 type RenderKey = string | number | Array<string | number>;
 
-interface IDispatchOptions {
+export interface IDispatchOptions {
   /**
    * force update module state, bydefaut is false
    */
@@ -152,11 +152,27 @@ interface IDispatchOptions {
   renderKey?: RenderKey;
   delay?: number;// pick this delay first if user pass
 }
+
+export interface ReducerCallerParams{
+  module: string,
+  fnName: string,
+  payload: P,
+  renderKey: any,
+  delay: any,
+}
+
 type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
   renderKeyOrOptions?: RenderKey | IDispatchOptions,
   delay?: number,
 ) => ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>> : unknown;
+
+type ReducerCallerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
+  payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
+  renderKeyOrOptions?: RenderKey | IDispatchOptions,
+  delay?: number,
+) => ReducerCallerParams : unknown;
+// ) => ReducerCallerParams<Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0]> : unknown;
 
 export type ReducerType<T extends IAnyObj> = T['setState'] extends Function ? {
   // readonly [K in keyof T]: T[K] extends IAnyFn ? (payload: Parameters<T[K]>[0]) => Promise<ReturnType<T[K]>> : unknown;
@@ -164,6 +180,19 @@ export type ReducerType<T extends IAnyObj> = T['setState'] extends Function ? {
 } : {
   readonly [K in keyof T]: ReducerMethod<T, K>;
 } & { setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => Promise<P> }
+
+export type ReducerCallerType<T extends IAnyObj> = T['setState'] extends Function ? {
+  readonly [K in keyof T]: ReducerCallerMethod<T, K>;
+} : {
+  readonly [K in keyof T]: ReducerCallerMethod<T, K>;
+} & {
+  setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => {
+    module: string, fnName: 'setState',
+    payload: P, renderKey: any, delay: any,
+  }
+}
+
+export type ReducerGhostType<Ghosts extends readonly string[], Reducer> = { [key in Ghosts[number]]: Reducer };
 
 export interface EvMapBase {
   [key: string]: any[];
@@ -497,10 +526,12 @@ export interface ICtxBase {
   readonly globalReducer: any;
   readonly connectedReducer: any;
   readonly reducer: any;
-  readonly mr: any;// alias of moduleReducer
-  readonly gr: any;// alias of globalReducer
-  readonly cr: any;// alias of connectedReducer
-  readonly r: any;// alias of reducer
+  readonly mr: any; // alias of moduleReducer
+  readonly mrc: any; // alias of moduleReducerCaller
+  readonly mrg: any; // alias of moduleReducerGhost
+  readonly gr: any; // alias of globalReducer
+  readonly cr: any; // alias of connectedReducer
+  readonly r: any; // alias of reducer
 
   computed: typeof refCtxComputed;
   watch: typeof refCtxWatch;
@@ -563,6 +594,8 @@ export interface IRefCtx<
   PrivState extends IAnyObj = {},
   ModuleState extends IAnyObj = {},
   ModuleReducer extends IAnyObj = {},
+  ModuleReducerCaller extends IAnyObj = {},
+  ModuleReducerGhost extends IAnyObj = {},
   ModuleComputed extends IAnyObj = {},
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
@@ -585,6 +618,8 @@ export interface IRefCtx<
   readonly moduleComputed: ModuleComputed;
   readonly moduleReducer: ModuleReducer;
   readonly mr: ModuleReducer;// alias of moduleReducer
+  readonly mrc: ModuleReducerCaller;// alias of moduleReducerCaller
+  readonly mrg: ModuleReducerGhost;// alias of moduleReducerGhost
   readonly settings: Settings;
   readonly mapped: Mapped;
   readonly refComputed: RefComputed;
@@ -601,6 +636,8 @@ export interface IRefCtxWithRoot<
   PrivState extends IAnyObj = {},
   ModuleState extends IAnyObj = {},
   ModuleReducer extends IAnyObj = {},
+  ModuleReducerCaller extends IAnyObj = {},
+  ModuleReducerGhost extends IAnyObj = {},
   ModuleComputed extends IAnyObj = {},
   Settings extends IAnyObj = {},
   RefComputed extends IAnyObj = {},
@@ -612,7 +649,8 @@ export interface IRefCtxWithRoot<
   ExtraType extends [IAnyObj, any] | [IAnyObj] = [IAnyObj, any],
   >
   extends IRefCtx<
-  Props, PrivState, ModuleState, ModuleReducer, ModuleComputed, Settings, RefComputed,
+  Props, PrivState, ModuleState, ModuleReducer, ModuleReducerCaller, ModuleReducerGhost,
+  ModuleComputed, Settings, RefComputed,
   Mapped, ConnectedState, ConnectedReducer, ConnectedComputed, ExtraType
   > {
   readonly globalState: GetSubType<GetSubType<RootInfo, 'state'>, MODULE_GLOBAL>;
@@ -620,10 +658,12 @@ export interface IRefCtxWithRoot<
 }
 
 
-interface ModuleDesc {
+export interface ModuleDesc {
   state: IAnyObj;
-  reducer: IAnyFnInObj;
-  computed: IAnyFnInObj;
+  reducer?: IAnyFnInObj;
+  computed?: IAnyFnInObj;
+  ghosts?: string[] | readonly string[];
+  watch?: IAnyFnInObj;
 }
 interface RootModule {
   [key: string]: ModuleDesc;
@@ -631,7 +671,11 @@ interface RootModule {
 
 type GetSubType<T, K> = K extends keyof T ? T[K] : {};
 type GetSubRdType<M extends ModuleDesc> = ReducerType<GetSubType<M, 'reducer'>>;
+type GetSubRdCallerType<M extends ModuleDesc> = ReducerCallerType<GetSubType<M, 'reducer'>>;
+type GetSubRdGhostType<M extends ModuleDesc> = ReducerGhostType<GetSubType<M, 'ghosts'>, GetSubRdType<M>>;
 type GetSubCuType<M extends ModuleDesc> = ComputedValType<GetSubType<M, 'computed'>>;
+
+
 type GetConnState<Mods extends RootModule, Conn extends keyof Mods> = {
   [key in Conn]: StateType<Mods[key]["state"]>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
@@ -643,10 +687,10 @@ type GetConnComputed<Mods extends RootModule, Conn extends keyof Mods> = {
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 
 export interface IRefCtxM<RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Se = {}, RefCu = {}>
-  extends IRefCtxWithRoot<RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubCuType<M>, Se, RefCu> {
+  extends IRefCtxWithRoot<RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu> {
 }
 export interface IRefCtxMS<RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj = {}, Se = {}, RefCu = {}>
-  extends IRefCtxWithRoot<RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubCuType<M>, Se, RefCu> {
+  extends IRefCtxWithRoot<RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu> {
 }
 export interface IRefCtxS<RootInfo extends IAnyObj, Props extends IAnyObj, St extends IAnyObj = {}, Se = {}, RefCu = {}>
   extends IRefCtxWithRoot<RootInfo, Props, St, {}, {}, {}, Se, RefCu> {
@@ -655,7 +699,7 @@ export interface IRefCtxMConn<
   RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}
   >
   extends IRefCtxWithRoot<
-  RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubCuType<M>, Se, RefCu,
+  RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu,
   GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
   > {
 }
@@ -664,7 +708,7 @@ export interface IRefCtxMSConn<
   Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {},
   >
   extends IRefCtxWithRoot<
-  RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubCuType<M>, Se, RefCu,
+  RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu,
   GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
   > {
 }
@@ -686,6 +730,8 @@ export interface ICtx
   <
   RootState extends IRootBase = IRootBase,
   RootReducer extends { [key in keyof RootState]?: any } = IRootBase,
+  RootReducerCaller extends { [key in keyof RootState]?: any } = IRootBase,
+  RootReducerGhost extends { [key in keyof RootState]?: any } = IRootBase,
   RootCu extends { [key in keyof RootState]?: any } = IRootBase,
   Props = {},
   PrivState = {},
@@ -718,9 +764,11 @@ export interface ICtx
     RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof reducerSetState }
   ) : {};
   // alias of moduleReducer
-  readonly mr: ModuleName extends keyof RootReducer ? (
-    RootReducer[ModuleName]['setState'] extends Function ?
-    RootReducer[ModuleName] : RootReducer[ModuleName] & { setState: typeof reducerSetState }
+  readonly mr: ModuleName extends keyof RootReducer ? RootReducer[ModuleName] : {};
+  // alias of moduleReducerCaller
+  readonly mrc: ModuleName extends keyof RootReducerCaller ? RootReducerCaller[ModuleName] : {};
+  readonly mrg: ModuleName extends keyof RootReducerGhost ? (
+    { [K in keyof ArrItemsType<RootReducerGhost[ModuleName]>]: RootReducer[ModuleName] }
   ) : {};
   readonly moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : {};
   readonly settings: Settings;
@@ -941,6 +989,7 @@ export type ModuleConfig = {
   reducer?: {
     [fnName: string]: IReducerFn;
   };
+  ghosts?: string[] | readonly string[];
   computed?: {
     [retKey: string]: typeof computedFn | IComputedFnSimpleDesc;
   };
@@ -1471,6 +1520,23 @@ export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
+export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig }> = {
+  [key in keyof Models]: "reducer" extends keyof Models[key] ?
+  (Models[key]["reducer"] extends IAnyObj ? ReducerCallerType<Models[key]["reducer"]> : {})
+  : {};
+}
+  & { [cst.MODULE_VOID]: {} }
+  & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
+  & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
+
+export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, RootReducer> = {
+  [key in keyof Models]: "ghosts" extends keyof Models[key] ?
+  (Models[key]["ghosts"] extends string[] ? { [ghostKey in ArrItemsType<Models[key]["ghosts"]>]: RootReducer[key] } : {})
+  : {};
+}
+  & { [cst.MODULE_VOID]: {} }
+  & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
+  & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 export type GetRootComputed<Models extends { [key: string]: ModuleConfig }> = {
   [key in keyof Models]: "computed" extends keyof Models[key] ?
@@ -1480,6 +1546,7 @@ export type GetRootComputed<Models extends { [key: string]: ModuleConfig }> = {
   & { [cst.MODULE_VOID]: {} }
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
+
 
 declare type DefaultExport = {
   ccContext: any,
