@@ -662,9 +662,9 @@ export interface IRefCtxWithRoot<
 export interface ModuleDesc {
   state: IAnyObj;
   reducer?: IAnyFnInObj;
-  computed?: IAnyFnInObj;
+  computed?: { [key: string]: IAnyFn | IComputedFnSimpleDesc };
   ghosts?: readonly string[];
-  watch?: IAnyFnInObj;
+  watch?: { [key: string]: IAnyFn | WatchFnDesc };
 }
 interface RootModule {
   [key: string]: ModuleDesc;
