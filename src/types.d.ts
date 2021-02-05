@@ -605,15 +605,15 @@ export interface IRefCtx<
   ConnectedState extends IAnyObj = {},
   ConnectedReducer extends IAnyObj = {},
   ConnectedComputed extends IAnyObj = {},
-  ExtraType extends [IAnyObj, any] | [IAnyObj] = [IAnyObj, any],
+  ExtraTypes extends [IAnyObj, any] | [IAnyObj] = [IAnyObj, any],
   >
   extends ICtxBase {
   readonly props: Props;
   readonly prevProps: Props;
   readonly state: PrivState & ModuleState;
   readonly unProxyState: PrivState & ModuleState;
-  extra: ExtraType[0];
-  staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
+  extra: ExtraTypes[0];
+  staticExtra: ExtraTypes[1] extends undefined ? any : ExtraTypes[1];
   readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
@@ -687,40 +687,48 @@ type GetConnComputed<Mods extends RootModule, Conn extends keyof Mods> = {
   [key in Conn]: ComputedValType<Mods[key]["computed"]>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 
-export interface IRefCtxM<RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Se = {}, RefCu = {}>
-  extends IRefCtxWithRoot<RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu> {
-}
-export interface IRefCtxMS<RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj = {}, Se = {}, RefCu = {}>
-  extends IRefCtxWithRoot<RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu> {
-}
-export interface IRefCtxS<RootInfo extends IAnyObj, Props extends IAnyObj, St extends IAnyObj = {}, Se = {}, RefCu = {}>
-  extends IRefCtxWithRoot<RootInfo, Props, St, {}, {}, {}, Se, RefCu> {
-}
+export interface IRefCtxM<
+  RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Se = {}, RefCu = {}, Extra = {}
+  >
+  extends IRefCtxWithRoot<
+  RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>,
+  GetSubCuType<M>, Se, RefCu, {}, {}, {}, {}, [Extra],
+  > { }
+export interface IRefCtxMS<
+  RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj = {}, Se = {}, RefCu = {}, Extra = {}
+  >
+  extends IRefCtxWithRoot<
+  RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>,
+  GetSubCuType<M>, Se, RefCu, {}, {}, {}, {}, [Extra],
+  > { }
+export interface IRefCtxS<
+  RootInfo extends IAnyObj, Props extends IAnyObj, St extends IAnyObj = {}, Se = {}, RefCu = {}, Extra = {}
+  >
+  extends IRefCtxWithRoot<RootInfo, Props, St, {}, {}, {}, Se, RefCu, {}, {}, {}, {}, [Extra],
+  > { }
 export interface IRefCtxMConn<
-  RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}
+  RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Mods extends RootModule,
+  Conn extends keyof Mods, Se = {}, RefCu = {}, Extra = {}
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu,
-  GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
-  > {
-}
+  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra],
+  > { }
 export interface IRefCtxMSConn<
   RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj,
-  Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {},
+  Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}, Extra = {},
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu,
-  GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
-  > {
-}
+  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra],
+  > { }
 export interface IRefCtxConn<
-  RootInfo extends IAnyObj, Props extends IAnyObj, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {},
+  RootInfo extends IAnyObj, Props extends IAnyObj, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}, Extra,
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, {}, {}, {}, {}, Se, RefCu,
-  GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>
-  > {
-}
+  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra],
+  > { }
 
 /**
  *  =================================
