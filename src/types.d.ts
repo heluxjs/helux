@@ -111,6 +111,12 @@ export type ComputedValType<T> = {
   (T[K] extends IComputedFnSimpleDesc ? GetPromiseT<T[K]['fn']> : never);
 }
 
+// for heping refComputed to infer type
+export type ComputedValTypeForFn<Fn> = {
+  readonly [K in keyof ReturnType<Fn>]: ReturnType<Fn>[K] extends IAnyFn ? GetPromiseT<ReturnType<Fn>[K]> :
+  (ReturnType<Fn>[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<Fn>[K]['fn']> : never);
+}
+
 export type SetupFn = (ctx: ICtxBase) => IAnyObj | void;
 export type SettingsType<Fn> = Fn extends SetupFn ?
   (ReturnType<Fn> extends void ? {} : ReturnType<Fn>) :

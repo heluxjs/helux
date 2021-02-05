@@ -24,7 +24,6 @@ const config = {
       //avoid (!) Missing global variable name
       react: 'React',
       'react-dom': 'ReactDOM',
-      co: 'co',
     }
   },
   plugins: [
