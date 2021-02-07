@@ -10,11 +10,11 @@ const { store: { getState } } = ccContext;
 
 export default function (spec, ref, e) {
   const refCtx = ref.ctx;
-  const refModule = refCtx.module;
 
   const mockE = buildMockEvent(spec, e, refCtx);
-  if (!mockE) return;//参数无效 例如 <input onChange={this.sync}/> 导致
+  if (!mockE) return; // 参数无效 例如 <input onChange={this.sync}/> 导致
 
+  const { ccKey, ccUniqueKey, module: refModule } = refCtx;
   const currentTarget = mockE.currentTarget;
   const { dataset, value, extraState, noAutoExtract } = currentTarget;
 
@@ -24,15 +24,16 @@ export default function (spec, ref, e) {
   let ccsync = dataset.ccsync;
 
   if (ccsync.startsWith('/')) {
-    ccsync = `${refModule}${ccsync}`;//附加上默认模块值
+    ccsync = `${refModule}${ccsync}`; // 附加上默认模块值
   }
 
-  if (ccsync.includes('/')) {// syncModuleState 同步模块的state状态
+  const options = { calledBy: SYNC, ccKey, ccUniqueKey, module: refModule, renderKey: ccrkey, delay: ccdelay };
+
+  const doExtract = fullState => extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool, refModule);
+  if (ccsync.includes('/')) { // syncModuleState 同步模块的state状态
     const targetModule = ccsync.split('/')[0];
     checker.checkModuleName(targetModule, false);
-
-    const { ccKey, ccUniqueKey } = refCtx;
-    const options = { calledBy: SYNC, ccKey, ccUniqueKey, module: targetModule, renderKey: ccrkey, delay: ccdelay };
+    options.module = targetModule;
 
     if (noAutoExtract) {
       if (extraState) changeRefState(extraState, options, ref);
@@ -40,16 +41,17 @@ export default function (spec, ref, e) {
     }
 
     const fullState = targetModule !== refModule ? getState(targetModule) : ref.state;
-
-    const { state } = extractStateByCcsync(ccsync, value, ccint, fullState, mockE.isToggleBool);
+    const { state, module, keys, keyPath } = doExtract(fullState);
+    Object.assign(options, { module, keys, keyPath });
     changeRefState(state, options, ref);
-  } else {//调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
+  } else { // 调用自己的setState句柄触发更新，key可能属于local的，也可能属于module的
     if (noAutoExtract) {
-      if (extraState) ref.setState(extraState, null, ccrkey, ccdelay);
+      if (extraState) ref.setState(extraState, null, options);
       return;
     }
 
-    const { state } = extractStateByCcsync(ccsync, value, ccint, ref.state, mockE.isToggleBool);
-    ref.setState(state, null, ccrkey, ccdelay);
+    const { state, module, keys, keyPath } = doExtract(ref.state);
+    Object.assign(options, { module, keys, keyPath });
+    ref.setState(state, null, options);
   }
 }

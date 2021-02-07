@@ -18,7 +18,7 @@ function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool = false
   }
 }
 
-export default (ccsync, value, ccint, oriState, isToggleBool) => {
+export default (ccsync, value, ccint, oriState, isToggleBool, refModule) => {
   let _value = value;
   if (ccint === true) {
     _value = parseInt(value);
@@ -29,33 +29,34 @@ export default (ccsync, value, ccint, oriState, isToggleBool) => {
     }
   }
 
-  let module = null, keys = [];
+  let module = refModule, keys = [];
   if (ccsync.includes('/')) {
-    const [_module, restStr] = ccsync.split('/');
+    const [_module, keyOrKeyPath] = ccsync.split('/');
     module = _module;
-    if (restStr.includes('.')) {
-      keys = restStr.split('.');
+    if (keyOrKeyPath.includes('.')) {
+      keys = keyOrKeyPath.split('.');
     } else {
-      keys = [restStr];
+      keys = [keyOrKeyPath];
     }
   } else if (ccsync.includes('.')) {
     keys = ccsync.split('.');
   } else {
     keys = [ccsync];
   }
+  const keyPath = keys.join('.');
 
   if (keys.length === 1) {
     const targetStateKey = keys[0];
     if (isToggleBool === true) {
-      return { module, state: { [targetStateKey]: !oriState[targetStateKey] } };
+      return { module, keys, keyPath, state: { [targetStateKey]: !oriState[targetStateKey] } };
     } else {
-      return { module, state: { [targetStateKey]: _value } };
+      return { module, keys, keyPath, state: { [targetStateKey]: _value } };
     }
   } else {
     const [key, ...restKeys] = keys;
     const subState = oriState[key];
 
     setValue(subState, restKeys, restKeys.length - 1, 0, _value, isToggleBool);
-    return { module, state: { [key]: subState } }
+    return { module, keys, keyPath, state: { [key]: subState } }
   }
 }

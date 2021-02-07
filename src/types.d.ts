@@ -850,6 +850,7 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 // to constrain IFnCtx interface series shape
 interface _IFnCtx {// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
   retKey: string;
+  callInfo: ICallInfo,
   isFirstCall: boolean;
   setted: string[];
   changed: string[];
@@ -1125,14 +1126,18 @@ export interface RunOptions {
   asyncCuKeys?: string[],
 }
 
+export interface ICallInfo {
+  renderKey: Array<string | number>[];
+  delay: number;
+  fnName: string;
+  type: string;
+  calledBy: string;
+  keys: string[];
+  keyPath: string;
+}
+
 export interface IActionCtxBase {
-  callInfo: {
-    renderKey: Array<string | number>[];
-    delay: number;
-    fnName: string;
-    type: string;
-    calledBy: string;
-  },
+  callInfo: ICallInfo;
   callerModule: string;
   module: PropKey;
   committedStateMap: IAnyObj,

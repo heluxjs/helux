@@ -18,7 +18,8 @@ const { _computedValues } = computed;
 const { okeys, extractChangedState } = util;
 const getDispatcher = () => ccContext.permanentDispatcher;
 
-const setStateByModule = (module, committedState, { ref = null, callInfo = {}, noSave = false, force } = {}) => {
+const setStateByModule = (module, committedState, opts = {}) => {
+  const { ref = null, callInfo = {}, noSave = false, force } = opts;
   const moduleState = getState(module);
   const moduleComputedValue = _computedValues[module];
 
@@ -247,7 +248,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.12.6',
+    version: '2.12.8',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',

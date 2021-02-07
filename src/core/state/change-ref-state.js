@@ -66,6 +66,7 @@ function getCallerForce(force) {
  */
 function changeRefState(state, {
   module, skipMiddleware = false, payload, stateChangedCb, force = false,
+  keys = [], keyPath = '', // sync api 透传
   reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, targetRef
 ) {
   if (!state) return;
@@ -80,7 +81,10 @@ function changeRefState(state, {
 
   const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
   const stateFor = getStateFor(module, refModule);
-  const callInfo = { calledBy, payload, renderKey: targetRenderKey, force, ccKey, module, fnName };
+  const callInfo = {
+    calledBy, payload, renderKey: targetRenderKey, force, ccKey, module, fnName,
+    keys, keyPath,
+  };
 
   // 在triggerReactSetState之前把状态存储到store，
   // 防止属于同一个模块的父组件套子组件渲染时，父组件修改了state，子组件初次挂载是不能第一时间拿到state
