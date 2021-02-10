@@ -1,3 +1,9 @@
+#### 2021-02-10
+2.12.9 发布
+- feature: 支持ghost函数
+- feature: sync函数透传callInfi
+- feature: sync函数keyPath为多层时，oldState保持为旧值
+
 #### 2021-01-24
 2.11.15 发布
 - refactor: 允许在`run`之前通过`configure`配置的模块再次放入`run`过程中配置，此时`configure`配置的模块会被自动忽略
