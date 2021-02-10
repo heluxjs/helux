@@ -2,9 +2,10 @@ import * as util from '../../support/util';
 
 function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool = false) {
   const key = keys[keyIndex];
+  let oriVal = obj[key];
+
   if (lastKeyIndex === keyIndex) {
     if (isToggleBool === true) {
-      const oriVal = obj[key];
       if (typeof oriVal !== 'boolean') {
         util.justWarning(`key[${key}]'s value type is not boolean`);
       } else {
@@ -14,7 +15,9 @@ function setValue(obj, keys, lastKeyIndex, keyIndex, value, isToggleBool = false
       obj[key] = value;
     }
   } else {
-    setValue(obj[key], keys, lastKeyIndex, ++keyIndex, value, isToggleBool)
+    let newVal = util.shallowCopy(oriVal);
+    obj[key] = newVal;
+    setValue(newVal, keys, lastKeyIndex, ++keyIndex, value, isToggleBool)
   }
 }
 
@@ -22,7 +25,7 @@ export default (ccsync, value, ccint, oriState, isToggleBool, refModule) => {
   let _value = value;
   if (ccint === true) {
     _value = parseInt(value);
-    //strict?
+    // strict?
     if (Number.isNaN(_value)) {
       util.justWarning(`${value} can not convert to int but you set ccint as true!！`);
       _value = value;
@@ -54,7 +57,7 @@ export default (ccsync, value, ccint, oriState, isToggleBool, refModule) => {
     }
   } else {
     const [key, ...restKeys] = keys;
-    const subState = oriState[key];
+    const subState = util.shallowCopy(oriState[key]);
 
     setValue(subState, restKeys, restKeys.length - 1, 0, _value, isToggleBool);
     return { module, keys, keyPath, state: { [key]: subState } }

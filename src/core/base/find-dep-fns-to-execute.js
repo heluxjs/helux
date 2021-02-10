@@ -421,6 +421,7 @@ export default function executeDepFns(
 
     if (whileCount > 2) {
       justWarning('fnCtx.commit may goes endless loop, please check your code');
+      justWarning(callInfo);
       // 清空，确保不再触发while循环
       curStateForComputeFn = null;
     }

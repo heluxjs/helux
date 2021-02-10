@@ -376,6 +376,16 @@ export function shallowDiffers(a, b) {
   return false;
 }
 
+export function shallowCopy(oriVal) {
+  let newVal = oriVal;
+  if (isObject(oriVal)) {
+    newVal = { ...oriVal };
+  } else if (Array.isArray(oriVal)) {
+    newVal = [...oriVal];
+  }
+  return newVal;
+}
+
 export function extractChangedState(oldState, partialNewState, moduleOpt, force) {
   let changedState = {};
 
