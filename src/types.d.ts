@@ -474,7 +474,7 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
     syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
-declare function refCtxSync(string: string, value?: typeof syncCb | any, renderKey?: RenderKey, delay?: string): IAnyFn | IAnyFn;
+declare function refCtxSync(string: string, value?: typeof syncCb | any, renderKey?: RenderKeyOrOpts, delay?: string): IAnyFn | IAnyFn;
 declare function refCtxSync(...args: any[]): any;// 支持dom直接绑sync时ts语法正确 <input data-ccsync="name" onChange={sync} />
 
 //////////////////////////////////////////
