@@ -119,7 +119,7 @@ export type ComputedValTypeForFn<Fn> = {
 
 export type SetupFn = (ctx: ICtxBase) => IAnyObj | void;
 export type SettingsType<Fn> = Fn extends SetupFn ?
-  (ReturnType<Fn> extends void ? {} : ReturnType<Fn>) :
+  (ReturnType<Fn> extends IAnyObj ? ReturnType<Fn> : {}) :
   {};
 
 /**

@@ -54,6 +54,7 @@ export default (spec, e, refCtx) => {
       if (isFn(val)) {
         // moduleState指的是所修改的目标模块的state
         const syncRet = val(
+          // TODO: syncCtx 填写函数 setVal(keyPath, value)
           value, keyPath, { event: e, module, moduleState: mState, fullKeyPath, state: refState, refCtx },
         );
 
