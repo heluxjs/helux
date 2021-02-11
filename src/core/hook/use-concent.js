@@ -49,11 +49,9 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   // when single file demo in hmr mode trigger buildRef, rState is 0 
   // so here call evalState again
   const state = rState || evalState(iState);
-  const bindCtxToMethod = regOpt.bindCtxToMethod;
-
   const {
     renderKeyClasses, module, watchedKeys = '-',
-    connect = {}, setup, lite,
+    connect = {}, setup, lite, cuSpec, bindCtxToMethod,
   } = regOpt;
 
   const { _module, _ccClassKey, _connect, _watchedKeys } = mapRegistrationInfo(
@@ -76,7 +74,7 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
 
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
-  beforeMount(hookRef, setup, bindCtxToMethod);
+  beforeMount(hookRef, setup, bindCtxToMethod, cuSpec);
 
   // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
   hookCtx.prevCcUKey = hookCtx.ccUKey;

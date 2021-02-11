@@ -1,4 +1,8 @@
 #### 2021-02-10
+2.13.1 发布
+- feature: 支持`useConcent`和`register`传入`cuSpec`参数来定义实例计算函数对象
+
+#### 2021-02-10
 2.12.9 发布
 - feature: 支持ghost函数
 - feature: sync函数透传callInfi

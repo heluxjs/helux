@@ -1,4 +1,6 @@
 /** @typedef {import('../../types-inner').IRef} IRef */
+/** @typedef {import('../../types').MultiComputed} MultiComputed */
+/** @typedef {import('../../types').MultiComputedFn} MultiComputedFn */
 import * as util from '../../support/util';
 import { MODULE_GLOBAL, NOT_MOUNT } from '../../support/constant';
 import { INAJ, INAF } from '../../support/priv-constant';
@@ -13,8 +15,9 @@ const { runtimeVar } = ccContext;
  * @param {IRef} ref
  * @param {Function} setup
  * @param {boolean} bindCtxToMethod
+ * @param {MultiComputed | MultiComputedFn} cuSpec
  */
-export default function (ref, setup, bindCtxToMethod) {
+export default function (ref, setup, bindCtxToMethod, cuSpec) {
   const ctx = ref.ctx;
   ref.__$$ms = NOT_MOUNT;
   // flag ref is at before mount step
@@ -37,6 +40,9 @@ export default function (ref, setup, bindCtxToMethod) {
     }
     Object.assign(ctx.settings, settingsObj);
   }
+
+  // v2.13.1+ 支持外部传入refComputed函数定义
+  if (cuSpec) ctx.computed(cuSpec);
 
   // !!! 把拦截了setter getter的计算结果容器赋值给refComputed
   // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入 computedRetKeyFns 等元数据

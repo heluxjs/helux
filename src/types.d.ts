@@ -381,7 +381,7 @@ declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase 
 // !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
 // !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
 // 先写为如下方式
-type MultiComputed = {
+export type MultiComputed = {
   [retKey: string]: ((oldVal: any, newVal: any, fnCtx: _IFnCtx) => any) | {
     fn: (oldVal: any, newVal: any, fnCtx: _IFnCtx) => any,
     depKeys?: DepKeys,
@@ -390,8 +390,9 @@ type MultiComputed = {
     retKeyDep?: boolean,
   }
 }
+export type MultiComputedFn = (ctx: ICtxBase) => MultiComputed;
 declare function refCtxComputed(multiComputed: MultiComputed): void;
-declare function refCtxComputed(multiFn: (ctx: ICtxBase) => MultiComputed): void;
+declare function refCtxComputed(multiFn: MultiComputedFn): void;
 
 type VorB = void | boolean;
 /**
@@ -906,6 +907,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   renderKeyClasses?: string[];
   compareProps?: boolean;//default true
   setup?: (refCtx: ICtx) => IAnyObj | void;
+  cuSpec?: MultiComputed | MultiComputedFn | null;
   // render?: (ctxOrMapped: any) => ReactNode;// work for useConcent, registerHookComp, registerDumb only
 }
 
