@@ -24,7 +24,7 @@ export default function register({
   watchedKeys = '-',
   storedKeys = [],
   setup = null,
-  cuSpec = null,
+  cuDesc = null,
   persistStoredKeys,
   connect = {},
   extra = {},
@@ -76,7 +76,7 @@ export default function register({
 
             if (!isPropsProxy) {
               if (this.$$setup) this.$$setup = this.$$setup.bind(this);
-              beforeMount(this, setup || this.$$setup || staticSetup, false, cuSpec);
+              beforeMount(this, setup || this.$$setup || staticSetup, false, cuDesc);
             }
             // isPropsProxy为true时，延迟到$$attach里执行beforeMount
           } catch (err) {
@@ -114,7 +114,7 @@ export default function register({
 
           if (childRef.$$setup) childRef.$$setup = childRef.$$setup.bind(childRef);
           if (setup && (childRef.$$setup || staticSetup)) throw setupErr(`ccUniqueKey ${ctx.ccUniqueKey}`);
-          beforeMount(this, setup || childRef.$$setup || staticSetup, false, cuSpec);
+          beforeMount(this, setup || childRef.$$setup || staticSetup, false, cuDesc);
 
           beforeRender(this);
         }

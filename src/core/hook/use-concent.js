@@ -51,7 +51,7 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   const state = rState || evalState(iState);
   const {
     renderKeyClasses, module, watchedKeys = '-',
-    connect = {}, setup, lite, cuSpec, bindCtxToMethod,
+    connect = {}, setup, lite, cuDesc, bindCtxToMethod,
   } = regOpt;
 
   const { _module, _ccClassKey, _connect, _watchedKeys } = mapRegistrationInfo(
@@ -74,7 +74,7 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
 
   const refCtx = hookRef.ctx;
   refCtx.props = props;// attach props to ctx
-  beforeMount(hookRef, setup, bindCtxToMethod, cuSpec);
+  beforeMount(hookRef, setup, bindCtxToMethod, cuDesc);
 
   // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
   hookCtx.prevCcUKey = hookCtx.ccUKey;

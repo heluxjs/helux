@@ -162,6 +162,7 @@ function bindInitStateHandler(ref, ctx, registryState, refStoredState, mstate, m
     ctx.prevState = Object.assign({}, newRefState);
     ctx.unProxyState = newRefState;
     ref.state = Object.assign(ctx.state, newRefState);
+    return ctx.state;
   };
 }
 

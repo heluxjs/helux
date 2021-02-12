@@ -15,9 +15,9 @@ const { runtimeVar } = ccContext;
  * @param {IRef} ref
  * @param {Function} setup
  * @param {boolean} bindCtxToMethod
- * @param {MultiComputed | MultiComputedFn} cuSpec
+ * @param {MultiComputed | MultiComputedFn} cuDesc
  */
-export default function (ref, setup, bindCtxToMethod, cuSpec) {
+export default function (ref, setup, bindCtxToMethod, cuDesc) {
   const ctx = ref.ctx;
   ref.__$$ms = NOT_MOUNT;
   // flag ref is at before mount step
@@ -42,7 +42,7 @@ export default function (ref, setup, bindCtxToMethod, cuSpec) {
   }
 
   // v2.13.1+ 支持外部传入refComputed函数定义
-  if (cuSpec) ctx.computed(cuSpec);
+  if (cuDesc) ctx.computed(cuDesc);
 
   // !!! 把拦截了setter getter的计算结果容器赋值给refComputed
   // 这一波必需在setup调用之后做，因为setup里会调用ctx.computed写入 computedRetKeyFns 等元数据

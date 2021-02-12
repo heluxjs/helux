@@ -12,7 +12,7 @@ export default function (ref, props) {
   const registerOptions = getRegisterOptions(props.register);
   const {
     module, renderKeyClasses, tag, lite, compareProps = true, setup, bindCtxToMethod,
-    watchedKeys = '-', connect = {}, storedKeys = [], cuSpec = null,
+    watchedKeys = '-', connect = {}, storedKeys = [], cuDesc = null,
   } = registerOptions;
 
   const state = evalState(registerOptions.state);
@@ -45,5 +45,5 @@ export default function (ref, props) {
 
   //对于concent来说，ctx在constructor里构造完成，此时就可以直接把ctx传递给beforeMount了，
   //无需在将要给废弃的componentWillMount里调用beforeMount
-  beforeMount(ref, setup, bindCtxToMethod, cuSpec);
+  beforeMount(ref, setup, bindCtxToMethod, cuDesc);
 }

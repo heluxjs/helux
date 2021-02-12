@@ -159,7 +159,7 @@ export interface IDispatchOptions {
   delay?: number;// pick this delay first if user pass
 }
 
-export interface ReducerCallerParams{
+export interface ReducerCallerParams {
   module: string,
   fnName: string,
   payload: any,
@@ -364,19 +364,19 @@ declare function reducerSetState<FullState = {}>(state: Partial<FullState>, cb?:
  * @param compare 
  * @param sort 
  */
-declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number): void;
+declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number): IAnyObj;
 declare function refCtxComputed(
   retKey: string,
   fnDesc: { fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
-): void;
+): IAnyObj;
 
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number): void;
+  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number): IAnyObj;
 // (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
 declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>(
   retKey: string,
   fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
-): void;
+): IAnyObj;
 
 // !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
 // !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
@@ -391,8 +391,8 @@ export type MultiComputed = {
   }
 }
 export type MultiComputedFn = (ctx: ICtxBase) => MultiComputed;
-declare function refCtxComputed(multiComputed: MultiComputed): void;
-declare function refCtxComputed(multiFn: MultiComputedFn): void;
+declare function refCtxComputed<T extends MultiComputed>(multiComputed: T): ComputedValType<T>;
+declare function refCtxComputed<T extends MultiComputedFn>(multiFn: T): ComputedValTypeForFn<T>;
 
 type VorB = void | boolean;
 /**
@@ -448,8 +448,8 @@ declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOpt): void;
 
-declare function refCtxInitState(state: IAnyObj): void;
-declare function refCtxInitState(stateCb: () => IAnyObj): void;
+declare function refCtxInitState(state: IAnyObj): IAnyObj;
+declare function refCtxInitState(stateCb: () => IAnyObj): IAnyObj;
 
 declare function syncCb
   (
@@ -590,6 +590,9 @@ export interface ICtxBase {
 type ExtraType = [any, any];
 // export interface ExtraType<> type ExtraType = [any=any, any=any];
 
+type InitState<ModuleState extends IAnyObj = {}> = <PrivState extends IAnyObj>(state: PrivState | (() => PrivState)) =>
+  Extract<keyof PrivState, keyof ModuleState> extends never ? PrivState & ModuleState : never;
+
 /**
  * IRefCtx series is simple than ICtx series, it is a loose mode check,
  * so it is more easy to use when your coding environment is js^_^
@@ -636,6 +639,7 @@ export interface IRefCtx<
   readonly connectedReducer: ConnectedReducer;
   readonly cr: ConnectedReducer;// alias of connectedReducer
   readonly connectedComputed: ConnectedComputed;
+  initState: InitState<ModuleState>;
 }
 
 export interface IRefCtxWithRoot<
@@ -767,6 +771,7 @@ export interface ICtx
   readonly globalComputed: RootCu[MODULE_GLOBAL];
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
+  initState: InitState<RootState[ModuleName]>;
   readonly state: RootState[ModuleName] & PrivState;
   readonly unProxyState: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
@@ -907,7 +912,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   renderKeyClasses?: string[];
   compareProps?: boolean;//default true
   setup?: (refCtx: ICtx) => IAnyObj | void;
-  cuSpec?: MultiComputed | MultiComputedFn | null;
+  cuDesc?: MultiComputed | MultiComputedFn | null;
   // render?: (ctxOrMapped: any) => ReactNode;// work for useConcent, registerHookComp, registerDumb only
 }
 
