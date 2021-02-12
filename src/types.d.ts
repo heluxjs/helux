@@ -112,7 +112,7 @@ export type ComputedValType<T> = {
 }
 
 // for heping refComputed to infer type
-export type ComputedValTypeForFn<Fn> = {
+export type ComputedValTypeForFn<Fn extends IAnyFn> = {
   readonly [K in keyof ReturnType<Fn>]: ReturnType<Fn>[K] extends IAnyFn ? GetPromiseT<ReturnType<Fn>[K]> :
   (ReturnType<Fn>[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<Fn>[K]['fn']> : never);
 }
@@ -341,7 +341,7 @@ declare function refCtxInvoke<UserFn extends IReducerFn>
 
 declare function refCtxSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 declare function refCtxSetState<FullState = {}>(cb: (prevFullState: FullState, props: IAnyObj) => IAnyObj, renderKey?: RenderKeyOrOpts, delay?: number): void;
-declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
+// declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
@@ -572,7 +572,7 @@ export interface ICtxBase {
   ) => void;
   reactForceUpdate: (callback?: () => void) => void;
   initState: typeof refCtxInitState;
-  setState: typeof refCtxSetState;
+  setState: IAnyFn;
   refs: { [key: string]: { current: any } };
   useRef: (refName: string) => any;//for class return ref=>{...}, for function return hookRef
   forceUpdate: typeof refCtxForceUpdate;
@@ -592,6 +592,18 @@ type ExtraType = [any, any];
 
 type InitState<ModuleState extends IAnyObj = {}> = <PrivState extends IAnyObj>(state: PrivState | (() => PrivState)) =>
   Extract<keyof PrivState, keyof ModuleState> extends never ? PrivState & ModuleState : never;
+
+type DecideFullState<T1, T2 extends IAnyObj> = T2['__no_anyobj_passed__'] extends '_nap_' ? T1 : T2;
+type RefCtxSetState<F extends IAnyObj = {}> =
+  // !!! allow user have a change to define fullState type
+  <InF extends IAnyObj = { __no_anyobj_passed__: '_nap_' }>(
+    stateOrUpdater: Partial<DecideFullState<F, InF>> | ((prevFullState: DecideFullState<F, InF>, props: any) => Partial<DecideFullState<F, InF>>),
+    // when arg1 is state, here is cb, otherwise here is renderKey
+    cbOrRenderKey?: ((newFullState: DecideFullState<F, InF>) => void) | RenderKeyOrOpts,
+    // when arg1 is state, here is renderKey, otherwise here is delay
+    renderKeyOrDelay?: RenderKeyOrOpts | number,
+    delay?: number
+  ) => void;
 
 /**
  * IRefCtx series is simple than ICtx series, it is a loose mode check,
@@ -640,6 +652,7 @@ export interface IRefCtx<
   readonly cr: ConnectedReducer;// alias of connectedReducer
   readonly connectedComputed: ConnectedComputed;
   initState: InitState<ModuleState>;
+  setState: RefCtxSetState<ModuleState>;
 }
 
 export interface IRefCtxWithRoot<
@@ -703,19 +716,19 @@ export interface IRefCtxM<
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>,
-  GetSubCuType<M>, Se, RefCu, {}, {}, {}, {}, [Extra],
+  GetSubCuType<M>, Se, RefCu, {}, {}, {}, {}, [Extra]
   > { }
 export interface IRefCtxMS<
   RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj = {}, Se = {}, RefCu = {}, Extra = {}
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>,
-  GetSubCuType<M>, Se, RefCu, {}, {}, {}, {}, [Extra],
+  GetSubCuType<M>, Se, RefCu, {}, {}, {}, {}, [Extra]
   > { }
 export interface IRefCtxS<
   RootInfo extends IAnyObj, Props extends IAnyObj, St extends IAnyObj = {}, Se = {}, RefCu = {}, Extra = {}
   >
-  extends IRefCtxWithRoot<RootInfo, Props, St, {}, {}, {}, Se, RefCu, {}, {}, {}, {}, [Extra],
+  extends IRefCtxWithRoot<RootInfo, Props, St, {}, {}, {}, Se, RefCu, {}, {}, {}, {}, [Extra]
   > { }
 export interface IRefCtxMConn<
   RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, Mods extends RootModule,
@@ -723,7 +736,7 @@ export interface IRefCtxMConn<
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, {}, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu,
-  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra],
+  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra]
   > { }
 export interface IRefCtxMSConn<
   RootInfo extends IAnyObj, Props extends IAnyObj, M extends ModuleDesc, St extends IAnyObj,
@@ -731,14 +744,14 @@ export interface IRefCtxMSConn<
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, St, StateType<M['state']>, GetSubRdType<M>, GetSubRdCallerType<M>, GetSubRdGhostType<M>, GetSubCuType<M>, Se, RefCu,
-  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra],
+  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra]
   > { }
 export interface IRefCtxConn<
-  RootInfo extends IAnyObj, Props extends IAnyObj, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}, Extra,
+  RootInfo extends IAnyObj, Props extends IAnyObj, Mods extends RootModule, Conn extends keyof Mods, Se = {}, RefCu = {}, Extra = {},
   >
   extends IRefCtxWithRoot<
   RootInfo, Props, {}, {}, {}, {}, Se, RefCu,
-  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra],
+  {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra]
   > { }
 
 /**
@@ -772,6 +785,7 @@ export interface ICtx
   extra: ExtraType[0];
   staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
   initState: InitState<RootState[ModuleName]>;
+  setState: RefCtxSetState<RootState[ModuleName]>;
   readonly state: RootState[ModuleName] & PrivState;
   readonly unProxyState: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;
