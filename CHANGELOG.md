@@ -1,3 +1,26 @@
+#### 2021-02-12
+2.13.4 发布
+- feature: 协同`concent-pro`，提供`ctx.computed`和`ctx.initState`返回值，提高ts类型推导友好度。
+```ts
+import { useModelWithSetup, CtxPre } from './model/meta';
+
+function setup(ctx:Pre){
+  const fullState = ctx.initState({tmp:1});
+  type Full = typeof fullState;
+  const rcu = ctx.computed({
+    key1(n:Full, o:Full){
+      return `${n.tmp}__`
+    },
+  });
+  return { fullState, rcu };
+}
+
+function Comp(){
+  // 此处拿到的fullState 和 rcu，依然具有依赖收集能力
+  const { settings: { fullState, rcu } } = useModelWithSetup(setup)
+}
+```
+
 #### 2021-02-10
 2.13.1 发布
 - feature: 支持`useConcent`和`register`传入`cuSpec`参数来定义实例计算函数对象
