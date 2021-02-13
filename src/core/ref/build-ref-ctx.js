@@ -6,7 +6,7 @@ import {
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
 import * as util from '../../support/util';
-import { INAJ, UNSTART, START } from '../../support/priv-constant';
+import { INAJ, UNSTART, START, FN, OBJ } from '../../support/priv-constant';
 import * as ev from '../event';
 import * as hf from '../state/handler-factory';
 import changeRefState from '../state/change-ref-state';
@@ -196,10 +196,11 @@ function bindSyncApis(ref, ctx, liteLevel) {
   if (liteLevel > 2) { // level 3, assign async api
     const cachedBoundFns = {};
 
-    const doSync = (e, val, rkey, delay, type) => {
+    const doSync = (type, e, val, rkey, delay) => {
       if (typeof e === 'string') {
         const valType = typeof val;
-        if (isValueNotNull(val) && (valType === 'object' || valType === 'function')) {
+        // now val is syncCb
+        if (isValueNotNull(val) && (valType === OBJ || valType === FN)) {
           return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
         }
 
@@ -216,10 +217,22 @@ function bindSyncApis(ref, ctx, liteLevel) {
       __sync({ type: 'val' }, ref, e);
     };
 
-    ctx.sync = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'val');
-    ctx.syncBool = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'bool');
-    ctx.syncInt = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'int');
-    ctx.syncAs = (e, val, rkey = '', delay = -1) => doSync(e, val, rkey, delay, 'as');
+    // syncer series
+    const makeTrap = (type) => ({
+      get(target, key) {
+        if (util.isKeyValid(target, key)) return doSync(type, key);
+        return util.noop;
+      },
+    });
+    ctx.syncer = new Proxy(ctx.state, makeTrap('val'));
+    ctx.syncerOfBool = new Proxy(ctx.state, makeTrap('bool'));
+    ctx.sybo = ctx.syncerOfBool; // alias of syncerOfBool
+
+    // sync series
+    ctx.sync = (e, val, rkey = '', delay = -1) => doSync('val', e, val, rkey, delay);
+    ctx.syncBool = (e, val, rkey = '', delay = -1) => doSync('bool', e, val, rkey, delay);
+    ctx.syncInt = (e, val, rkey = '', delay = -1) => doSync('int', e, val, rkey, delay);
+    ctx.syncAs = (e, val, rkey = '', delay = -1) => doSync('as', e, val, rkey, delay);
 
     ctx.set = (ccsync, val, rkey = '', delay = -1) => {
       __sync({ [CCSYNC_KEY]: ccsync, type: 'val', val, delay, rkey }, ref);

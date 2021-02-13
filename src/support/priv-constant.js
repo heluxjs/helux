@@ -8,6 +8,8 @@ export const END = '2';
 
 export const FN = 'function';
 
+export const OBJ = 'object';
+
 export const INAF = `is not a ${FN}`;
 
 export const INAJ = 'is not a plain json object!';

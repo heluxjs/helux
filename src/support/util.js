@@ -85,6 +85,10 @@ export function isEmptyVal(val) {
   return !val && val !== 0;
 }
 
+export function isKeyValid(obj, key) {
+  return typeof key !== "symbol" && Object.prototype.hasOwnProperty.call(obj, key)
+}
+
 // renderKey 可能是 IDispatchOptions
 export function extractRenderKey(renderKey) {
   const getRkey = (key) => {

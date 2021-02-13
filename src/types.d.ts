@@ -83,6 +83,11 @@ export interface IAnyFnReturnObj {
 }
 export interface IAnyFnInObj { [key: string]: IAnyFn }
 
+// let user export syncer new type when user define private state
+export type Syncer<FullState extends IAnyObj> = { [key in keyof FullState]: IAnyFn };
+// let user export syncerOfBool new type when user define private state
+export type SyncerOfBool<FullState extends IAnyObj> = { [key in keyof GetBoolKeys<FullState>]: IAnyFn };
+
 interface IComputedFnDesc<Fn extends typeof computedFn> {
   fn: Fn;
   sort?: number;
@@ -515,8 +520,8 @@ export interface ICtxBase {
   readonly mapped: IAnyObj;
   readonly stateKeys: string[];
 
-  extra: any;
-  staticExtra: any;
+  readonly extra: any;
+  readonly staticExtra: any;
   readonly state: any;
   readonly unProxyState: any;
   readonly prevState: any;
@@ -541,49 +546,53 @@ export interface ICtxBase {
   readonly cr: any; // alias of connectedReducer
   readonly r: any; // alias of reducer
 
-  computed: typeof refCtxComputed;
-  watch: typeof refCtxWatch;
-  effect: typeof refCtxEffect;
-  effectProps: typeof refCtxEffectProps;
-  execute: (handler: IAnyFnPromise) => void;
+  readonly computed: typeof refCtxComputed;
+  readonly watch: typeof refCtxWatch;
+  readonly effect: typeof refCtxEffect;
+  readonly effectProps: typeof refCtxEffectProps;
+  readonly execute: (handler: IAnyFnPromise) => void;
 
-  on: typeof refCtxOn;
-  emit: typeof refCtxEmit;
-  off: typeof refCtxOff;
+  readonly on: typeof refCtxOn;
+  readonly emit: typeof refCtxEmit;
+  readonly off: typeof refCtxOff;
 
-  dispatch: typeof refCtxDispatch;
-  dispatchLazy: typeof refCtxDispatch;
-  dispatchSilent: typeof refCtxDispatch;
-  lazyDispatch: typeof refCtxDispatch;
-  silentDispatch: typeof refCtxDispatch;
+  readonly dispatch: typeof refCtxDispatch;
+  readonly dispatchLazy: typeof refCtxDispatch;
+  readonly dispatchSilent: typeof refCtxDispatch;
+  readonly lazyDispatch: typeof refCtxDispatch;
+  readonly silentDispatch: typeof refCtxDispatch;
 
-  getWatchedKeys: () => string[];
-  getConnectWatchedKeys: typeof refCtxGetConnectWatchedKeys;
+  readonly getWatchedKeys: () => string[];
+  readonly getConnectWatchedKeys: typeof refCtxGetConnectWatchedKeys;
 
-  invoke: typeof refCtxInvoke;
-  invokeLazy: typeof refCtxInvoke;
-  invokeSilent: typeof refCtxInvoke;
-  lazyInvoke: typeof refCtxInvoke;
-  silentInvoke: typeof refCtxInvoke;
+  readonly invoke: typeof refCtxInvoke;
+  readonly invokeLazy: typeof refCtxInvoke;
+  readonly invokeSilent: typeof refCtxInvoke;
+  readonly lazyInvoke: typeof refCtxInvoke;
+  readonly silentInvoke: typeof refCtxInvoke;
 
-  reactSetState: <P, S, K extends keyof S>(
+  readonly reactSetState: <P, S, K extends keyof S>(
     state: ((prevState: Readonly<S>, props: Readonly<P>) => (Pick<S, K> | S | null)) | (Pick<S, K> | S | null),
     callback?: () => void
   ) => void;
-  reactForceUpdate: (callback?: () => void) => void;
-  initState: typeof refCtxInitState;
-  setState: IAnyFn;
-  refs: { [key: string]: { current: any } };
-  useRef: (refName: string) => any;//for class return ref=>{...}, for function return hookRef
-  forceUpdate: typeof refCtxForceUpdate;
-  setGlobalState: typeof refCtxSetGlobalState;
-  setModuleState: typeof refCtxSetModuleState;
-  sync: typeof refCtxSync;
-  syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: RenderKey, delay?: string) => IAnyFn;
-  syncInt: (string: string, value?: typeof syncCb | number, renderKey?: RenderKey, delay?: string) => IAnyFn;
-  syncAs: (string: string, value?: typeof asCb | any, renderKey?: RenderKey, delay?: string) => any;
-  set: (string: string, value: any, renderKey?: RenderKey, delay?: string) => void;
-  setBool: (string: string, renderKey?: RenderKey, delay?: string) => void;
+  readonly reactForceUpdate: (callback?: () => void) => void;
+  readonly initState: typeof refCtxInitState;
+  readonly setState: IAnyFn;
+  readonly refs: { [key: string]: { current: any } };
+  readonly useRef: (refName: string) => any; // return ref=>{...} for class, return hookRef for function
+  readonly forceUpdate: typeof refCtxForceUpdate;
+  readonly setGlobalState: typeof refCtxSetGlobalState;
+  readonly setModuleState: typeof refCtxSetModuleState;
+  readonly sync: typeof refCtxSync;
+  readonly syncer: any;
+  readonly syncerOfBool: any;
+  /** alias of  syncerOfBool */
+  readonly sybo: any;
+  readonly syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: RenderKey, delay?: string) => IAnyFn;
+  readonly syncInt: (string: string, value?: typeof syncCb | number, renderKey?: RenderKey, delay?: string) => IAnyFn;
+  readonly syncAs: (string: string, value?: typeof asCb | any, renderKey?: RenderKey, delay?: string) => any;
+  readonly set: (string: string, value: any, renderKey?: RenderKey, delay?: string) => void;
+  readonly setBool: (string: string, renderKey?: RenderKey, delay?: string) => void;
   readonly settings: IAnyObj;
 }
 
@@ -634,8 +643,8 @@ export interface IRefCtx<
   readonly prevProps: Props;
   readonly state: PrivState & ModuleState;
   readonly unProxyState: PrivState & ModuleState;
-  extra: ExtraTypes[0];
-  staticExtra: ExtraTypes[1] extends undefined ? any : ExtraTypes[1];
+  readonly extra: ExtraTypes[0];
+  readonly staticExtra: ExtraTypes[1] extends undefined ? any : ExtraTypes[1];
   readonly prevState: PrivState & ModuleState;
   readonly moduleState: ModuleState;
   readonly moduleComputed: ModuleComputed;
@@ -651,8 +660,12 @@ export interface IRefCtx<
   readonly connectedReducer: ConnectedReducer;
   readonly cr: ConnectedReducer;// alias of connectedReducer
   readonly connectedComputed: ConnectedComputed;
-  initState: InitState<ModuleState>;
-  setState: RefCtxSetState<ModuleState>;
+  readonly initState: InitState<ModuleState>;
+  readonly setState: RefCtxSetState<ModuleState>;
+  readonly syncer: { [key in keyof ModuleState]: IAnyFn };
+  readonly syncerOfBool: { [key in keyof PickBool<ModuleState>]: IAnyFn };
+  /** alias of syncerOfBool  */
+  readonly sybo: { [key in keyof PickBool<ModuleState>]: IAnyFn };
 }
 
 export interface IRefCtxWithRoot<
@@ -754,6 +767,10 @@ export interface IRefCtxConn<
   {}, GetConnState<Mods, Conn>, GetConnReducer<Mods, Conn>, GetConnComputed<Mods, Conn>, [Extra]
   > { }
 
+// !!! only extract boolean value type's keys
+type GetBoolKeys<T extends IAnyObj> = { [K in keyof T]: T[K] extends boolean ? K : never }[keyof T];
+type PickBool<T extends IAnyObj> = Pick<T, GetBoolKeys<T>>;
+
 /**
  *  =================================
  *   ICtx series start! because ICtx has strict type check, so start with RootState RootReducer RootComputed generic type
@@ -782,10 +799,14 @@ export interface ICtx
   readonly prevProps: Props;
   readonly globalState: RootState[MODULE_GLOBAL];
   readonly globalComputed: RootCu[MODULE_GLOBAL];
-  extra: ExtraType[0];
-  staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
-  initState: InitState<RootState[ModuleName]>;
-  setState: RefCtxSetState<RootState[ModuleName]>;
+  readonly extra: ExtraType[0];
+  readonly staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
+  readonly initState: InitState<RootState[ModuleName]>;
+  readonly setState: RefCtxSetState<RootState[ModuleName]>;
+  readonly syncer: { [key in keyof RootState[ModuleName]]: IAnyFn };
+  readonly syncerOfBool: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
+  /** alias of syncerOfBool */
+  readonly sybo: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
   readonly state: RootState[ModuleName] & PrivState;
   readonly unProxyState: RootState[ModuleName] & PrivState;
   readonly prevState: RootState[ModuleName] & PrivState;

@@ -1,6 +1,4 @@
-const isKeyValid = (obj, key) => {
-  return typeof key !== "symbol" && Object.prototype.hasOwnProperty.call(obj, key)
-}
+import { isKeyValid } from '../../support/util';
 
 /**
  * 用于传递给 computed 回调收集相关依赖
