@@ -1,3 +1,34 @@
+#### 2021-02-13
+2.13.6 发布
+- feature: 新增`syncer`接口，在ts项目里可以替代`sync`更友好的同步值到`moduleState`里
+```jsx
+function Comp(){
+  const { state, syncer, sync } = useModel();
+  return (
+    <div>
+      <span>by sync</span>
+      <input value={state.name} onChange={sync('name')} />
+      <span>by syncer</span>
+      <input value={state.name} onChange={syncer.name} />
+    </div>
+  );
+}
+```
+- feature: 新增`syncerOfBool`接口(别名`sybo`)，在ts项目里可以替代`syncBool`更友好的切换`moduleState`里的布尔值
+```jsx
+function Comp(){
+  const { state, syncBool, sybo } = useModel();
+  return (
+    <div>
+      <span>by syncBool</span>
+      <input value={state.isOk} onChange={syncBool('isOk')} />
+      <span>by sybo, ts环境里此处会之提示布尔型值的key</span>
+      <input value={state.name} onChange={sybo.isOk} />
+    </div>
+  );
+}
+```
+
 #### 2021-02-12
 2.13.4 发布
 - feature: 协同`concent-pro`，提供`ctx.computed`和`ctx.initState`返回值，提高ts类型推导友好度。

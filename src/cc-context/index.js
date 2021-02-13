@@ -261,7 +261,7 @@ const ccContext = {
   pluginNameMap: {},
   permanentDispatcher: null,
   localStorage: null,
-  recoverRefState: () => { },
+  recoverRefState: util.noop,
   getModuleStateKeys: (m) => ccContext.moduleName2stateKeys[m],
 }
 
