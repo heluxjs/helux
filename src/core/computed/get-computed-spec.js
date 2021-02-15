@@ -1,5 +1,6 @@
+import { okeys } from '../../support/util';
 
 export default function (computedFns, module) {
-  const hasFn = Object.keys(computedFns).length > 0;
+  const hasFn = okeys(computedFns).length > 0;
   return { computedFns, module, hasFn };
 }

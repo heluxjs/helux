@@ -266,7 +266,7 @@ export function safeGetThenNoDupPush(object, key, strItem) {
 }
 
 export function safeAssignObjectValue(assignTo, assignFrom) {
-  Object.keys(assignFrom).forEach(key => {
+  okeys(assignFrom).forEach(key => {
     assignTo[key] = assignFrom[key];
   });
 }
