@@ -21,7 +21,7 @@ const config = {
     format: 'umd',
     name: 'concent',
     globals: {
-      //avoid (!) Missing global variable name
+      // avoid (!) Missing global variable name
       react: 'React',
       'react-dom': 'ReactDOM',
     }

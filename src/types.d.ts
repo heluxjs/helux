@@ -1134,7 +1134,7 @@ export interface RunOptions {
    * it means no matter state changed or not, if a ref call setState or mr.{method}
    * it will always been rendered
    */
-  alwaysRenderCaller: boolean;
+  alwaysRenderCaller?: boolean;
   computedCompare?: boolean; // default is false, trigger computed if set
   watchCompare?: boolean; // default is false, trigger watch if set
   watchImmediate?: boolean; // default is false
