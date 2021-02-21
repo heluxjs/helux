@@ -155,13 +155,16 @@ type RenderKey = string | number | Array<string | number>;
 
 export interface IDispatchOptions {
   /**
-   * force update module state, bydefaut is false
+   * force update module state no matter state changed or not, bydefaut is false
    */
-  force: boolean;
+  force?: boolean;
   silent?: boolean;
   lazy?: boolean;
   renderKey?: RenderKey;
-  delay?: number;// pick this delay first if user pass
+  /**
+   * delay broadcast state to other refs
+   */
+  delay?: number;
 }
 
 export interface ReducerCallerParams {
