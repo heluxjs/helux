@@ -1,7 +1,7 @@
 /** @typedef {import('../../types-inner').IRefCtx} Ctx */
 import {
   okeys, safeGet, safeGetArray, makeError, verboseInfo, isPJO,
-  makeCuDepDesc, safeGetThenNoDupPush, makeFnDesc,
+  makeCuDepDesc, safeGetThenNoDupPush, makeFnDesc, isFn,
 } from '../../support/util';
 import { ERR, CATE_REF, FN_CU } from '../../support/constant';
 import { FN } from '../../support/priv-constant';
@@ -87,14 +87,15 @@ function _parseDescObj(cate, confMeta, descObj) {
 
   okeys(descObj).forEach((retKey) => {
     const val = descObj[retKey];
-    const vType = typeof val;
 
     let targetItem = val;
-    if (vType === FN) {
+    if (isFn(val)) {
       targetItem = { fn: val };
     }
 
-    if (isPJO(targetItem)) {
+    // 有可能是空模块，如未写任何内容的computed.js文件，babel编译后为 { default: {} }
+    // 所以此处需进一步判断 targetItem.fn
+    if (isPJO(targetItem) && isFn(targetItem.fn)) {
       const { fn, immediate = watchImmediate, compare = defaultCompare, lazy, retKeyDep = true } = targetItem;
 
       // 确保用户显示的传递null、undefined、0、都置为依赖收集状态
@@ -104,7 +105,7 @@ function _parseDescObj(cate, confMeta, descObj) {
       const sort = targetItem.sort || sortFactor++;
 
       const fnUid = uuid('mark');
-      
+
       if (depKeys === '*' || depKeys === '-') {
         // 处于依赖收集，且用户没有显式的通过设置retKeyDep为false来关闭同名依赖规则时，会自动设置同名依赖
         const mapSameName = depKeys === '-' && retKeyDep;
@@ -135,7 +136,7 @@ function _parseDescObj(cate, confMeta, descObj) {
           depKeys.forEach(depKey => {
             // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为，映射同名依赖仅发生在传入retKey的时候
             // consume depKey is stateKey
-            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey); 
+            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey);
 
             // ok: retKey: 'xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2'], 
             //     some stateKey belong to foo, some belong to bar
@@ -153,7 +154,7 @@ function _parseDescObj(cate, confMeta, descObj) {
             const depKeys = safeGetArray(module2depKeys, module);
             if (!isStateKey) {
               throw new Error(`depKey[${depKey}] invalid, module[${module}] doesn't include its stateKey[${pureKey}]`);
-            }else{
+            } else {
               // 当一个实例里 ctx.computed ctx.watch 的depKeys里显示的标记了依赖时
               // 在这里需要立即记录依赖了
               _mapIns(confMeta, module, pureKey);
@@ -238,11 +239,11 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
     retKey2lazy[retKey] = lazy;
     moduleDepDesc.fnCount++;
   }
-  
+
   if (cate === CATE_REF) {
     confMeta.retKeyFns[retKey] = retKey2fn[retKey];
   }
-  
+
   const refCtx = confMeta.refCtx;
   if (refCtx) {
     if (confMeta.type === 'computed') refCtx.hasComputedFn = true;
