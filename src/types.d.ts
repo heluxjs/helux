@@ -188,12 +188,13 @@ type ReducerCallerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
 ) => ReducerCallerParams : unknown;
 // ) => ReducerCallerParams<Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0]> : unknown;
 
-export type ReducerType<T extends IAnyObj> = T['setState'] extends Function ? {
+export type ReducerType<T extends IAnyObj, S extends IAnyObj = IAnyObj> = T['setState'] extends Function ? {
   // readonly [K in keyof T]: T[K] extends IAnyFn ? (payload: Parameters<T[K]>[0]) => Promise<ReturnType<T[K]>> : unknown;
   readonly [K in keyof T]: ReducerMethod<T, K>;
-} : {
-  readonly [K in keyof T]: ReducerMethod<T, K>;
-} & { setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => Promise<P> }
+} : (
+    { readonly [K in keyof T]: ReducerMethod<T, K>; }
+    & { setState: <P extends Partial<S> = {}>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => Promise<P> }
+  )
 
 export type ReducerCallerType<T extends IAnyObj> = T['setState'] extends Function ? {
   readonly [K in keyof T]: ReducerCallerMethod<T, K>;
@@ -700,7 +701,8 @@ export interface IRefCtxWithRoot<
 
 
 export interface ModuleDesc {
-  state: IAnyObj;
+  // most time you use define state as IAnyFnReturnObj, then it can been cloned anytime
+  state: IAnyObj | IAnyFnReturnObj;
   reducer?: IAnyFnInObj;
   computed?: { [key: string]: IAnyFn | IComputedFnSimpleDesc };
   ghosts?: readonly string[];
@@ -712,7 +714,7 @@ interface RootModule {
 
 type GetSubType<T, K> = K extends keyof T ? T[K] : {};
 type GetSubArrType<T, K> = K extends keyof T ? T[K] : [];
-type GetSubRdType<M extends ModuleDesc> = ReducerType<GetSubType<M, 'reducer'>>;
+type GetSubRdType<M extends ModuleDesc> = ReducerType<GetSubType<M, 'reducer'>, StateType<M['state']>>;
 type GetSubRdCallerType<M extends ModuleDesc> = ReducerCallerType<GetSubType<M, 'reducer'>>;
 type GetSubRdGhostType<M extends ModuleDesc> = ReducerGhostType<GetSubArrType<M, 'ghosts'>, GetSubRdType<M>>;
 type GetSubCuType<M extends ModuleDesc> = ComputedValType<GetSubType<M, 'computed'>>;
@@ -721,7 +723,7 @@ type GetConnState<Mods extends RootModule, Conn extends keyof Mods> = {
   [key in Conn]: StateType<Mods[key]["state"]>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 type GetConnReducer<Mods extends RootModule, Conn extends keyof Mods> = {
-  [key in Conn]: ReducerType<Mods[key]["reducer"]>
+  [key in Conn]: ReducerType<Mods[key]["reducer"], StateType<Mods[key]['state']>>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 type GetConnComputed<Mods extends RootModule, Conn extends keyof Mods> = {
   [key in Conn]: ComputedValType<Mods[key]["computed"]>
@@ -1580,7 +1582,7 @@ export type GetRootState<Models extends { [key: string]: ModuleConfig }> = {
 
 export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
   [key in keyof Models]: "reducer" extends keyof Models[key] ?
-  (Models[key]["reducer"] extends IAnyObj ? ReducerType<Models[key]["reducer"]> : {})
+  (Models[key]["reducer"] extends IAnyObj ? ReducerType<Models[key]["reducer"], StateType<Models[key]['state']>> : {})
   : {};
 }
   & { [cst.MODULE_VOID]: {} }
