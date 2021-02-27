@@ -1,7 +1,7 @@
 /** @typedef {import('../../types-inner').IRefCtx} ICtx */
 import {
   MODULE_GLOBAL, ERR, CCSYNC_KEY,
-  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK,
+  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
@@ -32,8 +32,13 @@ const {
 
 let idSeq = 0;
 function getEId() {
-  idSeq++;
+  idSeq += 1;
   return Symbol(`__autoGen_${idSeq}__`);
+}
+let fnKey = 0;
+function getFnKey() {
+  fnKey += 1;
+  return `${fnKey}`;
 }
 
 const noop = () => { };
@@ -162,7 +167,10 @@ function bindInitStateHandler(ref, ctx, registryState, refStoredState, mstate, m
     ctx.prevState = Object.assign({}, newRefState);
     ctx.unProxyState = newRefState;
     ref.state = Object.assign(ctx.state, newRefState);
-    return ctx.state;
+    // 扩展私有属性后，type.d.ts里会自动计算新的fullState，
+    // 这里直接返回ctx, 但类型文件仅描述了可解构使用的有 state、setState、computed、watch 四个属性
+    // 导出这四个属性可方便直接使用推导出的合并类型
+    return ctx;
   };
 }
 
@@ -264,6 +272,28 @@ function bindEventApis(ctx, liteLevel, ccUniqueKey) {
   }
 }
 
+function _makeCuWaDesc(moduleName, fnKeyOrDesc, cb, cbOptions) {
+  const newDesc = {};
+  const makeFnDesc = (fn, cbOptions = {}) => {
+    const fnDesc = util.isObject(fn) ? fn : { fn };
+    // 因为加上 / 后，cb的state类型会和模块相关了，types文件目前不方便推导含 / 的cb参数类型
+    // 所以types文件里不允许传递 allowSlash 标记，让用户定义的retKey包含 / 会报运行时错误
+    // 同时额外提供的 watchModule方法和 computedModule 方法需要用到 / 携带模块的特性
+    // 故需内部放过不允许key包含slash的校验，所以这里加上 allowSlash 标记
+    let opts = {};
+    if (cbOptions) opts = util.isObject(cbOptions) ? cbOptions : { depKeys: cbOptions };
+    return Object.assign({ allowSlash: true, depKeyModule: moduleName }, opts, fnDesc);
+  };
+
+  if (typeof fnKeyOrDesc === 'string') {
+    newDesc[`${moduleName}/${fnKeyOrDesc}`] = makeFnDesc(cb, cbOptions);
+  } else if (util.isObject(fnKeyOrDesc)) {
+    util.okeys(fnKeyOrDesc).forEach(key => {
+      newDesc[`${moduleName}/${key}`] = makeFnDesc(fnKeyOrDesc[key]);
+    });
+  }
+  return newDesc;
+}
 
 function bindEnhanceApis(ctx, liteLevel, stateModule) {
   const effectItems = [], effectPropsItems = []; // {fn:function, status:0, eId:'', immediate:true}
@@ -274,6 +304,18 @@ function bindEnhanceApis(ctx, liteLevel, stateModule) {
     ctx.execute = handler => ctx.execute = handler;
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
+    // 方便type文件定义类型时能够推导出cb的参数类型为已连接的模块状态类型
+    ctx.watchModule = (moduleName, cb, cbOptions = {}) => {
+      if (util.isFn(cb)) {
+        ctx.watch(_makeCuWaDesc(moduleName, getFnKey(), cb, cbOptions));
+      } else {
+        ctx.watch(_makeCuWaDesc(moduleName, cb));
+      }
+    };
+    // 方便type文件定义类型时能够推导出cb的参数类型为已连接的模块状态类型
+    ctx.computedModule = (moduleName, retKey, cb, cbOptions) => {
+      return ctx.computed(_makeCuWaDesc(moduleName, retKey, cb, cbOptions));
+    };
 
     const makeEffectHandler = (targetEffectItems, isProp) => (fn, depKeysOrOpt, compare, immediate = true) => {
       if (!util.isFn(fn)) throw new Error(`${eType('first')} function`);

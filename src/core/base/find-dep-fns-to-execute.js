@@ -74,7 +74,7 @@ function setStateKeyRetKeysMap(refCtx, sourceType, fnType, stateModule, retKey, 
 
       if (!stateKeys.includes(sKey)) stateKeys.push(sKey);
     });
-  }
+  };
 
   if (isKeysDep) {// keys is depKeys
     updateRelationship(keys);
@@ -121,10 +121,10 @@ const STOP_FN = Symbol('sf');
 
 // fnType: computed watch
 // sourceType: module ref
-// initDeltaCommittedState 会在整个过程里收集所有的提交状态
+// initialDeltaCommittedState 会在整个过程里收集所有的提交状态
 export default function executeDepFns(
   ref = {}, stateModule, refModule, oldState, finder,
-  committedState, initialNewState, initDeltaCommittedState, callInfo, isFirstCall,
+  committedState, initialNewState, initialDeltaCommittedState, callInfo, isFirstCall,
   fnType, sourceType, computedContainer, mergeToDelta = true
 ) {
   const refCtx = ref.ctx;
@@ -167,7 +167,7 @@ export default function executeDepFns(
         // computedContainer只是一个携带defineProperty的计算结果收集容器，没有收集依赖行为
         cuVal: computedContainer,
         committedState: curStateForComputeFn,
-        deltaCommittedState: initDeltaCommittedState,
+        deltaCommittedState: initialDeltaCommittedState,
         stateModule, refModule, oldState, refCtx,
         setInitialVal: () => {
           beforeMountFlag && justWarning(`non async ${keyInfo} call setInitialVal is unnecessary`);
@@ -279,17 +279,17 @@ export default function executeDepFns(
           }
         }
       } else { // watch
-        let tmpInitNewState = initialNewState;
+        let tmpInitialNewState = initialNewState;
         let tmpOldState = oldState;
 
         // 首次触发watch时，才传递ob对象，用于收集依赖
         if (needCollectDep) {
-          tmpInitNewState = makeCuObState(initialNewState, collectedDepKeys);
-          //new 和 old是同一个对象，方便用于收集depKeys
-          tmpOldState = tmpInitNewState;
+          tmpInitialNewState = makeCuObState(initialNewState, collectedDepKeys);
+          // new 和 old是同一个对象，方便用于收集depKeys
+          tmpOldState = tmpInitialNewState;
         }
 
-        fn(tmpInitNewState, tmpOldState, fnCtx);
+        fn(tmpInitialNewState, tmpOldState, fnCtx);
 
         // 首次触发watch时, 才记录依赖
         if (needCollectDep) {
@@ -302,7 +302,6 @@ export default function executeDepFns(
         }
       }
 
-
       // refCompute&refWatch 里获取state、moduleState、connectedState的值收集到的depKeys要记录为ref的静态依赖
       if (needCollectDep && sourceType === CATE_REF) {
         collectedDepKeys.forEach(key => refCtx.__$$staticWaKeys[makeWaKey(stateModule, key)] = 1);
@@ -310,8 +309,8 @@ export default function executeDepFns(
         // 逻辑在updateDep里判断__$$isBM来确定是不是首次触发
       }
 
-      // computedContainer对于module computed fn里调用committedCu，是moduleComputed结果容器，
-      // 对于ref computed fn里调用committedCu来说，是refComputed结果容器
+      // 对于模块计算过程，fn里调用committedCu，computedContainer是moduleComputed结果容器，
+      // 对于实例计算过程，fn里调用committedCu来说，computedContainer是refComputed结果容器
       // 每一个retKey返回的committedCu都及时处理掉，因为下面setStateKeyRetKeysMap需要对此时的retKey写依赖
       const committedCuRet = getRetKeyCu();
 
@@ -360,11 +359,11 @@ export default function executeDepFns(
 
         if (mergeToDelta) {
           Object.assign(initialNewState, curStateForComputeFn);
-          Object.assign(initDeltaCommittedState, curStateForComputeFn);
+          Object.assign(initialDeltaCommittedState, curStateForComputeFn);
         } else {
           // 强行置为null，结束while循环  
           // mergeToDelta为false表示这是来自connectedRefs触发的 cu 或者 wa 函数
-          // 此时传入的 initDeltaCommittedState 是模块state
+          // 此时传入的 initialDeltaCommittedState 是模块state
           // 但是实例里 cu 或 wa 函数只能commit private state
           // 收集到 committedStateInWhile 后，在外面单独触发新的 computedForRef watchForRef过程
           curStateForComputeFn = null;
@@ -403,7 +402,7 @@ export default function executeDepFns(
           // 一轮watch函数执行结束，去触发对应的computed计算
           const { hasDelta, newCommittedState } = executeDepFns(
             ref, stateModule, refModule, oldState, finder,
-            partialState, initialNewState, initDeltaCommittedState, callInfo,
+            partialState, initialNewState, initialDeltaCommittedState, callInfo,
             false, // 再次由watch发起的computed函数查找调用，irFirstCall，一定是false
             FN_CU, sourceType, computedContainer
           );

@@ -7,9 +7,10 @@ import { ERR, CATE_REF, FN_CU } from '../../support/constant';
 import { FN } from '../../support/priv-constant';
 import ccContext from '../../cc-context';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
+import makeCuObState from '../computed/make-cu-ob-state';
 import uuid from './uuid';
 
-const { moduleName2stateKeys, runtimeVar, runtimeHandler } = ccContext;
+const { moduleName2stateKeys, runtimeVar, runtimeHandler, store } = ccContext;
 let sortFactor = 1;
 
 /**
@@ -96,10 +97,25 @@ function _parseDescObj(cate, confMeta, descObj) {
     // 有可能是空模块，如未写任何内容的computed.js文件，babel编译后为 { default: {} }
     // 所以此处需进一步判断 targetItem.fn
     if (isPJO(targetItem) && isFn(targetItem.fn)) {
-      const { fn, immediate = watchImmediate, compare = defaultCompare, lazy, retKeyDep = true } = targetItem;
+      const {
+        fn, immediate = watchImmediate, compare = defaultCompare, lazy, retKeyDep = true,
+        // 内部传递的标记，watchModule computedModule调用时会传递
+        allowSlash, depKeyModule,
+      } = targetItem;
 
       // 确保用户显示的传递null、undefined、0、都置为依赖收集状态
-      const depKeys = targetItem.depKeys || '-';
+      let depKeys = targetItem.depKeys || '-';
+
+      // 作为动态的依赖收集函数，作用于watch函数
+      if (isFn(depKeys)) {
+        // ctx.watchModule 在内部会显式的传递depKeyModule
+        // 而ctx.watch 是不传递 depKeyModule的，所以此处这样写
+        const targetDepModule = depKeyModule || callerModule;
+        const moduleState = store.getState(targetDepModule);
+        const collectedDepKeys = [];
+        depKeys(makeCuObState(moduleState, collectedDepKeys));
+        depKeys = collectedDepKeys.map(key => `${targetDepModule}/${key}`);
+      }
 
       // if user don't pass sort explicitly, computed fn will been called orderly by sortFactor
       const sort = targetItem.sort || sortFactor++;
@@ -109,7 +125,7 @@ function _parseDescObj(cate, confMeta, descObj) {
       if (depKeys === '*' || depKeys === '-') {
         // 处于依赖收集，且用户没有显式的通过设置retKeyDep为false来关闭同名依赖规则时，会自动设置同名依赖
         const mapSameName = depKeys === '-' && retKeyDep;
-        const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey, mapSameName);
+        const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey, mapSameName, allowSlash);
 
         const err = _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
         if (err) return tryHandleWarning(err);
@@ -118,14 +134,14 @@ function _parseDescObj(cate, confMeta, descObj) {
         _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
       } else {
         if (depKeys.length === 0) {
-          const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey); // consume retKey is stateKey
+          const { pureKey, module } = _resolveKey(confMeta, callerModule, retKey, false, allowSlash); // consume retKey is stateKey
 
           const err = _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
           if (err) return tryHandleWarning(err);
 
           _mapDepDesc(cate, confMeta, module, pureKey, fn, depKeys, immediate, compare, lazy, sort);
         } else { // ['foo/b1', 'bar/b1'] or ['b1', 'b2']
-          const { pureKey, moduleOfKey } = _resolveKey(confMeta, callerModule, retKey);
+          const { pureKey, moduleOfKey } = _resolveKey(confMeta, callerModule, retKey, false, allowSlash);
           const stateKeyModule = moduleOfKey;
           const err = _checkRetKeyDup(cate, confMeta, fnUid, pureKey);
           if (err) return tryHandleWarning(err);
@@ -136,7 +152,7 @@ function _parseDescObj(cate, confMeta, descObj) {
           depKeys.forEach(depKey => {
             // !!!这里只是单纯的解析depKey，不需要有映射同名依赖的行为，映射同名依赖仅发生在传入retKey的时候
             // consume depKey is stateKey
-            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey);
+            const { isStateKey, pureKey, module } = _resolveKey(confMeta, callerModule, depKey, false, allowSlash);
 
             // ok: retKey: 'xxxx' depKeys:['foo/f1', 'foo/f2', 'bar/b1', 'bar/b2'], 
             //     some stateKey belong to foo, some belong to bar
@@ -269,10 +285,13 @@ function _mapDepDesc(cate, confMeta, module, retKey, fn, depKeys, immediate, com
 
 // 分析retKey或者depKey是不是stateKey,
 // 返回的是净化后的key
-function _resolveKey(confMeta, module, retKey, mapSameName = false) {
+function _resolveKey(confMeta, module, retKey, mapSameName = false, allowSlash) {
   let targetModule = module, targetRetKey = retKey, moduleOfKey = '';
 
   if (retKey.includes('/')) {
+    if (allowSlash !== true) {
+      throw new Error(`key[${retKey}] can't contains /, please use (computedModule,watchModule) instead of(computed, watch) if you want to operate another module`);
+    }
     const [_module, _stateKey] = retKey.split('/');
     if (_module) {
       moduleOfKey = _module;

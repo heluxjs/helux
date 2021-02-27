@@ -37,9 +37,13 @@ export function isObject(obj) {
   return str === '[object Object]' || str === '[object Module]';
 }
 
+export function isArray(obj) {
+  return Array.isArray(obj);
+}
+
 // isPJO is short of isPlainJsonObject
 export function isPJO(obj, canBeArray = false) {
-  const isArr = Array.isArray(obj);
+  const isArr = isArray(obj);
   const isObj = isObject(obj);
 
   return canBeArray ? (isArr || isObj) : isObj;
@@ -93,7 +97,7 @@ export function isKeyValid(obj, key) {
 export function extractRenderKey(renderKey) {
   const getRkey = (key) => {
     if (!key && key !== 0) return [];
-    if (Array.isArray(key)) return key;
+    if (isArray(key)) return key;
     return null;
   }
 
@@ -171,8 +175,8 @@ export function ccClassDisplayName(className) {
 
 export function verifyKeys(keys1, keys2) {
   let duplicate = false, notArray = false, keyElementNotString = false;
-  if (!Array.isArray(keys1)) return { duplicate, notArray: true, keyElementNotString };
-  if (!Array.isArray(keys2)) return { duplicate, notArray: true, keyElementNotString };
+  if (!isArray(keys1)) return { duplicate, notArray: true, keyElementNotString };
+  if (!isArray(keys2)) return { duplicate, notArray: true, keyElementNotString };
   const len1 = keys1.length;
   const len2 = keys2.length;
   outLoop: for (let i = 0; i < len1; i++) {
@@ -297,7 +301,7 @@ export function randomNumber(lessThan = 52) {
 // 在 object[key]存在且deepClear为true时，传入的reset会被忽略
 // 传入deepClear是为了保持引用不变
 export function clearObject(object, excludeKeys = [], reset, deepClear = false) {
-  if (Array.isArray(object)) {
+  if (isArray(object)) {
     const retainKeys = [];
     excludeKeys.forEach(key => {
       if (object.includes(key)) retainKeys.push(key);
@@ -384,7 +388,7 @@ export function shallowCopy(oriVal) {
   let newVal = oriVal;
   if (isObject(oriVal)) {
     newVal = { ...oriVal };
-  } else if (Array.isArray(oriVal)) {
+  } else if (isArray(oriVal)) {
     newVal = [...oriVal];
   }
   return newVal;
@@ -536,12 +540,12 @@ export function getValueByKeyPath(obj, keyPath) {
 }
 
 export function isDepKeysValid(depKeys) {
-  return Array.isArray(depKeys) || depKeys === '-' || depKeys === '*';
+  return isFn(depKeys) || isArray(depKeys) || depKeys === '-' || depKeys === '*';
 }
 
 export function checkDepKeys(depKeys) {
   if (depKeys && !isDepKeysValid(depKeys)) {
-    throw new Error(`depKeys must an array , '*' or '-'`);
+    throw new Error(`depKeys must be one of them(array,'*','-',fn)`);
   }
 }
 

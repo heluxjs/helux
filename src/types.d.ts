@@ -1,4 +1,8 @@
-import { Component, ReactNode, ComponentClass, FC } from 'react';
+import React, { Component, ReactNode, ComponentClass, FC } from 'react';
+
+/**
+ * concent types file v2.14.4
+ */
 
 type CC_CLASS = '$$CcClass';
 type CC_HOOK = '$$CcHook';
@@ -72,6 +76,7 @@ export type SigModuleConfigured = CcCst['SIG_MODULE_CONFIGURED'];
 export type SigStateChanged = CcCst['SIG_STATE_CHANGED'];
 
 export interface IAnyObj { [key: string]: any }
+// export type IAnyObj = Record<string, any>;
 export interface IAnyFn {
   (...args: any): any;
 }
@@ -87,6 +92,12 @@ export interface IAnyFnInObj { [key: string]: IAnyFn }
 export type Syncer<FullState extends IAnyObj> = { [key in keyof FullState]: IAnyFn };
 // let user export syncerOfBool new type when user define private state
 export type SyncerOfBool<FullState extends IAnyObj> = { [key in keyof GetBoolKeys<FullState>]: IAnyFn };
+
+declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
+  newState: any,
+  oldState: any,
+  fnCtx: FnCtx,
+): any;
 
 interface IComputedFnDesc<Fn extends typeof computedFn> {
   fn: Fn;
@@ -109,7 +120,10 @@ export interface IReducerFn {
 }
 
 // !!!use infer
-export type ArrItemsType<T extends any[]> = T extends Array<infer E> ? E : never;
+export type ArrItemsType<T> = T extends (any[] | readonly any[]) ? (
+  T extends Array<infer E> ? E : never
+) : any;
+
 
 export type ComputedValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<T[K]> :
@@ -125,7 +139,7 @@ export type ComputedValTypeForFn<Fn extends IAnyFn> = {
 export type SetupFn = (ctx: ICtxBase) => IAnyObj | void;
 export type SettingsType<Fn> = Fn extends SetupFn ?
   (ReturnType<Fn> extends IAnyObj ? ReturnType<Fn> : {}) :
-  {};
+  { a: 1 };
 
 /**
  * inspired by
@@ -188,35 +202,44 @@ type ReducerCallerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
 ) => ReducerCallerParams : unknown;
 // ) => ReducerCallerParams<Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0]> : unknown;
 
-export type ReducerType<T extends IAnyObj, S extends IAnyObj = IAnyObj> = T['setState'] extends Function ? {
-  // readonly [K in keyof T]: T[K] extends IAnyFn ? (payload: Parameters<T[K]>[0]) => Promise<ReturnType<T[K]>> : unknown;
-  readonly [K in keyof T]: ReducerMethod<T, K>;
-} : (
-    { readonly [K in keyof T]: ReducerMethod<T, K>; }
+export type ReducerType<S extends IAnyObj, Rd = IAnyObj> = Rd extends IAnyObj ? (
+  Rd['setState'] extends Function
+  ? { readonly [K in keyof Rd]: ReducerMethod<Rd, K> }
+  : (
+    { readonly [K in keyof Rd]: ReducerMethod<Rd, K>; }
     & { setState: <P extends Partial<S> = {}>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => Promise<P> }
-  )
+  )) : {};
 
-export type ReducerCallerType<T extends IAnyObj> = T['setState'] extends Function ? {
-  readonly [K in keyof T]: ReducerCallerMethod<T, K>;
-} : {
-  readonly [K in keyof T]: ReducerCallerMethod<T, K>;
-} & {
-  setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => {
-    module: string, fnName: 'setState',
-    payload: P, renderKey: any, delay: any,
-  }
-}
+export type ReducerCallerType<T> = T extends IAnyObj ? (
+  T['setState'] extends Function
+  ? { readonly [K in keyof T]: ReducerCallerMethod<T, K> }
+  : (
+    { readonly [K in keyof T]: ReducerCallerMethod<T, K> }
+    & {
+      setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => {
+        module: string, fnName: 'setState',
+        payload: P, renderKey: any, delay: any,
+      }
+    }
+  )) : {};
 
 // attention here omit Ghosts[number]
-export type ReducerGhostType<Ghosts extends readonly string[], Reducer> = { [key in Ghosts[number]]: Omit<Reducer, Ghosts[number]> };
+export type ReducerGhostType<Ghosts, Reducer> = Ghosts extends readonly string[]
+  ? { [key in Ghosts[number]]: Omit<Reducer, Ghosts[number]> }
+  : {};
 
 export interface EvMapBase {
   [key: string]: any[];
 }
 
+/** watch all keys changed */
 export type TStar = '*';
+/** collect key change automatically */
 export type TAuto = '-';
-export type DepKeys = string[] | TStar | TAuto;
+export type DepKeys<State extends IAnyObj = IAnyObj> = Array<keyof State> | TStar | TAuto;
+
+type DepKeyCollector<State> = (state: State) => any;
+export type DepKeysOfWatch<State extends IAnyObj = IAnyObj> = DepKeyCollector<State> | Array<keyof State> | TStar | TAuto;
 
 // type EvSyncReturn = (event: React.ChangeEvent<HTMLInputElement>) => void;
 
@@ -234,11 +257,6 @@ type RefWatchFn<FnCtx extends IFnCtxBase, RefFullState extends IAnyObj = {}> = (
   fnCtx: FnCtx,
 ) => boolean | void;
 
-declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
-  newState: any,
-  oldState: any,
-  fnCtx: FnCtx,
-): any;
 type GetComputedFn<T> = <FnCtx extends IFnCtxBase = IFnCtxBase>(
   newState: any,
   oldState: any,
@@ -254,12 +272,11 @@ interface IDictWithT<T> {
   // [customizedKey2: number]: any;
 }
 
-// make type for empty RootReducer
 export interface IRootBase extends IDict {
   [MODULE_VOID]: any
   $$global: any;
   $$default: any;
-  [customizedKey: string]: any;
+  [customizedModuleKey: string]: any;
 }
 
 type PropKey = string | number | symbol;
@@ -348,117 +365,120 @@ declare function refCtxInvoke<UserFn extends IReducerFn>
 declare function refCtxInvoke<UserFn extends IReducerFn>
   (fn: { module: string, fn: UserFn }, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 
-declare function refCtxSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-declare function refCtxSetState<FullState = {}>(cb: (prevFullState: FullState, props: IAnyObj) => IAnyObj, renderKey?: RenderKeyOrOpts, delay?: number): void;
-// declare function refCtxSetState<FullState = {}>(moduleName: string, state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-
 declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-
 declare function refCtxSetGlobalState<GlobalState = {}>(state: Partial<GlobalState>, cb?: (newFullState: GlobalState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-
-declare function refCtxSetModuleState(moduleName: string, state: IAnyObj, cb?: (newFullState: IAnyObj) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-declare function refCtxSetModuleState<RootState, T extends keyof RootState>(moduleName: T, state: Partial<RootState[T]>, cb?: (newFullState: RootState[T]) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
 declare function refCtxGetConnectWatchedKeys(module: string): string[];
 
-
 declare function reducerSetState<FullState = {}>(state: Partial<FullState>, cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): Promise<IAnyObj | undefined>;
 
-/**
- * <V extends IAnyObj, CuRet, F extends IFnCtxBase = IFnCtxBase>
- * @param retKey 
- * @param fn 
- * @param {DepKeys} depKeys 
- * @param compare 
- * @param sort 
- */
-declare function refCtxComputed(retKey: string, fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number): IAnyObj;
-declare function refCtxComputed(
-  retKey: string,
-  fnDesc: { fn: RefComputedFn<IFnCtxBase, any, IAnyObj>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
-): IAnyObj;
-
-declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number): IAnyObj;
-// (retKey: string, fn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: (keyof RefFullState)[], compare?: boolean): void;
-declare function refCtxComputed<RefFullState, CuRet = any, F extends IFnCtxBase = IFnCtxBase>(
-  retKey: string,
-  fnDesc: { computedFn: RefComputedFn<F, CuRet, RefFullState>, depKeys?: DepKeys, compare?: boolean, sort?: number, retKeyDep?: boolean }
-): IAnyObj;
-
-// !!! 写成  <FnCtx extends IFnCtxBase, FnReturnType>(oldVal: any, newVal: any, fnCtx: FnCtx) => FnReturnType 暂时无法约束返回类型
-// !!! 写成  <IFnCtx extends IFnCtxBase, FnReturnType, ValType>(oldVal: ValType, newVal: ValType, fnCtx: IFnCtxBase) => FnReturnType 暂时无法约束值类型和返回类型
-// 先写为如下方式
-export type MultiComputed = {
-  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: _IFnCtx) => any) | {
-    fn: (oldVal: any, newVal: any, fnCtx: _IFnCtx) => any,
-    depKeys?: DepKeys,
+type ComputeCb<FullState extends IAnyObj = IAnyObj> = (newState: FullState, oldState: FullState, fnCtx: _IFnCtx<FullState>) => any;
+export type MultiComputed<FullState extends IAnyObj = IAnyObj> = {
+  [retKey: string]: ComputeCb<FullState> | {
+    fn: ComputeCb<FullState>,
+    depKeys?: DepKeys<FullState>,
     compare?: boolean,
     sort?: number,
     retKeyDep?: boolean,
   }
+};
+export type MultiComputedFn<State extends IAnyObj = IAnyObj> = (ctx: ICtxBase) => MultiComputed<State>;
+
+interface ComputedCbOptions<State extends IAnyObj = IAnyObj> {
+  depKeys?: DepKeys<State>,
+  compare?: boolean,
+  sort?: number,
+  retKeyDep?: boolean
 }
-export type MultiComputedFn = (ctx: ICtxBase) => MultiComputed;
-declare function refCtxComputed<T extends MultiComputed>(multiComputed: T): ComputedValType<T>;
-declare function refCtxComputed<T extends MultiComputedFn>(multiFn: T): ComputedValTypeForFn<T>;
-
-type VorB = void | boolean;
 /**
- * retKeyDep: default is true, when key is same as state key, it will be a dep
+ * ctx.comptued overloading
+ * define how to compute refComputed
  */
-type DefWatchOptions = { depKeys?: DepKeys, compare?: boolean, immediate?: boolean, sort?: number, retKeyDep?: boolean };
-type DepKeysOrOpts = DepKeys | DefWatchOptions;
+interface RefCtxComputed<State extends IAnyObj = IAnyObj> {
+  <T extends MultiComputed<State>>(multiComputed: T): ComputedValType<T>;
+  <T extends MultiComputedFn<State>>(multiFn: T): ComputedValTypeForFn<T>;
+  <Key extends string, Fn extends ComputeCb<State>>
+    (retKey: Key, fn: Fn, depKeysOrOpts?: DepKeys<State> | ComputedCbOptions<State>): ComputedValType<{ [key in Key]: Fn }>;
+  <Key extends string, Fn extends ComputeCb<State>>
+    (retKey: Key, fnDesc: { fn: Fn } & ComputedCbOptions<State>): ComputedValType<{ [key in Key]: Fn }>;
+}
 
 /**
- * 
- * @param retKey 
- * @param watchFn 
- * @param {DepKeys} depKeys 
- * @param {boolean} compare defalut is true
- * @param {boolean} immediate defalut is false
+ * 不支持 computedModule 传递参数形如 (ctx)=> cuDesc
  */
-declare function refCtxWatch(retKey: string, fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeysOrOpts?: DepKeysOrOpts): void;
-declare function refCtxWatch(retKey: string, fnDesc: { fn: RefWatchFn<IFnCtxBase, IAnyObj>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean, retKeyDep?: boolean }): void;
+interface RefCtxComputedModule<RootState extends IAnyObj = IAnyObj> {
+  <T extends MultiComputed<RootState[M]>, M extends keyof RootState>(moduleName: M, multiComputed: T): ComputedValType<T>;
+  // <T extends MultiComputedFn<RootState[M]>, M extends keyof RootState>(moduleName: M, multiFn: T): ComputedValTypeForFn<T>;
+  <Key extends string, Fn extends ComputeCb<RootState[M]>, M extends keyof RootState>
+    (moduleName: M, retKey: Key, fn: Fn, depKeysOrOpts?: DepKeys<RootState[M]> | ComputedCbOptions<RootState[M]>): ComputedValType<{ [key in Key]: Fn }>;
+  <Key extends string, Fn extends ComputeCb<RootState[M]>, M extends keyof RootState>
+    (moduleName: M, retKey: Key, fnDesc: { fn: Fn } & ComputedCbOptions<RootState[M]>): ComputedValType<{ [key in Key]: Fn }>;
+}
 
-declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fn: RefWatchFn<F, RefFullState>, depKeysOrOpts?: DepKeysOrOpts): void;
-declare function refCtxWatch<RefFullState, F extends IFnCtxBase = IFnCtxBase>
-  (retKey: string, fnDesc: { fn: RefWatchFn<F, RefFullState>, depKeys?: DepKeys, compare?: boolean, immediate?: boolean, retKeyDep?: boolean }): void;
+interface WatchCbOptions<State extends IAnyObj = IAnyObj> {
+  depKeys?: DepKeysOfWatch<State>;
+  /** defalut is true */
+  compare?: boolean;
+  /** defalut is false */
+  immediate?: boolean;
+  sort?: number;
+  /** retKeyDep: default is true, when key is same as state key, it will be a dep */
+  retKeyDep?: boolean;
+}
 
-// !!! 写成  <FnCtx extends IFnCtxBase, ValType>(oldVal: ValType, newVal: ValType, fnCtx: FnCtx) => VorB 暂时无法约束值类型
-// 先写为如下方式
-type MultiWatch = {
-  [retKey: string]: ((oldVal: any, newVal: any, fnCtx: _IFnCtx) => VorB) | {
-    fn: (oldVal: any, newVal: any, fnCtx: _IFnCtx) => VorB,
-    depKeys?: DepKeys,
+type WatchCb<FullState extends IAnyObj = IAnyObj> = (newState: FullState, oldState: FullState, fnCtx: _IFnCtx<FullState>) => void;
+type MultiWatch<FullState extends IAnyObj = IAnyObj> = {
+  [fnKey: string]: WatchCb<FullState> | {
+    fn: WatchCb<FullState>,
+    depKeys?: DepKeys<FullState>,
     compare?: boolean,
     immediate?: boolean,
     retKeyDep?: boolean,
   }
-}
-declare function refCtxWatch(multiWatch: MultiWatch): void;
-declare function refCtxWatch(multiFn: (ctx: ICtxBase) => MultiWatch): void;
+};
+export type MultiWatchFn<FullState extends IAnyObj = IAnyObj> = (ctx: ICtxBase) => MultiWatch<FullState>;
 
-type ClearEffect = IAnyFnPromise | void;
+interface RefCtxWatch<State extends IAnyObj = IAnyObj> {
+  <T extends MultiWatch<State>>(multiWatch: T): void;
+  <T extends MultiWatchFn<State>>(multiWatchFn: T): void;
+  <Key extends string, Fn extends WatchCb<State>>(fnKey: Key, fn: Fn, depKeysOrOpts?: DepKeysOfWatch<State> | WatchCbOptions<State>): void;
+  <Key extends string, Fn extends WatchCb<State>>(fnKey: Key, fnDesc: { fn: Fn } & WatchCbOptions<State>): void;
+}
+
+/**
+ * 不支持 watchModule 传递参数形如 (ctx)=> watchDesc
+ */
+interface RefCtxWatchModule<RootState extends IAnyObj = IAnyObj> {
+  <T extends MultiWatch<RootState[M]>, M extends keyof RootState>(moduleName: M, multiWatch: T): void;
+  // <T extends MultiWatchFn<RootState[M]>, M extends keyof RootState>(moduleName: M, multiWatchFn: T): void;
+  <Fn extends WatchCb<RootState[M]>, M extends keyof RootState>
+    (moduleName: M, fn: Fn, depKeysOrOpts?: DepKeysOfWatch<RootState[M]> | WatchCbOptions<RootState[M]>): void;
+  <Fn extends WatchCb<RootState[M]>, M extends keyof RootState>
+    (moduleName: M, fnDesc: { fn: Fn } & WatchCbOptions<RootState[M]>): void;
+}
+
+type ClearEffect = IAnyFnPromise | IAnyFn | void;
 type EffectDepKeys = string[] | null;
-// immediate is true by default, compare is true by default
-type DepKeysOpt = { depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean };
+interface DepKeysOptions {
+  depKeys?: EffectDepKeys;
+  /** compare is true by default */
+  compare?: boolean;
+  /** immediate is true by default */
+  immediate?: boolean;
+}
 
 // compare default is true, 表示针对object类型的值需不需要比较
 // immediate default is true
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean): void;
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOpt): void;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOptions): void;
 
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOpt): void;
-
-declare function refCtxInitState(state: IAnyObj): IAnyObj;
-declare function refCtxInitState(stateCb: () => IAnyObj): IAnyObj;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOptions): void;
 
 declare function syncCb
   (
@@ -485,7 +505,7 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
   ): any;
 
 declare function refCtxSync(string: string, value?: typeof syncCb | any, renderKey?: RenderKeyOrOpts, delay?: string): IAnyFn | IAnyFn;
-declare function refCtxSync(...args: any[]): any;// 支持dom直接绑sync时ts语法正确 <input data-ccsync="name" onChange={sync} />
+declare function refCtxSync(...args: any[]): any;// 支持dom直接绑sync时ts语法正确 <input data-ccsync='name' onChange={sync} />
 
 //////////////////////////////////////////
 // exposed interface
@@ -550,8 +570,10 @@ export interface ICtxBase {
   readonly cr: any; // alias of connectedReducer
   readonly r: any; // alias of reducer
 
-  readonly computed: typeof refCtxComputed;
-  readonly watch: typeof refCtxWatch;
+  readonly computed: RefCtxComputed<IAnyObj>;
+  readonly computedModule: RefCtxComputedModule<IAnyObj>;
+  readonly watch: RefCtxWatch<IAnyObj>;
+  readonly watchModule: RefCtxWatchModule<IAnyObj>;
   readonly effect: typeof refCtxEffect;
   readonly effectProps: typeof refCtxEffectProps;
   readonly execute: (handler: IAnyFnPromise) => void;
@@ -580,13 +602,13 @@ export interface ICtxBase {
     callback?: () => void
   ) => void;
   readonly reactForceUpdate: (callback?: () => void) => void;
-  readonly initState: typeof refCtxInitState;
-  readonly setState: IAnyFn;
+  readonly initState: RefCtxInitState<any>;
+  readonly setState: RefCtxSetState;
   readonly refs: { [key: string]: { current: any } };
   readonly useRef: (refName: string) => any; // return ref=>{...} for class, return hookRef for function
   readonly forceUpdate: typeof refCtxForceUpdate;
   readonly setGlobalState: typeof refCtxSetGlobalState;
-  readonly setModuleState: typeof refCtxSetModuleState;
+  readonly setModuleState: RefCtxSetModuleState<any>;
   readonly sync: typeof refCtxSync;
   readonly syncer: any;
   readonly syncerOfBool: any;
@@ -599,31 +621,55 @@ export interface ICtxBase {
   readonly setBool: (string: string, renderKey?: RenderKey, delay?: string) => void;
   readonly settings: IAnyObj;
 }
+interface ICtxBaseP<Props extends any> extends ICtxBase {
+  props: Props;
+}
 
-type ExtraType = [any, any];
-// export interface ExtraType<> type ExtraType = [any=any, any=any];
-
-type InitState<ModuleState extends IAnyObj = {}> = <PrivState extends IAnyObj>(state: PrivState | (() => PrivState)) =>
-  Extract<keyof PrivState, keyof ModuleState> extends never ? PrivState & ModuleState : never;
+type RefCtxInitState<ModuleState extends IAnyObj = IAnyObj> = <PrivState extends IAnyObj>(state: PrivState | (() => PrivState)) =>
+  Extract<keyof PrivState, keyof ModuleState> extends never
+  // you must make sure that there is no common keys between privState and moduleState
+  ? {
+    state: PrivState & ModuleState, computed: RefCtxComputed<PrivState & ModuleState>,
+    watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>
+  }
+  : never;
 
 type DecideFullState<T1, T2 extends IAnyObj> = T2['__no_anyobj_passed__'] extends '_nap_' ? T1 : T2;
-type RefCtxSetState<F extends IAnyObj = {}> =
-  // !!! allow user have a change to define fullState type
-  <InF extends IAnyObj = { __no_anyobj_passed__: '_nap_' }>(
-    stateOrUpdater: Partial<DecideFullState<F, InF>> | ((prevFullState: DecideFullState<F, InF>, props: any) => Partial<DecideFullState<F, InF>>),
-    // when arg1 is state, here is cb, otherwise here is renderKey
-    cbOrRenderKey?: ((newFullState: DecideFullState<F, InF>) => void) | RenderKeyOrOpts,
-    // when arg1 is state, here is renderKey, otherwise here is delay
-    renderKeyOrDelay?: RenderKeyOrOpts | number,
-    delay?: number
-  ) => void;
 
 /**
- * IRefCtx series is simple than ICtx series, it is a loose mode check,
- * so it is more easy to use when your coding environment is js^_^
- * IRefCtx is more suitable for ts coding environment!
- * so my suggestion is : when you use js and no d.ts file, try IRefCtx series to mark type for jsdoc, 
- * and when you use ts or have d.ts file in js, consider ICtx series fist!!!!!
+ * ctx.setState overloading
+ */
+interface RefCtxSetState<FullState extends IAnyObj = IAnyObj> {
+  <MergedFullState extends IAnyObj = { __no_anyobj_passed__: '_nap_' }>(
+    state: Partial<DecideFullState<FullState, MergedFullState>>,
+    cb?: (newFullState: DecideFullState<FullState, MergedFullState>) => void | null,
+    renderKey?: RenderKeyOrOpts,
+    delay?: number,
+  ): void;
+  <MergedFullState extends IAnyObj = { __no_anyobj_passed__: '_nap_' }>(
+    updater: (prevFullState: DecideFullState<FullState, MergedFullState>, props: any) => Partial<DecideFullState<FullState, MergedFullState>>,
+    renderKey?: RenderKeyOrOpts,
+    delay?: number,
+  ): void;
+}
+
+interface RefCtxSetModuleState<ModuleState extends IAnyObj = IAnyObj> {
+  (
+    state: Partial<ModuleState>,
+    cb?: (newFullState: ModuleState) => void | null,
+    renderKey?: RenderKeyOrOpts,
+    delay?: number,
+  ): void;
+  (
+    updater: (prevFullState: ModuleState, props: any) => Partial<ModuleState>,
+    renderKey?: RenderKeyOrOpts,
+    delay?: number,
+  ): void;
+}
+
+/**
+ * the difference between IRefCtx and ICtx is that
+ * IRefCtx doesn't need to know RootModule
  */
 export interface IRefCtx<
   Props extends IAnyObj = {},
@@ -664,8 +710,13 @@ export interface IRefCtx<
   readonly connectedReducer: ConnectedReducer;
   readonly cr: ConnectedReducer;// alias of connectedReducer
   readonly connectedComputed: ConnectedComputed;
-  readonly initState: InitState<ModuleState>;
+  readonly computed: RefCtxComputed<PrivState & ModuleState>;
+  readonly computedModule: RefCtxComputedModule;
+  readonly watch: RefCtxWatch<PrivState & ModuleState>;
+  readonly watchModule: RefCtxWatchModule;
+  readonly initState: RefCtxInitState<ModuleState>;
   readonly setState: RefCtxSetState<ModuleState>;
+  readonly setModuleState: RefCtxSetModuleState<ModuleState>;
   readonly syncer: { [key in keyof ModuleState]: IAnyFn };
   readonly syncerOfBool: { [key in keyof PickBool<ModuleState>]: IAnyFn };
   /** alias of syncerOfBool  */
@@ -697,6 +748,7 @@ export interface IRefCtxWithRoot<
   > {
   readonly globalState: GetSubType<GetSubType<RootInfo, 'state'>, MODULE_GLOBAL>;
   readonly globalComputed: ComputedValType<GetSubType<GetSubType<RootInfo, 'computed'>, MODULE_GLOBAL>>;
+  readonly watchModule: RefCtxWatchModule<GetSubType<RootInfo, 'state'>>;
 }
 
 
@@ -714,19 +766,19 @@ interface RootModule {
 
 type GetSubType<T, K> = K extends keyof T ? T[K] : {};
 type GetSubArrType<T, K> = K extends keyof T ? T[K] : [];
-type GetSubRdType<M extends ModuleDesc> = ReducerType<GetSubType<M, 'reducer'>, StateType<M['state']>>;
+type GetSubRdType<M extends ModuleDesc> = ReducerType<StateType<M['state']>, GetSubType<M, 'reducer'>>;
 type GetSubRdCallerType<M extends ModuleDesc> = ReducerCallerType<GetSubType<M, 'reducer'>>;
 type GetSubRdGhostType<M extends ModuleDesc> = ReducerGhostType<GetSubArrType<M, 'ghosts'>, GetSubRdType<M>>;
 type GetSubCuType<M extends ModuleDesc> = ComputedValType<GetSubType<M, 'computed'>>;
 
 type GetConnState<Mods extends RootModule, Conn extends keyof Mods> = {
-  [key in Conn]: StateType<Mods[key]["state"]>
+  [key in Conn]: StateType<Mods[key]['state']>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 type GetConnReducer<Mods extends RootModule, Conn extends keyof Mods> = {
-  [key in Conn]: ReducerType<Mods[key]["reducer"], StateType<Mods[key]['state']>>
+  [key in Conn]: ReducerType<StateType<Mods[key]['state']>, Mods[key]['reducer']>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 type GetConnComputed<Mods extends RootModule, Conn extends keyof Mods> = {
-  [key in Conn]: ComputedValType<Mods[key]["computed"]>
+  [key in Conn]: ComputedValType<Mods[key]['computed']>
 } & (IncludeModelKey<Mods, MODULE_GLOBAL> extends true ? {} : { [key in MODULE_GLOBAL]: {} });
 
 export interface IRefCtxM<
@@ -806,15 +858,20 @@ export interface ICtx
   readonly globalComputed: RootCu[MODULE_GLOBAL];
   readonly extra: ExtraType[0];
   readonly staticExtra: ExtraType[1] extends undefined ? any : ExtraType[1];
-  readonly initState: InitState<RootState[ModuleName]>;
+  readonly computed: RefCtxComputed<PrivState & RootState[ModuleName]>;
+  readonly computedModule: RefCtxComputedModule<RootState>;
+  readonly watch: RefCtxWatch<PrivState & RootState[ModuleName]>;
+  readonly watchModule: RefCtxWatchModule<RootState>;
+  readonly initState: RefCtxInitState<RootState[ModuleName]>;
   readonly setState: RefCtxSetState<RootState[ModuleName]>;
+  readonly setModuleState: RefCtxSetModuleState<RootState[ModuleName]>;
   readonly syncer: { [key in keyof RootState[ModuleName]]: IAnyFn };
   readonly syncerOfBool: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
   /** alias of syncerOfBool */
   readonly sybo: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
-  readonly state: RootState[ModuleName] & PrivState;
-  readonly unProxyState: RootState[ModuleName] & PrivState;
-  readonly prevState: RootState[ModuleName] & PrivState;
+  readonly state: PrivState & RootState[ModuleName];
+  readonly unProxyState: PrivState & RootState[ModuleName];
+  readonly prevState: PrivState & RootState[ModuleName];
   readonly moduleState: RootState[ModuleName];
   readonly reducer: RootReducer;
   readonly r: RootReducer;
@@ -843,8 +900,8 @@ export interface ICtx
   readonly connectedComputed: Pick<RootCu, ConnectedModules | MODULE_GLOBAL>;
 
   // !!! 目前这样写有问题，例如连接是foo,bar, 
-  // 外面推导出的是 Pick<RootReducer, "foo"> | Pick<RootReducer, "bar">
-  // 而不是 Pick<RootReducer, "foo" | "bar">
+  // 外面推导出的是 Pick<RootReducer, 'foo'> | Pick<RootReducer, 'bar'>
+  // 而不是 Pick<RootReducer, 'foo' | 'bar'>
 
   // connectedReducer: ConnectedModules extends keyof RootReducer ? Pick<RootReducer, ConnectedModules> : {};
   // connectedComputed: ConnectedModules extends keyof RootCu ? Pick<RootCu, ConnectedModules> : {};
@@ -894,21 +951,24 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 
 
 // to constrain IFnCtx interface series shape
-interface _IFnCtx {// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
+interface _IFnCtx<FullState extends IAnyObj = IAnyObj> {// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
   retKey: string;
   callInfo: ICallInfo,
+  /**
+   * is cb been called first time
+   */
   isFirstCall: boolean;
   setted: string[];
   changed: string[];
   stateModule: string;
   refModule: string;
-  oldState: any;
+  oldState: FullState;
   committedState: IAnyObj;
   deltaCommittedState: IAnyObj;
-  cuVal: any;
-  refCtx: any;
+  cuVal: IAnyObj;
+  refCtx: ICtxBase;
   setInitialVal: (initialVal: any) => void;
-  commit: GetFnCtxCommit<any>;
+  commit: GetFnCtxCommit<FullState>;
   commitCu: GetFnCtxCommitCu<any>;
 }
 export interface IFnCtxBase extends _IFnCtx {
@@ -1034,7 +1094,7 @@ type WatchFnDesc = {
   fn: WatchFn,
   compare?: boolean,// default is runtimeVar.watchCompare
   immediate?: boolean,// default is runtimeVar.watchImmediate
-  depKeys?: DepKeys,// default is '-'
+  depKeys?: DepKeysOfWatch,// default is '-'
   retKeyDep?: boolean,// default is true
 }
 
@@ -1194,10 +1254,10 @@ export interface IActionCtxBase {
   dispatch: typeof refCtxDispatch;
   lazyDispatch: typeof refCtxDispatch;
   rootState: IAnyObj;
-  globalState: IAnyObj;
+  globalState: any;
   moduleState: IAnyObj;
   moduleComputed: IAnyObj;
-  setState: <T>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
+  setState: (obj: any, renderKey?: RenderKey, delay?: number) => Promise<any>;
   refCtx: IAnyObj;
 }
 
@@ -1428,7 +1488,7 @@ export function connectDumb<Props extends IAnyObj = {}, RootState extends IRootB
 ): (render: (props: RefCtx) => ReactNode) => ComponentClass<Props>;
 
 // user decide RefCtx type is which one of RefCtx series, default is ICtxBase
-export function useConcent<Props extends IAnyObj = {}, RefCtx extends ICtxBase = ICtxBase>(
+export function useConcent<Props extends IAnyObj = IAnyObj, RefCtx extends ICtxBase = ICtxBaseP<Props>>(
   registerOptions?: string,
   ccClassKey?: string,
 ): RefCtx;
@@ -1531,7 +1591,7 @@ export function defLazyComputed<CuRet>
   (fn: (newState: IAnyObj, oldState: IAnyObj, fnCtx: IFnCtxBase) => CuRet, defOptions?: DepKeys | DefLazyOptions): IComputedFnDesc<GetComputedFn<CuRet>>;
 
 export function defWatch<V extends IAnyObj = {}, F extends IFnCtxBase = IFnCtxBase>
-  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, defOptions?: DepKeys | DefWatchOptions): WatchFnDesc;
+  (fn: (newState: V, oldState: V, fnCtx: F) => void | boolean, defOptions?: DepKeysOfWatch<V> | WatchCbOptions<V>): WatchFnDesc;
 
 export declare const cst: CcCst;
 
@@ -1574,15 +1634,15 @@ export function cloneModule(newModuleName: string, existingModuleName: string, o
 export type IncludeModelKey<Models, ModelKey> = ModelKey extends keyof Models ? true : false;
 
 export type GetRootState<Models extends { [key: string]: ModuleConfig }> = {
-  [key in keyof Models]: StateType<Models[key]["state"]>
+  [key in keyof Models]: StateType<Models[key]['state']>
 }
   & { [cst.MODULE_VOID]: {} }
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
-  [key in keyof Models]: "reducer" extends keyof Models[key] ?
-  (Models[key]["reducer"] extends IAnyObj ? ReducerType<Models[key]["reducer"], StateType<Models[key]['state']>> : {})
+  [key in keyof Models]: 'reducer' extends keyof Models[key] ?
+  (Models[key]['reducer'] extends IAnyObj ? ReducerType<StateType<Models[key]['state']>, Models[key]['reducer']> : {})
   : {};
 }
   & { [cst.MODULE_VOID]: {} }
@@ -1590,8 +1650,8 @@ export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig }> = {
-  [key in keyof Models]: "reducer" extends keyof Models[key] ?
-  (Models[key]["reducer"] extends IAnyObj ? ReducerCallerType<Models[key]["reducer"]> : {})
+  [key in keyof Models]: 'reducer' extends keyof Models[key] ?
+  (Models[key]['reducer'] extends IAnyObj ? ReducerCallerType<Models[key]['reducer']> : {})
   : {};
 }
   & { [cst.MODULE_VOID]: {} }
@@ -1599,8 +1659,8 @@ export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig }>
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, RootReducer extends { [K in keyof Models]: any }> = {
-  [key in keyof Models]: "ghosts" extends keyof Models[key] ?
-  (Models[key]["ghosts"] extends string[] ? { [ghostKey in ArrItemsType<Models[key]["ghosts"]>]: RootReducer[key] } : {})
+  [key in keyof Models]: 'ghosts' extends keyof Models[key] ?
+  (Models[key]['ghosts'] extends string[] ? { [ghostKey in ArrItemsType<Models[key]['ghosts']>]: RootReducer[key] } : {})
   : {};
 }
   & { [cst.MODULE_VOID]: {} }
@@ -1608,8 +1668,8 @@ export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, 
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 export type GetRootComputed<Models extends { [key: string]: ModuleConfig }> = {
-  [key in keyof Models]: "computed" extends keyof Models[key] ?
-  (Models[key]["computed"] extends IAnyObj ? ComputedValType<Models[key]["computed"]> : {})
+  [key in keyof Models]: 'computed' extends keyof Models[key] ?
+  (Models[key]['computed'] extends IAnyObj ? ComputedValType<Models[key]['computed']> : {})
   : {};
 }
   & { [cst.MODULE_VOID]: {} }
