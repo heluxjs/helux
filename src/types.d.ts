@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types file v2.14.4
+ * concent types.d.ts file v2.14.6
  */
 
 type CC_CLASS = '$$CcClass';
@@ -89,9 +89,9 @@ export interface IAnyFnReturnObj {
 export interface IAnyFnInObj { [key: string]: IAnyFn }
 
 // let user export syncer new type when user define private state
-export type Syncer<FullState extends IAnyObj> = { [key in keyof FullState]: IAnyFn };
+export type Syncer<FullState> = FullState extends IAnyObj ? { [key in keyof FullState]: IAnyFn } : {};
 // let user export syncerOfBool new type when user define private state
-export type SyncerOfBool<FullState extends IAnyObj> = { [key in keyof GetBoolKeys<FullState>]: IAnyFn };
+export type SyncerOfBool<FullState> = FullState extends IAnyObj ? { [key in GetBoolKeys<FullState>]: IAnyFn } : {};
 
 declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
   newState: any,
@@ -138,8 +138,7 @@ export type ComputedValTypeForFn<Fn extends IAnyFn> = {
 
 export type SetupFn = (ctx: ICtxBase) => IAnyObj | void;
 export type SettingsType<Fn> = Fn extends SetupFn ?
-  (ReturnType<Fn> extends IAnyObj ? ReturnType<Fn> : {}) :
-  { a: 1 };
+  (ReturnType<Fn> extends IAnyObj ? ReturnType<Fn> : {}) : {};
 
 /**
  * inspired by
@@ -630,7 +629,12 @@ type RefCtxInitState<ModuleState extends IAnyObj = IAnyObj> = <PrivState extends
   // you must make sure that there is no common keys between privState and moduleState
   ? {
     state: PrivState & ModuleState, computed: RefCtxComputed<PrivState & ModuleState>,
-    watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>
+    watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>,
+    syncer: Syncer<PrivState & ModuleState>, syncerOfBool: SyncerOfBool<PrivState & ModuleState>,
+    sybo: SyncerOfBool<PrivState & ModuleState>,
+    ccUniqueKey: string;
+    initTime: number;
+    renderCount: number;
   }
   : never;
 
