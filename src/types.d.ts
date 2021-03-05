@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.6
+ * concent types.d.ts file v2.14.7
  */
 
 type CC_CLASS = '$$CcClass';
@@ -88,10 +88,16 @@ export interface IAnyFnReturnObj {
 }
 export interface IAnyFnInObj { [key: string]: IAnyFn }
 
+export interface ToggleBoolFn {
+  (...args: any): any;
+}
+export interface SyncValueToStateFn {
+  (...args: any): any;
+}
 // let user export syncer new type when user define private state
-export type Syncer<FullState> = FullState extends IAnyObj ? { [key in keyof FullState]: IAnyFn } : {};
+export type Syncer<FullState> = FullState extends IAnyObj ? { [key in keyof FullState]: SyncValueToStateFn } : {};
 // let user export syncerOfBool new type when user define private state
-export type SyncerOfBool<FullState> = FullState extends IAnyObj ? { [key in GetBoolKeys<FullState>]: IAnyFn } : {};
+export type SyncerOfBool<FullState> = FullState extends IAnyObj ? { [key in GetBoolKeys<FullState>]: ToggleBoolFn } : {};
 
 declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
   newState: any,
