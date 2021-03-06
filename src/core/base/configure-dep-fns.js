@@ -186,7 +186,7 @@ function _parseDescObj(cate, confMeta, descObj) {
         }
       }
     } else {
-      tryHandleWarning(`retKey[${retKey}] item type error`);
+      tryHandleWarning(`module[${callerModule}] ${confMeta.type} retKey[${retKey}] item type error`);
     }
   });
 }
@@ -200,7 +200,7 @@ function _checkRetKeyDup(cate, confMeta, fnUid, retKey) {
     const typedRetKey = `${type}_${retKey}`;
     const mappedFn = retKey2fnUid[typedRetKey];
     if (mappedFn) {
-      return new Error(`ccUKey[${ccUniqueKey}], retKey[${retKey}] duplicate in ref ${type}`);
+      return new Error(`ccUKey[${ccUniqueKey}] retKey[${retKey}] duplicate in ref ${type}`);
     }
     retKey2fnUid[typedRetKey] = fnUid;
   }
