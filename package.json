@@ -100,8 +100,8 @@
   ],
   "npmName": "concent",
   "peerDependencies": {
-    "@types/react": "^16.9.13",
-    "react": "^16.8.6"
+    "@types/react": "^16.14.5",
+    "react": "^16.14.5"
   },
   "repository": {
     "type": "git",
@@ -120,6 +120,7 @@
     "cov": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
   },
-  "version": "2.14.6",
-  "dependencies": {}
+  "version": "2.14.7",
+  "dependencies": {
+  }
 }
