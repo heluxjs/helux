@@ -1646,11 +1646,11 @@ export interface RefFilters {
 }
 type ccClassKey = string;
 export function getRefs<Ctx extends ICtxBase>(filters?: RefFilters | ccClassKey): { ctx: Ctx }[];
-export function getRef<Ctx extends ICtxBase>(filters?: RefFilters | ccClassKey): { ctx: Ctx };
+export function getRef<Ctx extends ICtxBase>(filters?: RefFilters | ccClassKey): ({ ctx: Ctx } | undefined);
 
 /**
  *
- * @param newModuleName 
+ * @param newModuleName
  * @param existingModuleName 
  * @param overwriteModuleConfig overwriteModuleConfig will been merged to existingModuleConfig
  */
