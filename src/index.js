@@ -36,6 +36,11 @@ if (typeof window === 'undefined') {
   global && (global.window = {});
 }
 
+const _getRef = (filters) => {
+  const refs = _getRefs(filters);
+  return refs[0];
+};
+
 export const cloneModule = _cloneModule;
 export const run = _run;
 export const connect = _connect;
@@ -59,6 +64,7 @@ export const ccContext = _ccContext;
 export const execute = _execute;
 export const executeAll = _executeAll;
 export const getRefs = _getRefs;
+export const getRef = _getRef;
 export const reducer = _reducer;
 export const clearContextIfHot = _clearContextIfHot;
 export const CcFragment = _CcFragment;
@@ -101,6 +107,7 @@ const defaultExport = {
   execute,
   executeAll,
   getRefs,
+  getRef,
   reducer,
   clearContextIfHot,
   CcFragment,

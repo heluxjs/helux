@@ -15,7 +15,7 @@ describe('test top api execute', () => {
     let targetClass = 'ClsComp';
     const setup = (/** @type Ctx */{ execute, ccClassKey }) => {
       execute(() => {
-        console.log(`trigger execute cb in ${ccClassKey}`);
+        // findout ccClassKey ins, trigger execute cb
         expect(ccClassKey).toBe(targetClass);
       })
     };
@@ -34,8 +34,8 @@ describe('test top api execute', () => {
     mount(<ClsComp />);
     mount(<FnComp />);
 
-    execute(targetClass);
+    execute({ ccClassKey: targetClass });
     targetClass = 'FnComp';
-    execute(targetClass);
+    execute({ ccClassKey: targetClass });
   });
 });

@@ -581,7 +581,7 @@ export interface ICtxBase {
   readonly watchModule: RefCtxWatchModule<IAnyObj>;
   readonly effect: typeof refCtxEffect;
   readonly effectProps: typeof refCtxEffectProps;
-  readonly execute: (handler: IAnyFnPromise) => void;
+  readonly execute: (filters: RefFilters, handler: IAnyFnPromise) => void;
 
   readonly on: typeof refCtxOn;
   readonly emit: typeof refCtxEmit;
@@ -1634,7 +1634,19 @@ export function Ob(props: { classKey?: string, module?: string, connect?: string
  */
 export declare const reducer: IAnyFnInObj;
 
-export function getRefs<Ctx extends ICtxBase>(classKey?: string): Ctx[];
+export interface RefFilters {
+  /**
+   * find refs that mountStatus is belong (NOT_MOUNT, MOUNTED) or (MOUNTED)
+   * default is false, means only find out MOUNTED refs
+   */
+  includeNotMount?: boolean;
+  tag?: string;
+  ccClassKey?: string;
+  moduleName?: string;
+}
+type ccClassKey = string;
+export function getRefs<Ctx extends ICtxBase>(filters?: RefFilters | ccClassKey): { ctx: Ctx }[];
+export function getRef<Ctx extends ICtxBase>(filters?: RefFilters | ccClassKey): { ctx: Ctx };
 
 /**
  *
@@ -1714,6 +1726,7 @@ declare type DefaultExport = {
   debugComputed: typeof debugComputed,
   getGlobalComputed: typeof getGlobalComputed,
   getRefs: typeof getRefs,
+  getRef: typeof getRef,
   dispatch: typeof dispatch,
   reducer: typeof reducer,
   emit: typeof refCtxEmit,
