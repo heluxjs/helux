@@ -52,8 +52,7 @@ export default function (store = {}, options = {}) {
   pendingModules.forEach(({ module, config }) => {
     // user put this module to run api 1th models param again, here just ignore this one
     if (storeConf.store[module]) return;
-
-    util.justTip(`configure pending module[${module}]`);
+    // configure pending module
     buildStoreConf(module, config);
   });
 

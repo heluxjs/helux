@@ -185,8 +185,8 @@ function _parseDescObj(cate, confMeta, descObj) {
           });
         }
       }
-    } else {
-      tryHandleWarning(`module[${callerModule}] ${confMeta.type} retKey[${retKey}] item type error`);
+    } else if (retKey !== 'default') { // default 是空模块导出导致的，这里就不打印了
+      tryHandleWarning(`module[${callerModule}] ${confMeta.type} retKey[${retKey}] type error`);
     }
   });
 }
