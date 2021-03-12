@@ -3,7 +3,6 @@ import { UNSTART, START, END } from './support/priv-constant';
 
 type RenderStatus = typeof UNSTART | typeof START | typeof END;
 
-
 export interface ComputedPackedValue {
   needCompute: boolean;
   fn: Function;
@@ -56,4 +55,9 @@ export type IRefCtx = ICtxBase & {
 
 export interface IRef {
   ctx: IRefCtx;
+  /**
+   * short of mountStatus
+   * NOT_MOUNT = 1; MOUNTED = 2; UNMOUNTED = 3;
+   */
+  __$$ms: number;
 }

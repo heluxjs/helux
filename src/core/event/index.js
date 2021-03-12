@@ -97,14 +97,14 @@ export function findEventHandlersToPerform(event, ...args) {
   handlers.forEach(({ ccUniqueKey, handlerKey }) => {
     const ref = ccUKey2ref[ccUniqueKey];
     if (ref && handlerKey) {// confirm the instance is mounted and handler is not been offed
-      if (ref.__$$isUnmounted) return;
+      if (ref.__$$ms !== MOUNTED) return;
 
       const handler = handlerKey2handler[handlerKey];
       if (handler) {
         if (canPerform && !canPerform(ref)) {
           return;
         }
-        if (ref.__$$ms === MOUNTED) handler.fn(...args);
+        handler.fn(...args);
       }
     }
   });
