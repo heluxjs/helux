@@ -36,7 +36,7 @@ function _deleteEventHandlers(handlers) {
   const toDeleteEventNames = [];
   handlers.forEach(item => {
     const { handlerKey, ccUniqueKey, event } = item;
-    delete handlerKey2handler[handlerKey];//delete mapping of handlerKey2handler;
+    delete handlerKey2handler[handlerKey];// delete mapping of handlerKey2handler;
     toDeleteHandlerKeyMap[handlerKey] = 1;
     toDeleteCcUniqueKeyMap[ccUniqueKey] = 1;
     if (!toDeleteEventNames.includes(event)) toDeleteEventNames.push(event);
@@ -49,10 +49,10 @@ function _deleteEventHandlers(handlers) {
         const { ccUniqueKey } = h;
         if (toDeleteCcUniqueKeyMap[ccUniqueKey] === 1) {
           eHandlers[idx] = null;
-          delete ccUKey2handlerKeys[ccUniqueKey];//delete mapping of ccUKey2handlerKeys;
+          delete ccUKey2handlerKeys[ccUniqueKey];// delete mapping of ccUKey2handlerKeys;
         }
       });
-      event2handlers[event] = eHandlers.filter(v => v !== null);//delete eHandlers null element
+      event2handlers[event] = eHandlers.filter(v => v !== null);// delete eHandlers null element
     }
   });
 }
@@ -96,7 +96,7 @@ export function findEventHandlersToPerform(event, ...args) {
   const handlers = _findEventHandlers(_event, _module, _ccClassKey, _ccUniqueKey, _identity);
   handlers.forEach(({ ccUniqueKey, handlerKey }) => {
     const ref = ccUKey2ref[ccUniqueKey];
-    if (ref && handlerKey) {//  confirm the instance is mounted and handler is not been offed
+    if (ref && handlerKey) {// confirm the instance is mounted and handler is not been offed
       if (ref.__$$isUnmounted) return;
 
       const handler = handlerKey2handler[handlerKey];

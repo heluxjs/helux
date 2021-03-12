@@ -76,7 +76,6 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   refCtx.props = props;// attach props to ctx
   beforeMount(hookRef, setup, bindCtxToMethod, cuDesc);
 
-  // cursor_refKey_[cursor] = hookRef.ctx.ccUniqueKey;
   hookCtx.prevCcUKey = hookCtx.ccUKey;
   hookCtx.ccUKey = hookRef.ctx.ccUniqueKey;
 
@@ -112,7 +111,6 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption, ef: 0 });
   const hookCtx = hookCtxContainer.current;
   
-  // here not allow user pass extra as undefined, it will been given value {} implicitly if pass undefined!!!
   const { state: iState = {} } = _registerOption;
   const { props = {}, mapProps, layoutEffect = false, extra } = _registerOption;
 
@@ -143,7 +141,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       refCtx.props = props;
       hookRef.props = props;
       if (isObject(extra)) {
-        refCtx.extra = Object.assign(refCtx.extra, extra);
+        Object.assign(refCtx.extra, extra);
       }
     }
   }
@@ -167,7 +165,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     }
   }, [hookRef]);// 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
 
-  //after every render
+  // after every render
   effectHandler(() => {
     replaceSetter(refCtx, hookSetter);
     // 热加载模式下会触发卸载，这里需要核实ccUKey_ref_
@@ -179,7 +177,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     }
 
     // dobule-invoking 机制导致初始化阶段生成了一个多余的hookRef
-    // 虽然未存储到refs上，但是收集到的依赖存储到了waKey_uKeyMap_上
+    // 虽然未存储到refs上，但是收集到的依赖存储到了waKey2uKeyMap上
     // 这里通过触发beforeUnmount来清理多余的依赖
     const cursor = hookCtx.cursor;
     if (isStrict(cursor) && !hookCtx.clearPrev) {
@@ -227,7 +225,7 @@ export function useConcentForOb(registerOption, ccClassKey) {
   return _useConcent(registerOption, ccClassKey, CC_OB);
 }
 
-//写为具名函数，防止react-dev-tool里显示.default
+// 写为具名函数，防止react-dev-tool里显示.default
 function useConcent(registerOption, ccClassKey) {
   return _useConcent(registerOption, ccClassKey, CC_CUSTOMIZE);
 }

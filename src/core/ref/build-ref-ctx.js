@@ -412,7 +412,7 @@ function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, stateMod
         if (m === MODULE_GLOBAL) moduleState = ctx.globalState;
         else moduleState = makeObState(ref, moduleState, m);
       } else {
-        // 非自动收集，这里就需要写入waKey_uKeyMap_来记录依赖关系了
+        // 非自动收集，这里就需要写入waKey2uKeyMap来记录依赖关系了
         recordDep(ccUniqueKey, m, connectDesc);
       }
 
@@ -636,9 +636,9 @@ export default function (ref, params, liteLevel = 5) {
     retKey2fnUid: {},
 
     // api
-    reactSetState: noop,//等待重写
+    reactSetState: noop,// 等待重写
     __boundSetState,
-    reactForceUpdate: noop,//等待重写
+    reactForceUpdate: noop,// 等待重写
     __boundForceUpdate,
     setState,
     setModuleState,
