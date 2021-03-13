@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.7
+ * concent types.d.ts file v2.14.10
  */
 
 type CC_CLASS = '$$CcClass';

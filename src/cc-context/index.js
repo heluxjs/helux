@@ -98,7 +98,7 @@ const incModuleVer = function (module, val = 1) {
   }
 }
 
-function replaceMV(mv){
+function replaceMV(mv) {
   _moduleVer = mv;
 }
 
@@ -248,7 +248,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.14.9',
+    version: '2.14.10',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',

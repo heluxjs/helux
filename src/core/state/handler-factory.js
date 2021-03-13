@@ -418,7 +418,7 @@ export function makeDispatchHandler(
       return iHandler(paramObj, payload, { renderKey: _renderKey, delay: _delay, force: _force });
     };
 
-    if (paramObjType && paramObjType === 'object') {
+    if (paramObjType === 'object') {
       if (Array.isArray(paramObj)) {
         const [mInArr, rInArr] = paramObj;
         if (rInArr && rInArr.__fnName) {
