@@ -1568,12 +1568,10 @@ interface IDispatchExtra {
   refModule?: string;
 }
 
-// declare function ccDispatch<T>(type: string | Function | TypeDesc, payload?: any, renderKey?: RenderKey | IDispatchOptions, delay?: number, extra?: IDispatchExtra): Promise<T>;
-// export type IDispatch = typeof ccDispatch;
-
 type GetDispatchRetType<T> = T extends IAnyFn ? GetPromiseT<T> : any;
-declare function ccDispatch<T extends string | IAnyFn | TypeDesc>(
-  type: T, payload?: any, renderKey?: RenderKey | IDispatchOptions, delay?: number, extra?: IDispatchExtra
+type GetDispatchPayloadType<T> = T extends IAnyFn ? Parameters<T>[0] : any;
+declare function ccDispatch<T extends string | IAnyFn | TypeDesc, P extends GetDispatchPayloadType<T>>(
+  type: T, payload?: P, renderKey?: RenderKey | IDispatchOptions, delay?: number, extra?: IDispatchExtra
 ): Promise<GetDispatchRetType<T>>;
 export type IDispatch = typeof ccDispatch;
 
