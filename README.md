@@ -78,7 +78,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 ### Templates
 - [cra-template-concent-ts](https://codesandbox.io/s/cra-template-concent-ts-2x347)
 
-install by npx command
+Install by npx command
 ```sh
 $ npx create-react-app my-app --template concent-ts
 ```
@@ -86,6 +86,10 @@ or clone its source code by git command
 ```sh
 $ git clone https://github.com/concentjs/cra-project-concent-ts
 ```
+
+- [concent-pro](https://github.com/tnfe/concent-pro)
+
+A best practise project building by concent & typescript.
 
 ### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
