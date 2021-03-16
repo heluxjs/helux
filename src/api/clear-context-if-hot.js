@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { clearObject, okeys, makeCuDepDesc } from '../support/util';
+import { clearObject, okeys, makeCuDepDesc, noop } from '../support/util';
 import ccContext from '../cc-context';
 import { clearCachedData } from '../core/base/pick-dep-fns';
 import { clearCount } from '../core/ref/set-ref';
@@ -118,7 +118,6 @@ export default function (clearAll = false) {
   ccContext.info.latestStartupTime = Date.now();
   // 热加载模式下，这些CcFragIns随后需要被恢复
   // let ccFragKeys = [];
-  const noop = () => { };
 
   if (ccContext.isStartup) {
     if (ccContext.isHotReloadMode()) {

@@ -24,6 +24,7 @@ const {
   refStore, getModuleStateKeys,
   store: { getState, getModuleVer },
 } = ccContext;
+const { noop } = util;
 
 const {
   okeys, makeError: me, verboseInfo: vbi, isObject, isBool,
@@ -41,7 +42,6 @@ function getFnKey() {
   return `${fnKey}`;
 }
 
-const noop = () => { };
 const eType = (th) => `type of defineEffect ${th} param must be`;
 
 const getWatchedKeys = (ctx) => {
@@ -229,7 +229,7 @@ function bindSyncApis(ref, ctx, liteLevel) {
     const makeTrap = (type) => ({
       get(target, key) {
         if (util.isKeyValid(target, key)) return doSync(type, key);
-        return util.noop;
+        return noop;
       },
     });
     ctx.syncer = new Proxy(ctx.state, makeTrap('val'));
