@@ -1,9 +1,8 @@
 import buildRefCtx from '../ref/build-ref-ctx';
 import mapRegistrationInfo from './map-registration-info';
 import { CC_DISPATCHER, MODULE_DEFAULT, CC_CLASS } from '../../support/constant';
+import { noop} from '../../support/util';
 import ccContext from '../../cc-context';
-
-const noop = () => { };
 
 export default function () {
   const ccClassKey = CC_DISPATCHER;

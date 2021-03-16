@@ -10,7 +10,7 @@ let cachedLocation = '';
 function checkStartup(err) {
   const info = ccContext.info;
 
-  let curLocation = getErrStackKeywordLoc(err, 'startup', 2);//向下2句找触发run的文件
+  let curLocation = getErrStackKeywordLoc(err, 'startup', 2);// 向下2句找触发run的文件
   if (!curLocation) curLocation = getErrStackKeywordLoc(err, 'runConcent', 0);
 
   const letRunOk = () => {
@@ -131,7 +131,7 @@ export default function (
         bindToWindow('sss', ccContext.store._state, bindTarget);
       }
       if (window && window.mcc) {
-        setTimeout(() => {//延迟绑定，等待ccns的输入
+        setTimeout(() => {// 延迟绑定，等待ccns的输入
           bindOthers(window.mcc[util.getCcNamespace()]);
         }, 1200);
       } else {
@@ -139,7 +139,7 @@ export default function (
       }
 
       ccContext.isStartup = true;
-      //置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
+      // 置为已启动后，才开始配置plugins，因为plugins需要注册自己的模块，而注册模块又必需是启动后才能注册
       boot.configPlugins(plugins);
 
       resetClassInsUI();
