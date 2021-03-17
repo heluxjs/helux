@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.10
+ * concent types.d.ts file v2.14.11
  */
 
 type CC_CLASS = '$$CcClass';
@@ -546,7 +546,7 @@ export interface ICtxBase {
   readonly renderKey: string | number;
   readonly tag: string;
 
-  readonly mapped: IAnyObj;
+  readonly mapped: any;
   readonly stateKeys: string[];
 
   readonly extra: any;
@@ -1232,7 +1232,7 @@ export interface RunOptions {
    */
   objectValueCompare?: boolean;// default is false
   nonObjectValueCompare?: boolean;// default is true
-  localStorage?: any;// localStorage lib, in browser it will be window.localStorage by default, in rn, user should pass one
+  localStorage?: Record<string, any>;// localStorage lib, in browser it will be window.localStorage by default, in rn, user should pass one
   /**
    * currently an async cu fun will be computed to below template in babel:
    * function asyncFn(_x, _x2, _x3) {
