@@ -1011,7 +1011,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   extra?: any, // assign to ctx.extra in every render period for useConcent , but only time for register
   staticExtra?: any, // assign to ctx.staticExtra only one time for useConcent and register both
   watchedKeys?: string[] | TStar | TAuto;
-  storedKeys?: any;
+  storedKeys?: string[];
   connect?: any;
   tag?: string;
   persistStoredKeys?: boolean;
@@ -1029,7 +1029,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
 // 不把render写在IRegBase里，会导致registerHookComp接口里的联合类型render函数类型失效
 // 所以这里单独为CcFrag单独写一个接口
 interface IRegBaseFrag<P extends IAnyObj, ICtx extends ICtxBase> extends IRegBase<P, ICtx> {
-  render?: (ctxOrMapped: any) => ReactNode;// work for useConcent, registerHookComp, registerDumb only
+  render?: (ctxOrMapped: any) => ReactNode; // work for useConcent, registerHookComp, registerDumb only
 }
 
 interface IRegBaseSt<P extends IAnyObj, ICtx extends ICtxBase, FnState = {}> extends IRegBase<P, ICtx> {
@@ -1346,7 +1346,7 @@ export function connect<
 ): (ReactComp: typeof Component) => ComponentClass<Props>;
 
 
-export type NoMap = 'NoMap';
+export type NoMap = 'NoMap'; // no mapProps passed
 type NoPrivState = 'NoPrivState';
 type TMap = IAnyObj | NoMap;
 
@@ -1356,7 +1356,7 @@ export function registerHookComp<Props extends IAnyObj, RefCtx extends ICtxBase 
 ): (renderFn: (props: RefCtx) => ReactNode) => FC<Props>;
 
 // ********* registerOptions 【包含】render时，直接返回组件 *********
-/** ====== 无指定所属模块，仅自定义自己的自己管理状态时 ======*/
+/** ====== 无指定所属模块，仅自定义自己的管理状态时 ======*/
 export function registerHookComp<
   Props extends IAnyObj,
   RefCtx extends ICtxDefault = ICtxDefault,

@@ -4,7 +4,6 @@
  */
 import * as React from 'react';
 import { CC_HOOK, CC_OB, CC_CUSTOMIZE } from '../../support/constant';
-import { INAJ } from '../../support/priv-constant';
 import buildRefCtx from '../ref/build-ref-ctx';
 import ccContext from '../../cc-context';
 import mapRegistrationInfo from '../base/map-registration-info';
@@ -13,7 +12,7 @@ import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 import * as hf from '../state/handler-factory';
-import { isPJO, getRegisterOptions, evalState, isObject, shallowDiffers } from '../../support/util';
+import { getRegisterOptions, evalState, isObject, shallowDiffers } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
 import isStrict, { markFalse } from './is-strict';
@@ -202,16 +201,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     }
   });
 
-  beforeRender(hookRef);
-
-  // before every render
-  if (mapProps) {
-    const mapped = mapProps(refCtx);
-    if (!isPJO(mapped)) {
-      throw new Error(`mapProps ret ${INAJ}`)
-    }
-    refCtx.mapped = mapped;
-  }
+  beforeRender(hookRef, mapProps);
 
   return refCtx;
 }

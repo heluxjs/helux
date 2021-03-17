@@ -17,20 +17,15 @@ export default function registerHookComp(options, ccClassKey) {
       return function CcHookComp(props) {
         _options.props = props;
         const ctx = useConcent(_options, ccClassKey);
+        return React.createElement(Dumb, ctx.__$$mapped);
+      };
+    };
 
-        // 和registerDumb保持一致，如果定义了mapProps，传递mapProps的结果给Dumb
-        if (_options.mapProps) {
-          return React.createElement(Dumb, ctx.mapped);
-        } else {
-          return React.createElement(Dumb, ctx);
-        }
-      }
-    }
-
+    const Comp = getComp();
     if (memo && React.memo) {
-      return React.memo(getComp());
+      return React.memo(Comp);
     } else {
-      return getComp();
+      return Comp;
     }
   }
 

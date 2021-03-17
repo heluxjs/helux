@@ -41,7 +41,7 @@ describe('test CcFragment ', () => {
         <h1>cause error</h1>
       </CcFragment>);
     } catch (err) {
-      expect(err.message).toMatch(/(?=children can not b a react dom)/);
+      expect(err.message).toMatch(/(?=children can not be a react dom)/);
     }
   });
 

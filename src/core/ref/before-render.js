@@ -1,7 +1,8 @@
 /** eslint-disable */
 import { START } from '../../support/priv-constant';
+import * as util from '../../support/util';
 
-export default function (ref) {
+export default function (ref, mapProps) {
   const ctx = ref.ctx;
   ctx.renderCount += 1;
 
@@ -42,4 +43,18 @@ export default function (ref) {
     ctx.__$$nextCompareConnWaKeys[m] = {};
     ctx.__$$nextCompareConnWaKeyCount[m] = 0;
   });
+
+  // 外面始终取 ctx.__$$mapped 传给 CcFragment registerHookComp registerDumb 的 render 函数，
+  // 具体 ctx.__$$mapped 指向什么取决于有没有传递 mapProps
+  // 传递 mapProps，则传 mapped 给 render 函数，没传 mapProps，则直接透传 ctx 给 render 函数
+  // !!! 这个规则或许将来某一天会改掉，始终传递 ctx 给 render 函数，这样简单的设定更适合编码思维，而不是存在多种形态
+  if (mapProps) {
+    const mapped = mapProps(ctx);
+    if (util.isPJO(mapped)) {
+      Object.assign(ctx.mapped, mapped);
+    }
+    ctx.__$$mapped = ctx.mapped;
+  } else {
+    ctx.__$$mapped = ctx;
+  }
 }

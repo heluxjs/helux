@@ -50,24 +50,17 @@ class CcFragment extends React.Component {
     this.ctx.prevProps = this.ctx.props;
     this.ctx.props = getOutProps(thisProps);
 
-    const { children, render } = thisProps;
+    const { children, render, register = {} } = thisProps;
     const view = render || children;
 
     if (isFn(view)) {
-      beforeRender(this);
-      const { __$$regDumb, register = {} } = thisProps;
       const ctx = this.ctx;
-
-      if (__$$regDumb !== true && register.mapProps) { // 直接使用<CcFragment />实例化
-        ctx.mapped = register.mapProps(ctx) || {};
-        return view(ctx.mapped) || nullSpan;
-      }
-
-      return view(ctx) || nullSpan;
+      beforeRender(this, register.mapProps);
+      return view(ctx.__$$mapped) || nullSpan;
     } else {
       if (React.isValidElement(view)) {
         // 直接传递dom，无论state怎么改变都不会再次触发渲染
-        throw new Error(`CcFragment's children can not b a react dom`);
+        throw new Error(`CcFragment's children can not be a react dom`);
       }
       return view;
     }
