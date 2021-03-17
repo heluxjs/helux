@@ -445,7 +445,7 @@ export default function (ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   const {
     ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, tag = '',
-    storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {},
+    storedKeys = [], persistStoredKeys = false, watchedKeys = '-', connect = {}, staticExtra = {},
   } = params;
 
   const stateModule = module;
@@ -602,10 +602,11 @@ export default function (ref, params, liteLevel = 5) {
     __$$mstate: mstate,// 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
     globalState,
     connectedState: {},
-    // for function: can pass value to extra in every render period
-    // for class: can pass value to extra one time
+    // for function: pass value to extra in every render period
+    // for class: pass value to extra one time
     extra: isObject(params.extra) ? params.extra : {},
-    staticExtra: {},
+    // pass value to staticExtra only one time for both function and class
+    staticExtra,
     settings: {},
 
     /** @type ICtx['refComputedValues'] */

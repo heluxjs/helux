@@ -1001,7 +1001,6 @@ export interface IFnCtx<RefCtx extends ICtxBase = ICtxBase, FullState = {}, Comp
 
 declare class ConcentComponent<P> extends Component {
   ctx: ICtxBase;
-
   constructor(props: Readonly<P>);
   constructor(props: P, context?: any);
 }
@@ -1009,21 +1008,22 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   module?: PropKey;
   props?: P;
   state?: IAnyFnReturnObj | IAnyObj;
-  extra?: any,// assign to ctx.extra in every render period for useConcent , but only time for register
+  extra?: any, // assign to ctx.extra in every render period for useConcent , but only time for register
+  staticExtra?: any, // assign to ctx.staticExtra only one time for useConcent and register both
   watchedKeys?: string[] | TStar | TAuto;
   storedKeys?: any;
   connect?: any;
   tag?: string;
   persistStoredKeys?: boolean;
   lite?: 1 | 2 | 3 | 4;
-  layoutEffect?: boolean;// work for useConcent only
-  isPropsProxy?: boolean;// work for register only, default false
-  bindCtxToMethod?: boolean;// default false
+  layoutEffect?: boolean; // work for useConcent only
+  isPropsProxy?: boolean; // work for register only, default false
+  bindCtxToMethod?: boolean; // default false
   renderKeyClasses?: string[];
-  compareProps?: boolean;//default true
+  compareProps?: boolean; //default true
   setup?: (refCtx: ICtx) => IAnyObj | void;
   cuDesc?: MultiComputed | MultiComputedFn | null;
-  // render?: (ctxOrMapped: any) => ReactNode;// work for useConcent, registerHookComp, registerDumb only
+  // render?: (ctxOrMapped: any) => ReactNode; // work for useConcent, registerHookComp, registerDumb only
 }
 
 // 不把render写在IRegBase里，会导致registerHookComp接口里的联合类型render函数类型失效

@@ -42,7 +42,7 @@ function CcHook(state, hookSetter, props, hookCtx) {
 }
 
 // rState: resolvedState, iState: initialState
-function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, extra, ccClassKey) {
+function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hookSetter, props, ccClassKey) {
   incCursor();
   cursor2hookCtx[hookCtx.cursor] = hookCtx;
 
@@ -62,7 +62,7 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
   hookCtx.hookRef = hookRef;
 
   const params = Object.assign({}, regOpt, {
-    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK, insType, extra,
+    module: _module, watchedKeys: _watchedKeys, state, type: CC_HOOK, insType,
     ccClassKey: _ccClassKey, connect: _connect,
     ccOption: props.ccOption, id: props.id, ccKey: props.ccKey,
   });
@@ -111,8 +111,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption, ef: 0 });
   const hookCtx = hookCtxContainer.current;
   
-  const { state: iState = {} } = _registerOption;
-  const { props = {}, mapProps, layoutEffect = false, extra } = _registerOption;
+  const { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra } = _registerOption;
 
   const reactUseState = React.useState;
   if (!reactUseState) {
@@ -124,7 +123,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const [hookState, hookSetter] = reactUseState(state);
   
   const cref = (ref) =>
-    buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, extra, ccClassKey);
+    buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, ccClassKey);
   
   let hookRef;
   // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
