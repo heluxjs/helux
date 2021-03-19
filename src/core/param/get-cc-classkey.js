@@ -45,7 +45,7 @@ export default function (allowNamingDispatcher, module, connect, prefix, feature
   if (clsCtx) {
     const fStr = userClassKey2featureStr[classKey];
     if (fStr !== featureStr) {
-      //不允许，特征值不一样的class指定相同的ccClassKey
+      // 不允许，特征值不一样的class指定相同的ccClassKey
       throw me(ERR.CC_CLASS_KEY_DUPLICATE, `ccClassKey:[${classKey}] duplicate`);
     }
   } else {

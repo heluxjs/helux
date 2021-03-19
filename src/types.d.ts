@@ -610,7 +610,14 @@ export interface ICtxBase {
   readonly initState: RefCtxInitState<any>;
   readonly setState: RefCtxSetState;
   readonly refs: { [key: string]: { current: any } };
-  readonly useRef: (refName: string) => any; // return ref=>{...} for class, return hookRef for function
+  /** 
+   * get target ref from ctx.refs
+   */
+  readonly getRef: <T extends any = any>(refName: string) => { current: T } | undefined;
+  /**
+   * can work for both class and function
+   */
+  readonly useRef: <T extends any = any>(refName: string) => ((reactRef: T) => void);
   readonly forceUpdate: typeof refCtxForceUpdate;
   readonly setGlobalState: typeof refCtxSetGlobalState;
   readonly setModuleState: RefCtxSetModuleState<any>;

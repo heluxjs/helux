@@ -450,7 +450,7 @@ export default function (ref, params, liteLevel = 5) {
 
   const stateModule = module;
   const existedCtx = ref.ctx;
-  const isCtxNull = isObjectNull(existedCtx);// 做个保护判断，防止 ctx = {}
+  const isCtxNull = isObjectNull(existedCtx); // 做个保护判断，防止 ctx = {}
   const modStateKeys = getModuleStateKeys(stateModule);
 
   let __boundSetState = ref.setState, __boundForceUpdate = ref.forceUpdate;
@@ -646,7 +646,8 @@ export default function (ref, params, liteLevel = 5) {
     forceUpdate,
     changeState,// not expose in d.ts
     refs,
-    useRef: (refName) => {
+    getRef: refName => refs[refName] || null,
+    useRef: refName => {
       return nodeRef => {
         // keep the same shape with hook useRef
         refs[refName] = { current: nodeRef };
