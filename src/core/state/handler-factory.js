@@ -201,7 +201,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
   const {
     module: targetModule = callerModule, context = false,
     cb, __innerCb, type, calledBy, fnName = '', delay = -1, renderKey, force = false,
-    chainId, oriChainId, chainId2depth, isSilent
+    chainId, oriChainId, chainId2depth, isSilent,
     // sourceModule
   } = executionContext;
   isStateModuleValid(targetModule, callerModule, cb, (err, newCb) => {
@@ -296,9 +296,9 @@ export function invokeWith(userLogicFn, executionContext, payload) {
             setChainState(chainId, targetModule, partialState);
           } else { // 合并状态一次性提交到store并派发到组件实例
             if (isChainExited(chainId)) {
-              // 丢弃本次状态，不做任何处理
+            // 丢弃本次状态，不做任何处理
             } else {
-              setAndGetChainStateList(isC2Result, chainId, targetModule, partialState);
+              commitStateList = setAndGetChainStateList(isC2Result, chainId, targetModule, partialState);
               removeChainState(chainId);
             }
           }
@@ -314,7 +314,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         }, callerRef);
       });
 
-      if (isSourceCall) {// 源头dispatch or invoke结束调用
+      if (isSourceCall) { // 源头 dispatch 或 invoke 结束调用
         removeChainState(chainId);
         removeAllChainState(chainId);
       }

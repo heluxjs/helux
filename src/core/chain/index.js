@@ -3,9 +3,9 @@ import { okeys } from '../../support/util';
 
 let id = 0;
 /** 针对lazy的reducer调用链状态记录缓存map */
-const chainId_moduleStateMap_ = {};
-const chainId_isExited_ = {};
-const chainId_isLazy_ = {};
+const chainId2moduleStateMap = {};
+const chainId2isExited = {};
+const chainId2isLazy = {};
 
 /** 所有的reducer调用链状态记录缓存map */
 const normalChainId_moduleStateMap_ = {};
@@ -33,7 +33,7 @@ function __setChainState(chainId, targetModule, partialState, targetId_msMap) {
 }
 
 export function setChainState(chainId, targetModule, partialState) {
-  __setChainState(chainId, targetModule, partialState, chainId_moduleStateMap_)
+  __setChainState(chainId, targetModule, partialState, chainId2moduleStateMap)
 }
 
 export function setAllChainState(chainId, targetModule, partialState) {
@@ -46,29 +46,20 @@ export function setAndGetChainStateList(isC2Result, chainId, targetModule, parti
 }
 
 export function getChainStateMap(chainId) {
-  return chainId_moduleStateMap_[chainId];
+  return chainId2moduleStateMap[chainId];
 }
 
 export function getAllChainStateMap(chainId) {
   return normalChainId_moduleStateMap_[chainId];
 }
 
-// export function getChainModuleState(chainId, module) {
-//   const moduleStateMap = getChainStateMap(chainId);
-//   return moduleStateMap[module];
-// }
-
 export function getChainStateList(chainId) {
   const moduleStateMap = getChainStateMap(chainId);
-  const list = [];
-  okeys(moduleStateMap).forEach(m => {
-    list.push({ module: m, state: moduleStateMap[m] });
-  });
-  return list;
+  return okeys(moduleStateMap).map(m => ({ module: m, state: moduleStateMap[m] }));
 }
 
 export function removeChainState(chainId) {
-  delete chainId_moduleStateMap_[chainId];
+  delete chainId2moduleStateMap[chainId];
 }
 
 export function removeAllChainState(chainId) {
@@ -76,18 +67,18 @@ export function removeAllChainState(chainId) {
 }
 
 export function exitChain(chainId) {
-  chainId_isExited_[chainId] = true;
+  chainId2isExited[chainId] = true;
   removeChainState(chainId)
 }
 
 export function isChainExited(chainId) {
-  return chainId_isExited_[chainId] === true;
+  return chainId2isExited[chainId] === true;
 }
 
 export function setChainIdLazy(chainId) {
-  chainId_isLazy_[chainId] = true;
+  chainId2isLazy[chainId] = true;
 }
 
 export function isChainIdLazy(chainId){
-  return chainId_isLazy_[chainId] === true;
+  return chainId2isLazy[chainId] === true;
 }
