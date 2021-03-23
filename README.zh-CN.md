@@ -105,7 +105,7 @@ import { register, useConcent } from 'concent';
 @register('counter')
 class DemoCls extends React.Component{
   // 此时setState提交的状态触发自己重渲染 
-  // 同时也会触发其他同样属于coutner模块的实例且消费了具体数据的实例重渲染
+  // 同时也会触发其他同样属于counter模块的实例且消费了具体数据的实例重渲染
   inc = ()=> this.setState({num: this.state.num + 1})
   render(){
     // 这里读取了num，意味着当前实例的依赖key列表是 ['num']
