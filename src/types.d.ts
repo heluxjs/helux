@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.11
+ * concent types.d.ts file v2.14.15
  */
 
 type CC_CLASS = '$$CcClass';
@@ -11,11 +11,12 @@ type CC_FRAGMENT = '$$CcFrag';
 type CC_CUSTOMIZE = '$$CcCust';
 type CC_OB = '$$CcOb';
 
+declare const mvoid = '$$concent_void_module_624313307';
+
 export type MODULE_GLOBAL = '$$global';
 export type MODULE_DEFAULT = '$$default';
 type MODULE_CC = '$$cc';
-declare const MODULE_VOID = '$$concent_void_module_624313307';
-export type MODULE_VOID = typeof MODULE_VOID;
+export type MODULE_VOID = typeof mvoid;
 
 type CcCst = {
   MODULE_GLOBAL: MODULE_GLOBAL;
@@ -87,6 +88,9 @@ export interface IAnyFnReturnObj {
   (...args: any): IAnyObj;
 }
 export interface IAnyFnInObj { [key: string]: IAnyFn }
+export interface IAnyClass {
+  new(...args: any[]): any;
+}
 
 export interface ToggleBoolFn {
   (...args: any): any;
@@ -278,7 +282,7 @@ interface IDictWithT<T> {
 }
 
 export interface IRootBase extends IDict {
-  [MODULE_VOID]: any
+  [mvoid]: any
   $$global: any;
   $$default: any;
   [customizedModuleKey: string]: any;
@@ -485,17 +489,18 @@ declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOptions): void;
 
-declare function syncCb
+
+interface SyncCb {
   (
     value: any, keyPath: string,
     syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: object, fullKeyPath: string, state: object, refCtx: object }
   ): IAnyObj | boolean;
-// if module state is not equal full state, you need pass generic type FullState
-declare function syncCb<Val, ModuleState, RefState = {}, RefCtx extends ICtxBase = ICtxBase>
-  (
+  // if module state is not equal full state, you need pass generic type FullState
+  <Val, ModuleState, FullState = {}, RefCtx extends ICtxBase = ICtxBase>(
     value: Val, keyPath: string,
-    syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
+    syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: FullState, refCtx: RefCtx }
   ): any;
+}
 
 declare function asCb
   (
@@ -509,8 +514,10 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
     syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
-declare function refCtxSync(string: string, value?: typeof syncCb | any, renderKey?: RenderKeyOrOpts, delay?: string): IAnyFn | IAnyFn;
-declare function refCtxSync(...args: any[]): any;// 支持dom直接绑sync时ts语法正确 <input data-ccsync='name' onChange={sync} />
+interface RefCtxSync{
+  (string: string, value?: SyncCb | any, renderKey?: RenderKeyOrOpts, delay?: string): IAnyFn;
+  (...args: any[]): any; // 支持dom直接绑sync时ts语法正确 <input data-ccsync='name' onChange={sync} />
+}  
 
 //////////////////////////////////////////
 // exposed interface
@@ -621,13 +628,13 @@ export interface ICtxBase {
   readonly forceUpdate: typeof refCtxForceUpdate;
   readonly setGlobalState: typeof refCtxSetGlobalState;
   readonly setModuleState: RefCtxSetModuleState<any>;
-  readonly sync: typeof refCtxSync;
+  readonly sync: RefCtxSync;
   readonly syncer: any;
   readonly syncerOfBool: any;
   /** alias of  syncerOfBool */
   readonly sybo: any;
-  readonly syncBool: (string: string, value?: typeof syncCb | boolean, renderKey?: RenderKey, delay?: string) => IAnyFn;
-  readonly syncInt: (string: string, value?: typeof syncCb | number, renderKey?: RenderKey, delay?: string) => IAnyFn;
+  readonly syncBool: (string: string, value?: SyncCb | boolean, renderKey?: RenderKey, delay?: string) => IAnyFn;
+  readonly syncInt: (string: string, value?: SyncCb | number, renderKey?: RenderKey, delay?: string) => IAnyFn;
   readonly syncAs: (string: string, value?: typeof asCb | any, renderKey?: RenderKey, delay?: string) => any;
   readonly set: (string: string, value: any, renderKey?: RenderKey, delay?: string) => void;
   readonly setBool: (string: string, renderKey?: RenderKey, delay?: string) => void;
@@ -643,8 +650,8 @@ type RefCtxInitState<ModuleState extends IAnyObj = IAnyObj> = <PrivState extends
   ? {
     state: PrivState & ModuleState, computed: RefCtxComputed<PrivState & ModuleState>,
     watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>,
-    syncer: Syncer<PrivState & ModuleState>, syncerOfBool: SyncerOfBool<PrivState & ModuleState>,
-    sybo: SyncerOfBool<PrivState & ModuleState>,
+    sync: RefCtxSync, syncer: Syncer<PrivState & ModuleState>,
+    syncerOfBool: SyncerOfBool<PrivState & ModuleState>, sybo: SyncerOfBool<PrivState & ModuleState>,
     ccUniqueKey: string;
     initTime: number;
     renderCount: number;
@@ -734,7 +741,7 @@ export interface IRefCtx<
   readonly initState: RefCtxInitState<ModuleState>;
   readonly setState: RefCtxSetState<ModuleState>;
   readonly setModuleState: RefCtxSetModuleState<ModuleState>;
-  readonly syncer: { [key in keyof ModuleState]: IAnyFn };
+  readonly syncer: Syncer<ModuleState>;
   readonly syncerOfBool: { [key in keyof PickBool<ModuleState>]: IAnyFn };
   /** alias of syncerOfBool  */
   readonly sybo: { [key in keyof PickBool<ModuleState>]: IAnyFn };
@@ -882,7 +889,7 @@ export interface ICtx
   readonly initState: RefCtxInitState<RootState[ModuleName]>;
   readonly setState: RefCtxSetState<RootState[ModuleName]>;
   readonly setModuleState: RefCtxSetModuleState<RootState[ModuleName]>;
-  readonly syncer: { [key in keyof RootState[ModuleName]]: IAnyFn };
+  readonly syncer: Syncer<RootState[ModuleName]>;
   readonly syncerOfBool: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
   /** alias of syncerOfBool */
   readonly sybo: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
@@ -1050,6 +1057,8 @@ type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] | readonly (
   // something like (keyof RootState[moduleName] )[] but it is wrong writing
   { [moduleName in (keyof RootState)]?: TStar | TAuto | string[] };
 
+type TargetKeysInFn<PrivState extends IAnyFnReturnObj> = Exclude<keyof ReturnType<PrivState>, (number | symbol)>;
+type TargetKeysInObj<PrivState extends IAnyObj> = Exclude<keyof PrivState, (number | symbol)>;
 export interface RegisterOptions<
   P extends IAnyObj,
   RootState extends IRootBase,
@@ -1061,11 +1070,10 @@ export interface RegisterOptions<
   module?: ModuleName,
   state?: PrivState,
   watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[] | TStar | TAuto;
-  storedKeys?: PrivState extends IAnyFn ? (keyof ReturnType<PrivState>)[] : (keyof PrivState)[]
+  storedKeys?: PrivState extends IAnyFn ? (TargetKeysInFn<PrivState>)[] : (TargetKeysInObj<PrivState>)[]
   connect?: ConnectSpec<RootState>,
   setup?: (refCtx: ICtx) => IAnyObj | void;
 }
-
 
 // only state required
 interface RegisterOptionsSt<
@@ -1325,10 +1333,10 @@ export function run(storeConfig?: StoreConfig | null, runOptions?: RunOptions): 
 
 // register 用于class组件注册，因只有setup在class组件的reg参数里是有意义的，而setup在类组件里使用场景不多
 // 所以setup的ctx参数类型不再有泛型方法列表里传入，由用户自己标记，如果不标记则默认为ICtxBase，以便减少register函数的泛型列表长度
-export function register<Props extends IAnyObj = {}>(
+export function register(
   registerOptions: string,
   ccClassKey?: string,
-): (ReactComp: typeof Component) => ComponentClass<Props>;
+): (ReactComp: IAnyClass) => IAnyClass;
 export function register<
   Props extends IAnyObj,
   RootState extends IRootBase = IRootBase,
@@ -1340,7 +1348,7 @@ export function register<
     (ModuleName extends MODULE_DEFAULT ? RegisterOptions<Props, RootState, ModuleName, {}> : RegisterOptionsMo<Props, RootState, ModuleName, {}>) :
     (ModuleName extends MODULE_DEFAULT ? RegisterOptionsSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>> : RegisterOptionsMoSt<Props, RootState, ModuleName, Exclude<PrivState, NoPrivState>>),
   ccClassKey?: string,
-): (ReactComp: typeof Component) => ComponentClass<Props>;
+): (ReactComp: IAnyClass) => IAnyClass;
 
 
 
