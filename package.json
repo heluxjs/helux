@@ -32,7 +32,7 @@
     "babel-eslint": "^10.0.1",
     "codecov": "^3.7.1",
     "coveralls": "^3.1.0",
-    "create-react-class": "^15.6.3",
+    "create-react-class": "^15.7.0",
     "cross-env": "^5.2.0",
     "cross-spawn": "^6.0.5",
     "enzyme": "^3.11.0",
@@ -122,5 +122,6 @@
   },
   "version": "2.14.17",
   "dependencies": {
+    "y18n": "^5.0.5"
   }
 }
