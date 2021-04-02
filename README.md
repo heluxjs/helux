@@ -59,6 +59,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-re-render-process.png)
 
 ## ✨Features
+* Provider less
 * Render context injected automatically (no any annoying boilerplate code)
 * [Dependency collection](https://codesandbox.io/s/dep-collection-uiqzn) at runtime (state & computed)
 * Unified logic reuse of class and function components
