@@ -91,6 +91,10 @@ $ git clone https://github.com/concentjs/cra-project-concent-ts
 - [concent-pro](https://github.com/tnfe/concent-pro)
 
 A best practise project building by concent & typescript.
+```sh
+$ git clone https://github.com/tnfe/concent-pro        (dev with webpack)
+$ git clone https://github.com/tnfe/vite-concent-pro   (dev with vite)
+```
 
 ### Key features snippet
 - [Dep collection of state](./examples/dep-collection-of-state.md)
