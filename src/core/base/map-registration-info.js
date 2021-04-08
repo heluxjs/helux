@@ -13,7 +13,7 @@ const {
 
 function checkCcStartupOrNot() {
   if (ccContext.isStartup !== true) {
-    throw new Error('you must startup cc by call startup method before register ReactClass to cc!');
+    throw new Error('you must call run api to startup concent before register Class!');
   }
 }
 

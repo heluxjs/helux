@@ -514,10 +514,10 @@ declare function asCb<Val, ModuleState, RefState, RefCtx extends ICtxBase = ICtx
     syncContext: { event: React.BaseSyntheticEvent, module: string, moduleState: ModuleState, fullKeyPath: string, state: RefState, refCtx: RefCtx }
   ): any;
 
-interface RefCtxSync{
+interface RefCtxSync {
   (string: string, value?: SyncCb | any, renderKey?: RenderKeyOrOpts, delay?: string): IAnyFn;
   (...args: any[]): any; // 支持dom直接绑sync时ts语法正确 <input data-ccsync='name' onChange={sync} />
-}  
+}
 
 //////////////////////////////////////////
 // exposed interface
@@ -1172,7 +1172,7 @@ export type MidCtx = {
   modState: (key: string, value: any) => void,
 };
 
-type SigFnData = {
+export type SigFnData = {
   sig: SigFn,
   payload: {
     isSourceCall: boolean,
@@ -1182,11 +1182,11 @@ type SigFnData = {
     fn: Function,
   }
 };
-type SigModuleConfiguredData = {
+export type SigModuleConfiguredData = {
   sig: SigModuleConfigured,
   payload: string,//配置了新模块
 };
-type SigStateChangedData = {
+export type SigStateChangedData = {
   sig: SigStateChanged,
   payload: {
     calledBy: CalledBy,
@@ -1199,26 +1199,31 @@ type SigStateChangedData = {
   }
 };
 
-declare function ccPluginOn(sig: SigFn | SigFn[], callback: (data: SigFnData) => void): void;
-declare function ccPluginOn(sig: SigModuleConfigured, callback: (data: SigModuleConfiguredData) => void): void;
-declare function ccPluginOn(sig: SigStateChanged, callback: (data: SigStateChangedData) => void): void;
-declare function ccPluginOn(sig: string | string[], callback: (data: { sig: string, payload: any }) => void): void;
-interface Plugin {
-  install: (on: typeof ccPluginOn) => { name: string };
+export interface PluginOn {
+  (sig: SigFn | SigFn[], callback: (data: SigFnData) => void): void;
+  (sig: SigModuleConfigured, callback: (data: SigModuleConfiguredData) => void): void;
+  (sig: SigStateChanged, callback: (data: SigStateChangedData) => void): void;
+  (sig: string | string[], callback: (data: { sig: string, payload: any }) => void): void;
 }
+type PluginName = string;
+export interface Plugin {
+  install: (on: PluginOn) => { name: PluginName };
+}
+
 export interface RunOptions {
   middlewares?: ((midCtx: MidCtx, next: Function) => void)[];
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false
   isStrict?: boolean;
-  log?: boolean; // if print error message with console.error, default is true
+  log?: boolean; // if print error message with console.error or not, default is true
+  logVersion?: boolean; // if print concent version or not, default is true
   act?: IAnyFn; // should pass act avoid warning if in test mode, see https://reactjs.org/docs/test-utils.html#act
   errorHandler?: (err: Error) => void;
   /**
    * this kind of error will not lead to app crash, but should let developer know it
    */
   warningHandler?: (err: Error) => void;
-  bindCtxToMethod?: boolean; // default false
+  bindCtxToMethod?: boolean; // default is false
   /**
    * default is true
    * it means no matter state changed or not, if a ref call setState or mr.{method}
@@ -1229,25 +1234,25 @@ export interface RunOptions {
   watchCompare?: boolean; // default is false, trigger watch if set
   watchImmediate?: boolean; // default is false
   reComputed?: boolean; // default is true
-  extractModuleChangedState?: boolean;// default is true
-  extractRefChangedState?: boolean;// default is false
+  extractModuleChangedState?: boolean; // default is true
+  extractRefChangedState?: boolean; // default is false
   /**
+   * default is false
    * when extractRefChangedState is true, objectValueCompare will effect
    * --------------------------------------------------------------------
-   * objectValueCompare is false by default.
-   * in this situation concent treat object value as new value when user set it
+   * when objectValueCompare is false, concent treat object value as new value when user set it
    * 
    * const { obj } = ctx.state;
    * obj.foo = 'new';
    * ctx.setState({obj});// trigger re-render
    * 
    * // but if you set objectValueCompare true, you need write immutable style code to trigger re-render
-   * ctx.setState({obj});// no trigger re-render
-   * ctx.setState({obj:{...obj}});// trigger re-render
+   * ctx.setState({obj}); // no trigger re-render
+   * ctx.setState({obj:{...obj}}); // trigger re-render
    */
-  objectValueCompare?: boolean;// default is false
-  nonObjectValueCompare?: boolean;// default is true
-  localStorage?: Record<string, any>;// localStorage lib, in browser it will be window.localStorage by default, in rn, user should pass one
+  objectValueCompare?: boolean;
+  nonObjectValueCompare?: boolean; // default is true
+  localStorage?: Record<string, any>; // localStorage lib, in browser it will be window.localStorage by default, in rn, user should pass one
   /**
    * currently an async cu fun will be computed to below template in babel:
    * function asyncFn(_x, _x2, _x3) {

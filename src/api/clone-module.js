@@ -25,7 +25,7 @@ function tagReducerFn(reducerFns, moduleName) {
 export default (newModule, existingModule, moduleOverideConf = {}) => {
   const { state, reducer, computed, watch } = moduleOverideConf;
   if (!ccContext.isStartup) {
-    throw new Error('cc is not startup yet');
+    throw new Error('concent is not running');
   }
   checker.checkModuleNameBasically(newModule);
   checker.checkModuleName(existingModule, false);

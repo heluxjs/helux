@@ -10,7 +10,7 @@ let cachedLocation = '';
 function checkStartup(err) {
   const info = ccContext.info;
 
-  let curLocation = getErrStackKeywordLoc(err, 'startup', 2);// 向下2句找触发run的文件
+  let curLocation = getErrStackKeywordLoc(err, 'startup', 2); // 向下2句找触发run的文件
   if (!curLocation) curLocation = getErrStackKeywordLoc(err, 'runConcent', 0);
 
   const letRunOk = () => {
@@ -60,13 +60,14 @@ export default function (
     isStrict = false,
     isDebug = false,
     log = true,
+    logVersion = true,
     errorHandler = null,
     warningHandler = null,
     isHot,
     alwaysRenderCaller = true,
     bindCtxToMethod = false,
-    computedCompare = false,// 表示针对object值需不需要比较
-    watchCompare = false,// 表示针对object值需不需要比较
+    computedCompare = false, // 表示针对object值需不需要比较
+    watchCompare = false, // 表示针对object值需不需要比较
     watchImmediate = false,
     reComputed = true,
     extractModuleChangedState  = true,
@@ -90,7 +91,7 @@ export default function (
       const rh = ccContext.runtimeHandler;
       rv.log = log;
 
-      justTip(`concent version ${ccContext.info.version}`);
+      if (logVersion) justTip(`concent version ${ccContext.info.version}`);
       if (isHot !== undefined) ccContext.isHot = isHot;
       ccContext.reComputed = reComputed;
       rh.errorHandler = errorHandler;
