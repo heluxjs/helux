@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.15
+ * concent types.d.ts file v2.14.20
  */
 
 type CC_CLASS = '$$CcClass';
@@ -76,7 +76,8 @@ export type SigFn = CcCst['SIG_FN_START'] | CcCst['SIG_FN_END'] | CcCst['SIG_FN_
 export type SigModuleConfigured = CcCst['SIG_MODULE_CONFIGURED'];
 export type SigStateChanged = CcCst['SIG_STATE_CHANGED'];
 
-export interface IAnyObj { [key: string]: any }
+// export interface IAnyObj { [key: string]: any };
+export type IAnyObj = Record<string, any>;
 // export type IAnyObj = Record<string, any>;
 export interface IAnyFn {
   (...args: any): any;
@@ -103,30 +104,23 @@ export type Syncer<FullState> = FullState extends IAnyObj ? { [key in keyof Full
 // let user export syncerOfBool new type when user define private state
 export type SyncerOfBool<FullState> = FullState extends IAnyObj ? { [key in GetBoolKeys<FullState>]: ToggleBoolFn } : {};
 
-declare function computedFn<FnCtx extends IFnCtxBase = IFnCtxBase>(
-  newState: any,
-  oldState: any,
+type ComputedFn<FnCtx extends IFnCtxBase = IFnCtxBase, S extends IAnyObj = IAnyObj> = (
+  newState: S,
+  oldState: S,
   fnCtx: FnCtx,
-): any;
+) => any;
 
-interface IComputedFnDesc<Fn extends typeof computedFn> {
+interface IComputedFnDesc<Fn extends ComputedFn = ComputedFn> {
   fn: Fn;
   sort?: number;
   compare?: boolean;
   depKeys?: DepKeys;
   retKeyDep?: boolean;
 }
-interface IComputedFnSimpleDesc {
-  fn: IAnyFn;
-  sort?: number;
-  compare?: boolean;
-  depKeys?: DepKeys;
-  retKeyDep?: boolean;
-}
 
-export interface IReducerFn {
+export interface IReducerFn<S extends IAnyObj = any> {
   // let configure works well, set actionCtx generic type any
-  (payload: any, moduleState: any, actionCtx: IActionCtx<any, any, any, any, any>): any | Promise<any>;
+  (payload: any, moduleState: S, actionCtx: IActionCtx<any, any, any, any, any>): any | Promise<any>;
 }
 
 // !!!use infer
@@ -137,13 +131,13 @@ export type ArrItemsType<T> = T extends (any[] | readonly any[]) ? (
 
 export type ComputedValType<T> = {
   readonly [K in keyof T]: T[K] extends IAnyFn ? GetPromiseT<T[K]> :
-  (T[K] extends IComputedFnSimpleDesc ? GetPromiseT<T[K]['fn']> : never);
+  (T[K] extends IComputedFnDesc ? GetPromiseT<T[K]['fn']> : never);
 }
 
 // for heping refComputed to infer type
 export type ComputedValTypeForFn<Fn extends IAnyFn> = {
   readonly [K in keyof ReturnType<Fn>]: ReturnType<Fn>[K] extends IAnyFn ? GetPromiseT<ReturnType<Fn>[K]> :
-  (ReturnType<Fn>[K] extends IComputedFnSimpleDesc ? GetPromiseT<ReturnType<Fn>[K]['fn']> : never);
+  (ReturnType<Fn>[K] extends IComputedFnDesc ? GetPromiseT<ReturnType<Fn>[K]['fn']> : never);
 }
 
 export type SetupFn = (ctx: ICtxBase) => IAnyObj | void;
@@ -202,7 +196,7 @@ type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
   renderKeyOrOptions?: RenderKey | IDispatchOptions,
   delay?: number,
-) => ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>> : unknown;
+) => (ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>>) : unknown;
 
 type ReducerCallerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
@@ -218,6 +212,16 @@ export type ReducerType<S extends IAnyObj, Rd = IAnyObj> = Rd extends IAnyObj ? 
     { readonly [K in keyof Rd]: ReducerMethod<Rd, K>; }
     & { setState: <P extends Partial<S> = {}>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => Promise<P> }
   )) : {};
+
+type ReducerMethodOfDef<RdFn, S> = RdFn extends IAnyFn ? (
+  payload: any,
+  moduleState: S,
+  actionCtx: IActionCtxBase,
+) => any : unknown;
+
+export type ReducerTypeOfDef<S extends IAnyObj, Rd = IAnyObj> = Rd extends IAnyObj ? (
+  { readonly [K in keyof Rd]: Rd[K] extends ReducerMethodOfDef<Rd[K], S> ? ReducerMethodOfDef<Rd[K], S> : nerver }
+) : {};
 
 export type ReducerCallerType<T> = T extends IAnyObj ? (
   T['setState'] extends Function
@@ -776,13 +780,13 @@ export interface IRefCtxWithRoot<
 }
 
 
-export interface ModuleDesc {
+export interface ModuleDesc<S extends IAnyObj = any> {
   // most time you use define state as IAnyFnReturnObj, then it can been cloned anytime
-  state: IAnyObj | IAnyFnReturnObj;
-  reducer?: IAnyFnInObj;
-  computed?: { [key: string]: IAnyFn | IComputedFnSimpleDesc };
+  state: S | (() => S);
+  reducer?: { [key: string]: IReducerFn<S> };
+  computed?: { [key: string]: ComputedFn<IFnCtxBase, S> | IComputedFnDesc<ComputedFn<IFnCtxBase, S>> };
   ghosts?: readonly string[];
-  watch?: { [key: string]: IAnyFn | WatchFnDesc };
+  watch?: { [key: string]: WatchFn<IFnCtxBase, S> | WatchFnDesc<WatchFn<IFnCtxBase, S>> };
 }
 interface RootModule {
   [key: string]: ModuleDesc;
@@ -794,6 +798,8 @@ type GetSubRdType<M extends ModuleDesc> = ReducerType<StateType<M['state']>, Get
 type GetSubRdCallerType<M extends ModuleDesc> = ReducerCallerType<GetSubType<M, 'reducer'>>;
 type GetSubRdGhostType<M extends ModuleDesc> = ReducerGhostType<GetSubArrType<M, 'ghosts'>, GetSubRdType<M>>;
 type GetSubCuType<M extends ModuleDesc> = ComputedValType<GetSubType<M, 'computed'>>;
+
+type GetSubRdTypeOfDef<M extends ModuleDesc> = ReducerTypeOfDef<StateType<M['state']>, GetSubType<M, 'reducer'>>;
 
 type GetConnState<Mods extends RootModule, Conn extends keyof Mods> = {
   [key in Conn]: StateType<Mods[key]['state']>
@@ -1110,13 +1116,10 @@ interface RegisterOptionsMoSt<
   state: PrivState;
 }
 
-//user decide it is FnCtx or FnCtxConnect
-interface WatchFn {
-  <IFnCtx extends IFnCtxBase>(newState: any, oldState: any, fnCtx: IFnCtx): void | boolean;
-}
+type WatchFn<F extends IFnCtxBase = IFnCtxBase, S extends IAnyObj = IAnyObj> = (newState: S, oldState: S, fnCtx: F) => void;
 // declare function watchFn<IFnCtx extends IFnCtxBase>(oldVal: any, newVal: any, fnCtx: IFnCtx): void;
-type WatchFnDesc = {
-  fn: WatchFn,
+type WatchFnDesc<Fn extends WatchFn> = {
+  fn: Fn,
   compare?: boolean,// default is runtimeVar.watchCompare
   immediate?: boolean,// default is runtimeVar.watchImmediate
   depKeys?: DepKeysOfWatch,// default is '-'
@@ -1134,31 +1137,18 @@ declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Promise<Part
 
 /** default is true */
 export type TriggerOnce = boolean | void;
-export type ModuleConfig = {
-  state: Object;
-  reducer?: {
-    [fnName: string]: IReducerFn;
-  };
+export type ModuleConfig<S extends IAnyObj = any> = {
+  state: S | (() => S);
+  reducer?: ModuleReducerDef<S>;
   ghosts?: string[] | readonly string[];
-  computed?: {
-    [retKey: string]: typeof computedFn | IComputedFnSimpleDesc;
-  };
-  watch?: {
-    // [retKey: string]: typeof watchFn | WatchFnDesc;
-    [retKey: string]: WatchFn | WatchFnDesc;
-  };
-  lifecycle?: {
-    initState?: typeof init; // legency for ModuleConfig.init
-    initStateDone?: (dispatch: IDispatch, moduleState: any) => any; // legency for ModuleConfig.initPost
-    // insteand of initState and initStateDone, using bellow methods is better way
-    // because you can put the logic to reducer
-    loaded?: (dispatch: IDispatch, moduleState: any) => void;
-    // return triggerOnce, default is true, 
-    // that means mounted will only been called one time if match the condition
-    mounted?: (dispatch: IDispatch, moduleState: any) => TriggerOnce;
-    willUnmount?: (dispatch: IDispatch, moduleState: any) => TriggerOnce;
-  }
+  computed?: ModuleComputedDef<S>;
+  watch?: ModuleWatchDef<S>;
+  lifecycle?: ModuleLifeCycleDef<S>;
 }
+export type RegisteredModule = {
+  /** concent will also keep a symbol('__regModule__') for stop user creating a fake RegisteredModule */
+  __regModule__: string;
+} & ModuleConfig;
 
 export interface StoreConfig {
   [moduleName: string]: ModuleConfig;
@@ -1553,9 +1543,108 @@ export function useConcent<
   ccClassKey?: string,
 ): RefCtx;
 
-
+/**
+ * 配置模块到concent模块池，区别于 run 接口集中式的配置，configureModule可以在 run 之前或之后新增模块到concent模块池
+ * @param moduleName
+ * @param moduleConfig
+ */
 declare function configureModule(moduleName: string, moduleConfig: ModuleConfig): void;
 declare function configureModule(storeConfig: StoreConfig): void;
+
+/** 用于辅助 defineModule 方法推导出类型 */
+interface ModuleConfigDef<
+  S extends any, Rd extends ModuleReducerDef, Cu extends ModuleComputedDef,
+  Wa extends ModuleWatchDef, Li extends ModuleLifeCycleDef, Go extends string[] | readonly string[]
+  > {
+  state: S | (() => S);
+  reducer?: Rd;
+  computed?: Cu;
+  watch?: Wa;
+  lifecycle?: Li;
+  ghosts?: Go;
+}
+
+export type ModuleReducerDef<S> = { [key: string]: IReducerFn<S> };
+export type ModuleComputedDef<S> = { [key: string]: ComputedFn<IFnCtxBase, S> | IComputedFnDesc<ComputedFn<IFnCtxBase, S>> };
+export type ModuleWatchDef<S> = { [retKey: string]: WatchFn<IFnCtxBase, S> | WatchFnDesc<WatchFn<IFnCtxBase, S>> };
+export type ModuleLifeCycleDef<S> = {
+  initState?: typeof init; // legency for ModuleConfig.init
+  initStateDone?: (dispatch: IDispatch, moduleState: S) => any; // legency for ModuleConfig.initPost
+  // insteand of initState and initStateDone, using bellow methods is better way
+  // because you can put the logic to reducer
+  loaded?: (dispatch: IDispatch, moduleState: S) => void;
+  // return triggerOnce, default is true, 
+  // that means mounted will only been called one time if match the condition
+  mounted?: (dispatch: IDispatch, moduleState: S) => TriggerOnce;
+  willUnmount?: (dispatch: IDispatch, moduleState: S) => TriggerOnce;
+};
+
+/**
+ * 定义模块配置，此函数仅用于辅助单文件定义model时，方便向对象体注入类型
+ * defineModule 返回的对象依然需要交给run函数执行后才能够被使用
+ * 
+ *  import { defineModule } from 'concent';
+ *  const modelDef = defineModule({
+ *    state: { a:1, b:2 };
+ *    reducer: {
+ *      // 此处 moduleState actionCtx 将获得类型
+ *      xxAction(payload, moduleState, actionCtx){}
+ *    }
+ *    computed: {
+ *      // 此处 newState oldState fnCtx 将获得类型
+ *      xxAction(newState, oldState, fnCtx){}
+ *    }
+ *    watch: {
+ *      // 此处 newState oldState fnCtx 将获得类型
+ *      xxAction(newState, oldState, fnCtx){}
+ *    }
+ *    lifecycle: {
+ *      willUnmount(dispatch, moduleState){}
+ *    }; // lifecycle 下的所有方法获得类型
+ *    ghosts: []; // 将被约束为 reducer keys
+ *  });
+ * 
+ * @param moduleConfig
+ * @return moduleDef
+ */
+declare function defineModule<
+  S extends IAnyObj = IAnyObj,
+  Rd extends ModuleReducerDef<S> = ModuleReducerDef<S>,
+  Cu extends ModuleComputedDef<S> = ModuleComputedDef<S>,
+  Wa extends ModuleWatchDef<S> = ModuleWatchDef<S>,
+  Li extends ModuleLifeCycleDef<S> = ModuleLifeCycleDef<S>,
+  Go extends Array<keyof Rd> = (string[] | readonly string[]),
+  >
+  (moduleConfig: ModuleConfigDef<S, Rd, Cu, Wa, Li, Go>): {
+    state: S;
+    reducer: 'reducer' extends keyof ModuleConfigDef ? Rd : {};
+    /**
+     * alias of reducer，方便书写 dispatch 调用
+     * 
+     * @example
+     * ```js
+     *  const m = defineModule({
+     *    state: { a:1, b:2 };
+     *    reducer: {
+     *      xxAction(payload, moduleState, ac){
+     *        // 等同于 ac.dispatch(m.reducer.anotherAction);
+     *        await ac.dispatch(m.r.anotherAction);
+     *      },
+     *      anotherAction(payload, moduleState, ac){
+     *        ac.dispatch(m.r.);
+     *      },
+     *    }
+     *  });
+     *``` 
+     */
+    r: 'reducer' extends keyof ModuleConfigDef ? Rd : {};
+    computed: 'computed' extends keyof ModuleConfigDef ? Cu : {};
+    watch: 'watch' extends keyof ModuleConfigDef ? Wa : {};
+    lifecycle: 'lifecycle' extends keyof ModuleConfigDef ? Li : {};
+    ghosts: 'ghosts' extends keyof ModuleConfigDef ? Go : [];
+  };
+
+export const defineModule: typeof defineModule;
 
 export const configure: typeof configureModule;
 
@@ -1679,14 +1768,14 @@ export function cloneModule(newModuleName: string, existingModuleName: string, o
 //////////////////////////////////////////////////
 export type IncludeModelKey<Models, ModelKey> = ModelKey extends keyof Models ? true : false;
 
-export type GetRootState<Models extends { [key: string]: ModuleConfig }> = {
+export type GetRootState<Models extends { [key: string]: ModuleConfig<any> }> = {
   [key in keyof Models]: StateType<Models[key]['state']>
 }
   & { [cst.MODULE_VOID]: {} }
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
-export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
+export type GetRootReducer<Models extends { [key: string]: ModuleConfig<any> }> = {
   [key in keyof Models]: 'reducer' extends keyof Models[key] ?
   (Models[key]['reducer'] extends IAnyObj ? ReducerType<StateType<Models[key]['state']>, Models[key]['reducer']> : {})
   : {};
@@ -1695,7 +1784,7 @@ export type GetRootReducer<Models extends { [key: string]: ModuleConfig }> = {
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
-export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig }> = {
+export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig<any> }> = {
   [key in keyof Models]: 'reducer' extends keyof Models[key] ?
   (Models[key]['reducer'] extends IAnyObj ? ReducerCallerType<Models[key]['reducer']> : {})
   : {};
@@ -1704,7 +1793,7 @@ export type GetRootReducerCaller<Models extends { [key: string]: ModuleConfig }>
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
-export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, RootReducer extends { [K in keyof Models]: any }> = {
+export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig<any> }, RootReducer extends { [K in keyof Models]: any }> = {
   [key in keyof Models]: 'ghosts' extends keyof Models[key] ?
   (Models[key]['ghosts'] extends string[] ? { [ghostKey in ArrItemsType<Models[key]['ghosts']>]: RootReducer[key] } : {})
   : {};
@@ -1713,7 +1802,7 @@ export type GetRootReducerGhost<Models extends { [key: string]: ModuleConfig }, 
   & (IncludeModelKey<Models, MODULE_DEFAULT> extends true ? {} : { [cst.MODULE_DEFAULT]: {} })
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
-export type GetRootComputed<Models extends { [key: string]: ModuleConfig }> = {
+export type GetRootComputed<Models extends { [key: string]: ModuleConfig<any> }> = {
   [key in keyof Models]: 'computed' extends keyof Models[key] ?
   (Models[key]['computed'] extends IAnyObj ? ComputedValType<Models[key]['computed']> : {})
   : {};
@@ -1734,6 +1823,7 @@ declare type DefaultExport = {
   registerHookComp: typeof registerHookComp,
   useConcent: typeof useConcent,
   configure: typeof configureModule,
+  defineModule: typeof defineModule,
   cloneModule: typeof cloneModule,
   set: typeof set,
   setState: typeof setState,

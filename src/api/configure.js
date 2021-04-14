@@ -18,11 +18,11 @@ const { isPJO, evalState, okeys, isFn } = util;
  * @description configure module associate params
  * @author zzk
  * @export
- * @param {string | {[module:string]: ModuleConfig}} module
+ * @param {string | {[module:string]: ModuleConfig}} moduleNameOrNamedModuleConf
  * @param {ModuleConfig} config - when module type is string
  */
-export default function (module, config = {}) {
-  const confOneMoudle = (module, /** @type ModuleConfig*/config) => {
+export default function (moduleNameOrNamedModuleConf, config = {}, innerParams) {
+  const confOneModule = (module, /** @type ModuleConfig*/config) => {
     if (!ccContext.isStartup) {
       pendingModules.push({ module, config });
       return;
@@ -37,7 +37,7 @@ export default function (module, config = {}) {
     const eState = evalState(state);
     if (isFn(state)) ccContext.moduleName2stateFn[module] = state;
 
-    initModuleState(module, eState, true);
+    initModuleState(module, eState, true, innerParams);
     initModuleReducer(module, reducer, ghosts);
     initModuleComputed(module, computed);
     initModuleWatch(module, watch);
@@ -48,9 +48,9 @@ export default function (module, config = {}) {
   }
 
   // now module is an object that includes partial store conf
-  if (isPJO(module)) {
-    okeys(module).forEach(moduleName => confOneMoudle(moduleName, module[moduleName]));
+  if (isPJO(moduleNameOrNamedModuleConf)) {
+    okeys(moduleNameOrNamedModuleConf).forEach(moduleName => confOneModule(moduleName, moduleNameOrNamedModuleConf[moduleName]));
   } else {
-    confOneMoudle(module, config);
+    confOneModule(moduleNameOrNamedModuleConf, config);
   }
 }

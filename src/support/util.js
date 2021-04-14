@@ -478,9 +478,11 @@ let ccns = '';
 export function setCcNamespace(name) {
   ccns = name;
 }
+
 export function getCcNamespace() {
   return ccns;
 }
+
 export function getWinCc() {
   if (ccns) return window.mcc[ccns];
   return window.cc;

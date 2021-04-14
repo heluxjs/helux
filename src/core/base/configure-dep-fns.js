@@ -290,7 +290,7 @@ function _resolveKey(confMeta, module, retKey, mapSameName = false, allowSlash) 
 
   if (retKey.includes('/')) {
     if (allowSlash !== true) {
-      throw new Error(`key[${retKey}] can't contains /, please use (computedModule,watchModule) instead of(computed, watch) if you want to operate another module`);
+      throw new Error(`key[${retKey}] can't contains /, please use (computedModule,watchModule) instead of (computed, watch) if you want to operate another module`);
     }
     const [_module, _stateKey] = retKey.split('/');
     if (_module) {

@@ -1,6 +1,8 @@
 
 export const CU_KEY = Symbol('cuk');
 export const REF_KEY = Symbol('refk');
+export const ALCC_KEY = Symbol('allowCcPrefix');
+export const REG_MODULE_KEY = Symbol('regModule');
 
 export const UNSTART = '0';
 export const START = '1';

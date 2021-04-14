@@ -49,6 +49,11 @@ export const register = _register;
 export const registerDumb = _registerDumb;
 export const registerHookComp = _registerHookComp;
 export const configure = _configure;
+export const defineModule = (conf) => {
+  const confCopy = Object.assign({}, conf);
+  if (conf.reducer) confCopy.r = confCopy.reducer;
+  return confCopy;
+};
 export const setGlobalState = _setGlobalState;
 export const setState = _setState;
 export const set = _set;
@@ -93,6 +98,7 @@ const defaultExport = {
   registerDumb,
   registerHookComp,
   configure,
+  defineModule,
   dispatch,
   run,
   setGlobalState,

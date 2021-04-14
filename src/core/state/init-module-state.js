@@ -7,11 +7,11 @@ import * as refCache from '../ref/_cache';
 
 const { safeAssignToMap, okeys, safeGet } = util;
 
-export default function (module, mState, moduleMustNotExisted = true) {
+export default function (module, mState, moduleMustNotExisted = true, innerParams) {
   // force MODULE_VOID state as {}
   const state = module === MODULE_VOID ? {} : mState;
   try {
-    checker.checkModuleNameAndState(module, state, moduleMustNotExisted);
+    checker.checkModuleNameAndState(module, state, moduleMustNotExisted, innerParams);
   } catch (err) {
     guessDuplicate(err, module, 'state');
   }

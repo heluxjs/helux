@@ -1,7 +1,7 @@
 
 
 import * as util from '../../support/util';
-import { INAJ, STR_ARR_OR_STAR } from '../../support/priv-constant';
+import { INAJ, STR_ARR_OR_STAR, ALCC_KEY } from '../../support/priv-constant';
 import { ERR, MODULE_GLOBAL } from '../../support/constant';
 import ccContext from '../../cc-context';
 
@@ -9,10 +9,12 @@ const { isModuleNameCcLike, isModuleNameValid, verboseInfo: vbi, makeError, okey
 const { store, getModuleStateKeys } = ccContext
 
 /** 检查模块名，名字合法，就算检查通过 */
-export function checkModuleNameBasically(moduleName) {
+export function checkModuleNameBasically(moduleName, innerParams = {}) {
   if (!isModuleNameValid(moduleName)) {
     throw new Error(`module[${moduleName}] writing is invalid!`);
   }
+  // moduleName will be named starting with $cc while calling createModule
+  if (innerParams[ALCC_KEY] === 1) return;
   if (isModuleNameCcLike(moduleName)) {
     throw new Error(`'$$cc' is a built-in module name`);
   }
@@ -25,10 +27,10 @@ export function checkModuleNameBasically(moduleName) {
  * @param {string} moduleName 
  * @param {boolean} [moduleMustNotExisted=true] - true 要求模块应该不存在 ,false 要求模块状态应该已存在
  */
-export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg = '') {
+export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg = '', innerParams) {
   const _vbiMsg = vbiMsg || `module[${moduleName}]`;
   const _state = store._state;
-  checkModuleNameBasically(moduleName);
+  checkModuleNameBasically(moduleName, innerParams);
   if (moduleName !== MODULE_GLOBAL) {
     if (moduleMustNotExisted) {
       if (util.isObjectNotNull(_state[moduleName])) { // 但是却存在了
@@ -42,8 +44,8 @@ export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg 
   }
 }
 
-export function checkModuleNameAndState(moduleName, moduleState, moduleMustNotExisted) {
-  checkModuleName(moduleName, moduleMustNotExisted);
+export function checkModuleNameAndState(moduleName, moduleState, moduleMustNotExisted, innerParams) {
+  checkModuleName(moduleName, moduleMustNotExisted, '', innerParams);
   if (!util.isPJO(moduleState)) {
     throw new Error(`module[${moduleName}]'s state ${INAJ}`);
   }
