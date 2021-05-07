@@ -1273,7 +1273,7 @@ export interface ICallInfo {
   keyPath: string;
 }
 
-export interface IActionCtxBase<RefState extends IAnyObj = IAnyObj> {
+export interface IActionCtxBase<RefState extends any = any> {
   callInfo: ICallInfo;
   callerModule: string;
   module: PropKey;
