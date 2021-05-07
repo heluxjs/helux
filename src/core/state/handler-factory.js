@@ -267,8 +267,10 @@ export function invokeWith(userLogicFn, executionContext, payload) {
           const targetD = d !== 0 ? (d || delay) : d;
           return dispatch('setState', state, { silent: isSilent, renderKey: targetR, delay: targetD });
         },
-        // !!!指的是调用源cc类实例的ctx
+        // !!!指的是调用源cc实例的ctx
         refCtx: callerRef.ctx,
+        // 方便直接获取并标记 refState 类型
+        refState: callerRef.ctx.state,
         // concent不鼓励用户在reducer使用ref相关数据书写业务逻辑，除非用户确保是同一个模块的实例触发调用该函数，
         // 因为不同调用方传递不同的refCtx值，会引起用户不注意的bug
       };

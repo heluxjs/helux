@@ -1273,7 +1273,7 @@ export interface ICallInfo {
   keyPath: string;
 }
 
-export interface IActionCtxBase {
+export interface IActionCtxBase<RefState extends IAnyObj = IAnyObj> {
   callInfo: ICallInfo;
   callerModule: string;
   module: PropKey;
@@ -1289,6 +1289,7 @@ export interface IActionCtxBase {
   moduleComputed: IAnyObj;
   setState: (obj: any, renderKey?: RenderKey, delay?: number) => Promise<any>;
   refCtx: IAnyObj;
+  retState: RefState;
 }
 
 // constraint RefCtx must be an implement of ICtxBase
@@ -1308,8 +1309,17 @@ export interface IActionCtx<
   refCtx: RefCtx;
 }
 
+// 适用于标记属于default模块的invokeFn的第三位ac参数
+export interface IActionCtxDe<
+  RefState extends IAnyObj = IAnyObj
+  > extends IActionCtxBase {
+  setState: <T extends Partial<RefState>>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
+  retState: RefState;
+}
+
+
 // 直接传入模块描述体来推导 actionCtx 类型
-export interface IModActionCtx<
+export interface IActionCtxMod<
   RootInfo extends IAnyObj,
   Mod extends ModuleDesc,
   RefCtx extends ICtxBase = ICtxBase,
@@ -1322,6 +1332,12 @@ export interface IModActionCtx<
   refCtx: RefCtx;
 }
 
+// IModActionCtx仅为了兼容旧的类型声明，（推荐优先考虑 IActionCtxMod，这样 IActionCtx 前缀能够形成统一词语前缀）
+export type IModActionCtx<
+  RootInfo extends IAnyObj,
+  Mod extends ModuleDesc,
+  RefCtx extends ICtxBase = ICtxBase,
+  > = IActionCtxMod<RootInfo, Mod, RefCtx>;
 
 //////////////////////////////////////////
 // exposed top api
