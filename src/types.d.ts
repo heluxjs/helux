@@ -1289,7 +1289,7 @@ export interface IActionCtxBase<RefState extends any = any> {
   moduleComputed: IAnyObj;
   setState: (obj: any, renderKey?: RenderKey, delay?: number) => Promise<any>;
   refCtx: IAnyObj;
-  retState: RefState;
+  refState: RefState;
 }
 
 // constraint RefCtx must be an implement of ICtxBase
@@ -1314,7 +1314,7 @@ export interface IActionCtxDe<
   RefState extends IAnyObj = IAnyObj
   > extends IActionCtxBase {
   setState: <T extends Partial<RefState>>(obj: T, renderKey?: RenderKey, delay?: number) => Promise<T>;
-  retState: RefState;
+  refState: RefState;
 }
 
 
