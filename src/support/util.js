@@ -3,8 +3,12 @@ import { ERR_MESSAGE, MODULE_CC, MODULE_DEFAULT } from './constant';
 import { INAJ, CU_KEY, FN } from './priv-constant';
 import runtimeVar from '../cc-context/runtime-var';
 
-const cer = (...args) => runtimeVar.log && console.error(...args);
+const cer = (...args) => runtimeVar.log && logErr(...args);
 const protoToString = Object.prototype.toString;
+
+export function logErr(...args) {
+  console.error(...args);
+}
 
 export function noop() { }
 

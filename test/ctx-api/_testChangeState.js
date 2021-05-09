@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * this file is prepared for setState、setModuleState、invoke、dispatch
  */
@@ -205,7 +206,7 @@ export async function testDelayForItemClick(makeChangeStateHandler) {
 
     await delay(1000);
 
-    // read renderCount again, now theay should added by 1
+    // read renderCount again, now they should be added by 1
     wrap2Book1RenderCountClk = getWrapNum(wrap2, '.renderCount1');
     wrap3Book1RenderCountClk = getWrapNum(wrap3, '.renderCount1');
     wrap4Book1RenderCountClk = getWrapNum(wrap4, '.renderCount1');

@@ -5,12 +5,9 @@ import { run } from '../../src/index';
 import { getTestModels } from '../util';
 import * as tcs from './_testChangeState'
 
-const errorList = [];
 const models = getTestModels();
 run(models, {
-  log: false, act, errorHandler: (err) => {
-    errorList.push(err);
-  }
+  log: false, act
 });
 
 const setState = models.test.reducer.setState;
@@ -21,15 +18,8 @@ const paramStyle3 = `[call with (type:{type:string})]`;
 const paramStyle4 = `[call with (type:{fn:Function})]`;
 const paramStyle5 = `[call with (type:[module:string,fn:Function])]`;
 
+
 describe('test ctx api dispatch', () => {
-  test('[call with (type:{type:Fn})] should throw error', () => {
-    tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.dispatch({ type: setState }));
-    expect(errorList[0].message).toMatch(/(?=dispatchDesc.type must be string)/);
-  });
-  test('[call with ()] should throw error', () => {
-    tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.dispatch());
-    expect(errorList[1].message).toMatch(/(?=dispatchDesc.type must be string)/);
-  });
 
   test(`${paramStyle1} pass empty state should do nothing`, () => {
     tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.dispatch('setState'));

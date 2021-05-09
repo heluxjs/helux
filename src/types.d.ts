@@ -1,8 +1,9 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.21
+ * concent types.d.ts file v2.14.25
  */
+declare const mvoid = '$$concent_void_module_624313307';
 
 type CC_CLASS = '$$CcClass';
 type CC_HOOK = '$$CcHook';
@@ -10,8 +11,6 @@ type CC_HOOK = '$$CcHook';
 type CC_FRAGMENT = '$$CcFrag';
 type CC_CUSTOMIZE = '$$CcCust';
 type CC_OB = '$$CcOb';
-
-declare const mvoid = '$$concent_void_module_624313307';
 
 export type MODULE_GLOBAL = '$$global';
 export type MODULE_DEFAULT = '$$default';
@@ -1050,8 +1049,9 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   isPropsProxy?: boolean; // work for register only, default false
   bindCtxToMethod?: boolean; // default false
   renderKeyClasses?: string[];
-  compareProps?: boolean; //default true
-  setup?: (refCtx: ICtx) => IAnyObj | void;
+  compareProps?: boolean; // default true
+  // setup 里的 ctx.settings 是一个空map，此处需要用Omit剔除掉透传的settings
+  setup?: (refCtx: Omit<ICtx, 'settings'> & { settings: {} }) => IAnyObj | void;
   cuDesc?: MultiComputed | MultiComputedFn | null;
   // render?: (ctxOrMapped: any) => ReactNode; // work for useConcent, registerHookComp, registerDumb only
 }
@@ -1215,6 +1215,13 @@ export interface RunOptions {
   plugins?: Plugin[];// default is false
   isHot?: boolean;// default is false
   isStrict?: boolean;
+  /**
+   * default is false
+   * 是否转发 reducer 错误到 errorHandler 里，
+   * 强烈不建议用户配置 unsafe_moveReducerErrToErrorHandler 为 true，否则reducer错误会被静默掉
+   * 保留这个参数是为了让老版本的concent工程能够正常工作，
+   */
+  unsafe_moveReducerErrToErrorHandler?: boolean;
   log?: boolean; // if print error message with console.error or not, default is true
   logVersion?: boolean; // if print concent version or not, default is true
   act?: IAnyFn; // should pass act avoid warning if in test mode, see https://reactjs.org/docs/test-utils.html#act

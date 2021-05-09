@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /**
  * inspired by mobx's <Observer>{state=>state.name}</Observer>
  */
@@ -9,7 +10,7 @@ const obView = () => 'miss render prop or children';
 let TargetComp = () => React.createElement('h1', {}, 'Ob component needs react ver lte 16.8');
 
 if (React.memo) {
-  TargetComp = React.memo(function (props) {
+  TargetComp = React.memo(function (/** @type any */props) {
     const { module, connect, classKey, render, children } = props;
     if (module && connect) {
       throw new Error(`module, connect can not been supplied both`);

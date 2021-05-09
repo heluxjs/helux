@@ -63,6 +63,7 @@ export default function (
     logVersion = true,
     errorHandler = null,
     warningHandler = null,
+    unsafe_moveReducerErrToErrorHandler = false,
     isHot,
     alwaysRenderCaller = true,
     bindCtxToMethod = false,
@@ -101,6 +102,7 @@ export default function (
       rv.alwaysRenderCaller = alwaysRenderCaller;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
+      rv.unsafe_moveReducerErrToErrorHandler = unsafe_moveReducerErrToErrorHandler;
       rv.computedCompare = computedCompare;
       rv.watchCompare = watchCompare;
       rv.watchImmediate = watchImmediate;

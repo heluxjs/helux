@@ -1,4 +1,4 @@
-
+/* eslint-disable react/prop-types */
 import * as React from 'react';
 import CcFragment from '../component/CcFragment';
 import mapRegistrationInfo from '../core/base/map-registration-info';

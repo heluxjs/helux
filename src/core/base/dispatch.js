@@ -5,7 +5,8 @@ import pickOneRef from '../../core/ref/pick-one-ref';
 const { makeUniqueCcKey, justWarning } = util;
 const resolve = () => Promise.resolve();
 
-export default function (action, payLoadWhenActionIsString, rkOrOptions = '', delay, { ccClassKey, ccKey, throwError, refModule = '' } = {}) {
+export default function (action, payLoadWhenActionIsString, rkOrOptions = '', delay, options = {}) {
+  const { ccClassKey, ccKey, throwError = true, refModule = '' } = options;
   if (action === undefined && payLoadWhenActionIsString === undefined) {
     throw new Error(`params type error`);
   }
@@ -34,11 +35,15 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
 
       let ref;
       if (module && module !== '*') {
-        ref = pickOneRef(module);
+        try {
+          ref = pickOneRef(module);
+        } catch (err) {
+          // do nothing
+        }
       } else if (refModule) {
         ref = pickOneRef(refModule);
       }
-      
+
       if (!ref) {
         ref = pickOneRef();
       }

@@ -2,7 +2,8 @@ module.exports = {
   root: true,
   parser: 'babel-eslint',
   extends: [
-    'eslint:recommended'
+    'eslint:recommended',
+    'plugin:react/recommended'
   ],
   settings: {
     react: {
@@ -16,6 +17,7 @@ module.exports = {
   env: {
     browser: true,
     es6: true,
+    jest: true,
   },
   rules: {
     'constructor-super': 0,

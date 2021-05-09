@@ -27,6 +27,7 @@
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-react": "^7.9.4",
     "@babel/runtime": "^7.5.4",
+    "@types/jest": "^26.0.23",
     "acorn": "^8.0.4",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
@@ -44,14 +45,15 @@
     "eslint-plugin-prettier": "^3.0.0",
     "eslint-plugin-react": "^7.9.1",
     "glob": "^7.1.1",
-    "jest": "^23.6.0",
+    "jest": "^26.6.3",
     "jest-dom": "^1.12.0",
     "kind-of": "^6.0.3",
     "mixin-deep": "^2.0.1",
     "node-fetch": "^2.6.1",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
-    "react-dom": "^16.14.0",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
     "rimraf": "^2.6.2",
     "rollup": "^0.66.5",
     "rollup-plugin-babel": "^4.0.3",
@@ -119,7 +121,6 @@
     "cov": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
   },
-  "version": "2.14.24",
-  "dependencies": {
-  }
+  "version": "2.14.25",
+  "dependencies": {}
 }

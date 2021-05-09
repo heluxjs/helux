@@ -1,5 +1,5 @@
 import { run, dispatch, getState, ccContext } from '../../src/index';
-import { makeStoreConfig, extractMessage } from '../util';
+import { makeStoreConfig } from '../util';
 
 const Foo = 'foo';
 const errorList = [];
@@ -14,28 +14,35 @@ describe('test top api dispatch', () => {
   });
 
 
-  test('dispatch undeclared module do nothing', async () => {
+  test('dispatch undeclared module should throw error', async () => {
     const moduleCount = Object.keys(ccContext.moduleName2stateKeys).length;
-    await dispatch(`xxx/changeName`, 'payload');
+    try{
+      await dispatch(`xxx/changeName`, 'payload');
+    }catch(err){
+      expect(err.message).toMatch(/(?=not found)/);
+    }
     const moduleCountAfterDispatch = Object.keys(ccContext.moduleName2stateKeys).length;
     expect(moduleCount).toBe(moduleCountAfterDispatch);
   });
 
 
-  test('dispatch undeclared method do nothing in unstrict mode', async () => {
+  test('dispatch undeclared method do nothing when set unsafe_moveReducerErrToErrorHandler true', async () => {
+    ccContext.runtimeVar.unsafe_moveReducerErrToErrorHandler = true; // hack
     await dispatch(`${Foo}/notExist`, 'payload');
   });
 
 
-  test('dispatch undeclared method should throw error in strict mode', async () => {
-    ccContext.runtimeVar.isStrict = true; // hack
-    await dispatch(`${Foo}/notExist`, 'payload');
-    expect(errorList[0].message).toMatch(/(?=no reducer fn found)/);
-    ccContext.runtimeVar.isStrict = false;
+  test('dispatch undeclared method should throw error', async () => {
+    ccContext.runtimeVar.unsafe_moveReducerErrToErrorHandler = false; // hack
+    try {
+      await dispatch(`${Foo}/notExist`, 'payload');
+    } catch (err) {
+      expect(err.message).toMatch(/(?=not found)/);
+    }
   });
 
 
-  test('dispatch string leterial', async () => {
+  test('dispatch string literal', async () => {
     await dispatch(`${Foo}/changeName`, 'payload');
     expect(fooState.name).toBe('payload');
   });

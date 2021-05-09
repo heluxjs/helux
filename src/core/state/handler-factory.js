@@ -18,7 +18,7 @@ import changeRefState from '../state/change-ref-state';
 import { innerSetState } from './set-state';
 import extractStateByKeys from './extract-state-by-keys';
 
-const { verboseInfo, makeError, justWarning, isPJO, okeys } = util;
+const { verboseInfo, makeError, justWarning, isPJO, okeys, isValueNotNull } = util;
 const {
   store: { getState, setState: storeSetState },
   reducer: { _reducer },
@@ -365,14 +365,11 @@ export function dispatch({
   callerRef, module: inputModule, renderKey, isSilent, force,
   type, payload, cb: reactCallback, __innerCb, delay = -1, chainId, oriChainId, chainId2depth } = {}
 ) {
-  const targetReducerMap = _reducer[inputModule];
-  if (!targetReducerMap) {
-    return __innerCb(new Error(`no reducerMap found for module:[${inputModule}]`))
-  }
-  const reducerFn = targetReducerMap[type];
+  const targetReducerFns = _reducer[inputModule] || {};
+  const reducerFn = targetReducerFns[type];
   if (!reducerFn) {
-    const fns = okeys(targetReducerMap);
-    const err = new Error(`no reducer fn found for [${inputModule}/${type}], is these fn you want:${fns}`);
+    const fns = okeys(targetReducerFns);
+    const err = new Error(`reducer fn [${inputModule}/${type}] not found, you may call:${fns}`);
     return __innerCb(err);
   }
 
@@ -389,7 +386,12 @@ export function makeDispatchHandler(
   defaultRenderKey = '', delay = -1, chainId, oriChainId, chainId2depth = {}
   // sourceModule, oriChainId, oriChainDepth
 ) {
-  return (paramObj = {}, payload, userInputRKey, userInputDelay) => {
+  // return Promise<any>
+  return (paramObj, payload, userInputRKey, userInputDelay) => {
+    if (!isValueNotNull(paramObj)) {
+      return Promise.reject(new Error('dispatch param is null/undefined'));
+    }
+
     let isLazy = inputIsLazy, isSilent = inputIsSilent;
     let _renderKey = '';
     let _delay = userInputDelay || delay;
@@ -438,8 +440,8 @@ export function makeDispatchHandler(
           if (!module) _module = fn.__stateModule;
         } else {
           if (typeof type !== 'string') {
-            runtimeHandler.tryHandleError(new Error('dispatchDesc.type must be string'));
-            return;
+            console.log('ffffffffuuuuuuuuccccccccckkkkkkkkk......');
+            return Promise.reject(new Error('dispatchDesc.type must be string'));
           }
           _type = type;
         }
@@ -449,9 +451,8 @@ export function makeDispatchHandler(
       let targetFirstParam = paramObj;
       if (paramObjType === 'function') {
         const fnName = paramObj.__fnName;
-        if (!fnName) {// 此函数是一个普通函数，没有配置到某个模块的reducer里，降级为invoke调用
+        if (!fnName) { // 此函数是一个普通函数，没有配置到某个模块的reducer里，降级为invoke调用
           return callInvoke();
-          // throw new Error('you are calling a unnamed function!!!');
         }
         targetFirstParam = fnName;
 
@@ -497,10 +498,13 @@ export function makeDispatchHandler(
         // oriChainId: _oriChainId, oriChainDepth: _oriChainDepth, sourceModule: _sourceModule,
       });
     }).catch(err => {
-      if (runtimeVar.isStrict) {
-        runtimeHandler.tryHandleError(err);
+      // 强烈不建议用户配置 unsafe_moveReducerErrToErrorHandler 为 true，转发 reducer 错误到 errorHandler 里
+      // 保留这个参数是为了让老版本的concent工程能够正常工作
+      if (runtimeVar.unsafe_moveReducerErrToErrorHandler) {
+        // 非严格模式，如果未配置 errorHandler，错误会被静默掉
+        runtimeHandler.tryHandleError(err, !runtimeVar.isStrict);
       } else {
-        justWarning(err);
+        throw err;
       }
     });
 
