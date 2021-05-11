@@ -261,6 +261,9 @@ ___
 </table>
 
 
+## Communication
+![QQ-qroup-qr-code](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-logo/qq-group-qr-code.png)
+
 ## 👅License
 
 concent is released under the MIT License. [http://www.opensource.org/licenses/mit-license](http://www.opensource.org/licenses/mit-license)
