@@ -1284,7 +1284,7 @@ export interface ICallInfo {
   delay: number;
   fnName: string;
   type: string;
-  calledBy: string;
+  calledBy: CalledBy;
   keys: string[];
   keyPath: string;
 }
