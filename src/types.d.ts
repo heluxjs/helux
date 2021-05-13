@@ -547,7 +547,7 @@ interface RefCtxSync {
  * get ctx in class : this.ctx
  * get ctx in function : const ctx = useConcent('foo');
  */
-export interface ICtxBase{
+export interface ICtxBase {
   // module: '$$default';
   readonly module: PropKey;
   readonly allModules: string[];
@@ -1076,7 +1076,7 @@ type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] | readonly (
 
 type TargetKeysInFn<PrivState extends IAnyFnReturnObj> = Exclude<keyof ReturnType<PrivState>, (number | symbol)>;
 type TargetKeysInObj<PrivState extends IAnyObj> = Exclude<keyof PrivState, (number | symbol)>;
- // setup 里的 ctx.settings 在初次拿到时是一个空map，此处需要用Omit剔除掉透传的settings来确保类型安全
+// setup 里的 ctx.settings 在初次拿到时是一个空map，此处需要用Omit剔除掉透传的settings来确保类型安全
 type EnsureEmptySettings<ICtx extends ICtxBase> = Omit<ICtx, 'settings'> & { settings: {} };
 
 export interface RegisterOptions<
@@ -1658,7 +1658,7 @@ export declare function defineModule<
   Cu extends ModuleComputedDef<S> = ModuleComputedDef<S>,
   Wa extends ModuleWatchDef<S> = ModuleWatchDef<S>,
   Li extends ModuleLifeCycleDef<S> = ModuleLifeCycleDef<S>,
-  Go extends Array<TargetKeysInObj<Rd>> = Array<TargetKeysInObj<Rd>>,
+  Go extends Array<Exclude<keyof Rd, number | symbol>> = Array<any>,
   >
   (moduleConfig: ModuleConfigDef<S, Rd, Cu, Wa, Li, Go>): {
     state: S;
