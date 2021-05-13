@@ -269,18 +269,6 @@ export type DepKeysOfWatch<State extends IAnyObj = IAnyObj> = DepKeyCollector<St
 
 type OnCallBack<EventCbArgs extends any[]> = (...args: EventCbArgs) => void;
 
-type RefComputedFn<FnCtx extends IFnCtxBase, CuRet, RefFullState extends IAnyObj = {}> = (
-  newState: RefFullState,
-  oldState: RefFullState,
-  fnCtx: FnCtx,
-) => CuRet;
-
-type RefWatchFn<FnCtx extends IFnCtxBase, RefFullState extends IAnyObj = {}> = (
-  newState: RefFullState,
-  oldState: RefFullState,
-  fnCtx: FnCtx,
-) => boolean | void;
-
 type GetComputedFn<T> = <FnCtx extends IFnCtxBase = IFnCtxBase>(
   newState: any,
   oldState: any,
@@ -464,6 +452,20 @@ type MultiWatch<FullState extends IAnyObj = IAnyObj> = {
 export type MultiWatchFn<FullState extends IAnyObj = IAnyObj> = (ctx: ICtxBase) => MultiWatch<FullState>;
 
 interface RefCtxWatch<State extends IAnyObj = IAnyObj> {
+  /**
+   * ```js
+   *  ctx.watch({
+   *    key1Changed: {
+   *      fn:(n, o, f){
+   *        const { key1 } = n; // dep collected;
+   *        if(f.isFirstCall)return;
+   *        // logic
+   *      },
+   *      immediate: true,
+   *    }
+   *  });
+   * ```
+   */
   <T extends MultiWatch<State>>(multiWatch: T): void;
   <T extends MultiWatchFn<State>>(multiWatchFn: T): void;
   <Key extends string, Fn extends WatchCb<State>>(fnKey: Key, fn: Fn, depKeysOrOpts?: DepKeysOfWatch<State> | WatchCbOptions<State>): void;
@@ -545,7 +547,7 @@ interface RefCtxSync {
  * get ctx in class : this.ctx
  * get ctx in function : const ctx = useConcent('foo');
  */
-export interface ICtxBase {
+export interface ICtxBase{
   // module: '$$default';
   readonly module: PropKey;
   readonly allModules: string[];
@@ -1050,8 +1052,7 @@ interface IRegBase<P extends IAnyObj, ICtx extends ICtxBase> {
   bindCtxToMethod?: boolean; // default false
   renderKeyClasses?: string[];
   compareProps?: boolean; // default true
-  // setup 里的 ctx.settings 是一个空map，此处需要用Omit剔除掉透传的settings
-  setup?: (refCtx: Omit<ICtx, 'settings'> & { settings: {} }) => IAnyObj | void;
+  setup?: (refCtx: EnsureEmptySettings<ICtx>) => IAnyObj | void;
   cuDesc?: MultiComputed | MultiComputedFn | null;
   // render?: (ctxOrMapped: any) => ReactNode; // work for useConcent, registerHookComp, registerDumb only
 }
@@ -1075,6 +1076,9 @@ type ConnectSpec<RootState extends IRootBase> = (keyof RootState)[] | readonly (
 
 type TargetKeysInFn<PrivState extends IAnyFnReturnObj> = Exclude<keyof ReturnType<PrivState>, (number | symbol)>;
 type TargetKeysInObj<PrivState extends IAnyObj> = Exclude<keyof PrivState, (number | symbol)>;
+ // setup 里的 ctx.settings 在初次拿到时是一个空map，此处需要用Omit剔除掉透传的settings来确保类型安全
+type EnsureEmptySettings<ICtx extends ICtxBase> = Omit<ICtx, 'settings'> & { settings: {} };
+
 export interface RegisterOptions<
   P extends IAnyObj,
   RootState extends IRootBase,
@@ -1088,7 +1092,7 @@ export interface RegisterOptions<
   watchedKeys?: (Extract<keyof RootState[ModuleName], string>)[] | TStar | TAuto;
   storedKeys?: PrivState extends IAnyFn ? (TargetKeysInFn<PrivState>)[] : (TargetKeysInObj<PrivState>)[]
   connect?: ConnectSpec<RootState>,
-  setup?: (refCtx: ICtx) => IAnyObj | void;
+  setup?: (refCtx: EnsureEmptySettings<ICtx>) => IAnyObj | void;
 }
 
 // only state required
@@ -1147,7 +1151,8 @@ declare function init<T extends IAnyObj = IAnyObj>(moduleState: T): Promise<Part
 
 /** default is true */
 export type TriggerOnce = boolean | void;
-export type ModuleConfig<S extends IAnyObj = any> = {
+
+export type ModuleTemplate<S extends IAnyObj = any> = {
   state: S | (() => S);
   reducer?: ModuleReducerDef<S>;
   ghosts?: string[] | readonly string[];
@@ -1155,8 +1160,12 @@ export type ModuleConfig<S extends IAnyObj = any> = {
   watch?: ModuleWatchDef<S>;
   lifecycle?: ModuleLifeCycleDef<S>;
 }
+// for legacy
+export type ModuleConfig<S extends IAnyObj = any> = ModuleTemplate<S>;
+
+// returned by createModule api
 export type RegisteredModule = {
-  /** concent will also keep a symbol('__regModule__') for stop user creating a fake RegisteredModule */
+  /** concent will also keep a symbol('__regModule__') for prevent user creating a fake RegisteredModule */
   __regModule__: string;
 } & ModuleConfig;
 
@@ -1617,6 +1626,7 @@ export type ModuleLifeCycleDef<S extends IState = IState> = {
  * 定义模块配置，此函数仅用于辅助单文件定义model时，方便向对象体注入类型
  * defineModule 返回的对象依然需要交给run函数执行后才能够被使用
  *
+ * ```js
  *  import { defineModule } from 'concent';
  *  const modelDef = defineModule({
  *    state: { a:1, b:2 };
@@ -1630,14 +1640,14 @@ export type ModuleLifeCycleDef<S extends IState = IState> = {
  *    }
  *    watch: {
  *      // 此处 newState oldState fnCtx 将获得类型
- *      xxAction(newState, oldState, fnCtx){}
+ *      xxChanged(newState, oldState, fnCtx){}
  *    }
  *    lifecycle: {
  *      willUnmount(dispatch, moduleState){}
  *    }; // lifecycle 下的所有方法获得类型
  *    ghosts: []; // 将被约束为 reducer keys
  *  });
- *
+ * ```
  * @param moduleConfig
  * @return moduleDef
  */

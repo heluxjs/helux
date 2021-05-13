@@ -1,8 +1,6 @@
-import configure from '../../api/configure';
-import { CC_CUSTOMIZE } from '../../support/constant';
-import getModuleName from '../param/get-module-name';
+/** @typedef {import('../../types').RegisteredModule} RegisteredModule */
+import useModuleConn from './use-module-conn';
 
-export default function (moduleRaw, moduleName, asTag) {
-  const finalModuleName = getModuleName(moduleName, asTag);
-  configure(finalModuleName, moduleRaw);
+export default function (/** @type RegisteredModule*/belongModule, options = {}) {
+  return useModuleConn(belongModule, [], options);
 }
