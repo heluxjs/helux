@@ -10,6 +10,10 @@ export function logErr(...args) {
   console.error(...args);
 }
 
+export function logWarn(...args) {
+  console.warn(...args);
+}
+
 export function noop() { }
 
 export function isValueNotNull(value) {

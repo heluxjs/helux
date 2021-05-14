@@ -10,6 +10,7 @@ describe('test top api run', () => {
   beforeEach(() => {
     // let run can work for all test block
     ccContext.runtimeVar.log = false;
+    ccContext.runtimeVar.isDebug = true;
     ccContext.isHot = true;
     ccContext.runtimeHandler.errorHandler = null;
     clearContextIfHot();
@@ -27,7 +28,7 @@ describe('test top api run', () => {
   test('configure plugin', () => {
     const aPlugin = {
       install: (on) => {
-        on(cst.SIG_FN_START, ({ sig, payload }) => {
+        on(cst.SIG_FN_START, ({ payload }) => {
           expect(payload.calledBy !== undefined).toBeTruthy();
           expect(payload.module !== undefined).toBeTruthy();
         });
@@ -223,10 +224,10 @@ describe('test top api run', () => {
           },
         },
         lifecycle: {
-          async initState(state) {
+          async initState() {
             return { num: 2, numBig: 200 };
           },
-          async initStateDone(dispatch, state) {
+          async initStateDone(dispatch) {
             await dispatch('changeNum', 300); // dispatch string leterial
             expect(getState('tmpModule').num).toBe(300);
 
@@ -269,7 +270,7 @@ describe('test top api run', () => {
           loaded(){
             sig = 1;
           },
-          initState(dispatch, state) {
+          initState() {
             sig = 2;
           },
         },
@@ -326,7 +327,7 @@ describe('test top api run', () => {
       test6: {
         state: { num: 1, numBig: 2, age: 2 },
         computed: {
-          numAsyncRet: async ({ num }, o, f) => {
+          numAsyncRet: async () => {
             await delay(200);
             return 100;
           },

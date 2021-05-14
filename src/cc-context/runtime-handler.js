@@ -1,8 +1,11 @@
-import { justWarning, logErr } from '../support/util';
+import { justWarning, logWarn, logErr } from '../support/util';
+import rv from './runtime-var';
 
 const defaultErrorHandler = (err, silent = false) => {
-  logErr('found uncaught err, suggest configure an errorHandler in run options');
-  logErr(err);
+  const logFn = rv.isDebug ? logWarn : logErr;
+  // 避免travis 发现 error打印就导致test用例不通过
+  logFn('found uncaught err, suggest configure an errorHandler in run options');
+  logFn(err);
   if (!silent) throw err;
 };
 
