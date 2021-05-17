@@ -77,6 +77,8 @@ export type SigStateChanged = CcCst['SIG_STATE_CHANGED'];
 
 // export interface IAnyObj { [key: string]: any };
 type ValueRange = string | number | boolean | symbol | object | null | undefined;
+type StrKey<T extends any> = Exclude<keyof T, symbol | number>;
+
 /**
  * 注意：
  * IState 能约束 plain json object, 而 IAnyObj 不可以
@@ -1693,15 +1695,23 @@ export const configure: typeof configureModule;
 
 export function cloneModule(newModule: string, existingModule: string, overwriteModuleConfig?: ModuleConfig): void;
 
-export function setState<RootState, ModuleState>(moduleName: keyof RootState, state: Partial<ModuleState>, renderKey?: RenderKey, delay?: number): void;
+export function setState<RootState, ModuleState>(moduleName: StrKey<RootState>, state: Partial<ModuleState>, renderKey?: RenderKey, delay?: number): void;
 
 export function setGlobalState<GlobalState>(state: Partial<GlobalState>): void;
 
-export function getState<RootState>(moduleName?: keyof RootState): object;
+// 放弃这种写法，拆为下面两个，方便外界调用时可直接通过泛型参数数量来确定返回类型
+// export function getState<RootState extends IAnyObj = IRootBase, M extends StrKey<RootState> = undefined>
+//   (moduleName?: M): M extends undefined ? RootState : RootState[M];
+
+export function getState<RootState extends IAnyObj = IRootBase, M extends StrKey<RootState> = undefined>
+  (moduleName: M): RootState[M];
+export function getState<RootState extends IAnyObj = IRootBase>(): RootState;
 
 export function getGlobalState<RootState extends IRootBase>(): RootState['$$global'];
 
-export function getComputed<T>(moduleName?: string): T;
+export function getComputed<RootCu extends IAnyObj = {}, M extends StrKey<RootState> = undefined>
+  (moduleName: M): RootCu[M];
+export function getComputed<RootCu extends IAnyObj = {}>(): RootCu;
 
 /**
  * for printing cu object in console as plain json object
