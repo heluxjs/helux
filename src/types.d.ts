@@ -77,8 +77,7 @@ export type SigStateChanged = CcCst['SIG_STATE_CHANGED'];
 
 // export interface IAnyObj { [key: string]: any };
 type ValueRange = string | number | boolean | symbol | object | null | undefined;
-type StrKey<T extends any> = Exclude<keyof T, symbol | number>;
-
+type StrKeys<T extends any> = Exclude<keyof T, symbol | number>;
 /**
  * 注意：
  * IState 能约束 plain json object, 而 IAnyObj 不可以
@@ -181,7 +180,7 @@ export type SettingsCType<Fn extends SetupFn, Ctx extends ICtxBase = ICtxBase> =
 
 export type StateType<S> = S extends IAnyFn ? ReturnType<S> : S;
 
-type RenderKey = string | number | Array<string | number>;
+type RenderKey = string | number | Array<string | number> | null;
 
 export interface IDispatchOptions {
   /**
@@ -696,15 +695,17 @@ interface RefCtxSetState<FullState extends IAnyObj = IAnyObj> {
   ): void;
 }
 
-interface RefCtxSetModuleState<ModuleState extends IAnyObj = IAnyObj> {
-  (
-    state: Partial<ModuleState>,
-    cb?: (newFullState: ModuleState) => void | null,
+interface RefCtxSetModuleState<RootState extends IAnyObj = IAnyObj> {
+  <M extends StrKeys<RootState>>(
+    moduleName: M,
+    state: Partial<RootState[M]>,
+    cb?: (newFullState: RootState[M]) => void | null,
     renderKey?: RenderKeyOrOpts,
     delay?: number,
   ): void;
-  (
-    updater: (prevFullState: ModuleState, props: any) => Partial<ModuleState>,
+  <M extends StrKeys<RootState>>(
+    moduleName: M,
+    updater: (prevFullState: RootState[M], props: any) => Partial<RootState[M]>,
     renderKey?: RenderKeyOrOpts,
     delay?: number,
   ): void;
@@ -759,7 +760,7 @@ export interface IRefCtx<
   readonly watchModule: RefCtxWatchModule;
   readonly initState: RefCtxInitState<ModuleState>;
   readonly setState: RefCtxSetState<ModuleState>;
-  readonly setModuleState: RefCtxSetModuleState<ModuleState>;
+  readonly setModuleState: RefCtxSetModuleState<any>;
   readonly syncer: Syncer<ModuleState>;
   readonly syncerOfBool: { [key in keyof PickBool<ModuleState>]: IAnyFn };
   /** alias of syncerOfBool  */
@@ -907,7 +908,7 @@ export interface ICtx
   readonly watchModule: RefCtxWatchModule<RootState>;
   readonly initState: RefCtxInitState<RootState[ModuleName]>;
   readonly setState: RefCtxSetState<RootState[ModuleName]>;
-  readonly setModuleState: RefCtxSetModuleState<RootState[ModuleName]>;
+  readonly setModuleState: RefCtxSetModuleState<RootState>;
   readonly syncer: Syncer<RootState[ModuleName]>;
   readonly syncerOfBool: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
   /** alias of syncerOfBool */
@@ -1695,21 +1696,21 @@ export const configure: typeof configureModule;
 
 export function cloneModule(newModule: string, existingModule: string, overwriteModuleConfig?: ModuleConfig): void;
 
-export function setState<RootState, ModuleState>(moduleName: StrKey<RootState>, state: Partial<ModuleState>, renderKey?: RenderKey, delay?: number): void;
+export function setState<RootState, ModuleState>(moduleName: keyof RootState, state: Partial<ModuleState>, renderKey?: RenderKey, delay?: number): void;
 
 export function setGlobalState<GlobalState>(state: Partial<GlobalState>): void;
 
 // 放弃这种写法，拆为下面两个，方便外界调用时可直接通过泛型参数数量来确定返回类型
-// export function getState<RootState extends IAnyObj = IRootBase, M extends StrKey<RootState> = undefined>
+// export function getState<RootState extends IAnyObj = IRootBase, M extends StrKeys<RootState> = undefined>
 //   (moduleName?: M): M extends undefined ? RootState : RootState[M];
 
-export function getState<RootState extends IAnyObj = IRootBase, M extends StrKey<RootState> = undefined>
+export function getState<RootState extends IAnyObj = IRootBase, M extends StrKeys<RootState> = undefined>
   (moduleName: M): RootState[M];
 export function getState<RootState extends IAnyObj = IRootBase>(): RootState;
 
 export function getGlobalState<RootState extends IRootBase>(): RootState['$$global'];
 
-export function getComputed<RootCu extends IAnyObj = {}, M extends StrKey<RootState> = undefined>
+export function getComputed<RootCu extends IAnyObj = {}, M extends StrKeys<RootState> = undefined>
   (moduleName: M): RootCu[M];
 export function getComputed<RootCu extends IAnyObj = {}>(): RootCu;
 

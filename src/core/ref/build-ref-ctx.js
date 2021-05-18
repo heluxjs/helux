@@ -47,7 +47,7 @@ const eType = (th) => `type of defineEffect ${th} param must be`;
 const getWatchedKeys = (ctx) => {
   if (ctx.watchedKeys === '-') {
     if (ctx.__$$renderStatus === START) return okeys(ctx.__$$compareWaKeys);
-    else return okeys(ctx.__$$curWaKeys);
+    return okeys(ctx.__$$curWaKeys);
   }
   return ctx.watchedKeys;
 };
@@ -58,7 +58,7 @@ const getConnectWatchedKeys = (ctx, moduleName) => {
 
   const getModuleWaKeys = (m) => {
     if (ctx.__$$renderStatus === START) return okeys(ctx.__$$compareConnWaKeys[m]);
-    else return okeys(ctx.__$$curConnWaKeys[m]);
+    return okeys(ctx.__$$curConnWaKeys[m]);
   };
 
   const getWKeys = (moduleName) => {

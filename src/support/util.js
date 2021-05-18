@@ -14,6 +14,10 @@ export function logWarn(...args) {
   console.warn(...args);
 }
 
+export function logNormal(...args) {
+  console.log(...args);
+}
+
 export function noop() { }
 
 export function isValueNotNull(value) {

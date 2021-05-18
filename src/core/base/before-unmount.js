@@ -20,7 +20,7 @@ function executeClearCb(cbMap, ctx) {
   okeys(cbMap).forEach(execute);
 }
 
-function triggerLifecyleWillUnmount(allModules, mstate) {
+function triggerLifecycleWillUnmount(allModules, mstate) {
   const handleOneModule = (m) => {
     module2insCount[m] -= 1;
     const moduleLifecycle = _lifecycle[m];
@@ -72,5 +72,5 @@ export default function (ref) {
 
   unsetRef(ccUniqueKey);
 
-  triggerLifecyleWillUnmount(allModules, __$$mstate);
+  triggerLifecycleWillUnmount(allModules, __$$mstate);
 }

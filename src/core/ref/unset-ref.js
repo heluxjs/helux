@@ -1,15 +1,14 @@
 import ccContext from '../../cc-context';
 import { decCcKeyInsCount } from './set-ref';
-import { styleStr, color } from '../../support/util';
+import { styleStr, color, logNormal } from '../../support/util';
 
 const {
-  ccUKey2ref, ccUKey2handlerKeys, runtimeVar,
-  handlerKey2handler,
+  ccUKey2ref, ccUKey2handlerKeys, runtimeVar, handlerKey2handler,
 } = ccContext;
 
 export default function (ccUniqueKey) {
   if (runtimeVar.isDebug) {
-    console.log(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
+    logNormal(styleStr(`${ccUniqueKey} unset ref`), color('purple'));
   }
 
   delete ccUKey2ref[ccUniqueKey];

@@ -3,7 +3,7 @@ import ccContext from '../../cc-context';
 import { ERR } from '../../support/constant'
 import * as util from '../../support/util'
 
-const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl } = util;
+const { justWarning, makeError: me, verboseInfo: vbi, styleStr: ss, color: cl, logNormal } = util;
 const { runtimeVar, ccUKey2ref } = ccContext;
 let ccUKey2insCount = {};
 
@@ -40,7 +40,7 @@ export function clearCount(){
 export default function (ref) {
   const { ccClassKey, ccKey, ccUniqueKey } = ref.ctx;
   if (runtimeVar.isDebug) {
-    console.log(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
+    logNormal(ss(`register ccKey ${ccUniqueKey} to CC_CONTEXT`), cl());
   }
 
   const isHot = ccContext.isHotReloadMode();

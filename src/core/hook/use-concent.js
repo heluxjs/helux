@@ -65,21 +65,21 @@ function buildRef(ref, insType, hookCtx, rState, iState, regOpt, hookState, hook
     ccClassKey: _ccClassKey, connect: _connect,
     ccOption: props.ccOption, id: props.id, ccKey: props.ccKey,
   });
-  hookRef.props = props;// keep shape same as class
-  buildRefCtx(hookRef, params, lite);// in buildRefCtx cc will assign hookRef.props to ctx.prevProps
+  hookRef.props = props; // keep shape same as class
+  buildRefCtx(hookRef, params, lite); // in buildRefCtx cc will assign hookRef.props to ctx.prevProps
 
   hookRef.ctx.reactSetState = hf.makeRefSetState(hookRef);
   hookRef.ctx.reactForceUpdate = hf.makeRefForceUpdate(hookRef);
 
   const refCtx = hookRef.ctx;
-  refCtx.props = props;// attach props to ctx
+  refCtx.props = props; // attach props to ctx
   beforeMount(hookRef, setup, bindCtxToMethod, cuDesc);
 
   hookCtx.prevCcUKey = hookCtx.ccUKey;
   hookCtx.ccUKey = hookRef.ctx.ccUniqueKey;
 
   // rewrite useRef for CcHook
-  refCtx.useRef = function useR(refName) {//give named function to avoid eslint error
+  refCtx.useRef = function useR(refName) { // give named function to avoid eslint error
     const ref = React.useRef(null);
     refCtx.refs[refName] = ref;
     return ref;
