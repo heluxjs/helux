@@ -88,21 +88,30 @@ function recordDep(ccUniqueKey, moduleName, watchedKeys) {
 }
 
 function makeProxyReducer(m, dispatch, reducerFnType = 0, ghostFnName) {
+  // 让绑定到组件上的mr.{xxx} 方法始终指向同一个，让 memo 优化可以生效
+  const name2wrapFn = {};
+
   // 此处代理对象仅用于log时可以打印出目标模块reducer函数集合
   return new Proxy((_caller[m] || {}), {
     get: (target, fnName) => {
       const fnNames = _module2fnNames[m];
       if (fnNames.includes(fnName)) {
-        // renderKey: rkeyOrOption
-        return (payload, renderKey, delay) => {
-          const callerParams = { module: m, fnName, payload, renderKey, delay };
-          if (reducerFnType === 0) return dispatch(`${m}/${fnName}`, payload, renderKey, delay);
-          if (reducerFnType === 1) return callerParams;
-          if (reducerFnType === 2) {
-            if (fnName === ghostFnName) return justWarning(`the target fn[${fnName}] can't be a ghost`);
-            return dispatch(`${m}/${ghostFnName}`, callerParams, renderKey, delay);
-          }
+        const fnKey = `${m}/${fnName}`;
+        let wrapFn = name2wrapFn[fnKey];
+        if (!wrapFn) {
+          wrapFn = (payload, renderKey, delay) => {
+            const callerParams = { module: m, fnName, payload, renderKey, delay };
+            if (reducerFnType === 0) return dispatch(fnKey, payload, renderKey, delay);
+            if (reducerFnType === 1) return callerParams;
+            if (reducerFnType === 2) {
+              if (fnName === ghostFnName) return justWarning(`the target fn[${fnName}] can't be a ghost`);
+              return dispatch(`${m}/${ghostFnName}`, callerParams, renderKey, delay);
+            }
+          };
+          name2wrapFn[fnKey] = wrapFn;
         }
+
+        return wrapFn;
       } else {
         // 可能是原型链上的其他方法或属性调用
         return target[fnName];
