@@ -5,6 +5,8 @@ export const MODULE_CC = '$$cc';
 export const MODULE_VOID = '$$concent_void_module_624313307';
 export const MODULE_CC_ROUTER = '$$CONCENT_ROUTER';
 
+// get val from callback or event
+export const AUTO_VAL = Symbol('__aval__');
 
 // component type
 export const CC_CLASS = '$$CcClass';

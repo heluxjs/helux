@@ -1,7 +1,7 @@
 /** @typedef {import('../../types-inner').IRefCtx} ICtx */
 import {
   MODULE_GLOBAL, ERR, CCSYNC_KEY,
-  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK
+  SET_STATE, SET_MODULE_STATE, FORCE_UPDATE, CC_HOOK, AUTO_VAL,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import { mapIns } from '../../cc-context/wakey-ukey-map';
@@ -210,18 +210,19 @@ function bindModApis(ref, ctx, stateModule, liteLevel, setState) {
 
 
 function bindSyncApis(ref, ctx, liteLevel) {
-  if (liteLevel > 2) { // level 3, assign async api
+  if (liteLevel > 2) { // level 3, assign sync api
     const cachedBoundFns = {};
 
     const doSync = (type, e, val, rkey, delay) => {
       if (typeof e === 'string') {
         const valType = typeof val;
         // now val is syncCb
-        if (isValueNotNull(val) && (valType === OBJ || valType === FN)) {
+        if (isValueNotNull(val) && (valType === OBJ || valType === FN || val === AUTO_VAL)) {
           return __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
         }
 
-        const key = `${e}|${val}|${rkey}|${delay}`;
+        const valStr = (val && val.toString) ? val.toString() : '';
+        const key = `${e}|${valStr}|${rkey}|${delay}`;
         let boundFn = cachedBoundFns[key];
         if (!boundFn) {
           cachedBoundFns[key] = __sync.bind(null, { [CCSYNC_KEY]: e, type, val, delay, rkey }, ref);
@@ -483,7 +484,8 @@ export default function (ref, params, liteLevel = 5) {
   // pick ccOption tag first, register tag second
   const ccUniqueKey = computeCcUniqueKey(ccClassKey, ccKey, refOption.tag);
   // 没有设定renderKey的话读id，最后才默认renderKey为ccUniqueKey
-  refOption.renderKey = ccOption.renderKey || id || ccUniqueKey;
+  const tmpRenderKey = ccOption.renderKey || id;
+  refOption.renderKey = tmpRenderKey !== undefined ? tmpRenderKey : ccUniqueKey;
   refOption.storedKeys = getStoredKeys(stateModule, state, ccOption.storedKeys, storedKeys);
 
   // 用户使用ccKey属性的话，必需显示的指定ccClassKey

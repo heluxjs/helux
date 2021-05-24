@@ -1,4 +1,4 @@
-import { CCSYNC_KEY } from '../../support/constant';
+import { CCSYNC_KEY, AUTO_VAL } from '../../support/constant';
 import { convertToStandardEvent, justWarning, getValueByKeyPath, isFn } from '../../support/util';
 import ccContext from '../../cc-context';
 
@@ -46,9 +46,9 @@ export default (spec, e, refCtx) => {
     const fullState = module !== refModule ? mState : refState;
     value = type === 'bool' ? !getValueByKeyPath(fullState, keyPath) : getValFromEvent(e);
 
-    // 优先从spec里取，取不到的话，从e里面分析并提取
+    // 优先从spec里取，取不到的话value不会重新被赋值，而是直接用上面从e里提取出来的值
     const val = spec.val;
-    if (val === undefined) {
+    if (val === undefined || val === AUTO_VAL) {
       // do nothing
     } else {
       if (isFn(val)) {
@@ -58,8 +58,8 @@ export default (spec, e, refCtx) => {
           value, keyPath, { event: e, module, moduleState: mState, fullKeyPath, state: refState, refCtx },
         );
 
-        if (syncRet != undefined) {
-          if (type === 'as') value = syncRet;// value is what cb returns;
+        if (syncRet !== undefined) {
+          if (type === 'as') value = syncRet; // value is what cb returns;
           else {
             const retType = typeof syncRet;
             if (retType === 'boolean') {
@@ -75,15 +75,15 @@ export default (spec, e, refCtx) => {
               justWarning(`syncKey[${syncKey}] cb result type error.`);
             }
           }
-        }else{
-          if (type === 'as') noAutoExtract = true;// if syncAs return undefined, will block update
+        } else {
+          if (type === 'as') noAutoExtract = true; // if syncAs return undefined, will block update
           // else continue update and value is just extracted above
         }
       } else {
         value = val;
       }
     }
-  } else { // 来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.sync} /> 
+  } else { // 来自于sync直接调用 <input data-ccsync="foo/f1" onChange={this.ctx.sync} /> 
     const se = convertToStandardEvent(e);
     if (se) { // e is event
       const currentTarget = se.currentTarget;
@@ -107,7 +107,7 @@ export default (spec, e, refCtx) => {
         }
       }
     } else {
-      // <Input onChange={this.sync}/> is invalid
+      // no data-ccsync in attrs, <Input onChange={this.ctx.sync}/> is invalid
       return null;
     }
   }
