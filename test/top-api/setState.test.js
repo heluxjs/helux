@@ -3,7 +3,7 @@ import { makeStoreConfig, extractMessage } from '../util';
 
 const Foo = 'foo';
 
-describe('test top api setState', async () => {
+describe('test top api setState', () => {
   let fooState;
 
   beforeAll(() => {
