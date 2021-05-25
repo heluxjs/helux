@@ -29,7 +29,7 @@ describe('test ctx api dispatch invalid params', () => {
   test('[call with ()] should throw error', () => {
     tcs.testPassEmptyState((/** @type Ctx*/ctx) => async () => {
       try {
-        ctx.dispatch()
+        await ctx.dispatch();
       } catch (err) {
         expect(err.message).toMatch(/(?=dispatch param is null)/);
       }
