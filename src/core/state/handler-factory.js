@@ -440,7 +440,6 @@ export function makeDispatchHandler(
           if (!module) _module = fn.__stateModule;
         } else {
           if (typeof type !== 'string') {
-            console.log('ffffffffuuuuuuuuccccccccckkkkkkkkk......');
             return Promise.reject(new Error('dispatchDesc.type must be string'));
           }
           _type = type;

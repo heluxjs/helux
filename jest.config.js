@@ -3,6 +3,7 @@
 module.exports = {
   // roots: ['<rootDir>'],
   testMatch: ['<rootDir>/test/**/*.{spec,test}.{js,jsx,ts,tsx}'],
+  // testMatch: ['<rootDir>/test/ctx-api/dispatch-invalid-params.test.js'],
   // testMatch: ['<rootDir>/test/top-api/run.test.js'],
   // testMatch: ['<rootDir>/test/top-api/runForSsr.test.js'],
   // testMatch: ['<rootDir>/test/ctx-api/dispatch.test.js'],

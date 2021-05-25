@@ -17,18 +17,22 @@ const setState = models.test.reducer.setState;
  */
 describe('test ctx api dispatch invalid params', () => {
   test('[call with (type:{type:Fn})] should throw error', () => {
-    try {
-      tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.dispatch({ type: setState }));
-    } catch (err) {
-      expect(err.message).toMatch(/(?=dispatchDesc.type must be string)/);
-    }
+    tcs.testPassEmptyState((/** @type Ctx*/ctx) => async () => {
+      try {
+        await ctx.dispatch({ type: setState })
+      } catch (err) {
+        expect(err.message).toMatch(/(?=dispatchDesc.type must be string)/);
+      }
+    });
   });
 
   test('[call with ()] should throw error', () => {
-    try {
-      tcs.testPassEmptyState((/** @type Ctx*/ctx) => () => ctx.dispatch());
-    } catch (err) {
-      expect(err.message).toMatch(/(?=dispatch param is null)/);
-    }
+    tcs.testPassEmptyState((/** @type Ctx*/ctx) => async () => {
+      try {
+        ctx.dispatch()
+      } catch (err) {
+        expect(err.message).toMatch(/(?=dispatch param is null)/);
+      }
+    });
   });
 });
