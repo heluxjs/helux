@@ -90,7 +90,7 @@ $ git clone https://github.com/concentjs/cra-project-concent-ts
 
 - [concent-pro](https://github.com/tnfe/concent-pro)
 
-A best practise project building by concent & typescript.
+A best practise project([onlie demo](https://tnfe.github.io/concent-pro)) building by concent & typescript.
 ```sh
 $ git clone https://github.com/tnfe/concent-pro        (dev with webpack)
 $ git clone https://github.com/tnfe/vite-concent-pro   (dev with vite)
