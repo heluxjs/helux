@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.14.25
+ * concent types.d.ts file v2.15.3
  */
 declare const mvoid = '$$concent_void_module_624313307';
 
@@ -198,6 +198,9 @@ export interface IDispatchOptions {
   delay?: number;
 }
 
+/**
+ * 自于 mrc.{xxxx} 调用返回的对象类型
+ */
 export interface ReducerCallerParams {
   module: string,
   fnName: string,
@@ -212,6 +215,9 @@ type ReducerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   delay?: number,
 ) => (ReturnType<T[K]> extends Promise<any> ? ReturnType<T[K]> : Promise<ReturnType<T[K]>>) : unknown;
 
+/**
+ * 推导模块里来得mrc 调用的单个reducer方法的类型
+ */
 type ReducerCallerMethod<T, K extends keyof T> = T[K] extends IAnyFn ? (
   payload: Parameters<T[K]>[0] extends undefined ? void : Parameters<T[K]>[0],
   renderKeyOrOptions?: RenderKey | IDispatchOptions,
@@ -237,6 +243,10 @@ export type ReducerTypeOfDef<S extends IAnyObj, Rd = IAnyObj> = Rd extends IAnyO
   { readonly [K in keyof Rd]: Rd[K] extends ReducerMethodOfDef<Rd[K], S> ? ReducerMethodOfDef<Rd[K], S> : never }
 ) : {};
 
+/**
+ * 推导模块caller类型的reducer方法集合类型
+ * 即 ctx.mrc 类型
+ */
 export type ReducerCallerType<T> = T extends IAnyObj ? (
   T['setState'] extends Function
   ? { readonly [K in keyof T]: ReducerCallerMethod<T, K> }
@@ -244,8 +254,7 @@ export type ReducerCallerType<T> = T extends IAnyObj ? (
     { readonly [K in keyof T]: ReducerCallerMethod<T, K> }
     & {
       setState: <P = IAnyObj>(payload: P, renderKeyOrOptions?: RenderKey | IDispatchOptions, delay?: number) => {
-        module: string, fnName: 'setState',
-        payload: P, renderKey: any, delay: any,
+        module: string, fnName: 'setState', payload: P, renderKey: any, delay: any,
       }
     }
   )) : {};
@@ -1702,19 +1711,32 @@ export function setState<RootState, ModuleState>(moduleName: keyof RootState, st
 
 export function setGlobalState<GlobalState>(state: Partial<GlobalState>): void;
 
+export function getGlobalState<RootState extends IRootBase = IRootBase>(): RootState['$$global'];
+
 // 放弃这种写法，拆为下面两个，方便外界调用时可直接通过泛型参数数量来确定返回类型
 // export function getState<RootState extends IAnyObj = IRootBase, M extends StrKeys<RootState> = undefined>
 //   (moduleName?: M): M extends undefined ? RootState : RootState[M];
 
-export function getState<RootState extends IAnyObj = IRootBase, M extends StrKeys<RootState> = undefined>
+export function getState<RootState extends IRootBase = IRootBase, M extends StrKeys<RootState> = undefined>
   (moduleName: M): RootState[M];
-export function getState<RootState extends IAnyObj = IRootBase>(): RootState;
+/**
+ * 适用于不需要感知 RootState 类型，直接返回用户的定义模块状态的场景
+ * @param moduleName
+ */
+export function getState<State extends IAnyObj = IAnyObj>(moduleName: string): State;
+export function getState<RootState extends IRootBase = IRootBase>(): RootState;
 
-export function getGlobalState<RootState extends IRootBase>(): RootState['$$global'];
 
-export function getComputed<RootCu extends IAnyObj = {}, M extends StrKeys<RootState> = undefined>
-  (moduleName: M): RootCu[M];
-export function getComputed<RootCu extends IAnyObj = {}>(): RootCu;
+export function getComputed<RootCu extends IAnyObj, M extends StrKeys<RootCu>>(moduleName: M): RootCu[M];
+/**
+ * 适用于不需要感知 RootCu 类型，直接返回用户的定义模块计算结果的场景
+ * @param moduleName 
+ */
+export function getComputed<Cu>(moduleName: string): Cu;
+/**
+ * 不传递模块名，直接返回整个 RootCu
+ */
+export function getComputed<RootCu extends IRootBase = IAnyObj>(): RootCu;
 
 /**
  * for printing cu object in console as plain json object
@@ -1819,6 +1841,27 @@ export function getRef<Ctx extends ICtxBase>(filters?: RefFilters | ccClassKey):
  */
 export function cloneModule(newModuleName: string, existingModuleName: string, overwriteModuleConfig?: ModuleConfig): void;
 
+export type Empty = void | null | undefined;
+export type MouseEv = React.MouseEvent<HTMLElement>;
+export type VoidPayload = Empty | MouseEv;
+interface FnPayload {
+  /**
+   * 【重载1】如果 fn 的第一位参数不是 VoidPayload，则会进入 unknown 逻辑导致类型推导出错
+   * 以便让用户必须传递具体的 payload 参数，让ts进入其他重载，便有机会检查 传递的payload类型是否符合定义的payload类型
+   */
+  <F extends IReducerFn>(fn: F): Parameters<F>[0] extends VoidPayload ? [F] : unknown;
+  /**
+   * 【重载2】
+   */
+  <F extends IReducerFn, P extends Parameters<F>[0]>(fn: F, payload: P): [F, P];
+  <F extends IReducerFn, P extends Parameters<F>[0]>(fn: F, payload: P, renderKey: RenderKeyOrOpts): [F, P, RenderKeyOrOpts];
+  <F extends IReducerFn, P extends Parameters<F>[0]>(fn: F, payload: P, renderKey: RenderKeyOrOpts, delay: number): [F, P, RenderKeyOrOpts, number];
+}
+/**
+ * 辅助检查 fn 类型和 payload 类型是否相匹配
+ */
+export const fnPayload: FnPayload;
+
 //////////////////////////////////////////////////
 // type helper
 //////////////////////////////////////////////////
@@ -1868,6 +1911,13 @@ export type GetRootComputed<Models extends { [key: string]: ModuleConfig<any> }>
   & (IncludeModelKey<Models, MODULE_GLOBAL> extends true ? {} : { [cst.MODULE_GLOBAL]: {} });
 
 
+type AnyOrEmpty = any | void | undefined | null;
+export type CallTargetParams = ReducerCallerParams
+  | [IAnyFn]
+  | [IAnyFn, AnyOrEmpty]
+  | [IAnyFn, AnyOrEmpty, RenderKeyOrOpts]
+  | [IAnyFn, AnyOrEmpty, RenderKeyOrOpts, delay: number];
+
 declare type DefaultExport = {
   ccContext: any,
   clearContextIfHot: typeof clearContextIfHot,
@@ -1902,6 +1952,7 @@ declare type DefaultExport = {
   defLazyComputed: typeof defLazyComputed,
   defComputedVal: typeof defComputedVal,
   defWatch: typeof defWatch,
+  fnPayload: FnPayload,
   cst: typeof cst,
   CcFragment: typeof CcFragment,
   Ob: typeof Ob,

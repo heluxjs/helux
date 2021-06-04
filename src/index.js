@@ -27,6 +27,7 @@ import _clearContextIfHot from './api/clear-context-if-hot';
 import _CcFragment from './component/CcFragment';
 import _Ob from './component/Ob';
 import _useConcent from './api/use-concent';
+import _fnPayload from './api/fn-payload';
 import * as _cst from './support/constant';
 import * as util from './support/util';
 
@@ -77,6 +78,7 @@ export const Ob = _Ob;
 export const cst = _cst;
 export const appendState = _appendState;
 export const useConcent = _useConcent;
+export const fnPayload = _fnPayload;
 
 export const defComputed = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
 export const defLazyComputed = (fn, defOptions) => {
@@ -126,6 +128,7 @@ const defaultExport = {
   defLazyComputed,
   defComputedVal,
   defWatch,
+  fnPayload,
 }
 
 let multiCcContainer = null;

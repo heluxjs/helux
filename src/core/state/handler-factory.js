@@ -423,6 +423,7 @@ export function makeDispatchHandler(
     };
 
     if (paramObjType === 'object') {
+      // [ moduleName: string, reducerFn: Function ]
       if (Array.isArray(paramObj)) {
         const [mInArr, rInArr] = paramObj;
         if (rInArr && rInArr.__fnName) {
