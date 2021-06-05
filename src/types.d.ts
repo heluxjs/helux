@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.15.3
+ * concent types.d.ts file v2.15.5
  */
 declare const mvoid = '$$concent_void_module_624313307';
 
@@ -390,7 +390,6 @@ declare function refCtxInvoke<UserFn extends IReducerFn>
   (fn: { module: string, fn: UserFn }, payload?: (Parameters<UserFn>)[0], renderKey?: RenderKeyOrOpts, delay?: number): Promise<GetPromiseT<UserFn>>;
 
 declare function refCtxForceUpdate<FullState = {}>(cb?: (newFullState: FullState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
-declare function refCtxSetGlobalState<GlobalState = {}>(state: Partial<GlobalState>, cb?: (newFullState: GlobalState) => void, renderKey?: RenderKeyOrOpts, delay?: number): void;
 
 declare function refCtxGetConnectWatchedKeys(): { [key: string]: string[] };
 declare function refCtxGetConnectWatchedKeys(module: string): string[];
@@ -655,7 +654,7 @@ export interface ICtxBase {
    */
   readonly useRef: <T extends any = any>(refName: string) => ((reactRef: T) => void);
   readonly forceUpdate: typeof refCtxForceUpdate;
-  readonly setGlobalState: typeof refCtxSetGlobalState;
+  readonly setGlobalState: RefCtxSetState;
   readonly setModuleState: RefCtxSetModuleState<any>;
   readonly sync: RefCtxSync;
   readonly syncer: any;
@@ -673,19 +672,23 @@ interface ICtxBaseP<Props extends any> extends ICtxBase {
   props: Props;
 }
 
-type RefCtxInitState<ModuleState extends IAnyObj = IAnyObj> = <PrivState extends IAnyObj>(state: PrivState | (() => PrivState)) =>
-  Extract<keyof PrivState, keyof ModuleState> extends never
-  // you must make sure that there is no common keys between privState and moduleState
-  ? {
-    state: PrivState & ModuleState, computed: RefCtxComputed<PrivState & ModuleState>,
-    watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>,
-    sync: RefCtxSync, syncer: Syncer<PrivState & ModuleState>,
-    syncerOfBool: SyncerOfBool<PrivState & ModuleState>, sybo: SyncerOfBool<PrivState & ModuleState>,
-    ccUniqueKey: string;
-    initTime: number;
-    renderCount: number;
-  }
-  : never;
+// 第二位泛型参数默认值设为 any，是为了使用 services/concent useSetup 时类型校验通过
+type RefCtxInitState<ModuleState extends IAnyObj = IAnyObj, GlobalState extends IAnyObj = any>
+  = <PrivState extends IAnyObj>(state: PrivState | (() => PrivState)) =>
+    Extract<keyof PrivState, keyof ModuleState> extends never
+    // you must make sure that there is no common keys between privState and moduleState
+    ? {
+      state: PrivState & ModuleState, computed: RefCtxComputed<PrivState & ModuleState>,
+      watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>,
+      sync: RefCtxSync, syncer: Syncer<PrivState & ModuleState>,
+      syncerOfBool: SyncerOfBool<PrivState & ModuleState>, sybo: SyncerOfBool<PrivState & ModuleState>,
+      ccUniqueKey: string;
+      initTime: number;
+      renderCount: number;
+      globalState: GlobalState;
+      setGlobalState: RefCtxSetState<PrivState & GlobalState>;
+    }
+    : never;
 
 type DecideFullState<T1, T2 extends IAnyObj> = T2['__no_anyobj_passed__'] extends '_nap_' ? T1 : T2;
 
@@ -917,9 +920,10 @@ export interface ICtx
   readonly computedModule: RefCtxComputedModule<RootState>;
   readonly watch: RefCtxWatch<PrivState & RootState[ModuleName]>;
   readonly watchModule: RefCtxWatchModule<RootState>;
-  readonly initState: RefCtxInitState<RootState[ModuleName]>;
+  readonly initState: RefCtxInitState<RootState[ModuleName], RootState[MODULE_GLOBAL]>;
   readonly setState: RefCtxSetState<RootState[ModuleName]>;
   readonly setModuleState: RefCtxSetModuleState<RootState>;
+  readonly setGlobalState: RefCtxSetState<RootState[MODULE_GLOBAL]>;
   readonly syncer: Syncer<RootState[ModuleName]>;
   readonly syncerOfBool: { [key in keyof PickBool<RootState[ModuleName]>]: IAnyFn };
   /** alias of syncerOfBool */
@@ -1730,13 +1734,13 @@ export function getState<RootState extends IRootBase = IRootBase>(): RootState;
 export function getComputed<RootCu extends IAnyObj, M extends StrKeys<RootCu>>(moduleName: M): RootCu[M];
 /**
  * 适用于不需要感知 RootCu 类型，直接返回用户的定义模块计算结果的场景
- * @param moduleName 
+ * @param moduleName
  */
 export function getComputed<Cu>(moduleName: string): Cu;
 /**
  * 不传递模块名，直接返回整个 RootCu
  */
-export function getComputed<RootCu extends IRootBase = IAnyObj>(): RootCu;
+export function getComputed<RootCu extends IRootBase = IRootBase>(): RootCu;
 
 /**
  * for printing cu object in console as plain json object
@@ -1913,10 +1917,10 @@ export type GetRootComputed<Models extends { [key: string]: ModuleConfig<any> }>
 
 type AnyOrEmpty = any | void | undefined | null;
 export type CallTargetParams = ReducerCallerParams
-  | [IAnyFn]
-  | [IAnyFn, AnyOrEmpty]
-  | [IAnyFn, AnyOrEmpty, RenderKeyOrOpts]
-  | [IAnyFn, AnyOrEmpty, RenderKeyOrOpts, delay: number];
+  | [reducerFn: IAnyFn]
+  | [reducerFn: IAnyFn, payload: AnyOrEmpty]
+  | [reducerFn: IAnyFn, payload: AnyOrEmpty, renderKeyOrOpts: RenderKeyOrOpts]
+  | [reducerFn: IAnyFn, payload: AnyOrEmpty, renderKeyOrOpts: RenderKeyOrOpts, delay: number];
 
 declare type DefaultExport = {
   ccContext: any,
