@@ -131,7 +131,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     hookRef = cref();
   } else {
     hookRef = ccUKey2ref[hookCtx.ccUKey];
-    if (!hookRef) {// single file demo in hot reload mode
+    // [KEY_1] single file demo in hot reload mode
+    if (!hookRef) {
       hookRef = cref();
     } else {
       const refCtx = hookRef.ctx;

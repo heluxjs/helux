@@ -134,7 +134,7 @@ export function makeError(code, extraMessage) {
   return error;
 }
 
-export function makeCuPackedValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx, ) {
+export function makeCuPackedValue(isLazy, result, needCompute, fn, newState, oldState, fnCtx,) {
   return { [CU_KEY]: 1, needCompute, fn, newState, oldState, fnCtx, isLazy, result };
 }
 
@@ -369,21 +369,8 @@ export function convertToStandardEvent(e) {
   return ret;
 }
 
-//防止有些在线IDE，绑定失败
-export function bindToWindow(key, toBindObj, targetObj) {
-  const attachToTarget = targetObj => {
-    if (!window) return;
-    if (targetObj) targetObj[key] = toBindObj;
-    else window[key] = toBindObj;
-  }
-
-  if (window) {
-    attachToTarget(targetObj);
-  } else {
-    setTimeout(() => {
-      attachToTarget(targetObj);
-    }, 3000);
-  }
+export function bindToContainer(key, toBindObj, targetContainerObj) {
+  if (targetContainerObj) targetContainerObj[key] = toBindObj;
 }
 
 /**
@@ -484,20 +471,6 @@ export function getRegisterOptions(options = {}) {
     return Object.assign(options, { module: MODULE_DEFAULT });
   }
   return { module: MODULE_DEFAULT };
-}
-
-let ccns = '';
-export function setCcNamespace(name) {
-  ccns = name;
-}
-
-export function getCcNamespace() {
-  return ccns;
-}
-
-export function getWinCc() {
-  if (ccns) return window.mcc[ccns];
-  return window.cc;
 }
 
 export function makeCommitHandler() {

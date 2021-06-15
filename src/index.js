@@ -31,6 +31,8 @@ import _fnPayload from './api/fn-payload';
 import * as _cst from './support/constant';
 import * as util from './support/util';
 
+const { bindToContainer, safeGet } = util;
+
 // for ssr
 if (typeof window === 'undefined') {
   // eslint-disable-next-line
@@ -90,6 +92,20 @@ export const defComputedVal = (val) => ({ fn: () => val, depKeys: [] });
 /** @type {import('./types').defWatch} */
 export const defWatch = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
 
+const innerBindCcTo = (custPrefix, bindTo) => {
+  if (!bindTo) return;
+  let prefix = custPrefix ? `${custPrefix}_` : '';
+  bindToContainer(`${prefix}cc`, defaultExport, bindTo);
+  bindToContainer(`${prefix}CC_CONTEXT`, ccContext, bindTo);
+  bindToContainer(`${prefix}ccc`, ccContext, bindTo);
+  bindToContainer(`${prefix}cccc`, ccContext.computed._computedValues, bindTo);
+  bindToContainer(`${prefix}sss`, ccContext.store._state, bindTo);
+}
+
+export const bindCcToWindow = (custPrefix) => {
+  innerBindCcTo(custPrefix, window);
+};
+
 const defaultExport = {
   cloneModule,
   emit,
@@ -124,6 +140,7 @@ const defaultExport = {
   appendState,
   useConcent,
   bindCcToMcc,
+  bindCcToWindow,
   defComputed,
   defLazyComputed,
   defComputedVal,
@@ -132,53 +149,58 @@ const defaultExport = {
 }
 
 let multiCcContainer = null;
-
-export function bindCcToMcc(name) {
+let mccKey = '';
+export function bindCcToMcc(key) {
   if (!multiCcContainer) {
     throw new Error('current env is not multi concent ins mode');
   }
-  if (multiCcContainer[name]) {
-    throw new Error(`ccNamespace[${name}] already existed in window.mcc`);
-  }
-  util.setCcNamespace(name);
-  util.bindToWindow(name, defaultExport, multiCcContainer);
+  mccKey = key;
+  const subBindTo = safeGet(multiCcContainer, key);
+  innerBindCcTo('', subBindTo);
 }
 
 function avoidMultiCcInSameScope() {
-  const winCc = util.getWinCc();
-  if (winCc) {
-    if (winCc.ccContext && winCc.ccContext.info) {
-      const existedVersion = winCc.ccContext.info.version;
-      const newVersion = ccContext.info.version;
-      //webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
-      //路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
-      //这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
-      if (existedVersion !== newVersion) {
-        throw new Error(
-          `concent ver conflict! cur[${existedVersion}]-new[${newVersion}], refresh browser or reinstall some concent-eco-lib`
-        );
-      }
+  let winCc = window.cc;
+  if (multiCcContainer && multiCcContainer[mccKey]) {
+    winCc = multiCcContainer[mccKey].cc;
+  }
+  if (!winCc) {
+    return;
+  }
+  if (winCc.ccContext && winCc.ccContext.info) {
+    const existedVersion = winCc.ccContext.info.version;
+    const newVersion = ccContext.info.version;
+    // webpack-dev-server模式下，有些引用了concent的插件或者中间件模块，如果和当前concent版本不一致的话，会保留另外一个concent在其包下
+    // 路径如 node_modules/concent-middleware-web-devtool/node_modules/concent（注，在版本一致时，不会出现此问题）
+    // 这样的就相当于隐形的实例化两个concent 上下文，这是不允许的
+    if (existedVersion !== newVersion) {
+      throw new Error(
+        `concent ver conflict! cur[${existedVersion}]-new[${newVersion}], refresh browser or reinstall some concent-eco-lib`
+      );
     }
   }
 }
 
-// 微前端机构里，每个子应用都有自己的cc实例，需要绑定到mcc下，防止相互覆盖
+let binded = false;
+// 微前端机构里，如果每个子应用都有自己的cc实例，允许用户绑定到mcc下，避免相互覆盖
+const autoBind = () => {
+  if (window) multiCcContainer = window.mcc;
+  avoidMultiCcInSameScope();
+  // 延迟绑定，等待用户调用 bindCcToWindow
+  setTimeout(() => {
+    if (!binded) {
+      binded = true;
+      bindCcToWindow('cc');
+    }
+  }, 2000);
+};
+
 if (window) {
   multiCcContainer = window.mcc;
-  if (multiCcContainer) {
-    // 1秒后concent会检查ccns，如果不存在，说明用户忘记调用bindCcToMcc了
-    setTimeout(() => {
-      const ccns = util.getCcNamespace();
-      if (!ccns) {
-        throw new Error('detect window.mcc, but user forget call bindCcToMcc in bundle entry');
-      } else {
-        avoidMultiCcInSameScope();
-      }
-    }, 1000);
-  } else {
-    avoidMultiCcInSameScope();
-    util.bindToWindow('cc', defaultExport);
-  }
+  autoBind();
+} else {
+  // 防止某些在线IDE不能及时拿到window
+  setTimeout(autoBind, 1000);
 }
 
 export default defaultExport;

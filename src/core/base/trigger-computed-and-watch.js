@@ -9,7 +9,7 @@ const { store: { getState } } = ccContext;
 export default function (ref) {
   const ctx = ref.ctx;
 
-  // 取原始对象，防止computeValueForRef里用Object.assign触发依赖收集
+  // 取原始对象，防止 computeValueForRef 里用 Object.assign 触发依赖收集
   const { hasComputedFn, hasWatchFn, connectedModules, module: refModule, unProxyState } = ctx;
 
   const callInfo = makeCallInfo(refModule);

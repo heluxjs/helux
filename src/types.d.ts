@@ -1923,6 +1923,8 @@ export type CallTargetParams = ReducerCallerParams
   | [reducerFn: IAnyFn, payload: AnyOrEmpty, renderKeyOrOpts: RenderKeyOrOpts, delay: number];
 
 declare type DefaultExport = {
+  bindCcToMcc:  (ccPrefix:string)=>void,
+  
   ccContext: any,
   clearContextIfHot: typeof clearContextIfHot,
   run: typeof run,

@@ -348,23 +348,36 @@ export default function startChangeRefState(state, options, ref) {
   /**
    * 避免死循环，利用 setTimeout 将执行流程放到下一轮事件循环里
    *  在 <= v2.10.13之前
-   *  1 watch回调里执行 setState 导致无限死循环
+   *  1 watch 回调里执行 setState 导致无限死循环
    *  2 setup 块里直接执行 setState 导致无限死循环
    * 
-   *  以 watch为例：
+   *  以 watch 为例：
    * function setup({watch, setState, initState}){
    *   initState({privKey: 2});
    *   watch('num', ()=>{
-   *     // 因为watch是在组件渲染前执行，当设置immediate为true时
-   *     // 组件处于 beforeMount 步骤，cUKey2Ref并未记录具体的ref,
-   *     // 此时回调里调用setState会导致 use-concent 140判断失败后
-   *     // 然后一直触发 cref函数，一直进入新的 beforeMount流程
+   *     // 因为watch是在组件渲染前执行，当设置 immediate 为 true 时
+   *     // 组件处于 beforeMount 步骤，cUKey2Ref 并未记录具体的 ref,
+   *     // 此时回调里调用setState会导致 use-concent 134 [KEY_1] 处判断失败后
+   *     // 然后一直触发 cref 函数，一直进入新的 beforeMount 流程
    *     setState({privKey:1});
    *   }, {immediate:true});
    * }
    */
   if (ref.ctx.__$$inBM) {
+    // <= 2.15.5
     setTimeout(() => startChangeRefState(state, options, ref), 0);
+
+    // > 2.15.5 todo 调整为此逻辑
+    // 满足一些的确需要在 setup里及时的将数据写入store的场景
+    // 由 permanentDispatcher 去触发其他组件实例渲染
+    // 自身的state直接合入，这样在实例首次渲染的函数体能拿到 setup 里写入的最新状态
+    // 注入此方法不会触发设置了 immediate 为 true 的实例 watch 函数
+    // const permanentDispatcher = ccContext.getDispatcher();
+    // if (permanentDispatcher) {
+    //   permanentDispatcher.changeState(state, options);
+    //   Object.assign(ref.ctx.state, state);
+    //   ref.state = Object.assign(ref.state, state);
+    // }
     return;
   }
   changeRefState(state, options, ref);
