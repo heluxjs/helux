@@ -196,7 +196,6 @@ const autoBind = () => {
 };
 
 if (window) {
-  multiCcContainer = window.mcc;
   autoBind();
 } else {
   // 防止某些在线IDE不能及时拿到window

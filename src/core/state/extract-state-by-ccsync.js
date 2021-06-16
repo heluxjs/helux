@@ -27,7 +27,7 @@ export default (ccsync, value, ccint, oriState, isToggleBool, refModule) => {
     _value = parseInt(value);
     // strict?
     if (Number.isNaN(_value)) {
-      util.justWarning(`${value} can not convert to int but you set ccint as true!！`);
+      util.justWarning(`${value} can not convert to int but you set ccint as true!`);
       _value = value;
     }
   }
