@@ -95,15 +95,18 @@ export const defWatch = (fn, defOptions) => util.makeFnDesc(fn, defOptions);
 const innerBindCcTo = (custPrefix, bindTo) => {
   if (!bindTo) return;
   let prefix = custPrefix ? `${custPrefix}_` : '';
-  bindToContainer(`${prefix}cc`, defaultExport, bindTo);
+  let ccKey = `${prefix}cc`;
+  bindToContainer(ccKey, defaultExport, bindTo);
   bindToContainer(`${prefix}CC_CONTEXT`, ccContext, bindTo);
   bindToContainer(`${prefix}ccc`, ccContext, bindTo);
   bindToContainer(`${prefix}cccc`, ccContext.computed._computedValues, bindTo);
   bindToContainer(`${prefix}sss`, ccContext.store._state, bindTo);
+  return ccKey;
 }
 
+let ccKey = null;
 export const bindCcToWindow = (custPrefix) => {
-  innerBindCcTo(custPrefix, window);
+  ccKey = innerBindCcTo(custPrefix, window);
 };
 
 const defaultExport = {
@@ -160,7 +163,7 @@ export function bindCcToMcc(key) {
 }
 
 function avoidMultiCcInSameScope() {
-  let winCc = window.cc;
+  let winCc = window[ccKey] || window.cc;
   if (multiCcContainer && multiCcContainer[mccKey]) {
     winCc = multiCcContainer[mccKey].cc;
   }
@@ -185,9 +188,10 @@ let binded = false;
 // 微前端机构里，如果每个子应用都有自己的cc实例，允许用户绑定到mcc下，避免相互覆盖
 const autoBind = () => {
   if (window) multiCcContainer = window.mcc;
-  avoidMultiCcInSameScope();
   // 延迟绑定，等待用户调用 bindCcToWindow
+  // 同时坚持 cc 版本问题
   setTimeout(() => {
+    avoidMultiCcInSameScope();
     if (!binded) {
       binded = true;
       bindCcToWindow('cc');

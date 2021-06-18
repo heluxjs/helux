@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.15.5
+ * concent types.d.ts file v2.15.8
  */
 declare const mvoid = '$$concent_void_module_624313307';
 
@@ -1922,9 +1922,12 @@ export type CallTargetParams = ReducerCallerParams
   | [reducerFn: IAnyFn, payload: AnyOrEmpty, renderKeyOrOpts: RenderKeyOrOpts]
   | [reducerFn: IAnyFn, payload: AnyOrEmpty, renderKeyOrOpts: RenderKeyOrOpts, delay: number];
 
+export declare function bindCcToMcc(key: string): void;
+export declare function bindCcToWindow(custPrefix: string): void;
+
 declare type DefaultExport = {
-  bindCcToMcc: (key: string) => void,
-  bindCcToWindow: (custPrefix: string) => void,
+  bindCcToMcc: typeof bindCcToMcc,
+  bindCcToWindow: typeof bindCcToWindow,
   ccContext: any,
   clearContextIfHot: typeof clearContextIfHot,
   run: typeof run,

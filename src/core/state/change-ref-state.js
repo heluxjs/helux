@@ -174,7 +174,7 @@ function triggerReactSetState(
   if (
     targetRef.__$$ms === UNMOUNTED // 已卸载
     || stateFor !== FOR_CUR_MOD
-    // 确保forceUpdate能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
+    // 确保 forceUpdate 能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     || (calledBy !== FORCE_UPDATE && isObjectNull(state))
   ) {
     return nextNoop();
@@ -216,7 +216,7 @@ function triggerReactSetState(
     else myChangedState = util.extractChangedState(refCtx.unProxyState, deltaCommittedState)
 
     if (myChangedState) {
-      // 记录stateKeys，方便triggerRefEffect之用
+      // 记录 stateKeys，方便 triggerRefEffect 之用
       refCtx.__$$settedList.push({ module: stateModule, keys: okeys(myChangedState) });
       refCtx.__$$ccSetState(myChangedState, reactCallback);
     }
@@ -270,7 +270,7 @@ function triggerBroadcastState(
 function broadcastState(
   callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, reactCallback, renderKeys, force
 ) {
-  if (!partialSharedState) {// null
+  if (!partialSharedState) { // null
     return;
   }
   const ccUKey2ref = ccContext.ccUKey2ref;
@@ -322,8 +322,8 @@ function broadcastState(
       } = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
 
       // computed & watch 过程中提交了新的state，合并到 unProxyState 里
-      // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute内部
-      // 保证了实例里cu或者wa函数commit提交的状态只能是 privateStateKey，所以合并到unProxyState是安全的
+      // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute 内部
+      // 保证了实例里cu或者wa函数 commit 提交的状态只能是 privateStateKey，所以合并到 unProxyState 是安全的
       if (hasDeltaInCu || hasDeltaInWa) {
         const changedRefPrivState = Object.assign(cuCommittedState, waCommittedState);
         const refModule = refCtx.module;
@@ -337,7 +337,7 @@ function broadcastState(
         refCtx.__$$settedList.push({ module: refModule, keys: okeys(changedRefPrivState) });
       }
 
-      // 记录sharedStateKeys，方便triggerRefEffect之用
+      // 记录 sharedStateKeys，方便 triggerRefEffect 之用
       refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
       refCtx.__$$ccForceUpdate();
     }
@@ -364,20 +364,19 @@ export default function startChangeRefState(state, options, ref) {
    * }
    */
   if (ref.ctx.__$$inBM) {
-    // <= 2.15.5
-    setTimeout(() => startChangeRefState(state, options, ref), 0);
+    // <= 2.15.7
+    // setTimeout(() => startChangeRefState(state, options, ref), 0);
 
-    // > 2.15.5 todo 调整为此逻辑
-    // 满足一些的确需要在 setup里及时的将数据写入store的场景
+    // > 2.15.7 调整为此逻辑
+    // 满足一些的确需要在 setup 里及时的将数据写入 store 的场景
     // 由 permanentDispatcher 去触发其他组件实例渲染
-    // 自身的state直接合入，这样在实例首次渲染的函数体能拿到 setup 里写入的最新状态
-    // 注入此方法不会触发设置了 immediate 为 true 的实例 watch 函数
-    // const permanentDispatcher = ccContext.getDispatcher();
-    // if (permanentDispatcher) {
-    //   permanentDispatcher.changeState(state, options);
-    //   Object.assign(ref.ctx.state, state);
-    //   ref.state = Object.assign(ref.state, state);
-    // }
+    // 自身的 state 直接合入，这样在实例首次渲染的函数体能拿到 setup 里写入的最新状态
+    const permanentDispatcher = ccContext.getDispatcher();
+    if (permanentDispatcher) {
+      permanentDispatcher.changeState(state, options);
+    }
+    Object.assign(ref.ctx.state, state);
+    Object.assign(ref.state, state);
     return;
   }
   changeRefState(state, options, ref);

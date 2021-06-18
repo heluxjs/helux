@@ -1,3 +1,13 @@
+#### 2021-06-18
+2.15.8 发布
+支持setup里直接调用setState了，处于beforeMount逻辑会走特殊的逻辑
+```js
+// >= 2.15.8 
+function setup(ctx){
+  ctx.setState({a:'1'}); // now it is ok
+}
+```
+
 #### 2021-02-13
 2.13.6 发布
 - feature: 新增`syncer`接口，在ts项目里可以替代`sync`更友好的同步值到`moduleState`里

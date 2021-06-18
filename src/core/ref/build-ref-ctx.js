@@ -610,7 +610,8 @@ export default function (ref, params, liteLevel = 5) {
     state: makeObState(ref, mergedState, stateModule, true),
     unProxyState: mergedState,// 没有proxy化的state
     moduleState,
-    __$$mstate: mstate,// 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
+    // 用于before-render里避免merge moduleState而导致的冗余触发get，此属性不暴露给用户使用，因其不具备依赖收集能力
+    __$$mstate: mstate,
     globalState,
     connectedState: {},
     // for function: pass value to extra in every render period
