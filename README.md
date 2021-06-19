@@ -77,6 +77,14 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 ## 💻 Playground
 
 ### Templates
+- [concent-pro](https://tnfe.github.io/concent-pro)
+
+A best practise project([git](https://github.com/tnfe/concent-pro)) building by concent & typescript.
+```sh
+$ git clone https://github.com/tnfe/concent-pro        (dev with webpack)
+$ git clone https://github.com/tnfe/vite-concent-pro   (dev with vite)
+```
+
 - [cra-template-concent-ts](https://codesandbox.io/s/cra-template-concent-ts-2x347)
 
 Install by npx command
@@ -86,14 +94,6 @@ $ npx create-react-app my-app --template concent-ts
 or clone its source code by git command
 ```sh
 $ git clone https://github.com/concentjs/cra-project-concent-ts
-```
-
-- [concent-pro](https://github.com/tnfe/concent-pro)
-
-A best practise project([onlie demo](https://tnfe.github.io/concent-pro)) building by concent & typescript.
-```sh
-$ git clone https://github.com/tnfe/concent-pro        (dev with webpack)
-$ git clone https://github.com/tnfe/vite-concent-pro   (dev with vite)
 ```
 
 ### Key features snippet
