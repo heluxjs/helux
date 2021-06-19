@@ -52,8 +52,6 @@
     "node-fetch": "^2.6.1",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0",
     "rimraf": "^2.6.2",
     "rollup": "^0.66.5",
     "rollup-plugin-babel": "^4.0.3",
