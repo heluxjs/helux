@@ -630,7 +630,7 @@ export default function (ref, params, liteLevel = 5) {
     connectedComputed,
 
     moduleReducer: null,
-    mrc: null,// 仅生成描述体，moduleReducerCaller
+    mrc: null, // 仅生成描述体，moduleReducerCaller
     /** ghost reducer map */
     mrg: {},
     globalReducer: null,
@@ -649,14 +649,14 @@ export default function (ref, params, liteLevel = 5) {
     retKey2fnUid: {},
 
     // api
-    reactSetState: noop,// 等待重写
+    reactSetState: noop, // 等待重写
     __boundSetState,
     reactForceUpdate: noop,// 等待重写
     __boundForceUpdate,
     setState,
     setModuleState,
     forceUpdate,
-    changeState,// not expose in d.ts
+    changeState, // not expose in d.ts
     refs,
     getRef: refName => refs[refName] || null,
     useRef: refName => {

@@ -1,4 +1,4 @@
-import { ICtxBase, IAnyFnInObj, IAnyObj, IFnCtxBase } from './types';
+import { ICtxBase, IAnyFnInObj, IAnyObj, IFnCtxBase, CalledBy } from './types';
 import { UNSTART, START, END } from './support/priv-constant';
 
 type RenderStatus = typeof UNSTART | typeof START | typeof END;
@@ -19,6 +19,24 @@ interface DepDesc {
   immediateRetKeys: string[];
 }
 
+interface Options {
+  module: string;
+  skipMiddleware: boolean;
+  payload: any;
+  stateChangedCb: (state: any) => void;
+  force: boolean;
+  keys: string[],
+  keyPath: string, // sync api 透传
+  reactCallback: (state: any) => void;
+  type: string;
+  calledBy: CalledBy,
+  fnName: string,
+  renderKey: string,
+  delay: number;
+}
+
+// 以下这些属性，尽管开发者可以log出来，
+// 但不标记在 ICtxBase里 是希望开发者不要访问或者修改这些属性，否则引发的问题后果自负哦
 export type IRefCtx = ICtxBase & {
   /**
    * 经 defineProperty 处理过的对象，用于获取 refComputedRawValues 里的 packedValue
@@ -42,6 +60,7 @@ export type IRefCtx = ICtxBase & {
    * key: moduleName
    */
   watchDep: Record<string, DepDesc>;
+  changeState: (state: any, options: Options) => void;
   /** is in before mount step */
   __$$inBM: boolean;
   __$$renderStatus: RenderStatus;

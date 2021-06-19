@@ -248,7 +248,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.15.8',
+    version: '2.15.9',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',
@@ -259,6 +259,7 @@ const ccContext = {
   middlewares: [],
   plugins: [],
   pluginNameMap: {},
+  /** @type {import('../types-inner').IRef | null} */
   permanentDispatcher: null,
   localStorage: null,
   recoverRefState: util.noop,

@@ -373,7 +373,7 @@ export default function startChangeRefState(state, options, ref) {
     // 自身的 state 直接合入，这样在实例首次渲染的函数体能拿到 setup 里写入的最新状态
     const permanentDispatcher = ccContext.getDispatcher();
     if (permanentDispatcher) {
-      permanentDispatcher.changeState(state, options);
+      permanentDispatcher.ctx.changeState(state, options);
     }
     Object.assign(ref.ctx.state, state);
     Object.assign(ref.state, state);

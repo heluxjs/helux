@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.15.8
+ * concent types.d.ts file v2.15.9
  */
 declare const mvoid = '$$concent_void_module_624313307';
 

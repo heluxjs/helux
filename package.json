@@ -119,8 +119,9 @@
     "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
     "test": "jest",
     "cov": "jest --coverage",
-    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls"
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
+    "pub": "npm publish --registry=http://registry.npmjs.org"
   },
-  "version": "2.15.8",
+  "version": "2.15.9",
   "dependencies": {}
 }
