@@ -1,4 +1,5 @@
 /** @typedef {import('../types').ModuleConfig} ModuleConfig */
+/** @typedef {import('../types').ConfOptions} ConfOptions */
 import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
 import { MODULE_GLOBAL, SIG_MODULE_CONFIGURED } from '../support/constant';
@@ -19,10 +20,10 @@ const { isPJO, evalState, okeys, isFn } = util;
  * @author zzk
  * @export
  * @param {string | {[module:string]: ModuleConfig}} moduleNameOrNamedModuleConf
- * @param {ModuleConfig} config - when module type is string
+ * @param {ModuleConfig | ConfOptions } config - when module type is string
  */
 export default function (moduleNameOrNamedModuleConf, config = {}, innerParams) {
-  const confOneModule = (module, /** @type ModuleConfig*/config) => {
+  const confOneModule = (module, /** @type ModuleConfig*/config, allowDup = false) => {
     if (!ccContext.isStartup) {
       pendingModules.push({ module, config });
       return;
@@ -33,9 +34,14 @@ export default function (moduleNameOrNamedModuleConf, config = {}, innerParams) 
     if (module === MODULE_GLOBAL) {
       throw new Error('configuring global module is not allowed');
     }
+    if (allowDup && ccContext.store.getState(module)) {
+      return;
+    }
     const { state, reducer, computed, watch, ghosts = [] } = config;
     const eState = evalState(state);
     if (isFn(state)) ccContext.moduleName2stateFn[module] = state;
+
+    // 运行重复且已存在，则直接忽略此模块
 
     initModuleState(module, eState, true, innerParams);
     initModuleReducer(module, reducer, ghosts);
@@ -49,7 +55,11 @@ export default function (moduleNameOrNamedModuleConf, config = {}, innerParams) 
 
   // now module is an object that includes partial store conf
   if (isPJO(moduleNameOrNamedModuleConf)) {
-    okeys(moduleNameOrNamedModuleConf).forEach(moduleName => confOneModule(moduleName, moduleNameOrNamedModuleConf[moduleName]));
+    let allowDup = false;
+    if (isPJO(config)) allowDup = config.allowDup === true;
+    okeys(moduleNameOrNamedModuleConf).forEach(moduleName =>
+      confOneModule(moduleName, moduleNameOrNamedModuleConf[moduleName], allowDup)
+    );
   } else {
     confOneModule(moduleNameOrNamedModuleConf, config);
   }

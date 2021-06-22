@@ -1180,6 +1180,10 @@ export type ModuleTemplate<S extends IAnyObj = any> = {
 }
 // for legacy
 export type ModuleConfig<S extends IAnyObj = any> = ModuleTemplate<S>;
+export interface ConfOptions {
+  /** 慎用此选项 */
+  allowDup: boolean;
+}
 
 // returned by createModule api
 export type RegisteredModule = {
@@ -1609,7 +1613,7 @@ export function useConcent<
  * @param moduleConfig
  */
 declare function configureModule(moduleName: string, moduleConfig: ModuleConfig): void;
-declare function configureModule(storeConfig: StoreConfig): void;
+declare function configureModule(storeConfig: StoreConfig, confOptions?: ConfOptions): void;
 
 /** 用于辅助 defineModule 方法推导出类型 */
 interface ModuleConfigDef<
