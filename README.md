@@ -77,7 +77,7 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 ## 💻 Playground
 
 ### Templates
-- [concent-pro](https://tnfe.github.io/concent-pro)
+- [tntweb-admin](https://tnfe.github.io/tntweb-admin)
 
 A best practise project([git](https://github.com/tnfe/concent-pro)) building by concent & typescript.
 ```sh
