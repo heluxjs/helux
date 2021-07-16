@@ -1,7 +1,7 @@
 import React, { Component, ReactNode, ComponentClass, FC } from 'react';
 
 /**
- * concent types.d.ts file v2.15.9
+ * concent types.d.ts file v2.15.13
  */
 declare const mvoid = '$$concent_void_module_624313307';
 
@@ -1725,8 +1725,8 @@ export function getGlobalState<RootState extends IRootBase = IRootBase>(): RootS
 // export function getState<RootState extends IAnyObj = IRootBase, M extends StrKeys<RootState> = undefined>
 //   (moduleName?: M): M extends undefined ? RootState : RootState[M];
 
-export function getState<RootState extends IRootBase = IRootBase, M extends StrKeys<RootState> = undefined>
-  (moduleName: M): RootState[M];
+export function getState<RootState extends IRootBase = IRootBase, M extends StrKeys<RootState> | Empty = undefined>
+  (moduleName: M): (M extends StrKeys<RootState> ? RootState[M] : RootState);
 /**
  * 适用于不需要感知 RootState 类型，直接返回用户的定义模块状态的场景
  * @param moduleName

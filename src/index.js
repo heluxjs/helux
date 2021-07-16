@@ -194,7 +194,7 @@ const autoBind = () => {
     avoidMultiCcInSameScope();
     if (!binded) {
       binded = true;
-      bindCcToWindow('cc');
+      bindCcToWindow('');
     }
   }, 2000);
 };
