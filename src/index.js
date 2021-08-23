@@ -189,7 +189,7 @@ let binded = false;
 const autoBind = () => {
   if (window) multiCcContainer = window.mcc;
   // 延迟绑定，等待用户调用 bindCcToWindow
-  // 同时坚持 cc 版本问题
+  // 同时检查 cc 版本问题
   setTimeout(() => {
     avoidMultiCcInSameScope();
     if (!binded) {

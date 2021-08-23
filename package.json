@@ -121,5 +121,8 @@
     "pub": "npm publish --registry=http://registry.npmjs.org"
   },
   "version": "2.15.14",
-  "dependencies": {}
+  "dependencies": {
+    "glob-parent": "^6.0.1",
+    "path-parse": "^1.0.7"
+  }
 }
