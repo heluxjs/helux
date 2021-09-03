@@ -226,8 +226,9 @@ export function justWarning(err) {
   if (err instanceof Error) {
     cer(err.message);
     cer(err.stack);
+  } else {
+    cer(err);
   }
-  else cer(err);
 }
 
 export function justTip(msg, tipColor = 'green') {

@@ -132,7 +132,10 @@ export default function register({
         }
 
         componentDidUpdate(prevProps, prevState, snapshot) {
-          if (super.componentDidUpdate) super.componentDidUpdate(prevProps, prevState, snapshot);
+          // if (super.componentDidUpdate) super.componentDidUpdate(prevProps, prevState, snapshot);
+          // @see https://codesandbox.io/s/example-modular-1-forked-z3xsb?file=/src/App.js
+          // prevState 不对，ctx.prevState是正确的 透传给用户
+          if (super.componentDidUpdate) super.componentDidUpdate(prevProps, this.ctx.prevState, snapshot);
           didUpdate(this);
         }
 

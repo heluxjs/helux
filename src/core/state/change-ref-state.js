@@ -2,7 +2,7 @@
 /** @typedef {import('../../types').ICtxBase} ICtxBase */
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
-import { INAJ, INAF } from '../../support/priv-constant';
+import { INAF } from '../../support/priv-constant';
 import runLater from '../base/run-later';
 import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
@@ -72,7 +72,6 @@ function changeRefState(state, {
   if (!state) return;
 
   if (!isPJO(state)) {
-    justWarning(`your committed state ${INAJ}`);
     return;
   }
 
