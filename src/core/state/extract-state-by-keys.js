@@ -24,8 +24,8 @@ export default function (state, stateKeys = [], returnNullIfEmpty = false, needI
   const cLen = committedStateKeys.length;
   const sLen = stateKeys.length;
 
-  if (cLen >= sLen) {
-    missKeyInState = cLen > sLen;
+  if (cLen > sLen) {
+    missKeyInState = true;
     stateKeys.forEach(key => {
       if (setPartialState(partialState, state, key)) isStateEmpty = false;
     });

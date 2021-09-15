@@ -122,7 +122,7 @@
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "pub": "npm publish --registry=http://registry.npmjs.org"
   },
-  "version": "2.15.16",
+  "version": "2.16.1",
   "dependencies": {
   }
 }
