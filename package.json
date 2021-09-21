@@ -61,7 +61,7 @@
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-uglify": "^6.0.0",
     "semver": "^5.5.0",
-    "set-value": "^3.0.2",
+    "set-value": "^4.0.1",
     "uglify-js": "3.5.8",
     "yargs-parser": "^20.2.1"
   },
