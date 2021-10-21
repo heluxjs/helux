@@ -13,7 +13,7 @@ import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 // import guessDuplicate from '../base/guess-duplicate';
 import * as hf from '../state/handler-factory';
-import { getRegisterOptions, evalState, isObject, isLocal } from '../../support/util';
+import { getRegisterOptions, evalState, isObject, isLocal, isOnlineEditor } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
 import isStrict, { recordFirst2HookCallLoc } from './is-strict';
@@ -104,7 +104,8 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
   const _registerOption = getRegisterOptions(registerOption);
 
-  if (isLocal() && [1, 2].includes(cursor)) {
+  const shouldGuessStrictMode = isLocal() || isOnlineEditor();
+  if (shouldGuessStrictMode && [1, 2].includes(cursor)) {
     try {
       throw new Error('guess strict mode');
     } catch (err) {
