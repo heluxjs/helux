@@ -20,6 +20,10 @@ export function logNormal(...args) {
 
 export function noop() { }
 
+export function isLocal() {
+  return window && window.location && window.location.port;
+}
+
 export function isValueNotNull(value) {
   return !(value === null || value === undefined);
 }

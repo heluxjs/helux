@@ -292,7 +292,12 @@ function _makeCuWaDesc(moduleName, fnKeyOrDesc, cb, cbOptions) {
     // 故需内部放过不允许key包含slash的校验，所以这里加上 allowSlash 标记
     let opts = {};
     if (cbOptions) opts = util.isObject(cbOptions) ? cbOptions : { depKeys: cbOptions };
-    return Object.assign({ allowSlash: true, depKeyModule: moduleName }, opts, fnDesc);
+
+    // 让 watchModule 的 depKeys 不拼模块前缀也能生效
+    let depKeys = Array.isArray(cbOptions.depKeys) ? cbOptions.depKeys : [];
+    depKeys = depKeys.map(key => (key.includes('/') ? key : `${moduleName}/${key}`));
+
+    return Object.assign({ allowSlash: true, depKeyModule: moduleName }, opts, { depKeys }, fnDesc);
   };
 
   if (typeof fnKeyOrDesc === 'string') {

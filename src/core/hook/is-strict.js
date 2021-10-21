@@ -1,16 +1,17 @@
-let firstCall = true;
 let isStrictMode = false;
 
-export function markFalse() {
-  isStrictMode = false;
+const locMsgs = {
+  1: '',
+  2: '',
+};
+
+export function recordFirst2HookCallLoc(cursor, msg) {
+  locMsgs[cursor] = msg;
+  if (cursor === 2 && locMsgs[1] === locMsgs[2]) {
+    isStrictMode = true;
+  }
 }
 
-export default function (cursor) {
-  // 首次调用，即可确认是不是严格模式了
-  if (firstCall) {
-    firstCall = false;
-    isStrictMode = cursor % 2 === 0;
-  }
-
+export default function () {
   return isStrictMode;
 }

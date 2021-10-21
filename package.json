@@ -89,14 +89,12 @@
   "module": "es/index.js",
   "types": "src/types.d.ts",
   "unpkg": "dist/concent.js",
-  "npmFileMap": [
-    {
-      "basePath": "/dist/",
-      "files": [
-        "*.js"
-      ]
-    }
-  ],
+  "npmFileMap": [{
+    "basePath": "/dist/",
+    "files": [
+      "*.js"
+    ]
+  }],
   "npmName": "concent",
   "peerDependencies": {
     "@types/react": "^16.13.0",
@@ -120,9 +118,8 @@
     "test": "jest",
     "cov": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
-    "pub": "npm publish --registry=http://registry.npmjs.org"
+    "pub": "npm publish --registry=https://registry.npmjs.org"
   },
-  "version": "2.16.1",
-  "dependencies": {
-  }
+  "version": "2.16.2",
+  "dependencies": {}
 }

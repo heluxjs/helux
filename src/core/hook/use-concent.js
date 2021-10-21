@@ -11,11 +11,12 @@ import beforeMount from '../base/before-mount';
 import didMount from '../base/did-mount';
 import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
+// import guessDuplicate from '../base/guess-duplicate';
 import * as hf from '../state/handler-factory';
-import { getRegisterOptions, evalState, isObject, shallowDiffers } from '../../support/util';
+import { getRegisterOptions, evalState, isObject, isLocal } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
-import isStrict, { markFalse } from './is-strict';
+import isStrict, { recordFirst2HookCallLoc } from './is-strict';
 
 const { ccUKey2ref } = ccContext;
 const cursor2hookCtx = {};
@@ -99,31 +100,36 @@ function getHookCtxCcUKey(hookCtx) {
 
 const tip = 'react version is LTE 16.8';
 
-// TODO, 访问 process.env.NODE_ENV 非生产模式为没有传tag的组件自动创建loc
-// 用于辅助判断 isStrictMode 是否正确
-
 function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
   const _registerOption = getRegisterOptions(registerOption);
 
+  if (isLocal() && [1, 2].includes(cursor)) {
+    try {
+      throw new Error('guess strict mode');
+    } catch (err) {
+      recordFirst2HookCallLoc(cursor, err.stack);
+    }
+  }
+
   // ef: effectFlag
   const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption, ef: 0 });
   const hookCtx = hookCtxContainer.current;
-  
+
   const { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra } = _registerOption;
 
   const reactUseState = React.useState;
   if (!reactUseState) {
     throw new Error(tip);
   }
-  
+
   const isFirstRendered = cursor === hookCtx.cursor;
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
-  
+
   const cref = (ref) =>
     buildRef(ref, insType, hookCtx, state, iState, _registerOption, hookState, hookSetter, props, ccClassKey);
-  
+
   let hookRef;
   // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
   if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
@@ -179,18 +185,11 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     // 虽然未存储到refs上，但是收集到的依赖存储到了waKey2uKeyMap上
     // 这里通过触发beforeUnmount来清理多余的依赖
     const cursor = hookCtx.cursor;
-    if (isStrict(cursor) && !hookCtx.clearPrev) {
+    if (isStrict() && !hookCtx.clearPrev) {
       hookCtx.clearPrev = true;
       const prevCursor = cursor - 1;
       const prevHookCtx = cursor2hookCtx[prevCursor];
       if (prevHookCtx && prevHookCtx.ef === 0) {
-        // 根组件useConcent 根组件包裹的子组件也useConcent
-        // 此时先触发子组件的effectHandler，同时cursor也是2
-        // 浅比较一下两者的注册参数，可以反推出是非strict模式
-        if (shallowDiffers(prevHookCtx.regOpt, hookCtx.regOpt)) {
-          return markFalse();
-        }
-
         // 确保是同一个类型的实例
         if (prevHookCtx.hookRef.ctx.ccClassKey === hookCtx.hookRef.ctx.ccClassKey) {
           delete cursor2hookCtx[prevCursor];
