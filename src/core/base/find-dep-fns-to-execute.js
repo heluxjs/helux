@@ -6,6 +6,7 @@ import {
 import { FN_WATCH, CATE_REF, FN_CU, CATE_MODULE } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import pickDepFns from '../base/pick-dep-fns';
+import dispatch from '../base/dispatch';
 import makeCuObState from '../computed/make-cu-ob-state';
 import executeAsyncCuInfo from '../computed/execute-async-cu-info';
 import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
@@ -160,6 +161,13 @@ export default function executeDepFns(
       // 异步计算的初始值
       let initialVal = '';
       let isInitialValSetted = false;
+      const innerDispatch = (immediate, fnOrFnStr, payload, dispatchOptions) => {
+        return new Promise(resolve => {
+          const d = () => dispatch(fnOrFnStr, payload, dispatchOptions, 0, { refModule: stateModule });
+          if (immediate) resolve(d());
+          else setTimeout(() => resolve(d()), 0);
+        });
+      };
 
       const fnCtx = {
         retKey, callInfo, isFirstCall, commit, commitCu, setted, changed,
@@ -169,6 +177,8 @@ export default function executeDepFns(
         committedState: curStateForComputeFn,
         deltaCommittedState: initialDeltaCommittedState,
         stateModule, refModule, oldState, refCtx,
+        dispatch: (...args) => innerDispatch(false, ...args),
+        dispatchImmediate: (...args) => innerDispatch(true, ...args),
         setInitialVal: () => {
           beforeMountFlag && justWarning(`non async ${keyInfo} call setInitialVal is unnecessary`);
         },

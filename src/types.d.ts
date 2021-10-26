@@ -1010,7 +1010,7 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 
 
 // to constrain IFnCtx interface series shape
-interface _IFnCtx<FullState extends IAnyObj = IAnyObj> {// 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
+interface _IFnCtx<FullState extends IAnyObj = IAnyObj> { // 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
   retKey: string;
   callInfo: ICallInfo,
   /**
@@ -1029,6 +1029,11 @@ interface _IFnCtx<FullState extends IAnyObj = IAnyObj> {// 方便 ctx.computed({
   setInitialVal: (initialVal: any) => void;
   commit: GetFnCtxCommit<FullState>;
   commitCu: GetFnCtxCommitCu<any>;
+  /**
+   * 总是优化考虑使用 dispatch 替代 dispatchImmediate，确保执行的目标函数里拿到的 moduleState 是落地后的结果
+   */
+  dispatch: typeof refCtxDispatch;
+  dispatchImmediate: typeof refCtxDispatch;
 }
 export interface IFnCtxBase extends _IFnCtx {
   refCtx: ICtxBase;
