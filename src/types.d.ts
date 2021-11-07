@@ -485,6 +485,15 @@ interface RefCtxWatch<State extends IAnyObj = IAnyObj> {
 
 /**
  * 不支持 watchModule 传递参数形如 (ctx)=> watchDesc
+ * ```ts
+ *  ctx.watchModule('foo', {
+ *    key1Change: ({key1})=>console.log(`key1 changed`),
+ *    key2Change: {
+ *      fn: ({key1})=>console.log(`key1 changed`),
+ *      immediate: true,
+ *    },
+ *  });
+ * ```
  */
 interface RefCtxWatchModule<RootState extends IAnyObj = IAnyObj> {
   <T extends MultiWatch<RootState[M]>, M extends keyof RootState>(moduleName: M, multiWatch: T): void;
@@ -497,15 +506,21 @@ interface RefCtxWatchModule<RootState extends IAnyObj = IAnyObj> {
 
 type ClearEffect = IAnyFnPromise | IAnyFn | void;
 type EffectDepKeys = string[] | null;
+type EffectDepPropKeys = string[] | null;
 interface DepKeysOptions {
   depKeys?: EffectDepKeys;
-  /** compare is true by default */
+  /** compare is false by default */
   compare?: boolean;
   /** immediate is true by default */
   immediate?: boolean;
 }
+interface PropDepKeysOptions {
+  depKeys?: EffectDepPropKeys;
+  /** immediate is true by default */
+  immediate?: boolean;
+}
 
-// compare default is true, 表示针对object类型的值需不需要比较
+// compare default is false, 表示针对object类型的值需不需要比较
 // immediate default is true
 declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, compare?: boolean, immediate?: boolean): void;
@@ -513,9 +528,9 @@ declare function refCtxEffect<RefCtx extends ICtxBase = ICtxBase>
   (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOptions): void;
 
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeys?: EffectDepKeys, immediate?: boolean): void;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depPropKeys?: EffectDepPropKeys, immediate?: boolean): void;
 declare function refCtxEffectProps<RefCtx extends ICtxBase = ICtxBase>
-  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depKeysOpt?: DepKeysOptions): void;
+  (cb: (refCtx: RefCtx, isFirstCall: boolean) => ClearEffect, depPropKeysOpt?: PropDepKeysOptions): void;
 
 
 interface SyncCb {

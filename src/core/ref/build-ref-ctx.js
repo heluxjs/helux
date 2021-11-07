@@ -284,7 +284,7 @@ function bindEventApis(ctx, liteLevel, ccUniqueKey) {
 
 function _makeCuWaDesc(moduleName, fnKeyOrDesc, cb, cbOptions) {
   const newDesc = {};
-  const makeFnDesc = (fn, cbOptions = {}) => {
+  const makeFnDesc = (fn, cbOptions) => {
     const fnDesc = util.isObject(fn) ? fn : { fn };
     // 因为加上 / 后，cb的state类型会和模块相关了，types文件目前不方便推导含 / 的cb参数类型
     // 所以types文件里不允许传递 allowSlash 标记，让用户定义的retKey包含 / 会报运行时错误
@@ -293,11 +293,15 @@ function _makeCuWaDesc(moduleName, fnKeyOrDesc, cb, cbOptions) {
     let opts = {};
     if (cbOptions) opts = util.isObject(cbOptions) ? cbOptions : { depKeys: cbOptions };
 
-    // 让 watchModule 的 depKeys 不拼模块前缀也能生效
-    let depKeys = Array.isArray(cbOptions.depKeys) ? cbOptions.depKeys : [];
-    depKeys = depKeys.map(key => (key.includes('/') ? key : `${moduleName}/${key}`));
+    let depKeys = opts.depKeys || fnDesc.depKeys;
+    if (Array.isArray(depKeys)) {
+      // 让 watchModule 的 depKeys 不拼模块前缀也能生效
+      depKeys = depKeys.map(key => (key.includes('/') ? key : `${moduleName}/${key}`));
+    } else {
+      depKeys = [];
+    }
 
-    return Object.assign({ allowSlash: true, depKeyModule: moduleName }, opts, { depKeys }, fnDesc);
+    return Object.assign({ allowSlash: true, depKeyModule: moduleName }, fnDesc, opts, { depKeys });
   };
 
   if (typeof fnKeyOrDesc === 'string') {
@@ -320,11 +324,11 @@ function bindEnhanceApis(ctx, liteLevel, stateModule) {
     ctx.watch = getDefineWatchHandler(ctx);
     ctx.computed = getDefineComputedHandler(ctx);
     // 方便type文件定义类型时能够推导出cb的参数类型为已连接的模块状态类型
-    ctx.watchModule = (moduleName, cb, cbOptions = {}) => {
-      if (util.isFn(cb)) {
-        ctx.watch(_makeCuWaDesc(moduleName, getFnKey(), cb, cbOptions));
+    ctx.watchModule = (moduleName, cbOrMultiWatchDesc, cbOptions = {}) => {
+      if (util.isFn(cbOrMultiWatchDesc)) {
+        ctx.watch(_makeCuWaDesc(moduleName, getFnKey(), cbOrMultiWatchDesc, cbOptions));
       } else {
-        ctx.watch(_makeCuWaDesc(moduleName, cb));
+        ctx.watch(_makeCuWaDesc(moduleName, cbOrMultiWatchDesc));
       }
     };
     // 方便type文件定义类型时能够推导出cb的参数类型为已连接的模块状态类型

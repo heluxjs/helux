@@ -98,7 +98,7 @@ export default function (ref, callByDidMount) {
         shouldEffectExecute = true;
       } else {
         // compare为true看有没有发生变化（object类型值不走immutable写法的话，这里是false，所以compare值默认是false）
-        // 为false则看是不是setted
+        // compare为false则看是不是setted
         shouldEffectExecute = compare ? isValChanged : mappedSettedKey[key];
       }
 

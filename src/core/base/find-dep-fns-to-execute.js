@@ -6,7 +6,6 @@ import {
 import { FN_WATCH, CATE_REF, FN_CU, CATE_MODULE } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import pickDepFns from '../base/pick-dep-fns';
-import dispatch from '../base/dispatch';
 import makeCuObState from '../computed/make-cu-ob-state';
 import executeAsyncCuInfo from '../computed/execute-async-cu-info';
 import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
@@ -140,6 +139,8 @@ export default function executeDepFns(
   let whileCount = 0;
   let curStateForComputeFn = committedState;
   let hasDelta = false;
+  // 不在头部引入，避免循环依赖 TODO：后期做更好的抽象
+  const ccDispatch = require('../base/dispatch').default;
 
   while (curStateForComputeFn) {
     whileCount++;
@@ -163,7 +164,7 @@ export default function executeDepFns(
       let isInitialValSetted = false;
       const innerDispatch = (immediate, fnOrFnStr, payload, dispatchOptions) => {
         return new Promise(resolve => {
-          const d = () => dispatch(fnOrFnStr, payload, dispatchOptions, 0, { refModule: stateModule });
+          const d = () => ccDispatch(fnOrFnStr, payload, dispatchOptions, 0, { refModule: stateModule });
           if (immediate) resolve(d());
           else setTimeout(() => resolve(d()), 0);
         });
