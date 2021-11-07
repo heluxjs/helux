@@ -297,8 +297,10 @@ function _makeCuWaDesc(moduleName, fnKeyOrDesc, cb, cbOptions) {
     if (Array.isArray(depKeys)) {
       // 让 watchModule 的 depKeys 不拼模块前缀也能生效
       depKeys = depKeys.map(key => (key.includes('/') ? key : `${moduleName}/${key}`));
-    } else {
-      depKeys = [];
+    }
+    // 不是自动搜集、也不是全依赖，置为自动收集模式
+    else if (!['-', '*'].includes(depKeys)) {
+      depKeys = '-';
     }
 
     return Object.assign({ allowSlash: true, depKeyModule: moduleName }, fnDesc, opts, { depKeys });

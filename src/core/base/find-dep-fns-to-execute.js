@@ -139,7 +139,7 @@ export default function executeDepFns(
   let whileCount = 0;
   let curStateForComputeFn = committedState;
   let hasDelta = false;
-  // 不在头部引入，避免循环依赖 TODO：后期做更好的抽象
+  // 不在头部引入，避免循环依赖，TODO：后期做更好的抽象
   const ccDispatch = require('../base/dispatch').default;
 
   while (curStateForComputeFn) {
