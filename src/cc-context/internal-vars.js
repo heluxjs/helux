@@ -7,9 +7,8 @@ const getRootState = () => ({
   [MODULE_DEFAULT]: {},
 })
 
-
-/** ccContext section */
 export const _state = getRootState();
+
 export const _prevState = getRootState();
 
 export const reducer = {
