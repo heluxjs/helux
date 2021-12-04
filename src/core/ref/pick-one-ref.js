@@ -1,5 +1,5 @@
 /** @typedef {import('../../types').ICtxBase} ICtxBase */
-import ccContext from '../../cc-context';
+import { refs, permanentDispatcherRef } from '../../cc-context/internal-vars';
 import { okeys } from '../../support/util';
 import { checkModuleName } from '../param/checker';
 
@@ -10,7 +10,7 @@ const ignoreIt = `if this message doesn't matter, you can ignore it`;
  * pick one ccInstance ref randomly
  */
 export default function (module, mustBelongToModule = false) {
-  const { ccUKey2ref } = ccContext;
+  const ccUKey2ref = refs;
 
   let oneRef = null;
   if (module) {
@@ -31,7 +31,7 @@ export default function (module, mustBelongToModule = false) {
     if (mustBelongToModule) {
       throw new Error(`[[pickOneRef]]: no ref found for module[${module}]!,${ignoreIt}`);
     } else {
-      oneRef = ccContext.permanentDispatcher;
+      oneRef = permanentDispatcherRef.value;
     }
   }
 

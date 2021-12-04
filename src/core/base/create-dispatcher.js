@@ -2,7 +2,7 @@ import buildRefCtx from '../ref/build-ref-ctx';
 import mapRegistrationInfo from './map-registration-info';
 import { CC_DISPATCHER, MODULE_DEFAULT, CC_CLASS } from '../../support/constant';
 import { noop } from '../../support/util';
-import ccContext from '../../cc-context';
+import { permanentDispatcherRef } from '../../cc-context/internal-vars';
 
 export default function () {
   const ccClassKey = CC_DISPATCHER;
@@ -14,5 +14,5 @@ export default function () {
   buildRefCtx(mockRef, {
     module: MODULE_DEFAULT, ccClassKey, state: {},
   });
-  ccContext.permanentDispatcher = mockRef;
+  permanentDispatcherRef.value = mockRef;
 }

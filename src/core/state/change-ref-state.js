@@ -65,7 +65,7 @@ function getCallerForce(force) {
  * 修改状态入口函数
  */
 function changeRefState(state, {
-  module, skipMiddleware = false, payload, stateChangedCb, force = false,
+  module, skipMiddleware = false, payload, stateChangedCb, force = false, stateSnapshot,
   keys = [], keyPath = '', // sync api 透传
   reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, targetRef
 ) {
@@ -142,8 +142,8 @@ function changeRefState(state, {
           }
         } else {
           send(SIG_STATE_CHANGED, {
-            calledBy, type, committedState, sharedState: realShare || {},
-            module, ccUniqueKey, renderKey: targetRenderKey
+            calledBy, type, committedState, sharedState: realShare || {}, payload,
+            module, ccUniqueKey, renderKey: targetRenderKey, stateSnapshot,
           });
         }
 

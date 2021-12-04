@@ -3,10 +3,9 @@
 import * as util from '../../support/util';
 import { INAJ, STR_ARR_OR_STAR, ALCC_KEY } from '../../support/priv-constant';
 import { ERR, MODULE_GLOBAL } from '../../support/constant';
-import ccContext from '../../cc-context';
+import { _state, moduleName2stateKeys } from '../../cc-context/internal-vars';
 
 const { isModuleNameCcLike, isModuleNameValid, verboseInfo: vbi, makeError, okeys } = util;
-const { store, getModuleStateKeys } = ccContext
 
 /** 检查模块名，名字合法，就算检查通过 */
 export function checkModuleNameBasically(moduleName, innerParams = {}) {
@@ -29,7 +28,6 @@ export function checkModuleNameBasically(moduleName, innerParams = {}) {
  */
 export function checkModuleName(moduleName, moduleMustNotExisted = true, vbiMsg = '', innerParams) {
   const _vbiMsg = vbiMsg || `module[${moduleName}]`;
-  const _state = store._state;
   checkModuleNameBasically(moduleName, innerParams);
   if (moduleName !== MODULE_GLOBAL) {
     if (moduleMustNotExisted) {
@@ -66,7 +64,7 @@ export function checkKeys(module, keys, keyShouldBeModuleStateKey = true, extraI
   const keyword = keyShouldBeModuleStateKey ? '' : 'not ';
   const keyTip = (name, keyword) => `${extraInfo}key[${name}] must ${keyword}be a module state key`;
 
-  const moduleStateKeys = getModuleStateKeys(module);
+  const moduleStateKeys = moduleName2stateKeys[module] || [];
   keys.forEach(sKey => {
     const keyInModuleState = moduleStateKeys.includes(sKey);
     const throwErr = () => {

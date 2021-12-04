@@ -46,11 +46,12 @@ export function isBool(val) {
   return typeof val === 'boolean';
 }
 
+// !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
+const objStrList = ['[object Object]', '[object Module]', '[object Map]', '[object Set]'];
 export function isObject(obj) {
   if (!obj) return false; // undefined null etc...
   const str = protoToString.call(obj);
-  // !!!编译后的对象可能重写了toStringTag Symbol(Symbol.toStringTag): "Module"
-  return str === '[object Object]' || str === '[object Module]';
+  return objStrList.includes(str);
 }
 
 export function isArray(obj) {

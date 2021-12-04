@@ -1231,6 +1231,10 @@ export type SigFnData = {
     module: string,
     chainId: number,
     fn: Function,
+    /**
+     * 可以等同于方法名
+     */
+    type: string,
   }
 };
 export type SigModuleConfiguredData = {
@@ -1242,10 +1246,12 @@ export type SigStateChangedData = {
   payload: {
     calledBy: CalledBy,
     type: string,
+    payload: any,
     committedState: IAnyObj,
     sharedState: IAnyObj | null,
     module: string,
     ccUniqueKey: string,
+    stateSnapshot: IAnyObj,
     renderKey: Array<string | number>[],
   }
 };
@@ -1263,8 +1269,8 @@ export interface Plugin {
 
 export interface RunOptions {
   middlewares?: ((midCtx: MidCtx, next: Function) => void)[];
-  plugins?: Plugin[];// default is false
-  isHot?: boolean;// default is false
+  plugins?: Plugin[]; // default is false
+  isHot?: boolean; // default is false
   isStrict?: boolean;
   /**
    * default is false
@@ -1302,7 +1308,7 @@ export interface RunOptions {
    *
    * const { obj } = ctx.state;
    * obj.foo = 'new';
-   * ctx.setState({obj});// trigger re-render
+   * ctx.setState({obj}); // trigger re-render
    *
    * // but if you set objectValueCompare true, you need write immutable style code to trigger re-render
    * ctx.setState({obj}); // no trigger re-render
@@ -1319,6 +1325,10 @@ export interface RunOptions {
    *  so if you want your async cu fn work well after compiled, you must specify async-cu-keys
    */
   asyncCuKeys?: string[],
+  /**
+   * pass immer or limu
+   */
+  immutLib?: any,
 }
 
 export interface ICallInfo {

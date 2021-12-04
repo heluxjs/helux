@@ -1,6 +1,6 @@
 /** @typedef {import('../../types-inner').IRefCtx} IRefCtx */
 import { START } from '../../support/priv-constant';
-import moduleName2stateKeys from '../../cc-context/statekeys-map';
+import { moduleName2stateKeys } from '../../cc-context/internal-vars';
 import { mapInsM, makeWaKey } from '../../cc-context/wakey-ukey-map';
 
 //  before render

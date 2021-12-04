@@ -3,7 +3,7 @@
 import { makeCuPackedValue, okeys, delay } from '../../support/util';
 import * as cst from '../../support/constant';
 import * as waKeyMap from '../../cc-context/wakey-ukey-map';
-import ccUKey2ref from '../../cc-context/refs';
+import { refs } from '../../cc-context/internal-vars';
 import runtimeHandler from '../../cc-context/runtime-handler';
 import { CATE_REF } from '../../support/constant';
 import { send } from '../plugin/index';
@@ -75,7 +75,7 @@ export default async function executeCuInfo(cuInfo) {
       const uKeys = okeys(uKeyMap);
 
       uKeys.forEach(refKey => {
-        triggerReRender(ccUKey2ref[refKey]);
+        triggerReRender(refs[refKey]);
       });
     } else {
       triggerReRender(ref);

@@ -52,6 +52,8 @@
     "node-fetch": "^2.6.1",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "rimraf": "^2.6.2",
     "rollup": "^0.66.5",
     "rollup-plugin-babel": "^4.0.3",
@@ -89,12 +91,14 @@
   "module": "es/index.js",
   "types": "src/types.d.ts",
   "unpkg": "dist/concent.js",
-  "npmFileMap": [{
-    "basePath": "/dist/",
-    "files": [
-      "*.js"
-    ]
-  }],
+  "npmFileMap": [
+    {
+      "basePath": "/dist/",
+      "files": [
+        "*.js"
+      ]
+    }
+  ],
   "npmName": "concent",
   "peerDependencies": {
     "@types/react": "^16.13.0",
@@ -120,6 +124,6 @@
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
-  "version": "2.16.7",
+  "version": "2.16.8",
   "dependencies": {}
 }

@@ -1,14 +1,13 @@
 /* eslint-disable camelcase */
-import moduleName2stateKeys from './statekeys-map';
 import computed from './computed-map';
 import watch from './watch-map';
 import runtimeVar from './runtime-var';
 import runtimeHandler from './runtime-handler';
 import { waKey2uKeyMap, waKey2staticUKeyMap } from './wakey-ukey-map';
 import module2insCount from './modue-ins-count-map';
+import { refs, reducer, permanentDispatcherRef, _state, _prevState, moduleName2stateKeys } from './internal-vars';
 import lifecycle from './lifecycle';
-import refs from './refs';
-import { MODULE_GLOBAL, MODULE_CC, MODULE_DEFAULT, MODULE_VOID, CATE_MODULE, FN_CU, FN_WATCH } from '../support/constant';
+import { MODULE_GLOBAL, CATE_MODULE, FN_CU, FN_WATCH } from '../support/constant';
 import * as util from '../support/util';
 import pickDepFns from '../core/base/pick-dep-fns';
 import findDepFnsToExecute from '../core/base/find-dep-fns-to-execute';
@@ -16,7 +15,7 @@ import extractStateByKeys from '../core/state/extract-state-by-keys';
 
 const { _computedValues } = computed;
 const { okeys, extractChangedState } = util;
-const getDispatcher = () => ccContext.permanentDispatcher;
+const getDispatcher = () => permanentDispatcherRef.value;
 
 const setStateByModule = (module, committedState, opts = {}) => {
   const { ref = null, callInfo = {}, noSave = false, force } = opts;
@@ -109,17 +108,8 @@ const getStateVer = function (module) {
 const incStateVer = function (module, key) {
   _stateVer[module][key]++;
 }
-const getRootState = () => ({
-  [MODULE_CC]: {},
-  [MODULE_VOID]: {},
-  [MODULE_GLOBAL]: {},
-  [MODULE_DEFAULT]: {},
-})
-
 
 /** ccContext section */
-const _state = getRootState();
-const _prevState = getRootState();
 // record state version, to let ref effect avoid endless execute
 // 1 effect里的函数再次出发当前实例渲染，渲染完后检查prevModuleState curModuleState, 对应的key值还是不一样，又再次出发effect，造成死循环
 // 2 确保引用型值是基于原有引用修改某个属性的值时，也能触发effect
@@ -203,19 +193,7 @@ const ccContext = {
       return _state[MODULE_GLOBAL];
     },
   },
-  reducer: {
-    _reducer: {
-      [MODULE_GLOBAL]: {
-      },
-      [MODULE_CC]: {
-      }
-    },
-    _caller: {},
-    // _reducerRefCaller: {},//为实例准备的reducer caller
-    _fnName2fullFnNames: {},
-    _module2fnNames: {},
-    _module2Ghosts: {},
-  },
+  reducer,
   computed,
   watch,
   refStore: {
@@ -248,7 +226,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.16.7',
+    version: '2.16.8',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',
@@ -259,11 +237,9 @@ const ccContext = {
   middlewares: [],
   plugins: [],
   pluginNameMap: {},
-  /** @type {import('../types-inner').IRef | null} */
-  permanentDispatcher: null,
   localStorage: null,
   recoverRefState: util.noop,
-  getModuleStateKeys: (m) => ccContext.moduleName2stateKeys[m],
+  getModuleStateKeys: (m) => moduleName2stateKeys[m],
 }
 
 ccContext.recoverRefState = function () {

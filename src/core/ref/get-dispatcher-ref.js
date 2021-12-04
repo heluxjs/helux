@@ -1,5 +1,5 @@
-import ccContext from '../../cc-context';
+import { permanentDispatcherRef } from '../../cc-context/internal-vars';
 
-export default function(){
-  return ccContext.permanentDispatcher;
+export default function () {
+  return permanentDispatcherRef.value;
 }

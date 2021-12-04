@@ -6,12 +6,13 @@ import {
 import { FN_WATCH, CATE_REF, FN_CU, CATE_MODULE } from '../../support/constant';
 import extractStateByKeys from '../state/extract-state-by-keys';
 import pickDepFns from '../base/pick-dep-fns';
+import ccDispatch from '../base/dispatch';
 import makeCuObState from '../computed/make-cu-ob-state';
 import executeAsyncCuInfo from '../computed/execute-async-cu-info';
 import { getSimpleObContainer } from '../computed/make-cu-ref-ob-container';
 import cuMap from '../../cc-context/computed-map';
 import waMap from '../../cc-context/watch-map';
-import moduleName2stateKeys from '../../cc-context/statekeys-map';
+import { moduleName2stateKeys } from '../../cc-context/internal-vars';
 import { makeWaKey } from '../../cc-context/wakey-ukey-map';
 
 const noCommit = (tip, asIs) => justWarning(`${tip} call commit or commitCu as it is ${asIs}`);
@@ -139,8 +140,6 @@ export default function executeDepFns(
   let whileCount = 0;
   let curStateForComputeFn = committedState;
   let hasDelta = false;
-  // 不在头部引入，避免循环依赖，TODO：后期做更好的抽象
-  const ccDispatch = require('../base/dispatch').default;
 
   while (curStateForComputeFn) {
     whileCount++;

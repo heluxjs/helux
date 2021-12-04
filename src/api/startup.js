@@ -71,13 +71,14 @@ export default function (
     watchCompare = false, // 表示针对object值需不需要比较
     watchImmediate = false,
     reComputed = true,
-    extractModuleChangedState  = true,
-    extractRefChangedState  = false,
-    objectValueCompare  = false,
-    nonObjectValueCompare  = true,
+    extractModuleChangedState = true,
+    extractRefChangedState = false,
+    objectValueCompare = false,
+    nonObjectValueCompare = true,
     localStorage = null,
     act = null,
     asyncCuKeys = null,
+    immutLib = null,
   } = {}) {
   try {
     throw new Error();
@@ -98,6 +99,7 @@ export default function (
       rh.errorHandler = errorHandler;
       rh.warningHandler = warningHandler;
       rh.act = act;
+      rh.immutLib = immutLib;
       rv.asyncCuKeys = asyncCuKeys || [];
       rv.alwaysRenderCaller = alwaysRenderCaller;
       rv.isStrict = isStrict;
@@ -119,7 +121,7 @@ export default function (
       }
       ccContext.recoverRefState();
       createDispatcher();
-      
+
       boot.configStoreState(store);
       boot.configRootReducer(reducer, ghost);
       boot.configRootComputed(computed);

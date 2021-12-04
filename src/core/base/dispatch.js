@@ -1,5 +1,5 @@
 import * as util from '../../support/util';
-import ccContext from '../../cc-context';
+import { refs, reducer } from '../../cc-context/internal-vars';
 import pickOneRef from '../../core/ref/pick-one-ref';
 
 const { makeUniqueCcKey, justWarning } = util;
@@ -15,7 +15,7 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
   try {
     if (ccClassKey && ccKey) {
       const uKey = makeUniqueCcKey(ccClassKey, ccKey);
-      const targetRef = ccContext.refs[uKey];
+      const targetRef = refs[uKey];
       if (!targetRef) {
         justWarning(`no ref found for ccUniqueKey:${uKey}!`);
         return resolve();
@@ -52,7 +52,7 @@ export default function (action, payLoadWhenActionIsString, rkOrOptions = '', de
     }
 
     if (module === '*') {
-      const fullFnNames = ccContext.reducer._fnName2fullFnNames[fnName];
+      const fullFnNames = reducer._fnName2fullFnNames[fnName];
       if (!fullFnNames) return;
       const tasks = [];
       fullFnNames.forEach(fullFnName => {

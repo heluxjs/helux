@@ -206,10 +206,15 @@ export function invokeWith(userLogicFn, executionContext, payload) {
   } = executionContext;
   isStateModuleValid(targetModule, callerModule, cb, (err, newCb) => {
     if (err) return handleCcFnError(err, __innerCb);
-    const moduleState = getState(targetModule);
+    const moduleStateBase = getState(targetModule);
+    let moduleState = moduleStateBase;
 
     let actionContext = {};
     let isSourceCall = false;
+    const immutLib = runtimeHandler.immutLib;
+    if (immutLib) {
+      moduleState = immutLib.createDraft(moduleStateBase);
+    }
     isSourceCall = chainId === oriChainId && chainId2depth[chainId] === 1;
 
     if (context) {
@@ -277,7 +282,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
     }
 
     if (isSilent === false) {
-      send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn });
+      send(SIG_FN_START, { isSourceCall, calledBy, module: targetModule, chainId, fn: userLogicFn, type });
     }
 
     const handleReturnState = partialState => {
@@ -298,7 +303,7 @@ export function invokeWith(userLogicFn, executionContext, payload) {
             setChainState(chainId, targetModule, partialState);
           } else { // 合并状态一次性提交到store并派发到组件实例
             if (isChainExited(chainId)) {
-            // 丢弃本次状态，不做任何处理
+              // 丢弃本次状态，不做任何处理
             } else {
               commitStateList = setAndGetChainStateList(isC2Result, chainId, targetModule, partialState);
               removeChainState(chainId);
@@ -307,12 +312,34 @@ export function invokeWith(userLogicFn, executionContext, payload) {
         } else {
           if (!isC2Result) commitStateList = [{ module: targetModule, state: partialState }];
         }
+      } else {
+        if (immutLib) {
+          immutLib.finishDraft();
+        }
       }
 
       commitStateList.forEach(v => {
-        changeRefState(v.state, {
+        let changedPartialState = v.state;
+        let stateSnapshot = moduleState;
+        if (immutLib) {
+          stateSnapshot = immutLib.finishDraft(moduleState);
+          // 可能未对 moduleState 做任何修改，做了修改才重置 changedPartialState
+          if (moduleStateBase !== stateSnapshot) {
+            changedPartialState = okeys(changedPartialState).reduce((tmpMap, stateKey) => {
+              const finalVal = stateSnapshot[stateKey];
+              if (util.isPJO(finalVal, true)) {
+                tmpMap[stateKey] = finalVal;
+              } else {
+                tmpMap[stateKey] = changedPartialState[stateKey];
+              }
+              return tmpMap;
+            }, {});
+          }
+        }
+
+        changeRefState(changedPartialState, {
           renderKey, module: v.module, reactCallback: newCb, type,
-          calledBy, fnName, delay, payload, force,
+          calledBy, fnName, delay, payload, force, stateSnapshot,
         }, callerRef);
       });
 

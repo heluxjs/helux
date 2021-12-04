@@ -11,6 +11,7 @@ const defaultErrorHandler = (err, silent = false) => {
 
 const rh = {
   act: null,
+  immutLib: null,
   errorHandler: null,
   warningHandler: null,
   tryHandleError: (err, silent) => {
