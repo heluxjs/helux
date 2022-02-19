@@ -122,6 +122,6 @@
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
-  "version": "2.16.11",
-  "dependencies": {}
+  "dependencies": {},
+  "version": "2.16.11"
 }
