@@ -15,8 +15,11 @@ export default function (ref, state, module, isForModule) {
           Object.assign(state, ctx.__$$mstate);
         }
       }
+      const val = target[key];
+      // TODO 2_level_key_collect
+
       updateDep(ref, module, key, isForModule);
-      return target[key];
+      return val;
     },
     set: function (target, key, value) {
       // 这个warning暂时关闭，因为buildRefCtx阶段就生成了obState, refComputed里可能会调用commit向obState写入新的state

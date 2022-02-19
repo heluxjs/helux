@@ -497,7 +497,7 @@ export function isOnlineEditor() {
   let result = false;
   if (window) {
     if (
-      window.name === 'previewFrame' //for stackblitz
+      window.name === 'previewFrame' // for stackblitz
       || window.__SANDBOX_DATA__ // for codesandbox
       || window.BrowserFS // for codesandbox
     ) {

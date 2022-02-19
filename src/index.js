@@ -31,7 +31,7 @@ import _fnPayload from './api/fn-payload';
 import * as _cst from './support/constant';
 import * as util from './support/util';
 
-const { bindToContainer, safeGet } = util;
+const { bindToContainer, safeGet, isOnlineEditor } = util;
 
 // for ssr
 if (typeof window === 'undefined') {
@@ -163,6 +163,10 @@ export function bindCcToMcc(key) {
 }
 
 function avoidMultiCcInSameScope() {
+  // 适配一些利用iframe做微前端的框架
+  if (!isOnlineEditor()) {
+    return;
+  }
   let winCc = window[ccKey] || window.cc;
   if (multiCcContainer && multiCcContainer[mccKey]) {
     winCc = multiCcContainer[mccKey].cc;

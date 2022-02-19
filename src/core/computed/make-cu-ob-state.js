@@ -20,8 +20,10 @@ export default function (state, depKeys) {
        *   // valueOf, toString, Symbol(...)
        */
       if (isKeyValid(target, key) && !depKeys.includes(key)) depKeys.push(key);
+      const val = target[key];
+      // TODO 2_level_key_collect
 
-      return target[key];
+      return val;
     },
     // set: function (target, key) {
     set: function () {

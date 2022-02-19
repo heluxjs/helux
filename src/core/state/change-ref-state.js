@@ -2,7 +2,7 @@
 /** @typedef {import('../../types').ICtxBase} ICtxBase */
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
-import { INAF } from '../../support/priv-constant';
+import { INAF, START } from '../../support/priv-constant';
 import runLater from '../base/run-later';
 import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
@@ -362,7 +362,12 @@ export default function startChangeRefState(state, options, ref) {
    *   }, {immediate:true});
    * }
    */
-  if (ref.ctx.__$$inBM) {
+
+  // TODO: 是否修改为 if (ref.ctx.__$$inBM || ref.ctx.__$$renderStatus === START) 
+  // 不知是否能避免
+  // Warning: Cannot update a component (`XXX`) while rendering a different component (`YYY`)
+
+  if (ref.ctx.__$$inBM || ref.ctx.__$$renderStatus === START) {
     // <= 2.15.7
     // setTimeout(() => startChangeRefState(state, options, ref), 0);
 
@@ -370,6 +375,8 @@ export default function startChangeRefState(state, options, ref) {
     // 满足一些的确需要在 setup 里及时的将数据写入 store 的场景
     // 由 permanentDispatcher 去触发其他组件实例渲染
     // 自身的 state 直接合入，这样在实例首次渲染的函数体能拿到 setup 里写入的最新状态
+
+
     const permanentDispatcher = ccContext.getDispatcher();
     if (permanentDispatcher) {
       permanentDispatcher.ctx.changeState(state, options);

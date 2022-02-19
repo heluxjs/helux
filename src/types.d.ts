@@ -1367,7 +1367,7 @@ export interface IActionCtx<
   ModuleName extends keyof RootState = MODULE_VOID,
   RefCtx extends ICtxBase = ICtxBase,
   FullState extends IAnyObj = RootState[ModuleName]
-  > extends IActionCtxBase {
+  > extends IActionCtxBase<FullState> {
   module: ModuleName;
   moduleState: RootState[ModuleName];
   moduleComputed: ModuleName extends keyof RootCu ? RootCu[ModuleName] : {};
