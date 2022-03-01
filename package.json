@@ -123,5 +123,5 @@
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
   "dependencies": {},
-  "version": "2.16.11"
+  "version": "2.16.12"
 }

@@ -625,10 +625,10 @@ export interface ICtxBase {
   readonly cr: any; // alias of connectedReducer
   readonly r: any; // alias of reducer
 
-  readonly computed: RefCtxComputed<IAnyObj>;
-  readonly computedModule: RefCtxComputedModule<IAnyObj>;
-  readonly watch: RefCtxWatch<IAnyObj>;
-  readonly watchModule: RefCtxWatchModule<IAnyObj>;
+  readonly computed: RefCtxComputed<any>;
+  readonly computedModule: RefCtxComputedModule<any>;
+  readonly watch: RefCtxWatch<any>;
+  readonly watchModule: RefCtxWatchModule<any>;
   readonly effect: typeof refCtxEffect;
   readonly effectProps: typeof refCtxEffectProps;
   readonly execute: (filters: RefFilters, handler: IAnyFnPromise) => void;
