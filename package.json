@@ -91,14 +91,12 @@
   "module": "es/index.js",
   "types": "src/types.d.ts",
   "unpkg": "dist/concent.js",
-  "npmFileMap": [
-    {
-      "basePath": "/dist/",
-      "files": [
-        "*.js"
-      ]
-    }
-  ],
+  "npmFileMap": [{
+    "basePath": "/dist/",
+    "files": [
+      "*.js"
+    ]
+  }],
   "npmName": "concent",
   "peerDependencies": {
     "@types/react": ">=16.8.0",
@@ -123,5 +121,5 @@
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
   "dependencies": {},
-  "version": "2.16.12"
+  "version": "2.17.1"
 }

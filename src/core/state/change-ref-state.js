@@ -102,7 +102,7 @@ function changeRefState(state, {
 
   // source ref will receive the whole committed state 
   triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender,
-    reactCallback, getCallerForce(force), (renderType, committedState, updateRef) => {
+    reactCallback, getCallerForce(force), (renderType, committedState, updater) => {
       // committedState means final committedState
       const passToMiddleware = {
         calledBy, type, payload, renderKey: targetRenderKey, delay: targetDelay, ccKey, ccUniqueKey,
@@ -133,11 +133,11 @@ function changeRefState(state, {
         // code here
 
         // 执行完毕所有的中间件，才更新触发调用的源头实例
-        updateRef && updateRef();
+        updater && updater();
 
         if (renderType === RENDER_NO_OP && !realShare) {
           if (ignoreRender) {
-            // 此时updateRef 为 null, 需要给补上一次机会为caller执行 triggerReactSetState
+            // 此时 updater 为 null, 需要给补上一次机会为caller执行 triggerReactSetState
             triggerReactSetState(targetRef, callInfo, [], SET_STATE, midSharedState, stateFor, false, reactCallback, getCallerForce(force));
           }
         } else {
@@ -162,9 +162,18 @@ function changeRefState(state, {
 function triggerReactSetState(
   targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, force, next
 ) {
-  const nextNoop = () => next && next(RENDER_NO_OP, state);
   const refCtx = targetRef.ctx;
   const refState = refCtx.unProxyState;
+  const nextNoop = () => {
+    next && next(RENDER_NO_OP, state);
+    // fix issue: https://github.com/concentjs/concent/issues/70
+    // 没有任何依赖的组件，定义了cb，也让其有机会执行
+    if (reactCallback) {
+      const { __$$mstate } = refCtx
+      const newState = Object.assign({}, refState, __$$mstate);
+      reactCallback(newState);
+    }
+  };
 
   if (ignoreRender) {
     return nextNoop();
@@ -210,14 +219,14 @@ function triggerReactSetState(
 
   const ccSetState = () => {
     // 使用 unProxyState ，避免触发get
-    let myChangedState;
-    if (force === true) myChangedState = deltaCommittedState;
-    else myChangedState = util.extractChangedState(refCtx.unProxyState, deltaCommittedState)
+    let mayChangedState;
+    if (force === true) mayChangedState = deltaCommittedState;
+    else mayChangedState = util.extractChangedState(refCtx.unProxyState, deltaCommittedState)
 
-    if (myChangedState) {
+    if (mayChangedState) {
       // 记录 stateKeys，方便 triggerRefEffect 之用
-      refCtx.__$$settedList.push({ module: stateModule, keys: okeys(myChangedState) });
-      refCtx.__$$ccSetState(myChangedState, reactCallback);
+      refCtx.__$$settedList.push({ module: stateModule, keys: okeys(mayChangedState) });
+      refCtx.__$$ccSetState(mayChangedState, reactCallback);
     }
   }
 

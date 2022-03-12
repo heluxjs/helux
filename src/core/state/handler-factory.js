@@ -77,7 +77,7 @@ function isStateModuleValid(inputModule, currentModule, reactCallback, cb) {
     if (inputModule !== currentModule && reactCallback) {
       // ???strict
       justWarning(paramCallBackShouldNotSupply(inputModule, currentModule));
-      targetCb = null;//let user's reactCallback has no chance to be triggered
+      targetCb = null; // let user's reactCallback has no chance to be triggered
     }
     cb(null, targetCb);
   } else {
@@ -107,8 +107,10 @@ function __promisifiedInvokeWith(userLogicFn, executionContext, payload) {
 
 function __invoke(userLogicFn, option, payload) {
   const { callerRef, delay, renderKey, force, calledBy, module, chainId, oriChainId, chainId2depth, isSilent } = option;
+  // 有可能直接 invoke 模块 reducer 里的方法
+  const fnName = userLogicFn.__fnName || userLogicFn.name;
   return __promisifiedInvokeWith(userLogicFn, {
-    callerRef, context: true, module, calledBy, fnName: userLogicFn.name,
+    callerRef, context: true, module, calledBy, fnName,
     delay, renderKey, force, chainId, oriChainId, chainId2depth, isSilent,
   }, payload);
 }
@@ -401,7 +403,7 @@ export function dispatch({
   }
 
   const executionContext = {
-    callerRef, module: inputModule, type, force,
+    callerRef, module: inputModule, type, force, fnName: type,
     cb: reactCallback, context: true, __innerCb, calledBy: DISPATCH, delay, renderKey, isSilent,
     chainId, oriChainId, chainId2depth
   };
@@ -558,7 +560,9 @@ export function makeModuleDispatcher(module) {
 // for moduleConf.init(legency) moduleConf.lifecycle.initState(v2.9+)
 export function makeSetStateHandler(module, initStateDone) {
   return state => {
-    const execInitDoneWrap = () => initStateDone && initStateDone(makeModuleDispatcher(module), getState(module));
+    const execInitDoneWrap = () => (
+      initStateDone && initStateDone(makeModuleDispatcher(module), getState(module))
+    );
     try {
       if (!state) return void execInitDoneWrap();
       innerSetState(module, state, execInitDoneWrap);
@@ -586,7 +590,7 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
   const newState = Object.assign({}, ctx.unProxyState, partialState);
   ctx.unProxyState = newState;
   // 和class setState(partialState, cb); 保持一致
-  const cbNewState = () => cb && cb(newState);
+  const cbNewState = () => (cb && cb(newState));
   // 让ctx.state始终保持同一个引用，使setup里可以安全的解构state反复使用
   ctx.state = Object.assign(ctx.state, partialState);
 

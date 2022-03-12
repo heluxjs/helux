@@ -3,6 +3,15 @@ import * as util from '../../support/util';
 import { INAJ, INAF } from '../../support/priv-constant';
 import dispatch from '../../api/dispatch';
 
+function attachFnInfo(moduleName, fnName, wrappedFn, reducerFn) {
+  // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
+  wrappedFn.__stateModule = moduleName;
+  wrappedFn.__fnName = fnName; // !!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
+  // AsyncFunction GeneratorFunction Function
+  wrappedFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
+  wrappedFn.__isAsync = util.isAsyncFn(reducerFn);
+}
+
 export default function (module, reducer = {}, ghosts = []) {
   if (!util.isPJO(reducer)) {
     throw new Error(`module[${module}] reducer ${INAJ}`);
@@ -27,7 +36,11 @@ export default function (module, reducer = {}, ghosts = []) {
   });
 
   // 自动附加一个setState在reducer里
-  if (!newReducer.setState) newReducer.setState = payload => payload;
+  if (!newReducer.setState) {
+    const injectedSetState = payload => payload;
+    attachFnInfo(module, 'setState', injectedSetState, injectedSetState);
+    newReducer.setState = injectedSetState;
+  }
 
   const reducerFnNames = util.okeys(newReducer);
   reducerFnNames.forEach(name => {
@@ -46,17 +59,12 @@ export default function (module, reducer = {}, ghosts = []) {
       throw new Error(`module[${module}] reducer[${name}] ${INAF}`);
     } else {
       let targetFn = reducerFn;
-      if (reducerFn.__fnName) {// 将某个已载入到模块a的reducer再次载入到模块b
+      if (reducerFn.__fnName) { // 将某个已载入到模块a的reducer再次载入到模块b
         targetFn = (payload, moduleState, actionCtx) => reducerFn(payload, moduleState, actionCtx);
         newReducer[name] = targetFn;
       }
 
-      targetFn.__fnName = name;// !!! 很重要，将真正的名字附记录上，否则名字是编译后的缩写名
-      // 给函数绑上模块名，方便dispatch可以直接调用函数时，也能知道是更新哪个模块的数据，
-      targetFn.__stateModule = module;
-      // AsyncFunction GeneratorFunction Function
-      targetFn.__ctName = reducerFn.__ctName || reducerFn.constructor.name;
-      targetFn.__isAsync = util.isAsyncFn(reducerFn);
+      attachFnInfo(module, name, targetFn, reducerFn);
     }
   });
 }

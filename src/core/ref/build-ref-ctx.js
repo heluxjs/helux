@@ -516,11 +516,11 @@ export default function (ref, params, liteLevel = 5) {
   const stateKeys = okeys(mergedState);
 
   const connectedModules = okeys(connect);
-
   const connectedComputed = {};
   connectedModules.forEach((m) => {
     connectedComputed[m] = makeCuRefObContainer(ref, m, false);
   });
+  
   const moduleComputed = makeCuRefObContainer(ref, module);
   // 所有实例都自动连接上了global模块，这里可直接取connectedComputed已做好的结果
   const globalComputed = connectedComputed[MODULE_GLOBAL];
