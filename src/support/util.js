@@ -448,14 +448,10 @@ export function extractChangedState(oldState, partialNewState, moduleOpt, force)
 
 export function differStateKeys(oldState, newState) {
   const changed = [], setted = [];
-  // const unchanged=[];
   okeys(newState).forEach(k => {
     const newVal = newState[k];
-    if (newVal !== undefined) {
-      setted.push(k);
-      if (newVal !== oldState[k]) changed.push(k);
-      // else unchanged.push(k);
-    }
+    setted.push(k);
+    if (newVal !== oldState[k]) changed.push(k);
   });
   return { changed, setted };
 }
