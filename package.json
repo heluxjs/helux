@@ -91,14 +91,12 @@
   "module": "es/index.js",
   "types": "src/types.d.ts",
   "unpkg": "dist/concent.js",
-  "npmFileMap": [
-    {
-      "basePath": "/dist/",
-      "files": [
-        "*.js"
-      ]
-    }
-  ],
+  "npmFileMap": [{
+    "basePath": "/dist/",
+    "files": [
+      "*.js"
+    ]
+  }],
   "npmName": "concent",
   "peerDependencies": {
     "@types/react": ">=16.8.0",
