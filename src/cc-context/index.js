@@ -49,7 +49,7 @@ const setStateByModule = (module, committedState, opts = {}) => {
   );
 
   if (!noSave) {
-    saveSharedState(module, deltaCommittedState, null, force);
+    saveSharedState(module, deltaCommittedState, false, force);
   }
 
   return {
@@ -226,7 +226,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.16.9',
+    version: '2.17.2',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',

@@ -67,7 +67,7 @@ function getCallerForce(force) {
 function changeRefState(state, {
   module, skipMiddleware = false, payload, stateChangedCb, force = false, stateSnapshot,
   keys = [], keyPath = '', // sync api 透传
-  reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, targetRef
+  reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, callerRef
 ) {
   if (!state) return;
 
@@ -78,7 +78,7 @@ function changeRefState(state, {
   const targetRenderKey = util.extractRenderKey(renderKey);
   const targetDelay = (renderKey && renderKey.delay) ? renderKey.delay : delay;
 
-  const { module: refModule, ccUniqueKey, ccKey } = targetRef.ctx;
+  const { module: refModule, ccUniqueKey, ccKey } = callerRef.ctx;
   const stateFor = getStateFor(module, refModule);
   const callInfo = {
     calledBy, payload, renderKey: targetRenderKey, force, ccKey, module, fnName,
@@ -91,18 +91,18 @@ function changeRefState(state, {
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
   const {
     partialState: sharedState, hasDelta, hasPrivState
-  } = syncCommittedStateToStore(module, state, { ref: targetRef, callInfo, noSave: true, force });
+  } = syncCommittedStateToStore(module, state, { ref: callerRef, callInfo, noSave: true, force });
 
   if (hasDelta) {
     Object.assign(state, sharedState);
   }
-  // 不包含私有状态，仅包含模块状态，交给belongRefs那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
-  // 因为belongRefs那里是根据有无依赖来确定要不要渲染，这样的话如果失去了依赖不把它查出来就不触发它渲染了
+  // 不包含私有状态，仅包含模块状态，交给 belongRefs 那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
+  // 因为 belongRefs 那里是根据有无依赖来确定要不要渲染，这样的话如果失去了依赖不把它查出来就不触发它渲染了
   const ignoreRender = !hasPrivState && !!sharedState;
 
   // source ref will receive the whole committed state 
-  triggerReactSetState(targetRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender,
-    reactCallback, getCallerForce(force), (renderType, committedState, updater) => {
+  triggerReactSetState(callerRef, callInfo, targetRenderKey, calledBy, state, stateFor, ignoreRender,
+    reactCallback, getCallerForce(force), (renderType, committedState, refUpdater) => {
       // committedState means final committedState
       const passToMiddleware = {
         calledBy, type, payload, renderKey: targetRenderKey, delay: targetDelay, ccKey, ccUniqueKey,
@@ -120,29 +120,31 @@ function changeRefState(state, {
       };
 
       callMiddlewares(skipMiddleware, passToMiddleware, () => {
-        // 到这里才触发调用saveSharedState存储模块状态和updateRef更新调用实例，注这两者前后顺序不能调换
-        // 因为updateRef里的beforeRender需要把最新的模块状态合进来
-        // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，且不会再触发computed&watch
-        // 调用此接口请明确知道后果,
-        // 注不要直接修改sharedState或committedState，两个对象一起修改某个key才是正确的
+        // 到这里才触发调用 saveSharedState 存储模块状态和 并用 refUpdater 更新调用实例，注这两者前后顺序不能调换
+        // 因为 callerRef 里的 beforeRender 步骤会把最新的模块状态合进来
+        // 允许在中间件过程中使用「modState」修改某些key的值，会影响到实例的更新结果，但不会再触发computed&watch
+        // 所以调用此接口请明确知道上面的后果，可能导致以外的bug
+        // 注不要直接修改 sharedState 或 committedState，如非要修改，应该是对两个对象一起修改某个key才是正确的
         const midSharedState = passToMiddleware.sharedState;
-        const realShare = saveSharedState(module, midSharedState, modStateCalled, force);
+        // 如 finalSharedState 为空，表示提交的状态和模块状态没有发生变化
+        const finalSharedState = saveSharedState(module, midSharedState, modStateCalled, force);
 
         // TODO: 查看其它模块的cu函数里读取了当前模块的state或computed作为输入产生了的新的计算结果
         // 然后做相应的关联更新 {'$$global/key1': {foo: ['cuKey1', 'cuKey2'] } }
         // code here
 
         // 执行完毕所有的中间件，才更新触发调用的源头实例
-        updater && updater();
+        refUpdater && refUpdater();
 
-        if (renderType === RENDER_NO_OP && !realShare) {
+        if (renderType === RENDER_NO_OP && !finalSharedState) {
           if (ignoreRender) {
-            // 此时 updater 为 null, 需要给补上一次机会为caller执行 triggerReactSetState
-            triggerReactSetState(targetRef, callInfo, [], SET_STATE, midSharedState, stateFor, false, reactCallback, getCallerForce(force));
+            // 此时 refUpdater 为 null, 主动为 caller 执行一次 triggerReactSetState，
+            // 以便让 triggerReactSetState 内部有机会触发 reactCallback
+            triggerReactSetState(callerRef, callInfo, [], SET_STATE, midSharedState, stateFor, true, reactCallback, getCallerForce(force));
           }
         } else {
           send(SIG_STATE_CHANGED, {
-            calledBy, type, committedState, sharedState: realShare || {}, payload,
+            calledBy, type, committedState, sharedState: finalSharedState || {}, payload,
             module, ccUniqueKey, renderKey: targetRenderKey, stateSnapshot,
           });
         }
@@ -150,9 +152,9 @@ function changeRefState(state, {
         // 无论是否真的有状态改变，此回调都会被触发
         if (stateChangedCb) stateChangedCb();
 
-        // 当前上下文的ignoreRender 为true 等效于这里的入参 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
-        if (realShare) triggerBroadcastState(
-          stateFor, callInfo, targetRef, realShare, ignoreRender, module, reactCallback, targetRenderKey, targetDelay, force
+        // 当前上下文的ignoreRender 为true时， 等效于入参 allowOriInsRender 为true，允许查询出oriIns后触发它渲染
+        if (finalSharedState) triggerBroadcastState(
+          stateFor, callInfo, callerRef, finalSharedState, ignoreRender, module, reactCallback, targetRenderKey, targetDelay, force
         );
       });
     }
@@ -160,9 +162,9 @@ function changeRefState(state, {
 }
 
 function triggerReactSetState(
-  targetRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, force, next
+  callerRef, callInfo, renderKeys, calledBy, state, stateFor, ignoreRender, reactCallback, force, next
 ) {
-  const refCtx = targetRef.ctx;
+  const refCtx = callerRef.ctx;
   const refState = refCtx.unProxyState;
   const nextNoop = () => {
     next && next(RENDER_NO_OP, state);
@@ -180,7 +182,7 @@ function triggerReactSetState(
   }
 
   if (
-    targetRef.__$$ms === UNMOUNTED // 已卸载
+    callerRef.__$$ms === UNMOUNTED // 已卸载
     || stateFor !== FOR_CUR_MOD
     // 确保 forceUpdate 能够刷新cc实例，因为state可能是{}，此时用户调用forceUpdate也要触发render
     || (calledBy !== FORCE_UPDATE && isObjectNull(state))
@@ -214,8 +216,8 @@ function triggerReactSetState(
   }
 
   const deltaCommittedState = Object.assign({}, state);
-  computeValueForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo);
-  watchKeyForRef(targetRef, stateModule, refState, deltaCommittedState, callInfo);
+  computeValueForRef(callerRef, stateModule, refState, deltaCommittedState, callInfo);
+  watchKeyForRef(callerRef, stateModule, refState, deltaCommittedState, callInfo);
 
   const ccSetState = () => {
     // 使用 unProxyState ，避免触发get
