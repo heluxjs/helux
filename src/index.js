@@ -33,11 +33,11 @@ import * as util from './support/util';
 
 const { bindToContainer, safeGet, isOnlineEditor } = util;
 
-// for ssr
-if (typeof window === 'undefined') {
-  // eslint-disable-next-line
-  global && (global.window = {});
-}
+// for ssr, fix issue: https://github.com/concentjs/concent/issues/73
+// if (typeof window === 'undefined') {
+//   // eslint-disable-next-line
+//   global && (global.window = {});
+// }
 
 const _getRef = (filters) => {
   const refs = _getRefs(filters);
