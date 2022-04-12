@@ -116,13 +116,13 @@ export type Syncer<FullState> = FullState extends IAnyObj ? { [key in keyof Full
 // let user export syncerOfBool new type when user define private state
 export type SyncerOfBool<FullState> = FullState extends IAnyObj ? { [key in GetBoolKeys<FullState>]: ToggleBoolFn } : {};
 
-type ComputedFn<FnCtx extends IFnCtxBase = IFnCtxBase, S extends any = any> = (
+export type ComputedFn<FnCtx extends IFnCtxBase = IFnCtxBase, S extends any = any> = (
   newState: S,
   oldState: S,
   fnCtx: FnCtx,
 ) => any;
 
-interface IComputedFnDesc<Fn extends ComputedFn = ComputedFn> {
+export interface IComputedFnDesc<Fn extends ComputedFn = ComputedFn> {
   fn: Fn;
   sort?: number;
   compare?: boolean;
@@ -1025,7 +1025,7 @@ type GetFnCtxCommitCu<ModuleComputed> = <PC extends Partial<ModuleComputed>>(par
 
 
 // to constrain IFnCtx interface series shape
-interface _IFnCtx<FullState extends IAnyObj = IAnyObj> { // 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
+interface _IFnCtx<FullState extends IAnyObj = any, Computed extends IAnyObj = any> { // 方便 ctx.computed({....}) 定义计算描述体时，可以正确赋值fnCtx类型
   retKey: string;
   callInfo: ICallInfo,
   /**
@@ -1039,7 +1039,7 @@ interface _IFnCtx<FullState extends IAnyObj = IAnyObj> { // 方便 ctx.computed(
   oldState: FullState;
   committedState: IAnyObj;
   deltaCommittedState: IAnyObj;
-  cuVal: IAnyObj;
+  cuVal: Computed;
   refCtx: ICtxBase;
   setInitialVal: (initialVal: any) => void;
   commit: GetFnCtxCommit<FullState>;
