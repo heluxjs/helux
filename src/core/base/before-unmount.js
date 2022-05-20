@@ -56,7 +56,7 @@ export default function (ref) {
   }
 
   // 删除记录的动态依赖
-  const waKeys = ctx.getWatchedKeys();// no module prefix
+  const waKeys = ctx.getWatchedKeys(); // no module prefix
   waKeys.forEach(k => delIns(module, k, ccUniqueKey));
   const connWaKeys = ctx.getConnectWatchedKeys();
   okeys(connWaKeys).map(m => {

@@ -352,7 +352,9 @@ declare function refCtxOff(eventName: string, offOptions?: OffOptions): void;
 declare function refCtxOff(eventDesc: [string, string?], offOptions?: OffOptions): void;
 declare function refCtxOff(eventDesc: { name: string, identity?: string }, offOptions?: OffOptions): void;
 
-export type GetPromiseT<F extends (...args: any) => any> = F extends (...args: any) => Promise<infer T> ? T : ReturnType<F>;
+// 用户定义 function xx():any 时，Promise<infer T> 会推导T为unknown，所以加一个类型强转
+export type GetPromiseT<F extends (...args: any) => any>
+  = F extends (...args: any) => Promise<infer T> ? (T extends unknown ? any : T) : ReturnType<F>;
 
 /**
  *

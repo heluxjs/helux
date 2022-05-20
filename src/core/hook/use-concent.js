@@ -13,7 +13,7 @@ import didUpdate from '../base/did-update';
 import beforeUnmount from '../base/before-unmount';
 // import guessDuplicate from '../base/guess-duplicate';
 import * as hf from '../state/handler-factory';
-import { getRegisterOptions, evalState, isObject, isLocal, isOnlineEditor } from '../../support/util';
+import { getRegisterOptions, evalState, isObject, shouldGuessStrictMode } from '../../support/util';
 import beforeRender from '../ref/before-render';
 import isRegChanged from '../param/is-reg-changed';
 import isStrict, { recordFirst2HookCallLoc } from './is-strict';
@@ -104,7 +104,6 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
   const cursor = getUsableCursor();
   const _registerOption = getRegisterOptions(registerOption);
 
-  const shouldGuessStrictMode = isLocal() || isOnlineEditor();
   if (shouldGuessStrictMode && [1, 2].includes(cursor)) {
     try {
       throw new Error('guess strict mode');
@@ -113,17 +112,15 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
     }
   }
 
+  const reactUseState = React.useState;
+  if (!reactUseState) {
+    throw new Error(tip);
+  }
   // ef: effectFlag
   const hookCtxContainer = React.useRef({ cursor, prevCcUKey: null, ccUKey: null, regOpt: _registerOption, ef: 0 });
   const hookCtx = hookCtxContainer.current;
 
   const { state: iState = {}, props = {}, mapProps, layoutEffect = false, extra } = _registerOption;
-
-  const reactUseState = React.useState;
-  if (!reactUseState) {
-    throw new Error(tip);
-  }
-
   const isFirstRendered = cursor === hookCtx.cursor;
   const state = isFirstRendered ? evalState(iState) : 0;
   const [hookState, hookSetter] = reactUseState(state);
@@ -133,7 +130,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
 
   let hookRef;
   // 组件刚挂载 or 渲染过程中变化module或者connect的值，触发创建新ref
-  if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption, true)) {
+  if (isFirstRendered || isRegChanged(hookCtx.regOpt, _registerOption)) {
     hookCtx.regOpt = _registerOption;
     hookRef = cref();
   } else {
@@ -169,7 +166,7 @@ function _useConcent(registerOption = {}, ccClassKey, insType) {
       }
       delete cursor2hookCtx[cursor];
     }
-  }, [hookRef]);// 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
+  }, [hookRef]); // 渲染过程中变化module或者connect的值，触发卸载前一刻的ref
 
   // after every render
   effectHandler(() => {

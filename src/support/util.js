@@ -503,6 +503,14 @@ export function isOnlineEditor() {
   return result;
 }
 
+let cachedSGSMResult = null;
+export function shouldGuessStrictMode() {
+  if (cachedSGSMResult === null) {
+    cachedSGSMResult = isLocal() || isOnlineEditor();
+  }
+  return cachedSGSMResult;
+}
+
 export function makeCallInfo(module) {
   return { payload: null, renderKey: [], delay: -1, module, fnName: '' }
 }

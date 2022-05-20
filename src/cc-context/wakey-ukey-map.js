@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import { shouldGuessStrictMode, safeGetThenNoDupPush } from '../support/util';
 
 // 依赖收集写入的映射
 export const waKey2uKeyMap = {};
@@ -33,8 +34,14 @@ export function delIns(module, stateKey, ccUniqueKey) {
   delInsM(makeWaKey(module, stateKey), ccUniqueKey)
 }
 
+const cUkey2depKeys = {};
 export function delInsM(modStateKey, ccUniqueKey) {
   try {
+    // 对抗 react 18 里的 strict 双调用模型
+    if (shouldGuessStrictMode()) {
+      safeGetThenNoDupPush(cUkey2depKeys, ccUniqueKey, modStateKey);
+    }
+
     delete waKey2uKeyMap[modStateKey][ccUniqueKey];
   } catch (err) {
     // do nothing
@@ -49,10 +56,32 @@ export function mapStaticInsM(modStateKey, ccUniqueKey) {
   _mapIns(waKey2staticUKeyMap, modStateKey, ccUniqueKey);
 }
 
+const cUkey2staticDepKeys = {};
 export function delStaticInsM(modStateKey, ccUniqueKey) {
   try {
+    // 对抗 react 18 里的 strict 双调用模型
+    if (shouldGuessStrictMode()) {
+      safeGetThenNoDupPush(cUkey2staticDepKeys, ccUniqueKey, modStateKey);
+    }
     delete waKey2staticUKeyMap[modStateKey][ccUniqueKey];
-  } catch (err) { 
+  } catch (err) {
     // do nothing
+  }
+}
+
+export function mayRecoverDepRecord(ccUniqueKey) {
+  if (shouldGuessStrictMode()) {
+    const depKeys = cUkey2depKeys[ccUniqueKey];
+    // 恢复时顺带清理掉
+    if (depKeys) {
+      delete cUkey2depKeys[ccUniqueKey];
+      depKeys.forEach(key => mapInsM(key, ccUniqueKey));
+    }
+
+    const staticDepKeys = cUkey2staticDepKeys[ccUniqueKey] || [];
+    if (staticDepKeys) {
+      delete cUkey2staticDepKeys[ccUniqueKey];
+      staticDepKeys.forEach(key => mapStaticInsM(key, ccUniqueKey));
+    }
   }
 }

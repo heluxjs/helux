@@ -2,7 +2,7 @@ import triggerSetupEffect from './trigger-setup-effect';
 import setRef from '../ref/set-ref';
 import afterRender from '../ref/after-render';
 import { okeys, safeAdd } from '../../support/util';
-import { mapStaticInsM } from '../../cc-context/wakey-ukey-map';
+import { mapStaticInsM, mayRecoverDepRecord } from '../../cc-context/wakey-ukey-map';
 import module2insCount from '../../cc-context/modue-ins-count-map';
 import lifecycle from '../../cc-context/lifecycle';
 import ccContext from '../../cc-context';
@@ -39,6 +39,8 @@ export default function (ref) {
   ref.__$$ms = MOUNTED;
   const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, allModules, __$$mstate, __$$prevModuleVer } = ref.ctx;
   setRef(ref);
+  // 开发模式下双调用模型里 effect ---> clear effect ---> effect 的顺序导致依赖可能丢失，这里恢复一下
+  mayRecoverDepRecord(ccUniqueKey);
 
   // 确保组件挂载时在绑定事件，以避免同一个组件(通常是function组件, 因为cursor问题)，
   // 走了 (1)mount ---> (2)mount ---> (1)unmount 时把2本来也要监听的事件清理掉
