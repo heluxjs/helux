@@ -234,6 +234,19 @@ Details see here [concent-plugin-loading](https://github.com/concentjs/concent-p
 [concent-plugin-loading online demo](https://stackblitz.com/edit/cc-plugin-loading?file=models%2Fstudent%2Freducer.js)
 ___
 
+## CDN resource
+- cdnjs   
+https://cdnjs.com/libraries/concent
+
+- cdn.bytedance   
+https://cdn.bytedance.com/?query=concent
+
+- jsdelivr    
+https://www.jsdelivr.com/package/npm/concent
+
+- unpkg   
+https://unpkg.com/concent
+
 ## 🐚Who is using it
 
 <table>
