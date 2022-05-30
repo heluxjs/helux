@@ -707,6 +707,23 @@ type RefCtxInitState<ModuleState extends IAnyObj = IAnyObj, GlobalState extends 
     }
     : never;
 
+// 该类型用于辅助用户外部某些地方直接求出 ins 类型
+export type RefCtxIns<ModuleState extends IAnyObj = IAnyObj, GlobalState extends IAnyObj = any, PrivState extends IAnyObj>
+  = Extract<keyof PrivState, keyof ModuleState> extends never
+  // you must make sure that there is no common keys between privState and moduleState
+  ? {
+    state: PrivState & ModuleState, computed: RefCtxComputed<PrivState & ModuleState>,
+    watch: RefCtxWatch<PrivState & ModuleState>, setState: RefCtxSetState<PrivState & ModuleState>,
+    sync: RefCtxSync, syncer: Syncer<PrivState & ModuleState>,
+    syncerOfBool: SyncerOfBool<PrivState & ModuleState>, sybo: SyncerOfBool<PrivState & ModuleState>,
+    ccUniqueKey: string;
+    initTime: number;
+    renderCount: number;
+    globalState: GlobalState;
+    setGlobalState: RefCtxSetState<PrivState & GlobalState>;
+  }
+  : never;
+
 type DecideFullState<T1, T2 extends IAnyObj> = T2['__no_anyobj_passed__'] extends '_nap_' ? T1 : T2;
 
 /**
