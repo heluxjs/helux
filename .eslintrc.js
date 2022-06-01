@@ -5,7 +5,7 @@ module.exports = {
     'eslint:recommended',
     'plugin:react/recommended'
   ],
-  excludes: ['./rollup.config.js'],
+  // excludes: ['./rollup.config.js'],
   settings: {
     react: {
       version: "latest"
