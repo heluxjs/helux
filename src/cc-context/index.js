@@ -226,7 +226,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.18.2',
+    version: '2.18.6',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',
@@ -252,7 +252,7 @@ ccContext.recoverRefState = function () {
     for (let i = 0; i < lsLen; i++) {
       const lsKey = localStorage.key(i);
       if (!lsKey.startsWith('CCSS_')) return;
-      _refStoreState[lsKey.substr(5)] = JSON.parse(localStorage.getItem(lsKey));
+      _refStoreState[lsKey.substring(5)] = JSON.parse(localStorage.getItem(lsKey));
     }
   } catch (err) {
     util.logErr(err);

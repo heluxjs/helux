@@ -30,11 +30,15 @@ function isLocEqual() {
   };
 
   const markIdx1 = locStr1.indexOf(mark);
+  if (markIdx1 === -1) { // 非 react 18 版本或线上已编译版本
+    return false;
+  }
+
   const markIdx2 = locStr2.indexOf(mark);
   const semi1 = find2ndSemicolonIdx(locStr1, markIdx1);
   const semi2 = find2ndSemicolonIdx(locStr2, markIdx2);
-  const newLocStr1 = `${locStr1.substr(0, semi1)}${locStr1.substr(markIdx1)}`;
-  const newLocStr2 = `${locStr2.substr(0, semi2)}${locStr2.substr(markIdx2)}`;
+  const newLocStr1 = `${locStr1.substring(0, semi1)}${locStr1.substring(markIdx1)}`;
+  const newLocStr2 = `${locStr2.substring(0, semi2)}${locStr2.substring(markIdx2)}`;
   return newLocStr1 === newLocStr2;
 }
 
