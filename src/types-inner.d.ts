@@ -61,7 +61,7 @@ export type IRefCtx = ICtxBase & {
    */
   watchDep: Record<string, DepDesc>;
   changeState: (state: any, options: Options) => void;
-  /** is in before mount step */
+  /** mark setup fn executing is start or end  */
   __$$inBM: boolean;
   __$$renderStatus: RenderStatus;
   /** 静态的观察依赖key列表，在实例didMount时会一次性记录这些静态依赖 */

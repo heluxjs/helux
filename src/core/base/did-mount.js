@@ -37,7 +37,10 @@ export default function (ref) {
   afterRender(ref);
 
   ref.__$$ms = MOUNTED;
-  const { ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, allModules, __$$mstate, __$$prevModuleVer } = ref.ctx;
+  const {
+    ccUniqueKey, __$$onEvents, __$$staticWaKeys, module, allModules, __$$mstate,
+    __$$prevModuleVer, __$$queuedUpdaters,
+  } = ref.ctx;
   setRef(ref);
   // 开发模式下双调用模型里 effect ---> clear effect ---> effect 的顺序导致依赖可能丢失，这里恢复一下
   mayRecoverDepRecord(ccUniqueKey);
@@ -61,6 +64,12 @@ export default function (ref) {
 
   triggerSetupEffect(ref, true);
   triggerLifecyleMounted(allModules, __$$mstate);
+
+  // fix warning: Cannot update a component (`XX`) while rendering a different component (`YY`)
+  if (__$$queuedUpdaters.length) {
+    __$$queuedUpdaters.forEach(up => up());
+    __$$queuedUpdaters.length = 0;
+  }
 
   // 组件的didMount触发会在lifecycle.initState调用之后，此处版本可能已落后，需要自我刷新一下
   if (__$$prevModuleVer !== getModuleVer(module)) {

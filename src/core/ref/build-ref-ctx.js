@@ -587,6 +587,7 @@ export default function (ref, params, liteLevel = 5) {
 
     // dynamic meta, I don't want user know these props, so let field name start with __$$
     __$$onEvents: [],// 当组件还未挂载时，将事件存到__$$onEvents里，当组件挂载时才开始真正监听事件
+    __$$queuedUpdaters: [],
 
     __$$hasModuleState: modStateKeys.length > 0,
     __$$renderStatus: UNSTART,

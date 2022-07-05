@@ -17,7 +17,7 @@ const {
   FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
-  UNMOUNTED, MOUNTED,
+  UNMOUNTED, MOUNTED, NOT_MOUNT,
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey2Context,
@@ -228,7 +228,12 @@ function triggerReactSetState(
     if (mayChangedState) {
       // 记录 stateKeys，方便 triggerRefEffect 之用
       refCtx.__$$settedList.push({ module: stateModule, keys: okeys(mayChangedState) });
-      refCtx.__$$ccSetState(mayChangedState, reactCallback);
+      const upCb = () => refCtx.__$$ccSetState(mayChangedState, reactCallback);
+      if (callerRef.__$$ms === NOT_MOUNT) {
+        refCtx.__$$queuedUpdaters.push(upCb);
+      } else {
+        upCb();
+      }
     }
   }
 
