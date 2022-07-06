@@ -96,6 +96,6 @@ export const ERR_MESSAGE = {
   [ERR.CC_REDUCER_NOT_A_FUNCTION]: `reducer must be a function!`,
 }
 
-export const NOT_MOUNT = 1;
+export const NOT_MOUNT = 1; // 未挂载
 export const MOUNTED = 2; // 已挂载未卸载
-export const UNMOUNTED = 3;
+export const UNMOUNTED = 3; // 已卸载

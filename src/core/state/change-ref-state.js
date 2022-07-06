@@ -17,7 +17,7 @@ const {
   FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
-  UNMOUNTED, MOUNTED, NOT_MOUNT,
+  UNMOUNTED, NOT_MOUNT,
 } = cst;
 const {
   store: { setState: storeSetState, getPrevState, saveSharedState }, middlewares, ccClassKey2Context,
@@ -326,35 +326,41 @@ function broadcastState(
     const ref = ccUKey2ref[refKey];
     if (!ref) return;
 
-    // 对于挂载好了还未卸载的实例，才有必要触发重渲染
-    if (ref.__$$ms === MOUNTED) {
-      const refCtx = ref.ctx;
-      const {
-        hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState,
-      } = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
-      const {
-        hasDelta: hasDeltaInWa, newCommittedState: waCommittedState,
-      } = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
+    if (ref.__$$ms === UNMOUNTED) {
+      return;
+    }
 
-      // computed & watch 过程中提交了新的state，合并到 unProxyState 里
-      // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute 内部
-      // 保证了实例里cu或者wa函数 commit 提交的状态只能是 privateStateKey，所以合并到 unProxyState 是安全的
-      if (hasDeltaInCu || hasDeltaInWa) {
-        const changedRefPrivState = Object.assign(cuCommittedState, waCommittedState);
-        const refModule = refCtx.module;
-        const refState = refCtx.unProxyState;
+    const refCtx = ref.ctx;
+    const {
+      hasDelta: hasDeltaInCu, newCommittedState: cuCommittedState,
+    } = computeValueForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
+    const {
+      hasDelta: hasDeltaInWa, newCommittedState: waCommittedState,
+    } = watchKeyForRef(ref, moduleName, prevModuleState, partialSharedState, callInfo, false, false);
 
-        computeValueForRef(ref, refModule, refState, changedRefPrivState, callInfo);
-        watchKeyForRef(ref, refModule, refState, changedRefPrivState, callInfo);
+    // computed & watch 过程中提交了新的state，合并到 unProxyState 里
+    // 注意这里，computeValueForRef watchKeyForRef 调用的 findDepFnsToExecute 内部
+    // 保证了实例里cu或者wa函数 commit 提交的状态只能是 privateStateKey，所以合并到 unProxyState 是安全的
+    if (hasDeltaInCu || hasDeltaInWa) {
+      const changedRefPrivState = Object.assign(cuCommittedState, waCommittedState);
+      const refModule = refCtx.module;
+      const refState = refCtx.unProxyState;
 
-        Object.assign(refState, changedRefPrivState);
-        Object.assign(refCtx.state, changedRefPrivState);
-        refCtx.__$$settedList.push({ module: refModule, keys: okeys(changedRefPrivState) });
-      }
+      computeValueForRef(ref, refModule, refState, changedRefPrivState, callInfo);
+      watchKeyForRef(ref, refModule, refState, changedRefPrivState, callInfo);
 
-      // 记录 sharedStateKeys，方便 triggerRefEffect 之用
-      refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
-      refCtx.__$$ccForceUpdate();
+      Object.assign(refState, changedRefPrivState);
+      Object.assign(refCtx.state, changedRefPrivState);
+      refCtx.__$$settedList.push({ module: refModule, keys: okeys(changedRefPrivState) });
+    }
+
+    // 记录 sharedStateKeys，方便 triggerRefEffect 之用
+    refCtx.__$$settedList.push({ module: moduleName, keys: sharedStateKeys });
+    const upCb = () => refCtx.__$$ccForceUpdate();
+    if (ref.__$$ms === NOT_MOUNT) {
+      refCtx.__$$queuedUpdaters.push(upCb);
+    } else {
+      upCb();
     }
   });
 }
