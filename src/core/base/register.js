@@ -165,7 +165,8 @@ export default function register({
         }
       }
 
-      _CcClass.displayName = ccClassDisplayName(_ccClassKey);
+      const displayName = ReactClass.displayName || _ccClassKey;
+      _CcClass.displayName = ccClassDisplayName(displayName);
       return _CcClass;
     }
   } catch (err) {
