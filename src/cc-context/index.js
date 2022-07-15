@@ -226,7 +226,7 @@ const ccContext = {
     packageLoadTime: Date.now(),
     firstStartupTime: '',
     latestStartupTime: '',
-    version: '2.19.6',
+    version: '2.19.7',
     author: 'fantasticsoul',
     emails: ['624313307@qq.com', 'zhongzhengkai@gmail.com'],
     tag: 'glory',

@@ -1,14 +1,18 @@
 import { isPJO, okeys, removeArrElements } from '../../support/util';
 import runtimeVar from '../../cc-context/runtime-var';
 
+const UNDEFINED = void 0;
+
 // set成功则返回true
 function setPartialState(partialState, state, key) {
   const value = state[key];
-  if (runtimeVar.ignoreUndefined || value !== undefined) {
-    partialState[key] = value;
-    return true;
+
+  if (runtimeVar.ignoreUndefined && value === UNDEFINED) {
+    return false;
   }
-  return false;
+
+  partialState[key] = value;
+  return true;
 }
 
 // missKeyInState: true 代表 state 含有 stateKeys 里不包含的 key， false 则不含

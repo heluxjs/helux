@@ -30,6 +30,9 @@ export default {
   // false: 不比较，只要set了就提取出来
   // true: 只有和前一刻的值不一样就提取出来
   nonObjectValueCompare: true,
-  /** see @type {import('../types').RunOptions['ignoreUndefined']} */
+  /**
+   * see
+   * @type {import('../types').RunOptions['ignoreUndefined']}
+   */
   ignoreUndefined: false,
 }
