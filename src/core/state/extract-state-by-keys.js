@@ -1,6 +1,17 @@
 import { isPJO, okeys, removeArrElements } from '../../support/util';
+import runtimeVar from '../../cc-context/runtime-var';
 
-// missKeyInState: true代表state含有stateKeys里不包含的key， false则不含
+// set成功则返回true
+function setPartialState(partialState, state, key) {
+  const value = state[key];
+  if (runtimeVar.ignoreUndefined || value !== undefined) {
+    partialState[key] = value;
+    return true;
+  }
+  return false;
+}
+
+// missKeyInState: true 代表 state 含有 stateKeys 里不包含的 key， false 则不含
 export default function (state, stateKeys = [], returnNullIfEmpty = false, needIgnored = false) {
   let partialState = {}, ignoredStateKeys = [], missKeyInState = false;
   if (!isPJO(state)) {
@@ -17,15 +28,13 @@ export default function (state, stateKeys = [], returnNullIfEmpty = false, needI
   if (cLen > sLen) {
     missKeyInState = true;
     stateKeys.forEach(key => {
-      partialState[key] = state[key];
-      isStateEmpty = false;
+      if (setPartialState(partialState, state, key)) isStateEmpty = false;
     });
     if (needIgnored) ignoredStateKeys = removeArrElements(committedStateKeys, stateKeys);
   } else {
     committedStateKeys.forEach(key => {
       if (stateKeys.includes(key)) {
-        partialState[key] = state[key];
-        isStateEmpty = false;
+        if (setPartialState(partialState, state, key)) isStateEmpty = false;
       } else {
         missKeyInState = true;
         if (needIgnored) ignoredStateKeys.push(key);

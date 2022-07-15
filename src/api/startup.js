@@ -59,6 +59,7 @@ export default function (
     // consider every error will be throwed by cc? be careful when app in prod mode
     isStrict = false,
     isDebug = false,
+    ignoreUndefined = false,
     log = true,
     logVersion = true,
     errorHandler = null,
@@ -104,6 +105,7 @@ export default function (
       rv.alwaysRenderCaller = alwaysRenderCaller;
       rv.isStrict = isStrict;
       rv.isDebug = isDebug;
+      rv.ignoreUndefined = ignoreUndefined;
       rv.unsafe_moveReducerErrToErrorHandler = unsafe_moveReducerErrToErrorHandler;
       rv.computedCompare = computedCompare;
       rv.watchCompare = watchCompare;

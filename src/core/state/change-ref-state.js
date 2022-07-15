@@ -64,16 +64,17 @@ function getCallerForce(force) {
 /**
  * 修改状态入口函数
  */
-function changeRefState(state, {
+function changeRefState(inputState, {
   module, skipMiddleware = false, payload, stateChangedCb, force = false, stateSnapshot,
   keys = [], keyPath = '', // sync api 透传
   reactCallback, type, calledBy = SET_STATE, fnName = '', renderKey, delay = -1 } = {}, callerRef
 ) {
-  if (!state) return;
+  if (!inputState) return;
 
-  if (!isPJO(state)) {
+  if (!isPJO(inputState)) {
     return;
   }
+  let state = inputState;
 
   const targetRenderKey = util.extractRenderKey(renderKey);
   const targetDelay = (renderKey && renderKey.delay) ? renderKey.delay : delay;
@@ -91,10 +92,11 @@ function changeRefState(state, {
   // 标记noSave为true，延迟到后面可能存在的中间件执行结束后才save
   const {
     partialState: sharedState, hasDelta, hasPrivState
-  } = syncCommittedStateToStore(module, state, { ref: callerRef, callInfo, noSave: true, force });
+  } = syncCommittedStateToStore(module, inputState, { ref: callerRef, callInfo, noSave: true, force });
 
+  // 有 computed 提交了新的 state
   if (hasDelta) {
-    Object.assign(state, sharedState);
+    state = Object.assign({}, inputState, sharedState);
   }
   // 不包含私有状态，仅包含模块状态，交给 belongRefs 那里去触发渲染，这样可以让已失去依赖的当前实例减少一次渲染
   // 因为 belongRefs 那里是根据有无依赖来确定要不要渲染，这样的话如果失去了依赖不把它查出来就不触发它渲染了

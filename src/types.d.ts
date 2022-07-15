@@ -1292,6 +1292,21 @@ export interface RunOptions {
   isHot?: boolean; // default is false
   isStrict?: boolean;
   /**
+   * default: false
+   * let concent.setState and react.setState stay the same
+   *
+   * 2.19.5 新增，是否忽略掉提交的 state 里第一层为 undefined 的值
+   * true:    { a: 1, b: undefined } ---> { a: 1 }
+   * false:   { a: 1, b: undefined } ---> { a: 1, b: undefined }
+   * 2.17.5之前都是忽略的，导致问题 https://github.com/concentjs/concent/issues/68
+   * 为了和 react.setState 的行为一致，默认设置为不忽略
+   *
+   * 考虑到在 2.17.5 版本之前，用户的程序提交状态当包含有 undefined 值时，concent 会自动忽略掉，
+   * 但当用户升级到最新版本后，默认不忽略的策略可能会导致出现 bug（ 使用时未检测 undefined ），
+   * 为了平滑升级，用户可设置 ignoreUndefined 为 true，让 concent 保持和之前一样的状态过滤策略
+   */
+  ignoreUndefined?: boolean;
+  /**
    * default is false
    * 是否转发 reducer 错误到 errorHandler 里，
    * 强烈不建议用户配置 unsafe_moveReducerErrToErrorHandler 为 true，否则reducer错误会被静默掉

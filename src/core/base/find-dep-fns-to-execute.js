@@ -389,7 +389,7 @@ export default function executeDepFns(
         const { partialState, ignoredStateKeys } = extractStateByKeys(fnCommittedState, stateKeys, true);
 
         if (ignoredStateKeys.length) {
-          const reason = `they are not ${sourceType === CATE_REF ? 'private' : 'module'}, fn is ${sourceType} ${fnType}`;
+          const reason = `they are not ${sourceType === CATE_REF ? 'private' : 'module'} keys, fn is ${sourceType} ${fnType}`;
           justWarning(`these state keys[${ignoredStateKeys.join(',')}] are invalid, ${reason}`)
         }
         return partialState;// 返回合法的提交状态
