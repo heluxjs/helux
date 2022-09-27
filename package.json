@@ -49,7 +49,7 @@
     "jest-dom": "^1.12.0",
     "kind-of": "^6.0.3",
     "mixin-deep": "^2.0.1",
-    "node-fetch": "^3.1.1",
+    "node-fetch": "^3.2.10",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
     "react": ">=16.8.0",
@@ -91,12 +91,14 @@
   "module": "es/index.js",
   "types": "src/types.d.ts",
   "unpkg": "dist/concent.js",
-  "npmFileMap": [{
-    "basePath": "/dist/",
-    "files": [
-      "*.js"
-    ]
-  }],
+  "npmFileMap": [
+    {
+      "basePath": "/dist/",
+      "files": [
+        "*.js"
+      ]
+    }
+  ],
   "npmName": "concent",
   "peerDependencies": {
     "@types/react": ">=16.8.0",
