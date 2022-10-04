@@ -27,6 +27,7 @@
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-react": "^7.9.4",
     "@babel/runtime": "^7.5.4",
+    "@lopatnov/rollup-plugin-uglify": "^2.1.5",
     "@types/jest": "^26.0.23",
     "acorn": "^8.0.4",
     "ajv": ">=6.12.3",
@@ -40,7 +41,7 @@
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.5",
     "es3ify": "^0.2.0",
-    "eslint": "^8.24.0",
+    "eslint": "^7.32.0",
     "eslint-config-prettier": "^3.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-prettier": "^3.0.0",
@@ -64,9 +65,9 @@
     "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-uglify": "^6.0.4",
     "semver": "^5.5.0",
     "set-value": "^4.0.1",
+    "terser": "^5.15.0",
     "uglify-js": "3.5.8",
     "yargs-parser": "^20.2.1"
   },
@@ -126,5 +127,8 @@
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
   "dependencies": {},
+  "resolutions": {
+    "minimist": "1.2.6"
+  },
   "version": "2.19.7"
 }
