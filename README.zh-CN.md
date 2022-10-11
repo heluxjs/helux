@@ -68,7 +68,7 @@
 确保已安装[nodejs](http://nodejs.cn/download/)。
 
 ### Install concent
-使用npm命令安装`cocnent`
+使用npm命令安装`concent`
 
 ```sh
 $ cd cc-app
