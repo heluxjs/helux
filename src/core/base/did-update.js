@@ -1,7 +1,7 @@
 import triggerSetupEffect from './trigger-setup-effect';
 import afterRender from '../ref/after-render';
 
-export default function (ref) {
+function didUpdate(ref) {
   afterRender(ref);
   triggerSetupEffect(ref);
 
@@ -10,3 +10,5 @@ export default function (ref) {
 
   ref.ctx.prevState = ref.ctx.unProxyState;
 }
+
+export default didUpdate;

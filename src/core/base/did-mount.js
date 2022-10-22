@@ -33,7 +33,7 @@ function triggerLifecyleMounted(allModules, mstate) {
   allModules.forEach(handleOneModule);
 }
 
-export default function (ref) {
+function didMount(ref) {
   afterRender(ref);
 
   ref.__$$ms = MOUNTED;
@@ -76,3 +76,5 @@ export default function (ref) {
     ref.ctx.reactForceUpdate();
   }
 }
+
+export default didMount;

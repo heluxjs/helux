@@ -17,7 +17,7 @@ const { runtimeVar } = ccContext;
  * @param {boolean} bindCtxToMethod
  * @param {MultiComputed | MultiComputedFn} cuDesc
  */
-export default function (ref, setup, bindCtxToMethod, cuDesc) {
+function beforeMount(ref, setup, bindCtxToMethod, cuDesc) {
   const ctx = ref.ctx;
   ref.__$$ms = NOT_MOUNT;
   // flag ref is at before mount step
@@ -62,3 +62,5 @@ export default function (ref, setup, bindCtxToMethod, cuDesc) {
   triggerComputedAndWatch(ref);
   ctx.__$$inBM = false;
 }
+
+export default beforeMount;

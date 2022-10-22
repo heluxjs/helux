@@ -20,7 +20,7 @@ function checkCcStartupOrNot() {
 /**
  * map registration info to ccContext
  */
-export default function (
+function mapRegInfo(
   module = MODULE_DEFAULT, ccClassKey, regRenderKeyClasses, classKeyPrefix, regWatchedKeys,
   regConnect, __checkStartUp, __calledBy
 ) {
@@ -48,3 +48,5 @@ export default function (
 
   return { _module: module, _connect, _ccClassKey, _watchedKeys };
 }
+
+export default mapRegInfo;

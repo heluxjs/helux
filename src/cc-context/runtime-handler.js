@@ -3,7 +3,7 @@ import rv from './runtime-var';
 
 const defaultErrorHandler = (err, silent = false) => {
   const logFn = rv.isDebug ? logWarn : logErr;
-  // 避免travis 发现 error打印就导致test用例不通过
+  // 避免travis 发现 error 打印就导致 test 用例不通过
   logFn('found uncaught err, suggest configure an errorHandler in run options');
   logFn(err);
   if (!silent) throw err;

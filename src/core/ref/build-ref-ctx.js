@@ -462,7 +462,7 @@ function fillCtxOtherAttrs(ref, ctx, connect, watchedKeys, ccUniqueKey, stateMod
  * 构建refCtx，附加到ref上
  * liteLevel 越小，绑定的方法越少
  */
-export default function (ref, params, liteLevel = 5) {
+function buildRefCtx(ref, params, liteLevel = 5) {
   // 能省赋默认值的就省，比如state，外层调用都保证赋值过了
   const {
     ccKey = '', state, id, ccOption = {}, module, ccClassKey, type, insType, tag = '',
@@ -703,3 +703,5 @@ export default function (ref, params, liteLevel = 5) {
   ctx.getWatchedKeys = () => getWatchedKeys(ref.ctx || ctx);
   ctx.getConnectWatchedKeys = (moduleName) => getConnectWatchedKeys(ref.ctx || ctx, moduleName);
 }
+
+export default buildRefCtx;
