@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+/* eslint-disable react/prop-types,react/display-name */
 /**
  * inspired by mobx's <Observer>{state=>state.name}</Observer>
  */
@@ -6,16 +6,15 @@ import * as React from 'react';
 import { useConcentForOb } from '../core/hook/use-concent';
 
 const obView = () => 'miss render prop or children';
-
 let TargetComp = () => React.createElement('h1', {}, 'Ob component needs react ver lte 16.8');
 
 if (React.memo) {
   TargetComp = React.memo(function (/** @type any */props) {
     const { module, connect, classKey, render, children } = props;
     if (module && connect) {
-      throw new Error(`module, connect can not been supplied both`);
+      throw new Error('module, connect can not been supplied both');
     } else if (!module && !connect) {
-      throw new Error(`module or connect should been supplied`);
+      throw new Error('module or connect should been supplied');
     }
 
     const view = render || children || obView;
@@ -35,7 +34,8 @@ if (React.memo) {
     }
 
     return view([state, computed, { mr, cr, r }]);
-  })
+  });
 }
+TargetComp.displayName = 'Ob';
 
 export default TargetComp;

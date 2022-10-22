@@ -8,7 +8,7 @@ module.exports = {
   // excludes: ['./rollup.config.js'],
   settings: {
     react: {
-      version: "latest"
+      version: "detect"
     }
   },
   parserOptions: {

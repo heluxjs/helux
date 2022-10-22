@@ -1,10 +1,10 @@
-import nodeResolve from 'rollup-plugin-node-resolve'
-import babel from 'rollup-plugin-babel'
-import replace from 'rollup-plugin-replace'
-import commonjs from 'rollup-plugin-commonjs'
-import { uglify } from 'rollup-plugin-uglify'
+import nodeResolve from 'rollup-plugin-node-resolve';
+import babel from 'rollup-plugin-babel';
+import replace from 'rollup-plugin-replace';
+import commonjs from 'rollup-plugin-commonjs';
+import uglify from "@lopatnov/rollup-plugin-uglify";
 import { eslint } from 'rollup-plugin-eslint';
-import pkg from './package.json'
+import pkg from './package.json';
 
 const env = process.env.NODE_ENV;
 
@@ -24,7 +24,7 @@ const config = {
       // avoid (!) Missing global variable name
       react: 'React',
       'react-dom': 'ReactDOM',
-    }
+    },
   },
   plugins: [
     nodeResolve(),
@@ -33,17 +33,17 @@ const config = {
       runtimeHelpers: true,
     }),
     replace({
-      'process.env.NODE_ENV': JSON.stringify(env)
+      'process.env.NODE_ENV': JSON.stringify(env),
     }),
     commonjs({
       namedExports: {
         'node_modules/react-is/index.js': ['isValidElementType'],
-      }
+      },
     }),
     eslint({
-      include: ['src/**/*.js'] // 需要检查的部分
+      include: ['src/**/*.js'], // 需要检查的部分
     }),
-  ]
+  ],
 }
 
 if (env === 'production') {
@@ -53,10 +53,10 @@ if (env === 'production') {
         pure_getters: true,
         unsafe: true,
         unsafe_comps: true,
-        warnings: false
-      }
-    })
-  )
+        warnings: false,
+      },
+    }),
+  );
 }
 
 export default config;

@@ -27,8 +27,10 @@
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-react": "^7.9.4",
     "@babel/runtime": "^7.5.4",
+    "@lopatnov/rollup-plugin-uglify": "^2.1.5",
     "@types/jest": "^26.0.23",
     "acorn": "^8.0.4",
+    "ajv": ">=6.12.3",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
     "codecov": "^3.7.1",
@@ -39,17 +41,19 @@
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.5",
     "es3ify": "^0.2.0",
-    "eslint": "^4.19.1",
+    "eslint": "^7.32.0",
     "eslint-config-prettier": "^3.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-prettier": "^3.0.0",
     "eslint-plugin-react": "^7.9.1",
     "glob": "^7.1.1",
+    "glob-parent": ">=5.1.2",
     "jest": "^26.6.3",
     "jest-dom": "^1.12.0",
     "kind-of": "^6.0.3",
+    "minimist": ">=1.2.6",
     "mixin-deep": "^2.0.1",
-    "node-fetch": "^3.1.1",
+    "node-fetch": "^3.2.10",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
     "react": ">=16.8.0",
@@ -61,9 +65,9 @@
     "rollup-plugin-eslint": "^7.0.0",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-uglify": "^6.0.0",
     "semver": "^5.5.0",
     "set-value": "^4.0.1",
+    "terser": "^5.15.0",
     "uglify-js": "3.5.8",
     "yargs-parser": "^20.2.1"
   },
@@ -91,12 +95,14 @@
   "module": "es/index.js",
   "types": "src/types.d.ts",
   "unpkg": "dist/concent.js",
-  "npmFileMap": [{
-    "basePath": "/dist/",
-    "files": [
-      "*.js"
-    ]
-  }],
+  "npmFileMap": [
+    {
+      "basePath": "/dist/",
+      "files": [
+        "*.js"
+      ]
+    }
+  ],
   "npmName": "concent",
   "peerDependencies": {
     "@types/react": ">=16.8.0",
@@ -121,5 +127,8 @@
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
   "dependencies": {},
+  "resolutions": {
+    "minimist": "1.2.6"
+  },
   "version": "2.19.10"
 }
