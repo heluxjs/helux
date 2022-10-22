@@ -54,9 +54,10 @@ class CcFragment extends React.Component {
     const view = render || children;
 
     if (isFn(view)) {
-      const ctx = this.ctx;
+      console.log('isFn');
       beforeRender(this, register.mapProps);
-      return view(ctx.__$$mapped) || nullSpan;
+      return view(this.ctx) || nullSpan;
+      // return view(this.ctx.__$$mapped) || nullSpan;
     } else {
       if (React.isValidElement(view)) {
         // 直接传递dom，无论state怎么改变都不会再次触发渲染

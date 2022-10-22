@@ -56,8 +56,6 @@
     "node-fetch": "^3.2.10",
     "npm-run": "^5.0.1",
     "prettier": "1.14.3",
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0",
     "rimraf": "^2.6.2",
     "rollup": "^0.66.5",
     "rollup-plugin-babel": "^4.0.3",
@@ -126,9 +124,12 @@
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "pub": "npm publish --registry=https://registry.npmjs.org"
   },
-  "dependencies": {},
+  "dependencies": {
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
+  },
   "resolutions": {
     "minimist": "1.2.6"
   },
-  "version": "2.19.11"
+  "version": "2.19.12"
 }

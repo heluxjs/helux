@@ -10,7 +10,7 @@ module.exports = {
   // testMatch: ['<rootDir>/test/ctx-api/dispatch.test.js'],
   // testMatch: ['<rootDir>/test/ctx-api/sync.test.js'],
   // testMatch: ['<rootDir>/test/comps/*.test.js'],
-  // testMatch: ['<rootDir>/test/comps/cc-fragment.test.js'],ss
+  // testMatch: ['<rootDir>/test/comps/cc-fragment.test.js'],
   // testMatch: ['<rootDir>/test/top-api/dispatch.test.js'],
   // testMatch: ['<rootDir>/test/top-api-integration/registerDumb.test.js'],
   // testMatch: ['<rootDir>/test/top-api-integration/run.test.js'],
