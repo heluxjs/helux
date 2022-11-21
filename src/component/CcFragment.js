@@ -54,7 +54,6 @@ class CcFragment extends React.Component {
     const view = render || children;
 
     if (isFn(view)) {
-      console.log('isFn');
       beforeRender(this, register.mapProps);
       return view(this.ctx) || nullSpan;
       // return view(this.ctx.__$$mapped) || nullSpan;
