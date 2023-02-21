@@ -6,7 +6,7 @@ import ccContext from '../cc-context';
 import pendingModules from '../cc-context/pending-modules';
 import getLifecycle from '../core/param/get-lifecycle';
 
-const { isPJO, okeys, evalState, isFn } = util;
+const { isPJO, okeys, isFn } = util;
 const pError = label => {
   throw new Error(`[[run]]: param error, ${label} ${INAJ}`);
 };
@@ -35,9 +35,9 @@ export default function (store = {}, options = {}) {
       throw new Error(`run api error: module[${m}] duplicate`);
     }
 
-    storeConf.store[m] = evalState(state);
     if (isFn(state)) ccContext.moduleName2stateFn[m] = state;
 
+    storeConf.store[m] = state;
     storeConf.reducer[m] = reducer;
     storeConf.ghost[m] = ghosts;
     storeConf.watch[m] = watch;

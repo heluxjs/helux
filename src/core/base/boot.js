@@ -10,7 +10,7 @@ import initModuleComputed from '../computed/init-module-computed';
 import initModuleLifecycle from './init-module-lifecycle';
 import { on, clearCbs } from '../plugin';
 
-const { isPJO, okeys, isObject } = util;
+const { isPJO, okeys, isObject, evalState } = util;
 
 function checkObj(rootObj, tag) {
   if (!isPJO(rootObj)) {
@@ -30,7 +30,7 @@ export function configStoreState(storeState) {
   const len = moduleNames.length;
   for (let i = 0; i < len; i++) {
     const moduleName = moduleNames[i];
-    const moduleState = storeState[moduleName];
+    const moduleState = evalState(storeState[moduleName]);
     initModuleState(moduleName, moduleState);
   }
 }

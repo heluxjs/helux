@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as React from 'react';
 import * as util from '../support/util';
 import beforeUnmount from '../core/base/before-unmount';
@@ -50,6 +51,7 @@ class CcFragment extends React.Component {
     this.ctx.prevProps = this.ctx.props;
     this.ctx.props = getOutProps(thisProps);
 
+    // eslint-disable-next-line
     const { children, render, register = {} } = thisProps;
     const view = render || children;
 
