@@ -23,14 +23,14 @@ export function configStoreState(storeState) {
   delete storeState[MODULE_VOID];
   delete storeState[MODULE_CC];
 
-  if (!isObject(storeState[MODULE_GLOBAL])) storeState[MODULE_GLOBAL] = {};
-  if (!isObject(storeState[MODULE_DEFAULT])) storeState[MODULE_DEFAULT] = {};
+  if (!storeState[MODULE_GLOBAL]) storeState[MODULE_GLOBAL] = {};
+  if (!storeState[MODULE_DEFAULT]) storeState[MODULE_DEFAULT] = {};
 
   const moduleNames = okeys(storeState);
   const len = moduleNames.length;
   for (let i = 0; i < len; i++) {
     const moduleName = moduleNames[i];
-    const moduleState = evalState(storeState[moduleName]);
+    const moduleState = evalState(storeState[moduleName], `module[${moduleName}] `);
     initModuleState(moduleName, moduleState);
   }
 }

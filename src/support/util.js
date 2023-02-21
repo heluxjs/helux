@@ -515,10 +515,10 @@ export function makeCallInfo(module) {
   return { payload: null, renderKey: [], delay: -1, module, fnName: '' }
 }
 
-export function evalState(state = {}) {
+export function evalState(state = {}, mark = '') {
   const ret = isFn(state) ? state() : state;
   if (!isPJO(ret)) {
-    throw new Error(`state ${INAJ}`);
+    throw new Error(`${mark}state ${INAJ}`);
   }
   return ret;
 }
