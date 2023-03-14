@@ -2,7 +2,7 @@
 /** @typedef {import('../../types').ICtxBase} ICtxBase */
 import * as util from '../../support/util';
 import * as cst from '../../support/constant';
-import { INAF, START } from '../../support/priv-constant';
+import { INAF } from '../../support/priv-constant';
 import runLater from '../base/run-later';
 import ccContext from '../../cc-context';
 import extractStateByKeys from '../state/extract-state-by-keys';
@@ -387,11 +387,10 @@ export default function startChangeRefState(state, options, ref) {
    * }
    */
 
-  // TODO: 是否修改为 if (ref.ctx.__$$inBM || ref.ctx.__$$renderStatus === START) 
-  // 不知是否能避免
+  // TODO:  此问题待排查是否由 concent 引入
   // Warning: Cannot update a component (`XXX`) while rendering a different component (`YYY`)
 
-  if (ref.ctx.__$$inBM || ref.ctx.__$$renderStatus === START) {
+  if (ref.ctx.__$$inBM) {
     // <= 2.15.7
     // setTimeout(() => startChangeRefState(state, options, ref), 0);
 
