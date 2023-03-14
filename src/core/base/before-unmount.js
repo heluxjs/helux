@@ -39,7 +39,7 @@ function triggerLifecycleWillUnmount(allModules, mstate) {
 }
 
 
-export default function beforeMount(ref) {
+export default function beforeUnmount(ref) {
   // 标记一下已卸载，防止组件卸载后，某个地方有异步的任务拿到了该组件的引用，然后执行setState，导致
   // Warning: Can't perform a React state update on an unmounted component. This is a no-op ......
   const curMs = ref.__$$ms;
