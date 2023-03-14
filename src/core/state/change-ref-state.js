@@ -299,6 +299,9 @@ function broadcastState(
   const {
     sharedStateKeys, result: { belong: belongRefKeys, connect: connectRefKeys }
   } = findUpdateRefs(moduleName, partialSharedState, renderKeys, renderKeyClasses);
+  // 引入更新队列，放入下一轮事件循环更新，避免一下警告
+  // Warning: Cannot update a component (`XXX`) while rendering a different component (`YYY`)
+  const updaterQueue = [];
 
   const renderedInBelong = {};
   belongRefKeys.forEach(refKey => {
@@ -314,7 +317,9 @@ function broadcastState(
       rcb = reactCallback;
       calledBy = callInfo.calledBy;
     }
-    triggerReactSetState(ref, callInfo, [], calledBy, partialSharedState, FOR_CUR_MOD, false, rcb, force);
+    updaterQueue.push(() => {
+      triggerReactSetState(ref, callInfo, [], calledBy, partialSharedState, FOR_CUR_MOD, false, rcb, force);
+    });
     renderedInBelong[refKey] = 1;
   });
 
@@ -362,9 +367,13 @@ function broadcastState(
     if (ref.__$$ms === NOT_MOUNT) {
       refCtx.__$$queuedUpdaters.push(upCb);
     } else {
-      upCb();
+      updaterQueue.push(upCb);
     }
   });
+
+  setTimeout(() => {
+    updaterQueue.forEach(updater => updater());
+  }, 0);
 }
 
 export default function startChangeRefState(state, options, ref) {
@@ -386,10 +395,6 @@ export default function startChangeRefState(state, options, ref) {
    *   }, {immediate:true});
    * }
    */
-
-  // TODO:  此问题待排查是否由 concent 引入
-  // Warning: Cannot update a component (`XXX`) while rendering a different component (`YYY`)
-
   if (ref.ctx.__$$inBM) {
     // <= 2.15.7
     // setTimeout(() => startChangeRefState(state, options, ref), 0);
@@ -399,7 +404,7 @@ export default function startChangeRefState(state, options, ref) {
     // 由 permanentDispatcher 去触发其他组件实例渲染
     // 自身的 state 直接合入，这样在实例首次渲染的函数体能拿到 setup 里写入的最新状态
 
-
+    // >=2.21.1 在broadcastState 内部新增延迟到下一轮事件循环更新的机制
     const permanentDispatcher = ccContext.getDispatcher();
     if (permanentDispatcher) {
       permanentDispatcher.ctx.changeState(state, options);
