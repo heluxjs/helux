@@ -14,7 +14,7 @@ import { send } from '../plugin';
 const { isPJO, justWarning, isObjectNull, computeFeature, okeys } = util;
 const {
   FOR_CUR_MOD, FOR_ANOTHER_MOD,
-  FORCE_UPDATE, SET_STATE,
+  FORCE_UPDATE, SET_STATE, SYNC,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
   UNMOUNTED, NOT_MOUNT,
@@ -302,6 +302,15 @@ function broadcastState(
   // 引入更新队列，放入下一轮事件循环更新，避免一下警告
   // Warning: Cannot update a component (`XXX`) while rendering a different component (`YYY`)
   const updaterQueue = [];
+  const oriCalledBy = callInfo.calledBy;
+  const queuedOrUpdate = (updater) => {
+    // 必须立即触发更新，避免使用 sync 接口出现无法输入中文的问题
+    if (oriCalledBy === SYNC) {
+      updater();
+    } else {
+      updaterQueue.push(updater);
+    }
+  };
 
   const renderedInBelong = {};
   belongRefKeys.forEach(refKey => {
@@ -315,9 +324,10 @@ function broadcastState(
     if (refUKey === currentCcUKey) {
       if (!allowOriInsRender) return;
       rcb = reactCallback;
-      calledBy = callInfo.calledBy;
+      calledBy = oriCalledBy;
     }
-    updaterQueue.push(() => {
+
+    queuedOrUpdate(() => {
       triggerReactSetState(ref, callInfo, [], calledBy, partialSharedState, FOR_CUR_MOD, false, rcb, force);
     });
     renderedInBelong[refKey] = 1;
@@ -367,7 +377,7 @@ function broadcastState(
     if (ref.__$$ms === NOT_MOUNT) {
       refCtx.__$$queuedUpdaters.push(upCb);
     } else {
-      updaterQueue.push(upCb);
+      queuedOrUpdate(upCb);
     }
   });
 

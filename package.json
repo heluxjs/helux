@@ -116,8 +116,8 @@
     "build:es": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-cpway": "rm -rf ./es/* && cp -r ./src/* ./es",
     "build:es-rightway": "cross-env BABEL_ENV=es babel src --out-dir es",
-    "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.js",
-    "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.min.js",
+    "build:umd": "cross-env BABEL_ENV=rollup NODE_ENV=development rollup -c -o dist/concent.legacy.js",
+    "build:umd:min": "cross-env BABEL_ENV=rollup NODE_ENV=production rollup -c -o dist/concent.legacy.min.js",
     "test": "jest",
     "cov": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
@@ -130,5 +130,5 @@
   "resolutions": {
     "minimist": "1.2.6"
   },
-  "version": "2.21.3"
+  "version": "2.21.5"
 }
