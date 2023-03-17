@@ -14,7 +14,7 @@ import { send } from '../plugin';
 const { isPJO, justWarning, isObjectNull, computeFeature, okeys } = util;
 const {
   FOR_CUR_MOD, FOR_ANOTHER_MOD,
-  FORCE_UPDATE, SET_STATE, SYNC,
+  FORCE_UPDATE, SET_STATE,
   SIG_STATE_CHANGED,
   RENDER_NO_OP, RENDER_BY_KEY, RENDER_BY_STATE,
   UNMOUNTED, NOT_MOUNT,
@@ -285,7 +285,7 @@ function triggerBroadcastState(
 }
 
 function broadcastState(
-  callInfo, targetRef, partialSharedState, allowOriInsRender, moduleName, reactCallback, renderKeys, force
+  callInfo, callerRef, partialSharedState, allowOriInsRender, moduleName, reactCallback, renderKeys, force
 ) {
   if (!partialSharedState) { // null
     return;
@@ -293,7 +293,7 @@ function broadcastState(
   const ccUKey2ref = ccContext.ccUKey2ref;
 
   /** @type ICtxBase */
-  const { ccUniqueKey: currentCcUKey, ccClassKey } = targetRef.ctx;
+  const { ccUniqueKey: currentCcUKey, ccClassKey } = callerRef.ctx;
   const renderKeyClasses = ccClassKey2Context[ccClassKey].renderKeyClasses;
 
   const {
@@ -303,9 +303,9 @@ function broadcastState(
   // Warning: Cannot update a component (`XXX`) while rendering a different component (`YYY`)
   const updaterQueue = [];
   const oriCalledBy = callInfo.calledBy;
-  const queuedOrUpdate = (updater) => {
-    // 必须立即触发更新，避免使用 sync 接口出现无法输入中文的问题
-    if (oriCalledBy === SYNC) {
+  const queuedOrUpdate = (refKey, updater) => {
+    // 触发者调用则必须立即触发更新，避免input框录入字符时出现无法输入中文的问题
+    if (refKey === currentCcUKey) {
       updater();
     } else {
       updaterQueue.push(updater);
@@ -316,18 +316,17 @@ function broadcastState(
   belongRefKeys.forEach(refKey => {
     const ref = ccUKey2ref[refKey];
     if (!ref) return;
-    const refUKey = ref.ctx.ccUniqueKey;
 
     let rcb = null;
     // 这里的calledBy直接用'broadcastState'，仅供concent内部运行时用
     let calledBy = 'broadcastState';
-    if (refUKey === currentCcUKey) {
+    if (refKey === currentCcUKey) {
       if (!allowOriInsRender) return;
       rcb = reactCallback;
       calledBy = oriCalledBy;
     }
 
-    queuedOrUpdate(() => {
+    queuedOrUpdate(refKey, () => {
       triggerReactSetState(ref, callInfo, [], calledBy, partialSharedState, FOR_CUR_MOD, false, rcb, force);
     });
     renderedInBelong[refKey] = 1;
@@ -377,7 +376,7 @@ function broadcastState(
     if (ref.__$$ms === NOT_MOUNT) {
       refCtx.__$$queuedUpdaters.push(upCb);
     } else {
-      queuedOrUpdate(upCb);
+      queuedOrUpdate(refKey, upCb);
     }
   });
 
