@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { okeys } from '../../support/util';
+import { okeys, safeGet } from '../../support/util';
 
 let id = 0;
 /** 针对lazy的reducer调用链状态记录缓存map */
@@ -17,18 +17,9 @@ export function getChainId() {
 
 function __setChainState(chainId, targetModule, partialState, targetId_msMap) {
   if (partialState) {
-    let moduleStateMap = targetId_msMap[chainId];
-    if (!moduleStateMap) {
-      moduleStateMap = {};
-      targetId_msMap[chainId] = moduleStateMap;
-    }
-
-    const state = moduleStateMap[targetModule];
-    if (!state) {
-      moduleStateMap[targetModule] = partialState;
-    } else {
-      Object.assign(state, partialState);
-    }
+    const moduleStateMap = safeGet(targetId_msMap, chainId);
+    const moduleState = safeGet(moduleStateMap, targetModule);
+    Object.assign(moduleState, partialState);
   }
 }
 
@@ -79,6 +70,6 @@ export function setChainIdLazy(chainId) {
   chainId2isLazy[chainId] = true;
 }
 
-export function isChainIdLazy(chainId){
+export function isChainIdLazy(chainId) {
   return chainId2isLazy[chainId] === true;
 }

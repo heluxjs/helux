@@ -2,7 +2,7 @@
 import {
   MODULE_GLOBAL, ERR,
   SIG_FN_START, SIG_FN_END, SIG_FN_ERR,
-  DISPATCH, INVOKE, CC_HOOK,
+  DISPATCH, INVOKE, CC_HOOK, UNMOUNTED,
 } from '../../support/constant';
 import ccContext from '../../cc-context';
 import * as util from '../../support/util';
@@ -596,6 +596,12 @@ export const makeRefSetState = (ref) => (partialState, cb) => {
 
   const act = runtimeHandler.act;
   const update = () => {
+    if (ref.__$$ms === UNMOUNTED) {
+      // do nothing, to avoid below problem
+      // Warning: Can't perform a React state update on an unmounted component. This is a no-op
+      return;
+    }
+
     if (ctx.type === CC_HOOK) {
       ctx.__boundSetState(newState);
       // 保持和class组件callback一样的行为，即组件渲染后再触发callback
