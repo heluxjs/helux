@@ -58,6 +58,8 @@ Concent encourages simplicity. It saves you the hassle of creating boilerplate c
 
 ![](https://raw.githubusercontent.com/fantasticsoul/assets/master/img/cc-re-render-process.png)
 
+> recommend next verion lib: helux
+
 ## ✨Features
 * Provider less
 * Render context injected automatically (no any annoying boilerplate code)
