@@ -1,6 +1,6 @@
 简体中文 | [English](./README.en.md)
 
-helux v3 commin soon!
+helux v3 commin soon! powerd by [limu](https://tnfe.github.io/limu/)
 
 ## quick visit
 
