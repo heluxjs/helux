@@ -9,13 +9,13 @@ simple usage
 ```tsx
 import { createDeepShared, createComputed, createComputedAsync, useShared, useComputed } from 'helux';
 
-// create multi shared state
+// create multi shared state with deep dependencies collection strategy
 const ret = createDeepShared({a:1, b:{ b1: {b2: 200}} });
 const ret2 = createDeepShared({a:1, b:{ b1: {b2: 200}} });
 
-// sync computed
+// create sync computed fn with one shared state
 const doubleA = createComputed(()=> ({val: ret.state.a * 2}) );
-// sync computed with mutil shared state
+// create sync computed with mutil shared state
 const aPlusB2 = createComputed(()=> ({val:ret.state.a + ret.state.b.b1.b2}) );
 
 // async computed
