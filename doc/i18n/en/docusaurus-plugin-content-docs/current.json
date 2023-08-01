@@ -1,0 +1,38 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorial.category.实践": {
+    "message": "实践",
+    "description": "The label for category 实践 in sidebar tutorial"
+  },
+  "sidebar.api.category.basic": {
+    "message": "basic",
+    "description": "The label for category basic in sidebar api"
+  },
+  "sidebar.api.category.hel-lib-proxy": {
+    "message": "hel-lib-proxy",
+    "description": "The label for category hel-lib-proxy in sidebar api"
+  },
+  "sidebar.api.category.hel-micro": {
+    "message": "hel-micro",
+    "description": "The label for category hel-micro in sidebar api"
+  },
+  "sidebar.api.category.hel-micro-core": {
+    "message": "hel-micro-core",
+    "description": "The label for category hel-micro-core in sidebar api"
+  },
+  "sidebar.api.category.hel-micro-react": {
+    "message": "hel-micro-react",
+    "description": "The label for category hel-micro-react in sidebar api"
+  },
+  "sidebar.api.category.hel-dev-utils": {
+    "message": "hel-dev-utils",
+    "description": "The label for category hel-dev-utils in sidebar api"
+  },
+  "sidebar.api.category.types": {
+    "message": "types",
+    "description": "The label for category types in sidebar api"
+  }
+}

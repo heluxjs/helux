@@ -1,0 +1,11 @@
+node_modules
+dist
+pnpm-lock.yaml
+*.d.ts
+compiled
+fixtures
+*.md
+*.yaml
+*.less
+.turbo
+doc/src/components

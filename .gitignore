@@ -1,20 +1,17 @@
 .DS_Store
-**/.DS_Store
 .vscode
-.coveralls.yml
-
-coverage
+.idea
+.docusaurus
+.trubo
 
 node_modules
+build
 dist
-lib
-es/*
+tmp
+TIMME.md
+package-lock.json
+coverage
 
-TODO.md
-TIPME.md
-ATTENTION.md
-GROWTH.md
-
-articles
-type-work
-tmp-file
+npm-debug.log*
+yarn-debug.log*
+turbo-build.log*

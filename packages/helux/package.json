@@ -1,0 +1,53 @@
+{
+  "name": "helux",
+  "version": "3.0.0",
+  "description": "A React state library that encourages service injection and supports reactive updates",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tnfe/hel.git",
+    "directory": "packages/helux"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "fantasticsoul"
+  },
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "dist",
+    "lib",
+    "es",
+    "src",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
+    "build:es": "rollup -c --environment BUILD_ENV:es",
+    "build:umd": "rollup -c --environment BUILD_ENV:development",
+    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@types/react": ">=16.0.0",
+    "@types/react-dom": ">=16.0.0",
+    "react": ">=16.10.2",
+    "react-dom": ">=16.10.2"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-react": "^7.12.10",
+    "babel-cli": "^6.26.0",
+    "rollup": "^2.23.0"
+  },
+  "peerDependencies": {
+    "@types/react": ">=16.0.0",
+    "@types/react-dom": ">=16.0.0",
+    "react": ">=16.10.2",
+    "react-dom": ">=16.10.2"
+  },
+  "bundleDependencies": false,
+  "deprecated": false
+}

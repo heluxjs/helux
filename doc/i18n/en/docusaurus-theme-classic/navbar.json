@@ -1,0 +1,30 @@
+{
+  "title": {
+    "message": "hel-micro",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "hel-micro-logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.教程": {
+    "message": "教程",
+    "description": "Navbar item with label 教程"
+  },
+  "item.label.api": {
+    "message": "api",
+    "description": "Navbar item with label api"
+  },
+  "item.label.日志": {
+    "message": "日志",
+    "description": "Navbar item with label 日志"
+  },
+  "item.label.Blog": {
+    "message": "Blog",
+    "description": "Navbar item with label Blog"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

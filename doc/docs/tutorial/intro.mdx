@@ -1,0 +1,183 @@
+---
+sidebar_position: 1
+---
+
+# 模块使用
+
+对于 `hel-micro` 来说，一切 js 模块皆可以被打包为远程模块，模块可以是我们接触到的单页面应用、ui 组件、一个工具库、或者一个简单的函数！
+
+接下来让我们花 3 分钟时间来学习如何使用和编写 hel 远程模块。
+
+## 使用远程库
+
+### 安装依赖
+
+使用 tnpm 或 npm 命令安装 `hel-micro`
+
+```shell
+npm install hel-micro
+```
+
+以下内容将使用[hel-tpl-remote-lib](https://github.com/hel-eco/hel-tpl-remote-lib)作为示例
+
+### 懒加载远程模块
+
+在你的任意文件里使用`preFetchLib`接口导入`hel-tpl-remote-lib`模块
+
+```jsx title="src/some-dir/some-file.js"
+import helMicro from '/hel-micro';
+
+export async function callRemoteMethod() {
+  const lib = await helMicro.preFetchLib('hel-tpl-remote-lib');
+  return lib.num.random(22);
+}
+```
+
+为了演示更加逼真，我们基于`mdx`语法渲染两个按钮来现场调用`random`方法，点击以下按钮可观察到函数返回结果
+
+```js
+<button
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib');
+    alert(lib.num.random(22));
+  }}
+>
+  Click me to call remote method!
+</button>
+```
+
+> 下面的按钮由上面的 jsx 片段渲染得到，点击观察效果，或打开开发者工具观察点击后的资源下载情况
+
+<button
+  style={{ backgroundColor: 'var(--ifm-color-primary)', color: 'white', fontSize: '22px', border: 'none' }}
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib');
+    alert(lib.num.random(22));
+  }}
+>
+  点我获取返回结果
+</button>
+
+<p></p>
+
+`preFetchLib`默认返回`hel-tpl-remote-lib`模块的最新版本，也支持透传`versionId`指定具体的版本号来获取，以下示例将导入两个有问题的版本号模块并调用其`random`方法
+
+```js
+<button
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib', { versionId: '2.0.0' });
+    alert(lib.num.random(22));
+  }}
+>
+  固定返回10000
+</button>
+```
+
+<button
+  style={{ backgroundColor: 'var(--ifm-color-primary)', color: 'white', fontSize: '22px', border: 'none' }}
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib', { versionId: '2.0.0' });
+    alert(lib.num.random(22));
+  }}
+>
+  固定返回10000
+</button>
+
+<p></p>
+
+```js
+<button
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib', { versionId: '2.0.1' });
+    alert(lib.num.random(22));
+  }}
+>
+  固定返回888
+</button>
+```
+
+<button
+  style={{ backgroundColor: 'var(--ifm-color-primary)', color: 'white', fontSize: '22px', border: 'none' }}
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib', { versionId: '2.0.1' });
+    alert(lib.num.random(22));
+  }}
+>
+  固定返回888
+</button>
+
+### 预加载远程模块 ❤️
+
+采用预加载模式，只需要一点点小技巧将你的项目入口文件内容后移一层，即可像本地模块一样头部静态导入远程模块
+
+入口文件后移改造前，`index.js`通常作为项目加载入口做一些初始化动作，然后开始执行渲染根节点等业务逻辑。
+
+```jsx title="src/index.js"
+import React from 'react';
+import App from 'src/App';
+import ReactDOM from 'react-dom';
+
+ReactDOM.render(<App />, document.getElementById('root'));
+```
+
+入口文件后移改造后，原`index.js`内容复制到`loadApp.js`里，`index.js`则用来做模块预拉取之用
+
+```jsx title="src/index.js"
+(async function () {
+  const helMicro = await import('hel-micro');
+  await helMicro.preFetchLib('hel-tpl-remote-lib');
+  import('./loadApp');
+})();
+```
+
+之后你只需要使用 npm 安装`hel-tpl-remote-lib`包，就可以项目任意文件头部静态导入该模块了
+
+> 如果是懒加载模式，且不关心模块源码与类型，可以不用安装此 npm 包
+
+```jsx title="src/whatever.js"
+import remoteLib from 'hel-tpl-remote-lib';
+
+function callRemoteMethod() {
+  return remoteLib.num.random(19);
+}
+```
+
+注意此处，你将得到 100% 的类型提示
+
+![tip](https://tnfe.gtimg.com/image/hk3v1tv02f_1651834618998.png)
+
+当然也包括源码查看
+
+![tip](https://tnfe.gtimg.com/image/mvx5x509xv_1651834770279.png)
+
+得益于 hel 建立的运行代码与源码分离托管机制
+
+![tip](https://tnfe.gtimg.com/image/i592t8pe5y_1661912450811.png)
+
+你导入的 npm 包指向的 js 文件是一个近乎空壳的文件，对项目打包体积大小和构建速度几乎可以忽略不计
+
+![tip](https://tnfe.gtimg.com/image/xjekuifhj3_1661912778251.png)
+
+当然了，此处也不会影响你正常断点调试
+
+![tip](https://tnfe.gtimg.com/image/aix4epyswy_1651835862396.png)
+
+> 如果打包运行源码时提供了 sourcemap，调试会更友好
+
+作为模块使用方可以采用`懒加载`和`预加载`两种模式来使用 hel 远程模块，是不是很简单呢？感觉上手试试吧^\_^
+
+## 发布远程模块
+
+请点击下列目录依次阅读
+
+- [模块开发-js 库](/docs/tutorial/helmod-dev)
+- [模块开发-react 组件](/docs/tutorial/helmod-dev-react)
+- [模块开发-vue 组件](/docs/tutorial/helmod-dev-vue)
+
+其余文档正在拼命建设中，有疑问可联系 [fantasticsoul](https://github.com/fantasticsoul) 或提 [issue](https://github.com/tnfe/hel/issues) ....
