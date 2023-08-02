@@ -7,11 +7,18 @@ helux v3 commin soon! powerd by [limu](https://tnfe.github.io/limu/)
 simple usage
 
 ```tsx
-import { createDeepShared, createComputed, createComputedAsync, useShared, useComputed } from 'helux';
+import {
+createShared, createDeepShared, createComputed, createComputedAsync,
+useShared, useComputed,
+} from 'helux';
 
-// create multi shared state with deep dependencies collection strategy
+
+// create 2 shared state with deep dependencies collection strategy
 const ret = createDeepShared({a:1, b:{ b1: {b2: 200}} });
 const ret2 = createDeepShared({a:1, b:{ b1: {b2: 200}} });
+
+// create one shared state with shallow dependencies collection strategy
+const ret3 = createDeepShared({a:1, b:{ b1: {b2: 200}} });
 
 // create sync computed fn with one shared state
 const doubleA = createComputed(()=> ({val: ret.state.a * 2}) );
