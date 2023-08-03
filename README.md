@@ -1,6 +1,9 @@
 简体中文 | [English](./README.en.md)
 
-helux v3 commin soon! powerd by [limu](https://tnfe.github.io/limu/)
+attention: helux v3 powerd by [limu](https://tnfe.github.io/limu/) is still in lab but will commin soon! 
+> helux v3 is hope te be the next version of concent.
+
+check [concent v2] at this [branch](https://github.com/heluxjs/helux/tree/concent-v2)
 
 ## quick visit
 
