@@ -5,8 +5,9 @@ helux v3 is releasd now! powerd by extremely fast immutable lib [limu](https://t
 ## why helux
 
 - 基于超快的不可变数据 js 库[limu](https://tnfe.github.io/limu/)开发，依赖收集性能优异
+- 不需要Provider，接入超级简单，0成本提升状态为共享模式
 - 同时支持深、浅收集两种依赖收集策略
-- 支持 `derive`、`watch`、`atom` 等特性
+- 支持 `share`、`derive`、`watch`、`atom` 等特性
 - 导出支持异步导出，支持导出重算
 - 支持基于导出结果再导出，形成有向图架构
 - 除了依赖变更触发更新组件，还可自定义 id 来触发更新组件
