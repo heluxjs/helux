@@ -1,17 +1,17 @@
-import './factory/root';
 import { limuUtils } from 'limu';
-import { createShared, share, atom, derive, deriveAsync, deriveTask, deriveAtom, deriveAtomAsync, deriveAtomTask, watch } from './factory';
+import { atom, createShared, derive, deriveAsync, deriveAtom, deriveAtomAsync, deriveAtomTask, deriveTask, share, watch } from './factory';
+import './factory/root';
 import * as advance from './helpers/advance';
 import { runDerive } from './helpers/fndep';
 import { getRawState, getRawStateSnap } from './helpers/state';
-import { useDerived, useDerivedAsync, useDerivedTask, useAtomDerived, useAtomDerivedAsync, useAtomDerivedTask, } from './hooks/useDerived';
+import { useAtomDerived, useAtomDerivedAsync, useAtomDerivedTask, useDerived, useDerivedAsync, useDerivedTask } from './hooks/useDerived';
 import { useEffect, useLayoutEffect } from './hooks/useEffect';
 import { useForceUpdate } from './hooks/useForceUpdate';
+import { useGlobalId } from './hooks/useGlobalId';
 import { useObject } from './hooks/useObject';
 import { useService } from './hooks/useService';
-import { useShared, useAtom } from './hooks/useShared';
+import { useAtom, useShared } from './hooks/useShared';
 import { useWatch } from './hooks/useWatch';
-import { useGlobalId } from './hooks/useGlobalId';
 
 const { shallowCompare, isDiff } = limuUtils;
 const shareState = createShared;
@@ -30,7 +30,7 @@ export {
   deriveAtomTask,
   watch,
   runDerive,
-  createShared, // just for compatible with helux v2
+  createShared,
   advance,
   useAtom,
   useShared,

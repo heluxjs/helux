@@ -3,19 +3,20 @@
 helux v3 is releasd now! powerd by extremely fast immutable lib [limu](https://tnfe.github.io/limu/).
 
 ## why helux
-- 基于超快的不可变数据js库[limu](https://tnfe.github.io/limu/)开发，依赖收集性能优异
+
+- 基于超快的不可变数据 js 库[limu](https://tnfe.github.io/limu/)开发，依赖收集性能优异
 - 同时支持深收集、前收集两种策略
 - 支持 `derive`、`watch`、`atom` 等特性
 - 导出支持异步导出，支持导出重算
 - 除了依赖变更触发更新组件，还可自定义 id 来触发更新组件
 - 兼容 react 18
 - 支持热更新
-- 100% ts编写
+- 100% ts 编写
 
 ## quick visit
 
-
 ### 定义共享状态、计算、观察
+
 ```ts
 import { share, derive, watch, getRawStateSnap } from "helux";
 
@@ -30,51 +31,64 @@ watch((params)=>{
 ```
 
 ### 组件使用状态、组件内部修改状态
-```ts
-import { useShared } from "helux";
 
-const [ state, setState] = useShared(sharedState);
+```ts
+import { useShared } from 'helux';
+
+const [state, setState] = useShared(sharedState);
 // 两种更新方式：即可可变状态修改，或返回新的部分状态
-const mutableSet = () => setState((draft) => { draft.a += 100 });
+const mutableSet = () =>
+  setState((draft) => {
+    draft.a += 100;
+  });
 const classicalSet = () => setState((draft) => ({ a: draft.a + 1 }));
 
 // 注意以上修改只触发读取 state.a 的组件渲染，如以下更深层的修改
 // 只会影响读取 draft.b、draft.b.b1、draft.b.b1.b2 的组件重渲染
 // 读取 draft.b.k1 的相关组件不会触发重渲染
-const mutableSet = () => setState((draft) => { draft.b.b1.b2 += 100 });
+const mutableSet = () =>
+  setState((draft) => {
+    draft.b.b1.b2 += 100;
+  });
 ```
 
 ### 组件外部修改状态
+
 基于 share 返回的接口可在外部定义修改函数，提供给组件直接调用
+
 ```ts
-const [sharedState, setState, call] = share({ a: 1, b: { b1: { b2: 200 }, k1: { k2: 100} } });
+const [sharedState, setState, call] = share({ a: 1, b: { b1: { b2: 200 }, k1: { k2: 100 } } });
 
 // 方式1, 基于 mutable 修改
-function changeA(){
-  setState((draft) => { draft.a += 100 });
+function changeA() {
+  setState((draft) => {
+    draft.a += 100;
+  });
 }
 
 // 方式2, 返回新的部分状态修改
-function changeA(){
+function changeA() {
   setState({ a: sharedState.a + 100 });
 }
 
 // 方式3, 返回新的部分状态函数修改
-function changeA(){
-  setState((draft)=>({ a: draft.a + 100 }));
+function changeA() {
+  setState((draft) => ({ a: draft.a + 100 }));
 }
 
 // 方式3, 基于call 封装，结合 mutable 修改
 function change(num) {
-  call(function ({ draft, args }) { // call ctx { draft, state, setState, args }
+  call(function ({ draft, args }) {
+    // call ctx { draft, state, setState, args }
     draft.a += args[0] || 100;
   }, num); // 透传参数给 callCtx
 }
 ```
 
 ### 定义异步导出、重计算导出
+
 ```ts
-import { deriveAsync, runDerive } from "helux";
+import { deriveAsync, runDerive } from 'helux';
 
 const aPlusB2Result = deriveAsync(
   // 定义输入源、初始值
@@ -83,37 +97,41 @@ const aPlusB2Result = deriveAsync(
   async ({ source: [a, b2] }) => {
     await delay(1000);
     return { val: a + b2 };
-  }
+  },
 );
 
 runDerive(aPlusB2Result); // 同步导出、异步导出即可交给 runDerive 触发重导出
 ```
 
 ### 组件读取导出结果
-```ts
-import { useDerive } from "helux";
 
-const [ aPlusB, isComputing] = useDerive(aPlusB2Result);
+```ts
+import { useDerive } from 'helux';
+
+const [aPlusB, isComputing] = useDerive(aPlusB2Result);
 ```
 
 ### 组件里定义导出结果
+
 ```ts
-import { useDerive } from "helux";
+import { useDerive } from 'helux';
 // 推荐在组件外部定义
-const [ aPlusB, isComputing] = useDerive(() => ({ val: sharedState.a * 2 }));
+const [aPlusB, isComputing] = useDerive(() => ({ val: sharedState.a * 2 }));
 ```
 
 ### atom
-想比`share`只能传入object类型值，`derive`必须返回对象类型值，`atom`支持任意类型值，`deriveAtom`支持返回任意类型值
+
+想比`share`只能传入 object 类型值，`derive`必须返回对象类型值，`atom`支持任意类型值，`deriveAtom`支持返回任意类型值
 
 ```ts
 import { atom, deriveAtom, useAtom } from 'helux';
 
 const numAtom = atom(1); // numAtom 被封装为 { val: T } 对象
-deriveAtom(()=>numAtom.val + 100);
+deriveAtom(() => numAtom.val + 100);
 
-const [ num ] = useAtom(numAtom); // num is 101，已被自动拆开
+const [num] = useAtom(numAtom); // num is 101，已被自动拆开
 ```
 
 ### 综合示例
+
 这一个真实的在线[演示](https://codesandbox.io/s/distracted-cloud-2xrvpw)，欢迎访问了解

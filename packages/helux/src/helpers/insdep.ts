@@ -1,5 +1,5 @@
-import { getHeluxRoot } from '../factory/root';
 import type { InsCtxDef } from '../factory/common/buildInternal';
+import { getHeluxRoot } from '../factory/root';
 
 function getScope() {
   return getHeluxRoot().help.insDep;

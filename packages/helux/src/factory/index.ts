@@ -1,3 +1,3 @@
-export { derive, deriveAsync, deriveTask, deriveAtom, deriveAtomAsync, deriveAtomTask } from './createDerived';
-export { createShared, share, atom } from './createShared';
+export { derive, deriveAsync, deriveAtom, deriveAtomAsync, deriveAtomTask, deriveTask } from './createDerived';
+export { atom, createShared, share } from './createShared';
 export { watch } from './createWatch';

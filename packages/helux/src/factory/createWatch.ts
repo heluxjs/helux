@@ -1,8 +1,8 @@
 import * as fnDep from '../helpers/fndep';
-import { isFn } from '../utils';
 import type { IFnCtx, IWatchFnParams, ScopeType } from '../types';
+import { isFn } from '../utils';
 
-export function createWatchLogic(watchFn: (fnParams: IWatchFnParams) => void, options: { scopeType: ScopeType, fnCtxBase?: IFnCtx }) {
+export function createWatchLogic(watchFn: (fnParams: IWatchFnParams) => void, options: { scopeType: ScopeType; fnCtxBase?: IFnCtx }) {
   const { scopeType, fnCtxBase } = options;
 
   if (!isFn(watchFn)) {

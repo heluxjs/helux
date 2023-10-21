@@ -1,7 +1,7 @@
 import { VER } from '../consts';
-import { safeMapGet, nodupPush, asType } from '../utils';
+import type { Dict, IFnCtx, IUnmountInfo, NumStrSymbol } from '../types';
+import { asType, nodupPush, safeMapGet } from '../utils';
 import type { TInternal } from './common/buildInternal';
-import type { Dict, IFnCtx, IUnmountInfo, IInsCtx, NumStrSymbol } from '../types';
 
 const windowRef: Dict & Window & typeof globalThis = window;
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { IS_SHARED, SKIP_MERGE } from '../consts';
 import { getSharedKey } from '../helpers/state';
-import { useForceUpdate } from './useForceUpdate';
 import type { Dict } from '../types';
+import { useForceUpdate } from './useForceUpdate';
 
 interface IUseObjectLogicOptions {
   /** use forceUpdate or not */

@@ -1,9 +1,9 @@
+import type { Atom, IAsyncTaskParams, ICreateDerivedLogicOptions, IFnCtx, IFnParams, PlainObject, ScopeType } from '../types';
 import { createFnCtx } from './common/derived';
-import type { Atom, IFnCtx, IFnParams, PlainObject, ScopeType, IAsyncTaskParams, ICreateDerivedLogicOptions } from '../types';
 
 export function createDerivedLogic<R extends any = any>(
   deriveFn: (params: IFnParams<R>) => R,
-  options?: { scopeType?: ScopeType; fnCtxBase?: IFnCtx, forAtom?: boolean },
+  options?: { scopeType?: ScopeType; fnCtxBase?: IFnCtx; forAtom?: boolean },
 ) {
   const fnCtx = createFnCtx({ ...(options || {}), sourceFn: deriveFn, deriveFn, isAsync: false });
   return fnCtx;

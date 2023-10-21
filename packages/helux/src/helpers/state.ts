@@ -1,6 +1,6 @@
 import type { TInternal } from '../factory/common/buildInternal';
 import { getHeluxRoot } from '../factory/root';
-import { Dict, IInnerCreateOptions, SharedObject } from '../types';
+import { Dict, IInnerCreateOptions } from '../types';
 import { isDebug, isObj } from '../utils';
 
 function getScope() {

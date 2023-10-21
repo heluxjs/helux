@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { IS_SHARED, MOUNTED, RENDER_END, RENDER_START, SKIP_MERGE } from '../consts';
+import type { InsCtxDef, TInternal } from '../factory/common/buildInternal';
+import { isAtomProxy } from '../factory/common/util';
+import { delGlobalId, mapGlobalId } from '../factory/root';
 import { attachInsProxyState, buildInsCtx } from '../helpers/ins';
 import { clearDep, recoverDep, resetReadMap, updateDep } from '../helpers/insdep';
 import { getInternal, getRawState } from '../helpers/state';
+import type { Atom, Dict, HookDebugInfo, IInnerUseSharedOptions, IUseSharedOptions, SetAtom, SetState } from '../types';
 import { isFn } from '../utils';
 import { useSync } from './common/useSync';
 import { useObjectLogic } from './useObject';
-import { delGlobalId, mapGlobalId } from '../factory/root';
-import { isAtomProxy } from '../factory/common/util';
-import type { InsCtxDef, TInternal } from '../factory/common/buildInternal';
-import type { Atom, Dict, IInnerUseSharedOptions, IUseSharedOptions, SetState, SetAtom, HookDebugInfo } from '../types';
 
 // for skip ts check that after if block
 const nullInsCtx = null as unknown as InsCtxDef;
@@ -65,10 +65,7 @@ function isSharedKeyChanged<T extends Dict = Dict>(insCtx: InsCtxDef, sharedStat
   return insCtx.internal.sharedKey !== curSharedKey;
 }
 
-function useSharedLogic<T extends Dict = Dict>(
-  sharedState: T,
-  options: IInnerUseSharedOptions<T> = {},
-): [T, TInternal, HookDebugInfo] {
+function useSharedLogic<T extends Dict = Dict>(sharedState: T, options: IInnerUseSharedOptions<T> = {}): [T, TInternal, HookDebugInfo] {
   checkAtom(sharedState, options.forAtom);
   const rawState = getRawState(sharedState);
 
@@ -108,10 +105,7 @@ function useSharedLogic<T extends Dict = Dict>(
   return [insCtx.proxyState, insCtx.internal, debugInfo];
 }
 
-export function useShared<T extends Dict = Dict>(
-  sharedState: T,
-  options: IUseSharedOptions<T> = {},
-): [T, SetState<T>, HookDebugInfo] {
+export function useShared<T extends Dict = Dict>(sharedState: T, options: IUseSharedOptions<T> = {}): [T, SetState<T>, HookDebugInfo] {
   const [proxyState, internal, info] = useSharedLogic(sharedState, options);
   return [proxyState, internal.setState, info];
 }

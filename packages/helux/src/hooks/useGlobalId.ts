@@ -1,7 +1,7 @@
-import { getGlobalShared, setGlobalShared } from '../factory/root';
 import { createSharedLogic } from '../factory/createShared';
-import { useShared } from './useShared';
+import { getGlobalShared, setGlobalShared } from '../factory/root';
 import { NumStrSymbol } from '../types';
+import { useShared } from './useShared';
 
 const GLOBAL_SHARED = ensureGlobalShared();
 

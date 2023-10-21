@@ -1,9 +1,9 @@
-import { IS_ATOM, DERIVE, ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
+import { ASYNC_TYPE, DERIVE, IS_ATOM, SCOPE_TYPE } from '../../consts';
 import { delRunninFnKey, getFnCtxByObj, getFnKey, mapFn, markFnKey, recordValKeyDep, revertDep, runFn } from '../../helpers/fndep';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey } from '../../helpers/state';
-import { dedupList, isFn, isObj, isPromise, nodupPush, noop, warn } from '../../utils';
 import type { AsyncType, Dict, Fn, IFnCtx, ScopeType } from '../../types';
+import { dedupList, isFn, isObj, isPromise, nodupPush, noop, warn } from '../../utils';
 
 function checkResult(fnCtx: IFnCtx, result: Dict) {
   if (!isObj(result) || isPromise(result)) {
@@ -21,23 +21,20 @@ function checkResult(fnCtx: IFnCtx, result: Dict) {
 }
 
 export function attachStaticProxyResult(fnCtx: IFnCtx, forAtom: boolean) {
-  const proxyResult = createOb(
-    fnCtx.result,
-    {
-      set: () => {
-        warn('changing derived result is invalid');
-        return false;
-      },
-      get: (target: Dict, key: any) => {
-        if (key === IS_ATOM) {
-          return forAtom;
-        }
-        // copy dep keys
-        recordValKeyDep(fnCtx.depKeys, { belongCtx: fnCtx });
-        return target[key];
-      },
+  const proxyResult = createOb(fnCtx.result, {
+    set: () => {
+      warn('changing derived result is invalid');
+      return false;
     },
-  );
+    get: (target: Dict, key: any) => {
+      if (key === IS_ATOM) {
+        return forAtom;
+      }
+      // copy dep keys
+      recordValKeyDep(fnCtx.depKeys, { belongCtx: fnCtx });
+      return target[key];
+    },
+  });
   fnCtx.proxyResult = proxyResult;
   return proxyResult;
 }

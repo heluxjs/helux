@@ -44,12 +44,12 @@ export type DepCollectionWay = 'FIRST_RENDER' | 'EVERY_RENDER';
 export type IsComputing = boolean;
 
 export type SetState<T extends Dict = Dict> = (
-  partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => (void | Partial<T>)),
+  partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => void | Partial<T>),
   options?: ISetStateOptions<T>,
 ) => NextState<T>;
 
 export type SetAtom<T extends any = any> = (
-  newAtomOrRecipeCb: T | ((mutable: MutableAtom<T>) => (void | T)),
+  newAtomOrRecipeCb: T | ((mutable: MutableAtom<T>) => void | T),
   options?: ISetStateOptions<T>,
 ) => NextAtomValue<T>;
 
@@ -58,22 +58,13 @@ export type Call<T extends Dict = Dict> = <A extends any[] = any[]>(
     args: A;
     state: Readonly<T>;
     draft: Mutable<T>;
-    setState: (
-      partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => void),
-      options?: ISetStateOptions<T>,
-    ) => NextState<T>;
+    setState: (partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => void), options?: ISetStateOptions<T>) => NextState<T>;
   }) => Promise<Partial<T>> | Partial<T> | void,
   ...args: A
 ) => Promise<NextState<T>>;
 
-
 export type AtomCall<T extends any = any> = <A extends any[] = any[]>(
-  srvFn: (ctx: {
-    args: A;
-    state: ReadonlyAtom<T>;
-    draft: MutableAtom<T>;
-    setState: SetAtom<T>;
-  }) => Promise<T> | T | void,
+  srvFn: (ctx: { args: A; state: ReadonlyAtom<T>; draft: MutableAtom<T>; setState: SetAtom<T> }) => Promise<T> | T | void,
   ...args: A
 ) => Promise<NextAtomValue<T>>;
 
@@ -182,12 +173,12 @@ export interface IUseSharedOptions<T extends Dict = Dict> {
   way?: DepCollectionWay;
   /**
    * 组件的静态依赖，，一旦设置后当前组件的依赖收集行为将关闭，请慎用此设置
-  */
-  staticDeps?: (readOnlyState: T) => (any[] | void);
+   */
+  staticDeps?: (readOnlyState: T) => any[] | void;
   /**
    * 除了收集到的依赖之外，补充的额外依赖项，如果设置 staticDeps 则此设置无效
    */
-  extraDeps?: (readOnlyState: T) => (any[] | void);
+  extraDeps?: (readOnlyState: T) => any[] | void;
   /**
    * 视图的id，在 ICreateOptionsFull.rules 里配置更新的 ids 包含的值指的就是此处配置的id，
    * 此id属于传入的 sharedState ，即和共享状态绑定了对应关系，意味着组件使用不同的 sharedState，
@@ -211,11 +202,11 @@ export interface ISetStateOptions<T extends Dict = Dict> {
   /**
    * 除了 setState 方法里收集的状态变化依赖之外，额外追加的变化依赖，适用于没有某些状态值无改变也要触发视图渲染的场景
    */
-  extraDeps?: (readOnlyState: T) => (any[] | void);
+  extraDeps?: (readOnlyState: T) => any[] | void;
   /**
    * 需要排除掉的依赖，因内部先执行 extraDeps 再执行 excludeDeps，故 excludeDeps 也能排除掉 extraDeps 追加的依赖
    */
-  excludeDeps?: (readOnlyState: T) => (any[] | void);
+  excludeDeps?: (readOnlyState: T) => any[] | void;
 }
 
 export type ICreateOptions<T extends Dict = Dict> = Partial<ICreateOptionsFull<T>>;

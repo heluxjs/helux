@@ -1,8 +1,6 @@
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 
-export {
-  HAS_SYMBOL,
-}
+export { HAS_SYMBOL };
 
 export const PROTO_KEY = '__proto__';
 

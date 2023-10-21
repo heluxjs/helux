@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
-import { MOUNTED, RENDER_END, RENDER_START, SCOPE_TYPE, ASYNC_TYPE } from '../consts';
+import { ASYNC_TYPE, MOUNTED, RENDER_END, RENDER_START, SCOPE_TYPE } from '../consts';
 import { buildFnCtx, delFnCtx, getDepSharedStateFeature, recoverDep } from '../helpers/fndep';
 import { attachInsDerivedResult } from '../helpers/ins';
+import type {
+  Atom,
+  DeriveAtomFn,
+  DerivedAtom,
+  DerivedResult,
+  DeriveFn,
+  Dict,
+  IAsyncTaskParams,
+  IFnParams,
+  IsComputing,
+  PlainObject,
+} from '../types';
 import { noop } from '../utils';
 import { genDerivedResult, IUseDerivedOptions } from './common/derived';
 import { useSync } from './common/useSync';
 import { useForceUpdate } from './useForceUpdate';
-import type {
-  Atom, Dict, DeriveFn, DerivedResult, IsComputing, PlainObject, IAsyncTaskParams, IFnParams, DerivedAtom, DeriveAtomFn,
-} from '../types';
 
 const { SOURCE, TASK } = ASYNC_TYPE;
 
@@ -56,12 +65,16 @@ export function useDerived<R extends PlainObject = PlainObject>(
 }
 
 export function useDerivedAsync<S extends any = any, R extends PlainObject = PlainObject>(
-  sourceFn: () => ({ source: S; initial: R }),
+  sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
 ) {
   const resultPair = useDerivedLogic({
-    fn: deriveFn, sourceFn, enableRecordResultDep, careDeriveStatus: true, asyncType: SOURCE,
+    fn: deriveFn,
+    sourceFn,
+    enableRecordResultDep,
+    careDeriveStatus: true,
+    asyncType: SOURCE,
   });
   return resultPair as [R, IsComputing];
 }
@@ -71,7 +84,10 @@ export function useDerivedTask<R extends Dict = Dict>(
   enableRecordResultDep?: boolean,
 ) {
   const resultPair = useDerivedLogic({
-    fn: deriveFn, enableRecordResultDep, careDeriveStatus: true, asyncType: TASK,
+    fn: deriveFn,
+    enableRecordResultDep,
+    careDeriveStatus: true,
+    asyncType: TASK,
   });
   return resultPair as [R, IsComputing];
 }
@@ -85,12 +101,17 @@ export function useAtomDerived<R extends any = any>(
 }
 
 export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
-  sourceFn: () => ({ source: S; initial: R }),
+  sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
 ): [R, IsComputing] {
   const [result, isComputing] = useDerivedLogic<Atom<R>>({
-    fn: deriveFn, sourceFn, enableRecordResultDep, careDeriveStatus: true, asyncType: SOURCE, forAtom: true,
+    fn: deriveFn,
+    sourceFn,
+    enableRecordResultDep,
+    careDeriveStatus: true,
+    asyncType: SOURCE,
+    forAtom: true,
   });
   return [result.val, isComputing];
 }
@@ -100,7 +121,11 @@ export function useAtomDerivedTask<R extends any = any>(
   enableRecordResultDep?: boolean,
 ): [R, IsComputing] {
   const [result, isComputing] = useDerivedLogic<Atom<R>>({
-    fn: deriveFn, enableRecordResultDep, careDeriveStatus: true, asyncType: TASK, forAtom: true,
+    fn: deriveFn,
+    enableRecordResultDep,
+    careDeriveStatus: true,
+    asyncType: TASK,
+    forAtom: true,
   });
   return [result.val, isComputing];
 }

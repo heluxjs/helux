@@ -1,10 +1,10 @@
 import { ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
-import { createDerivedLogic, createDerivedAsyncLogic, createDerivedTaskLogic } from '../../factory/createDerived';
 import { isAtomProxy } from '../../factory/common/util';
-import { getFnCtxByObj, delFnCtx } from '../../helpers/fndep';
+import { createDerivedAsyncLogic, createDerivedLogic, createDerivedTaskLogic } from '../../factory/createDerived';
+import { delFnCtx, getFnCtxByObj } from '../../helpers/fndep';
 import { attachInsDerivedResult } from '../../helpers/ins';
-import { isFn, isObj } from '../../utils';
 import type { AsyncType, IFnCtx, ScopeType } from '../../types';
+import { isFn, isObj } from '../../utils';
 
 const InvalidInput = 'ERR_NON_DERIVED_FN_OR_RESULT: useDerived only accept a static derived result or derived fn';
 const NotAtomResult = 'ERR_NOT_ATOM_RESULT: useAtom series fn only accept atom result';
@@ -19,7 +19,7 @@ export interface IUseDerivedOptions {
 }
 
 interface IInitOptions extends IUseDerivedOptions {
-  deriveCtx: { input: any, deriveFn: any };
+  deriveCtx: { input: any; deriveFn: any };
   fnCtx: IFnCtx;
 }
 

@@ -1,5 +1,5 @@
-import type { Dict, Fn, NumStrSymbol } from '../types';
 import type { IOperateParams } from 'limu';
+import type { Dict, Fn, NumStrSymbol } from '../types';
 
 // @ts-ignore
 const canUseReflect = !!Reflect;
@@ -91,7 +91,7 @@ export function dedupList(list: Array<any>) {
   return Array.from(new Set(list));
 }
 
-export function noop() { }
+export function noop() {}
 
 export function prefixValKey(valKey: string, sharedKey: number) {
   return `${sharedKey}/${valKey}`;

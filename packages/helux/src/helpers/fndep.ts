@@ -1,9 +1,9 @@
-import { EXPIRE_MS, FN_KEY, NOT_MOUNT, PROTO_KEY, RENDER_START, SIZE_LIMIT, UNMOUNT, DERIVE } from '../consts';
+import { DERIVE, EXPIRE_MS, FN_KEY, NOT_MOUNT, PROTO_KEY, RENDER_START, SIZE_LIMIT, UNMOUNT } from '../consts';
 import { getHeluxRoot } from '../factory/root';
-import { isFn, isObj, isDebug, nodupPush, noop, safeMapGet } from '../utils';
+import type { Dict, Fn, IFnCtx, ScopeType, TriggerReason } from '../types';
+import { isDebug, isFn, isObj, nodupPush, noop, safeMapGet } from '../utils';
 import { injectHeluxProto } from './obj';
 import { getInternalByKey } from './state';
-import type { Dict, Fn, IFnCtx, ScopeType, TriggerReason } from '../types';
 
 function getScope() {
   return getHeluxRoot().help.fnDep;
@@ -252,7 +252,7 @@ export function markComputing(fnKey: string, runCount: number) {
 
 export function runFn(
   fnKey: string,
-  options?: { forAtom?: boolean, force?: boolean; isFirstCall?: boolean, updateReasons?: TriggerReason[] }
+  options?: { forAtom?: boolean; force?: boolean; isFirstCall?: boolean; updateReasons?: TriggerReason[] },
 ) {
   const { forAtom, isFirstCall = false, updateReasons = [] } = options || {};
   const fnCtx = getFnCtx(fnKey);
@@ -314,10 +314,12 @@ export function runFn(
     });
   }
 
-  return fn(fnParams).task(fnParams).then((data: any) => {
-    updateAndDrillDown(data);
-    return data;
-  });
+  return fn(fnParams)
+    .task(fnParams)
+    .then((data: any) => {
+      updateAndDrillDown(data);
+      return data;
+    });
 }
 
 export function rerunDerivedFn<T extends Dict = Dict>(result: T): T {
@@ -371,7 +373,7 @@ export function getDepSharedStateFeature(fn: IFnCtx) {
 export function markExpired() {
   if (isDebug()) {
     // for hot reload working well
-    FNKEY_HOOK_CTX_MAP.forEach(item => {
+    FNKEY_HOOK_CTX_MAP.forEach((item) => {
       item.isExpired = true;
     });
   }

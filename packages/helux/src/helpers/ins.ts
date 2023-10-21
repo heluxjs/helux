@@ -1,13 +1,13 @@
 import { immut } from 'limu';
 import { EXPIRE_MS, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, WAY } from '../consts';
+import type { InsCtxDef } from '../factory/common/buildInternal';
 import { getHeluxRoot, mapGlobalId } from '../factory/root';
 import * as fnDep from '../helpers/fndep';
 import { getInternal } from '../helpers/state';
-import { isSymbol, prefixValKey, warn, isFn } from '../utils';
+import type { Dict, Ext, IFnCtx, IUseSharedOptions } from '../types';
+import { isFn, isSymbol, prefixValKey, warn } from '../utils';
 import { clearDep } from './insdep';
 import { createOb } from './obj';
-import type { InsCtxDef } from '../factory/common/buildInternal';
-import type { Dict, IFnCtx, Ext, IUseSharedOptions } from '../types';
 
 function getScope() {
   return getHeluxRoot().help.insDep;
@@ -44,8 +44,7 @@ export function attachInsProxyState(insCtx: InsCtxDef, enableReactive?: boolean)
       compareVer: true,
     });
   } else {
-    insCtx.proxyState = createOb(
-      rawState, {
+    insCtx.proxyState = createOb(rawState, {
       set: (target: Dict, key: string, val: any) => {
         // @ts-ignore
         target[key] = val;
@@ -134,8 +133,7 @@ export function attachInsDerivedResult(fnCtx: IFnCtx) {
 
   // TODO: 或许 4.0 版本可参考 buildInsCtx，实现计算结果的深依赖收集，这里需要仔细思考下
   // 已计算结果每次都是全新生成的，如何实现部分节点更新和计算理念本身有点冲突
-  fnCtx.proxyResult = createOb(
-    result, {
+  fnCtx.proxyResult = createOb(result, {
     set: () => {
       warn('changing derived result is invalid');
       return false;

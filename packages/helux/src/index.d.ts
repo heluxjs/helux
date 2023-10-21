@@ -5,12 +5,30 @@
 | compatible with react 18 concurrency mode.
 |------------------------------------------------------------------------------------------------
 */
-import type {
-  Atom, Dict, DictN, EffectCb, ICreateOptionsType, SharedObject, PlainObject, SetState, Call, IsComputing,
-  IFnParams, IAsyncTaskParams, IWatchFnParams, IUseSharedOptions, SetAtom, AtomCall, DerivedResult, DeriveFn,
-  DerivedAtom, DeriveAtomFn, NumStrSymbol,
-} from './types';
 import type { LimuUtils } from 'limu';
+import type {
+  Atom,
+  AtomCall,
+  Call,
+  DeriveAtomFn,
+  DerivedAtom,
+  DerivedResult,
+  DeriveFn,
+  Dict,
+  DictN,
+  EffectCb,
+  IAsyncTaskParams,
+  ICreateOptionsType,
+  IFnParams,
+  IsComputing,
+  IUseSharedOptions,
+  IWatchFnParams,
+  NumStrSymbol,
+  PlainObject,
+  SetAtom,
+  SetState,
+  SharedObject,
+} from './types';
 
 type Advance = {
   /** after calling getDepStats, mem depStats will be cleanup automatically */
@@ -32,7 +50,7 @@ export const advance: Advance;
  *  // state 可透传给 useSharedObject
  *  // setState 可以直接修改状态
  *  // call 可以调用服务函数，并透传上下文
- * 
+ *
  *  // share({ a: 100, b: 2 }, true); // 创建响应式状态
  *  // share({ a: 100, b: 2 }, 'demo'); // 指定模块名
  *  // share({ a: 100, b: 2 }, { moduleName: 'demo', enableReactive: true }); // 既指定模块名，也设定响应式为true
@@ -51,7 +69,7 @@ export const advance: Advance;
  *      // args：使用 call 调用函数时透传的参数列表，state：状态，setState：更新状态句柄
  *      // 此处可全部感知到具体的类型
  *      // const { args, state, setState, draft } = ctx;
- * 
+ *
  *      // 直接返回变化的部分数据
  *      return { a, b };
  *      // or 修改 draft
@@ -68,7 +86,7 @@ export const advance: Advance;
 export function share<T extends Dict = Dict>(
   rawState: T | (() => T),
   strBoolOrCreateOptions?: ICreateOptionsType<T>,
-): [SharedObject<T>, SetState<T>, Call<T>]
+): [SharedObject<T>, SetState<T>, Call<T>];
 
 export const createShared: typeof share; // for compatible wit v2 helux
 
@@ -79,7 +97,7 @@ export const createShared: typeof share; // for compatible wit v2 helux
 export function shareState<T extends Dict = Dict>(
   rawState: T | (() => T),
   strBoolOrCreateOptions?: ICreateOptionsType<T>,
-): { state: SharedObject<T>, setState: SetState<T>, call: Call<T> }
+): { state: SharedObject<T>; setState: SetState<T>; call: Call<T> };
 
 /**
  * 支持共享 primitive 类型值的接口
@@ -87,7 +105,7 @@ export function shareState<T extends Dict = Dict>(
 export function atom<T extends any = any>(
   rawState: T | (() => T),
   createOptions?: ICreateOptionsType<Atom<T>>,
-): [Atom<T>, SetAtom<T>, AtomCall<T>]
+): [Atom<T>, SetAtom<T>, AtomCall<T>];
 
 /**
  * 以共享状态或其他计算结果为输入，创建计算函数
@@ -95,7 +113,7 @@ export function atom<T extends any = any>(
  * @param deriveFn
  * ```
  */
-export function derive<T extends PlainObject = PlainObject>(deriveFn: (params: IFnParams) => T): T
+export function derive<T extends PlainObject = PlainObject>(deriveFn: (params: IFnParams) => T): T;
 
 /**
  *
@@ -105,19 +123,19 @@ export function derive<T extends PlainObject = PlainObject>(deriveFn: (params: I
 export function deriveAsync<S extends any = any, R extends Dict = Dict>(
   sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S>) => Promise<R>,
-): R
+): R;
 
 export function deriveTask<R extends PlainObject = PlainObject>(
   deriveFn: (taskParams: IFnParams) => {
     initial: R;
     task: () => Promise<R>;
   },
-): R
+): R;
 
 /**
  * 创建一个普通的派生新结果的atom任务，支持返回 pritimive 类型
  */
-export function deriveAtom<T extends any = any>(deriveFn: (params: IFnParams) => T): Atom<T>
+export function deriveAtom<T extends any = any>(deriveFn: (params: IFnParams) => T): Atom<T>;
 
 /**
  * 创建一个异步的派生新结果的atom任务，支持返回 pritimive 类型
@@ -125,16 +143,14 @@ export function deriveAtom<T extends any = any>(deriveFn: (params: IFnParams) =>
 export function deriveAtomAsync<S extends any = any, R extends any = any>(
   sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S>) => Promise<R>,
-): Atom<R>
+): Atom<R>;
 
 /**
  * 创建一个异步的派生新结果的atom任务，支持返回 pritimive 类型
  */
-export function deriveAtomTask<R extends any = any>(
-  deriveFn: (taskParams: IFnParams) => { initial: R; task: () => Promise<R> },
-): Atom<R>
+export function deriveAtomTask<R extends any = any>(deriveFn: (taskParams: IFnParams) => { initial: R; task: () => Promise<R> }): Atom<R>;
 
-export function watch(watchFn: (fnParams: IWatchFnParams) => void): void
+export function watch(watchFn: (fnParams: IWatchFnParams) => void): void;
 
 /**
  * 使用共享对象，需注意此接口只接受共享对象，如传递普通对象给它会报错 OBJ_NOT_SHARED_ERR
@@ -145,15 +161,9 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void): void
  * const [ obj, setObj ] = useShared(sharedObj);
  * ```
  */
-export function useShared<T extends Dict = Dict>(
-  sharedObject: T,
-  IUseSharedOptions?: IUseSharedOptions<T>,
-): [SharedObject<T>, SetState<T>]
+export function useShared<T extends Dict = Dict>(sharedObject: T, IUseSharedOptions?: IUseSharedOptions<T>): [SharedObject<T>, SetState<T>];
 
-export function useAtom<T extends any = any>(
-  sharedState: Atom<T>,
-  options?: IUseSharedOptions<Atom<T>>,
-): [T, SetAtom<T>]
+export function useAtom<T extends any = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>];
 
 /**
  * 使用普通对象，需注意此接口只接受普通对象，如传递共享对象给它会报错 OBJ_NOT_NORMAL_ERR
@@ -167,9 +177,9 @@ export function useAtom<T extends any = any>(
  * @param initialState
  * @returns
  */
-export function useObject<T extends Dict = Dict>(initialState: T | (() => T)): [T, (partialState: Partial<T>) => void]
+export function useObject<T extends Dict = Dict>(initialState: T | (() => T)): [T, (partialState: Partial<T>) => void];
 
-export function useGlobalId(globalId: NumStrSymbol): void
+export function useGlobalId(globalId: NumStrSymbol): void;
 
 /**
  * 使用服务注入模式开发 react 组件，可配和`useObject`和`useSharedObject`同时使用，详细使用方式见在线示例：
@@ -214,12 +224,12 @@ export function useService<P extends Dict = Dict, S extends Dict = Dict, T exten
     getState: () => S;
     getProps: () => P;
   };
-}
+};
 
 /**
  * 强制更新
  */
-export function useForceUpdate(): () => void
+export function useForceUpdate(): () => void;
 
 /**
  * 对齐 React.useEffect
@@ -227,7 +237,7 @@ export function useForceUpdate(): () => void
  * @param cb
  * @param deps
  */
-export function useEffect(cb: EffectCb, deps?: any[]): void
+export function useEffect(cb: EffectCb, deps?: any[]): void;
 
 /**
  * 对齐 React.useLayoutEffect
@@ -235,46 +245,46 @@ export function useEffect(cb: EffectCb, deps?: any[]): void
  * @param cb
  * @param deps
  */
-export function useLayoutEffect(cb: EffectCb, deps?: any[]): void
+export function useLayoutEffect(cb: EffectCb, deps?: any[]): void;
 
 export function useDerived<R extends PlainObject = PlainObject>(
   resultOrFn: DerivedResult<R> | DeriveFn<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing]
+): [R, IsComputing];
 
 export function useDerivedAsync<S extends any = any, R extends PlainObject = PlainObject>(
-  sourceFn: () => ({ source: S; initial: R }),
+  sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing]
+): [R, IsComputing];
 
 export function useDerivedTask<R extends Dict = Dict>(
-  deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R>; },
+  deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
-): [R, IsComputing]
+): [R, IsComputing];
 
 export function useAtomDerived<R extends any = any>(
   resultOrFn: DerivedAtom<R> | DeriveAtomFn<R>,
   enableRecordResultDep?: boolean,
-): [R, boolean]
+): [R, boolean];
 
 export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
-  sourceFn: () => ({ source: S; initial: R }),
+  sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing]
+): [R, IsComputing];
 
 export function useAtomDerivedTask<R extends any = any>(
   deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
-): [R, IsComputing]
+): [R, IsComputing];
 
-export function getRawState<T extends Dict>(state: T): T
+export function getRawState<T extends Dict>(state: T): T;
 
-export function getRawStateSnap<T extends Dict>(state: T): T
+export function getRawStateSnap<T extends Dict>(state: T): T;
 
-export const shallowCompare: LimuUtils['shallowCompare']
+export const shallowCompare: LimuUtils['shallowCompare'];
 
-export const isDiff: LimuUtils['isDiff']
+export const isDiff: LimuUtils['isDiff'];
 
-export function runDerive<T extends Dict = Dict>(result: T): T
+export function runDerive<T extends Dict = Dict>(result: T): T;

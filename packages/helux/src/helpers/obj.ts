@@ -1,5 +1,5 @@
 import { Dict, Fn } from '../types';
-import { isFn, canUseProxy } from '../utils';
+import { canUseProxy, isFn } from '../utils';
 
 function setProtoOf(obj: Dict, proto: any) {
   obj.__proto__ = proto;
@@ -58,7 +58,7 @@ function dget(target: any, key: any) {
 /**
  * create observable object
  */
-export function createOb(rawObj: any, options?: { set?: Fn, get?: Fn }) {
+export function createOb(rawObj: any, options?: { set?: Fn; get?: Fn }) {
   const { set = dset, get = dget } = options || {};
 
   if (canUseProxy()) {

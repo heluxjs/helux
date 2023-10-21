@@ -1,4 +1,4 @@
-import { IS_ATOM, HAS_SYMBOL } from '../../consts';
+import { HAS_SYMBOL, IS_ATOM } from '../../consts';
 import { getMarkAtomMap } from '../root';
 
 export function isAtomProxy(mayAtomProxy: any) {
