@@ -27,7 +27,7 @@ const doubleA = derive(()=> sharedState.a * 2);
 watch((params)=>{
   const { a } = sharedState; // 收集观察依赖
   if(params.isFirstCall) return;
-  console.log(`a change from ${} to ${a}`);
+  console.log(`a change to ${a}`);
 });
 ```
 
