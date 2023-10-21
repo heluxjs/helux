@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { MOUNTED } from '../consts';
+import { SCOPE_TYPE } from '../consts';
 import { createWatchLogic } from '../factory/createWatch';
 import * as fnDep from '../helpers/fndep';
-import { ComputedFn, ComputedResult, Dict } from '../types';
 import { isFn } from '../utils';
+import type { DeriveFn, DerivedResult, Dict } from '../types';
 
-export function useWatch<T extends Dict = Dict>(watchFn: ComputedResult<T> | ComputedFn<T>) {
+export function useWatch<T extends Dict = Dict>(watchFn: DerivedResult<T> | DeriveFn<T>) {
   const fnRef = useRef<any>(null);
   const [fnCtx] = useState(() => fnDep.buildFnCtx());
 
@@ -15,7 +16,7 @@ export function useWatch<T extends Dict = Dict>(watchFn: ComputedResult<T> | Com
       throw new Error('ERR_NON_WATCH_FN: useWatch only accept function');
     }
     fnRef.current = watchFn;
-    createWatchLogic(fnRef.current, { scopeType: 'hook', fnCtxBase: fnCtx });
+    createWatchLogic(fnRef.current, { scopeType: SCOPE_TYPE.HOOK, fnCtxBase: fnCtx });
   }
 
   useEffect(() => {

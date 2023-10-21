@@ -1,5 +1,7 @@
 import { VER } from '../consts';
-import type { Dict, IFnCtx, IUnmountInfo } from '../types';
+import { safeMapGet, nodupPush, asType } from '../utils';
+import type { TInternal } from './common/buildInternal';
+import type { Dict, IFnCtx, IUnmountInfo, IInsCtx, NumStrSymbol } from '../types';
 
 const windowRef: Dict & Window & typeof globalThis = window;
 
@@ -10,6 +12,7 @@ function buildFnDep() {
       hook: 0,
     },
     currentRunningFnKey: '',
+    GID_INSKEYS_MAP: new Map<NumStrSymbol, number[]>(), // globalId to insKeys
     FNKEY_STATIC_CTX_MAP: new Map<string, IFnCtx>(),
     FNKEY_HOOK_CTX_MAP: new Map<string, IFnCtx>(),
     VALKEY_FNKEYS_MAP: new Map<string, string[]>(),
@@ -28,6 +31,7 @@ function buildShared() {
   return {
     UNMOUNT_INFO_MAP: new Map<number, IUnmountInfo>(),
     SHARED_KEY_STATE_MAP: new Map<number, Dict>(),
+    STATE_SHARED_KEY_MAP: new Map<any, number>(),
     INTERMAL_MAP: {} as Dict,
   };
 }
@@ -48,13 +52,54 @@ function createRoot() {
       shared: buildShared(),
       fnDep: buildFnDep(),
       insDep: buildInsDep(),
+      markAtomMap: new Map<any, boolean>(), // 不支持 symbol 的环境才会记录此map
     },
+    globalShared: asType<Dict>(null), // works for useGlobalId
+    globalInternal: asType<TInternal>(null), // works for useGlobalId
     legacyRoot: {},
   };
   return root;
 }
 
+export function getMarkAtomMap() {
+  const map = getHeluxRoot().help.markAtomMap;
+  return map;
+}
+
+export function getGlobalIdInsKeys(id: NumStrSymbol) {
+  const map = getHeluxRoot().help.fnDep.GID_INSKEYS_MAP;
+  return safeMapGet(map, id, [] as number[]);
+}
+
+export function getGlobalInternal() {
+  return getHeluxRoot().globalInternal;
+}
+
 type HeluxRoot = ReturnType<typeof createRoot>;
+
+export function getGlobalShared() {
+  return getHeluxRoot().globalShared;
+}
+
+export function setGlobalShared(shared: Dict) {
+  getHeluxRoot().globalShared = shared;
+  return shared;
+}
+
+export function mapGlobalId(id: NumStrSymbol, insKey: number) {
+  if (!id) return;
+  const keys = getGlobalIdInsKeys(id);
+  nodupPush(keys, insKey);
+}
+
+export function delGlobalId(id: NumStrSymbol, insKey: number) {
+  if (!id) return;
+  const keys = getGlobalIdInsKeys(id);
+  const idx = keys.indexOf(insKey);
+  if (idx >= 0) {
+    keys.splice(idx, 1);
+  }
+}
 
 export function getHeluxRoot(): HeluxRoot {
   return windowRef.__HELUX__;

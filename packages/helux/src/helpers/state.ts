@@ -1,14 +1,13 @@
-import { SHARED_KEY } from '../consts';
 import type { TInternal } from '../factory/common/buildInternal';
 import { getHeluxRoot } from '../factory/root';
-import { Dict } from '../types';
-import { isObj } from '../utils';
+import { Dict, IInnerCreateOptions, SharedObject } from '../types';
+import { isDebug, isObj } from '../utils';
 
 function getScope() {
   return getHeluxRoot().help.shared;
 }
 
-const { UNMOUNT_INFO_MAP, SHARED_KEY_STATE_MAP, INTERMAL_MAP } = getScope();
+const { UNMOUNT_INFO_MAP, SHARED_KEY_STATE_MAP, STATE_SHARED_KEY_MAP, INTERMAL_MAP } = getScope();
 
 export function getInternalMap() {
   return INTERMAL_MAP;
@@ -27,14 +26,42 @@ export function getInternalByKey(sharedKey: number): TInternal {
   return INTERMAL_MAP[sharedKey];
 }
 
-export function getRawState(state: Dict) {
+export function getRawState<T extends Dict>(state: T): T {
   const internal = getInternal(state);
   return internal.rawState;
 }
 
+export function getRawStateSnap<T extends Dict>(state: T): T {
+  const internal = getInternal(state);
+  return internal.rawStateSnap;
+}
+
 export function getSharedKey(state: Dict) {
   if (!isObj(state)) return 0;
-  return state[SHARED_KEY] || 0;
+  return STATE_SHARED_KEY_MAP.get(state) || 0;
+}
+
+/**
+ * see window.__HELUX__.help.shared.INTERMAL_MAP
+ */
+export function clearInternal(moduleName: string) {
+  if (!moduleName) return;
+  if (!isDebug()) return;
+
+  let matchedKeys: string[] = [];
+  const keys = Object.keys(INTERMAL_MAP);
+  for (const key of keys) {
+    const item = INTERMAL_MAP[key];
+    if (item.moduleName === moduleName) {
+      matchedKeys.push(item.sharedKey);
+    }
+  }
+
+  // 清除头2个即可
+  if (matchedKeys.length > 2) {
+    Reflect.deleteProperty(INTERMAL_MAP, matchedKeys[0]);
+    Reflect.deleteProperty(INTERMAL_MAP, matchedKeys[1]);
+  }
 }
 
 export function bindInternal<T extends Dict = Dict>(state: Dict, internal: T): T {
@@ -46,25 +73,33 @@ export function bindInternal<T extends Dict = Dict>(state: Dict, internal: T): T
 let keySeed = 0;
 export function markSharedKey(state: Dict) {
   keySeed = keySeed === Number.MAX_SAFE_INTEGER ? 1 : keySeed + 1;
-  state.__proto__[SHARED_KEY] = keySeed;
+  STATE_SHARED_KEY_MAP.set(state, keySeed);
   return keySeed;
 }
 
-export function mapSharedState(sharedKey: number, state: Dict) {
-  SHARED_KEY_STATE_MAP.set(sharedKey, state);
+export function mapSharedState(sharedKey: number, sharedState: Dict) {
+  SHARED_KEY_STATE_MAP.set(sharedKey, sharedState);
+  // 代理后的 sharedState 也记录下对应的 sharedKey
+  STATE_SHARED_KEY_MAP.set(sharedState, sharedKey);
 }
 
 export function getSharedState(sharedKey: number) {
   return SHARED_KEY_STATE_MAP.get(sharedKey);
 }
 
-export function record(moduleName: string, sharedState: Dict) {
+export function recordMod(sharedState: Dict, options: IInnerCreateOptions) {
   const { rootState, help } = getHeluxRoot();
+  const { forGlobal, moduleName } = options;
   const treeKey = moduleName || getSharedKey(sharedState);
   if (rootState[treeKey] && !window.location.port) {
     return console.error(`moduleName ${moduleName} duplicate!`);
   }
   // may hot replace for dev mode or add new mod
   rootState[treeKey] = sharedState;
-  help.mod[treeKey] = { setState: getInternal(sharedState).setState };
+  const internal = getInternal(sharedState);
+  help.mod[treeKey] = { setState: internal.setState };
+
+  if (forGlobal) {
+    getHeluxRoot().globalInternal = internal;
+  }
 }

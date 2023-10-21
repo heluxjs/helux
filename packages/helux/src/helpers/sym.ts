@@ -1,8 +1,10 @@
 let symbolSeed = 0;
+const NativeSym = Symbol;
+export const HAS_SYMBOL = typeof NativeSym === 'function';
 
 export function createSymbol(str: string) {
-  if (typeof Symbol === 'function') {
-    return Symbol(str);
+  if (HAS_SYMBOL) {
+    return NativeSym(str);
   }
 
   symbolSeed += 1;

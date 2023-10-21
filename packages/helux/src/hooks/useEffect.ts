@@ -1,5 +1,5 @@
 import { useEffect as useReactEffect, useLayoutEffect as useReactLayoutEffect, useState } from 'react';
-import { EffectCb } from '../types';
+import type { EffectCb } from '../types';
 
 let insKey = 0;
 const MOUNT_MAP = new Map<number, { count: number }>();

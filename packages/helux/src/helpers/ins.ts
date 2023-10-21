@@ -1,13 +1,13 @@
 import { immut } from 'limu';
-import { EXPIRE_MS, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, SHARED_KEY } from '../consts';
-import type { InsCtxDef } from '../factory/common/buildInternal';
-import { getHeluxRoot } from '../factory/root';
+import { EXPIRE_MS, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, WAY } from '../consts';
+import { getHeluxRoot, mapGlobalId } from '../factory/root';
 import * as fnDep from '../helpers/fndep';
 import { getInternal } from '../helpers/state';
-import type { Dict, IFnCtx } from '../types';
-import { isSymbol, prefixValKey, warn } from '../utils';
+import { isSymbol, prefixValKey, warn, isFn } from '../utils';
 import { clearDep } from './insdep';
 import { createOb } from './obj';
+import type { InsCtxDef } from '../factory/common/buildInternal';
+import type { Dict, IFnCtx, Ext, IUseSharedOptions } from '../types';
 
 function getScope() {
   return getHeluxRoot().help.insDep;
@@ -15,17 +15,24 @@ function getScope() {
 
 const scope = getScope();
 
-export function attachInsProxyState(insCtx: InsCtxDef, enableReactive: boolean) {
-  const { internal } = insCtx;
+export function attachInsProxyState(insCtx: InsCtxDef, enableReactive?: boolean) {
+  const { internal, way } = insCtx;
   const { sharedKey, rawState, isDeep } = insCtx.internal;
 
   const collectDep = (key: string) => {
+    if (!insCtx.canCollect) {
+      return;
+    }
+    if (way === WAY.FIRST_RENDER && !insCtx.isFirstRender) {
+      return;
+    }
+
     const depKey = prefixValKey(key, sharedKey);
     insCtx.readMap[depKey] = 1;
     if (insCtx.renderStatus !== RENDER_END) {
       internal.recordDep(depKey, insCtx.insKey);
     }
-    // record computed/watch dep
+    // record derive/watch dep
     fnDep.recordValKeyDep(depKey);
   };
 
@@ -35,13 +42,11 @@ export function attachInsProxyState(insCtx: InsCtxDef, enableReactive: boolean) 
         collectDep(params.fullKeyPath.join(KEY_SPLITER));
       },
       compareVer: true,
-      extraProps: { [SHARED_KEY]: sharedKey },
     });
   } else {
     insCtx.proxyState = createOb(
-      rawState,
-      // setter
-      (target: Dict, key: string, val: any) => {
+      rawState, {
+      set: (target: Dict, key: string, val: any) => {
         // @ts-ignore
         target[key] = val;
         if (enableReactive) {
@@ -49,15 +54,14 @@ export function attachInsProxyState(insCtx: InsCtxDef, enableReactive: boolean) 
         }
         return true;
       },
-      // getter
-      (target: Dict, key: string) => {
+      get: (target: Dict, key: string) => {
         if (isSymbol(key)) {
           return target[key];
         }
         collectDep(key);
         return target[key];
       },
-    );
+    });
   }
 }
 
@@ -78,13 +82,13 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined, partialState: Dict)
   setState(partialState);
 }
 
-export function buildInsCtx(options: any): InsCtxDef {
-  const { setState, sharedState, enableReactive } = options;
-  const insKey = getInsKey();
+export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
+  const { setState, sharedState, enableReactive, id = '', globalId = '', staticDeps, way = WAY.EVERY_RENDER } = options;
   const internal = getInternal(sharedState);
   if (!internal) {
     throw new Error('ERR_OBJ_NOT_SHARED: input object is not a result returned by createShared');
   }
+  const insKey = getInsKey();
 
   const { rawState, isDeep, ver } = internal;
   const insCtx: InsCtxDef = {
@@ -102,30 +106,41 @@ export function buildInsCtx(options: any): InsCtxDef {
     renderStatus: RENDER_START,
     createTime: Date.now(),
     ver,
+    id,
+    globalId,
+    way,
+    canCollect: true,
+    hasStaticDeps: false,
+    isFirstRender: true,
     subscribe: (cb) => {
-      // console.log('call insDep subscribe, snap changed', cb);
+      // call insDep subscribe after snap changed
       cb();
     },
   };
+  globalId && mapGlobalId(globalId, insKey);
   attachInsProxyState(insCtx, enableReactive);
-  internal.mapInsCtx(insKey, insCtx);
+  internal.mapInsCtx(insCtx, insKey);
+  internal.recordId(id, insKey);
+  if (isFn(staticDeps)) {
+    staticDeps(insCtx.proxyState);
+    insCtx.canCollect = false; // 让后续的收集行为无效
+    insCtx.hasStaticDeps = true;
+  }
   return insCtx;
 }
 
-export function attachInsComputedResult(fnCtx: IFnCtx) {
+export function attachInsDerivedResult(fnCtx: IFnCtx) {
   const { result } = fnCtx;
 
   // TODO: 或许 4.0 版本可参考 buildInsCtx，实现计算结果的深依赖收集，这里需要仔细思考下
   // 已计算结果每次都是全新生成的，如何实现部分节点更新和计算理念本身有点冲突
   fnCtx.proxyResult = createOb(
-    result,
-    // setter
-    () => {
-      warn('changing computed result is invalid');
+    result, {
+    set: () => {
+      warn('changing derived result is invalid');
       return false;
     },
-    // getter
-    (target: Dict, resultKey: string) => {
+    get: (target: Dict, resultKey: string) => {
       if (RENDER_START === fnCtx.renderStatus) {
         fnDep.revertDep(fnCtx);
         fnCtx.isResultReaded = true;
@@ -134,5 +149,5 @@ export function attachInsComputedResult(fnCtx: IFnCtx) {
 
       return result[resultKey];
     },
-  );
+  });
 }

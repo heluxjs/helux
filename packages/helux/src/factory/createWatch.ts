@@ -1,8 +1,8 @@
 import * as fnDep from '../helpers/fndep';
-import type { IFnCtx, IFnParams } from '../types';
 import { isFn } from '../utils';
+import type { IFnCtx, IWatchFnParams, ScopeType } from '../types';
 
-export function createWatchLogic(watchFn: (fnParams: IFnParams) => void, options: { scopeType: 'static' | 'hook'; fnCtxBase?: IFnCtx }) {
+export function createWatchLogic(watchFn: (fnParams: IWatchFnParams) => void, options: { scopeType: ScopeType, fnCtxBase?: IFnCtx }) {
   const { scopeType, fnCtxBase } = options;
 
   if (!isFn(watchFn)) {
@@ -16,6 +16,6 @@ export function createWatchLogic(watchFn: (fnParams: IFnParams) => void, options
   return fnCtx;
 }
 
-export function createWatch(watchFn: (fnParams: IFnParams) => void) {
+export function watch(watchFn: (fnParams: IWatchFnParams) => void) {
   createWatchLogic(watchFn, { scopeType: 'static' });
 }

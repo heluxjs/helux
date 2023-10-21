@@ -1,36 +1,55 @@
-import type { Fn, IHeluxParams, IInsCtx } from '../../types';
-import { safeGet } from '../../utils';
+import { safeGet, nodupPush, delListItem } from '../../utils';
+import type { Fn, IHeluxParams, IInsCtx, SetAtom, KeyIdsDict, KeyInsKeysDict, NumStrSymbol } from '../../types';
 
 export function buildInternal(
   heluxParams: IHeluxParams,
-  options: { setState: Fn; insCtxMap: Map<number, IInsCtx>; key2InsKeys: Record<string, number[]> },
+  options: {
+    setAtom: SetAtom;
+    setState: Fn;
+    insCtxMap: Map<number, IInsCtx>;
+    key2InsKeys: KeyInsKeysDict;
+    id2InsKeys: KeyInsKeysDict;
+    writeKey2Ids: KeyIdsDict;
+    writeKey2GlobalIds: KeyIdsDict;
+    isDeep: boolean;
+  },
 ) {
-  const { heluxObj, sharedKey, createOptions } = heluxParams;
-  const { setState, insCtxMap, key2InsKeys } = options;
+  const { markedState, sharedKey, moduleName, createOptions, shouldSync } = heluxParams;
+  const { setAtom, setState, insCtxMap, key2InsKeys, id2InsKeys, writeKey2Ids, writeKey2GlobalIds, isDeep } = options;
 
   return {
-    rawState: heluxObj, // helux raw state
-    rawStateSnap: heluxObj, // will be replaced while change state
+    rawState: markedState, // helux raw state
+    rawStateSnap: markedState, // will be replaced after changing state
     ver: 0,
     sharedKey,
+    moduleName,
     key2InsKeys,
     insCtxMap,
-    isDeep: createOptions.isDeep,
+    id2InsKeys,
+    writeKey2Ids,
+    writeKey2GlobalIds,
+    isDeep,
+    createOptions,
+    shouldSync,
+    setAtom,
     setState,
-    recordDep(key: string, insKey: number) {
-      const insKeys: any[] = safeGet(key2InsKeys, key, []);
-      if (!insKeys.includes(insKey)) {
-        insKeys.push(insKey);
-      }
+    recordId(id: NumStrSymbol, insKey: number) {
+      if (!id) return;
+      const insKeys: any[] = safeGet(id2InsKeys, id, []);
+      nodupPush(insKeys, insKey);
     },
-    delDep(key: string, insKey: number) {
-      const insKeys: any[] = key2InsKeys[key] || [];
-      const idx = insKeys.indexOf(insKey);
-      if (idx >= 0) {
-        insKeys.splice(idx, 1);
-      }
+    delId(id: NumStrSymbol, insKey: number) {
+      if (!id) return;
+      delListItem(id2InsKeys[id] || [], insKey);
     },
-    mapInsCtx(insKey: number, insCtx: IInsCtx) {
+    recordDep(depKey: string, insKey: number) {
+      const insKeys: any[] = safeGet(key2InsKeys, depKey, []);
+      nodupPush(insKeys, insKey);
+    },
+    delDep(depKey: string, insKey: number) {
+      delListItem(key2InsKeys[depKey] || [], insKey);
+    },
+    mapInsCtx(insCtx: IInsCtx, insKey: number) {
       insCtxMap.set(insKey, insCtx);
     },
     delInsCtx(insKey: number) {

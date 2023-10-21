@@ -1,5 +1,5 @@
-import { Dict } from '../types';
-import { isFn } from '../utils';
+import { Dict, Fn } from '../types';
+import { isFn, canUseProxy } from '../utils';
 
 function setProtoOf(obj: Dict, proto: any) {
   obj.__proto__ = proto;
@@ -23,13 +23,13 @@ const setProto = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array ? 
  * create a object with helux prototype
  */
 export function createHeluxObj(rawObj?: any) {
-  let heluxObj = Object.create(null);
+  let markedState = Object.create(null);
   const protoCopy = { ...Object.prototype };
-  setProto(heluxObj, protoCopy);
+  setProto(markedState, protoCopy);
   if (rawObj) {
-    Object.assign(heluxObj, rawObj);
+    Object.assign(markedState, rawObj);
   }
-  return heluxObj;
+  return markedState;
 }
 
 /**
@@ -40,39 +40,51 @@ export function injectHeluxProto(rawObj: Dict) {
     return;
   }
 
-  const heluxObj = Object.create(null);
-  setProto(heluxObj, Object.prototype);
-  setProto(rawObj, heluxObj);
+  const markedState = Object.create(null);
+  setProto(markedState, Object.prototype);
+  setProto(rawObj, markedState);
   return rawObj;
+}
+
+function dset(target: any, key: any, val: any) {
+  target[key] = val;
+  return true;
+}
+
+function dget(target: any, key: any) {
+  return target[key];
 }
 
 /**
  * create observable object
  */
-export function createOb(rawObj: any, setFn: any, getFn?: any) {
-  if (typeof Proxy === 'function') {
+export function createOb(rawObj: any, options?: { set?: Fn, get?: Fn }) {
+  const { set = dset, get = dget } = options || {};
+
+  if (canUseProxy()) {
     return new Proxy(rawObj, {
       set(target, key, val) {
-        return setFn(target, key, val);
+        return set(target, key, val);
       },
       get(target, key) {
-        return getFn ? getFn(target, key) : target[key];
+        return get(target, key);
       },
     });
-  } else {
-    const downgradeObj = createHeluxObj();
-    Object.keys(rawObj).forEach((key) => {
-      Object.defineProperty(downgradeObj, key, {
-        enumerable: true,
-        configurable: false,
-        set: function (val) {
-          return setFn(rawObj, key, val);
-        },
-        get: function () {
-          return getFn ? getFn(rawObj, key) : rawObj[key];
-        },
-      });
-    });
-    return downgradeObj;
   }
+
+  const downgradeObj = createHeluxObj();
+  Object.keys(rawObj).forEach((key) => {
+    Object.defineProperty(downgradeObj, key, {
+      enumerable: true,
+      configurable: false,
+      set: function (val) {
+        return set(rawObj, key, val);
+      },
+      get: function () {
+        return get(rawObj, key);
+      },
+    });
+  });
+
+  return downgradeObj;
 }

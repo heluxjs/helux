@@ -1,9 +1,9 @@
-import { EXPIRE_MS, FN_KEY, NOT_MOUNT, PROTO_KEY, RENDER_START, SHARED_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
+import { EXPIRE_MS, FN_KEY, NOT_MOUNT, PROTO_KEY, RENDER_START, SIZE_LIMIT, UNMOUNT, DERIVE } from '../consts';
 import { getHeluxRoot } from '../factory/root';
-import type { Dict, Fn, IFnCtx, ScopeType } from '../types';
-import { isFn, isObj, nodupPush, noop, safeMapGet } from '../utils';
+import { isFn, isObj, isDebug, nodupPush, noop, safeMapGet } from '../utils';
 import { injectHeluxProto } from './obj';
 import { getInternalByKey } from './state';
+import type { Dict, Fn, IFnCtx, ScopeType, TriggerReason } from '../types';
 
 function getScope() {
   return getHeluxRoot().help.fnDep;
@@ -48,10 +48,11 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     fnKey: '',
     fn: noop,
     isFirstLevel: true,
+    isExpired: false,
     sourceFn: noop,
     isComputing: false,
     remainRunCount: 0,
-    careComputeStatus: false,
+    careDeriveStatus: false,
     enableRecordResultDep: false,
     nextLevelFnKeys: [],
     prevLevelFnKeys: [],
@@ -73,7 +74,6 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     isAsyncTransfer: false,
     asyncType: 'normal',
     subscribe: (cb) => {
-      // console.log('call fnDep subscribe, snap changed', cb);
       cb();
     },
   };
@@ -199,7 +199,7 @@ export function recordValKeyDep(
   }
 
   const doRecord = (valKey: string) => {
-    if ([SHARED_KEY, PROTO_KEY].includes(valKey)) {
+    if (PROTO_KEY === valKey) {
       return;
     }
     nodupPush(fnCtx.depKeys, valKey);
@@ -250,8 +250,11 @@ export function markComputing(fnKey: string, runCount: number) {
   }
 }
 
-export function runFn(fnKey: string, options?: { force?: boolean; isFirstCall?: boolean }) {
-  const { isFirstCall = false } = options || {};
+export function runFn(
+  fnKey: string,
+  options?: { forAtom?: boolean, force?: boolean; isFirstCall?: boolean, updateReasons?: TriggerReason[] }
+) {
+  const { forAtom, isFirstCall = false, updateReasons = [] } = options || {};
   const fnCtx = getFnCtx(fnKey);
   if (!fnCtx) {
     return;
@@ -262,13 +265,14 @@ export function runFn(fnKey: string, options?: { force?: boolean; isFirstCall?: 
 
   const { isAsync, fn, sourceFn, isAsyncTransfer, fnType } = fnCtx;
   const assignResult = (data: Dict) => {
+    const dataVar = forAtom ? { val: data } : data;
     // 是计算函数
-    if (fnType === 'computed') {
+    if (fnType === DERIVE) {
       // 非中转结果
-      if (!fnCtx.returnUpstreamResult && data) {
-        Object.assign(fnCtx.result, data);
+      if (!fnCtx.returnUpstreamResult && dataVar) {
+        Object.assign(fnCtx.result, dataVar);
       }
-      // 需生成新的代理对象，让直接透传结果给 memo 组件的场景也能够正常工作，useComputed 会用到此属性
+      // 需生成新的代理对象，让直接透传结果给 memo 组件的场景也能够正常工作，useDerived 会用到此属性
       fnCtx.shouldReplaceResult = true;
     }
   };
@@ -291,39 +295,45 @@ export function runFn(fnKey: string, options?: { force?: boolean; isFirstCall?: 
     fnCtx.nextLevelFnKeys.forEach((key) => runFn(key));
   };
 
-  const cuParams = { isFirstCall: false, prevResult: fnCtx.result };
-  if (isAsync) {
-    if (isAsyncTransfer) {
-      updateAndDrillDown();
-    } else {
-      // TODO: allow user configure global err handler for async compupted
-      if (fnCtx.asyncType === 'source') {
-        fn({ isFirstCall, source: sourceFn(cuParams).source }).then((data: any) => {
-          updateAndDrillDown(data);
-        });
-      } else if (fnCtx.asyncType === 'task') {
-        fn({ isFirstCall })
-          .task(cuParams)
-          .then((data: any) => {
-            updateAndDrillDown(data);
-          });
-      } else {
-        const result = fn(cuParams);
-        updateAndDrillDown(result);
-      }
-    }
-  } else {
-    const result = fn(cuParams);
-    updateAndDrillDown(result);
+  const prevResult = forAtom ? fnCtx.result.val : fnCtx.result;
+  const fnParams = { isFirstCall, prevResult, updateReasons };
+  if (!isAsync) {
+    const result = fn(fnParams);
+    return updateAndDrillDown(result);
   }
+  if (isAsyncTransfer) {
+    updateAndDrillDown();
+    return fnCtx.result;
+  }
+
+  // TODO: allow user configure global err handler for async compupted
+  if (fnCtx.asyncType === 'source') {
+    return fn({ ...fnParams, source: sourceFn(fnParams).source }).then((data: any) => {
+      updateAndDrillDown(data);
+      return data;
+    });
+  }
+
+  return fn(fnParams).task(fnParams).then((data: any) => {
+    updateAndDrillDown(data);
+    return data;
+  });
 }
 
-export function runComputed<T extends Dict = Dict>(result: T) {
+export function rerunDerivedFn<T extends Dict = Dict>(result: T): T {
   const fnCtx = getFnCtxByObj(result);
   if (!fnCtx) {
-    throw new Error('[Helux]: not a computed result');
+    throw new Error('[Helux]: not a derived result');
   }
-  runFn(fnCtx.fnKey);
+  return runFn(fnCtx.fnKey);
+}
+
+export function runDerive<T extends Dict = Dict>(result: T): T {
+  return rerunDerivedFn(result);
+}
+
+export function runDeriveAsync<T extends Dict = Dict>(result: T): Promise<T> {
+  return Promise.resolve(rerunDerivedFn(result));
 }
 
 export function recoverDep(fnCtx: IFnCtx) {
@@ -353,4 +363,16 @@ export function getDepSharedStateFeature(fn: IFnCtx) {
     feature += `${ver}_`;
   });
   return feature;
+}
+
+/**
+ * see window.__HELUX__.help.fnDep.FNKEY_HOOK_CTX_MAP
+ */
+export function markExpired() {
+  if (isDebug()) {
+    // for hot reload working well
+    FNKEY_HOOK_CTX_MAP.forEach(item => {
+      item.isExpired = true;
+    });
+  }
 }

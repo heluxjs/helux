@@ -1,13 +1,10 @@
-export type PrimitiveItem = number | string;
+export type NumStr = number | string;
 
-export type PrimitiveSymItem = PrimitiveItem | symbol;
+export type NumStrSymbol = number | string | symbol;
 
-// export type PlainObject = Record<PrimitiveSymItem, T>;
+export type Dict<T extends any = any> = Record<NumStrSymbol, T>;
 
-export type Dict<T extends any = any> = Record<PrimitiveSymItem, T>;
-
-// export type PlainObject = Record<string, {}>;
-export type PlainObject = Dict;
+export type PlainObject = Record<string, {}>;
 
 export type DictN<T extends any = any> = Record<number, T>;
 
@@ -15,25 +12,142 @@ export type Fn<T extends any = any> = (...args: any[]) => T;
 
 export type SharedObject<T extends Dict = any> = T;
 
-export type EenableReactive = boolean;
+export type Mutable<T extends Dict = Dict> = T;
+
+export type NextState<T extends Dict = Dict> = T;
+
+export type NextAtomValue<T> = T;
+
+export type Ext<T extends Dict = Dict> = T & { [key: string]: any };
+
+export type EenableReactive = ICreateOptionsFull['enableReactive'];
+
+export type Atom<T extends any = any> = { val: T };
+
+export type Draft<T> = T;
+
+export type KeyIdsDict = Record<string, NumStrSymbol[]>;
+
+export type KeyInsKeysDict = Record<NumStrSymbol, number[]>;
+
+export type ReadonlyAtom<T extends any = any> = { readonly val: T };
+
+export type MutableAtom<T extends any = any> = { val: T };
+
+/**
+ * 'FIRST_RENDER': 仅组件首次渲染时收集依赖，
+ * 'EVERY_RENDER': 组件每一轮渲染时都收集依赖
+ */
+export type DepCollectionWay = 'FIRST_RENDER' | 'EVERY_RENDER';
 
 /** 是否在执行计算中，如是同步的计算结果，hook里此值总是 false，不会产生变化 */
 export type IsComputing = boolean;
 
-export interface IBaseCreateOptionsFull {
-  /** 模块名称，不传递的话内部会生成 symbol 作为key */
-  moduleName: string;
-}
+export type SetState<T extends Dict = Dict> = (
+  partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => (void | Partial<T>)),
+  options?: ISetStateOptions<T>,
+) => NextState<T>;
 
-export interface ICreateOptionsFull extends IBaseCreateOptionsFull {
-  /** default: false，是否创建响应式状态，true：是，false：否 */
-  enableReactive: EenableReactive;
+export type SetAtom<T extends any = any> = (
+  newAtomOrRecipeCb: T | ((mutable: MutableAtom<T>) => (void | T)),
+  options?: ISetStateOptions<T>,
+) => NextAtomValue<T>;
+
+export type Call<T extends Dict = Dict> = <A extends any[] = any[]>(
+  srvFn: (ctx: {
+    args: A;
+    state: Readonly<T>;
+    draft: Mutable<T>;
+    setState: (
+      partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => void),
+      options?: ISetStateOptions<T>,
+    ) => NextState<T>;
+  }) => Promise<Partial<T>> | Partial<T> | void,
+  ...args: A
+) => Promise<NextState<T>>;
+
+
+export type AtomCall<T extends any = any> = <A extends any[] = any[]>(
+  srvFn: (ctx: {
+    args: A;
+    state: ReadonlyAtom<T>;
+    draft: MutableAtom<T>;
+    setState: SetAtom<T>;
+  }) => Promise<T> | T | void,
+  ...args: A
+) => Promise<NextAtomValue<T>>;
+
+export interface ICreateOptionsFull<T extends Dict = Dict> {
+  /**
+   * default: true
+   * when true, it means using deep dependency collection strategy in component, using mutable state to generate new state
+   */
+  deep: boolean;
+  /**
+   * default: true ，是否使用精确更新策略
+   * ```
+   * 为 true 时，表示使用精确更新策略，此时相信用户用稳定方式去修改状态，helux 内部会使用深度依赖收集到的最长路径（即更新凭据）
+   * 去更新视图，有助于缩小更新视图范围，达到更精确通知视图更新的目的，开启此设置需谨慎，确保开启后按约定使用稳定方式去修改状态，
+   * 否则会造成冗余更新，具体原因见下面代码解释
+   * ```
+   * ```ts
+   * // 如下为稳定方式更新，在 exact 为 true 时，会查 a1|b、a2|b|c、a2|b|e 这些依赖对应的视图更新
+   * // exact 为 false 时，会查 a1、a1|b、a2、a2|b、a2|b|c、a2|b|e 这些依赖对应的视图更新
+   * // 所以只要用户按约定一定使用稳定方式去修改状态的话，通知范围会减少
+   * setState(draft=>{
+   *  draft.a1.b = 1;
+   *  draft.a2.b.c = 2
+   *  draft.a2.b.e = 3
+   * });
+   *
+   * // 如下使用非稳定方式更新时，此时只会查 a2 去更新视图，则可能造成部分视图冗余更新
+   * setState(draft=>{
+   *  draft.a2 = { b: { ...draft.a2.b, c: 2, e: 3 } };
+   * });
+   * // 冗余更新的原因是，假如视图V1读的是 a2.b.f，它的依赖是 a2、a2|b、a2|b|f，
+   * // 上面的更新语句其实只改了 a2.b.c  a2.b.e，但更新凭据是 a2，则也会通知V1更新
+   * // 如果使用稳定更新方式，用最长路径去更新视图的话，更新路径是 a2|b|c  a2|b|e，则不同通知V1更新
+   * ```
+   */
+  exact: boolean;
+  /**
+   * 配置状态变更联动视图更新的规则
+   */
+  rules: {
+    /**
+     * 当这些数据节点发生变化时
+     */
+    when: (state: T) => any | void;
+    /**
+     * 需要触发重渲染的和共享状态绑定关系的 id 对应的组件（ id 可在调用 useShared 时可设定 ）
+     */
+    ids?: NumStrSymbol[];
+    /**
+     * 需要触发重渲染的全局 id 对应的组件（ id 可在调用 useShared 或 useGlobalId 时可设定 ）
+     */
+    globalIds?: NumStrSymbol[];
+  }[];
+  /**
+   * 模块名称，方便用户可以查看到语义化的状态树
+   * 不传递的话内部会生成 symbol 作为 key
+   * 传递的话如果重复了，目前的策略仅仅是做个警告，helux 内部始终以 symbol 作为模块的命名空间控制其他逻辑
+   */
+  moduleName: string;
+  /**
+   * default: false，是否创建响应式状态
+   * ```
+   * 响应式状态，即可直接通过给对象赋值来驱动视图渲染的模式（且支持对第一层key直接赋值才起作用）：`obj.a = 1`
+   * 特别注意，此参数仅针对 isDeep=false 处于浅依赖收集模式的状态有效
+   *
+   * true：创建响应式状态，false：创建非响应式状态
+   * ```
+   */
+  enableReactive: boolean;
 
   /** default: false，直接读取 sharedObj 时是否记录依赖，目前用于满足 helux-solid 库的需要，enableReactive 为 true 时 ，设置此参数才有意义 */
   enableRecordDep: boolean;
   /**
-   * default: false
-   * 是否对传入进来的 obj 做浅拷贝
+   * default: false，是否对传入进来的 obj 做浅拷贝
    * ```
    * const originalObj = { a:1, b: 2 };
    * const { state } = createShared(originalObj, { copyObj: true } );
@@ -54,36 +168,87 @@ export interface ICreateOptionsFull extends IBaseCreateOptionsFull {
   enableSyncOriginal: boolean;
 }
 
-export interface ICreateDeepOptionsFull extends IBaseCreateOptionsFull {
-  isDeep: boolean;
+export interface IInnerCreateOptions extends ICreateOptionsFull {
+  forAtom: boolean;
+  forGlobal: boolean;
 }
 
-export type InnerCreateOptions = ICreateDeepOptionsFull & ICreateOptionsFull;
+// collectionWay: FIRST_RENDER EVERY_RENDER EVERY_RENDER_MERGE
+export interface IUseSharedOptions<T extends Dict = Dict> {
+  /**
+   * default: 'EVERY_RENDER'
+   * 依赖收集方式，默认是每一轮渲染都去收集视图的最新依赖数据
+   */
+  way?: DepCollectionWay;
+  /**
+   * 组件的静态依赖，，一旦设置后当前组件的依赖收集行为将关闭，请慎用此设置
+  */
+  staticDeps?: (readOnlyState: T) => (any[] | void);
+  /**
+   * 除了收集到的依赖之外，补充的额外依赖项，如果设置 staticDeps 则此设置无效
+   */
+  extraDeps?: (readOnlyState: T) => (any[] | void);
+  /**
+   * 视图的id，在 ICreateOptionsFull.rules 里配置更新的 ids 包含的值指的就是此处配置的id，
+   * 此id属于传入的 sharedState ，即和共享状态绑定了对应关系，意味着组件使用不同的 sharedState，
+   * 时传入了相同的id，是相互隔离的状态
+   */
+  id?: NumStrSymbol;
+  /**
+   * 全局id，在 ICreateOptionsFull.rules 子项里配置 globalIds，
+   * 此 id 不属于传入的 sharedState ，即 rules 触发的更新范围是全局的，和具体的 sharedState 无关，
+   * 此 id 也可以通过 useGlobalId 设定
+   */
+  globalId?: NumStrSymbol;
+  enableReactive?: boolean;
+}
 
-export type ICreateOptions = Partial<ICreateOptionsFull>;
+export interface IInnerUseSharedOptions<T extends Dict = Dict> extends IUseSharedOptions<T> {
+  forAtom?: boolean;
+}
 
-export type ICreateDeepOptions = Partial<ICreateDeepOptionsFull>;
+export interface ISetStateOptions<T extends Dict = Dict> {
+  /**
+   * 除了 setState 方法里收集的状态变化依赖之外，额外追加的变化依赖，适用于没有某些状态值无改变也要触发视图渲染的场景
+   */
+  extraDeps?: (readOnlyState: T) => (any[] | void);
+  /**
+   * 需要排除掉的依赖，因内部先执行 extraDeps 再执行 excludeDeps，故 excludeDeps 也能排除掉 extraDeps 追加的依赖
+   */
+  excludeDeps?: (readOnlyState: T) => (any[] | void);
+}
+
+export type ICreateOptions<T extends Dict = Dict> = Partial<ICreateOptionsFull<T>>;
 
 export type ModuleName = string;
 
-export type ICreateOptionsType = ModuleName | EenableReactive | ICreateOptions;
+export type TriggerReason = { sharedKey: number; moduleName: string; keyPath: string[] };
+
+export type ICreateOptionsType<T extends Dict = Dict> = ModuleName | EenableReactive | ICreateOptions<T>;
 
 export type CleanUpCb = () => void;
 
 export type EffectCb = () => void | CleanUpCb;
 
-export interface IFnParams<T extends PlainObject = PlainObject> {
+export interface IWatchFnParams {
   isFirstCall: boolean;
-  prevResult: T | null;
+}
+export interface IFnParams<R extends any = any> {
+  isFirstCall: boolean;
+  prevResult: R | null;
 }
 
-export interface IAsyncTaskParams<S extends any = any> extends IFnParams {
+export interface IAsyncTaskParams<S extends any = any, R extends any = any> extends IFnParams<R> {
   source: S;
 }
 
-export type ComputedResult<T extends Dict = Dict> = T;
+export type DerivedResult<R extends PlainObject = PlainObject> = R;
 
-export type ComputedFn<T extends Dict = Dict> = (params: IFnParams) => T;
+export type DeriveFn<R extends PlainObject = PlainObject> = (params: IFnParams<R>) => R;
+
+export type DerivedAtom<R extends any = any> = { val: R };
+
+export type DeriveAtomFn<R extends any = any> = (params: IFnParams<R>) => R;
 
 export interface IUnmountInfo {
   t: number;
@@ -96,7 +261,7 @@ export interface IUnmountInfo {
   prev: number;
 }
 
-export type FnType = 'watch' | 'computed';
+export type FnType = 'watch' | 'derive';
 
 export type ScopeType = 'static' | 'hook';
 
@@ -125,9 +290,9 @@ export interface IFnCtx {
   isFirstLevel: boolean;
   isComputing: boolean;
   remainRunCount: number;
-  careComputeStatus: boolean;
+  careDeriveStatus: boolean;
   /**
-   * default: false ，是否对计算结果开启记录读依赖功能，此功能仅针对 hook 里使用 useComputed 有效
+   * default: false ，是否对计算结果开启记录读依赖功能，此功能仅针对 hook 里使用 useDerived 有效
    */
   enableRecordResultDep: boolean;
   /**
@@ -151,22 +316,24 @@ export interface IFnCtx {
   proxyResult: PlainObject;
   fnType: FnType;
   scopeType: ScopeType;
-  /** work for hook computed fnCtx */
+  /** work for hook derived fnCtx */
   updater: Fn;
-  /** work for hook computed fnCtx */
+  /** work for hook derived fnCtx */
   isResultReaded: boolean;
   /** 只要结果曾经读取过就记录为 true */
   isResultReadedOnce: boolean;
+  /** 为了更友好的支持热更新而加入的标记，标记当前 fnCtx 是否已过期 */
+  isExpired: boolean;
   /**
    * 是否返回了上游的计算结算，方便为计算结果中转机制服务
-   * work for computed result transfer mechanism
+   * work for derived result transfer mechanism
    */
   returnUpstreamResult: boolean;
-  /** work for hook computed fnCtx */
+  /** work for hook derived fnCtx */
   renderStatus: ReanderStatus;
   /** fn ctx created timestamp */
   createTime: number;
-  /** work for hook computed fnCtx  */
+  /** work for hook derived fnCtx  */
   shouldReplaceResult: boolean;
   /**
    * 是否是异步的计算函数，使用了异步计算结果、返回了异步计算结果、返回了 asyncTask，满足任意一种情况都会标记为 true
@@ -187,6 +354,8 @@ export interface IInsCtx<T extends Dict = Dict> {
   readMapStrict: null | Dict;
   /** 是否是深度依赖收集模式 */
   isDeep: boolean;
+  /** 是否是第一次渲染 */
+  isFirstRender: boolean;
   insKey: number;
   internal: T;
   rawState: Dict;
@@ -202,22 +371,38 @@ export interface IInsCtx<T extends Dict = Dict> {
   subscribe: Fn;
   /** 实例读取数据对应的版本号 */
   ver: number;
+  id: NumStrSymbol;
+  globalId: NumStrSymbol;
+  way: DepCollectionWay;
+  /** 能否收集依赖 */
+  canCollect: boolean;
+  /** 是否有静态依赖 */
+  hasStaticDeps: boolean;
 }
 
-export interface ICreateComputedLogicOptions {
-  careComputeStatus?: boolean;
+export interface ICreateDerivedLogicOptions {
+  careDeriveStatus?: boolean;
   scopeType?: ScopeType;
   fnCtxBase?: IFnCtx;
   allowTransfer?: boolean;
   runAsync?: boolean;
   asyncType?: AsyncType;
   returnUpstreamResult?: boolean;
+  forAtom?: boolean;
 }
 
 export interface IHeluxParams {
-  heluxObj: Dict;
+  /**
+   * 一个标识了 sharedKey 的普通json对象，可以作为一个始终可以获取到最新值的稳定引用
+   */
+  markedState: Dict;
   rawState: Dict;
   shouldSync: boolean;
   sharedKey: number;
-  createOptions: InnerCreateOptions;
+  moduleName: string;
+  createOptions: IInnerCreateOptions;
+}
+
+export interface HookDebugInfo {
+  sharedKey: number;
 }

@@ -1,11 +1,12 @@
 import React from 'react';
 import { IS_SHARED, SKIP_MERGE } from '../consts';
 import { getSharedKey } from '../helpers/state';
-import type { Dict } from '../types';
 import { useForceUpdate } from './useForceUpdate';
+import type { Dict } from '../types';
 
 interface IUseObjectLogicOptions {
-  isStable?: boolean;
+  /** use forceUpdate or not */
+  force?: boolean;
   [key: string | symbol]: any;
 }
 
@@ -13,8 +14,7 @@ export function useObjectLogic<T extends Dict = Dict>(
   initialState: T | (() => T),
   options: IUseObjectLogicOptions,
 ): [T, (partialState: Partial<T>) => void] {
-  const { isStable } = options;
-
+  const { force } = options;
   const [state, setFullState] = React.useState(initialState);
   const unmountRef = React.useRef(false);
   const forceUpdate = useForceUpdate();
@@ -31,11 +31,11 @@ export function useObjectLogic<T extends Dict = Dict>(
     }
     const partial = partialState || {};
 
-    if (!isStable) {
+    if (!force) {
       return setFullState((state) => ({ ...state, ...partial }));
     }
 
-    // start to handle isStable=true situation
+    // start to handle force=true situation
     if (!options[SKIP_MERGE]) {
       Object.assign(state, partial);
     }
@@ -62,6 +62,6 @@ export function useObjectLogic<T extends Dict = Dict>(
  * @param initialState
  * @returns
  */
-export function useObject<T extends Dict = Dict>(initialState: T | (() => T), isStable?: boolean): [T, (partialState: Partial<T>) => void] {
-  return useObjectLogic(initialState, { isStable });
+export function useObject<T extends Dict = Dict>(initialState: T | (() => T), exact?: boolean): [T, (partialState: Partial<T>) => void] {
+  return useObjectLogic(initialState, { exact });
 }

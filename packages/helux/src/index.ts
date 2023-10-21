@@ -1,45 +1,56 @@
-import { limuUtils } from 'limu';
-import { createComputed } from './factory/createComputed';
-import { createComputedAsync } from './factory/createComputedAsync';
-import { createComputedTask } from './factory/createComputedTask';
-import { createDeepShared, createShared } from './factory/createShared';
-import { createWatch } from './factory/createWatch';
 import './factory/root';
+import { limuUtils } from 'limu';
+import { createShared, share, atom, derive, deriveAsync, deriveTask, deriveAtom, deriveAtomAsync, deriveAtomTask, watch } from './factory';
 import * as advance from './helpers/advance';
-import { runComputed } from './helpers/fndep';
-import { getRawState } from './helpers/state';
-import { useComputed } from './hooks/useComputed';
-import { useComputedAsync } from './hooks/useComputedAsync';
-import { useComputedTask } from './hooks/useComputedTask';
+import { runDerive } from './helpers/fndep';
+import { getRawState, getRawStateSnap } from './helpers/state';
+import { useDerived, useDerivedAsync, useDerivedTask, useAtomDerived, useAtomDerivedAsync, useAtomDerivedTask, } from './hooks/useDerived';
 import { useEffect, useLayoutEffect } from './hooks/useEffect';
 import { useForceUpdate } from './hooks/useForceUpdate';
 import { useObject } from './hooks/useObject';
 import { useService } from './hooks/useService';
-import { useShared } from './hooks/useShared';
+import { useShared, useAtom } from './hooks/useShared';
 import { useWatch } from './hooks/useWatch';
+import { useGlobalId } from './hooks/useGlobalId';
 
 const { shallowCompare, isDiff } = limuUtils;
+const shareState = createShared;
 
 export {
+  atom,
+  share,
+  shareState,
+  // derive for shared state
+  derive,
+  deriveAsync,
+  deriveTask,
+  // derive for shared atom
+  deriveAtom,
+  deriveAtomAsync,
+  deriveAtomTask,
+  watch,
+  runDerive,
+  createShared, // just for compatible with helux v2
   advance,
+  useAtom,
   useShared,
-  useComputed,
-  useComputedAsync,
-  useComputedTask,
+  // use derived state
+  useDerived,
+  useDerivedAsync,
+  useDerivedTask,
+  // use derived atom
+  useAtomDerived,
+  useAtomDerivedAsync,
+  useAtomDerivedTask,
   useWatch,
+  useGlobalId,
   useObject,
   useService,
   useForceUpdate,
   useEffect,
   useLayoutEffect,
-  createShared,
-  createDeepShared,
-  createComputed,
-  createComputedAsync,
-  createComputedTask,
-  createWatch,
-  runComputed,
   shallowCompare,
   isDiff,
   getRawState,
+  getRawStateSnap,
 };

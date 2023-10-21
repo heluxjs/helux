@@ -1,8 +1,8 @@
-import * as React from 'react';
+import React from 'react';
 import { noop } from '../../utils';
 
 // @ts-ignore
-const useSyncExternalStore = React.useSyncExternalStore || noop;
+const useSyncExternalStore = React['useSyncExternalStore'] || noop;
 
 /**
  * resolve react tearing problem

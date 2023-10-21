@@ -126,12 +126,14 @@ importers:
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
       babel-cli: ^6.26.0
+      limu: ^3.7.2
       react: '>=16.10.2'
       react-dom: '>=16.10.2'
       rollup: ^2.23.0
     dependencies:
       '@types/react': 17.0.62
       '@types/react-dom': 17.0.20
+      limu: 3.7.2
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
@@ -10440,6 +10442,10 @@ packages:
 
   /limu/3.5.5:
     resolution: {integrity: sha512-RM15ILprLsAibStQOm60A1+SwVpwTmZBfTGa8Y07Z3n8gSAkswnBYtsT/yRsgfg2Owa6w6tSOTuoRdnMgiBDbw==}
+    dev: false
+
+  /limu/3.7.2:
+    resolution: {integrity: sha512-cPmfsUfAY2WbTwsZCNk2egHBdeDhzL7E9bDsyLaKkqE5fy+/9FKICdXKAFmBdPE1fzEu6zhrIdvSgcJEASSYIw==}
     dev: false
 
   /lines-and-columns/1.2.4:

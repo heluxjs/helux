@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "baseUrl": "./src",
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
@@ -8,5 +9,8 @@
     "target": "esnext",
     "outDir": "src-js"
   },
-  "include": ["src/**/*", "src/components/.tsx"]
+  "include": [
+    "src/**/*",
+    "src/components/.tsx"
+  ]
 }
