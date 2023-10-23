@@ -5,7 +5,7 @@ helux v3 is releasd now! powerd by extremely fast immutable lib [limu](https://t
 ## why helux
 
 - 基于超快的不可变数据 js 库[limu](https://tnfe.github.io/limu/)开发，依赖收集性能优异
-- 不需要Provider，接入超级简单，0成本提升状态为共享模式
+- 不需要 Provider，接入超级简单，0 成本提升状态为共享模式
 - 同时支持深、浅收集两种依赖收集策略
 - 支持 `share`、`derive`、`watch`、`atom` 等特性
 - 派生函数支持异步派生，支持人工触发派生函数重计算
@@ -20,14 +20,14 @@ helux v3 is releasd now! powerd by extremely fast immutable lib [limu](https://t
 ### 定义共享状态、计算、观察
 
 ```ts
-import { share, derive, watch, getRawStateSnap } from "helux";
+import { share, derive, watch, getRawStateSnap } from 'helux';
 
 // sharedState 稳定引用，无论何时何地都能够读取到最新值
-const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 }, k1: { k2: 100} } });
-const doubleA = derive(()=> sharedState.a * 2);
-watch((params)=>{
+const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 }, k1: { k2: 100 } } });
+const doubleA = derive(() => sharedState.a * 2);
+watch((params) => {
   const { a } = sharedState; // 收集观察依赖
-  if(params.isFirstCall) return;
+  if (params.isFirstCall) return;
   console.log(`a change to ${a}`);
 });
 ```
