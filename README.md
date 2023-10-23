@@ -17,6 +17,8 @@ helux v3 is releasd now! powerd by extremely fast immutable lib [limu](https://t
 
 ## quick visit
 
+[在线示例](https://codesandbox.io/s/helux-demo-ts-539scq?file=/src/App.tsx)，欢迎访问了解
+
 ### 定义共享状态、计算、观察
 
 ```ts
@@ -133,7 +135,3 @@ deriveAtom(() => numAtom.val + 100);
 
 const [num] = useAtom(numAtom); // num is 101，已被自动拆开
 ```
-
-### 综合示例
-
-这一个真实的在线[演示](https://codesandbox.io/s/distracted-cloud-2xrvpw)，欢迎访问了解
