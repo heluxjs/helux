@@ -5,9 +5,11 @@ helux v3 is releasd now! powerd by extremely fast immutable lib [limu](https://t
 ## why helux
 
 - 基于超快的不可变数据 js 库[limu](https://tnfe.github.io/limu/)开发，依赖收集性能优异
-- 同时支持深收集、前收集两种策略
-- 支持 `derive`、`watch`、`atom` 等特性
-- 导出支持异步导出，支持导出重算
+- 不需要Provider，接入超级简单，0成本提升状态为共享模式
+- 同时支持深、浅收集两种依赖收集策略
+- 支持 `share`、`derive`、`watch`、`atom` 等特性
+- 派生函数支持异步派生，支持人工触发派生函数重计算
+- 支持基于派生结果再定义新的派生结果，形成有向图架构
 - 除了依赖变更触发更新组件，还可自定义 id 来触发更新组件
 - 兼容 react 18
 - 支持热更新
@@ -26,7 +28,7 @@ const doubleA = derive(()=> sharedState.a * 2);
 watch((params)=>{
   const { a } = sharedState; // 收集观察依赖
   if(params.isFirstCall) return;
-  console.log(`a change from ${} to ${a}`);
+  console.log(`a change to ${a}`);
 });
 ```
 
