@@ -1,7 +1,7 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux@3.0.0
-| A simple and powerful react state library with dependency collection, derived and watch,
+| helux@3.0.5
+| A simple and powerful react state library with dependency collection, derive, watch, atom ... etc features,
 | compatible with react 18 concurrency mode.
 |------------------------------------------------------------------------------------------------
 */
@@ -19,16 +19,20 @@ import type {
   EffectCb,
   IAsyncTaskParams,
   ICreateOptionsType,
-  IFnParams,
+  IDeriveFnParams,
   IsComputing,
   IUseSharedOptions,
   IWatchFnParams,
   NumStrSymbol,
   PlainObject,
+  RenderInfo,
   SetAtom,
   SetState,
-  SharedObject,
+  SharedDict,
+  WatchOptionsType,
 } from './types';
+
+export type * from './types';
 
 type Advance = {
   /** after calling getDepStats, mem depStats will be cleanup automatically */
@@ -86,7 +90,7 @@ export const advance: Advance;
 export function share<T extends Dict = Dict>(
   rawState: T | (() => T),
   strBoolOrCreateOptions?: ICreateOptionsType<T>,
-): [SharedObject<T>, SetState<T>, Call<T>];
+): [SharedDict<T>, SetState<T>, Call<T>];
 
 export const createShared: typeof share; // for compatible wit v2 helux
 
@@ -97,7 +101,7 @@ export const createShared: typeof share; // for compatible wit v2 helux
 export function shareState<T extends Dict = Dict>(
   rawState: T | (() => T),
   strBoolOrCreateOptions?: ICreateOptionsType<T>,
-): { state: SharedObject<T>; setState: SetState<T>; call: Call<T> };
+): { state: SharedDict<T>; setState: SetState<T>; call: Call<T> };
 
 /**
  * 支持共享 primitive 类型值的接口
@@ -113,7 +117,7 @@ export function atom<T extends any = any>(
  * @param deriveFn
  * ```
  */
-export function derive<T extends PlainObject = PlainObject>(deriveFn: (params: IFnParams) => T): T;
+export function derive<T extends PlainObject = PlainObject>(deriveFn: (params: IDeriveFnParams) => T): T;
 
 /**
  *
@@ -126,7 +130,7 @@ export function deriveAsync<S extends any = any, R extends Dict = Dict>(
 ): R;
 
 export function deriveTask<R extends PlainObject = PlainObject>(
-  deriveFn: (taskParams: IFnParams) => {
+  deriveFn: (taskParams: IDeriveFnParams) => {
     initial: R;
     task: () => Promise<R>;
   },
@@ -135,7 +139,7 @@ export function deriveTask<R extends PlainObject = PlainObject>(
 /**
  * 创建一个普通的派生新结果的atom任务，支持返回 pritimive 类型
  */
-export function deriveAtom<T extends any = any>(deriveFn: (params: IFnParams) => T): Atom<T>;
+export function deriveAtom<T extends any = any>(deriveFn: (params: IDeriveFnParams) => T): Atom<T>;
 
 /**
  * 创建一个异步的派生新结果的atom任务，支持返回 pritimive 类型
@@ -148,9 +152,24 @@ export function deriveAtomAsync<S extends any = any, R extends any = any>(
 /**
  * 创建一个异步的派生新结果的atom任务，支持返回 pritimive 类型
  */
-export function deriveAtomTask<R extends any = any>(deriveFn: (taskParams: IFnParams) => { initial: R; task: () => Promise<R> }): Atom<R>;
+export function deriveAtomTask<R extends any = any>(
+  deriveFn: (taskParams: IDeriveFnParams) => { initial: R; task: () => Promise<R> },
+): Atom<R>;
 
-export function watch(watchFn: (fnParams: IWatchFnParams) => void): void;
+/**
+ * 观察共享状态变化，默认 watchFn 立即执行
+ * ```ts
+ * // 函数内解构完成监听
+ * watch(()=>{ console.log(shared.val) }, { immediate: true });
+ * // 第二个参数传递依赖收集回调，收集到监听key，不需要立即执行的话可设定 immediate 为 false
+ * watch(()=>{ console.log('shared.val changed')}, ()=>[shared.val]);
+ * // 第二个参数传递依赖收集回调，收集到监听对象，表示shared发生变化就执行watch回调
+ * watch(()=>{ console.log('shared changed')}, ()=>[shared]);
+ * // 第二个参数传递依赖收集回调，既设置监听key，也设置监听对象
+ * watch(()=>{ console.log('shared1 or shared2.val changed')}, {dep:()=>[shared1,shared2.val]});
+ * ```
+ */
+export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType): void;
 
 /**
  * 使用共享对象，需注意此接口只接受共享对象，如传递普通对象给它会报错 OBJ_NOT_SHARED_ERR
@@ -161,9 +180,12 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void): void;
  * const [ obj, setObj ] = useShared(sharedObj);
  * ```
  */
-export function useShared<T extends Dict = Dict>(sharedObject: T, IUseSharedOptions?: IUseSharedOptions<T>): [SharedObject<T>, SetState<T>];
+export function useShared<T extends Dict = Dict>(
+  sharedObject: T,
+  IUseSharedOptions?: IUseSharedOptions<T>,
+): [SharedDict<T>, SetState<T>, RenderInfo];
 
-export function useAtom<T extends any = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>];
+export function useAtom<T extends any = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>, RenderInfo];
 
 /**
  * 使用普通对象，需注意此接口只接受普通对象，如传递共享对象给它会报错 OBJ_NOT_NORMAL_ERR
@@ -259,7 +281,7 @@ export function useDerivedAsync<S extends any = any, R extends PlainObject = Pla
 ): [R, IsComputing];
 
 export function useDerivedTask<R extends Dict = Dict>(
-  deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
 ): [R, IsComputing];
 
@@ -275,7 +297,7 @@ export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
 ): [R, IsComputing];
 
 export function useAtomDerivedTask<R extends any = any>(
-  deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
 ): [R, IsComputing];
 

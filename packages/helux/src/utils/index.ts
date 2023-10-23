@@ -91,7 +91,7 @@ export function dedupList(list: Array<any>) {
   return Array.from(new Set(list));
 }
 
-export function noop() {}
+export function noop(...any: any[]): any {}
 
 export function prefixValKey(valKey: string, sharedKey: number) {
   return `${sharedKey}/${valKey}`;

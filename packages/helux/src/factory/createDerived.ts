@@ -1,8 +1,8 @@
-import type { Atom, IAsyncTaskParams, ICreateDerivedLogicOptions, IFnCtx, IFnParams, PlainObject, ScopeType } from '../types';
+import type { Atom, IAsyncTaskParams, ICreateDerivedLogicOptions, IDeriveFnParams, IFnCtx, PlainObject, ScopeType } from '../types';
 import { createFnCtx } from './common/derived';
 
 export function createDerivedLogic<R extends any = any>(
-  deriveFn: (params: IFnParams<R>) => R,
+  deriveFn: (params: IDeriveFnParams<R>) => R,
   options?: { scopeType?: ScopeType; fnCtxBase?: IFnCtx; forAtom?: boolean },
 ) {
   const fnCtx = createFnCtx({ ...(options || {}), sourceFn: deriveFn, deriveFn, isAsync: false });
@@ -19,7 +19,7 @@ export function createDerivedAsyncLogic<S extends any = any, R extends any = any
 }
 
 export function createDerivedTaskLogic<R extends any = any>(
-  deriveFn: (taskParams: IFnParams) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams) => { initial: R; task: () => Promise<R> },
   options?: ICreateDerivedLogicOptions,
 ) {
   const fnCtx = createFnCtx({ ...(options || {}), deriveFn, isAsync: true, asyncType: 'task' });
@@ -29,7 +29,7 @@ export function createDerivedTaskLogic<R extends any = any>(
 /**
  * 创建一个普通的派生新结果的任务
  */
-export function derive<R extends PlainObject = PlainObject>(deriveFn: (params: IFnParams) => R): R {
+export function derive<R extends PlainObject = PlainObject>(deriveFn: (params: IDeriveFnParams) => R): R {
   const fnCtx = createDerivedLogic<R>(deriveFn);
   return fnCtx.proxyResult as R;
 }
@@ -43,7 +43,7 @@ export function deriveAsync<S extends any = any, R extends PlainObject = PlainOb
 }
 
 export function deriveTask<R extends PlainObject = PlainObject>(
-  deriveFn: (taskParams: IFnParams) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams) => { initial: R; task: () => Promise<R> },
 ): R {
   const fnCtx = createDerivedTaskLogic<R>(deriveFn);
   return fnCtx.proxyResult as R;
@@ -52,7 +52,7 @@ export function deriveTask<R extends PlainObject = PlainObject>(
 /**
  * 创建一个普通的派生新结果的atom任务，支持返回 pritimive 类型
  */
-export function deriveAtom<R extends any = any>(deriveFn: (params: IFnParams<R>) => R): Atom<R> {
+export function deriveAtom<R extends any = any>(deriveFn: (params: IDeriveFnParams<R>) => R): Atom<R> {
   const fnCtx = createDerivedLogic<R>(deriveFn, { forAtom: true });
   return fnCtx.proxyResult as Atom<R>;
 }
@@ -72,7 +72,7 @@ export function deriveAtomAsync<S extends any = any, R extends any = any>(
  * 创建一个异步的派生新结果的atom任务，支持返回 pritimive 类型
  */
 export function deriveAtomTask<R extends any = any>(
-  deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
 ): Atom<R> {
   const fnCtx = createDerivedTaskLogic(deriveFn, { forAtom: true });
   return fnCtx.proxyResult as Atom<R>;

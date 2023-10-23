@@ -10,7 +10,7 @@ import type {
   DeriveFn,
   Dict,
   IAsyncTaskParams,
-  IFnParams,
+  IDeriveFnParams,
   IsComputing,
   PlainObject,
 } from '../types';
@@ -80,7 +80,7 @@ export function useDerivedAsync<S extends any = any, R extends PlainObject = Pla
 }
 
 export function useDerivedTask<R extends Dict = Dict>(
-  deriveFn: (taskParams: IFnParams) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
 ) {
   const resultPair = useDerivedLogic({
@@ -117,7 +117,7 @@ export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
 }
 
 export function useAtomDerivedTask<R extends any = any>(
-  deriveFn: (taskParams: IFnParams<R>) => { initial: R; task: () => Promise<R> },
+  deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
 ): [R, IsComputing] {
   const [result, isComputing] = useDerivedLogic<Atom<R>>({

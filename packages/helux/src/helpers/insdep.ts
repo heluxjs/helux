@@ -2,7 +2,7 @@ import type { InsCtxDef } from '../factory/common/buildInternal';
 import { getHeluxRoot } from '../factory/root';
 
 function getScope() {
-  return getHeluxRoot().help.insDep;
+  return getHeluxRoot().help.insDepInfo;
 }
 
 const { UNMOUNT_INFO_MAP } = getScope();

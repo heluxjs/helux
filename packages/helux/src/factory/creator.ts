@@ -1,11 +1,23 @@
 import { createDraft, finishDraft, immut, IOperateParams } from 'limu';
 import { HAS_SYMBOL, IS_ATOM, KEY_SPLITER } from '../consts';
+import { getRenderSN } from '../factory/common/util';
 import { getGlobalIdInsKeys, getGlobalInternal, getMarkAtomMap } from '../factory/root';
 import * as fnDep from '../helpers/fndep';
 import { runInsUpdater } from '../helpers/ins';
 import { createHeluxObj, createOb, injectHeluxProto } from '../helpers/obj';
-import { bindInternal, clearInternal, getInternal, getSharedKey, mapSharedState, markSharedKey, recordMod } from '../helpers/state';
+import {
+  bindInternal,
+  clearInternal,
+  getInternal,
+  getSharedKey,
+  getWatchers,
+  mapSharedState,
+  markSharedKey,
+  recordMod,
+  setWatcher,
+} from '../helpers/state';
 import type {
+  AsyncSetState,
   Dict,
   DictN,
   Fn,
@@ -13,13 +25,15 @@ import type {
   ICreateOptionsType,
   IHeluxParams,
   IInnerCreateOptions,
-  IInsCtx,
+  IInnerSetStateOptions,
+  InsCtxMap,
   ISetStateOptions,
   KeyIdsDict,
   KeyInsKeysDict,
   NumStrSymbol,
   SetAtom,
   SetState,
+  SharedState,
   TriggerReason,
 } from '../types';
 import {
@@ -32,6 +46,7 @@ import {
   isObj,
   isSymbol,
   nodupPush,
+  noop,
   prefixValKey,
   safeGet,
   setNoop,
@@ -216,6 +231,8 @@ export function parseOptions(options?: ICreateOptionsType) {
   let deep = true;
   let exact = true;
   let rules: ICreateOptions['rules'] = [];
+  let watch: ICreateOptions['watch'] = [];
+  let mutate: ICreateOptions['mutate'] = noop;
 
   // for ts check, write 'typeof options' 3 times
   if (typeof options === 'boolean') {
@@ -230,10 +247,12 @@ export function parseOptions(options?: ICreateOptionsType) {
     moduleName = options.moduleName || '';
     deep = options.deep ?? true;
     exact = options.exact ?? true;
-    rules = options.rules ?? [];
+    rules = options.rules || [];
+    watch = options.watch || [];
+    mutate = options.mutate || noop;
   }
 
-  return { enableReactive, enableRecordDep, copyObj, enableSyncOriginal, moduleName, deep, exact, rules };
+  return { enableReactive, enableRecordDep, copyObj, enableSyncOriginal, moduleName, deep, exact, rules, watch, mutate };
 }
 
 function parseRawState<T extends Dict = Dict>(stateOrStateFn: T | (() => T)) {
@@ -325,21 +344,10 @@ function buildSharedState(heluxParams: IHeluxParams) {
   return sharedState;
 }
 
-function execDepFnAndInsUpdater(
-  state: Dict,
-  ctx: {
-    forAtom: boolean;
-    ids: string[];
-    globalIds: string[];
-    depKeys: string[];
-    triggerReasons: TriggerReason[];
-    key2InsKeys: Record<string, number[]>;
-    id2InsKeys: Record<string, number[]>;
-    internal: TInternal;
-    insCtxMap: Map<number, IInsCtx>;
-  },
-) {
-  const { forAtom, ids, globalIds, depKeys, triggerReasons, internal, key2InsKeys, id2InsKeys, insCtxMap } = ctx;
+function execDepFnAndInsUpdater(state: Dict, opts: IHanldeStateOptions) {
+  const { forAtom, ids, globalIds, depKeys, triggerReasons, internal, sharedState } = opts;
+  const { key2InsKeys, id2InsKeys, insCtxMap, sharedKey } = internal;
+  console.log('depKeys', depKeys);
   internal.ver += 1;
   // find associate ins keys
   let allInsKeys: number[] = [];
@@ -349,12 +357,15 @@ function execDepFnAndInsUpdater(
   let allAsyncFnKeys: string[] = [];
   const runCountStats: Dict<number> = {};
 
-  depKeys.forEach((key) => {
+  const analyzeDepKey = (key: string) => {
     allInsKeys = allInsKeys.concat(key2InsKeys[key] || []);
     const { firstLevelFnKeys, asyncFnKeys } = fnDep.getDepFnStats(key, runCountStats);
     allFirstLevelFnKeys = allFirstLevelFnKeys.concat(firstLevelFnKeys);
     allAsyncFnKeys = allAsyncFnKeys.concat(asyncFnKeys);
-  });
+  };
+  depKeys.forEach(analyzeDepKey);
+  // 直接设定 watchList 的 watch 函数，观察的共享对象本身的变化，这里以 sharedKey 为依赖去取查出来
+  analyzeDepKey(`${sharedKey}`);
   // find id's ins keys
   ids.forEach((id) => {
     allInsKeys = allInsKeys.concat(id2InsKeys[id] || []);
@@ -373,20 +384,42 @@ function execDepFnAndInsUpdater(
   allAsyncFnKeys.forEach((fnKey) => fnDep.markComputing(fnKey, runCountStats[fnKey]));
   allFirstLevelFnKeys.forEach((fnKey) => fnDep.runFn(fnKey, { forAtom, updateReasons: triggerReasons }));
 
+  // start trigger watchers mutate cb
+  const watchers = getWatchers(sharedState);
+  if (watchers.length) {
+    const { desc = null, prevDesc = null } = opts;
+    watchers.forEach((watcherState) => {
+      const { mutate, watch, setStateImpl } = getInternal(watcherState);
+      const { draft, finishMutate } = setStateImpl(noop);
+      const customOptions: IInnerSetStateOptions = { desc };
+      const setOptions = (options: ISetStateOptions) => {
+        const { desc = null, ...rest } = options;
+        Object.assign(customOptions, { ...rest, prevDesc: desc });
+      };
+      const params = { draft, watch, desc, prevDesc, setOptions };
+      // TODO, pass uncaught err to global err handler
+      Promise.resolve(mutate(params)).then((newPartial) => {
+        finishMutate(newPartial, customOptions);
+      });
+    });
+  }
+
+  const renderSN = getRenderSN();
+  const updateIns = (insCtxMap: InsCtxMap, insKey: number) => {
+    const insCtx = insCtxMap.get(insKey) as InsCtxDef;
+    insCtx.renderSN = renderSN;
+    runInsUpdater(insCtx, state);
+  };
   // start update
-  allInsKeys.forEach((insKey) => {
-    runInsUpdater(insCtxMap.get(insKey) as InsCtxDef, state);
-  });
+  allInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey));
   // start update globalId ins
   if (globalInsKeys.length) {
     const globalInsCtxMap = getGlobalInternal().insCtxMap;
-    globalInsKeys.forEach((insKey) => {
-      runInsUpdater(globalInsCtxMap.get(insKey) as InsCtxDef, state);
-    });
+    globalInsKeys.forEach((insKey) => updateIns(globalInsCtxMap, insKey));
   }
 }
 
-interface IHanldeStateCtx extends ISetStateOptions {
+interface IHanldeStateOptions extends ISetStateOptions {
   state: Dict;
   internal: TInternal;
   depKeys: string[];
@@ -394,11 +427,14 @@ interface IHanldeStateCtx extends ISetStateOptions {
   globalIds: string[];
   triggerReasons: TriggerReason[];
   forAtom: boolean;
+  sharedState: SharedState;
+  desc?: any;
+  prevDesc?: any;
 }
 
-function handleState(opts: IHanldeStateCtx) {
-  const { state, depKeys, ids, globalIds, triggerReasons, extraDeps, excludeDeps, internal, forAtom } = opts;
-  const { key2InsKeys, id2InsKeys, insCtxMap, rawState } = internal;
+function handleState(opts: IHanldeStateOptions) {
+  const { state, internal, extraDeps, excludeDeps, depKeys } = opts;
+  const { rawState } = internal;
   Object.assign(rawState, state);
   if (internal.isDeep) {
     // now state is a structurally shared obj generated by limu
@@ -411,12 +447,14 @@ function handleState(opts: IHanldeStateCtx) {
   }
   interveneDeps({ internal, depKeys, add: true, fn: extraDeps });
   interveneDeps({ internal, depKeys, add: false, fn: excludeDeps });
-  execDepFnAndInsUpdater(state, { forAtom, internal, ids, globalIds, depKeys, triggerReasons, key2InsKeys, id2InsKeys, insCtxMap });
+  execDepFnAndInsUpdater(state, opts);
 }
 
 interface IHandleDeepMutateOpts extends ISetStateOptions {
   internal: TInternal;
   forAtom: boolean;
+  sharedState: SharedState;
+  desc?: any;
 }
 
 /**
@@ -441,7 +479,8 @@ export function handleDeepMutate(opts: IHandleDeepMutateOpts) {
 
   return {
     draft,
-    finishMutate(partial?: Dict) {
+    // customOptions 是为了方便 sharedState 链里的 mutate 回调里提供一个 setOptions 句柄让用户有机会定义 setStateOptions 控制一些额外的行为
+    finishMutate(partial?: Dict, customOptions?: IInnerSetStateOptions) {
       // 把深依赖和迁依赖收集到的keys合并起来
       if (isObj(partial)) {
         Object.keys(partial).forEach((key) => {
@@ -452,6 +491,7 @@ export function handleDeepMutate(opts: IHandleDeepMutateOpts) {
       handleOpts.depKeys = Object.keys(writeKeys);
       handleOpts.state = finishDraft(draft); // a structurally shared state generated by limu
       handleOpts.triggerReasons = Object.values(writeKeyPathInfo);
+      Object.assign(handleOpts, customOptions);
       handleState(handleOpts);
 
       return opts.internal.rawStateSnap;
@@ -462,6 +502,7 @@ export function handleDeepMutate(opts: IHandleDeepMutateOpts) {
 interface IHandleNormalMutateOpts extends ISetStateOptions {
   internal: TInternal;
   forAtom: boolean;
+  sharedState: SharedState;
 }
 
 /**
@@ -500,7 +541,7 @@ export function handleNormalMutate(opts: IHandleNormalMutateOpts) {
 
   return {
     draft: mockDraft,
-    finishMutate(partial?: Dict) {
+    finishMutate(partial?: Dict, customOptions?: IInnerSetStateOptions) {
       /**
        * 兼容非 deep 模式下用户的以下代码
        * ```txt
@@ -535,6 +576,7 @@ export function handleNormalMutate(opts: IHandleNormalMutateOpts) {
         triggerReasons.push({ sharedKey, moduleName, keyPath: [depKey] });
       });
       handleOpts.state = newPartial;
+      Object.assign(handleOpts, customOptions);
       handleState(handleOpts);
 
       return internal.rawStateSnap;
@@ -542,9 +584,9 @@ export function handleNormalMutate(opts: IHandleNormalMutateOpts) {
   };
 }
 
-function bindInternalToShared(sharedState: Dict, heluxParams: IHeluxParams) {
+function bindInternalToShared(sharedState: SharedState, heluxParams: IHeluxParams) {
   const { createOptions } = heluxParams;
-  const { deep, forAtom } = createOptions;
+  const { deep, forAtom, mutate, watch } = createOptions;
   const insCtxMap = new Map<number, InsCtxDef>();
   const key2InsKeys: KeyInsKeysDict = {};
   // id --> insKeys
@@ -552,26 +594,36 @@ function bindInternalToShared(sharedState: Dict, heluxParams: IHeluxParams) {
   const { writeKey2Ids, writeKey2GlobalIds } = parseRules(heluxParams);
   const isDeep = canUseDeep(deep);
 
-  // setState implementation
-  const setState: SetState = (partialState, options = {}) => {
+  const setStateImpl = (partialState: any, options: ISetStateOptions = {}) => {
     if (partialState === internal.rawStateSnap) {
       // do nothing
-      return partialState;
+      return { draft: {}, getPartial: () => partialState, finishMutate: () => partialState };
     }
-    let ctx;
-    let returnedPartial;
+
+    const mutateOptions = { ...options, forAtom, internal, sharedState };
     // deep 模式修改： setState(draft=>{draft.x.y=1})
     if (isFn(partialState) && isDeep) {
       // now partialState is a draft recipe callback
-      ctx = handleDeepMutate({ forAtom, internal, ...options });
-      // returnedPartial 是为了对齐非deep模式的 setState，这个只支持一层依赖收集
-      returnedPartial = partialState(ctx.draft);
-    } else {
-      ctx = handleNormalMutate({ forAtom, internal });
-      returnedPartial = isFn(partialState) ? partialState(ctx.draft) : partialState;
+      const handleCtx = handleDeepMutate(mutateOptions);
+      // 后续流程会使用到 getPartial 的返回结果是为了对齐非deep模式的 setState，此时只支持一层依赖收集
+      const getPartial = () => partialState(handleCtx.draft);
+      return { ...handleCtx, getPartial };
     }
 
-    return ctx.finishMutate(returnedPartial);
+    const handleCtx = handleNormalMutate(mutateOptions);
+    const getPartial = () => (isFn(partialState) ? partialState(handleCtx.draft) : partialState);
+    return { ...handleCtx, getPartial };
+  };
+  // setState definition
+  const setState: SetState = (partialState, options) => {
+    const ret = setStateImpl(partialState, options);
+    return ret.finishMutate(ret.getPartial());
+  };
+  // async setState definition
+  const asyncSetState: AsyncSetState = async (partialState, options = {}) => {
+    const ret = setStateImpl(partialState, options);
+    const partialVar = await Promise.resolve(ret.getPartial());
+    return ret.finishMutate(partialVar);
   };
   // setAtom implementation
   const setAtom: SetAtom = (atomVal, options) => {
@@ -581,13 +633,17 @@ function bindInternalToShared(sharedState: Dict, heluxParams: IHeluxParams) {
 
   const internal = buildInternal(heluxParams, {
     setState,
+    asyncSetState,
     setAtom,
+    setStateImpl,
     insCtxMap,
     key2InsKeys,
     id2InsKeys,
     writeKey2Ids,
     writeKey2GlobalIds,
     isDeep,
+    mutate,
+    watch,
   });
 
   bindInternal(sharedState, internal);
@@ -611,6 +667,7 @@ export function buildSharedObject<T extends Dict = Dict>(stateOrStateFn: T | (()
   bindInternalToShared(sharedState, heluxParams);
   recordMod(sharedState, options);
   fnDep.markExpired();
+  setWatcher(sharedState, options.watch);
 
   const internal = getInternal(sharedState);
   return { sharedState, internal };

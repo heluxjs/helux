@@ -72,7 +72,7 @@ export function createFnCtx(options: IMapFnCtxOptions) {
     throw new Error('ERR_NON_FN: only accpet function arg!');
   }
   const fnCtx = mapFn(deriveFn, {
-    specificProps: { scopeType, fnType: DERIVE, isAsync, asyncType, isAsyncTransfer: allowTransfer, careDeriveStatus },
+    specificProps: { forAtom, scopeType, fnType: DERIVE, isAsync, asyncType, isAsyncTransfer: allowTransfer, careDeriveStatus },
     fnCtxBase,
   });
 

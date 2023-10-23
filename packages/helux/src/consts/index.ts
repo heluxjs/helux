@@ -1,5 +1,7 @@
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 
+export const VER = '3.0.5';
+
 export { HAS_SYMBOL };
 
 export const PROTO_KEY = '__proto__';
@@ -16,8 +18,6 @@ export const IS_ATOM = createSymbol('HeluxIsAtom');
 export const EXPIRE_MS = 2000;
 
 export const SIZE_LIMIT = 20;
-
-export const VER = '3.0.1';
 
 export const RENDER_START = '1';
 

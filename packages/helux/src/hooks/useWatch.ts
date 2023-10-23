@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { MOUNTED, SCOPE_TYPE } from '../consts';
 import { createWatchLogic } from '../factory/createWatch';
 import * as fnDep from '../helpers/fndep';
-import type { DerivedResult, DeriveFn, Dict } from '../types';
+import type { Dict, Fn } from '../types';
 import { isFn } from '../utils';
 
-export function useWatch<T extends Dict = Dict>(watchFn: DerivedResult<T> | DeriveFn<T>) {
+export function useWatch<T extends Dict = Dict>(watchFn: Fn) {
   const fnRef = useRef<any>(null);
   const [fnCtx] = useState(() => fnDep.buildFnCtx());
 

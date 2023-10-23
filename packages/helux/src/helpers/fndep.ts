@@ -6,7 +6,7 @@ import { injectHeluxProto } from './obj';
 import { getInternalByKey } from './state';
 
 function getScope() {
-  return getHeluxRoot().help.fnDep;
+  return getHeluxRoot().help.fnDepInfo;
 }
 
 const scope = getScope();
@@ -51,6 +51,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     isExpired: false,
     sourceFn: noop,
     isComputing: false,
+    forAtom: false,
     remainRunCount: 0,
     careDeriveStatus: false,
     enableRecordResultDep: false,
@@ -292,7 +293,7 @@ export function runFn(
       fnCtx.isComputing = false;
     }
     triggerUpdate();
-    fnCtx.nextLevelFnKeys.forEach((key) => runFn(key));
+    fnCtx.nextLevelFnKeys.forEach((key) => runFn(key, { forAtom }));
   };
 
   const prevResult = forAtom ? fnCtx.result.val : fnCtx.result;
@@ -322,20 +323,23 @@ export function runFn(
     });
 }
 
-export function rerunDerivedFn<T extends Dict = Dict>(result: T): T {
+/**
+ * run redive fn by result
+ */
+export function rerunDeriveFn<T extends Dict = Dict>(result: T): T {
   const fnCtx = getFnCtxByObj(result);
   if (!fnCtx) {
     throw new Error('[Helux]: not a derived result');
   }
-  return runFn(fnCtx.fnKey);
+  return runFn(fnCtx.fnKey, { forAtom: fnCtx.forAtom });
 }
 
 export function runDerive<T extends Dict = Dict>(result: T): T {
-  return rerunDerivedFn(result);
+  return rerunDeriveFn(result);
 }
 
 export function runDeriveAsync<T extends Dict = Dict>(result: T): Promise<T> {
-  return Promise.resolve(rerunDerivedFn(result));
+  return Promise.resolve(rerunDeriveFn(result));
 }
 
 export function recoverDep(fnCtx: IFnCtx) {

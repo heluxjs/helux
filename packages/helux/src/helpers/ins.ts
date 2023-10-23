@@ -10,7 +10,7 @@ import { clearDep } from './insdep';
 import { createOb } from './obj';
 
 function getScope() {
-  return getHeluxRoot().help.insDep;
+  return getHeluxRoot().help.insDepInfo;
 }
 
 const scope = getScope();
@@ -115,6 +115,7 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
       // call insDep subscribe after snap changed
       cb();
     },
+    renderSN: 0,
   };
   globalId && mapGlobalId(globalId, insKey);
   attachInsProxyState(insCtx, enableReactive);

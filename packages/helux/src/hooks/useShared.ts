@@ -6,7 +6,7 @@ import { delGlobalId, mapGlobalId } from '../factory/root';
 import { attachInsProxyState, buildInsCtx } from '../helpers/ins';
 import { clearDep, recoverDep, resetReadMap, updateDep } from '../helpers/insdep';
 import { getInternal, getRawState } from '../helpers/state';
-import type { Atom, Dict, HookDebugInfo, IInnerUseSharedOptions, IUseSharedOptions, SetAtom, SetState } from '../types';
+import type { Atom, Dict, IInnerUseSharedOptions, IUseSharedOptions, RenderInfo, SetAtom, SetState } from '../types';
 import { isFn } from '../utils';
 import { useSync } from './common/useSync';
 import { useObjectLogic } from './useObject';
@@ -65,7 +65,7 @@ function isSharedKeyChanged<T extends Dict = Dict>(insCtx: InsCtxDef, sharedStat
   return insCtx.internal.sharedKey !== curSharedKey;
 }
 
-function useSharedLogic<T extends Dict = Dict>(sharedState: T, options: IInnerUseSharedOptions<T> = {}): [T, TInternal, HookDebugInfo] {
+function useSharedLogic<T extends Dict = Dict>(sharedState: T, options: IInnerUseSharedOptions<T> = {}): [T, TInternal, RenderInfo] {
   checkAtom(sharedState, options.forAtom);
   const rawState = getRawState(sharedState);
 
@@ -101,19 +101,16 @@ function useSharedLogic<T extends Dict = Dict>(sharedState: T, options: IInnerUs
   }, [insCtx]);
 
   checkStateVer(insCtx, options);
-  const debugInfo = { sharedKey: insCtx.internal.sharedKey };
-  return [insCtx.proxyState, insCtx.internal, debugInfo];
+  const { internal, renderSN } = insCtx;
+  return [insCtx.proxyState, internal, { renderSN }];
 }
 
-export function useShared<T extends Dict = Dict>(sharedState: T, options: IUseSharedOptions<T> = {}): [T, SetState<T>, HookDebugInfo] {
+export function useShared<T extends Dict = Dict>(sharedState: T, options: IUseSharedOptions<T> = {}): [T, SetState<T>, RenderInfo] {
   const [proxyState, internal, info] = useSharedLogic(sharedState, options);
   return [proxyState, internal.setState, info];
 }
 
-export function useAtom<T extends any = any>(
-  sharedState: Atom<T>,
-  options: IUseSharedOptions<Atom<T>> = {},
-): [T, SetAtom<T>, HookDebugInfo] {
+export function useAtom<T extends any = any>(sharedState: Atom<T>, options: IUseSharedOptions<Atom<T>> = {}): [T, SetAtom<T>, RenderInfo] {
   const [proxyState, internal, info] = useSharedLogic(sharedState, { ...options, forAtom: true });
   return [proxyState.val, internal.setAtom, info];
 }

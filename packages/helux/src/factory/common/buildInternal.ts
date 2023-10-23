@@ -1,21 +1,50 @@
-import type { Fn, IHeluxParams, IInsCtx, KeyIdsDict, KeyInsKeysDict, NumStrSymbol, SetAtom } from '../../types';
+import type {
+  AsyncSetState,
+  Fn,
+  IHeluxParams,
+  IInsCtx,
+  InsCtxMap,
+  KeyIdsDict,
+  KeyInsKeysDict,
+  NumStrSymbol,
+  SetAtom,
+  SetState,
+  SharedState,
+} from '../../types';
 import { delListItem, nodupPush, safeGet } from '../../utils';
 
 export function buildInternal(
   heluxParams: IHeluxParams,
   options: {
     setAtom: SetAtom;
-    setState: Fn;
-    insCtxMap: Map<number, IInsCtx>;
+    setState: SetState;
+    asyncSetState: AsyncSetState;
+    setStateImpl: (...any: any[]) => { draft: any; finishMutate: Fn; getPartial: Fn };
+    insCtxMap: InsCtxMap;
     key2InsKeys: KeyInsKeysDict;
     id2InsKeys: KeyInsKeysDict;
     writeKey2Ids: KeyIdsDict;
     writeKey2GlobalIds: KeyIdsDict;
     isDeep: boolean;
+    mutate: Fn;
+    watch: SharedState[];
   },
 ) {
   const { markedState, sharedKey, moduleName, createOptions, shouldSync } = heluxParams;
-  const { setAtom, setState, insCtxMap, key2InsKeys, id2InsKeys, writeKey2Ids, writeKey2GlobalIds, isDeep } = options;
+  const {
+    asyncSetState,
+    setAtom,
+    setState,
+    setStateImpl,
+    insCtxMap,
+    key2InsKeys,
+    id2InsKeys,
+    writeKey2Ids,
+    writeKey2GlobalIds,
+    isDeep,
+    mutate,
+    watch,
+  } = options;
 
   return {
     rawState: markedState, // helux raw state
@@ -33,6 +62,10 @@ export function buildInternal(
     shouldSync,
     setAtom,
     setState,
+    asyncSetState,
+    setStateImpl,
+    mutate,
+    watch,
     recordId(id: NumStrSymbol, insKey: number) {
       if (!id) return;
       const insKeys: any[] = safeGet(id2InsKeys, id, []);

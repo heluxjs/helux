@@ -1,13 +1,13 @@
 import type { TInternal } from '../factory/common/buildInternal';
 import { getHeluxRoot } from '../factory/root';
-import { Dict, IInnerCreateOptions } from '../types';
-import { isDebug, isObj } from '../utils';
+import { Dict, IInnerCreateOptions, SharedDict } from '../types';
+import { isDebug, isObj, safeMapGet } from '../utils';
 
 function getScope() {
-  return getHeluxRoot().help.shared;
+  return getHeluxRoot().help.sharedInfo;
 }
 
-const { UNMOUNT_INFO_MAP, SHARED_KEY_STATE_MAP, STATE_SHARED_KEY_MAP, INTERMAL_MAP } = getScope();
+const { UNMOUNT_INFO_MAP, SHARED_KEY_STATE_MAP, STATE_SHARED_KEY_MAP, INTERMAL_MAP, BEENING_WATCHED_MAP } = getScope();
 
 export function getInternalMap() {
   return INTERMAL_MAP;
@@ -70,10 +70,11 @@ export function bindInternal<T extends Dict = Dict>(state: Dict, internal: T): T
   return internal;
 }
 
-let keySeed = 0;
 export function markSharedKey(state: Dict) {
+  let keySeed = getScope().keySeed;
   keySeed = keySeed === Number.MAX_SAFE_INTEGER ? 1 : keySeed + 1;
   STATE_SHARED_KEY_MAP.set(state, keySeed);
+  getScope().keySeed = keySeed;
   return keySeed;
 }
 
@@ -102,4 +103,16 @@ export function recordMod(sharedState: Dict, options: IInnerCreateOptions) {
   if (forGlobal) {
     getHeluxRoot().globalInternal = internal;
   }
+}
+
+export function setWatcher(selfShared: SharedDict, watch: SharedDict[]) {
+  watch.forEach((watchingTarget) => {
+    const watchers = safeMapGet(BEENING_WATCHED_MAP, watchingTarget, [] as SharedDict[]);
+    watchers.push(selfShared);
+  });
+}
+
+export function getWatchers(changedShared: SharedDict) {
+  const watcherList = BEENING_WATCHED_MAP.get(changedShared) || [];
+  return watcherList;
 }

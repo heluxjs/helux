@@ -1,5 +1,5 @@
 import { VER } from '../consts';
-import type { Dict, IFnCtx, IUnmountInfo, NumStrSymbol } from '../types';
+import type { Dict, IFnCtx, IUnmountInfo, NumStrSymbol, SharedState } from '../types';
 import { asType, nodupPush, safeMapGet } from '../utils';
 import type { TInternal } from './common/buildInternal';
 
@@ -29,9 +29,11 @@ function buildInsDep() {
 
 function buildShared() {
   return {
+    keySeed: 0,
     UNMOUNT_INFO_MAP: new Map<number, IUnmountInfo>(),
     SHARED_KEY_STATE_MAP: new Map<number, Dict>(),
     STATE_SHARED_KEY_MAP: new Map<any, number>(),
+    BEENING_WATCHED_MAP: new Map<SharedState, SharedState[]>(),
     INTERMAL_MAP: {} as Dict,
   };
 }
@@ -49,10 +51,11 @@ function createRoot() {
     },
     help: {
       mod: {} as Dict, // 与模块相关的辅助信息
-      shared: buildShared(),
-      fnDep: buildFnDep(),
-      insDep: buildInsDep(),
+      sharedInfo: buildShared(),
+      fnDepInfo: buildFnDep(),
+      insDepInfo: buildInsDep(),
       markAtomMap: new Map<any, boolean>(), // 不支持 symbol 的环境才会记录此map
+      renderSN: 0, // 渲染批次序列号种子数
     },
     globalShared: asType<Dict>(null), // works for useGlobalId
     globalInternal: asType<TInternal>(null), // works for useGlobalId
@@ -61,13 +64,17 @@ function createRoot() {
   return root;
 }
 
+export function getHelp() {
+  return getHeluxRoot().help;
+}
+
 export function getMarkAtomMap() {
   const map = getHeluxRoot().help.markAtomMap;
   return map;
 }
 
 export function getGlobalIdInsKeys(id: NumStrSymbol) {
-  const map = getHeluxRoot().help.fnDep.GID_INSKEYS_MAP;
+  const map = getHeluxRoot().help.fnDepInfo.GID_INSKEYS_MAP;
   return safeMapGet(map, id, [] as number[]);
 }
 

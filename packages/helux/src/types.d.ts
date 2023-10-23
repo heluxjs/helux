@@ -10,21 +10,9 @@ export type DictN<T extends any = any> = Record<number, T>;
 
 export type Fn<T extends any = any> = (...args: any[]) => T;
 
-export type SharedObject<T extends Dict = any> = T;
-
-export type Mutable<T extends Dict = Dict> = T;
-
-export type NextState<T extends Dict = Dict> = T;
-
-export type NextAtomValue<T> = T;
-
 export type Ext<T extends Dict = Dict> = T & { [key: string]: any };
 
 export type EenableReactive = ICreateOptionsFull['enableReactive'];
-
-export type Atom<T extends any = any> = { val: T };
-
-export type Draft<T> = T;
 
 export type KeyIdsDict = Record<string, NumStrSymbol[]>;
 
@@ -33,6 +21,20 @@ export type KeyInsKeysDict = Record<NumStrSymbol, number[]>;
 export type ReadonlyAtom<T extends any = any> = { readonly val: T };
 
 export type MutableAtom<T extends any = any> = { val: T };
+
+export type Draft<T> = T;
+
+export type Mutable<T extends Dict = Dict> = T;
+
+export type NextState<T extends Dict = Dict> = T;
+
+export type NextAtomValue<T> = T;
+
+export type SharedDict<T extends Dict = any> = T;
+
+export type Atom<T extends any = any> = { val: T };
+
+export type SharedState = SharedDict | Atom;
 
 /**
  * 'FIRST_RENDER': 仅组件首次渲染时收集依赖，
@@ -48,6 +50,11 @@ export type SetState<T extends Dict = Dict> = (
   options?: ISetStateOptions<T>,
 ) => NextState<T>;
 
+export type AsyncSetState<T extends Dict = Dict> = (
+  partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => void | Partial<T>),
+  options?: ISetStateOptions<T>,
+) => Promise<NextState<T>>;
+
 export type SetAtom<T extends any = any> = (
   newAtomOrRecipeCb: T | ((mutable: MutableAtom<T>) => void | T),
   options?: ISetStateOptions<T>,
@@ -58,17 +65,50 @@ export type Call<T extends Dict = Dict> = <A extends any[] = any[]>(
     args: A;
     state: Readonly<T>;
     draft: Mutable<T>;
-    setState: (partialStateOrRecipeCb: Partial<T> | ((mutable: Mutable<T>) => void), options?: ISetStateOptions<T>) => NextState<T>;
+    setState: SetState<T>;
+    /** 仅适用 draft 修改数据时，可使用此函数设置 setStateOptions */
+    setOptions?: (options: ISetStateOptions<T>) => void;
   }) => Promise<Partial<T>> | Partial<T> | void,
   ...args: A
 ) => Promise<NextState<T>>;
 
 export type AtomCall<T extends any = any> = <A extends any[] = any[]>(
-  srvFn: (ctx: { args: A; state: ReadonlyAtom<T>; draft: MutableAtom<T>; setState: SetAtom<T> }) => Promise<T> | T | void,
+  srvFn: (ctx: {
+    args: A;
+    state: ReadonlyAtom<T>;
+    draft: MutableAtom<T>;
+    setState: SetAtom<T>;
+    /** 仅适用 draft 修改数据时，可使用此函数设置 setStateOptions */
+    setOptions?: (options: ISetStateOptions<Atom<T>>) => void;
+  }) => Promise<T> | T | void,
   ...args: A
 ) => Promise<NextAtomValue<T>>;
 
-export interface ICreateOptionsFull<T extends Dict = Dict> {
+export interface IShareMutateFnParams<D extends SharedState = SharedState, W extends SharedState[] = SharedState[], De extends any = any> {
+  draft: D;
+  watch: W;
+  /**
+   * 源头调用设定的那个desc值
+   */
+  desc: De | null;
+  /**
+   * share 链的第二个 mutable 回调通过 setOptions 设置后，后续的 mutable 可通过 prevDesc 拿到，
+   * 未设置的话，prevDesc 为空
+   */
+  prevDesc?: De | null;
+  setOptions: (customOptions: ISetStateOptions) => void;
+}
+
+export type ShareMutateFn<D extends SharedState, W extends SharedState[], E extends any> = (
+  params: IShareMutateFnParams<D, W, E>,
+) => void | Promise<void>;
+
+export interface ICreateOptionsFull<T extends Dict = Dict, W extends SharedState[] = SharedState[]> {
+  /**
+   * 模块名称，方便用户可以查看到语义化的状态树，不传递的话内部会以生成的自增序号 作为 key
+   * 传递的话如果重复了，目前的策略仅仅是做个警告，helux 内部始终以生成的自增序号作为模块命名空间控制其他逻辑
+   */
+  moduleName: string;
   /**
    * default: true
    * when true, it means using deep dependency collection strategy in component, using mutable state to generate new state
@@ -119,11 +159,13 @@ export interface ICreateOptionsFull<T extends Dict = Dict> {
     globalIds?: NumStrSymbol[];
   }[];
   /**
-   * 模块名称，方便用户可以查看到语义化的状态树
-   * 不传递的话内部会生成 symbol 作为 key
-   * 传递的话如果重复了，目前的策略仅仅是做个警告，helux 内部始终以 symbol 作为模块的命名空间控制其他逻辑
+   * 监听别的由 share 或 atom 生成的共享对象的变化
    */
-  moduleName: string;
+  watch: W;
+  /**
+   * watch 里任意共享对象发生变化时欲执行的修改函数
+   */
+  mutate: (params: IShareMutateFnParams<T, W>) => void | Promise<void>;
   /**
    * default: false，是否创建响应式状态
    * ```
@@ -198,7 +240,7 @@ export interface IInnerUseSharedOptions<T extends Dict = Dict> extends IUseShare
   forAtom?: boolean;
 }
 
-export interface ISetStateOptions<T extends Dict = Dict> {
+export interface ISetStateOptions<T extends Dict = Dict, De extends any = any> {
   /**
    * 除了 setState 方法里收集的状态变化依赖之外，额外追加的变化依赖，适用于没有某些状态值无改变也要触发视图渲染的场景
    */
@@ -207,6 +249,14 @@ export interface ISetStateOptions<T extends Dict = Dict> {
    * 需要排除掉的依赖，因内部先执行 extraDeps 再执行 excludeDeps，故 excludeDeps 也能排除掉 extraDeps 追加的依赖
    */
   excludeDeps?: (readOnlyState: T) => any[] | void;
+  /**
+   * 传递到 share 链的 mutable 回调参数里，方便 mutable 回调逻辑识别后做不同的修改动作，desc 始终执行源头调用设定的那个值
+   */
+  desc?: De;
+}
+
+export interface IInnerSetStateOptions<T extends Dict = Dict, De extends any = any> extends ISetStateOptions<T, De> {
+  prevDesc?: De;
 }
 
 export type ICreateOptions<T extends Dict = Dict> = Partial<ICreateOptionsFull<T>>;
@@ -224,22 +274,37 @@ export type EffectCb = () => void | CleanUpCb;
 export interface IWatchFnParams {
   isFirstCall: boolean;
 }
-export interface IFnParams<R extends any = any> {
+
+export type WatchDepFn = () => any[] | void;
+
+export interface IWatchOptions {
+  dep?: WatchDepFn;
+  /**
+   * default: true，
+   * 默认值为 true 是为了首次允许收集到依赖，如依赖在dep函数设定了，且不需要立即执行，
+   * 则可以人工设定 immediate 为 false
+   */
+  immediate?: boolean;
+}
+
+export type WatchOptionsType = WatchDepFn | IWatchOptions;
+
+export interface IDeriveFnParams<R extends any = any> {
   isFirstCall: boolean;
   prevResult: R | null;
 }
 
-export interface IAsyncTaskParams<S extends any = any, R extends any = any> extends IFnParams<R> {
+export interface IAsyncTaskParams<S extends any = any, R extends any = any> extends IDeriveFnParams<R> {
   source: S;
 }
 
 export type DerivedResult<R extends PlainObject = PlainObject> = R;
 
-export type DeriveFn<R extends PlainObject = PlainObject> = (params: IFnParams<R>) => R;
+export type DeriveFn<R extends PlainObject = PlainObject> = (params: IDeriveFnParams<R>) => R;
 
 export type DerivedAtom<R extends any = any> = { val: R };
 
-export type DeriveAtomFn<R extends any = any> = (params: IFnParams<R>) => R;
+export type DeriveAtomFn<R extends any = any> = (params: IDeriveFnParams<R>) => R;
 
 export interface IUnmountInfo {
   t: number;
@@ -282,6 +347,8 @@ export interface IFnCtx {
   isComputing: boolean;
   remainRunCount: number;
   careDeriveStatus: boolean;
+  /** 是否是 atom 导出的结果 */
+  forAtom: boolean;
   /**
    * default: false ，是否对计算结果开启记录读依赖功能，此功能仅针对 hook 里使用 useDerived 有效
    */
@@ -369,7 +436,11 @@ export interface IInsCtx<T extends Dict = Dict> {
   canCollect: boolean;
   /** 是否有静态依赖 */
   hasStaticDeps: boolean;
+  /** 记录渲染批次序号 */
+  renderSN: number;
 }
+
+export type InsCtxMap = Map<number, IInsCtx>;
 
 export interface ICreateDerivedLogicOptions {
   careDeriveStatus?: boolean;
@@ -394,6 +465,7 @@ export interface IHeluxParams {
   createOptions: IInnerCreateOptions;
 }
 
-export interface HookDebugInfo {
-  sharedKey: number;
+export interface RenderInfo {
+  /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
+  renderSN: number;
 }
