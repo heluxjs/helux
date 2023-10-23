@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux@3.0.5
+| helux@3.0.6
 | A simple and powerful react state library with dependency collection, derive, watch, atom ... etc features,
 | compatible with react 18 concurrency mode.
 |------------------------------------------------------------------------------------------------
