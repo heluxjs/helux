@@ -1,7 +1,9 @@
 import { immut } from 'limu';
 import { EXPIRE_MS, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, WAY } from '../consts';
 import type { InsCtxDef } from '../factory/common/buildInternal';
-import { getHeluxRoot, mapGlobalId } from '../factory/root';
+import { getInsKey } from '../factory/common/scope';
+import { recordDataKeyForStop } from '../factory/common/util';
+import { mapGlobalId } from '../factory/root';
 import * as fnDep from '../helpers/fndep';
 import { getInternal } from '../helpers/state';
 import type { Dict, Ext, IFnCtx, IUseSharedOptions } from '../types';
@@ -9,37 +11,50 @@ import { isFn, isSymbol, prefixValKey, warn } from '../utils';
 import { clearDep } from './insdep';
 import { createOb } from './obj';
 
-function getScope() {
-  return getHeluxRoot().help.insDepInfo;
-}
+export function runInsUpdater(insCtx: InsCtxDef | undefined, partialState: Dict) {
+  if (!insCtx) return;
+  const { setState, mountStatus, createTime } = insCtx;
+  if (mountStatus === NOT_MOUNT && Date.now() - createTime > EXPIRE_MS) {
+    return clearDep(insCtx);
+  }
 
-const scope = getScope();
+  setState(partialState);
+}
 
 export function attachInsProxyState(insCtx: InsCtxDef, enableReactive?: boolean) {
   const { internal, way } = insCtx;
-  const { sharedKey, rawState, isDeep } = insCtx.internal;
+  const { sharedKey, rawState, isDeep, ruleConf } = insCtx.internal;
 
   const collectDep = (key: string) => {
-    if (!insCtx.canCollect) {
-      return;
-    }
-    if (way === WAY.FIRST_RENDER && !insCtx.isFirstRender) {
+    if (
+      !insCtx.canCollect // 无需收集依赖
+      || (way === WAY.FIRST_RENDER && !insCtx.isFirstRender) // 仅第一轮渲染收集依赖
+    ) {
       return;
     }
 
-    const depKey = prefixValKey(key, sharedKey);
-    insCtx.readMap[depKey] = 1;
-    if (insCtx.renderStatus !== RENDER_END) {
-      internal.recordDep(depKey, insCtx.insKey);
+    // depKey 可能因为配置了 rules[]stopDep 的关系被改写
+    let depKey = prefixValKey(key, sharedKey);
+    recordDataKeyForStop(depKey, ruleConf.stopDepInfo, (key) => {
+      depKey = key;
+    });
+
+    if (insCtx.readMap[depKey] !== 1) {
+      insCtx.readMap[depKey] = 1;
+      if (insCtx.renderStatus !== RENDER_END) {
+        internal.recordDep(depKey, insCtx.insKey);
+      }
+      // record derive/watch dep
+      fnDep.recordValKeyDep(depKey);
     }
-    // record derive/watch dep
-    fnDep.recordValKeyDep(depKey);
   };
 
   if (isDeep) {
     insCtx.proxyState = immut(rawState, {
       onOperate: (params) => {
-        collectDep(params.fullKeyPath.join(KEY_SPLITER));
+        if (!params.isBuiltInFnKey) {
+          collectDep(params.fullKeyPath.join(KEY_SPLITER));
+        }
       },
       compareVer: true,
     });
@@ -62,23 +77,6 @@ export function attachInsProxyState(insCtx: InsCtxDef, enableReactive?: boolean)
       },
     });
   }
-}
-
-export function getInsKey() {
-  let keySeed = scope.keySeed;
-  keySeed = keySeed === Number.MAX_SAFE_INTEGER ? 1 : keySeed + 1;
-  scope.keySeed = keySeed;
-  return keySeed;
-}
-
-export function runInsUpdater(insCtx: InsCtxDef | undefined, partialState: Dict) {
-  if (!insCtx) return;
-  const { setState, mountStatus, createTime } = insCtx;
-  if (mountStatus === NOT_MOUNT && Date.now() - createTime > EXPIRE_MS) {
-    return clearDep(insCtx);
-  }
-
-  setState(partialState);
 }
 
 export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
@@ -115,7 +113,10 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
       // call insDep subscribe after snap changed
       cb();
     },
-    renderSN: 0,
+    renderInfo: {
+      sn: 0,
+      getDeps: () => Object.keys(insCtx.readMap),
+    },
   };
   globalId && mapGlobalId(globalId, insKey);
   attachInsProxyState(insCtx, enableReactive);
@@ -132,8 +133,7 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
 export function attachInsDerivedResult(fnCtx: IFnCtx) {
   const { result } = fnCtx;
 
-  // TODO: 或许 4.0 版本可参考 buildInsCtx，实现计算结果的深依赖收集，这里需要仔细思考下
-  // 已计算结果每次都是全新生成的，如何实现部分节点更新和计算理念本身有点冲突
+  // MARK: 此计算结果不具备依赖收集特性，如需要此特性可使用 share接口 的 watch 加 mutate 配置完成
   fnCtx.proxyResult = createOb(result, {
     set: () => {
       warn('changing derived result is invalid');
@@ -145,7 +145,6 @@ export function attachInsDerivedResult(fnCtx: IFnCtx) {
         fnCtx.isResultReaded = true;
         fnCtx.isResultReadedOnce = true;
       }
-
       return result[resultKey];
     },
   });

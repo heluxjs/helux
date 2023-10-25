@@ -6,7 +6,7 @@ import { injectHeluxProto } from './obj';
 import { getInternalByKey } from './state';
 
 function getScope() {
-  return getHeluxRoot().help.fnDepInfo;
+  return getHeluxRoot().help.fnDepScope;
 }
 
 const scope = getScope();
@@ -76,6 +76,10 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     asyncType: 'normal',
     subscribe: (cb) => {
       cb();
+    },
+    renderInfo: {
+      sn: 0,
+      getDeps: () => base.depKeys.slice(),
     },
   };
   return Object.assign(base, specificProps || {});
@@ -253,9 +257,9 @@ export function markComputing(fnKey: string, runCount: number) {
 
 export function runFn(
   fnKey: string,
-  options?: { forAtom?: boolean; force?: boolean; isFirstCall?: boolean; updateReasons?: TriggerReason[] },
+  options?: { sn?: number; forAtom?: boolean; force?: boolean; isFirstCall?: boolean; updateReasons?: TriggerReason[] },
 ) {
-  const { forAtom, isFirstCall = false, updateReasons = [] } = options || {};
+  const { forAtom, isFirstCall = false, updateReasons = [], sn = 0 } = options || {};
   const fnCtx = getFnCtx(fnKey);
   if (!fnCtx) {
     return;
@@ -277,13 +281,19 @@ export function runFn(
       fnCtx.shouldReplaceResult = true;
     }
   };
+  /** 尝试更新函数对应的实例 */
   const triggerUpdate = () => {
+    let canUpdate = false;
     // 开启读依赖功能时，实例读取了计算结果才执行更新
     if (fnCtx.enableRecordResultDep) {
-      fnCtx.isResultReaded && fnCtx.updater();
-    } else {
+      fnCtx.isResultReaded && (canUpdate = true);
+    } else if (fnCtx.isResultReadedOnce) {
       // 未开启读依赖功能时，实例曾读取过计算结果就执行更新
-      fnCtx.isResultReadedOnce && fnCtx.updater();
+      canUpdate = true;
+    }
+    if (canUpdate) {
+      fnCtx.renderInfo.sn = sn;
+      fnCtx.updater();
     }
   };
   /** 下钻执行其他函数 */
@@ -293,7 +303,7 @@ export function runFn(
       fnCtx.isComputing = false;
     }
     triggerUpdate();
-    fnCtx.nextLevelFnKeys.forEach((key) => runFn(key, { forAtom }));
+    fnCtx.nextLevelFnKeys.forEach((key) => runFn(key, { forAtom, sn, updateReasons }));
   };
 
   const prevResult = forAtom ? fnCtx.result.val : fnCtx.result;

@@ -4,7 +4,7 @@ import { Dict, IInnerCreateOptions, SharedDict } from '../types';
 import { isDebug, isObj, safeMapGet } from '../utils';
 
 function getScope() {
-  return getHeluxRoot().help.sharedInfo;
+  return getHeluxRoot().help.sharedScope;
 }
 
 const { UNMOUNT_INFO_MAP, SHARED_KEY_STATE_MAP, STATE_SHARED_KEY_MAP, INTERMAL_MAP, BEENING_WATCHED_MAP } = getScope();

@@ -15,5 +15,6 @@ function ensureGlobalShared() {
 }
 
 export function useGlobalId(globalId: NumStrSymbol) {
-  useShared(GLOBAL_SHARED, { staticDeps: () => [], globalId });
+  const [, , info] = useShared(GLOBAL_SHARED, { staticDeps: () => [], globalId });
+  return info;
 }

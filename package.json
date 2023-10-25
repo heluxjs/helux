@@ -1,9 +1,13 @@
 {
   "name": "helux",
   "version": "3.0.0",
-  "description": "",
+  "description": "A react state lib with atom, derive, share, watch, dependency collection features, compatible with react 18.",
   "keywords": [],
-  "author": "fantasticsoul",
+  "author": {
+    "name": "fantasticsoul",
+    "email": "624313307@qq.com",
+    "url": "https://github.com/fantasticsoul"
+  },
   "main": "index.js",
   "scripts": {
     "build": "npm run build_helux",

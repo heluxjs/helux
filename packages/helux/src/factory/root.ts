@@ -51,9 +51,9 @@ function createRoot() {
     },
     help: {
       mod: {} as Dict, // 与模块相关的辅助信息
-      sharedInfo: buildShared(),
-      fnDepInfo: buildFnDep(),
-      insDepInfo: buildInsDep(),
+      sharedScope: buildShared(),
+      fnDepScope: buildFnDep(),
+      insDepScope: buildInsDep(),
       markAtomMap: new Map<any, boolean>(), // 不支持 symbol 的环境才会记录此map
       renderSN: 0, // 渲染批次序列号种子数
     },
@@ -63,6 +63,7 @@ function createRoot() {
   };
   return root;
 }
+type HeluxRoot = ReturnType<typeof createRoot>;
 
 export function getHelp() {
   return getHeluxRoot().help;
@@ -74,15 +75,13 @@ export function getMarkAtomMap() {
 }
 
 export function getGlobalIdInsKeys(id: NumStrSymbol) {
-  const map = getHeluxRoot().help.fnDepInfo.GID_INSKEYS_MAP;
+  const map = getHeluxRoot().help.fnDepScope.GID_INSKEYS_MAP;
   return safeMapGet(map, id, [] as number[]);
 }
 
 export function getGlobalInternal() {
   return getHeluxRoot().globalInternal;
 }
-
-type HeluxRoot = ReturnType<typeof createRoot>;
 
 export function getGlobalShared() {
   return getHeluxRoot().globalShared;

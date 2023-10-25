@@ -1,15 +1,20 @@
 {
   "name": "helux",
-  "version": "3.0.6",
-  "description": "A React state library that encourages service injection and supports reactive updates",
+  "version": "3.0.7",
+  "description": "A react state lib with atom, derive, share, watch, dependency collection features, compatible with react 18.",
+  "bugs": {
+    "url": "https://github.com/heluxjs/helux/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tnfe/hel.git",
+    "url": "https://github.com/heluxjs/helux",
     "directory": "packages/helux"
   },
   "license": "MIT",
   "author": {
-    "name": "fantasticsoul"
+    "name": "fantasticsoul",
+    "email": "624313307@qq.com",
+    "url": "https://github.com/fantasticsoul"
   },
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -33,7 +38,7 @@
   "dependencies": {
     "@types/react": ">=16.0.0",
     "@types/react-dom": ">=16.0.0",
-    "limu": "^3.7.2",
+    "limu": "^3.7.3",
     "react": ">=16.10.2",
     "react-dom": ">=16.10.2"
   },
@@ -46,7 +51,7 @@
   "peerDependencies": {
     "@types/react": ">=16.0.0",
     "@types/react-dom": ">=16.0.0",
-    "limu": "^3.7.2",
+    "limu": "^3.7.3",
     "react": ">=16.10.2",
     "react-dom": ">=16.10.2"
   },

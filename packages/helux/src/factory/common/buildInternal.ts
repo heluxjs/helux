@@ -4,7 +4,7 @@ import type {
   IHeluxParams,
   IInsCtx,
   InsCtxMap,
-  KeyIdsDict,
+  IRuleConf,
   KeyInsKeysDict,
   NumStrSymbol,
   SetAtom,
@@ -23,28 +23,14 @@ export function buildInternal(
     insCtxMap: InsCtxMap;
     key2InsKeys: KeyInsKeysDict;
     id2InsKeys: KeyInsKeysDict;
-    writeKey2Ids: KeyIdsDict;
-    writeKey2GlobalIds: KeyIdsDict;
+    ruleConf: IRuleConf;
     isDeep: boolean;
     mutate: Fn;
     watch: SharedState[];
   },
 ) {
   const { markedState, sharedKey, moduleName, createOptions, shouldSync } = heluxParams;
-  const {
-    asyncSetState,
-    setAtom,
-    setState,
-    setStateImpl,
-    insCtxMap,
-    key2InsKeys,
-    id2InsKeys,
-    writeKey2Ids,
-    writeKey2GlobalIds,
-    isDeep,
-    mutate,
-    watch,
-  } = options;
+  const { asyncSetState, setAtom, setState, setStateImpl, insCtxMap, key2InsKeys, id2InsKeys, ruleConf, isDeep, mutate, watch } = options;
 
   return {
     rawState: markedState, // helux raw state
@@ -55,8 +41,7 @@ export function buildInternal(
     key2InsKeys,
     insCtxMap,
     id2InsKeys,
-    writeKey2Ids,
-    writeKey2GlobalIds,
+    ruleConf,
     isDeep,
     createOptions,
     shouldSync,

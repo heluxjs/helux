@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux@3.0.6
+| helux@3.0.7
 | A simple and powerful react state library with dependency collection, derive, watch, atom ... etc features,
 | compatible with react 18 concurrency mode.
 |------------------------------------------------------------------------------------------------
@@ -15,17 +15,16 @@ import type {
   DerivedResult,
   DeriveFn,
   Dict,
-  DictN,
   EffectCb,
   IAsyncTaskParams,
   ICreateOptionsType,
   IDeriveFnParams,
+  IRenderInfo,
   IsComputing,
   IUseSharedOptions,
   IWatchFnParams,
   NumStrSymbol,
   PlainObject,
-  RenderInfo,
   SetAtom,
   SetState,
   SharedDict,
@@ -33,18 +32,6 @@ import type {
 } from './types';
 
 export type * from './types';
-
-type Advance = {
-  /** after calling getDepStats, mem depStats will be cleanup automatically */
-  getDepStats: () => DictN<Array<string>>;
-  getSharedState: (sharedKey: number) => Dict;
-};
-
-/**
- * @deprecated
- * unstable currently ( for helux-signal in the future )
- */
-export const advance: Advance;
 
 /**
  * 创建浅依赖收集的共享对象
@@ -92,7 +79,11 @@ export function share<T extends Dict = Dict>(
   strBoolOrCreateOptions?: ICreateOptionsType<T>,
 ): [SharedDict<T>, SetState<T>, Call<T>];
 
-export const createShared: typeof share; // for compatible wit v2 helux
+/**
+ * for compatible wit v2 helux
+ * 这个接口仅为了兼容 helux v2 升级到 v3 后不报错
+ */
+export const createShared: typeof share;
 
 /**
  * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,call] ，
@@ -120,7 +111,7 @@ export function atom<T extends any = any>(
 export function derive<T extends PlainObject = PlainObject>(deriveFn: (params: IDeriveFnParams) => T): T;
 
 /**
- *
+ * 支持异步导出的接口
  * @param sourceFn
  * @param deriveFn
  */
@@ -129,6 +120,9 @@ export function deriveAsync<S extends any = any, R extends Dict = Dict>(
   deriveFn: (taskParams: IAsyncTaskParams<S>) => Promise<R>,
 ): R;
 
+/**
+ * 支持异步导出的另一种写法的接口
+ */
 export function deriveTask<R extends PlainObject = PlainObject>(
   deriveFn: (taskParams: IDeriveFnParams) => {
     initial: R;
@@ -183,9 +177,12 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: Wat
 export function useShared<T extends Dict = Dict>(
   sharedObject: T,
   IUseSharedOptions?: IUseSharedOptions<T>,
-): [SharedDict<T>, SetState<T>, RenderInfo];
+): [SharedDict<T>, SetState<T>, IRenderInfo];
 
-export function useAtom<T extends any = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>, RenderInfo];
+/**
+ * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
+ */
+export function useAtom<T extends any = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>, IRenderInfo];
 
 /**
  * 使用普通对象，需注意此接口只接受普通对象，如传递共享对象给它会报错 OBJ_NOT_NORMAL_ERR
@@ -201,7 +198,10 @@ export function useAtom<T extends any = any>(sharedState: Atom<T>, options?: IUs
  */
 export function useObject<T extends Dict = Dict>(initialState: T | (() => T)): [T, (partialState: Partial<T>) => void];
 
-export function useGlobalId(globalId: NumStrSymbol): void;
+/**
+ * 使用全局id，配合 rules[].globalIds 做定向通知更新
+ */
+export function useGlobalId(globalId: NumStrSymbol): IRenderInfo;
 
 /**
  * 使用服务注入模式开发 react 组件，可配和`useObject`和`useSharedObject`同时使用，详细使用方式见在线示例：
@@ -272,34 +272,34 @@ export function useLayoutEffect(cb: EffectCb, deps?: any[]): void;
 export function useDerived<R extends PlainObject = PlainObject>(
   resultOrFn: DerivedResult<R> | DeriveFn<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing];
+): [R, IsComputing, IRenderInfo];
 
 export function useDerivedAsync<S extends any = any, R extends PlainObject = PlainObject>(
   sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing];
+): [R, IsComputing, IRenderInfo];
 
 export function useDerivedTask<R extends Dict = Dict>(
   deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
-): [R, IsComputing];
+): [R, IsComputing, IRenderInfo];
 
 export function useAtomDerived<R extends any = any>(
   resultOrFn: DerivedAtom<R> | DeriveAtomFn<R>,
   enableRecordResultDep?: boolean,
-): [R, boolean];
+): [R, IsComputing, IRenderInfo];
 
 export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
   sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing];
+): [R, IsComputing, IRenderInfo];
 
 export function useAtomDerivedTask<R extends any = any>(
   deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
-): [R, IsComputing];
+): [R, IsComputing, IRenderInfo];
 
 export function getRawState<T extends Dict>(state: T): T;
 

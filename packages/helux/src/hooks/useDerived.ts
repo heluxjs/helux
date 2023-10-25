@@ -11,6 +11,7 @@ import type {
   Dict,
   IAsyncTaskParams,
   IDeriveFnParams,
+  IRenderInfo,
   IsComputing,
   PlainObject,
 } from '../types';
@@ -21,7 +22,7 @@ import { useForceUpdate } from './useForceUpdate';
 
 const { SOURCE, TASK } = ASYNC_TYPE;
 
-function useDerivedLogic<R>(options: IUseDerivedOptions): [R, IsComputing] {
+function useDerivedLogic<R>(options: IUseDerivedOptions): [R, IsComputing, IRenderInfo] {
   const { fn, sourceFn = noop, enableRecordResultDep = false, careDeriveStatus, asyncType } = options;
   const deriveCtxRef = useRef({ input: fn, deriveFn: null });
   const updater = useForceUpdate();
@@ -53,15 +54,15 @@ function useDerivedLogic<R>(options: IUseDerivedOptions): [R, IsComputing] {
     };
   }, [fnCtx]);
 
-  return [fnCtx.proxyResult as R, fnCtx.isComputing];
+  return [fnCtx.proxyResult as R, fnCtx.isComputing, fnCtx.renderInfo];
 }
 
 export function useDerived<R extends PlainObject = PlainObject>(
   resultOrFn: DerivedResult<R> | DeriveFn<R>,
   enableRecordResultDep?: boolean,
 ) {
-  const resultPair = useDerivedLogic<R>({ fn: resultOrFn, enableRecordResultDep });
-  return resultPair;
+  const resultTuple = useDerivedLogic<R>({ fn: resultOrFn, enableRecordResultDep });
+  return resultTuple;
 }
 
 export function useDerivedAsync<S extends any = any, R extends PlainObject = PlainObject>(
@@ -69,43 +70,43 @@ export function useDerivedAsync<S extends any = any, R extends PlainObject = Pla
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
 ) {
-  const resultPair = useDerivedLogic({
+  const resultTuple = useDerivedLogic({
     fn: deriveFn,
     sourceFn,
     enableRecordResultDep,
     careDeriveStatus: true,
     asyncType: SOURCE,
   });
-  return resultPair as [R, IsComputing];
+  return resultTuple as [R, IsComputing, IRenderInfo];
 }
 
 export function useDerivedTask<R extends Dict = Dict>(
   deriveFn: (taskParams: IDeriveFnParams) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
 ) {
-  const resultPair = useDerivedLogic({
+  const resultTuple = useDerivedLogic({
     fn: deriveFn,
     enableRecordResultDep,
     careDeriveStatus: true,
     asyncType: TASK,
   });
-  return resultPair as [R, IsComputing];
+  return resultTuple as [R, IsComputing, IRenderInfo];
 }
 
 export function useAtomDerived<R extends any = any>(
   resultOrFn: DerivedAtom<R> | DeriveAtomFn<R>,
   enableRecordResultDep?: boolean,
-): [R, boolean] {
-  const [result, isComputing] = useDerivedLogic<Atom<R>>({ fn: resultOrFn, enableRecordResultDep, forAtom: true });
-  return [result.val, isComputing];
+): [R, boolean, IRenderInfo] {
+  const [result, isComputing, info] = useDerivedLogic<Atom<R>>({ fn: resultOrFn, enableRecordResultDep, forAtom: true });
+  return [result.val, isComputing, info];
 }
 
 export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
   sourceFn: () => { source: S; initial: R },
   deriveFn: (taskParams: IAsyncTaskParams<S, R>) => Promise<R>,
   enableRecordResultDep?: boolean,
-): [R, IsComputing] {
-  const [result, isComputing] = useDerivedLogic<Atom<R>>({
+): [R, IsComputing, IRenderInfo] {
+  const [result, isComputing, info] = useDerivedLogic<Atom<R>>({
     fn: deriveFn,
     sourceFn,
     enableRecordResultDep,
@@ -113,19 +114,19 @@ export function useAtomDerivedAsync<S extends any = any, R extends any = any>(
     asyncType: SOURCE,
     forAtom: true,
   });
-  return [result.val, isComputing];
+  return [result.val, isComputing, info];
 }
 
 export function useAtomDerivedTask<R extends any = any>(
   deriveFn: (taskParams: IDeriveFnParams<R>) => { initial: R; task: () => Promise<R> },
   enableRecordResultDep?: boolean,
-): [R, IsComputing] {
-  const [result, isComputing] = useDerivedLogic<Atom<R>>({
+): [R, IsComputing, IRenderInfo] {
+  const [result, isComputing, info] = useDerivedLogic<Atom<R>>({
     fn: deriveFn,
     enableRecordResultDep,
     careDeriveStatus: true,
     asyncType: TASK,
     forAtom: true,
   });
-  return [result.val, isComputing];
+  return [result.val, isComputing, info];
 }

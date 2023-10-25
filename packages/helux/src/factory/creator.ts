@@ -1,6 +1,7 @@
 import { createDraft, finishDraft, immut, IOperateParams } from 'limu';
 import { HAS_SYMBOL, IS_ATOM, KEY_SPLITER } from '../consts';
-import { getRenderSN } from '../factory/common/util';
+import { getRenderSN } from '../factory/common/scope';
+import { getArrKey, getMutateCtx, IMutateCtx, recordDataKeyForStop } from '../factory/common/util';
 import { getGlobalIdInsKeys, getGlobalInternal, getMarkAtomMap } from '../factory/root';
 import * as fnDep from '../helpers/fndep';
 import { runInsUpdater } from '../helpers/ins';
@@ -19,22 +20,21 @@ import {
 import type {
   AsyncSetState,
   Dict,
-  DictN,
-  Fn,
   ICreateOptions,
   ICreateOptionsType,
   IHeluxParams,
   IInnerCreateOptions,
   IInnerSetStateOptions,
   InsCtxMap,
+  IRuleConf,
   ISetStateOptions,
+  KeyBoolDict,
   KeyIdsDict,
   KeyInsKeysDict,
   NumStrSymbol,
   SetAtom,
   SetState,
   SharedState,
-  TriggerReason,
 } from '../types';
 import {
   canUseDeep,
@@ -54,106 +54,101 @@ import {
 } from '../utils';
 import { buildInternal, InsCtxDef, TInternal } from './common/buildInternal';
 
-/** 这个是给 helux-signal 使用的数据，目前暂时还用不上 */
-let depStats: DictN<Array<string>> = {};
-
-function mapDepStats(sharedKey: number) {
-  const keys = safeGet(depStats, sharedKey, []);
-  return keys;
-}
-
-function recordDep(sharedKey: number, valKey: string | symbol) {
-  const keys = mapDepStats(sharedKey);
-  nodupPush(keys, valKey);
-}
-
 function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
   return prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
 }
 
-function handleOperate(
-  opParams: IOperateParams,
-  opts: {
-    internal: TInternal;
-    writeKeyPathInfo: Dict<TriggerReason>;
-    ids: string[];
-    globalIds: string[];
-    writeKeys: Dict;
-    writeKey2Ids: KeyIdsDict;
-    writeKey2GlobalIds: KeyIdsDict;
-  },
-) {
+function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
   const { isChange, fullKeyPath, keyPath, parentType } = opParams;
-  const { writeKeyPathInfo, ids, globalIds, writeKeys, writeKey2Ids, writeKey2GlobalIds, internal } = opts;
-  const { moduleName, sharedKey, createOptions } = internal;
-  if (!isChange) return;
+  const { internal, mutateCtx } = opts;
+  const { arrKeyDict } = mutateCtx;
+  if (!isChange) {
+    if (parentType === 'Array') {
+      arrKeyDict[getDepKeyByPath(keyPath, internal.sharedKey)] = 1;
+    }
+    return;
+  }
 
-  const keyPrefix = prefixValKey('', sharedKey); // as namespace
-  const curWriteKey = getDepKeyByPath(fullKeyPath, sharedKey);
-  writeKeyPathInfo[curWriteKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
+  const { moduleName, sharedKey, createOptions, ruleConf } = internal;
+  const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
+  const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
+  const { idsDict, globalIdsDict, stopDepInfo } = ruleConf;
+
+  writeKeyPathInfo[writeKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
 
   // 设定了非精确更新策略时，提取出第一层更新路径即可
   if (!createOptions.exact) {
+    const keyPrefix = prefixValKey('', sharedKey); // as namespace
     const level1Key = `${keyPrefix}${fullKeyPath[0]}`;
     writeKeys[level1Key] = 1;
     return;
   }
-
   // 用户设定了精确更新策略，则只查当前更新路径的视图
+
+  const arrKey = getArrKey(writeKey, arrKeyDict);
+  if (arrKey) {
+    // 主动把数组key也记录下，因为数组对应视图通常都用 forEach 生成的
+    // 然后遍历出来的孩子节点都会包一个 memo，所以需主动通知一下使用数组根节点的组件重渲染
+    writeKeys[arrKey] = 1;
+  }
+  // 可能会缩短后再记录
+  if (
+    !recordDataKeyForStop(writeKey, stopDepInfo, (key) => {
+      writeKeys[key] = 1;
+    })
+  ) {
+    writeKeys[writeKey] = 1;
+  }
+
   const putId = (keyIds: KeyIdsDict, ids: string[]) => {
     // find update ids configured in rules
-    Object.keys(keyIds).forEach((confWriteKey) => {
+    Object.keys(keyIds).forEach((confKey) => {
       // writeKey: 1/a|list|0|name
-      // confWriteKey: 1/a|list
-      if (writeKey.startsWith(confWriteKey)) {
-        keyIds[confWriteKey].forEach((id) => nodupPush(ids, id));
+      // confKey: 1/a|list
+      if (writeKey.startsWith(confKey)) {
+        keyIds[confKey].forEach((id) => nodupPush(ids, id));
       }
     });
   };
-
-  let writeKey = curWriteKey;
-  if (parentType === 'Array') {
-    writeKey = prefixValKey(keyPath.join(KEY_SPLITER), sharedKey);
-  }
-  writeKeys[writeKey] = 1;
-
-  putId(writeKey2Ids, ids);
-  putId(writeKey2GlobalIds, globalIds);
+  putId(idsDict, ids);
+  putId(globalIdsDict, globalIds);
 }
 
 /**
  * 解析出 createShared 里配置的 rules
  */
-function parseRules(heluxParams: IHeluxParams) {
+function parseRules(heluxParams: IHeluxParams): IRuleConf {
   const { markedState, sharedKey, createOptions } = heluxParams;
   const { deep, rules } = createOptions;
-  const writeKey2Ids: KeyIdsDict = {};
-  const writeKey2GlobalIds: KeyIdsDict = {};
+  const idsDict: KeyIdsDict = {};
+  const globalIdsDict: KeyIdsDict = {};
+  const stopDepInfo: IRuleConf['stopDepInfo'] = { keys: [], isArrDict: {} };
+  const isArrDict: KeyBoolDict = {}; // 临时记录是否是数组，后面步骤会转移到 stopDepInfo.isArrDict
   const isDeep = canUseDeep(deep);
 
   rules.forEach((rule) => {
-    const writeKeys: string[] = [];
-    const { when, ids = [], globalIds = [] } = rule;
-    if (!ids.length && !globalIds.length) {
-      return;
-    }
+    // when 函数执行完，会写入读取到的 key 列表
+    const confKeys: string[] = [];
+    const { when, ids = [], globalIds = [], stopDep = false } = rule;
 
     let state: any;
     let keyReaded = false;
     if (isDeep) {
       let pervKey = '';
       state = immut(markedState, {
-        onOperate: ({ fullKeyPath }) => {
+        onOperate: ({ fullKeyPath, value, isBuiltInFnKey }) => {
+          if (isBuiltInFnKey) return;
           // 只记录单一路径下读取的最长的那个key，
           // 即 a.b.c 行为会触发 ['a'] ['a','b'] ['a','b','c'] 3次 onOperate 操作
-          // 但 writeKeys 只记录['a','b','c'] 这一次生成的 key
-          const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
-          if (pervKey && writeKey.includes(pervKey)) {
+          // 但 confKeys 只记录['a','b','c'] 这一次生成的 key
+          const confKey = getDepKeyByPath(fullKeyPath, sharedKey);
+          if (pervKey && confKey.includes(pervKey)) {
             // 是一条路径中正在下钻的key，将之前的弹出
-            writeKeys.pop();
+            confKeys.pop();
           }
-          writeKeys.push(writeKey);
-          pervKey = writeKey;
+          confKeys.push(confKey);
+          isArrDict[confKey] = Array.isArray(value);
+          pervKey = confKey;
           keyReaded = true;
         },
       });
@@ -161,52 +156,60 @@ function parseRules(heluxParams: IHeluxParams) {
       state = createOb(markedState, {
         set: setNoop,
         get: (target: Dict, key: any) => {
-          const writeKey = getDepKeyByPath([key], sharedKey);
-          writeKeys.push(writeKey);
+          const confKey = getDepKeyByPath([key], sharedKey);
+          confKeys.push(confKey);
+          const value = target[key];
+          isArrDict[confKey] = Array.isArray(value);
           keyReaded = true;
-          return target[key];
+          return value;
         },
       });
     }
 
     const result = when(state);
-    // record id and globalId
-    const setId = (writeKey: string) => {
-      const idList = safeGet(writeKey2Ids, writeKey, [] as NumStrSymbol[]);
+    // record id, globalId, stopDep
+    const setRuleConf = (confKey: string) => {
+      const idList = safeGet(idsDict, confKey, [] as NumStrSymbol[]);
       ids.forEach((id) => nodupPush(idList, id));
-      const globalIdList = safeGet(writeKey2GlobalIds, writeKey, [] as NumStrSymbol[]);
+      const globalIdList = safeGet(globalIdsDict, confKey, [] as NumStrSymbol[]);
       globalIds.forEach((id) => nodupPush(globalIdList, id));
+      if (stopDep && isArrDict[confKey]) {
+        nodupPush(stopDepInfo.keys, confKey);
+        stopDepInfo.isArrDict[confKey] = isArrDict[confKey];
+      }
     };
-    writeKeys.forEach(setId);
+    confKeys.forEach(setRuleConf);
 
     if (
       keyReaded
       || result === state // 返回了state自身
       || (Array.isArray(result) && result.includes(state)) // 返回了数组，包含有state自身
     ) {
-      setId(`${sharedKey}`);
+      setRuleConf(`${sharedKey}`);
     }
   });
 
-  return { writeKey2Ids, writeKey2GlobalIds };
+  return { idsDict, globalIdsDict, stopDepInfo };
 }
 
 /** 干预 setState 调用结束后收集到的依赖项（新增或删除） */
-function interveneDeps(opts: { internal: TInternal; depKeys: string[]; fn?: Fn; add: boolean }) {
-  const { depKeys, fn, add, internal } = opts;
+function interveneDeps(isAdd: boolean, opts: IHanldeStateOptions) {
+  const { extraDeps, excludeDeps } = opts;
+  const fn = isAdd ? extraDeps : excludeDeps;
   if (isFn(fn)) {
-    const { rawState, sharedKey, createOptions } = internal;
-    const { deep } = createOptions;
-    const isDeep = canUseDeep(deep);
+    const {
+      mutateCtx: { depKeys },
+      internal: { rawState, sharedKey, isDeep },
+    } = opts;
     let state: any;
     const record = (keyPath: string[]) => {
       const depKey = getDepKeyByPath(keyPath, sharedKey);
-      add ? nodupPush(depKeys, depKey) : delListItem(depKeys, depKey);
+      isAdd ? nodupPush(depKeys, depKey) : delListItem(depKeys, depKey);
     };
 
     if (isDeep) {
       state = immut(rawState, {
-        onOperate: ({ fullKeyPath }) => record(fullKeyPath),
+        onOperate: ({ fullKeyPath, isBuiltInFnKey }) => !isBuiltInFnKey && record(fullKeyPath),
       });
     } else {
       state = createOb(rawState, {
@@ -270,6 +273,9 @@ function parseRawState<T extends Dict = Dict>(stateOrStateFn: T | (() => T)) {
   return rawState;
 }
 
+/**
+ * 分析 createOptions，算出 helux 内部创建共享对象过程中需要的参数
+ */
 function getHeluxParams(rawState: Dict, createOptions: IInnerCreateOptions): IHeluxParams {
   const { copyObj, enableSyncOriginal, moduleName } = createOptions;
   let markedState; // object marked shared key
@@ -290,12 +296,9 @@ function getHeluxParams(rawState: Dict, createOptions: IInnerCreateOptions): IHe
 function buildSharedState(heluxParams: IHeluxParams) {
   let sharedState: Dict = {};
   const { rawState, markedState, sharedKey, shouldSync, createOptions } = heluxParams;
-  const { enableReactive, enableRecordDep, deep, forAtom } = createOptions;
+  const { enableReactive, deep, forAtom } = createOptions;
   const collectDep = (key: string) => {
     const depKey = prefixValKey(key, sharedKey);
-    if (enableRecordDep) {
-      recordDep(sharedKey, depKey);
-    }
     // using shared state in derived/watch callback
     fnDep.recordValKeyDep(depKey, { sharedKey });
   };
@@ -304,13 +307,12 @@ function buildSharedState(heluxParams: IHeluxParams) {
     sharedState = immut(markedState, {
       customKeys: [IS_ATOM as symbol],
       customGet: () => forAtom,
-      onOperate: (params) => {
-        collectDep(params.fullKeyPath.join(KEY_SPLITER));
-      },
+      onOperate: (params) => !params.isBuiltInFnKey && collectDep(params.fullKeyPath.join(KEY_SPLITER)),
     });
   } else {
     sharedState = createOb(markedState, {
       set: (target: Dict, key: any, val: any) => {
+        // TODO: enableReactive 机制和现有流程不匹配，可能考虑移除
         if (enableReactive) {
           markedState[key] = val;
           if (shouldSync) {
@@ -345,7 +347,8 @@ function buildSharedState(heluxParams: IHeluxParams) {
 }
 
 function execDepFnAndInsUpdater(state: Dict, opts: IHanldeStateOptions) {
-  const { forAtom, ids, globalIds, depKeys, triggerReasons, internal, sharedState } = opts;
+  const { forAtom, mutateCtx, internal, sharedState } = opts;
+  const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, sharedKey } = internal;
   internal.ver += 1;
   // find associate ins keys
@@ -374,6 +377,7 @@ function execDepFnAndInsUpdater(state: Dict, opts: IHanldeStateOptions) {
     getGlobalIdInsKeys(id).forEach((insKey) => globalInsKeys.push(insKey));
   });
 
+  const sn = getRenderSN();
   // deduplicate
   allInsKeys = dedupList(allInsKeys);
   allFirstLevelFnKeys = dedupList(allFirstLevelFnKeys);
@@ -381,7 +385,7 @@ function execDepFnAndInsUpdater(state: Dict, opts: IHanldeStateOptions) {
 
   // start execute compute/watch fns
   allAsyncFnKeys.forEach((fnKey) => fnDep.markComputing(fnKey, runCountStats[fnKey]));
-  allFirstLevelFnKeys.forEach((fnKey) => fnDep.runFn(fnKey, { forAtom, updateReasons: triggerReasons }));
+  allFirstLevelFnKeys.forEach((fnKey) => fnDep.runFn(fnKey, { sn, forAtom, updateReasons: triggerReasons }));
 
   // start trigger watchers mutate cb
   const watchers = getWatchers(sharedState);
@@ -403,11 +407,10 @@ function execDepFnAndInsUpdater(state: Dict, opts: IHanldeStateOptions) {
     });
   }
 
-  const renderSN = getRenderSN();
   const updateIns = (insCtxMap: InsCtxMap, insKey: number) => {
     const insCtx = insCtxMap.get(insKey) as InsCtxDef;
     if (insCtx) {
-      insCtx.renderSN = renderSN;
+      insCtx.renderInfo.sn = sn;
       runInsUpdater(insCtx, state);
     }
   };
@@ -423,10 +426,7 @@ function execDepFnAndInsUpdater(state: Dict, opts: IHanldeStateOptions) {
 interface IHanldeStateOptions extends ISetStateOptions {
   state: Dict;
   internal: TInternal;
-  depKeys: string[];
-  ids: string[];
-  globalIds: string[];
-  triggerReasons: TriggerReason[];
+  mutateCtx: IMutateCtx;
   forAtom: boolean;
   sharedState: SharedState;
   desc?: any;
@@ -434,11 +434,11 @@ interface IHanldeStateOptions extends ISetStateOptions {
 }
 
 function handleState(opts: IHanldeStateOptions) {
-  const { state, internal, extraDeps, excludeDeps, depKeys } = opts;
+  const { state, internal } = opts;
   const { rawState } = internal;
   Object.assign(rawState, state);
   if (internal.isDeep) {
-    // now state is a structurally shared obj generated by limu
+    // now state is a structural sharing obj generated by limu
     internal.rawStateSnap = state;
   } else {
     if (internal.shouldSync) {
@@ -446,8 +446,8 @@ function handleState(opts: IHanldeStateOptions) {
     }
     internal.rawStateSnap = { ...rawState };
   }
-  interveneDeps({ internal, depKeys, add: true, fn: extraDeps });
-  interveneDeps({ internal, depKeys, add: false, fn: excludeDeps });
+  interveneDeps(true, opts);
+  interveneDeps(false, opts);
   execDepFnAndInsUpdater(state, opts);
 }
 
@@ -463,18 +463,13 @@ interface IHandleDeepMutateOpts extends ISetStateOptions {
  */
 export function handleDeepMutate(opts: IHandleDeepMutateOpts) {
   const { internal } = opts;
-  const { writeKey2Ids, rawState, writeKey2GlobalIds } = internal;
+  const { rawState } = internal;
 
-  const depKeys: string[] = [];
-  const triggerReasons: TriggerReason[] = [];
-  const ids: string[] = [];
-  const globalIds: string[] = [];
-  const writeKeys: Dict = {};
-  const writeKeyPathInfo: Dict<TriggerReason> = {};
-  const handleOpts = { state: {}, depKeys, ids, globalIds, triggerReasons, ...opts };
+  const mutateCtx = getMutateCtx();
+  const handleOpts = { state: {}, mutateCtx, ...opts };
   const draft = createDraft(rawState, {
     onOperate(opParams) {
-      handleOperate(opParams, { internal, ids, globalIds, writeKeys, writeKeyPathInfo, writeKey2Ids, writeKey2GlobalIds });
+      handleOperate(opParams, { internal, mutateCtx });
     },
   });
 
@@ -482,16 +477,16 @@ export function handleDeepMutate(opts: IHandleDeepMutateOpts) {
     draft,
     // customOptions 是为了方便 sharedState 链里的 mutate 回调里提供一个 setOptions 句柄让用户有机会定义 setStateOptions 控制一些额外的行为
     finishMutate(partial?: Dict, customOptions?: IInnerSetStateOptions) {
+      const { writeKeys, writeKeyPathInfo } = mutateCtx;
       // 把深依赖和迁依赖收集到的keys合并起来
       if (isObj(partial)) {
         Object.keys(partial).forEach((key) => {
-          nodupPush(depKeys, key);
-          draft[key] = partial[key];
+          draft[key] = partial[key]; // 触发 writeKeys 里记录当前变化key
         });
       }
-      handleOpts.depKeys = Object.keys(writeKeys);
+      mutateCtx.depKeys = Object.keys(writeKeys);
       handleOpts.state = finishDraft(draft); // a structurally shared state generated by limu
-      handleOpts.triggerReasons = Object.values(writeKeyPathInfo);
+      mutateCtx.triggerReasons = Object.values(writeKeyPathInfo);
       Object.assign(handleOpts, customOptions);
       handleState(handleOpts);
 
@@ -512,19 +507,14 @@ interface IHandleNormalMutateOpts extends ISetStateOptions {
  */
 export function handleNormalMutate(opts: IHandleNormalMutateOpts) {
   const { internal } = opts;
-  const { rawState, sharedKey, moduleName, writeKey2Ids, writeKey2GlobalIds } = internal;
+  const { rawState, sharedKey, moduleName } = internal;
   const newPartial: Dict = {};
   const mayChangedKeys: string[] = [];
 
-  const depKeys: string[] = [];
-  const triggerReasons: TriggerReason[] = [];
-  const ids: string[] = [];
-  const globalIds: string[] = [];
-  const writeKeys: Dict = {};
-  const writeKeyPathInfo: Dict<TriggerReason> = {};
-  const handleOpts = { state: {}, depKeys, ids, globalIds, triggerReasons, ...opts };
+  const mutateCtx = getMutateCtx();
+  const handleOpts = { state: {}, mutateCtx, ...opts };
   const handleValueChange = (key: string, value: any) => {
-    handleOperate(genOpParams(key, value), { internal, ids, globalIds, writeKeys, writeKeyPathInfo, writeKey2Ids, writeKey2GlobalIds });
+    handleOperate(genOpParams(key, value), { internal, mutateCtx });
   };
 
   // 为了和 deep 模式下返回的 setState 保持行为一致
@@ -535,7 +525,12 @@ export function handleNormalMutate(opts: IHandleNormalMutateOpts) {
       return true;
     },
     get: (target: Dict, key: any) => {
-      mayChangedKeys.push(key);
+      const value = target[key];
+      // 用户可能在非deep模式下直接修改深层次路径的值： state.a.b = 1
+      // 但 get 只能拦截到第一层，故这记录到 mayChangedKeys 里
+      if (isObj(value)) {
+        mayChangedKeys.push(key);
+      }
       return has(newPartial, key) ? newPartial[key] : target[key];
     },
   });
@@ -571,9 +566,10 @@ export function handleNormalMutate(opts: IHandleNormalMutateOpts) {
         handleValueChange(key, newPartial[key]);
       });
 
+      const { depKeys, triggerReasons } = mutateCtx;
       Object.keys(newPartial).forEach((key) => {
         const depKey = prefixValKey(key, sharedKey);
-        depKeys.push(depKey);
+        nodupPush(depKeys, depKey);
         triggerReasons.push({ sharedKey, moduleName, keyPath: [depKey] });
       });
       handleOpts.state = newPartial;
@@ -592,7 +588,7 @@ function bindInternalToShared(sharedState: SharedState, heluxParams: IHeluxParam
   const key2InsKeys: KeyInsKeysDict = {};
   // id --> insKeys
   const id2InsKeys: KeyInsKeysDict = {};
-  const { writeKey2Ids, writeKey2GlobalIds } = parseRules(heluxParams);
+  const ruleConf = parseRules(heluxParams);
   const isDeep = canUseDeep(deep);
 
   const setStateImpl = (partialState: any, options: ISetStateOptions = {}) => {
@@ -640,8 +636,7 @@ function bindInternalToShared(sharedState: SharedState, heluxParams: IHeluxParam
     insCtxMap,
     key2InsKeys,
     id2InsKeys,
-    writeKey2Ids,
-    writeKey2GlobalIds,
+    ruleConf,
     isDeep,
     mutate,
     watch,
@@ -650,16 +645,9 @@ function bindInternalToShared(sharedState: SharedState, heluxParams: IHeluxParam
   bindInternal(sharedState, internal);
 }
 
-export function setShared(sharedList: Dict[]) {
-  sharedList.forEach((shared) => mapDepStats(getSharedKey(shared)));
-}
-
-export function getDepStats() {
-  const curDepStats = depStats;
-  depStats = {};
-  return curDepStats;
-}
-
+/**
+ * 创建共享对象
+ */
 export function buildSharedObject<T extends Dict = Dict>(stateOrStateFn: T | (() => T), options: IInnerCreateOptions) {
   const rawState = parseRawState(stateOrStateFn);
   const heluxParams = getHeluxParams(rawState, options);

@@ -1,6 +1,6 @@
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 
-export const VER = '3.0.6';
+export const VER = '3.0.7';
 
 export { HAS_SYMBOL };
 

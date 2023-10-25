@@ -1,5 +1,5 @@
 import { ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
-import { isAtomProxy } from '../../factory/common/util';
+import { isAtomProxy } from '../../factory/common/scope';
 import { createDerivedAsyncLogic, createDerivedLogic, createDerivedTaskLogic } from '../../factory/createDerived';
 import { delFnCtx, getFnCtxByObj } from '../../helpers/fndep';
 import { attachInsDerivedResult } from '../../helpers/ins';

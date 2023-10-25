@@ -1,7 +1,8 @@
 import { limuUtils } from 'limu';
-import { atom, createShared, derive, deriveAsync, deriveAtom, deriveAtomAsync, deriveAtomTask, deriveTask, share, watch } from './factory';
+// prettier-ignore
 import './factory/root';
-import * as advance from './helpers/advance';
+// prettier-ignore
+import { atom,createShared,derive,deriveAsync,deriveAtom,deriveAtomAsync,deriveAtomTask,deriveTask,share,watch } from './factory';
 import { runDerive } from './helpers/fndep';
 import { getRawState, getRawStateSnap } from './helpers/state';
 import { useAtomDerived, useAtomDerivedAsync, useAtomDerivedTask, useDerived, useDerivedAsync, useDerivedTask } from './hooks/useDerived';
@@ -31,7 +32,6 @@ export {
   watch,
   runDerive,
   createShared,
-  advance,
   useAtom,
   useShared,
   // use derived state

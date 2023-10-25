@@ -14,6 +14,8 @@ export type Ext<T extends Dict = Dict> = T & { [key: string]: any };
 
 export type EenableReactive = ICreateOptionsFull['enableReactive'];
 
+export type KeyBoolDict = Record<string, boolean>;
+
 export type KeyIdsDict = Record<string, NumStrSymbol[]>;
 
 export type KeyInsKeysDict = Record<NumStrSymbol, number[]>;
@@ -146,17 +148,22 @@ export interface ICreateOptionsFull<T extends Dict = Dict, W extends SharedState
    */
   rules: {
     /**
-     * 当这些数据节点发生变化时
+     * 当这些数据节点发生变化时和被读取时，对应的各种行为
      */
     when: (state: T) => any | void;
     /**
-     * 需要触发重渲染的和共享状态绑定关系的 id 对应的组件（ id 可在调用 useShared 时可设定 ）
+     * 变化时，需要触发重渲染的和共享状态绑定关系的 id 对应的组件（ id 可在调用 useShared 时可设定 ）
      */
     ids?: NumStrSymbol[];
     /**
-     * 需要触发重渲染的全局 id 对应的组件（ id 可在调用 useShared 或 useGlobalId 时可设定 ）
+     * 变化时，需要触发重渲染的全局 id 对应的组件（ id 可在调用 useShared 或 useGlobalId 时可设定 ）
      */
     globalIds?: NumStrSymbol[];
+    /**
+     * defatul: false，表示不停止收集依赖
+     * 读取时，是否依赖收集值停留到当前这一层，对应数组来说，停留在当前key+index，对于对象来说，停留在当前key
+     */
+    stopDep?: boolean;
   }[];
   /**
    * 监听别的由 share 或 atom 生成的共享对象的变化
@@ -176,8 +183,12 @@ export interface ICreateOptionsFull<T extends Dict = Dict, W extends SharedState
    * ```
    */
   enableReactive: boolean;
-
-  /** default: false，直接读取 sharedObj 时是否记录依赖，目前用于满足 helux-solid 库的需要，enableReactive 为 true 时 ，设置此参数才有意义 */
+  /**
+   * @deprecated
+   * 目前此特性暂未实现
+   * default: false，直接读取 sharedObj 时是否记录依赖，目前用于满足 helux-solid 库的需要，
+   * enableReactive 为 true 时 ，设置此参数才有意义
+   */
   enableRecordDep: boolean;
   /**
    * default: false，是否对传入进来的 obj 做浅拷贝
@@ -233,6 +244,11 @@ export interface IUseSharedOptions<T extends Dict = Dict> {
    * 此 id 也可以通过 useGlobalId 设定
    */
   globalId?: NumStrSymbol;
+  /**
+   * @deprecated
+   * default: false，
+   * 这个特性可能移除，和现有流程不匹配
+   */
   enableReactive?: boolean;
 }
 
@@ -361,6 +377,7 @@ export interface IFnCtx {
   prevLevelFnKeys: string[];
   /** 未挂载 已挂载 已卸载 */
   mountStatus: MountStatus;
+  /** 依赖的 valKey 集合 */
   depKeys: string[];
   /** 依赖的共享状态集合 */
   depSharedKeys: number[];
@@ -401,6 +418,17 @@ export interface IFnCtx {
   isAsyncTransfer: boolean;
   asyncType: AsyncType;
   subscribe: Fn;
+  renderInfo: IRenderInfo;
+}
+
+export interface IRenderInfo {
+  /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
+  sn: number;
+  /**
+   * 获取当前组件的依赖列表，通常需要再 useEffect 里调用能获取当前渲染收集的依赖，
+   * 如在渲染过程中直接调用获取的是前一次渲染收集的依赖
+   */
+  getDeps: () => string[];
 }
 
 export interface IInsCtx<T extends Dict = Dict> {
@@ -436,8 +464,7 @@ export interface IInsCtx<T extends Dict = Dict> {
   canCollect: boolean;
   /** 是否有静态依赖 */
   hasStaticDeps: boolean;
-  /** 记录渲染批次序号 */
-  renderSN: number;
+  renderInfo: IRenderInfo;
 }
 
 export type InsCtxMap = Map<number, IInsCtx>;
@@ -465,7 +492,11 @@ export interface IHeluxParams {
   createOptions: IInnerCreateOptions;
 }
 
-export interface RenderInfo {
-  /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
-  renderSN: number;
+export interface IRuleConf {
+  idsDict: KeyIdsDict;
+  globalIdsDict: KeyIdsDict;
+  stopDepInfo: {
+    keys: string[];
+    isArrDict: KeyBoolDict;
+  };
 }
