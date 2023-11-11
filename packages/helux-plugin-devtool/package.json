@@ -1,0 +1,54 @@
+{
+  "name": "helux-plugin-devtool",
+  "version": "3.0.2",
+  "description": "devtool for helux",
+  "bugs": {
+    "url": "https://github.com/heluxjs/helux/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heluxjs/helux",
+    "directory": "packages/helux"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "fantasticsoul",
+    "email": "624313307@qq.com",
+    "url": "https://github.com/fantasticsoul"
+  },
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "index.d.ts",
+  "files": [
+    "dist",
+    "lib",
+    "es",
+    "src",
+    "index.d.ts",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
+    "build:es": "rollup -c --environment BUILD_ENV:es",
+    "build:umd": "rollup -c --environment BUILD_ENV:development",
+    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "helux": "^3.0.7",
+    "redux": "^4.2.1"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.12.11",
+    "babel-cli": "^6.26.0",
+    "rollup": "^2.23.0"
+  },
+  "peerDependencies": {
+    "helux": "^3.0.7",
+    "redux": "^4.2.1"
+  },
+  "bundleDependencies": false,
+  "deprecated": false
+}

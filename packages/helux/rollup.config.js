@@ -41,6 +41,8 @@ const config = {
     globals: {
       react: 'React',
       'react-dom': 'ReactDOM',
+      limu: 'limu',
+      'helux-core': 'HeluxCore',
     },
   },
   plugins: [

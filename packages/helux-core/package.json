@@ -1,0 +1,52 @@
+{
+  "name": "helux-core",
+  "version": "3.0.19",
+  "description": "A state library core that integrates atom, signal, collection dep, derive and watch, it supports all react like frameworks.",
+  "bugs": {
+    "url": "https://github.com/heluxjs/helux/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heluxjs/helux",
+    "directory": "packages/helux"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "fantasticsoul",
+    "email": "624313307@qq.com",
+    "url": "https://github.com/fantasticsoul"
+  },
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "index.d.ts",
+  "files": [
+    "dist",
+    "lib",
+    "es",
+    "src",
+    "index.d.ts",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
+    "build:es": "rollup -c --environment BUILD_ENV:es",
+    "build:umd": "rollup -c --environment BUILD_ENV:development",
+    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "limu": "^3.7.3"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.12.11",
+    "babel-cli": "^6.26.0",
+    "rollup": "^2.23.0"
+  },
+  "peerDependencies": {
+    "limu": "^3.7.3"
+  },
+  "bundleDependencies": false,
+  "deprecated": false
+}

@@ -1,9 +1,0 @@
-{
-  "short_name": "Remote React Comp",
-  "name": "Create Remote React Comp With hel-micro",
-  "icons": [],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
-}

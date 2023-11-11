@@ -31,14 +31,9 @@
     "@docusaurus/types": "^2.4.1",
     "@jest/transform": "29",
     "@types/node": ">=12.0.0",
-    "@types/react": "^16.8.0",
-    "@types/react-dom": "^16.8.0",
     "helux": "workspace:*",
-    "helux-devtool": "workspace:*",
-    "limu": "^3.5.5",
-    "react": "^16.8.0",
-    "react-dom": "^16.8.0",
-    "react-is": "^18.2.0"
+    "helux-core": "workspace:*",
+    "limu": "^3.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",
