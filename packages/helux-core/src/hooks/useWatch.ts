@@ -24,7 +24,7 @@ export function useWatch(watchFn: Fn, options: WatchOptionsType) {
       if (fnCtx.mountStatus === MOUNTED) {
         fnRef.current(params);
       }
-    };
+    }
     createWatchLogic(fnWrapRef.current, { scopeType: SCOPE_TYPE.HOOK, fnCtxBase: fnCtx, deps, immediate });
   }
 
@@ -35,4 +35,5 @@ export function useWatch(watchFn: Fn, options: WatchOptionsType) {
       delFnCtx(fnCtx);
     };
   }, [fnCtx]);
+
 }

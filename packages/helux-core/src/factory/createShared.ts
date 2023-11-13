@@ -1,13 +1,33 @@
-import { FROM, STATE_TYPE } from '../consts';
-import { useAtom, useShared } from '../hooks/useShared';
-import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, ISharedCtx } from '../types';
-import { action, actionAsync, atomAction, atomActionAsync } from './createAction';
-import { buildSharedObject } from './creator';
-import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
+import { useShared, useAtom } from '../hooks/useShared';
+import type { Dict, Fn, IAtomCtx, ICreateOptions, IAtomCreateOptions, ISharedCtx, SharedState } from '../types';
 import { initGlobalLoading, initLoadingCtx } from './creator/loading';
+import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
+import { buildSharedObject } from './creator';
 import type { IInnerOptions } from './creator/parse';
+import { action, actionAsync, atomAction, atomActionAsync } from './createAction';
+import { mutate, atomMutate } from './createMutate';
+import { STATE_TYPE, FROM } from '../consts';
 
 const { USER_STATE } = STATE_TYPE;
+const { MUTATE, ACTION } = FROM;
+
+function getFns(state: any, forAtom: boolean) {
+  if (forAtom) {
+    return {
+      useFn: useAtom,
+      actionCreator: atomAction(state),
+      asyncActionCreator: atomActionAsync(state),
+      mutateCreator: atomMutate(state),
+    };
+  }
+  return {
+    useFn: useShared,
+    actionCreator: action(state),
+    asyncActionCreator: actionAsync(state),
+    mutateCreator: mutate(state),
+  };
+}
+
 
 export function ensureGlobal(inputStateType?: string) {
   const stateType = inputStateType || USER_STATE;
@@ -21,15 +41,14 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   ensureGlobal(innerOptions.stateType);
   const { sharedState: state, internal } = buildSharedObject(innerOptions, createOptions);
   const { syncer, sync, forAtom, setDraft: setState } = internal;
-  const useFn: any = forAtom ? useAtom : useShared;
-  const actionCreator = forAtom ? atomAction(state) : action(state);
-  const asyncActionCreator = forAtom ? atomActionAsync(state) : actionAsync(state);
-  const { getLoading: getMutateLoading, useLoading: useMutateLoading } = initLoadingCtx(createSharedLogic, internal, FROM.MUTATE);
-  const { getLoading: getActionLoading, useLoading: useActionLoading } = initLoadingCtx(createSharedLogic, internal, FROM.ACTION);
+  const { useFn, actionCreator, asyncActionCreator, mutateCreator } = getFns(state, forAtom);
+  const { getLoading: getMutateLoading, useLoading: useMutateLoading } = initLoadingCtx(createSharedLogic, internal, MUTATE);
+  const { getLoading: getActionLoading, useLoading: useActionLoading } = initLoadingCtx(createSharedLogic, internal, ACTION);
 
   return {
     state,
     setState,
+    mutate: mutateCreator,
     action: actionCreator,
     asyncAction: asyncActionCreator,
     call: (fn: Fn, ...args: any[]) => actionCreator(fn)(...args),
@@ -46,16 +65,14 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
 
 /** expose share ctx as object */
 export function shareState<T = Dict, O extends ICreateOptions<T> = ICreateOptions<T>>(
-  rawState: T | (() => T),
-  options?: O,
+  rawState: T | (() => T), options?: O,
 ): ISharedCtx<T, O> {
   return createSharedLogic({ rawState }, options);
 }
 
 /** expose atom ctx as object */
 export function shareAtom<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>>(
-  rawState: any | (() => any),
-  options?: O,
+  rawState: any | (() => any), options?: O,
 ): IAtomCtx<T, O> {
   return createSharedLogic({ rawState, forAtom: true }, options);
 }

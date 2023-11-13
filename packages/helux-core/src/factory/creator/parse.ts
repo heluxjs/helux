@@ -1,26 +1,33 @@
 import { immut } from 'limu';
-import { FROM, LOADING_MODE, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
 import type {
-  AtomMutateFnItem,
   Dict,
   ICreateOptions,
   IInnerCreateOptions,
   IRuleConf,
-  IRunMutateOptions,
-  ISetStateOptions,
   KeyBoolDict,
   KeyIdsDict,
-  MutateFn,
-  MutateFnItem,
   NumStrSymbol,
-  WatchDepFn,
+  MutateFn,
+  MutateFnLooseItem,
+  MutateFnItem,
+  AtomMutateFnLooseItem,
+  AtomMutateFnItem,
+  AtomMutateFn,
+  MutateFnStdDict,
+  AtomMutateFnStdDict,
+  ISetStateOptions,
+  IRunMutateOptions,
   WatchOptionsType,
+  WatchDepFn,
+  MutateFnStdItem,
+  AtomMutateFnStdItem,
 } from '../../types';
-import { canUseDeep, isFn, isObj, nodupPush, noop, safeGet, setNoop } from '../../utils';
-import { genFnKey } from '../common/key';
+import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeGet, setNoop, getVal } from '../../utils';
 import { getDepKeyByPath, tryGetLoc } from '../common/util';
+import { genFnKey } from '../common/key';
+import { SINGLE_MUTATE, LOADING_MODE, STATE_TYPE, STOP_DEPTH, STOP_ARR_DEP, FROM } from '../../consts';
 
 export interface IInnerOptions<T = any> {
   rawState: T | (() => T);
@@ -64,36 +71,42 @@ export function parseRawState(innerOptions: IInnerOptions) {
 export function parseDesc(fnKey: any, itemDesc?: any) {
   const desc = fnKey || itemDesc || genFnKey(FROM.MUTATE);
   return desc;
+};
+
+export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dict) {
+  let validItem: MutateFnStdItem | AtomMutateFnStdItem | null = null;
+  let desc = inputDesc || '';
+  if (isFn(fnItem) && fnItem !== noop) {
+    validItem = { fn: fnItem, deps: noopArr, desc, realDesc: desc };
+  } else if (isObj(fnItem)) {
+    const { fn, desc, deps, task, immediate = false } = fnItem;
+    const descVar = inputDesc || desc || '';
+    const fnVar = isFn(fn) ? fn : undefined;
+    const taskVar = isFn(task) ? task : undefined;
+    const depsVar = isFn(deps) ? deps : noopArr;
+    if (fn || task) {
+      validItem = { fn: fnVar, desc: descVar, realDesc: descVar, deps: depsVar, task: taskVar, immediate };
+    }
+  }
+
+  if (validItem && cachedDict) {
+    const { desc } = validItem;
+    if (!desc || cachedDict[desc]) {
+      validItem.realDesc = genFnKey(FROM.MUTATE);
+    }
+    cachedDict[validItem.realDesc] = validItem;
+  }
+
+  return validItem;
 }
 
 /**
- * 解析伴随创建share对象时配置的 mutate 对象
+ * 解析伴随创建share对象时配置的 mutate 对象，如果传入已存在字典则写入
  */
-function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null) {
-  const mutateFns: Array<MutateFnItem | AtomMutateFnItem> = []; // 额外存一份数组结构，方便后续遍历
-  const mutateFnDict: Dict<MutateFnItem | AtomMutateFnItem> = {};
-  const handleItem = (item: MutateFnItem | MutateFn, inputDesc?: string) => {
-    let fnItem: MutateFnItem | AtomMutateFnItem | null = null;
-    let desc = inputDesc || '';
-    // 暂不考虑用户人为设置重复 desc 的问题
-    if (isFn(item)) {
-      if (item === noop) return;
-      fnItem = { fn: item, deps: noop, desc };
-    } else if (isObj(item)) {
-      if (item.fn === noop) return;
-      desc = inputDesc || item.desc || '';
-      const { fn = noop, deps = noop, task } = item;
-      fnItem = { fn, desc, deps, task };
-    }
-
-    if (fnItem) {
-      if (mutateFnDict[desc]) {
-        // TODO 开发环境提示用户 desc 重复
-        desc = genFnKey(FROM.MUTATE);
-      }
-      mutateFnDict[desc] = fnItem; // 原始 desc 暂存到 fnItem 上保持不变
-      mutateFns.push(fnItem);
-    }
+export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: MutateFnStdDict | AtomMutateFnStdDict) {
+  const mutateFnDict: MutateFnStdDict | AtomMutateFnStdDict = cachedDict || {};
+  const handleItem = (item: MutateFnLooseItem | MutateFn, inputDesc?: string) => {
+    parseMutateFn(item, inputDesc, mutateFnDict);
   };
 
   if (Array.isArray(mutate)) {
@@ -105,12 +118,12 @@ function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null) {
   } else if (isFn(mutate)) {
     handleItem(mutate, SINGLE_MUTATE); // 标记为单函数
   } else if (isObj(mutate)) {
-    Object.keys(mutate).forEach((key) => {
+    Object.keys(mutate).forEach(key => {
       handleItem(mutate[key], key);
     });
   }
 
-  return { mutateFns, mutateFnDict };
+  return mutateFnDict;
 }
 
 export function parseOptions(innerOptions: IInnerOptions, options: ICreateOptions = {}) {
@@ -130,7 +143,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const stopDepth = options.stopDepth || STOP_DEPTH;
   const usefulName = moduleName || `${sharedKey}`;
   const loc = tryGetLoc(moduleName);
-  const { mutateFnDict, mutateFns } = parseMutate(mutate);
+  const mutateFnDict = parseMutate(mutate);
 
   return {
     enableLoading,
@@ -147,7 +160,6 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     before,
     mutate,
     mutateFnDict,
-    mutateFns,
     stateType,
     loadingMode,
     stopArrDep,
@@ -252,6 +264,7 @@ export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions)
   }
   return { out, desc, strict, ...descOrOptions };
 }
+
 
 export function parseWatchOptions(options?: WatchOptionsType) {
   let deps: WatchDepFn = noop;

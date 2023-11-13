@@ -1,26 +1,18 @@
 import { react } from '../react';
 import type { Dict, Srv } from '../types';
 import type { MutableRefObject } from '../types-react';
-import { isFn } from '../utils';
 import { useEffect } from './useEffect';
+import { useStable } from './useStable';
+import { isFn, isObj } from '../utils';
 
 // 如 props 上存在 srvRef 函数，则暴露服务出去
-export function useExposeService(props: any, srv: any) {
-  const depArr: string[] = [];
-  Object.keys(props).forEach((key) => {
-    if (key !== 'srvRef') {
-      // 默认排除 srvRef 项的变化
-      depArr.push(props[key]);
-    }
-  });
-
+export function useExposeService(srv: any, mayProps?: any) {
+  const props = isObj(mayProps) ? mayProps : {};
   useEffect(() => {
     const { srvRef } = props;
-    if (isFn(srvRef)) {
-      srvRef?.(srv);
-    }
+    isFn(srvRef) && srvRef(srv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, depArr);
+  }, []);
 }
 
 export function uesStableDict<T = Dict>(dict: T) {
@@ -31,26 +23,12 @@ export function uesStableDict<T = Dict>(dict: T) {
   return () => dictRef.current;
 }
 
-export function useService<S = Dict, P = Dict, E = Dict>(serviceImpl: S, options?: { props?: P; extra?: E }) {
-  const { props = {} as P, extra = {} as E } = options || {};
-  const getProps = uesStableDict(props);
-  const getExtra = uesStableDict(extra);
-  // now srv's all method is stable
-  const srv = react.useMemo<Srv<S, P, E>>(
-    () => ({
-      ...serviceImpl,
-      inner: {
-        getExtra,
-        getProps,
-      },
-    }),
-    [],
-  );
-
-  useExposeService(props, srv);
+export function useService<T = any>(serviceImpl: T, props?: object) {
+  const srv = useStable(serviceImpl);
+  useExposeService(srv, props);
   return srv;
 }
 
 export function storeSrv(ref: MutableRefObject<any>) {
-  return <S extends Srv>(srv: S) => (ref.current = srv);
+  return <S extends Srv>(srv: S) => ref.current = srv;
 }

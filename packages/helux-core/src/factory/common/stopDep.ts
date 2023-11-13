@@ -1,7 +1,7 @@
+import { nodupPush, matchListItem } from '../../utils';
 import { KEY_SPLITER } from '../../consts';
 import type { IRuleConf } from '../../types';
 import type { DepKeyInfo, Level1ArrKeys } from '../../types-inner';
-import { matchListItem, nodupPush } from '../../utils';
 import { getDepKeyByPath } from './util';
 
 /**
@@ -17,6 +17,7 @@ function getArrIndexKey(confKey: string, fullKey: string) {
   const keys = restStr.split(KEY_SPLITER);
   return `${confKey}${KEY_SPLITER}${keys[0]}`;
 }
+
 
 /**
  * 辅助 stopDep 主逻辑之用
@@ -35,7 +36,7 @@ const cutCache = new Map<string, string>();
  */
 export function cutDepKeyByStop(
   depKeyInfo: DepKeyInfo,
-  options: { stopDepInfo: IRuleConf['stopDepInfo']; level1ArrKeys: Level1ArrKeys; recordCb: (key: string) => void },
+  options: { stopDepInfo: IRuleConf['stopDepInfo'], level1ArrKeys: Level1ArrKeys, recordCb: (key: string) => void },
 ) {
   let isKeyRerord = false;
   const { depKey, keyPath, sharedKey } = depKeyInfo;
@@ -66,7 +67,7 @@ export function cutDepKeyByStop(
         if (isGtDepth) {
           newDepKey = getDepKeyByPath(keyPath.slice(0, cutDepth), sharedKey);
         } else {
-          newDepKey = getArrIndexKey(mayArrKeyPrefix, depKey);
+          newDepKey = getArrIndexKey(mayArrKeyPrefix, depKey)
         }
       }
     }

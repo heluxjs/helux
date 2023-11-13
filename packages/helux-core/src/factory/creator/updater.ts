@@ -4,10 +4,10 @@ import { markComputing } from '../../helpers/fnStatus';
 import { runInsUpdater } from '../../helpers/insCtx';
 import type { Dict, InsCtxMap } from '../../types';
 import { dedupList } from '../../utils';
+import { getGlobalIdInsKeys, getGlobalEmptyInternal } from './globalId';
 import { genRenderSN } from '../common/key';
 import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';
-import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
 
 export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
   const { mutateCtx, internal } = opts;
@@ -48,7 +48,7 @@ export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
   allFirstLevelFnKeys = dedupList(allFirstLevelFnKeys);
   allAsyncFnKeys = dedupList(allAsyncFnKeys);
 
-  // start execute compute/watch fns
+  // start execute derive/watch fns
   allAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, triggerReasons }));
 

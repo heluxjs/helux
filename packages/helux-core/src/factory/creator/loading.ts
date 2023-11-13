@@ -1,11 +1,12 @@
-import { FROM, HELUX_GLOBAL_LOADING, LOADING_MODE, STATE_TYPE } from '../../consts';
-import { createOb } from '../../helpers/obj';
+import type { Dict, Fn, LoadingState, IRenderInfo, LoadingStatus, From } from '../../types';
 import { getInternal } from '../../helpers/state';
-import { useSharedLogic } from '../../hooks/common/useSharedLogic';
-import type { Dict, Fn, From, IRenderInfo, LoadingState, LoadingStatus } from '../../types';
-import { noop } from '../../utils';
+import { emitPluginEvent } from '../../factory/common/plugin';
+import { createOb } from '../../helpers/obj';
 import { getRootCtx } from '../root';
+import { noop } from '../../utils';
+import { HELUX_GLOBAL_LOADING, STATE_TYPE, LOADING_MODE, FROM, EVENT_NAME } from '../../consts';
 import type { TInternal } from './buildInternal';
+import { useSharedLogic } from '../../hooks/common/useSharedLogic';
 
 const { MUTATE } = FROM;
 const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
@@ -54,12 +55,14 @@ export function createLoading(createFn: Fn, leaderInternal: TInternal) {
   return loadingCtx.state;
 }
 
-export function setLoadStatus(interal: TInternal, statusKey: string, status: LoadingStatus) {
+export function setLoadStatus(internal: TInternal, statusKey: string, status: LoadingStatus) {
   if (!statusKey) return;
-  const { loadingInternal } = interal;
-  loadingInternal.setState((draft: any) => {
-    draft[statusKey] = status;
-  });
+  const { loadingInternal } = internal;
+  loadingInternal.setState((draft: any) => { draft[statusKey] = status });
+  if (status.err) {
+    emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err: status.err });
+    console.error(status.err);
+  }
 }
 
 /**
@@ -69,13 +72,12 @@ export function setLoadStatus(interal: TInternal, statusKey: string, status: Loa
  */
 export function createSafeLoading(extra: Dict, loading: any, from: From) {
   let safeLoading = extra[from];
-  if (!safeLoading) {
-    // 各种 from 场景对应的 safeLoading 最多只创建一次
+  if (!safeLoading) { // 各种 from 场景对应的 safeLoading 最多只创建一次
     safeLoading = createOb(loading, {
       get(target, key) {
         const realKey = `${from}/${key}`;
         return target[realKey] || { loading: false, ok: true, err: null };
-      },
+      }
     });
     extra[from] = safeLoading;
   }
@@ -110,7 +112,7 @@ export function getLoadingInfo(createFn: Fn, internal: TInternal, from: From = M
     }
   }
   return { loadingState, loadingProxy };
-}
+};
 
 /**
  * 初始化伴生的 loading 上下文

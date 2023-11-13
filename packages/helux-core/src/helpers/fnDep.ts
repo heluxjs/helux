@@ -23,7 +23,7 @@ export function recordFnDepKeys(
     // 因 mutate 里需要为自己重新赋值
     // 避免自己的 mutate 函数为自己收集，稍微不注意就会照成死循环
     // TODO: 如后期有需求，可删除此判断，允许同一个状态的不同值之间相互联动，但死循环后果需用户自己承担
-    return;
+    // return;
   }
 
   if (sharedKey) {

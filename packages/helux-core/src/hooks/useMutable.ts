@@ -1,6 +1,6 @@
-import { createDraft, finishDraft } from 'limu';
 import { react } from '../react';
-import type { PartialStateCb, PlainObject } from '../types';
+import { createDraft, finishDraft } from 'limu';
+import type { PlainObject, PartialStateCb } from '../types';
 import { isFn, isObj } from '../utils';
 import { useObjectLogic } from './useObject';
 
@@ -9,24 +9,21 @@ export function useMutable<T extends PlainObject>(initialState: T | (() => T)) {
   const stateRef = react.useRef(state);
   stateRef.current = state;
 
-  const setState = react.useCallback(
-    (partialStateOrCb: Partial<T> | PartialStateCb<T>) => {
-      const prevState = stateRef.current;
-      let final = prevState;
-      if (isFn(partialStateOrCb)) {
-        const draft = createDraft(prevState);
-        const mayPartial = partialStateOrCb(draft);
-        final = finishDraft(draft);
-        if (isObj(mayPartial)) {
-          Object.assign(final, mayPartial); // call assign is ok here, cause final is already a new state
-        }
-      } else if (isObj(partialStateOrCb)) {
-        final = { ...final, ...partialStateOrCb };
+  const setState = react.useCallback((partialStateOrCb: Partial<T> | PartialStateCb<T>) => {
+    const prevState = stateRef.current;
+    let final = prevState;
+    if (isFn(partialStateOrCb)) {
+      const draft = createDraft(prevState);
+      const mayPartial = partialStateOrCb(draft);
+      final = finishDraft(draft);
+      if (isObj(mayPartial)) {
+        Object.assign(final, mayPartial); // call assign is ok here, cause final is already a new state
       }
-      setFullState(final);
-    },
-    [stateRef],
-  );
+    } else if (isObj(partialStateOrCb)) {
+      final = { ...final, ...partialStateOrCb };
+    }
+    setFullState(final);
+  }, [stateRef]);
 
   return useObjectLogic(state, setState, true);
 }

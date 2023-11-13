@@ -1,6 +1,6 @@
-import { STATE_TYPE } from '../../consts';
 import { EVENT_NAME } from '../../consts/user';
-import { Fn, IInnerSetStateOptions, IPlugin, PluginCtx } from '../../types';
+import { STATE_TYPE } from '../../consts';
+import { Fn, Dict, IPlugin, PluginCtx, IInnerSetStateOptions } from '../../types';
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 
@@ -27,8 +27,7 @@ export function emitDataChanged(internal: TInternal, options: IInnerSetStateOpti
     const desc = options.desc || inputDesc || 'setState';
     const { sharedKey, moduleName, snap, usefulName, stateType } = internal;
     let type;
-    if (loadingTypes.includes(stateType)) {
-      // 来自伴生的 loading 状态调用
+    if (loadingTypes.includes(stateType)) { // 来自伴生的 loading 状态调用
       type = `${usefulName}/setState`;
     } else {
       type = `${usefulName}@${from || 'Api'}/${desc}`;
@@ -46,5 +45,13 @@ export function emitShareCreated(internal: TInternal) {
     const { snap, sharedKey, moduleName, usefulName } = internal;
     const type = `${usefulName}@FactoryApi/createShared`;
     bus.emit(ON_SHARE_CREATED, { snap, sharedKey, moduleName, type });
+  }
+}
+
+export function emitPluginEvent(internal: TInternal, evName: string, data: Dict) {
+  const { bus } = getRootCtx();
+  if (bus.canEmit(evName)) {
+    const { sharedKey, moduleName } = internal;
+    bus.emit(evName, { moduleName, sharedKey, data });
   }
 }

@@ -1,9 +1,13 @@
-import { SINGLE_MUTATE } from '../consts';
+import { callMutateFn, watchAndCallMutateDict } from './creator/mutateFn';
+import { parseCreateMutateOpt, parseDesc, parseMutateFn, parseMutate } from './creator/parse';
+import { checkShared, checkSharedStrict } from './common/check';
 import { getInternal } from '../helpers/state';
-import type { Atom, AtomMutateFnItem, IRunMutateOptions, MutateFnItem, SharedDict, SharedState } from '../types';
-import { checkShared } from './common/check';
-import { callMutateFn, configureMutateFns } from './creator/mutateFn';
-import { parseCreateMutateOpt, parseDesc } from './creator/parse';
+import type {
+  Fn, Dict, MutateFn, MutateFnLooseItem, AtomMutateFn, AtomMutateFnLooseItem, MutateFnDict,
+  SharedState, SharedDict, Atom, IRunMutateOptions, MutateFnStdDict, AtomMutateFnStdDict,
+  MutateFnStdItem, AtomMutateFnStdItem, AtomMutateFnDict, MutateWitness,
+} from '../types';
+import { SINGLE_MUTATE } from '../consts';
 
 interface ILogicOptions {
   label: string;
@@ -14,7 +18,7 @@ interface ILogicOptions {
 /**
  * 查找到配置到 mutate 函数并执行
  */
-function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?: boolean }) {
+function runMutateFnItem(options: { target: SharedState, desc?: string, forTask?: boolean }) {
   const { target, desc: inputDesc = '', forTask = false } = options;
   const { mutateFnDict, snap } = getInternal(target);
   const desc = inputDesc || SINGLE_MUTATE; // 未传递任何描述，尝试调用可能存在的单函数
@@ -28,27 +32,55 @@ function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?
   return callMutateFn(target, { ...item, forTask });
 }
 
-/** 如用户未显式指定 desc，会自动生成一个，辅助 runMutateFn 之用，当前阶段不考虑 desc 重复问题，需用户自己保证 */
-function injectDesc(fnItem: MutateFnItem | AtomMutateFnItem) {
-  const desc = parseDesc(fnItem.desc);
-  return { ...fnItem, desc };
+function makeWitness(target: SharedState, desc: string, realDesc: string) {
+  return {
+    call: () => runMutateFnItem({ target, desc: realDesc }), // 呼叫同步函数的句柄
+    callTask: () => runMutateFnItem({ target, desc: realDesc, forTask: true }), // 呼叫异步函数的句柄
+    desc,
+    realDesc,
+  };
+}
+
+interface IConfigureMutateFnOptBase {
+  target: SharedState;
+  forAtom?: boolean;
+  label: string;
+}
+
+interface IConfigureMutateFnOpt extends IConfigureMutateFnOptBase {
+  fnItem: MutateFnLooseItem | AtomMutateFnLooseItem | MutateFn | AtomMutateFn;
+}
+
+interface IConfigureMutateDictOpt extends IConfigureMutateFnOptBase {
+  fnDict: any; // 刻意擦除类型，适配 atomMutateDict 逻辑
 }
 
 /**
  * 创建一个外部执行的 mutate 函数（ 即不定义在生成 share 或 atom 时的 options 参数里，生成后再定义 mutate 函数 ）
  */
-function configureMutateFn(options: { target: SharedState; fnItem: MutateFnItem | AtomMutateFnItem; forAtom?: boolean; label: string }) {
+function configureMutateFn(options: IConfigureMutateFnOpt) {
   const { target, fnItem, forAtom = false, label } = options;
-  checkShared(target, { forAtom, label, strict: true });
-  const withDescFn = injectDesc(fnItem);
-  configureMutateFns({ target, fns: [withDescFn], isOut: true });
-  const realDesc = withDescFn.desc;
-  return {
-    call: () => runMutateFnItem({ target, desc: realDesc }), // 呼叫同步函数的句柄
-    callTask: () => runMutateFnItem({ target, desc: realDesc, forTask: true }), // 呼叫异步函数的句柄
-    realDesc,
-    desc: fnItem.desc || '',
-  };
+  const internal = checkSharedStrict(target, { forAtom, label });
+  const stdFnItem = parseMutateFn(fnItem, '', internal.mutateFnDict);
+  if (!stdFnItem) {
+    throw new Error('not a fn or fnItem { fn }');
+  }
+  const dict = { [stdFnItem.realDesc]: stdFnItem };
+  watchAndCallMutateDict({ target, dict });
+  return makeWitness(target, stdFnItem.desc, stdFnItem.realDesc);
+}
+
+/**
+ * 配置 mutate 字典，暂返回 any，具体约束见 types-api multiDict
+ */
+function configureMutateDict(options: IConfigureMutateDictOpt): any {
+  const { target, fnDict, forAtom = false, label } = options;
+  const internal = checkSharedStrict(target, { forAtom, label });
+  const dict = parseMutate(fnDict, internal.mutateFnDict); // trust dict here
+  watchAndCallMutateDict({ target, dict });
+  const witnessDict: Dict<MutateWitness> = {}; // 具体类型定义见 types-api multiDict
+  Object.keys(dict).forEach(desc => { witnessDict[desc] = makeWitness(target, desc, desc) });
+  return witnessDict;
 }
 
 /**
@@ -94,8 +126,15 @@ export function runMutateTask<T extends SharedState>(target: T, descOrOptions?: 
  * 为 shared 创建一个 mutate 函数，如需创建异步计算结果，配置 task 即可
  * 更详细的泛型定义见 types-api.d.ts
  */
-export function mutate(target: SharedDict) {
-  return (fnItem: MutateFnItem<any, any>) => configureMutateFn({ target, fnItem, label: 'mutate' });
+export function mutate(target: SharedState) {
+  return (fnItem: MutateFnLooseItem<any, any> | MutateFn<any, any>) => configureMutateFn({ target, fnItem, label: 'mutate' });
+}
+
+/**
+ * 为 shared 创建多个 mutate 函数，接收一个字典配置来完成多函数配置，更详细的泛型定义见 types-api.d.ts
+ */
+export function mutateDict<T extends SharedDict>(target: T) {
+  return <D = MutateFnDict<T>>(fnDict: D) => configureMutateDict({ target, fnDict, label: 'mutateDict' });
 }
 
 /**
@@ -103,5 +142,9 @@ export function mutate(target: SharedDict) {
  * 更详细的泛型定义见 types-api.d.ts
  */
 export function atomMutate(target: Atom) {
-  return (fnItem: AtomMutateFnItem<any, any>) => configureMutateFn({ target, fnItem, label: 'atomMutate', forAtom: true });
+  return (fnItem: AtomMutateFnLooseItem<any, any> | AtomMutateFn<any, any>) => configureMutateFn({ target, fnItem, label: 'atomMutate', forAtom: true });
+}
+
+export function atomMutateDict(target: Atom) {
+  return (fnDict: AtomMutateFnDict) => configureMutateDict({ target, fnDict, label: 'atomMutateDict' });
 }

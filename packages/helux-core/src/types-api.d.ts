@@ -5,66 +5,70 @@
 | it supports all react like frameworks.
 |------------------------------------------------------------------------------------------------
 */
-import type { IProduce, LimuUtils } from 'limu';
+import type { LimuUtils, IProduce } from 'limu';
 import type {
-  Action,
-  ActionFnDef,
-  AsyncAction,
-  AsyncActionFnDef,
+  TriggerReason,
+  ChangeDraftCb,
+  Fn,
   Atom,
-  AtomAction,
-  AtomActionFnDef,
-  AtomAsyncAction,
-  AtomAsyncActionFnDef,
-  AtomMutateFnItem,
   AtomValType,
   BlockComponent,
   BlockStatusComponent,
   BlockStatusProps,
-  ChangeDraftCb,
+  ICreateOptions,
+  IAtomCreateOptions,
+  ISharedCtx,
+  IAtomCtx,
   DeriveAtomFn,
   DerivedAtom,
   DerivedDict,
   DeriveDictFn,
   Dict,
   EffectCb,
-  Fn,
-  IAtomCreateOptions,
-  IAtomCtx,
   IBlockOptions,
-  ICreateOptions,
-  IDeriveAsyncOptions,
-  IDeriveAtomAsyncOptions,
-  IDeriveAtomFnParams,
   IDeriveFnParams,
   IPlugin,
   IRenderInfo,
-  IRunMutateOptions,
-  ISharedCtx,
   IUseSharedOptions,
   IWatchFnParams,
-  LoadingNone,
-  LoadingState,
-  LoadingStatus,
   Middleware,
-  MutateFnItem,
-  MutateWitness,
   NumStrSymbol,
-  Off,
-  PartialStateCb,
   PlainObject,
-  ReadOnlyArr,
-  SafeLoading,
   SetAtom,
   SetState,
   SharedDict,
   SharedState,
   SingalVal,
-  Srv,
-  TriggerReason,
   WatchOptionsType,
+  PartialStateCb,
+  ActionFnDef,
+  Action,
+  AsyncActionFnDef,
+  AsyncAction,
+  AtomActionFnDef,
+  AtomAction,
+  AtomAsyncActionFnDef,
+  AtomAsyncAction,
+  LoadingNone,
+  LoadingStatus,
+  IDeriveAsyncOptions,
+  IDeriveAtomAsyncOptions,
+  MutateFnLooseItem,
+  AtomMutateFnLooseItem,
+  MutateFn,
+  AtomMutateFn,
+  ReadOnlyArr,
+  MutateWitness,
+  IDeriveAtomFnParams,
+  Srv,
+  IRunMutateOptions,
+  Off,
+  SafeLoading,
+  LoadingState,
+  MutateFnDict,
+  MutateFnItemDict,
 } from './types';
-import type { MutableRefObject, ReactNode } from './types-react';
+import type { ReactNode, MutableRefObject } from './types-react';
 
 export declare const EVENT_NAME: {
   ON_DATA_CHANGED: 'ON_DATA_CHANGED';
@@ -72,14 +76,14 @@ export declare const EVENT_NAME: {
 };
 
 export declare const LOADING_MODE: {
-  NONE: LoadingNone;
-  PRIVATE: 'PRIVATE';
-  GLOBAL: 'GLOBAL';
+  NONE: LoadingNone,
+  PRIVATE: 'PRIVATE',
+  GLOBAL: 'GLOBAL',
 };
 
 export declare const WAY: {
-  FIRST_RENDER: 'FIRST_RENDER';
-  EVERY_RENDER: 'EVERY_RENDER';
+  FIRST_RENDER: 'FIRST_RENDER',
+  EVERY_RENDER: 'EVERY_RENDER',
 };
 
 /**
@@ -173,6 +177,7 @@ interface IDeriveFnParams2<T = Dict, I extends readonly any[] = readonly any[]> 
   input: I;
 }
 
+
 /**
  * 支持异步导出的接口
  * ```ts
@@ -212,7 +217,12 @@ export function deriveAsync<T = PlainObject, I = readonly any[]>(options: {
    * fn: (params: IDeriveFnParams<T, I>) => T;
    * ```
    */
-  fn: (params: { isFirstCall: boolean; prevResult: T | null; triggerReasons: TriggerReason[]; input: I }) => T;
+  fn: (params: {
+    isFirstCall: boolean;
+    prevResult: T | null;
+    triggerReasons: TriggerReason[];
+    input: I;
+  }) => T;
   task: (params: IDeriveFnParams<T, I>) => Promise<T>;
   immediate?: boolean;
 }): T;
@@ -238,7 +248,12 @@ export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T)
  */
 export function deriveAtomAsync<T = any, I = readonly any[]>(options: {
   deps?: () => I;
-  fn: (params: { isFirstCall: boolean; prevResult: Atom<T> | null; triggerReasons: TriggerReason[]; input: I }) => T;
+  fn: (params: {
+    isFirstCall: boolean;
+    prevResult: Atom<T> | null;
+    triggerReasons: TriggerReason[];
+    input: I;
+  }) => T;
   task: (params: IDeriveAtomFnParams<T, I>) => Promise<T>;
   immediate?: boolean;
 }): Atom<T>;
@@ -267,7 +282,10 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: Wat
  * const [ obj, setObj ] = useShared(sharedObj);
  * ```
  */
-export function useShared<T = Dict>(sharedObject: T, IUseSharedOptions?: IUseSharedOptions<T>): [SharedDict<T>, SetState<T>, IRenderInfo];
+export function useShared<T = Dict>(
+  sharedObject: T,
+  IUseSharedOptions?: IUseSharedOptions<T>,
+): [SharedDict<T>, SetState<T>, IRenderInfo];
 
 /**
  * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
@@ -325,7 +343,10 @@ export function useGlobalId(globalId: NumStrSymbol): IRenderInfo;
  * @param compCtx
  * @param serviceImpl
  */
-export function useService<S = Dict, P = Dict, E = Dict>(serviceImpl: S, options?: { props?: P; extra?: E }): Srv<S, P, E>;
+export function useService<S = Dict, P = Dict, E = Dict>(
+  serviceImpl: S,
+  options?: { props?: P, extra?: E },
+): Srv<S, P, E>;
 
 export function storeSrv(ref: MutableRefObject<any>): void;
 
@@ -350,7 +371,10 @@ export function useEffect(cb: EffectCb, deps?: any[]): void;
  */
 export function useLayoutEffect(cb: EffectCb, deps?: any[]): void;
 
-export function useDerived<R = SharedDict>(resultOrFn: DerivedDict<R> | DeriveDictFn<R>): [R, LoadingStatus, IRenderInfo];
+export function useDerived<R = SharedDict>(
+  resultOrFn: DerivedDict<R> | DeriveDictFn<R>,
+): [R, LoadingStatus, IRenderInfo];
+
 
 export function useDerivedAsync<T = PlainObject, D = any[]>(options: IDeriveAsyncOptions<T, D>): [T, LoadingStatus, IRenderInfo];
 
@@ -371,9 +395,12 @@ export function useOnEvent(name: string, cb: Fn): void;
  * setState(draft => draft.a.a1 = Date.now()); // 使用回调方式修改draft
  * ```
  */
-export function useMutable<T extends PlainObject>(
-  initialState: T | (() => T),
-): [state: T, setDraft: (partialOrDraftCb: Partial<T> | ChangeDraftCb<T>) => void];
+export function useMutable<T extends PlainObject>(initialState: T | (() => T)): [
+  state: T,
+  setDraft: (partialOrDraftCb: Partial<T> | ChangeDraftCb<T>) => void,
+];
+
+export function useStable<T = any>(data: T): T;
 
 /**
  * default: GlobalLoading，
@@ -434,16 +461,19 @@ export function runMutateTask<T extends SharedState>(target: T, descOrOptions?: 
  * 外部为 shared 创建一个 mutate 函数，不定义在 share 接口的 options 参数里，生成 shared 后再对其定义 mutate 函数
  * 此处采用柯里化风格api，可拥有更好的类型编码提示，会自动把 deps 类型映射到 task 函数的回调函数的 input 参数上
  */
-export function mutate<T extends SharedDict>(
-  target: T,
-): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnItem<T, A>) => MutateWitness<T>;
+export function mutate<T extends SharedDict>(target: T)
+  : <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
+
+// export function mutateDict<T extends SharedDict>(target: T)
+//   : <D = MutateFnDict<T>>(fnItem: D) => { [K in keyof D]: MutateWitness<T> };
+export function mutateDict<T extends SharedDict>(target: T)
+  : <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: MutateWitness<T> };
 
 /**
  * 作用同 mutate，为 atom 生成的对象创建一个 mutate 函数
  */
-export function atomMutate<T extends any>(
-  target: Atom<T>,
-): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnItem<T, A>) => MutateWitness<T>;
+export function atomMutate<T extends any>(target: Atom<T>)
+  : <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnLooseItem<T, A> | AtomMutateFn<T, A>) => MutateWitness<T>;
 
 export const shallowCompare: LimuUtils['shallowCompare'];
 
@@ -475,7 +505,10 @@ export function dynamicBlock<P = object>(cb: (props: P) => ReactNode, options: I
 /**
  * 生成会透传 isCommputing 表示计算状态的 Block 组件，会自动绑定视图中的状态依赖
  */
-export function blockStatus<P = object>(cb: (props: BlockStatusProps<P>) => ReactNode, options?: IBlockOptions<P>): BlockStatusComponent<P>;
+export function blockStatus<P = object>(
+  cb: (props: BlockStatusProps<P>) => ReactNode,
+  options?: IBlockOptions<P>,
+): BlockStatusComponent<P>;
 
 /**
  * 功能同 blockStatus，适用于在组件里调用动态生成组件的场景，会在组件销毁后自动释放掉占用的内存
@@ -585,12 +618,8 @@ export declare const produce: IProduce;
  */
 export function action<T = SharedDict>(sharedDict: T): <A extends any[] = any[]>(fn: ActionFnDef<A, T>, desc?: string) => Action<A, T>;
 
-export function actionAsync<T = SharedDict>(
-  sharedDict: T,
-): <A extends any[] = any[]>(fn: AsyncActionFnDef<A, T>, desc?: string) => AsyncAction<A, T>;
+export function actionAsync<T = SharedDict>(sharedDict: T): <A extends any[] = any[]>(fn: AsyncActionFnDef<A, T>, desc?: string) => AsyncAction<A, T>;
 
 export function atomAction<T = any>(atom: Atom<T>): <A extends any[] = any[]>(fn: AtomActionFnDef<A, T>, desc?: string) => AtomAction<A, T>;
 
-export function atomActionAsync<T = any>(
-  atom: Atom<T>,
-): <A extends any[] = any[]>(fn: AtomAsyncActionFnDef<A, T>, desc?: string) => AtomAsyncAction<A, T>;
+export function atomActionAsync<T = any>(atom: Atom<T>): <A extends any[] = any[]>(fn: AtomAsyncActionFnDef<A, T>, desc?: string) => AtomAsyncAction<A, T>;
