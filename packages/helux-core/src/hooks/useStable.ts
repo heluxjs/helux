@@ -56,7 +56,7 @@ function wrapData(ref: StableRef) {
 
 export function useStable<T = any>(data: T) {
   const stableRef = react.useRef<Stable>({ data, wrap: {}, inited: false });
-  // 'srvRef.current = serviceImpl' will have problem in react devtool
+  // 'stableRef.current = serviceImpl' will have problem in react devtool
   // https://github.com/alibaba/hooks/issues/728
   // https://github.com/facebook/react/issues/20394
   // https://github.com/facebook/react/blob/80f3d88190c07c2da11b5cac58a44c3b90fbc296/packages/react-debug-tools/src/ReactDebugHooks.js#L249
