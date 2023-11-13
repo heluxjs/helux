@@ -1,16 +1,9 @@
-import { SCOPE_TYPE, EVENT_NAME } from '../../consts';
-import { getInternal } from '../../helpers/state';
-import type {
-  Fn,
-  ICallMutateFnOptions,
-  IInnerSetStateOptions,
-  IWatchAndCallMutateDictOptions,
-  SharedState,
-  From,
-} from '../../types';
-import { noop, isFn, isObj, enureReturnArr, isProxyRevoked, tryAlert } from '../../utils';
-import { setLoadStatus } from '../../factory/creator/loading';
+import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
+import { setLoadStatus } from '../../factory/creator/loading';
+import { getInternal } from '../../helpers/state';
+import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types';
+import { enureReturnArr, isFn, isObj, isProxyRevoked, noop, tryAlert } from '../../utils';
 import { createWatchLogic } from '../createWatch';
 
 interface ICallMutateFnLogicOptionsBase {
@@ -25,20 +18,20 @@ interface ICallMutateFnLogicOptions<T = SharedState> extends ICallMutateFnLogicO
   draft?: T;
   fn: Fn;
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: SharedState, setState: Fn, desc: string }) => any[];
+  getArgs?: (param: { draft: SharedState; setState: Fn; desc: string }) => any[];
 }
 
 interface ICallAsyncMutateFnLogicOptions extends ICallMutateFnLogicOptionsBase {
   task: Fn;
   /** task 函数调用入参拼装，暂不像同步函数逻辑那样提供 draft 给用户直接操作，用户必须使用 setState 修改状态 */
-  getArgs?: (param: { desc: string, setState: Fn }) => any[];
+  getArgs?: (param: { desc: string; setState: Fn }) => any[];
 }
 
 function mayWrapVal(forAtom: boolean, val: any) {
   if (val === undefined) return; // undefined 丢弃，如正需要赋值 undefined，对 draft 操作即可
   if (forAtom) return { val };
   if (isObj(val)) return val;
-};
+}
 
 /** 呼叫异步函数的逻辑封装 */
 export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options: ICallAsyncMutateFnLogicOptions) {
@@ -50,7 +43,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   const setState: any = (cb: any) => {
     const { draft, finishMutate } = setStateImpl(noop);
     // 注意这里需要区分是 atom 还是 shared 返回，atom 返回要自动包裹未 { val: T }
-    const mayPartial = (!isFn(cb) ? mayWrapVal(forAtom, cb) : mayWrapVal(forAtom, cb(draft)));
+    const mayPartial = !isFn(cb) ? mayWrapVal(forAtom, cb) : mayWrapVal(forAtom, cb(draft));
     let mayAnotherPartial = null;
     if (!skipBefore) {
       mayAnotherPartial = mayWrapVal(forAtom, before({ from, draft, desc, sn }));
@@ -67,13 +60,15 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
 
   const statusKey = `${from}/${desc}`;
   setLoadStatus(internal, statusKey, { loading: true, err: null, ok: false });
-  return Promise.resolve(task(...args)).then(() => {
-    setLoadStatus(internal, statusKey, { loading: false, err: null, ok: true });
-    return internal.snap;
-  }).catch((err) => {
-    setLoadStatus(internal, statusKey, { loading: false, err, ok: false });
-    return internal.snap;
-  });
+  return Promise.resolve(task(...args))
+    .then(() => {
+      setLoadStatus(internal, statusKey, { loading: false, err: null, ok: true });
+      return internal.snap;
+    })
+    .catch((err) => {
+      setLoadStatus(internal, statusKey, { loading: false, err, ok: false });
+      return internal.snap;
+    });
 }
 
 /** 呼叫同步函数的逻辑封装 */
@@ -85,7 +80,8 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
 
   let draft = options.draft as SharedState; // 如果传递了 draft 表示需要复用
   let finishMutate = noop;
-  if (!draft) { // 不透传 draft 时，才指向一个真正有结束功能的 finishMutate 句柄
+  if (!draft) {
+    // 不透传 draft 时，才指向一个真正有结束功能的 finishMutate 句柄
     const ret = setStateImpl(noop);
     draft = ret.draft;
     finishMutate = ret.finishMutate;
@@ -114,10 +110,12 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
 export function callMutateFn<T = SharedState>(target: T, options: ICallMutateFnOptions<T> = { forTask: false }) {
   const { desc = '', sn = 0, fn, task, deps, draft, forTask } = options;
   const from = 'Mutate';
-  if (forTask && task) { // 处理异步函数
+  if (forTask && task) {
+    // 处理异步函数
     return callAsyncMutateFnLogic(target, { from, desc, sn, task, deps });
   }
-  if (!forTask && fn) { // 处理同步函数
+  if (!forTask && fn) {
+    // 处理同步函数
     return callMutateFnLogic(target, { from, desc, sn, fn, draft, deps });
   }
   return getInternal(target).snap;
@@ -125,7 +123,7 @@ export function callMutateFn<T = SharedState>(target: T, options: ICallMutateFnO
 
 /**
  * 监听并运行 mutate 函数
- * @param options 
+ * @param options
  */
 export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) {
   const { target, dict } = options;
@@ -170,7 +168,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
             draft = null;
           }
         } catch (err: any) {
-          let customLabel = ''
+          let customLabel = '';
           if (draft != null && isProxyRevoked(draft) && err.message.includes('revoked')) {
             // 出现错误 Cannot perform 'get' on a proxy that has been revoked 代表同步的多个 mutate 里出现了循环依赖
             // 原理是 finishMutate 内部流程是先结束草稿，再触发watch，如出现循环依赖的话，后续会复用已撤销的 draft 进而导致错误产生
@@ -185,7 +183,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         }
       },
       {
-        deps: () => (item.deps?.(target) || []),
+        deps: () => item.deps?.(target) || [],
         sharedState: target,
         scopeType: SCOPE_TYPE.STATIC,
         immediate: true,

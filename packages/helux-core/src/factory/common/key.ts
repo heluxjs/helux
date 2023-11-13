@@ -1,8 +1,8 @@
+import { SCOPE_TYPE } from '../../consts';
 import type { ScopeType } from '../../types';
 import { getSafeNext, isMax } from '../../utils';
-import { getFnScope, getBlockScope, getInsScope } from './speedup';
 import { getRootCtx } from '../root';
-import { SCOPE_TYPE } from '../../consts';
+import { getBlockScope, getFnScope, getInsScope } from './speedup';
 
 const fnKeyPrefix = {
   Mutate: '',

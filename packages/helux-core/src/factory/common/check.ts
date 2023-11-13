@@ -1,21 +1,21 @@
 import { getInternal } from '../../helpers/state';
 import type { SharedState } from '../../types';
-import type { TInternal } from '../creator/buildInternal';
 import { tryAlert } from '../../utils';
+import type { TInternal } from '../creator/buildInternal';
 
 interface ICheckSharedOptionsBase {
-  /** 
+  /**
    * default: undefined，检查传入对象是否是 atom，
    * undefined 表示不检查，
    * true 检查传入对象必须是 atom，
-   * false 检查传入对象必须非 atom 
+   * false 检查传入对象必须非 atom
    */
   forAtom?: boolean;
   label?: string;
 }
 
 interface ICheckSharedOptions extends ICheckSharedOptionsBase {
-  /** 
+  /**
    * default: false，是否严格检查 interna 必须存在，
    * true，严格检查 internal，不存在则报错
    * false，不严格检查，不存在返回 null

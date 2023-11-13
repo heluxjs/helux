@@ -1,9 +1,9 @@
+import { STATE_TYPE } from '../../consts';
+import { getInternal } from '../../helpers/state';
 import type { Fn, NumStrSymbol } from '../../types';
 import { delListItem, nodupPush, safeMapGet } from '../../utils';
-import { getInternal } from '../../helpers/state';
 import { getFnScope } from '../common/speedup';
 import { getRootCtx } from '../root';
-import { STATE_TYPE } from '../../consts';
 
 // will init after calling ensureGlobal at createShared
 let GLOBAL_EMPTY: any = null;

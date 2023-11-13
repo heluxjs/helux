@@ -1,5 +1,5 @@
-import type { Dict, Fn, NumStrSymbol } from '../types';
 import { PROD_FLAG } from '../consts';
+import type { Dict, Fn, NumStrSymbol } from '../types';
 
 // @ts-ignore
 const canUseReflect = !!Reflect;
@@ -120,7 +120,8 @@ export function dedupList(list: Array<any>) {
 export function includeOne(loopList: any[], judgeList: any[]) {
   let ret = false;
   for (const item of loopList) {
-    if (judgeList.includes(item)) { // 包含有外层list的一项，就结束循环
+    if (judgeList.includes(item)) {
+      // 包含有外层list的一项，就结束循环
       ret = true;
       break;
     }
@@ -130,7 +131,8 @@ export function includeOne(loopList: any[], judgeList: any[]) {
 
 export function matchDictKey(dict: Dict, fullStr: string) {
   let matchKey = '';
-  for (const key in dict) { // test if calling matchListItem(fullStr, Object.keys(dict)) is faster
+  for (const key in dict) {
+    // test if calling matchListItem(fullStr, Object.keys(dict)) is faster
     if (fullStr.startsWith(key)) {
       matchKey = key;
       break;
@@ -152,11 +154,15 @@ export function matchListItem(list: string[], fullStr: string) {
   return matchKey;
 }
 
-export function noop(...args: any[]): any { }
+export function noop(...args: any[]): any {}
 
-export function noopArgs(...args: any[]): any { return args };
+export function noopArgs(...args: any[]): any {
+  return args;
+}
 
-export function noopArr(...args: any[]): any[] { return [] }
+export function noopArr(...args: any[]): any[] {
+  return [];
+}
 
 export function prefixValKey(valKey: string, sharedKey: number) {
   return `${sharedKey}/${valKey}`;

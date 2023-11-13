@@ -1,5 +1,5 @@
-import type { InsCtxDef } from '../factory/creator/buildInternal';
 import { getInsScope } from '../factory/common/speedup';
+import type { InsCtxDef } from '../factory/creator/buildInternal';
 
 /**
  * recover dep

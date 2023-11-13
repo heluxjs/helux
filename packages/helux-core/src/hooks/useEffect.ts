@@ -6,7 +6,8 @@ const MOUNT_MAP = new Map<number, { count: number }>();
 let firstMountKey = 0;
 
 function setFirstMountKey(insKey: number) {
-  if (!firstMountKey) { // 未设置过才能设置
+  if (!firstMountKey) {
+    // 未设置过才能设置
     firstMountKey = insKey;
   }
 }
@@ -56,7 +57,7 @@ function mayExecuteCb(insKey: number, cb: EffectCb) {
   }
 }
 
-export function useEffectLogic(cb: EffectCb, options: { isLayout?: boolean, deps?: any[] }) {
+export function useEffectLogic(cb: EffectCb, options: { isLayout?: boolean; deps?: any[] }) {
   const { isLayout, deps } = options;
   const [insKey] = react.useState(() => getInsKey());
   const useFn = isLayout ? react.useLayoutEffect : react.useEffect;

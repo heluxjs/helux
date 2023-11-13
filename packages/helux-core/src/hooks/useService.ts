@@ -1,9 +1,9 @@
 import { react } from '../react';
 import type { Dict, Srv } from '../types';
 import type { MutableRefObject } from '../types-react';
+import { isFn, isObj } from '../utils';
 import { useEffect } from './useEffect';
 import { useStable } from './useStable';
-import { isFn, isObj } from '../utils';
 
 // 如 props 上存在 srvRef 函数，则暴露服务出去
 export function useExposeService(srv: any, mayProps?: any) {
@@ -30,5 +30,5 @@ export function useService<T = any>(serviceImpl: T, props?: object) {
 }
 
 export function storeSrv(ref: MutableRefObject<any>) {
-  return <S extends Srv>(srv: S) => ref.current = srv;
+  return <S extends Srv>(srv: S) => (ref.current = srv);
 }

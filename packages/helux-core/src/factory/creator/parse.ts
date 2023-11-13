@@ -1,33 +1,29 @@
 import { immut } from 'limu';
+import { FROM, LOADING_MODE, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
 import type {
+  AtomMutateFnStdDict,
+  AtomMutateFnStdItem,
   Dict,
   ICreateOptions,
   IInnerCreateOptions,
   IRuleConf,
+  IRunMutateOptions,
+  ISetStateOptions,
   KeyBoolDict,
   KeyIdsDict,
-  NumStrSymbol,
   MutateFn,
   MutateFnLooseItem,
-  MutateFnItem,
-  AtomMutateFnLooseItem,
-  AtomMutateFnItem,
-  AtomMutateFn,
   MutateFnStdDict,
-  AtomMutateFnStdDict,
-  ISetStateOptions,
-  IRunMutateOptions,
-  WatchOptionsType,
-  WatchDepFn,
   MutateFnStdItem,
-  AtomMutateFnStdItem,
+  NumStrSymbol,
+  WatchDepFn,
+  WatchOptionsType,
 } from '../../types';
-import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeGet, setNoop, getVal } from '../../utils';
-import { getDepKeyByPath, tryGetLoc } from '../common/util';
+import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeGet, setNoop } from '../../utils';
 import { genFnKey } from '../common/key';
-import { SINGLE_MUTATE, LOADING_MODE, STATE_TYPE, STOP_DEPTH, STOP_ARR_DEP, FROM } from '../../consts';
+import { getDepKeyByPath, tryGetLoc } from '../common/util';
 
 export interface IInnerOptions<T = any> {
   rawState: T | (() => T);
@@ -71,7 +67,7 @@ export function parseRawState(innerOptions: IInnerOptions) {
 export function parseDesc(fnKey: any, itemDesc?: any) {
   const desc = fnKey || itemDesc || genFnKey(FROM.MUTATE);
   return desc;
-};
+}
 
 export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dict) {
   let validItem: MutateFnStdItem | AtomMutateFnStdItem | null = null;
@@ -118,7 +114,7 @@ export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cache
   } else if (isFn(mutate)) {
     handleItem(mutate, SINGLE_MUTATE); // 标记为单函数
   } else if (isObj(mutate)) {
-    Object.keys(mutate).forEach(key => {
+    Object.keys(mutate).forEach((key) => {
       handleItem(mutate[key], key);
     });
   }
@@ -264,7 +260,6 @@ export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions)
   }
   return { out, desc, strict, ...descOrOptions };
 }
-
 
 export function parseWatchOptions(options?: WatchOptionsType) {
   let deps: WatchDepFn = noop;

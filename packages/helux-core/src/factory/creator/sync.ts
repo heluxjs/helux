@@ -1,5 +1,5 @@
-import type { Dict, SetState, Fn } from '../../types';
 import { createOneLevelOb } from '../../helpers/obj';
+import type { Dict, Fn, SetState } from '../../types';
 import { setVal } from '../../utils';
 import { createImmut, getDepKeyByPath } from '../common/util';
 
@@ -30,7 +30,7 @@ function createTargetWrap(rawState: Dict) {
 function createSyncFn(setState: SetState, path: string[], before?: Fn) {
   const syncFn = (evOrVal: any) => {
     let val = tryEtractEventVal(evOrVal);
-    setState(draft => {
+    setState((draft) => {
       setVal(draft, path, val);
       before?.(val, draft); // 用户设置了想修改其他数据或自身数据的函数
     });
@@ -43,7 +43,7 @@ const dataSyncerCahce = new Map<string, Fn>();
  * 注意 syncer 只能同步一层key的数据，如需要同步多层的，使用 sync 函数
  * <div onClick={syncer.a}></div>
  * @return syncerBuilder
-*/
+ */
 export function createSyncerBuilder(sharedKey: number, rawState: Dict, setState: SetState) {
   const syncer = createOneLevelOb(rawState, {
     get(target, key) {
@@ -55,7 +55,7 @@ export function createSyncerBuilder(sharedKey: number, rawState: Dict, setState:
       }
 
       return dataSyncer;
-    }
+    },
   });
   return syncer;
 }

@@ -1,29 +1,28 @@
-import type { Fn, SharedState, SharedDict, Atom } from '../types';
+import type { Atom, Fn, SharedDict, SharedState } from '../types';
 import { checkShared } from './common/check';
 import { callAsyncMutateFnLogic, callMutateFnLogic } from './creator/mutateFn';
 
 /**
  * 内部统一封装，shared 和 atom 走统一的入口，上层接口自己标记对应类型
  */
-function innerCreate<T = SharedState>(state: T, options: { fn: Fn, desc: string, label: string, forAtom?: boolean, isAsync?: boolean }) {
+function innerCreate<T = SharedState>(state: T, options: { fn: Fn; desc: string; label: string; forAtom?: boolean; isAsync?: boolean }) {
   const { forAtom = false, isAsync = false, fn, desc = '', label } = options;
   checkShared(state, { forAtom, label, strict: true });
   if (isAsync) {
     const asyncAction = (...args: any[]) => {
-      return callAsyncMutateFnLogic(
-        state,
-        { task: fn, desc, getArgs: ({ setState, desc }) => [{ setState, desc, args }], from: 'Action' },
-      );
+      return callAsyncMutateFnLogic(state, { task: fn, desc, getArgs: ({ setState, desc }) => [{ setState, desc, args }], from: 'Action' });
     }; // now fn can have a name 'asyncAction' at dev mode
     asyncAction.__fnName = desc;
     return asyncAction;
   }
 
   const action = (...args: any[]) => {
-    return callMutateFnLogic(
-      state,
-      { fn, desc, getArgs: ({ draft, setState, desc }) => [{ draft, setState, desc, args }], from: 'Action' },
-    );
+    return callMutateFnLogic(state, {
+      fn,
+      desc,
+      getArgs: ({ draft, setState, desc }) => [{ draft, setState, desc, args }],
+      from: 'Action',
+    });
   }; // now fn can have a name 'action' at dev mode
   action.__fnName = desc;
   return action;

@@ -1,6 +1,6 @@
-import { EVENT_NAME } from '../../consts/user';
 import { STATE_TYPE } from '../../consts';
-import { Fn, Dict, IPlugin, PluginCtx, IInnerSetStateOptions } from '../../types';
+import { EVENT_NAME } from '../../consts/user';
+import { Dict, Fn, IInnerSetStateOptions, IPlugin, PluginCtx } from '../../types';
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 
@@ -27,7 +27,8 @@ export function emitDataChanged(internal: TInternal, options: IInnerSetStateOpti
     const desc = options.desc || inputDesc || 'setState';
     const { sharedKey, moduleName, snap, usefulName, stateType } = internal;
     let type;
-    if (loadingTypes.includes(stateType)) { // 来自伴生的 loading 状态调用
+    if (loadingTypes.includes(stateType)) {
+      // 来自伴生的 loading 状态调用
       type = `${usefulName}/setState`;
     } else {
       type = `${usefulName}@${from || 'Api'}/${desc}`;

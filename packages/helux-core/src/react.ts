@@ -1,8 +1,8 @@
 /**
  * react like lib
  */
+import { UseCallback, UseMemo, UseRef, UseState } from './types-react';
 import { asType, noop } from './utils';
-import { UseCallback, UseState, UseRef, UseMemo } from './types-react';
 
 // this is a mock lib, it will be replaced to real react lib later
 export const react = {

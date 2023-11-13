@@ -1,8 +1,8 @@
 import { ASYNC_TYPE, WATCH } from '../consts';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
-import type { Dict, TriggerReason, IDeriveFnParams } from '../types';
-import { markComputing } from './fnStatus';
+import type { Dict, IDeriveFnParams, TriggerReason } from '../types';
 import { shouldShowComputing } from './fnCtx';
+import { markComputing } from './fnStatus';
 
 const { MAY_TRANSFER } = ASYNC_TYPE;
 
@@ -11,7 +11,7 @@ const { MAY_TRANSFER } = ASYNC_TYPE;
  */
 export function runFn(
   fnKey: string,
-  options?: { sn?: number; force?: boolean; isFirstCall?: boolean; triggerReasons?: TriggerReason[], err?: any }
+  options?: { sn?: number; force?: boolean; isFirstCall?: boolean; triggerReasons?: TriggerReason[]; err?: any },
 ) {
   const { isFirstCall = false, triggerReasons = [], sn = 0, err } = options || {};
   const fnCtx = getFnCtx(fnKey);
@@ -42,7 +42,7 @@ export function runFn(
     fnCtx.updater();
   };
   /** 下钻执行其他函数 */
-  const updateAndDrillDown = (options: { data?: any, err?: any }) => {
+  const updateAndDrillDown = (options: { data?: any; err?: any }) => {
     const { data, err = null } = options;
     if (!err) {
       assignResult(data);
@@ -87,22 +87,24 @@ export function runFn(
 
   if (isFirstCall) {
     depKeys.forEach((depKey) => {
-      putComputingFnKey(depKey, fnKey)
+      putComputingFnKey(depKey, fnKey);
     });
   }
 
   if (task) {
     const del = () => isFirstCall && depKeys.forEach((depKey) => delComputingFnKey(depKey, fnKey));
-    return task(fnParams).then((data: any) => {
-      del();
-      updateAndDrillDown({ data });
-      return fnCtx.result;
-    }).catch((err: any) => {
-      // TODO: emit ERR_OCCURRED to plugin
-      del();
-      updateAndDrillDown({ err }); // 向下传递错误
-      return fnCtx.result;
-    });
+    return task(fnParams)
+      .then((data: any) => {
+        del();
+        updateAndDrillDown({ data });
+        return fnCtx.result;
+      })
+      .catch((err: any) => {
+        // TODO: emit ERR_OCCURRED to plugin
+        del();
+        updateAndDrillDown({ err }); // 向下传递错误
+        return fnCtx.result;
+      });
   }
 
   return fnCtx.result;

@@ -1,9 +1,9 @@
-import { IOperateParams, immut } from 'limu';
+import { immut, IOperateParams } from 'limu';
 import { KEY_SPLITER } from '../../consts';
 import { createOb } from '../../helpers/obj';
-import type { Dict, IRuleConf, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types';
-import { isDebug, prefixValKey, canUseProxy, matchDictKey, matchListItem } from '../../utils';
+import type { Dict, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types';
 import { DepKeyInfo } from '../../types-inner';
+import { canUseProxy, isDebug, prefixValKey } from '../../utils';
 
 export interface IMutateCtx {
   depKeys: string[];
@@ -60,7 +60,7 @@ export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
 
 export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) {
   if (canUseProxy()) {
-    return immut(obj, { onOperate })
+    return immut(obj, { onOperate });
   }
 
   return createOb(obj, {
@@ -69,6 +69,6 @@ export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) 
       const op = newOpParams(key, val, false);
       onOperate(op);
       return val;
-    }
-  })
+    },
+  });
 }

@@ -5,10 +5,10 @@ import { recordFnDepKeys } from '../../helpers/fnDep';
 import { createOb } from '../../helpers/obj';
 import { mapSharedState } from '../../helpers/state';
 import type { Dict } from '../../types';
-import type { ParsedOptions } from './parse';
 import { canUseDeep, isSymbol, prefixValKey, warn } from '../../utils';
 import { getMarkAtomMap } from '../common/atom';
 import { recordLastest } from '../common/blockScope';
+import type { ParsedOptions } from './parse';
 
 /**
  * 创建全局使用的共享对象，可提供给 useShared useDerived useWatch derived watch 函数使用

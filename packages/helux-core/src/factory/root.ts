@@ -1,7 +1,7 @@
 import { VER } from '../consts';
-import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, Middleware, NumStrSymbol, LoadingState } from '../types';
-import { asType, GLOBAL_REF, safeGet } from '../utils';
 import { setReactLib } from '../react';
+import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types';
+import { asType, GLOBAL_REF, safeGet } from '../utils';
 import type { TInternal } from './creator/buildInternal';
 
 function buildFnScope() {
@@ -83,7 +83,7 @@ function buildEventBus() {
     },
     off: (name: string, cb: Fn) => {
       const cbs = name2cbs[name] || [];
-      const idx = cbs.findIndex(item => item === cb);
+      const idx = cbs.findIndex((item) => item === cb);
       if (idx >= 0) cbs.splice(idx, 1);
     },
     /** for perf */

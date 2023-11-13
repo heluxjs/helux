@@ -1,9 +1,9 @@
 import { EXPIRE_MS, FN_KEY, NOT_MOUNT, SIZE_LIMIT, UNMOUNT } from '../../consts';
+import { injectHeluxProto } from '../../helpers/obj';
 import type { Dict, IFnCtx, ScopeType } from '../../types';
 import { delListItem, isDebug, isFn, isObj, safeMapGet } from '../../utils';
 import { genFnKey } from '../common/key';
 import { getFnScope } from './speedup';
-import { injectHeluxProto } from '../../helpers/obj';
 
 export function getCtxMap(scopeKeyOrFnKey: string) {
   const { FNKEY_STATIC_CTX_MAP, FNKEY_HOOK_CTX_MAP } = getFnScope();

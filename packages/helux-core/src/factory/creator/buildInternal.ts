@@ -1,20 +1,18 @@
 import type {
   AsyncSetState,
+  Dict,
   Fn,
   IInsCtx,
+  InnerSetState,
   IRuleConf,
   KeyInsKeysDict,
   NumStrSymbol,
   SetAtom,
   SetState,
   SharedState,
-  InnerSetState,
-  MutateFnLooseItem,
-  AtomMutateFnLooseItem,
-  Dict,
 } from '../../types';
 import type { Level1ArrKeys } from '../../types-inner';
-import { delListItem, nodupPush, safeGet, noop } from '../../utils';
+import { delListItem, nodupPush, noop, safeGet } from '../../utils';
 import { ParsedOptions } from './parse';
 
 /** 在 initLoadingCtx 阶段会生成，这里先预备一个假的 */

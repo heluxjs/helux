@@ -5,9 +5,9 @@ import type {
   DerivedDict,
   DeriveDictFn,
   Dict,
-  PlainObject,
   IDeriveAsyncOptions,
   IDeriveAtomAsyncOptions,
+  PlainObject,
 } from '../types';
 import { getAtomTuple, getTuple, useDerivedLogic } from './common/useDerivedLogic';
 

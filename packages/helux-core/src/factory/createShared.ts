@@ -1,12 +1,12 @@
-import { useShared, useAtom } from '../hooks/useShared';
-import type { Dict, Fn, IAtomCtx, ICreateOptions, IAtomCreateOptions, ISharedCtx, SharedState } from '../types';
-import { initGlobalLoading, initLoadingCtx } from './creator/loading';
-import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
-import { buildSharedObject } from './creator';
-import type { IInnerOptions } from './creator/parse';
+import { FROM, STATE_TYPE } from '../consts';
+import { useAtom, useShared } from '../hooks/useShared';
+import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, ISharedCtx } from '../types';
 import { action, actionAsync, atomAction, atomActionAsync } from './createAction';
-import { mutate, atomMutate } from './createMutate';
-import { STATE_TYPE, FROM } from '../consts';
+import { atomMutate, mutate } from './createMutate';
+import { buildSharedObject } from './creator';
+import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
+import { initGlobalLoading, initLoadingCtx } from './creator/loading';
+import type { IInnerOptions } from './creator/parse';
 
 const { USER_STATE } = STATE_TYPE;
 const { MUTATE, ACTION } = FROM;
@@ -27,7 +27,6 @@ function getFns(state: any, forAtom: boolean) {
     mutateCreator: mutate(state),
   };
 }
-
 
 export function ensureGlobal(inputStateType?: string) {
   const stateType = inputStateType || USER_STATE;
@@ -65,14 +64,16 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
 
 /** expose share ctx as object */
 export function shareState<T = Dict, O extends ICreateOptions<T> = ICreateOptions<T>>(
-  rawState: T | (() => T), options?: O,
+  rawState: T | (() => T),
+  options?: O,
 ): ISharedCtx<T, O> {
   return createSharedLogic({ rawState }, options);
 }
 
 /** expose atom ctx as object */
 export function shareAtom<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>>(
-  rawState: any | (() => any), options?: O,
+  rawState: any | (() => any),
+  options?: O,
 ): IAtomCtx<T, O> {
   return createSharedLogic({ rawState, forAtom: true }, options);
 }

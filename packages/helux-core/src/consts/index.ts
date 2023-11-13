@@ -1,11 +1,10 @@
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
-export { LOADING_MODE, WAY, FROM, EVENT_NAME } from './user';
+export { EVENT_NAME, FROM, LOADING_MODE, WAY } from './user';
+export { HAS_SYMBOL };
 
-export const VER = '3.0.20';
+export const VER = '3.0.21';
 
 export const PROD_FLAG = true;
-
-export { HAS_SYMBOL };
 
 export const PROTO_KEY = '__proto__';
 

@@ -4,8 +4,8 @@ import { markBlockFnEnd, markBlockFnStart } from '../../helpers/blockCtx';
 import { react } from '../../react';
 import type { Dict, Fn, IBlockCtx, IBlockOptions, LoadingStatus } from '../../types';
 import type { ForwardedRef } from '../../types-react';
-import { wrapComp, wrapDerivedAtomSignalComp } from './wrap';
 import { noopArgs } from '../../utils';
+import { wrapComp, wrapDerivedAtomSignalComp } from './wrap';
 
 interface IMarkBlockAndRunCbOptions {
   isDynamic: boolean;

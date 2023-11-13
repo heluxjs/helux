@@ -1,8 +1,8 @@
 import { IOperateParams } from 'limu';
 import type { KeyIdsDict, NumStrSymbol } from '../../types';
-import { nodupPush, prefixValKey, matchDictKey } from '../../utils';
-import { getDepKeyByPath, IMutateCtx } from '../common/util';
+import { matchDictKey, nodupPush, prefixValKey } from '../../utils';
 import { cutDepKeyByStop } from '../common/stopDep';
+import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
 
 export function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
@@ -47,7 +47,13 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   // 可能在 recordCb 里缩短后再记录
   const depKeyInfo = { sharedKey, keyPath: fullKeyPath, depKey: writeKey };
   if (
-    !cutDepKeyByStop(depKeyInfo, { stopDepInfo, level1ArrKeys, recordCb: (key) => { writeKeys[key] = 1 } })
+    !cutDepKeyByStop(depKeyInfo, {
+      stopDepInfo,
+      level1ArrKeys,
+      recordCb: (key) => {
+        writeKeys[key] = 1;
+      },
+    })
   ) {
     writeKeys[writeKey] = 1;
   }

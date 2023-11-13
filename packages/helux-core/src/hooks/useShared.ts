@@ -1,4 +1,4 @@
-import type { Atom, Dict, IRenderInfo, IUseSharedOptions, IUseAtomOptions, SetAtom, SetState } from '../types';
+import type { Atom, Dict, IRenderInfo, IUseAtomOptions, IUseSharedOptions, SetAtom, SetState } from '../types';
 import { useSharedLogic } from './common/useSharedLogic';
 
 export function useShared<T = Dict>(sharedState: T, options: IUseSharedOptions<T> = {}): [T, SetState<T>, IRenderInfo] {

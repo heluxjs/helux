@@ -6,5 +6,11 @@ import { react } from '../../react';
  * param2: getSnapshot
  */
 export function useSync(...args: any[]) {
-  react.useSyncExternalStore(...args);
+  try {
+    react.useSyncExternalStore(...args);
+  } catch (err) {
+    // ReactDevTooll sometimes throw this strange bug:
+    // dispatcher.useSyncExternalStore is not a function
+    console.error(err);
+  }
 }

@@ -1,7 +1,6 @@
 import { initHeluxContext } from './factory/root';
 export * from './api';
 export { model, modelFactory } from './factory/createModel'; // 依赖 api，故独立导出
-
 export {
   /**
    * 这里暴露 initHeluxContext 出去是给 wrapper 库使用，但 types-api 里故意隐藏了此接口

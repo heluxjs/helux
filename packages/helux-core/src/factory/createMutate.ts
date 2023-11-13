@@ -1,13 +1,22 @@
-import { callMutateFn, watchAndCallMutateDict } from './creator/mutateFn';
-import { parseCreateMutateOpt, parseDesc, parseMutateFn, parseMutate } from './creator/parse';
-import { checkShared, checkSharedStrict } from './common/check';
+import { SINGLE_MUTATE } from '../consts';
 import { getInternal } from '../helpers/state';
 import type {
-  Fn, Dict, MutateFn, MutateFnLooseItem, AtomMutateFn, AtomMutateFnLooseItem, MutateFnDict,
-  SharedState, SharedDict, Atom, IRunMutateOptions, MutateFnStdDict, AtomMutateFnStdDict,
-  MutateFnStdItem, AtomMutateFnStdItem, AtomMutateFnDict, MutateWitness,
+  Atom,
+  AtomMutateFn,
+  AtomMutateFnDict,
+  AtomMutateFnLooseItem,
+  Dict,
+  IRunMutateOptions,
+  MutateFn,
+  MutateFnDict,
+  MutateFnLooseItem,
+  MutateWitness,
+  SharedDict,
+  SharedState,
 } from '../types';
-import { SINGLE_MUTATE } from '../consts';
+import { checkShared, checkSharedStrict } from './common/check';
+import { callMutateFn, watchAndCallMutateDict } from './creator/mutateFn';
+import { parseCreateMutateOpt, parseMutate, parseMutateFn } from './creator/parse';
 
 interface ILogicOptions {
   label: string;
@@ -18,7 +27,7 @@ interface ILogicOptions {
 /**
  * 查找到配置到 mutate 函数并执行
  */
-function runMutateFnItem(options: { target: SharedState, desc?: string, forTask?: boolean }) {
+function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?: boolean }) {
   const { target, desc: inputDesc = '', forTask = false } = options;
   const { mutateFnDict, snap } = getInternal(target);
   const desc = inputDesc || SINGLE_MUTATE; // 未传递任何描述，尝试调用可能存在的单函数
@@ -79,7 +88,9 @@ function configureMutateDict(options: IConfigureMutateDictOpt): any {
   const dict = parseMutate(fnDict, internal.mutateFnDict); // trust dict here
   watchAndCallMutateDict({ target, dict });
   const witnessDict: Dict<MutateWitness> = {}; // 具体类型定义见 types-api multiDict
-  Object.keys(dict).forEach(desc => { witnessDict[desc] = makeWitness(target, desc, desc) });
+  Object.keys(dict).forEach((desc) => {
+    witnessDict[desc] = makeWitness(target, desc, desc);
+  });
   return witnessDict;
 }
 
@@ -142,7 +153,8 @@ export function mutateDict<T extends SharedDict>(target: T) {
  * 更详细的泛型定义见 types-api.d.ts
  */
 export function atomMutate(target: Atom) {
-  return (fnItem: AtomMutateFnLooseItem<any, any> | AtomMutateFn<any, any>) => configureMutateFn({ target, fnItem, label: 'atomMutate', forAtom: true });
+  return (fnItem: AtomMutateFnLooseItem<any, any> | AtomMutateFn<any, any>) =>
+    configureMutateFn({ target, fnItem, label: 'atomMutate', forAtom: true });
 }
 
 export function atomMutateDict(target: Atom) {

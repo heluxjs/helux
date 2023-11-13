@@ -1,9 +1,9 @@
 import { immut } from 'limu';
 import { EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, WAY } from '../consts';
-import { mapGlobalId } from '../factory/creator/globalId';
 import { genInsKey } from '../factory/common/key';
-import { recordArrKey, cutDepKeyByStop } from '../factory/common/stopDep';
+import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
+import { mapGlobalId } from '../factory/creator/globalId';
 import type { Dict, Ext, IFnCtx, IUseSharedOptions } from '../types';
 import type { DepKeyInfo } from '../types-inner';
 import { isFn, isSymbol, prefixValKey, warn } from '../utils';
@@ -112,7 +112,13 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
     recordDep: (depKeyInfo: DepKeyInfo) => {
       let depKey = depKeyInfo.depKey;
       // depKey 可能因为配置了 rules[]stopDep 的关系被 recordCb 改写
-      cutDepKeyByStop(depKeyInfo, { stopDepInfo, level1ArrKeys, recordCb: (key) => { depKey = key } });
+      cutDepKeyByStop(depKeyInfo, {
+        stopDepInfo,
+        level1ArrKeys,
+        recordCb: (key) => {
+          depKey = key;
+        },
+      });
       recordBlockDepKey(sharedState, [depKey]);
 
       if (insCtx.readMap[depKey] !== 1) {

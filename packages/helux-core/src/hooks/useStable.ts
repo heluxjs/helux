@@ -1,9 +1,9 @@
 import { react } from '../react';
 import type { Dict } from '../types';
 import type { MutableRefObject } from '../types-react';
-import { isFn, isObj, canUseProxy, safeGet } from '../utils';
+import { canUseProxy, isFn, isObj, safeGet } from '../utils';
 
-type Stable = { data: any, wrap: any, inited: boolean };
+type Stable = { data: any; wrap: any; inited: boolean };
 type StableRef = MutableRefObject<Stable>;
 
 /** 特殊处理 {} 类型 */
@@ -22,7 +22,7 @@ function wrapObj(data: any, ref: StableRef) {
           set(value) {
             ref.current.data[key] = value;
           },
-        })
+        });
       }
     });
     return wrap;
@@ -36,7 +36,7 @@ function wrapObj(data: any, ref: StableRef) {
         return safeGet(cache, key, (...args: any[]) => ref.current.data[key](...args));
       }
       return val;
-    }
+    },
   });
 }
 

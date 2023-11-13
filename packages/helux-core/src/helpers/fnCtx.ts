@@ -2,7 +2,7 @@ import { ASYNC_TYPE, NOT_MOUNT, RENDER_START } from '../consts';
 import { delHistoryUnmoutFnCtx, getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { Fn, IFnCtx, ScopeType } from '../types';
-import { noop, noopArr, includeOne } from '../utils';
+import { includeOne, noop, noopArr } from '../utils';
 import { delFnDepData } from './fnDep';
 
 const { MAY_TRANSFER } = ASYNC_TYPE;

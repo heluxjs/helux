@@ -1,11 +1,11 @@
 import { setInternal } from '../../helpers/state';
-import type { AsyncSetState, IInnerSetStateOptions, SetAtom, SetState, SharedState, InnerSetState } from '../../types';
+import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types';
 import { canUseDeep, isFn } from '../../utils';
 import { buildInternal } from './buildInternal';
 import { prepareDeepMutate } from './mutateDeep';
 import { prepareNormalMutate } from './mutateNormal';
-import { parseRules, parseSetOptions, ParsedOptions } from './parse';
-import { createSyncFnBuilder, createSyncerBuilder } from './sync';
+import { ParsedOptions, parseRules, parseSetOptions } from './parse';
+import { createSyncerBuilder, createSyncFnBuilder } from './sync';
 
 export function mapSharedToInternal(sharedState: SharedState, options: ParsedOptions) {
   const { rawState, sharedKey, deep, forAtom } = options;

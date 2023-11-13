@@ -1,5 +1,14 @@
 import { ASYNC_TYPE } from '../consts';
-import type { Atom, ICreateDeriveLogicOptions, IDeriveFnParams, IFnCtx, PlainObject, ScopeType, IDeriveAtomAsyncOptions, IDeriveAsyncOptions } from '../types';
+import type {
+  Atom,
+  ICreateDeriveLogicOptions,
+  IDeriveAsyncOptions,
+  IDeriveAtomAsyncOptions,
+  IDeriveFnParams,
+  IFnCtx,
+  PlainObject,
+  ScopeType,
+} from '../types';
 import { initDeriveFn } from './common/derived';
 
 const { TASK } = ASYNC_TYPE;

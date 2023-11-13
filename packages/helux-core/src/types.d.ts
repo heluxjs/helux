@@ -1,5 +1,5 @@
-import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } from './types-react';
 import type { DepKeyInfo } from './types-inner';
+import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } from './types-react';
 
 /**
  * 函数描述
@@ -61,7 +61,7 @@ export interface IBlockOptions<P = object> {
  */
 export type Read = <A extends readonly any[] = readonly any[]>(...args: A) => A;
 
-export type BlockStatusProps<P = object> = P & { status: LoadingStatus, read: Read };
+export type BlockStatusProps<P = object> = P & { status: LoadingStatus; read: Read };
 
 export type BlockStatusCb<P = object> = (props: BlockStatusProps<P>, ref?: ForwardedRef<any>) => ReactNode;
 
@@ -71,7 +71,7 @@ export type BlockComponent<P = object> = FunctionComponent<P>;
 
 export type BlockStatusComponent<P = object> = FunctionComponent<P>;
 
-export type Srv<S = Dict, P = Dict, E = Dict> = S & { inner: { getProps: () => P, getExtra: () => E } };
+export type Srv<S = Dict, P = Dict, E = Dict> = S & { inner: { getProps: () => P; getExtra: () => E } };
 
 export type NumStr = number | string;
 
@@ -147,19 +147,19 @@ export type AtomValType<T> = T extends Atom<infer V> ? V : T;
 export type DepCollectionWay = 'FIRST_RENDER' | 'EVERY_RENDER';
 
 export type LoadingStatus = {
-  loading: boolean,
-  err: Error | null,
+  loading: boolean;
+  err: Error | null;
   /** ok=!loading && !err */
-  ok: boolean
+  ok: boolean;
 };
 
 export type LoadingState<T = Dict> = {
   [key in keyof T]: LoadingStatus;
-}
+};
 
-export type ActionFnParam<A = any[], T = SharedState> = { draft: Draft<T>, setState: SetState<T>, desc: string, args: A };
+export type ActionFnParam<A = any[], T = SharedState> = { draft: Draft<T>; setState: SetState<T>; desc: string; args: A };
 
-export type AsyncActionFnParam<A = any[], T = SharedState> = { setState: SetState<T>, desc: string, args: A };
+export type AsyncActionFnParam<A = any[], T = SharedState> = { setState: SetState<T>; desc: string; args: A };
 
 export type ActionFnDef<A = any[], T = SharedState> = (param: ActionFnParam<A, T>) => Partial<T> | void;
 
@@ -171,9 +171,9 @@ export type AsyncAction<A extends any[] = any[], T = SharedState> = (...args: A)
 
 // atom action series
 
-export type AtomActionFnParam<A = any[], T = any> = { draft: AtomDraft<T>, setState: SetAtom<T>, desc: string, args: A };
+export type AtomActionFnParam<A = any[], T = any> = { draft: AtomDraft<T>; setState: SetAtom<T>; desc: string; args: A };
 
-export type AtomAsyncActionFnParam<A = any[], T = any> = { setState: SetAtom<T>, desc: string, args: A };
+export type AtomAsyncActionFnParam<A = any[], T = any> = { setState: SetAtom<T>; desc: string; args: A };
 
 export type AtomActionFnDef<A = any[], T = any> = (param: AtomActionFnParam<A, T>) => Partial<T> | void;
 
@@ -201,13 +201,13 @@ export interface IMutateTaskParam<T = SharedDict, A = any[]> {
    */
   desc: string;
   setState: SetState<T>;
-  input: A,
+  input: A;
 }
 
 export interface IAtomMutateTaskParam<T = any, A = any[]> {
   desc: FnDesc;
   setState: SetAtom<T>;
-  input: A,
+  input: A;
 }
 
 /** 呼叫 mutate 的句柄，由顶层api mutate 和 atomMutate 返回，可直接无理由重运行 mutate 函数 */
@@ -217,13 +217,13 @@ export type MutateTaskCall<T = any> = () => Promise<T>;
 
 export type MutateWitness<T = any> = {
   /** 人工调用 mutate 配置里的同步函数 */
-  call: MutateCall<T>,
+  call: MutateCall<T>;
   /** 人工调用 mutate 配置里的异步函数 */
-  callTask: MutateTaskCall<T>,
+  callTask: MutateTaskCall<T>;
   /** 用户透传的描述值 */
-  desc: string,
+  desc: string;
   /** 内部生成的实际描述值 */
-  realDesc: string,
+  realDesc: string;
 };
 
 // for dict
@@ -234,11 +234,11 @@ export type MutateFn<T = SharedDict, A = ReadOnlyArr> = (draft: Draft<T>, input:
 
 export type MutateFnItem<T = SharedDict, A = ReadOnlyArr> = {
   /** 异步 mutate 的依赖项列表 */
-  deps?: (state: T) => A,
-  fn?: MutateFn<T, A>,
-  task?: MutateTask<T, A>,
+  deps?: (state: T) => A;
+  fn?: MutateFn<T, A>;
+  task?: MutateTask<T, A>;
   /** default: false, task 是否立即执行 */
-  immediate?: boolean,
+  immediate?: boolean;
 };
 
 /** std item 确保了 desc 一定存在 */
@@ -271,11 +271,11 @@ export type AtomMutateFn<T = any, A = ReadOnlyArr> = (draft: AtomDraft<T>, input
 
 export type AtomMutateFnItem<T = any, A = ReadOnlyArr> = {
   /** 如定义了 task，fn 只会执行一次 */
-  fn?: AtomMutateFn<T, A>,
+  fn?: AtomMutateFn<T, A>;
   /** 异步 atom mutate 的依赖项列表 */
-  deps?: (state: T) => A,
+  deps?: (state: T) => A;
   /** 异步计算任务 */
-  task?: AtomMutateTask<T, A>,
+  task?: AtomMutateTask<T, A>;
   /** default: false, task 是否立即执行 */
   immediate?: boolean;
 };
@@ -301,9 +301,9 @@ export type AtomMutateFnStdDict<T = any> = Dict<AtomMutateFnStdItem<T>>;
 
 export type AtomMutateFnList<T = any> = Array<AtomMutateFn<T> | AtomMutateFnLooseItem<T>>;
 
-export type PartialStateCb<T = Dict> = (prev: T) => (Partial<T> | void);
+export type PartialStateCb<T = Dict> = (prev: T) => Partial<T> | void;
 
-export type ChangeDraftCb<T = Dict> = (mutableDraft: T) => (Partial<T> | void);
+export type ChangeDraftCb<T = Dict> = (mutableDraft: T) => Partial<T> | void;
 
 export interface IDeriveAsyncOptions<T = Dict, I = readonly any[]> {
   fn: (params: IDeriveFnParams<T, I>) => T;
@@ -341,12 +341,7 @@ export type InnerSetState<T = Dict> = (
 ) => NextSharedDict<T>;
 
 export type Call<T = Dict> = <A extends any[] = any[]>(
-  srvFn: (ctx: {
-    args: A;
-    state: Readonly<T>;
-    draft: MutableDraft<T>;
-    setState: SetState<T>;
-  }) => Partial<T> | void,
+  srvFn: (ctx: { args: A; state: Readonly<T>; draft: MutableDraft<T>; setState: SetState<T> }) => Partial<T> | void,
   ...args: A
 ) => NextSharedDict<T>;
 
@@ -354,22 +349,12 @@ export type Call<T = Dict> = <A extends any[] = any[]>(
  * 👿 呼叫异步函数修改 draft 是危险的行为，可能会造成数据脏覆盖的情况产生
  */
 export type AsyncCall<T = Dict> = <A extends any[] = any[]>(
-  srvFn: (ctx: {
-    args: A;
-    state: Readonly<T>;
-    draft: MutableDraft<T>;
-    setState: SetState<T>;
-  }) => Promise<Partial<T> | void>,
+  srvFn: (ctx: { args: A; state: Readonly<T>; draft: MutableDraft<T>; setState: SetState<T> }) => Promise<Partial<T> | void>,
   ...args: A
 ) => Promise<NextSharedDict<T>>;
 
 export type AtomCall<T = any> = <A extends any[] = any[]>(
-  srvFn: (ctx: {
-    args: A;
-    state: ReadonlyAtom<T>;
-    draft: MutableAtomDraft<T>;
-    setState: SetAtom<T>;
-  }) => T | void,
+  srvFn: (ctx: { args: A; state: ReadonlyAtom<T>; draft: MutableAtomDraft<T>; setState: SetAtom<T> }) => T | void,
   ...args: A
 ) => NextAtomVal<T>;
 
@@ -377,12 +362,7 @@ export type AtomCall<T = any> = <A extends any[] = any[]>(
  * 👿 呼叫异步函数修改 atom draft 是危险的行为，可能会造成数据脏覆盖的情况产生
  */
 export type AtomAsyncCall<T = any> = <A extends any[] = any[]>(
-  srvFn: (ctx: {
-    args: A;
-    state: ReadonlyAtom<T>;
-    draft: MutableAtomDraft<T>;
-    setState: SetAtom<T>;
-  }) => Promise<T | void>,
+  srvFn: (ctx: { args: A; state: ReadonlyAtom<T>; draft: MutableAtomDraft<T>; setState: SetAtom<T> }) => Promise<T | void>,
   ...args: A
 ) => Promise<NextAtomVal<T>>;
 
@@ -399,11 +379,13 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = Dict> = { [key in keyof T]: SyncerFn };
 
-export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>>
-  = O['mutate'] extends MutateFnDict<T> ? Ext<LoadingState<O['mutate']>, LoadingStatus> : Ext<LoadingState, LoadingStatus>;
+export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
+  ? Ext<LoadingState<O['mutate']>, LoadingStatus>
+  : Ext<LoadingState, LoadingStatus>;
 
-export type AtomSafeLoading<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>>
-  = O['mutate'] extends AtomMutateFnDict<T> ? Ext<LoadingState<O['mutate']>, LoadingStatus> : Ext<LoadingState, LoadingStatus>;
+export type AtomSafeLoading<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> = O['mutate'] extends AtomMutateFnDict<T>
+  ? Ext<LoadingState<O['mutate']>, LoadingStatus>
+  : Ext<LoadingState, LoadingStatus>;
 
 export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
@@ -563,7 +545,7 @@ export interface IAtomCreateOptionsFull<T = any> extends ICreateOptionsBaseFull 
   rules: IDataRule<Atom<T>>[];
   /**
    * 定义当前状态对其他状态有依赖的 mutate 函数集合或函数，它们将被自动执行，并收集到每个函数各自对应的上游数据依赖
-  */
+   */
   mutate: AtomMutateFn<T> | AtomMutateFnDict<T> | AtomMutateFnList<T>;
   /**
    * mutate 结束到提交状态之前的中间函数

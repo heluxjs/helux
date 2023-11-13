@@ -1,6 +1,6 @@
 import { getBlockCtxMap } from '../factory/common/blockScope';
-import { getBlockScope } from '../factory/common/speedup';
 import { genBlockKey } from '../factory/common/key';
+import { getBlockScope } from '../factory/common/speedup';
 import { IBlockCtx, SharedState } from '../types';
 
 const SIZE_LIMIT = 100;

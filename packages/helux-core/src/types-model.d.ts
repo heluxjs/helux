@@ -15,12 +15,12 @@ export function model<T = any>(cb: (api: HeluxApi) => Model<T>): Model<T>;
  * ```ts
  * const factory = modelFactory((api, extra) => {
  *   console.log('received build extra param ', extra);
- * 
+ *
  *   // you can also create multi sharedState
  *   const userCtx = api.shareState({ a: 1, b: 2 });
  *   const { state, setState } = userCtx;
  *   const someResult = api.derive(() => state.a + 100);
- * 
+ *
  *  return { // export anything you want
  *    state,
  *     someResult,

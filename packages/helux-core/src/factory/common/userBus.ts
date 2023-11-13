@@ -1,5 +1,5 @@
+import { Off, ReadOnlyArr } from '../../types';
 import { getRootCtx } from '../root';
-import { ReadOnlyArr, Off } from '../../types';
 
 export function getUserBus() {
   const { userBus } = getRootCtx();

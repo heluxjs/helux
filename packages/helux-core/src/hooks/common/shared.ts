@@ -1,6 +1,6 @@
 import { isAtom } from '../../factory/common/atom';
-import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
+import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';

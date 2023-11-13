@@ -2,7 +2,7 @@ import { ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
 import { isDerivedAtom } from '../../factory/common/atom';
 import { getFnCtxByObj } from '../../factory/common/fnScope';
 import { createDeriveAsyncLogic, createDeriveLogic } from '../../factory/createDerived';
-import { delFnCtx, shouldShowComputing } from '../../helpers/fnCtx';
+import { delFnCtx } from '../../helpers/fnCtx';
 import { attachInsDerivedResult } from '../../helpers/insCtx';
 import type { AsyncType, IFnCtx, ScopeType } from '../../types';
 import { isFn, isObj } from '../../utils';

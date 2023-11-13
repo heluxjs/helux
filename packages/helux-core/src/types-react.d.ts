@@ -25,11 +25,8 @@ export type ForwardedRef<T> = ((instance: T | null) => void) | MutableRefObject<
 
 export type UseCallback = <T extends (...args: any[]) => any>(callback: T, deps: any[]) => T;
 
-export type UseState = <T extends any = any>(initial: T | (() => T)) => [
-  state: T,
-  setState: (stateOrCb: T | ((state: T) => T)) => void,
-];
+export type UseState = <T extends any = any>(initial: T | (() => T)) => [state: T, setState: (stateOrCb: T | ((state: T) => T)) => void];
 
-export type UseRef = <T = any>(initial: T) => ({ current: T });
+export type UseRef = <T = any>(initial: T) => { current: T };
 
 export type UseMemo = <T = any>(factory: () => T, deps?: any[]) => T;

@@ -6,7 +6,7 @@ import { runFn } from '../../helpers/fnRunner';
 import { createOb } from '../../helpers/obj';
 import { getSharedKey } from '../../helpers/state';
 import type { AsyncType, Dict, Fn, IFnCtx, ScopeType } from '../../types';
-import { dedupList, isFn, isAsyncFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '../../utils';
+import { dedupList, isAsyncFn, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '../../utils';
 import { recordLastest } from './blockScope';
 import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
@@ -140,7 +140,7 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
     isUpstream: () => {
       // 异步函数已在 checkResult 里保证不能产生结果中转行为，此处只需要针对处于非异步函数场景时赋值为 true 即可
       fnCtx.returnUpstreamResult = returnUpstreamResult ?? !isAsync;
-    }
+    },
   });
   ensureFnDepData(fnCtx); // 人工补录 depKey 和 fn 的依赖关系
 

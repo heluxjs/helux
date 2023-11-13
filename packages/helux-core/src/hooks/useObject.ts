@@ -10,18 +10,22 @@ export function useObjectLogic<T = Dict>(
   const ctxRef = react.useRef({ state, unmount: false });
   ctxRef.current.state = state;
 
-  const stableSet = react.useCallback((partialStateOrCb: any) => {
-    if (ctxRef.current.unmount) { // already unmounted
-      return;
-    }
-    if (callInputSet) {
-      return setState(partialStateOrCb); // take over by user cumtom setState
-    }
+  const stableSet = react.useCallback(
+    (partialStateOrCb: any) => {
+      if (ctxRef.current.unmount) {
+        // already unmounted
+        return;
+      }
+      if (callInputSet) {
+        return setState(partialStateOrCb); // take over by user cumtom setState
+      }
 
-    const state = ctxRef.current.state;
-    const partial = (isFn(partialStateOrCb) ? partialStateOrCb(state) : partialStateOrCb) || {};
-    setState({ ...state, ...partial });
-  }, [ctxRef]); // no need pass callInputSet here
+      const state = ctxRef.current.state;
+      const partial = (isFn(partialStateOrCb) ? partialStateOrCb(state) : partialStateOrCb) || {};
+      setState({ ...state, ...partial });
+    },
+    [ctxRef],
+  ); // no need pass callInputSet here
 
   react.useEffect(() => {
     ctxRef.current.unmount = false; // 防止 StrictMode 写为 true
@@ -43,9 +47,7 @@ export function useObjectLogic<T = Dict>(
  * @param initialState
  * @returns
  */
-export function useObject<T = Dict>(
-  initialState: T | (() => T),
-): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void] {
+export function useObject<T = Dict>(initialState: T | (() => T)): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void] {
   const [state, setFullState] = react.useState<T>(initialState);
   return useObjectLogic(state, setFullState);
 }
