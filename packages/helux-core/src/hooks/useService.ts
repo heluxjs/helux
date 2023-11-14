@@ -1,5 +1,4 @@
-import { react } from '../react';
-import type { Dict, Srv } from '../types';
+import type { Srv } from '../types';
 import type { MutableRefObject } from '../types-react';
 import { isFn, isObj } from '../utils';
 import { useEffect } from './useEffect';
@@ -13,14 +12,6 @@ export function useExposeService(srv: any, mayProps?: any) {
     isFn(srvRef) && srvRef(srv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-}
-
-export function uesStableDict<T = Dict>(dict: T) {
-  // trust me, just for give state a ref
-  // eslint-disable-next-line
-  const dictRef = react.useRef(dict);
-  dictRef.current = dict;
-  return () => dictRef.current;
 }
 
 export function useService<T = any>(serviceImpl: T, props?: object) {
