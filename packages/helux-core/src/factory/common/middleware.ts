@@ -1,4 +1,4 @@
-import { Dict, IMiddlewareCtx, Middleware, MutableDraft } from '../../types';
+import { Dict, IMiddlewareCtx, Middleware, MutableDraft } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 

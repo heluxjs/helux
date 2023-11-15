@@ -1,6 +1,6 @@
+import { tryAlert } from 'helux-utils';
 import { getInternal } from '../../helpers/state';
-import type { SharedState } from '../../types';
-import { tryAlert } from '../../utils';
+import type { SharedState } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 
 interface ICheckSharedOptionsBase {

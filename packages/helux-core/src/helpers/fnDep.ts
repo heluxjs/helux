@@ -1,8 +1,8 @@
+import { nodupPush, safeMapGet } from 'helux-utils';
 import { PROTO_KEY } from '../consts';
 import { getFnCtx, getRunninFnCtx } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
-import type { Dict, IFnCtx } from '../types';
-import { nodupPush, safeMapGet } from '../utils';
+import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
 
 /**

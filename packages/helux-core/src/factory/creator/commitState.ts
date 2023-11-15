@@ -1,7 +1,7 @@
+import { delListItem, isFn, nodupPush, setNoop, setVal } from 'helux-utils';
 import { immut } from 'limu';
 import { createOb } from '../../helpers/obj';
-import type { Dict, IInnerSetStateOptions } from '../../types';
-import { delListItem, isFn, nodupPush, setNoop, setVal } from '../../utils';
+import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
 import { execDepFnAndInsUpdater } from './updater';

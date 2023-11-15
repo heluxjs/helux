@@ -1,4 +1,4 @@
-import type { Atom, Fn, SharedDict, SharedState } from '../types';
+import type { Atom, Fn, SharedDict, SharedState } from '../types/base';
 import { checkShared } from './common/check';
 import { callAsyncMutateFnLogic, callMutateFnLogic } from './creator/mutateFn';
 

@@ -2,7 +2,7 @@ import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 export { EVENT_NAME, FROM, LOADING_MODE, WAY } from './user';
 export { HAS_SYMBOL };
 
-export const VER = '3.0.21';
+export const VER = '3.0.36';
 
 export const PROD_FLAG = true;
 

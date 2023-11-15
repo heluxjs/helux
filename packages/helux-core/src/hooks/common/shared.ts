@@ -1,11 +1,11 @@
+import { isFn } from 'helux-utils';
 import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
-import type { Dict, IUseSharedOptions } from '../../types';
-import { isFn } from '../../utils';
+import type { Dict, IUseSharedOptions } from '../../types/base';
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {
   if (forAtom && !isAtom(mayAtom)) {

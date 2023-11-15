@@ -3,9 +3,8 @@ import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { buildInsCtx } from '../../helpers/insCtx';
 import { resetReadMap, updateDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
-import { react } from '../../react';
-import type { Dict, IInnerUseSharedOptions } from '../../types';
-import { useForceUpdate } from './../useForceUpdate';
+import type { CoreApiCtx } from '../../types/api-ctx';
+import type { Dict, IInnerUseSharedOptions } from '../../types/base';
 import { checkAtom, checkStateVer, delInsCtx, isSharedKeyChanged, readExtraDeps, recoverInsCtx } from './shared';
 import { useSync } from './useSync';
 
@@ -15,9 +14,9 @@ const nullInsCtx = null as unknown as InsCtxDef;
 /**
  * 生成组件对应的上下文
  */
-function useInsCtx<T = Dict>(sharedState: T, options: IInnerUseSharedOptions<T>): InsCtxDef {
-  const updater = useForceUpdate();
-  const ctxRef = react.useRef<{ ctx: InsCtxDef }>({ ctx: nullInsCtx });
+function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInnerUseSharedOptions<T>): InsCtxDef {
+  const updater = apiCtx.hookImpl.useForceUpdate();
+  const ctxRef = apiCtx.react.useRef<{ ctx: InsCtxDef }>({ ctx: nullInsCtx });
   // start build or rebuild ins ctx
   let insCtx = ctxRef.current.ctx;
   if (!insCtx || isSharedKeyChanged(insCtx, sharedState)) {
@@ -31,8 +30,8 @@ function useInsCtx<T = Dict>(sharedState: T, options: IInnerUseSharedOptions<T>)
 /**
  * 组件卸载清理相关依赖
  */
-function useDelInsCtxEffect(insCtx: InsCtxDef) {
-  react.useEffect(() => {
+function useDelInsCtxEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
+  apiCtx.react.useEffect(() => {
     insCtx.mountStatus = MOUNTED;
     recoverInsCtx(insCtx);
     return () => {
@@ -44,15 +43,15 @@ function useDelInsCtxEffect(insCtx: InsCtxDef) {
 /**
  * 收集组件渲染需要的依赖
  */
-function useDepCollection<T = Dict>(sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
+function useDepCollection<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
   insCtx.renderStatus = RENDER_START;
   resetReadMap(insCtx);
   readExtraDeps(insCtx, options);
   // adapt to react 18
-  useSync(insCtx.subscribe, () => getInternal(sharedState).snap);
+  useSync(apiCtx, insCtx.subscribe, () => getInternal(sharedState).snap);
 
   // start update dep in every render period
-  react.useEffect(() => {
+  apiCtx.react.useEffect(() => {
     insCtx.renderStatus = RENDER_END;
     insCtx.isFirstRender = false;
     updateDep(insCtx);
@@ -62,20 +61,24 @@ function useDepCollection<T = Dict>(sharedState: T, insCtx: InsCtxDef, options: 
 /**
  * 裁剪后的 useSharedLogic，供 signal 模块 和 useGlobalId 调用
  */
-export function useSharedSimpleLogic<T extends Dict = Dict>(sharedState: T, options: IInnerUseSharedOptions<T> = {}): InsCtxDef {
-  const insCtx = useInsCtx(sharedState, options);
+export function useSharedSimpleLogic<T extends Dict = Dict>(
+  apiCtx: CoreApiCtx,
+  sharedState: T,
+  options: IInnerUseSharedOptions<T> = {},
+): InsCtxDef {
+  const insCtx = useInsCtx(apiCtx, sharedState, options);
   // adapt to react 18
-  useSync(insCtx.subscribe, () => getInternal(sharedState).snap);
-  useDelInsCtxEffect(insCtx);
+  useSync(apiCtx, insCtx.subscribe, () => getInternal(sharedState).snap);
+  useDelInsCtxEffect(apiCtx, insCtx);
 
   return insCtx;
 }
 
-export function useSharedLogic<T = Dict>(sharedState: T, options: IInnerUseSharedOptions<T> = {}): InsCtxDef {
+export function useSharedLogic<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInnerUseSharedOptions<T> = {}): InsCtxDef {
   checkAtom(sharedState, options.forAtom);
-  const insCtx = useInsCtx(sharedState, options);
-  useDepCollection(sharedState, insCtx, options);
-  useDelInsCtxEffect(insCtx);
+  const insCtx = useInsCtx(apiCtx, sharedState, options);
+  useDepCollection(apiCtx, sharedState, insCtx, options);
+  useDelInsCtxEffect(apiCtx, insCtx);
   checkStateVer(insCtx);
 
   return insCtx;

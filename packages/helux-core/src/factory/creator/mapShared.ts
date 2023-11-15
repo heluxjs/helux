@@ -1,6 +1,6 @@
+import { canUseDeep, isFn } from 'helux-utils';
 import { setInternal } from '../../helpers/state';
-import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types';
-import { canUseDeep, isFn } from '../../utils';
+import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types/base';
 import { buildInternal } from './buildInternal';
 import { prepareDeepMutate } from './mutateDeep';
 import { prepareNormalMutate } from './mutateNormal';

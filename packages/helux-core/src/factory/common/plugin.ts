@@ -1,6 +1,6 @@
 import { STATE_TYPE } from '../../consts';
 import { EVENT_NAME } from '../../consts/user';
-import { Dict, Fn, IInnerSetStateOptions, IPlugin, PluginCtx } from '../../types';
+import { Dict, Fn, IInnerSetStateOptions, IPlugin, PluginCtx } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 

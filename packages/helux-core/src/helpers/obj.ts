@@ -1,5 +1,5 @@
-import type { Dict, Fn } from '../types';
-import { canUseProxy, isFn } from '../utils';
+import { isFn, isProxyAvailable } from 'helux-utils';
+import type { Dict, Fn } from '../types/base';
 
 function setProtoOf(obj: Dict, proto: any) {
   obj.__proto__ = proto;
@@ -79,7 +79,7 @@ export function createOneLevelOb(rawObj: any, options?: { obj?: any; set?: Fn; g
 export function createOb(rawObj: any, options?: { set?: Fn; get?: Fn }) {
   const { set = dset, get = dget } = options || {};
 
-  if (canUseProxy()) {
+  if (isProxyAvailable()) {
     return new Proxy(rawObj, {
       set(target, key, val) {
         return set(target, key, val);

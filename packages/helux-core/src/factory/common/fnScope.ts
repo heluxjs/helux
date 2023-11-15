@@ -1,7 +1,7 @@
+import { delListItem, isDebug, isFn, isObj, safeMapGet } from 'helux-utils';
 import { EXPIRE_MS, FN_KEY, NOT_MOUNT, SIZE_LIMIT, UNMOUNT } from '../../consts';
 import { injectHeluxProto } from '../../helpers/obj';
-import type { Dict, IFnCtx, ScopeType } from '../../types';
-import { delListItem, isDebug, isFn, isObj, safeMapGet } from '../../utils';
+import type { Dict, IFnCtx, ScopeType } from '../../types/base';
 import { genFnKey } from '../common/key';
 import { getFnScope } from './speedup';
 

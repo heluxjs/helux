@@ -1,10 +1,11 @@
+import { noop } from 'helux-utils';
 import { EVENT_NAME, FROM, HELUX_GLOBAL_LOADING, LOADING_MODE, STATE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { createOb } from '../../helpers/obj';
 import { getInternal } from '../../helpers/state';
 import { useSharedLogic } from '../../hooks/common/useSharedLogic';
-import type { Dict, Fn, From, IRenderInfo, LoadingState, LoadingStatus } from '../../types';
-import { noop } from '../../utils';
+import type { CoreApiCtx } from '../../types/api-ctx';
+import type { Dict, Fn, From, IRenderInfo, LoadingState, LoadingStatus } from '../../types/base';
 import { getRootCtx } from '../root';
 import type { TInternal } from './buildInternal';
 
@@ -15,6 +16,28 @@ const fakeExtra: Dict = {};
 const fakeLoading: Dict = {};
 const fakeRenderInfo: IRenderInfo = { sn: 0, getDeps: noop };
 const fakeTuple = [createSafeLoading(fakeExtra, fakeLoading, MUTATE), noop, fakeRenderInfo];
+
+interface IInitLoadingCtxOpt {
+  internal: TInternal;
+  from: From;
+  apiCtx: CoreApiCtx;
+}
+
+/**
+ * 为 shared 或 atom 创建独立的伴生 loading 状态
+ * 通过分析 mutateFnDict 对象，为宿主对象创建一个伴生对象，专注于存储各种 desc 调用对应的 loading 状态
+ */
+function createLoading(createFn: Fn, options: IInitLoadingCtxOpt) {
+  const { internal, apiCtx } = options; // now internal is leaderInternal
+  const { mutateFnDict, moduleName } = internal;
+  const rawLoading: LoadingState = {};
+  Object.keys(mutateFnDict).forEach((desc: string) => {
+    rawLoading[desc] = { loading: false, err: null, ok: true };
+  });
+  const name = moduleName ? `${moduleName}@Loading` : '';
+  const loadingCtx = createFn({ apiCtx, rawState: rawLoading, isLoading: true, stateType: PRIVATE_LOADING }, { moduleName: name });
+  return loadingCtx.state;
+}
 
 // will init after calling ensureGlobal at createShared
 let GLOBAL_LOADING: any = null;
@@ -27,32 +50,17 @@ export function getGlobalLoadingInternal() {
   return getRootCtx().globalLoadingInternal;
 }
 
-export function initGlobalLoading(createFn: Fn) {
+export function initGlobalLoading(apiCtx: CoreApiCtx, createFn: Fn) {
   const ctx = getRootCtx();
   let shared = ctx.globalLoading;
   if (!shared) {
-    const { state } = createFn({ rawState: {}, stateType: GLOGAL_LOADING }, { moduleName: HELUX_GLOBAL_LOADING });
+    const { state } = createFn({ apiCtx, rawState: {}, stateType: GLOGAL_LOADING }, { moduleName: HELUX_GLOBAL_LOADING });
     const internal = getInternal(state);
     ctx.globalLoadingInternal = internal;
     ctx.globalLoading = state;
   }
   GLOBAL_LOADING = shared;
   return shared;
-}
-
-/**
- * 为 shared 或 atom 创建独立的伴生 loading 状态
- * 通过分析 mutateFnDict 对象，为宿主对象创建一个伴生对象，专注于存储各种 desc 调用对应的 loading 状态
- */
-export function createLoading(createFn: Fn, leaderInternal: TInternal) {
-  const { mutateFnDict, moduleName } = leaderInternal;
-  const rawLoading: LoadingState = {};
-  Object.keys(mutateFnDict).forEach((desc: string) => {
-    rawLoading[desc] = { loading: false, err: null, ok: true };
-  });
-  const name = moduleName ? `${moduleName}@Loading` : '';
-  const loadingCtx = createFn({ rawState: rawLoading, isLoading: true, stateType: PRIVATE_LOADING }, { moduleName: name });
-  return loadingCtx.state;
 }
 
 export function setLoadStatus(internal: TInternal, statusKey: string, status: LoadingStatus) {
@@ -72,12 +80,13 @@ export function setLoadStatus(internal: TInternal, statusKey: string, status: Lo
  * 创建一个 loading 代理对象，如获取不到真实的数据，则返回一个假的，
  * 确保让 loading 的任意获取都是安全的，不会出现 undefined
  */
-export function createSafeLoading(extra: Dict, loading: any, from: From) {
+export function createSafeLoading(extra: Dict, loadingObj: any, from: From) {
   let safeLoading = extra[from];
   if (!safeLoading) {
     // 各种 from 场景对应的 safeLoading 最多只创建一次
-    safeLoading = createOb(loading, {
+    safeLoading = createOb(loadingObj, {
       get(target, key) {
+        // 通过 from 避免 mutate 和 action 重复key，同时也方便 devtool 知道调用来源
         const realKey = `${from}/${key}`;
         return target[realKey] || { loading: false, ok: true, err: null };
       },
@@ -87,7 +96,8 @@ export function createSafeLoading(extra: Dict, loading: any, from: From) {
   return safeLoading;
 }
 
-export function getLoadingInfo(createFn: Fn, internal: TInternal, from: From = MUTATE) {
+export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
+  const { internal, from } = options;
   const { stateType, loadingMode } = internal;
   const isUserState = STATE_TYPE.USER_STATE === stateType;
 
@@ -100,7 +110,7 @@ export function getLoadingInfo(createFn: Fn, internal: TInternal, from: From = M
     if (PRIVATE === loadingMode) {
       loadingProxy = internal.extra.loadingProxy;
       if (!loadingProxy) {
-        loadingProxy = createLoading(createFn, internal);
+        loadingProxy = createLoading(createFn, options);
         internal.extra.loadingProxy = loadingProxy;
         // 向宿主上写入私有的 loadingInternal 实现
         internal.loadingInternal = getInternal(loadingProxy);
@@ -120,7 +130,8 @@ export function getLoadingInfo(createFn: Fn, internal: TInternal, from: From = M
 /**
  * 初始化伴生的 loading 上下文
  */
-export function initLoadingCtx(createFn: Fn, leaderInternal: TInternal, from: From) {
+export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
+  const { internal: leaderInternal, from, apiCtx } = options;
   const { stateType, loadingMode } = leaderInternal;
   const isUserState = STATE_TYPE.USER_STATE === stateType;
 
@@ -128,8 +139,8 @@ export function initLoadingCtx(createFn: Fn, leaderInternal: TInternal, from: Fr
   // 当前状态是用户状态，且未禁用伴生loading
   if (isUserState && NONE !== loadingMode) {
     useLoading = () => {
-      const loadingProxy = getLoadingInfo(createFn, leaderInternal, from).loadingProxy;
-      const { proxyState, internal, extra, renderInfo } = useSharedLogic(loadingProxy);
+      const loadingProxy = getLoadingInfo(createFn, options).loadingProxy;
+      const { proxyState, internal, extra, renderInfo } = useSharedLogic(apiCtx, loadingProxy);
       // 注意此处用实例的 extra 记录 safeLoading，实例存在期间 safeLoading 创建一次后会被后续一直复用
       return [createSafeLoading(extra, proxyState, from), internal.setState, renderInfo];
     };
@@ -137,6 +148,6 @@ export function initLoadingCtx(createFn: Fn, leaderInternal: TInternal, from: Fr
 
   return {
     useLoading,
-    getLoading: () => getLoadingInfo(createFn, leaderInternal, from).loadingState,
+    getLoading: () => getLoadingInfo(createFn, options).loadingState,
   };
 }

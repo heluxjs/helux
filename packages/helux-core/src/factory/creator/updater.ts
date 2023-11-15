@@ -1,9 +1,9 @@
+import { dedupList } from 'helux-utils';
 import { getDepFnStats } from '../../helpers/fnDep';
 import { runFn } from '../../helpers/fnRunner';
 import { markComputing } from '../../helpers/fnStatus';
 import { runInsUpdater } from '../../helpers/insCtx';
-import type { Dict, InsCtxMap } from '../../types';
-import { dedupList } from '../../utils';
+import type { Dict, InsCtxMap } from '../../types/base';
 import { genRenderSN } from '../common/key';
 import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';

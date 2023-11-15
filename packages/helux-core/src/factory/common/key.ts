@@ -1,6 +1,6 @@
+import { getSafeNext, isMax } from 'helux-utils';
 import { SCOPE_TYPE } from '../../consts';
-import type { ScopeType } from '../../types';
-import { getSafeNext, isMax } from '../../utils';
+import type { ScopeType } from '../../types/base';
 import { getRootCtx } from '../root';
 import { getBlockScope, getFnScope, getInsScope } from './speedup';
 

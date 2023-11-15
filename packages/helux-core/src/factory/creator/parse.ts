@@ -1,7 +1,9 @@
+import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from 'helux-utils';
 import { immut } from 'limu';
 import { FROM, LOADING_MODE, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
+import type { CoreApiCtx } from '../../types/api-ctx';
 import type {
   AtomMutateFnStdDict,
   AtomMutateFnStdItem,
@@ -20,12 +22,12 @@ import type {
   NumStrSymbol,
   WatchDepFn,
   WatchOptionsType,
-} from '../../types';
-import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeGet, setNoop } from '../../utils';
+} from '../../types/base';
 import { genFnKey } from '../common/key';
 import { getDepKeyByPath, tryGetLoc } from '../common/util';
 
 export interface IInnerOptions<T = any> {
+  apiCtx: CoreApiCtx;
   rawState: T | (() => T);
   forAtom?: boolean;
   forGlobal?: boolean;
@@ -75,7 +77,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dic
   if (isFn(fnItem) && fnItem !== noop) {
     validItem = { fn: fnItem, deps: noopArr, desc, realDesc: desc };
   } else if (isObj(fnItem)) {
-    const { fn, desc, deps, task, immediate = false } = fnItem;
+    const { fn, desc, deps, task, immediate } = fnItem;
     const descVar = inputDesc || desc || '';
     const fnVar = isFn(fn) ? fn : undefined;
     const taskVar = isFn(task) ? task : undefined;
@@ -220,9 +222,9 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     const result = when(state);
     // record id, globalId, stopDep
     const setRuleConf = (confKey: string) => {
-      const idList = safeGet(idsDict, confKey, [] as NumStrSymbol[]);
+      const idList = safeObjGet(idsDict, confKey, [] as NumStrSymbol[]);
       ids.forEach((id) => nodupPush(idList, id));
-      const globalIdList = safeGet(globalIdsDict, confKey, [] as NumStrSymbol[]);
+      const globalIdList = safeObjGet(globalIdsDict, confKey, [] as NumStrSymbol[]);
       globalIds.forEach((id) => nodupPush(globalIdList, id));
 
       let stopKeyDep;

@@ -40,6 +40,8 @@ const config = {
     exports: 'named',
     globals: {
       limu: 'limu',
+      'helux-utils': 'HeluxUtils',
+      'helux-hooks-impl': 'HeluxHooksImpl',
     },
   },
   plugins: [

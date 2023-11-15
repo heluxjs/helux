@@ -1,9 +1,9 @@
+import { enureReturnArr, isFn, isObj, isProxyRevoked, noop, tryAlert } from 'helux-utils';
 import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { setLoadStatus } from '../../factory/creator/loading';
 import { getInternal } from '../../helpers/state';
-import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types';
-import { enureReturnArr, isFn, isObj, isProxyRevoked, noop, tryAlert } from '../../utils';
+import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types/base';
 import { createWatchLogic } from '../createWatch';
 
 interface ICallMutateFnLogicOptionsBase {
@@ -141,7 +141,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
     createWatchLogic(
       ({ sn, isFirstCall }) => {
         try {
-          const { realDesc: desc, fn, task, deps, immediate = false } = item;
+          const { realDesc: desc, fn, task, deps, immediate } = item;
           console.log('run watch fn ', desc);
           if (fn) {
             // 包含 task 配置时，fn 只会在首次执行被调用一次
@@ -153,8 +153,9 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
           }
 
           if (task) {
-            // 第一次运行则检查 immediate
-            if ((isFirstCall && immediate) || !isFirstCall) {
+            // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行，有 fn 则不执行
+            const canRunAtFirstCall = isFirstCall && (immediate ?? !fn);
+            if (!isFirstCall || canRunAtFirstCall) {
               callMutateFn(target, { sn, task, desc, deps, forTask: true });
             }
           }
@@ -169,9 +170,13 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
           }
         } catch (err: any) {
           let customLabel = '';
-          if (draft != null && isProxyRevoked(draft) && err.message.includes('revoked')) {
-            // 出现错误 Cannot perform 'get' on a proxy that has been revoked 代表同步的多个 mutate 里出现了循环依赖
-            // 原理是 finishMutate 内部流程是先结束草稿，再触发watch，如出现循环依赖的话，后续会复用已撤销的 draft 进而导致错误产生
+          const msg = err.message || '';
+          if (draft != null && isProxyRevoked(draft) && (msg.includes('revoked') || msg.includes('draft has been finished'))) {
+            // 出现以下错误代表同步的多个 mutate 里出现了循环依赖
+            // 1 Not a Limu root draft or draft has been finished
+            // 2 Cannot perform 'get' on a proxy that has been revoked
+            // 原理是 finishMutate 内部流程是先结束草稿，再触发 watch，如出现循环依赖的话，
+            // 后续会复用已撤销的 draft 或再次结束 draft 导致错误产生
             customLabel = `found module [${usefulName}] recycle dep in mutate fns [${keysStr}], please check them!`;
             if (foundRecycleDep) {
               return; // 静默掉，会有多个同步函数触发，这里只需告警一次即可

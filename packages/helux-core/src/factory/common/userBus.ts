@@ -1,4 +1,4 @@
-import { Off, ReadOnlyArr } from '../../types';
+import { Off, ReadOnlyArr } from '../../types/base';
 import { getRootCtx } from '../root';
 
 export function getUserBus() {

@@ -1,3 +1,4 @@
+import { dedupList, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from 'helux-utils';
 import { ASYNC_TYPE, DERIVE, IS_DERIVED_ATOM, SCOPE_TYPE } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { markFnEnd, markFnStart, registerFn, shouldShowComputing } from '../../helpers/fnCtx';
@@ -5,8 +6,7 @@ import { ensureFnDepData, recordFnDepKeys } from '../../helpers/fnDep';
 import { runFn } from '../../helpers/fnRunner';
 import { createOb } from '../../helpers/obj';
 import { getSharedKey } from '../../helpers/state';
-import type { AsyncType, Dict, Fn, IFnCtx, ScopeType } from '../../types';
-import { dedupList, isAsyncFn, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '../../utils';
+import type { AsyncType, Dict, Fn, IFnCtx, ScopeType } from '../../types/base';
 import { recordLastest } from './blockScope';
 import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
@@ -111,9 +111,6 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
   } = options;
   if (!isFn(fn)) {
     throw new Error('ERR_NON_FN: derive need a function arg!');
-  }
-  if (isAsync && !isAsyncFn(task)) {
-    throw new Error('ERR_NON_FN: deriveAsync need a async function arg!');
   }
 
   const fnCtx = registerFn(fn, {

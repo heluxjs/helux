@@ -1,15 +1,15 @@
+import { isFn, isObj } from 'helux-utils';
 import { createDraft, finishDraft } from 'limu';
-import { react } from '../react';
-import type { PartialStateCb, PlainObject } from '../types';
-import { isFn, isObj } from '../utils';
-import { useObjectLogic } from './useObject';
+import type { CoreApiCtx } from '../types/api-ctx';
+import type { PartialStateCb, PlainObject } from '../types/base';
 
-export function useMutable<T extends PlainObject>(initialState: T | (() => T)) {
-  const [state, setFullState] = react.useState<T>(initialState);
-  const stateRef = react.useRef(state);
+export function useMutable<T extends PlainObject>(apiCtx: CoreApiCtx, initialState: T | (() => T)) {
+  const { useState, useRef, useCallback } = apiCtx.react;
+  const [state, setFullState] = useState<T>(initialState);
+  const stateRef = useRef(state);
   stateRef.current = state;
 
-  const setState = react.useCallback(
+  const setState = useCallback(
     (partialStateOrCb: Partial<T> | PartialStateCb<T>) => {
       const prevState = stateRef.current;
       let final = prevState;
@@ -28,5 +28,5 @@ export function useMutable<T extends PlainObject>(initialState: T | (() => T)) {
     [stateRef],
   );
 
-  return useObjectLogic(state, setState, true);
+  return apiCtx.hookImpl.useObjectLogic(state, setState, true);
 }

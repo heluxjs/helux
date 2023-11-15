@@ -1,5 +1,5 @@
 import { HAS_SYMBOL, IS_ATOM, IS_DERIVED_ATOM } from '../../consts';
-import { Atom, AtomValType, DerivedAtom } from '../../types';
+import { Atom, AtomValType, DerivedAtom } from '../../types/base';
 import { getRootCtx } from '../root';
 
 export function getMarkAtomMap() {

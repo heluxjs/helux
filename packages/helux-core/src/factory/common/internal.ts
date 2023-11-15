@@ -1,4 +1,4 @@
-import { isDebug } from '../../utils';
+import { isDebug } from 'helux-utils';
 import type { TInternal } from '../creator/buildInternal';
 import { getSharedScope } from './speedup';
 

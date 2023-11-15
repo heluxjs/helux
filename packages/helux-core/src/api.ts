@@ -12,16 +12,12 @@ import { watch } from './factory/createWatch';
 import { getDeriveLoading, runDerive } from './helpers/fnRunner';
 import { getRawState, getSnap } from './helpers/state';
 import { useDerived, useDerivedAsync, useDerivedAtom, useDerivedAtomAsync } from './hooks/useDerived';
-import { useEffect, useLayoutEffect } from './hooks/useEffect';
-import { useForceUpdate } from './hooks/useForceUpdate';
 import { useGlobalId } from './hooks/useGlobalId';
 import { getActionLoading, getMutateLoading, useActionLoading, useMutateLoading } from './hooks/useLoading';
 import { useMutable } from './hooks/useMutable';
-import { useObject } from './hooks/useObject';
 import { useOnEvent } from './hooks/useOnEvent';
 import { storeSrv, useService } from './hooks/useService';
 import { useAtom, useShared } from './hooks/useShared';
-import { useStable } from './hooks/useStable';
 import { useWatch } from './hooks/useWatch';
 import { block, blockStatus, dynamicBlock, dynamicBlockStatus, signal } from './signal';
 
@@ -52,16 +48,11 @@ export {
   useDerivedAtomAsync,
   useWatch,
   useGlobalId,
-  useObject,
   useService,
-  useForceUpdate,
-  useEffect,
-  useLayoutEffect,
   useOnEvent,
   useMutable,
   useMutateLoading,
   useActionLoading,
-  useStable,
   // action api
   action,
   actionAsync,
@@ -83,9 +74,9 @@ export {
   // emit api
   emit,
   on,
-  produce,
   // util api
   storeSrv,
+  produce,
   shallowCompare,
   isDiff,
   getMutateLoading,

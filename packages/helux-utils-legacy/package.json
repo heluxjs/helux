@@ -1,0 +1,61 @@
+{
+  "name": "helux-utils-legacy",
+  "version": "3.0.7",
+  "description": "helux utils lib",
+  "keywords": [
+    "helux",
+    "helux-utils"
+  ],
+  "bugs": {
+    "url": "https://github.com/heluxjs/helux/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heluxjs/helux",
+    "directory": "packages/helux"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "fantasticsoul",
+    "email": "624313307@qq.com",
+    "url": "https://github.com/fantasticsoul"
+  },
+  "main": "dist/helux-utils.min.js",
+  "unpkg": "dist/helux-utils.min.js",
+  "types": "index.d.ts",
+  "files": [
+    "dist",
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "build-legacy": "tsc & rollup -c",
+    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
+    "build:es": "rollup -c --environment BUILD_ENV:es",
+    "build:umd": "rollup -c --environment BUILD_ENV:development",
+    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
+    "dev": "tsc --watch",
+    "lint": "eslint ./src --fix --ext js,ts,tsx",
+    "test": "jest"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  },
+  "dependencies": {
+    "helux-types": ">=3.0.3"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.12.11",
+    "babel-cli": "^6.26.0",
+    "rollup": "^2.23.0"
+  },
+  "peerDependencies": {
+    "helux-types": ">=3.0.3"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "npmName": "helux-utils"
+}

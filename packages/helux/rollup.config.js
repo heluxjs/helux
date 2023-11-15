@@ -1,8 +1,6 @@
 import babel from 'rollup-plugin-babel'; // 支持jsx
 import commonjs from 'rollup-plugin-commonjs'; // 支持按commonjs规范来导入外部模块
 import resolve from 'rollup-plugin-node-resolve'; // 支持内部的模块路径解析
-// import { eslint } from 'rollup-plugin-eslint';
-// import { terser } from 'rollup-plugin-terser';
 import { uglify } from 'rollup-plugin-uglify';
 import pkg from './package.json';
 
@@ -40,22 +38,16 @@ const config = {
     exports: 'named',
     globals: {
       react: 'React',
-      'react-dom': 'ReactDOM',
-      limu: 'limu',
       'helux-core': 'HeluxCore',
     },
   },
   plugins: [
     resolve(),
+    commonjs(),
     babel({
       exclude: '**/node_modules/**',
       runtimeHelpers: true,
     }),
-    commonjs(),
-    // terser(),
-    // eslint({
-    //   include: ['src/**/*.js'] // 需要检查的部分
-    // }),
   ],
 };
 

@@ -1,6 +1,6 @@
+import { isObj } from 'helux-utils';
 import { createDraft, finishDraft } from 'limu';
-import type { Dict, IInnerSetStateOptions } from '../../types';
-import { isObj } from '../../utils';
+import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { runMiddlewares } from '../common/middleware';
 import { emitDataChanged } from '../common/plugin';
 import { newMutateCtx } from '../common/util';

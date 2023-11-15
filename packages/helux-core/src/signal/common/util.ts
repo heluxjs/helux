@@ -1,10 +1,10 @@
+import type { ForwardedRef } from 'helux-types';
+import { noopArgs } from 'helux-utils';
 import { IS_BLOCK } from '../../consts';
 import { getAtom, isDerivedAtom } from '../../factory/common/atom';
 import { markBlockFnEnd, markBlockFnStart } from '../../helpers/blockCtx';
-import { react } from '../../react';
-import type { Dict, Fn, IBlockCtx, IBlockOptions, LoadingStatus } from '../../types';
-import type { ForwardedRef } from '../../types-react';
-import { noopArgs } from '../../utils';
+import type { CoreApiCtx } from '../../types/api-ctx';
+import type { Dict, Fn, IBlockCtx, IBlockOptions, LoadingStatus } from '../../types/base';
 import { wrapComp, wrapDerivedAtomSignalComp } from './wrap';
 
 interface IMarkBlockAndRunCbOptions {
@@ -35,26 +35,26 @@ export function markBlockAndRunCb(blockCtx: IBlockCtx, options: IMarkBlockAndRun
   return result;
 }
 
-export function callBlockCb(blockCtx: IBlockCtx, options: ICallBlockCbOptions) {
+export function callBlockCb(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, options: ICallBlockCbOptions) {
   const { cb, props, ref, isFirstRender, isHeadCall, status } = options;
   if (isFirstRender) {
     if (!isHeadCall) {
       return options.result; // call at function buttom, return head call's result
     }
     const result = markBlockAndRunCb(blockCtx, options);
-    return renderResult(blockCtx, result);
+    return renderResult(apiCtx, blockCtx, result);
   }
 
   if (!isHeadCall) {
     const blockProps = { ...props, status, read: noopArgs };
     const result = cb(blockProps, ref) || '';
-    return renderResult(blockCtx, result);
+    return renderResult(apiCtx, blockCtx, result);
   }
 
   return '';
 }
 
-export function renderResult(blockCtx: IBlockCtx, result: any) {
+export function renderResult(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, result: any) {
   const isDerivedAtomResult = isDerivedAtom(result);
 
   if (blockCtx.renderAtomOnce && !isDerivedAtomResult) {
@@ -64,18 +64,17 @@ export function renderResult(blockCtx: IBlockCtx, result: any) {
 
   if (isDerivedAtomResult) {
     blockCtx.renderAtomOnce = true;
-    const Comp = wrapDerivedAtomSignalComp(result);
-    // TODO CHECK
-    return react.createElement(Comp, { status: { loading: false, err: null, ok: true } });
+    const Comp = wrapDerivedAtomSignalComp(apiCtx, result);
+    return apiCtx.react.createElement(Comp, { status: { loading: false, err: null, ok: true } });
   }
   // 内部自动尝试拆箱 atom
   return getAtom(result as any);
 }
 
-export function makeBlockComp<P = object>(blockCtx: IBlockCtx, defComp: Fn, options?: IBlockOptions<P>) {
+export function makeBlockComp<P = object>(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, defComp: Fn, options?: IBlockOptions<P>) {
   const { memo = true, compare } = options || {};
   const CompRender = defComp(blockCtx);
-  const Block = wrapComp(CompRender, 'HeluxBlock', memo, compare);
+  const Block = wrapComp(apiCtx, CompRender, 'HeluxBlock', memo, compare);
   // @ts-ignore
   Block[IS_BLOCK] = true;
   return Block;

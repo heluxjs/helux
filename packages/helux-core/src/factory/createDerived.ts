@@ -8,7 +8,7 @@ import type {
   IFnCtx,
   PlainObject,
   ScopeType,
-} from '../types';
+} from '../types/base';
 import { initDeriveFn } from './common/derived';
 
 const { TASK } = ASYNC_TYPE;

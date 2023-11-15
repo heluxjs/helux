@@ -13,7 +13,7 @@ import type {
   MutateWitness,
   SharedDict,
   SharedState,
-} from '../types';
+} from '../types/base';
 import { checkShared, checkSharedStrict } from './common/check';
 import { callMutateFn, watchAndCallMutateDict } from './creator/mutateFn';
 import { parseCreateMutateOpt, parseMutate, parseMutateFn } from './creator/parse';

@@ -1,13 +1,13 @@
-import { react } from '../../react';
+import type { CoreApiCtx } from '../../types/api-ctx';
 
 /**
  * resolve react tearing problem
  * param1: subscribe
  * param2: getSnapshot
  */
-export function useSync(...args: any[]) {
+export function useSync(api: CoreApiCtx, ...args: any[]) {
   try {
-    react.useSyncExternalStore(...args);
+    api.react.useSyncExternalStore(...args);
   } catch (err) {
     // ReactDevTooll sometimes throw this strange bug:
     // dispatcher.useSyncExternalStore is not a function

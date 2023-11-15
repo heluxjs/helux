@@ -4,16 +4,16 @@ import { delBlockCtx, markBlockMounted } from '../../helpers/blockCtx';
 import { isSharedState } from '../../helpers/state';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
 import { useSharedSimpleLogic } from '../../hooks/common/useSharedLogic';
-import { react } from '../../react';
-import type { IBlockCtx, LoadingStatus } from '../../types';
+import type { CoreApiCtx } from '../../types/api-ctx';
+import type { IBlockCtx, LoadingStatus } from '../../types/base';
 
-export function useDep(blockCtx: IBlockCtx, showProcess = false) {
+export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, showProcess = false) {
   let status: LoadingStatus = { loading: false, err: null, ok: true };
   blockCtx.map.forEach((depKeys, stateOrResult) => {
     // trust beblow statement, cause map data supplied by blockCtx is stable
     if (isSharedState(stateOrResult)) {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      const insCtx = useSharedSimpleLogic(stateOrResult);
+      const insCtx = useSharedSimpleLogic(apiCtx, stateOrResult);
       if (insCtx.isFirstRender) {
         // transfer depKeys
         depKeys.forEach((depKey) => insCtx.recordDep(getDepKeyInfo(depKey)));
@@ -22,7 +22,7 @@ export function useDep(blockCtx: IBlockCtx, showProcess = false) {
     } else {
       // will transfer depKeys in genDerivedResult process
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      const fnCtx = useDerivedSimpleLogic({ fn: stateOrResult, forAtom: isDerivedAtom(stateOrResult), showProcess });
+      const fnCtx = useDerivedSimpleLogic(apiCtx, { fn: stateOrResult, forAtom: isDerivedAtom(stateOrResult), showProcess });
       if (!fnCtx.status.ok) {
         status = fnCtx.status;
       }
@@ -31,8 +31,8 @@ export function useDep(blockCtx: IBlockCtx, showProcess = false) {
   return status;
 }
 
-export function useDelBlockCtxEffect(blockCtx: IBlockCtx, isDynamic: boolean) {
-  react.useEffect(() => {
+export function useDelBlockCtxEffect(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, isDynamic: boolean) {
+  apiCtx.react.useEffect(() => {
     if (!blockCtx.mounted) {
       markBlockMounted(blockCtx);
     }
@@ -41,8 +41,8 @@ export function useDelBlockCtxEffect(blockCtx: IBlockCtx, isDynamic: boolean) {
   }, [blockCtx]);
 }
 
-export function useIsFirstRender(blockCtx: IBlockCtx, isDynamic: boolean) {
-  const ref = react.useRef({ isFirst: true, key: blockCtx.key });
+export function useIsFirstRender(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, isDynamic: boolean) {
+  const ref = apiCtx.react.useRef({ isFirst: true, key: blockCtx.key });
   if (ref.current.key !== blockCtx.key) {
     // works for hot reload
     delBlockCtx(ref.current.key, isDynamic);

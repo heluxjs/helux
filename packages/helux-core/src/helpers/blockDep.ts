@@ -1,5 +1,5 @@
+import { nodupPush, safeMapGet } from 'helux-utils';
 import { getBlockScope } from '../factory/common/speedup';
-import { nodupPush, safeMapGet } from '../utils';
 
 /**
  * 为可能存在的 block(cb) 的 [cb调用] 记录依赖

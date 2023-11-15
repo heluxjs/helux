@@ -1,7 +1,8 @@
+import { delListItem, nodupPush, safeMapGet } from 'helux-utils';
 import { STATE_TYPE } from '../../consts';
 import { getInternal } from '../../helpers/state';
-import type { Fn, NumStrSymbol } from '../../types';
-import { delListItem, nodupPush, safeMapGet } from '../../utils';
+import type { CoreApiCtx } from '../../types/api-ctx';
+import type { Fn, NumStrSymbol } from '../../types/base';
 import { getFnScope } from '../common/speedup';
 import { getRootCtx } from '../root';
 
@@ -12,12 +13,12 @@ export function getGlobalEmpty() {
   return GLOBAL_EMPTY;
 }
 
-export function initGlobalEmpty(createFn: Fn) {
+export function initGlobalEmpty(apiCtx: CoreApiCtx, createFn: Fn) {
   const ctx = getRootCtx();
   let shared = ctx.globalEmpty;
   if (!shared) {
     // global shared state
-    const { state } = createFn({ rawState: {}, forGlobal: true, stateType: STATE_TYPE.GLOGAL_EMPTY });
+    const { state } = createFn({ apiCtx, rawState: {}, forGlobal: true, stateType: STATE_TYPE.GLOGAL_EMPTY });
     const internal = getInternal(state);
     ctx.globalEmpty = state;
     ctx.globalEmptyInternal = internal;

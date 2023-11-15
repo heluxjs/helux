@@ -1,11 +1,11 @@
+import { isFn, isObj } from 'helux-utils';
 import { ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
 import { isDerivedAtom } from '../../factory/common/atom';
 import { getFnCtxByObj } from '../../factory/common/fnScope';
 import { createDeriveAsyncLogic, createDeriveLogic } from '../../factory/createDerived';
 import { delFnCtx } from '../../helpers/fnCtx';
 import { attachInsDerivedResult } from '../../helpers/insCtx';
-import type { AsyncType, IFnCtx, ScopeType } from '../../types';
-import { isFn, isObj } from '../../utils';
+import type { AsyncType, IFnCtx, ScopeType } from '../../types/base';
 
 const InvalidInput = 'ERR_NON_DERIVED_FN_OR_RESULT: useDerived only accept a static derived result or derive fn';
 const NotDerivedAtom = 'ERR_NOT_ATOM_RESULT: useAtom series fn only accept derived atom';

@@ -1,7 +1,6 @@
+import { asType, safeObjGet } from 'helux-utils';
 import { VER } from '../consts';
-import { setReactLib } from '../react';
-import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types';
-import { asType, GLOBAL_REF, safeGet } from '../utils';
+import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types/base';
 import type { TInternal } from './creator/buildInternal';
 
 function buildFnScope() {
@@ -74,7 +73,7 @@ function buildEventBus() {
   const name2cbs: Dict<Fn[]> = {};
   return {
     on: (name: string, cb: Fn) => {
-      const cbs = safeGet(name2cbs, name, [] as Fn[]);
+      const cbs = safeObjGet(name2cbs, name, [] as Fn[]);
       cbs.push(cb);
     },
     emit: (name: string, ...args: any[]) => {
@@ -91,7 +90,7 @@ function buildEventBus() {
   };
 }
 
-function createRoot() {
+export function createRoot() {
   const root = {
     VER,
     rootState: {} as Dict,
@@ -138,41 +137,11 @@ export function getRoot() {
   return ROOT;
 }
 
-export function initHeluxContext(options: {
-  heluxCtxKey: string | symbol;
-  reactLib: any;
-  standalone?: boolean;
-  transfer?: (existedRoot: any, newRoot: any) => any;
-}) {
-  if (inited) return; // only can be call one time!
+export function setRootData(options: Dict) {
+  ROOT = options.ROOT;
+  inited = options.inited;
+}
 
-  const { heluxCtxKey, standalone, transfer, reactLib } = options;
-  setReactLib(reactLib);
-  const existedRoot: HeluxRoot = GLOBAL_REF[heluxCtxKey];
-  const done = (key: string | symbol) => {
-    inited = true;
-    ROOT = createRoot();
-    GLOBAL_REF[key] = ROOT;
-  };
-
-  if (!existedRoot) {
-    return done(heluxCtxKey);
-  }
-
-  // found another version, but want to own dependency helux context
-  if (standalone) {
-    return done(`${String(heluxCtxKey)}_${Date.now()}`);
-  }
-
-  // now current helux will reuse existed helux context,
-  // multi helux lib will share one hulex context,
-  // no matter the helux in app1 and and2 is the same module or not,
-  // it is ok that app1 can use a shared state exported from app2 by useShared directly,
-
-  //try transfer legacy root by user custom transfer fn
-  if (transfer) {
-    inited = true;
-    ROOT = createRoot(); // may a lower version root
-    transfer(existedRoot, ROOT);
-  }
+export function getRootData() {
+  return { ROOT, inited };
 }

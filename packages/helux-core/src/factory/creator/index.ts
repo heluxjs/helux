@@ -1,5 +1,5 @@
 import { getInternal, recordMod } from '../../helpers/state';
-import type { Dict, ICreateOptions } from '../../types';
+import type { Dict, ICreateOptions } from '../../types/base';
 import { markFnExpired } from '../common/fnScope';
 import { clearInternal } from '../common/internal';
 import { emitShareCreated } from '../common/plugin';

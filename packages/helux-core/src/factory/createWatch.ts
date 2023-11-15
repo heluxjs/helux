@@ -1,9 +1,9 @@
+import { isFn, noop } from 'helux-utils';
 import { SCOPE_TYPE, WATCH } from '../consts';
 import { markFnEnd, markFnStart, registerFn } from '../helpers/fnCtx';
 import { recordFnDepKeys } from '../helpers/fnDep';
 import { getInternal } from '../helpers/state';
-import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types';
-import { isFn, noop } from '../utils';
+import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types/base';
 import { parseWatchOptions } from './creator/parse';
 
 export function createWatchLogic<T = SharedState>(

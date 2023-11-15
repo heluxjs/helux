@@ -1,12 +1,12 @@
+import { isFn, isSymbol, prefixValKey, warn } from 'helux-utils';
 import { immut } from 'limu';
 import { EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, WAY } from '../consts';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
 import { mapGlobalId } from '../factory/creator/globalId';
-import type { Dict, Ext, IFnCtx, IUseSharedOptions } from '../types';
-import type { DepKeyInfo } from '../types-inner';
-import { isFn, isSymbol, prefixValKey, warn } from '../utils';
+import type { Dict, Ext, IFnCtx, IUseSharedOptions } from '../types/base';
+import type { DepKeyInfo } from '../types/inner';
 import { recordBlockDepKey } from './blockDep';
 import * as fnDep from './fnDep';
 import { clearDep } from './insDep';

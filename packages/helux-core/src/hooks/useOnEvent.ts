@@ -1,14 +1,11 @@
 import { getUserBus } from '../factory/common/userBus';
-import { Fn } from '../types';
-import { useEffectLogic } from './useEffect';
+import type { CoreApiCtx } from '../types/api-ctx';
+import { Fn } from '../types/base';
 
-export function useOnEvent(name: string, cb: Fn) {
-  useEffectLogic(
-    () => {
-      const userBus = getUserBus();
-      userBus.on(name, cb);
-      return () => userBus.off(name, cb);
-    },
-    { deps: [] },
-  );
+export function useOnEvent(apiCtx: CoreApiCtx, name: string, cb: Fn) {
+  apiCtx.react.useEffect(() => {
+    const userBus = getUserBus();
+    userBus.on(name, cb);
+    return () => userBus.off(name, cb);
+  }, []);
 }

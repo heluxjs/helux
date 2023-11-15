@@ -1,11 +1,12 @@
 import { ensureGlobal } from '../factory/createShared';
 import { getGlobalEmpty } from '../factory/creator/globalId';
-import { NumStrSymbol } from '../types';
+import type { CoreApiCtx } from '../types/api-ctx';
+import type { NumStrSymbol } from '../types/base';
 import { useSharedSimpleLogic } from './common/useSharedLogic';
 
-export function useGlobalId(globalId: NumStrSymbol) {
-  ensureGlobal();
+export function useGlobalId(apiCtx: CoreApiCtx, globalId: NumStrSymbol) {
+  ensureGlobal(apiCtx);
   const globalEmpty = getGlobalEmpty();
-  const insCtx = useSharedSimpleLogic(globalEmpty, { staticDeps: () => [], globalId });
+  const insCtx = useSharedSimpleLogic(apiCtx, globalEmpty, { staticDeps: () => [], globalId });
   return insCtx.renderInfo;
 }

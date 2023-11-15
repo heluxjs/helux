@@ -1,11 +1,11 @@
+import { canUseDeep, isSymbol, prefixValKey, warn } from 'helux-utils';
 import { immut } from 'limu';
 import { HAS_SYMBOL, IS_ATOM, KEY_SPLITER } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import { createOb } from '../../helpers/obj';
 import { mapSharedState } from '../../helpers/state';
-import type { Dict } from '../../types';
-import { canUseDeep, isSymbol, prefixValKey, warn } from '../../utils';
+import type { Dict } from '../../types/base';
 import { getMarkAtomMap } from '../common/atom';
 import { recordLastest } from '../common/blockScope';
 import type { ParsedOptions } from './parse';

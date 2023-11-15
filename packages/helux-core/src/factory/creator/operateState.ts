@@ -1,6 +1,6 @@
+import { matchDictKey, nodupPush, prefixValKey } from 'helux-utils';
 import { IOperateParams } from 'limu';
-import type { KeyIdsDict, NumStrSymbol } from '../../types';
-import { matchDictKey, nodupPush, prefixValKey } from '../../utils';
+import type { KeyIdsDict, NumStrSymbol } from '../../types/base';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';

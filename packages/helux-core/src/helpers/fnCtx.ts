@@ -1,8 +1,8 @@
+import { includeOne, noop, noopArr } from 'helux-utils';
 import { ASYNC_TYPE, NOT_MOUNT, RENDER_START } from '../consts';
 import { delHistoryUnmoutFnCtx, getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
-import type { Fn, IFnCtx, ScopeType } from '../types';
-import { includeOne, noop, noopArr } from '../utils';
+import type { Fn, IFnCtx, ScopeType } from '../types/base';
 import { delFnDepData } from './fnDep';
 
 const { MAY_TRANSFER } = ASYNC_TYPE;

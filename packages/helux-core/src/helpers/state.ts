@@ -1,10 +1,10 @@
+import { getSafeNext, isDebug, isObj } from 'helux-utils';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
 import { ParsedOptions } from '../factory/creator/parse';
 import { getRoot } from '../factory/root';
-import { Dict, SharedState } from '../types';
-import { getSafeNext, isDebug, isObj } from '../utils';
+import { Dict, SharedState } from '../types/base';
 
 export function getInternalByKey(sharedKey: number): TInternal {
   const internalMap = getInternalMap();

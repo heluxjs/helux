@@ -1,9 +1,9 @@
+import { isDebug, isProxyAvailable, prefixValKey } from 'helux-utils';
 import { immut, IOperateParams } from 'limu';
 import { KEY_SPLITER } from '../../consts';
 import { createOb } from '../../helpers/obj';
-import type { Dict, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types';
-import { DepKeyInfo } from '../../types-inner';
-import { canUseProxy, isDebug, prefixValKey } from '../../utils';
+import type { Dict, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
+import { DepKeyInfo } from '../../types/inner';
 
 export interface IMutateCtx {
   depKeys: string[];
@@ -59,7 +59,7 @@ export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
 }
 
 export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) {
-  if (canUseProxy()) {
+  if (isProxyAvailable()) {
     return immut(obj, { onOperate });
   }
 

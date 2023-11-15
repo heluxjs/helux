@@ -1,3 +1,4 @@
+import { delListItem, nodupPush, noop, safeObjGet } from 'helux-utils';
 import type {
   AsyncSetState,
   Dict,
@@ -10,9 +11,8 @@ import type {
   SetAtom,
   SetState,
   SharedState,
-} from '../../types';
-import type { Level1ArrKeys } from '../../types-inner';
-import { delListItem, nodupPush, noop, safeGet } from '../../utils';
+} from '../../types/base';
+import type { Level1ArrKeys } from '../../types/inner';
 import { ParsedOptions } from './parse';
 
 /** 在 initLoadingCtx 阶段会生成，这里先预备一个假的 */
@@ -55,7 +55,7 @@ export function buildInternal(
     id2InsKeys,
     recordId(id: NumStrSymbol, insKey: number) {
       if (!id) return;
-      const insKeys: any[] = safeGet(id2InsKeys, id, []);
+      const insKeys: any[] = safeObjGet(id2InsKeys, id, []);
       nodupPush(insKeys, insKey);
     },
     delId(id: NumStrSymbol, insKey: number) {
@@ -63,7 +63,7 @@ export function buildInternal(
       delListItem(id2InsKeys[id] || [], insKey);
     },
     recordDep(depKey: string, insKey: number) {
-      const insKeys: any[] = safeGet(key2InsKeys, depKey, []);
+      const insKeys: any[] = safeObjGet(key2InsKeys, depKey, []);
       nodupPush(insKeys, insKey);
     },
     delDep(depKey: string, insKey: number) {

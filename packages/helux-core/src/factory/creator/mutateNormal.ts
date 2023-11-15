@@ -1,6 +1,6 @@
+import { has, isObj, nodupPush, prefixValKey } from 'helux-utils';
 import { createOb } from '../../helpers/obj';
-import type { Dict, IInnerSetStateOptions } from '../../types';
-import { has, isObj, nodupPush, prefixValKey } from '../../utils';
+import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { runMiddlewares } from '../common/middleware';
 import { emitDataChanged } from '../common/plugin';
 import { newMutateCtx, newOpParams } from '../common/util';

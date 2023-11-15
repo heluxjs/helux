@@ -1,9 +1,9 @@
+import type { FunctionComponent } from 'helux-types';
+import { getVal, noop } from 'helux-utils';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
 import { useSharedSimpleLogic } from '../../hooks/common/useSharedLogic';
-import { react } from '../../react';
-import type { DerivedAtom, Dict, Fn } from '../../types';
-import type { FunctionComponent } from '../../types-react';
-import { getVal, noop } from '../../utils';
+import type { CoreApiCtx } from '../../types/api-ctx';
+import type { DerivedAtom, Dict, Fn } from '../../types/base';
 
 export const alwaysEqual = () => true;
 
@@ -16,37 +16,37 @@ interface IWrapSignalComp {
 }
 
 /** for perf, no options here */
-export function wrapComp(Comp: any, displayName: string, needMemo?: boolean, compare?: Fn): FunctionComponent {
+export function wrapComp(apiCtx: CoreApiCtx, Comp: any, displayName: string, needMemo?: boolean, compare?: Fn): FunctionComponent {
   const CompVar = Comp as FunctionComponent;
   CompVar.displayName = displayName;
-  return needMemo ? react.memo(CompVar, compare) : CompVar;
+  return needMemo ? apiCtx.react.memo(CompVar, compare) : CompVar;
 }
 
-export function wrapSignalComp(options: IWrapSignalComp): FunctionComponent {
+export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalComp): FunctionComponent {
   const { sharedState, depKey, keyPath, compare, sharedKey } = options;
   const valHook = { get: noop };
   const Comp = function () {
-    const insCtx = useSharedSimpleLogic(sharedState);
+    const insCtx = useSharedSimpleLogic(apiCtx, sharedState);
     insCtx.recordDep({ sharedKey, depKey, keyPath });
     const val = getVal(sharedState, keyPath);
     valHook.get = () => val;
     return val;
   };
-  return wrapComp(Comp, 'HeluxPrimitiveSignal', true, compare);
+  return wrapComp(apiCtx, Comp, 'HeluxPrimitiveSignal', true, compare);
 }
 
-export function wrapDerivedAtomSignalComp(derivedAtom: DerivedAtom, compare?: Fn): FunctionComponent {
+export function wrapDerivedAtomSignalComp(apiCtx: CoreApiCtx, derivedAtom: DerivedAtom, compare?: Fn): FunctionComponent {
   const Comp = function () {
-    const fnCtx = useDerivedSimpleLogic({ fn: derivedAtom, forAtom: true });
+    const fnCtx = useDerivedSimpleLogic(apiCtx, { fn: derivedAtom, forAtom: true });
     return fnCtx.proxyResult.val as any; // auto unbox atom result
   };
-  return wrapComp(Comp, 'HeluxDerivedAtomSignal', true, compare);
+  return wrapComp(apiCtx, Comp, 'HeluxDerivedAtomSignal', true, compare);
 }
 
-export function wrapDerivedSignalComp(derivedResult: DerivedAtom, keyPath: string[], compare?: Fn) {
+export function wrapDerivedSignalComp(apiCtx: CoreApiCtx, derivedResult: DerivedAtom, keyPath: string[], compare?: Fn) {
   const Comp = function () {
-    useDerivedSimpleLogic({ fn: derivedResult, forAtom: false });
+    useDerivedSimpleLogic(apiCtx, { fn: derivedResult, forAtom: false });
     return getVal(derivedResult, keyPath);
   };
-  return wrapComp(Comp, 'HeluxDerivedSignal', true, compare);
+  return wrapComp(apiCtx, Comp, 'HeluxDerivedSignal', true, compare);
 }

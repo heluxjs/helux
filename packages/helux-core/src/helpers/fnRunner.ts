@@ -1,6 +1,7 @@
+import { isPromise, tryAlert } from 'helux-utils';
 import { ASYNC_TYPE, WATCH } from '../consts';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
-import type { Dict, IDeriveFnParams, TriggerReason } from '../types';
+import type { Dict, IDeriveFnParams, TriggerReason } from '../types/base';
 import { shouldShowComputing } from './fnCtx';
 import { markComputing } from './fnStatus';
 
@@ -93,14 +94,23 @@ export function runFn(
 
   if (task) {
     const del = () => isFirstCall && depKeys.forEach((depKey) => delComputingFnKey(depKey, fnKey));
-    return task(fnParams)
+    return Promise.resolve(() => {
+      const result = task(fnParams);
+      // 检查 result 是否是 Promise 来反推 task 是否是 async 函数
+      if (!isPromise(result)) {
+        tryAlert('ERR_NON_FN: deriveAsync need a async function arg!', false);
+        return null;
+      }
+      return result;
+    })
+      .then((wrap) => wrap())
       .then((data: any) => {
         del();
         updateAndDrillDown({ data });
         return fnCtx.result;
       })
       .catch((err: any) => {
-        // TODO: emit ERR_OCCURRED to plugin
+        // TODO: emit ON_DERIVE_ERROR_OCCURED to plugin
         del();
         updateAndDrillDown({ err }); // 向下传递错误
         return fnCtx.result;
