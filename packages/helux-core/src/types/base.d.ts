@@ -389,8 +389,8 @@ export type AtomSafeLoading<T = any, O extends IAtomCreateOptions<T> = IAtomCrea
 
 export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
-  runMutate: (descOrOptions: string | IRunMutateOptions) => T,
-  runMutateTask: (descOrOptions: string | IRunMutateOptions) => T,
+  runMutate: (descOrOptions: string | IRunMutateOptions) => T;
+  runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
   call: Call<T>;
   asyncCall: AsyncCall<T>;
   action: <A extends any[] = any[]>(fn: ActionFnDef<A, T>, desc?: FnDesc) => Action<A, T>;

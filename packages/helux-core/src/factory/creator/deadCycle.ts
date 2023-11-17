@@ -1,15 +1,15 @@
 /**
  * 本模块用于辅助处理 mutate 函数可能遇到的死循环问题
  */
-import { safeMapGet, nodupPush } from 'helux-utils';
+import { nodupPush, safeMapGet } from 'helux-utils';
 import { TInternal } from './buildInternal';
 
-type Log = { sn: number, descs: string[], timer: any, errs: any[], cycle: string[] };
+type Log = { sn: number; descs: string[]; timer: any; errs: any[]; cycle: string[] };
 const logMap = new Map<string, Log>();
 
 function newLog(sn = 0): Log {
   return { sn, descs: [], errs: [], timer: null, cycle: [] };
-};
+}
 
 export function dcErr(descs: string[], runDesc: string) {
   const err = new Error(`found mutate fn(${runDesc}) in these dead cycle fns [${descs.join(',')}]`);
@@ -91,4 +91,3 @@ export function analyzeErrLog(usefulName: string, err: any) {
     errs.length = 0;
   }, 0);
 }
-

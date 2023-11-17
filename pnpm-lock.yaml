@@ -110,7 +110,7 @@ importers:
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
       babel-cli: ^6.26.0
-      helux-core: '>=3.0.21'
+      helux-core: '>=3.0.39'
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
       rollup: ^2.23.0
@@ -129,9 +129,9 @@ importers:
     specifiers:
       '@babel/preset-env': ^7.12.11
       babel-cli: ^6.26.0
-      helux-hooks-impl: '>=3.0.10'
-      helux-types: '>=3.0.0'
-      helux-utils: '>=3.0.6'
+      helux-hooks-impl: '>=3.0.13'
+      helux-types: '>=3.0.4'
+      helux-utils: '>=3.0.11'
       limu: ^3.7.3
       rollup: ^2.23.0
     dependencies:
@@ -151,9 +151,9 @@ importers:
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
       babel-cli: ^6.26.0
-      helux-hooks-impl: '>=3.0.0'
-      helux-types: '>=3.0.0'
-      helux-utils: '>=3.0.0'
+      helux-hooks-impl: '>=3.0.13'
+      helux-types: '>=3.0.4'
+      helux-utils: '>=3.0.11'
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
       rollup: ^2.23.0
@@ -175,37 +175,14 @@ importers:
     specifiers:
       '@babel/preset-env': ^7.12.11
       babel-cli: ^6.26.0
-      helux-types: '>=3.0.3'
-      helux-utils: '>=3.0.6'
+      helux-types: '>=3.0.4'
+      helux-utils: '>=3.0.11'
       rollup: ^2.23.0
     dependencies:
       helux-types: link:../helux-types
       helux-utils: link:../helux-utils
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
-      babel-cli: 6.26.0
-      rollup: 2.79.1
-
-  packages/helux-legacy:
-    specifiers:
-      '@babel/preset-env': ^7.12.11
-      '@babel/preset-react': ^7.12.10
-      '@types/react': '>=16.8.0'
-      '@types/react-dom': '>=16.8.0'
-      babel-cli: ^6.26.0
-      helux-core: '>=3.0.21'
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-      rollup: ^2.23.0
-    dependencies:
-      '@types/react': 17.0.69
-      '@types/react-dom': 17.0.22
-      helux-core: link:../helux-core
-      react: 16.14.0
-      react-dom: 16.14.0_react@16.14.0
-    devDependencies:
-      '@babel/preset-env': 7.23.2_@babel+core@7.23.2
-      '@babel/preset-react': 7.22.15_@babel+core@7.23.2
       babel-cli: 6.26.0
       rollup: 2.79.1
 
@@ -239,7 +216,7 @@ importers:
       '@babel/preset-env': ^7.12.11
       '@babel/preset-react': ^7.12.10
       babel-cli: ^6.26.0
-      helux-types: '>=3.0.3'
+      helux-types: '>=3.0.4'
       rollup: ^2.23.0
     dependencies:
       helux-types: link:../helux-types

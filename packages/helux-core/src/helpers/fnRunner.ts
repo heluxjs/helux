@@ -14,7 +14,7 @@ interface IRnFnOpt {
   force?: boolean;
   isFirstCall?: boolean;
   triggerReasons?: TriggerReason[];
-  err?: any,
+  err?: any;
   internal?: TInternal;
   desc?: any;
 }

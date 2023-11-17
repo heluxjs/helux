@@ -9,7 +9,7 @@ import type { Fn, WatchOptionsType } from '../types/base';
 
 export function useWatch(apiCtx: CoreApiCtx, watchFn: Fn, options: WatchOptionsType) {
   const { useRef, useState, useMemo, useEffect } = apiCtx.react;
-  const fnRef = useRef<{ fn: Fn, wrap: any }>({ fn: watchFn, wrap: null });
+  const fnRef = useRef<{ fn: Fn; wrap: any }>({ fn: watchFn, wrap: null });
   const [fnCtx] = useState(() => buildFnCtx());
   // 总是绑定最新的 watchFn，让组件里的 watch 可以读取到闭包里的最新值
   // fnRef.current = watchFn; // 这样写不兼容 react dev tool

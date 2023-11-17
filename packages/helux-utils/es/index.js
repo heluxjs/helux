@@ -1,25 +1,19 @@
 function _typeof(o) {
-  '@babel/helpers - typeof';
+  "@babel/helpers - typeof";
 
-  return (
-    (_typeof =
-      'function' == typeof Symbol && 'symbol' == typeof Symbol.iterator
-        ? function (o) {
-            return typeof o;
-          }
-        : function (o) {
-            return o && 'function' == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? 'symbol' : typeof o;
-          }),
-    _typeof(o)
-  );
+  return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+    return typeof o;
+  } : function (o) {
+    return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+  }, _typeof(o);
 }
 function _unsupportedIterableToArray(o, minLen) {
   if (!o) return;
-  if (typeof o === 'string') return _arrayLikeToArray(o, minLen);
+  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
   var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === 'Object' && o.constructor) n = o.constructor.name;
-  if (n === 'Map' || n === 'Set') return Array.from(o);
-  if (n === 'Arguments' || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
 }
 function _arrayLikeToArray(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
@@ -27,33 +21,30 @@ function _arrayLikeToArray(arr, len) {
   return arr2;
 }
 function _createForOfIteratorHelper(o, allowArrayLike) {
-  var it = (typeof Symbol !== 'undefined' && o[Symbol.iterator]) || o['@@iterator'];
+  var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
   if (!it) {
-    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || (allowArrayLike && o && typeof o.length === 'number')) {
+    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
       if (it) o = it;
       var i = 0;
       var F = function () {};
       return {
         s: F,
         n: function () {
-          if (i >= o.length)
-            return {
-              done: true,
-            };
+          if (i >= o.length) return {
+            done: true
+          };
           return {
             done: false,
-            value: o[i++],
+            value: o[i++]
           };
         },
         e: function (e) {
           throw e;
         },
-        f: F,
+        f: F
       };
     }
-    throw new TypeError(
-      'Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.',
-    );
+    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
   }
   var normalCompletion = true,
     didErr = false,
@@ -77,7 +68,7 @@ function _createForOfIteratorHelper(o, allowArrayLike) {
       } finally {
         if (didErr) throw err;
       }
-    },
+    }
   };
 }
 
@@ -98,7 +89,7 @@ function includeOne(loopList, judgeList) {
   var _iterator = _createForOfIteratorHelper(loopList),
     _step;
   try {
-    for (_iterator.s(); !(_step = _iterator.n()).done; ) {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
       var item = _step.value;
       if (judgeList.includes(item)) {
         // 包含有外层list的一项，就结束循环
@@ -131,8 +122,16 @@ function enureReturnArr(fn, arg) {
   return Array.isArray(result) ? result : [result];
 }
 
-// @ts-ignore
-var GLOBAL_REF = window || global;
+function getGlobalThis() {
+  if (typeof globalThis !== 'undefined') return globalThis;
+  if (typeof global !== 'undefined') return global;
+  if (typeof window !== 'undefined') return window;
+  if (typeof this !== 'undefined') return this;
+  throw new Error('no globalThis');
+}
+// 直接写 window 导致 vitest 报错，改为 getGlobalThis 写法
+// export const GLOBAL_REF: Dict & Window & typeof globalThis = window || global;
+var GLOBAL_REF = getGlobalThis();
 var DEV_FLAG = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 
 // @ts-nocheck
@@ -151,10 +150,8 @@ function isMax(input) {
   return input === Number.MAX_SAFE_INTEGER;
 }
 function isDebug() {
-  if (
-    DEV_FLAG
-    || GLOBAL_REF.name === 'previewFrame' // for stackblitz
-    || GLOBAL_REF.BrowserFS // for codesandbox
+  if (DEV_FLAG || GLOBAL_REF.name === 'previewFrame' // for stackblitz
+  || GLOBAL_REF.BrowserFS // for codesandbox
   ) {
     return true;
   }
@@ -205,13 +202,10 @@ function tryAlert(err) {
       isErr = true;
       label = err.message;
     }
-    err
-      && ((_GLOBAL_REF$alert = GLOBAL_REF.alert) === null || _GLOBAL_REF$alert === void 0
-        ? void 0
-        : _GLOBAL_REF$alert.call(GLOBAL_REF, ''.concat(customLabel || label, ', see details in console.')));
+    err && ((_GLOBAL_REF$alert = GLOBAL_REF.alert) === null || _GLOBAL_REF$alert === void 0 ? void 0 : _GLOBAL_REF$alert.call(GLOBAL_REF, "".concat(customLabel || label, ", see details in console.")));
   }
   if (isErr && customLabel) {
-    err.message = ''.concat(customLabel);
+    err.message = "".concat(customLabel);
   }
   console.error(err);
   if (throwErr) {
@@ -299,45 +293,10 @@ function asType(val) {
   return typedVal;
 }
 function prefixValKey(valKey, sharedKey) {
-  return ''.concat(sharedKey, '/').concat(valKey);
+  return "".concat(sharedKey, "/").concat(valKey);
 }
 function canUseDeep(isDeep) {
   return isDeep && isProxyAvailable();
 }
 
-export {
-  DEV_FLAG,
-  GLOBAL_REF,
-  asType,
-  canUseDeep,
-  dedupList,
-  delListItem,
-  enureReturnArr,
-  getSafeNext,
-  getVal,
-  has,
-  includeOne,
-  isAsyncFn,
-  isDebug,
-  isFn,
-  isMax,
-  isObj,
-  isPromise,
-  isProxyAvailable,
-  isProxyRevoked,
-  isSymbol,
-  matchDictKey,
-  matchListItem,
-  nodupPush,
-  noop,
-  noopArgs,
-  noopArr,
-  prefixValKey,
-  safeMapGet,
-  safeObjGet,
-  setNoop,
-  setVal,
-  tryAlert,
-  tryWarn,
-  warn,
-};
+export { DEV_FLAG, GLOBAL_REF, asType, canUseDeep, dedupList, delListItem, enureReturnArr, getSafeNext, getVal, has, includeOne, isAsyncFn, isDebug, isFn, isMax, isObj, isPromise, isProxyAvailable, isProxyRevoked, isSymbol, matchDictKey, matchListItem, nodupPush, noop, noopArgs, noopArr, prefixValKey, safeMapGet, safeObjGet, setNoop, setVal, tryAlert, tryWarn, warn };

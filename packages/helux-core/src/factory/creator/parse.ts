@@ -110,7 +110,7 @@ export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cache
   const handleItem = (item: MutateFnLooseItem | MutateFn, inputDesc?: string) => {
     const stdFn = parseMutateFn(item, inputDesc, cachedDict);
     if (stdFn) {
-      mutateFnDict[stdFn.desc] = stdFn
+      mutateFnDict[stdFn.desc] = stdFn;
       cachedDict && (cachedDict[stdFn.desc] = stdFn);
     }
   };

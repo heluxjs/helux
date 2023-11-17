@@ -8,8 +8,10 @@ node_modules
 build
 dist
 src-js
+es
+lib
 tmp
-TIMME.md
+TIPME.md
 package-lock.json
 coverage
 

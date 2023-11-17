@@ -1,8 +1,8 @@
 import { enureReturnArr, isFn, isObj, noop } from 'helux-utils';
 import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
+import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';
 import { setLoadStatus } from '../../factory/creator/loading';
-import { analyzeErrLog, inDeadCycle, dcErr } from '../../factory/creator/deadCycle';
 import { getInternal } from '../../helpers/state';
 import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types/base';
 import { createWatchLogic } from '../createWatch';
@@ -211,7 +211,6 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
           //   // 此阶段由 helpers/fnRunner 模块调用 probeDeadCycle 收集运行信息来避免循环依赖照成的 watch 执行死循环
           //   // finishMutate(null, { desc });
           // }
-
         } catch (err: any) {
           if (err.cause === 'DeadCycle') {
             analyzeErrLog(usefulName, err);
@@ -223,7 +222,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         }
       },
       {
-        deps: () => (item.deps?.(target) || []),
+        deps: () => item.deps?.(target) || [],
         sharedState: target,
         scopeType: SCOPE_TYPE.STATIC,
         immediate: true,

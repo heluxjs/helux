@@ -1,6 +1,6 @@
 {
   "name": "helux-hooks-impl",
-  "version": "3.0.12",
+  "version": "3.0.13",
   "description": "helux hooks implement lib",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "helux-types": ">=3.0.4",
-    "helux-utils": ">=3.0.10"
+    "helux-utils": ">=3.0.11"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.12.11",
@@ -47,7 +47,7 @@
   },
   "peerDependencies": {
     "helux-types": ">=3.0.4",
-    "helux-utils": ">=3.0.10"
+    "helux-utils": ">=3.0.11"
   },
   "bundleDependencies": false,
   "deprecated": false

@@ -1,7 +1,7 @@
 import { FROM, STATE_TYPE } from '../consts';
 import { useAtom, useShared } from '../hooks/useShared';
 import type { CoreApiCtx } from '../types/api-ctx';
-import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, ISharedCtx, IRunMutateOptions } from '../types/base';
+import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, IRunMutateOptions, ISharedCtx } from '../types/base';
 import { action, actionAsync, atomAction, atomActionAsync } from './createAction';
 import { atomMutate, mutate, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';

@@ -6,6 +6,5 @@ module.exports = {
         modules: false,
       },
     ],
-    '@babel/react',
   ],
 };
