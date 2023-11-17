@@ -277,14 +277,13 @@ export function useShared<T = Dict>(sharedObject: T, IUseSharedOptions?: IUseSha
 export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>, IRenderInfo];
 
 /**
- * 使用普通对象，需注意此接口只接受普通对象，如传递共享对象给它会报错 OBJ_NOT_NORMAL_ERR
+ * 使用普通对象，需注意此接口只接受普通对象
  * 应用里使用 useObject 替代 React.useState 将享受到以下两个好处
  * ```txt
  * 1 方便定义多个状态值时，少写很多 useState
  * 2 内部做了 unmount 判断，让异步函数也可以安全的调用 setState，避免 react 出现警告 :
  * "Called SetState() on an Unmounted Component" Errors
  * ```
- * 需注意此接口只接受普通对象，如传递共享对象给它会报错 OBJ_NOT_NORMAL_ERR
  * @param initialState
  * @returns
  */
@@ -360,6 +359,35 @@ export function useMutable<T extends PlainObject>(
   initialState: T | (() => T),
 ): [state: T, setDraft: (partialOrDraftCb: Partial<T> | ChangeDraftCb<T>) => void];
 
+/**
+ * 生成稳定的对象，对象的所有方法将转为稳定引用，且回调里始终可以读到外部的最新值，无闭包陷阱
+ * ```ts
+ * function Comp(props: any) {
+ *   const [obj, setObj] = useObject({ num: 1 });
+ *   // 如字典包含非方法值，可获取最新值
+ *   const srv = useStable({
+ *     readState() {
+ *      console.log(`%c read state num ${obj.num}`, `color:green`);
+ *    },
+ *    readProps() {
+ *     console.log(`%c read props num ${props.num}`, `color:green`);
+ *   },
+ *   changeState() {
+ *     setObj({ num: random() });
+ *   },
+ *  });
+ *
+ *  // 如传入单函数，则返回的稳定的函数引用
+ *  const fn = useStable(() => {
+ *    console.log(`%c read state num ${obj.num}`, `color:green`);
+ *  });
+ *
+ *  // 传入值，则只是返回最新值
+ *  const numTwo = useStable(2);
+ *
+ * }
+ * ```
+ */
 export function useStable<T = any>(data: T): T;
 
 /**
