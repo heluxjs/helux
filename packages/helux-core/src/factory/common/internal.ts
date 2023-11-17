@@ -15,16 +15,19 @@ export function clearInternal(moduleName: string, loc: string) {
   if (!moduleName || !isDebug() || !loc) return;
   const map = getInternalMap();
   let matchedKeys: number[] = [];
+  let cleared = false;
   map.forEach((item) => {
     if (item.moduleName === moduleName && item.loc === loc) {
       matchedKeys.push(item.sharedKey);
     }
   });
-
   // 清除第一个即可
   if (matchedKeys.length > 1) {
     Reflect.deleteProperty(map, matchedKeys[0]);
+    cleared = true;
   }
+
+  return cleared;
 }
 
 export function setInternal(key: number, internal: TInternal) {

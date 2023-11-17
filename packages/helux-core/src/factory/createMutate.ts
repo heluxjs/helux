@@ -41,12 +41,12 @@ function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?
   return callMutateFn(target, { ...item, forTask });
 }
 
-function makeWitness(target: SharedState, desc: string, realDesc: string) {
+function makeWitness(target: SharedState, desc: string, oriDesc: string) {
   return {
-    call: () => runMutateFnItem({ target, desc: realDesc }), // 呼叫同步函数的句柄
-    callTask: () => runMutateFnItem({ target, desc: realDesc, forTask: true }), // 呼叫异步函数的句柄
+    call: () => runMutateFnItem({ target, desc }), // 呼叫同步函数的句柄
+    callTask: () => runMutateFnItem({ target, desc, forTask: true }), // 呼叫异步函数的句柄
     desc,
-    realDesc,
+    oriDesc,
   };
 }
 
@@ -74,9 +74,10 @@ function configureMutateFn(options: IConfigureMutateFnOpt) {
   if (!stdFnItem) {
     throw new Error('not a fn or fnItem { fn }');
   }
-  const dict = { [stdFnItem.realDesc]: stdFnItem };
+  internal.mutateFnDict[stdFnItem.desc] = stdFnItem;
+  const dict = { [stdFnItem.desc]: stdFnItem };
   watchAndCallMutateDict({ target, dict });
-  return makeWitness(target, stdFnItem.desc, stdFnItem.realDesc);
+  return makeWitness(target, stdFnItem.desc, stdFnItem.oriDesc);
 }
 
 /**

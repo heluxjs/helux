@@ -35,6 +35,8 @@ export interface IInnerOptions<T = any> {
   stateType?: string;
 }
 
+export type StdDict = MutateFnStdDict | AtomMutateFnStdDict;
+
 function markSharedKeyOnState(rawState: Dict) {
   injectHeluxProto(rawState);
   const sharedKey = markSharedKey(rawState); // now rawState marked shared key
@@ -75,7 +77,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dic
   let validItem: MutateFnStdItem | AtomMutateFnStdItem | null = null;
   let desc = inputDesc || '';
   if (isFn(fnItem) && fnItem !== noop) {
-    validItem = { fn: fnItem, deps: noopArr, desc, realDesc: desc };
+    validItem = { fn: fnItem, deps: noopArr, oriDesc: desc, desc };
   } else if (isObj(fnItem)) {
     const { fn, desc, deps, task, immediate } = fnItem;
     const descVar = inputDesc || desc || '';
@@ -83,16 +85,16 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dic
     const taskVar = isFn(task) ? task : undefined;
     const depsVar = isFn(deps) ? deps : noopArr;
     if (fn || task) {
-      validItem = { fn: fnVar, desc: descVar, realDesc: descVar, deps: depsVar, task: taskVar, immediate };
+      validItem = { fn: fnVar, desc: descVar, oriDesc: descVar, deps: depsVar, task: taskVar, immediate };
     }
   }
 
   if (validItem && cachedDict) {
-    const { desc } = validItem;
-    if (!desc || cachedDict[desc]) {
-      validItem.realDesc = genFnKey(FROM.MUTATE);
+    const { oriDesc } = validItem;
+    if (!oriDesc || cachedDict[oriDesc]) {
+      // TODO tip desc duplicated
+      validItem.desc = genFnKey(FROM.MUTATE);
     }
-    cachedDict[validItem.realDesc] = validItem;
   }
 
   return validItem;
@@ -101,10 +103,16 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dic
 /**
  * 解析伴随创建share对象时配置的 mutate 对象，如果传入已存在字典则写入
  */
-export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: MutateFnStdDict | AtomMutateFnStdDict) {
-  const mutateFnDict: MutateFnStdDict | AtomMutateFnStdDict = cachedDict || {};
+export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: StdDict) {
+  const mutateFnDict: StdDict = {};
+  if (!mutate) return mutateFnDict;
+
   const handleItem = (item: MutateFnLooseItem | MutateFn, inputDesc?: string) => {
-    parseMutateFn(item, inputDesc, mutateFnDict);
+    const stdFn = parseMutateFn(item, inputDesc, cachedDict);
+    if (stdFn) {
+      mutateFnDict[stdFn.desc] = stdFn
+      cachedDict && (cachedDict[stdFn.desc] = stdFn);
+    }
   };
 
   if (Array.isArray(mutate)) {

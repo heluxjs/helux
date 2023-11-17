@@ -1,6 +1,6 @@
 {
   "name": "helux-core",
-  "version": "3.0.36",
+  "version": "3.0.38",
   "description": "A state library core that integrates atom, signal, collection dep, derive and watch, it supports all react like frameworks.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -37,7 +37,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux-hooks-impl": ">=3.0.10",
+    "helux-hooks-impl": ">=3.0.12",
     "helux-types": ">=3.0.0",
     "helux-utils": ">=3.0.6",
     "limu": "^3.7.3"
@@ -48,7 +48,7 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "helux-hooks-impl": ">=3.0.10",
+    "helux-hooks-impl": ">=3.0.12",
     "helux-types": ">=3.0.0",
     "helux-utils": ">=3.0.6",
     "limu": "^3.7.3"

@@ -1,9 +1,9 @@
 import { FROM, STATE_TYPE } from '../consts';
 import { useAtom, useShared } from '../hooks/useShared';
 import type { CoreApiCtx } from '../types/api-ctx';
-import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, ISharedCtx } from '../types/base';
+import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, ISharedCtx, IRunMutateOptions } from '../types/base';
 import { action, actionAsync, atomAction, atomActionAsync } from './createAction';
-import { atomMutate, mutate } from './createMutate';
+import { atomMutate, mutate, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';
 import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
 import { initGlobalLoading, initLoadingCtx } from './creator/loading';
@@ -51,6 +51,8 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     state,
     setState,
     mutate: mutateCreator,
+    runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(state, descOrOptions),
+    runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(state, descOrOptions),
     action: actionCreator,
     asyncAction: asyncActionCreator,
     call: (fn: Fn, ...args: any[]) => actionCreator(fn)(...args),

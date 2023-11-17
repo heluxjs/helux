@@ -220,10 +220,10 @@ export type MutateWitness<T = any> = {
   call: MutateCall<T>;
   /** 人工调用 mutate 配置里的异步函数 */
   callTask: MutateTaskCall<T>;
-  /** 用户透传的描述值 */
-  desc: string;
+  /** 用户透传的原始描述值 */
+  oriDesc: string;
   /** 内部生成的实际描述值 */
-  realDesc: string;
+  desc: string;
 };
 
 // for dict
@@ -244,9 +244,9 @@ export type MutateFnItem<T = SharedDict, A = ReadOnlyArr> = {
 /** std item 确保了 desc 一定存在 */
 export type MutateFnStdItem<T = any, A = ReadOnlyArr> = MutateFnItem<T, A> & {
   /** 用户透传的原始 desc */
-  desc: string;
+  oriDesc: string;
   /** 可能是内部生成的 desc */
-  realDesc: string;
+  desc: string;
 };
 
 export type MutateFnLooseItem<T = SharedDict, A = ReadOnlyArr> = MutateFnItem<T, A> & {
@@ -283,9 +283,9 @@ export type AtomMutateFnItem<T = any, A = ReadOnlyArr> = {
 /** std item 确保了 desc 一定存在 */
 export type AtomMutateFnStdItem<T = any, A = ReadOnlyArr> = AtomMutateFnItem<T, A> & {
   /** 用户透传的原始 desc */
-  desc: string;
+  oriDesc: string;
   /** 可能是内部生成的 desc */
-  realDesc: string;
+  desc: string;
 };
 
 export type AtomMutateFnLooseItem<T = any, A = ReadOnlyArr> = AtomMutateFnItem<T, A> & {
@@ -389,6 +389,8 @@ export type AtomSafeLoading<T = any, O extends IAtomCreateOptions<T> = IAtomCrea
 
 export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
+  runMutate: (descOrOptions: string | IRunMutateOptions) => T,
+  runMutateTask: (descOrOptions: string | IRunMutateOptions) => T,
   call: Call<T>;
   asyncCall: AsyncCall<T>;
   action: <A extends any[] = any[]>(fn: ActionFnDef<A, T>, desc?: FnDesc) => Action<A, T>;
@@ -626,6 +628,7 @@ export interface ISetStateOptions<T = any> {
 export interface IInnerSetStateOptions<T = Dict> extends ISetStateOptions<T> {
   from?: From;
   isAsync?: boolean;
+  isFirstCall?: boolean;
   sn?: number;
 }
 
@@ -863,6 +866,7 @@ interface ICallMutateFnOptions<T = SharedState> {
   desc?: FnDesc;
   sn?: number;
   deps?: Fn;
+  throwErr?: boolean;
 }
 
 export interface IUseDerivedAsyncOptions {

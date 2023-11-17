@@ -19,7 +19,7 @@ interface IPrepareDeepMutateOpts extends IInnerSetStateOptions {
 export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
   const { internal, desc } = opts;
   const mutateCtx = newMutateCtx(opts);
-  const commitOpts = { state: {}, mutateCtx, ...opts };
+  const commitOpts = { state: {}, mutateCtx, ...opts, desc };
   const draft = createDraft(internal.rawState, {
     onOperate(opParams) {
       handleOperate(opParams, { internal, mutateCtx });
