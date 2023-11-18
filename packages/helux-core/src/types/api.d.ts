@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.1.0
+| helux-core@3.1.2
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks.
 |------------------------------------------------------------------------------------------------

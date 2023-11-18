@@ -1,6 +1,6 @@
 {
   "name": "helux-utils",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "helux utils lib",
   "keywords": [
     "helux",
@@ -41,7 +41,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux-types": "^3.1.0"
+    "helux-types": "^3.1.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.12.11",
@@ -50,7 +50,7 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "helux-types": "^3.1.0"
+    "helux-types": "^3.1.1"
   },
   "bundleDependencies": false,
   "deprecated": false
