@@ -1,4 +1,4 @@
-import { delListItem, isDebug, isFn, isObj, safeMapGet } from 'helux-utils';
+import { delListItem, isDebug, isFn, isObj, nodupPush, safeMapGet } from 'helux-utils';
 import { EXPIRE_MS, FN_KEY, NOT_MOUNT, SIZE_LIMIT, UNMOUNT } from '../../consts';
 import { injectHeluxProto } from '../../helpers/obj';
 import type { Dict, IFnCtx, ScopeType } from '../../types/base';
@@ -33,9 +33,20 @@ export function delFnDepData(fnCtx: IFnCtx) {
   const { depKeys, fnKey } = fnCtx;
   depKeys.forEach((key) => {
     const fnKeys = DEPKEY_FNKEYS_MAP.get(key) || [];
-    const idx = fnKeys.indexOf(fnKey);
-    if (idx >= 0) {
-      fnKeys.splice(idx, 1);
+    delListItem(fnKeys, fnKey);
+  });
+}
+
+/**
+ * 对当前 fnKey 在上游的记录做操作（删除、新增）
+ */
+export function opUpstreamFnKey(fnCtx: IFnCtx, isAdd?: boolean) {
+  const { FNKEY_STATIC_CTX_MAP } = getFnScope();
+  const { fnKey, prevLevelFnKeys } = fnCtx;
+  prevLevelFnKeys.forEach((upFnKey) => {
+    const next = FNKEY_STATIC_CTX_MAP.get(upFnKey)?.nextLevelFnKeys;
+    if (next) {
+      isAdd ? nodupPush(next, fnKey) : delListItem(next, fnKey);
     }
   });
 }
@@ -48,8 +59,8 @@ export function delHistoryUnmoutFnCtx() {
     FNKEY_HOOK_CTX_MAP.forEach((fnCtx) => {
       const { mountStatus, createTime, fnKey } = fnCtx;
       if ([NOT_MOUNT, UNMOUNT].includes(mountStatus) && now - createTime > EXPIRE_MS) {
-        console.error('del fnCtx ', fnKey);
         delFnDepData(fnCtx);
+        opUpstreamFnKey(fnCtx);
         // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
         // deleting item in map.forEach is doable
         FNKEY_HOOK_CTX_MAP.delete(fnKey);

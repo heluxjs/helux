@@ -1,7 +1,7 @@
 /**
  * 本模块用于辅助处理 mutate 函数可能遇到的死循环问题
  */
-import { nodupPush, safeMapGet } from 'helux-utils';
+import { nodupPush, safeMapGet, tryAlert } from 'helux-utils';
 import { TInternal } from './buildInternal';
 
 type Log = { sn: number; descs: string[]; timer: any; errs: any[]; cycle: string[] };
@@ -11,8 +11,8 @@ function newLog(sn = 0): Log {
   return { sn, descs: [], errs: [], timer: null, cycle: [] };
 }
 
-export function dcErr(descs: string[], runDesc: string) {
-  const err = new Error(`found mutate fn(${runDesc}) in these dead cycle fns [${descs.join(',')}]`);
+export function dcErr(usefulName: string, descs: string[], runDesc: string) {
+  const err = new Error(`module(${usefulName}) found mutate fn(${runDesc}) in these dead cycle fns [${descs.join(',')}]`);
   err.cause = 'DeadCycle';
   // @ts-ignore
   err.data = descs;
@@ -41,21 +41,14 @@ export function probeDeadCycle(sn: number, desc: string, internal?: TInternal) {
     }
 
     const { descs } = log;
-    const len = descs.length;
-
-    console.log('before probe descs', descs);
-
-    // 最多只发现 100 层深的死循环
-    if (len === 10) descs.length = 0;
     // found dead cycle
     if (descs[0] === desc) {
       const listCopy = descs.slice();
-      log.cycle = listCopy;
+      log.cycle = listCopy; // 记录死循环desc列表
       descs.length = 0;
-      throw dcErr(listCopy, desc);
+      throw dcErr(usefulName, listCopy, desc);
     }
     nodupPush(descs, desc);
-    console.log('after probe descs', descs);
   }
 }
 
@@ -84,9 +77,8 @@ export function analyzeErrLog(usefulName: string, err: any) {
       }
     }
     if (targetErr) {
-      console.error('------------------------------------------');
-      console.error('dead cycle', targetErr);
-      console.error('------------------------------------------');
+      // console.error('dead cycle', targetErr);
+      tryAlert(targetErr);
     }
     errs.length = 0;
   }, 0);

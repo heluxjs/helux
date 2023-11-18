@@ -1,17 +1,17 @@
 import { limuUtils, produce } from 'limu';
-import { EVENT_NAME, LOADING_MODE, WAY } from './consts/user';
+import { EVENT_NAME, LOADING_MODE } from './consts/user';
 import { getAtom } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
 import { emit, on } from './factory/common/userBus';
 import { action, actionAsync, atomAction, atomActionAsync } from './factory/createAction';
-import { derive, deriveAsync, deriveAtom, deriveAtomAsync } from './factory/createDerived';
+import { derive, deriveAtom } from './factory/createDerived';
 import { atomMutate, mutate, mutateDict, runMutate, runMutateTask } from './factory/createMutate';
 import { atom, share, shareAtom, shareState } from './factory/createShared';
 import { watch } from './factory/createWatch';
-import { getDeriveLoading, runDerive } from './helpers/fnRunner';
+import { getDeriveLoading, runDerive, runDeriveAsync } from './helpers/fnRunner';
 import { getRawState, getSnap } from './helpers/state';
-import { useDerived, useDerivedAsync, useDerivedAtom, useDerivedAtomAsync } from './hooks/useDerived';
+import { useDerived, useDerivedAtom } from './hooks/useDerived';
 import { useGlobalId } from './hooks/useGlobalId';
 import { getActionLoading, getMutateLoading, useActionLoading, useMutateLoading } from './hooks/useLoading';
 import { useMutable } from './hooks/useMutable';
@@ -33,19 +33,16 @@ export {
   createShared,
   // derive api
   derive,
-  deriveAsync,
   deriveAtom,
-  deriveAtomAsync,
   runDerive,
+  runDeriveAsync,
   // watch api
   watch,
   // hooks api
   useAtom,
   useShared,
   useDerived,
-  useDerivedAsync,
   useDerivedAtom,
-  useDerivedAtomAsync,
   useWatch,
   useGlobalId,
   useService,
@@ -88,6 +85,5 @@ export {
   addMiddleware,
   addPlugin,
   EVENT_NAME,
-  WAY,
   LOADING_MODE,
 };

@@ -28,10 +28,7 @@ export type LoadingGlobal = 'GLOBAL';
 
 export type LoadingMode = LoadingNone | LoadingPrivate | LoadingGlobal;
 
-/** 是由外部还是内部定义的 mutate 触发的 */
-export type MutateFrom = 'Mutate' | 'InnerMutate';
-
-export type From = MutateFrom | 'Action';
+export type From = 'Mutate' | 'Action';
 
 export interface IBlockCtx {
   key: string;
@@ -58,6 +55,10 @@ export interface IBlockOptions<P = object> {
 
 /**
  * block 渲染函数内部存在判断逻辑时，可使用 read 提前锁定住相关依赖
+ * ```
+ * // 注意输入的是可变长入参，返回的元组
+ * const [val1, val2, val3] = read(1,2,3);
+ * ```
  */
 export type Read = <A extends readonly any[] = readonly any[]>(...args: A) => A;
 
@@ -98,7 +99,7 @@ export type SharedDict<T = PlainObject> = T;
 export type DerivedDict<R = PlainObject> = R;
 
 /** shared result derive fn definition  */
-export type DeriveDictFn<R = PlainObject> = (params: IDeriveFnParams<R>) => R;
+export type DeriveFn<R = PlainObject> = (params: IDeriveFnParams<R>) => R;
 
 export type NextSharedDict<T = PlainObject> = T;
 
@@ -113,7 +114,7 @@ export type Atom<T = any> = { val: T };
 export type DerivedAtom<R = any> = { val: R };
 
 /** derive atom fn definition  */
-export type DeriveAtomFn<R = any> = (params: IDeriveFnParams<R>) => R;
+export type DeriveAtomFn<R = any> = (params: IDeriveAtomFnParams<R>) => R;
 
 export type NextAtomVal<T> = T;
 
@@ -139,12 +140,6 @@ export type SharedState = SharedDict | Atom;
 export type SingalVal = Atom | DerivedAtom | NumStrSymbol | ReactNode | BlockComponent | BlockStatusComponent;
 
 export type AtomValType<T> = T extends Atom<infer V> ? V : T;
-
-/**
- * 'FIRST_RENDER': 仅组件首次渲染时收集依赖，
- * 'EVERY_RENDER': 组件每一轮渲染时都收集依赖
- */
-export type DepCollectionWay = 'FIRST_RENDER' | 'EVERY_RENDER';
 
 export type LoadingStatus = {
   loading: boolean;
@@ -305,19 +300,19 @@ export type PartialStateCb<T = Dict> = (prev: T) => Partial<T> | void;
 
 export type ChangeDraftCb<T = Dict> = (mutableDraft: T) => Partial<T> | void;
 
-export interface IDeriveAsyncOptions<T = Dict, I = readonly any[]> {
-  fn: (params: IDeriveFnParams<T, I>) => T;
+export type DeriveFnItem<T = Dict, I = readonly any[]> = {
   deps?: () => I;
-  task: (params: IDeriveFnParams<T, I>) => Promise<T>;
+  fn?: (params: IDeriveFnParams<T, I>) => T;
+  task?: (params: IDeriveFnParams<T, I>) => Promise<T>;
   immediate?: boolean;
-}
+};
 
-export interface IDeriveAtomAsyncOptions<T = any, I = readonly any[]> {
+export type DeriveAtomFnItem<T = any, I = readonly any[]> = {
   fn: (params: IDeriveAtomFnParams<T, I>) => T;
   deps?: () => I;
   task: (params: IDeriveAtomFnParams<T, I>) => Promise<T>;
   immediate?: boolean;
-}
+};
 
 export type SetState<T = Dict> = (
   partialStateOrRecipeCb: Partial<T> | ((mutable: MutableDraft<T>) => void | Partial<T>),
@@ -432,7 +427,7 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
 }
 
 interface IMutateFnParamsBase {
-  from: MutateFrom;
+  from: From;
   desc?: FnDesc;
   sn?: number;
 }
@@ -565,10 +560,14 @@ export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull
 
 export interface IUseSharedOptionsBase {
   /**
-   * default: 'EVERY_RENDER'
-   * 依赖收集方式，默认是每一轮渲染都去收集视图的最新依赖数据
+   * default: true，设置为false可以进一步提高组件渲染性能，但需要注意如果组件的依赖时变化的，
+   * 会造成依赖丢失的情况产生，触发组件不会重渲染的bug
+   * ```txt
+   * true，每一轮渲染都实时收集最新的依赖项
+   * false，仅首轮渲染收集依赖，后续渲染流程不收集
+   * ```
    */
-  way?: DepCollectionWay;
+  collect?: boolean;
   /**
    * 视图的id，在 ICreateOptionsFull.rules 里配置更新的 ids 包含的值指的就是此处配置的id，
    * 此id属于传入的 sharedState ，即和共享状态绑定了对应关系，意味着组件使用不同的 sharedState，
@@ -579,18 +578,18 @@ export interface IUseSharedOptionsBase {
 
 export interface IUseSharedOptions<T = Dict> extends IUseSharedOptionsBase {
   /**
-   * 组件的静态依赖，，一旦设置后当前组件的依赖收集行为将关闭，请慎用此设置
+   * 组件件可在渲染过实时收集到依赖，如需补充一些组件渲染过程中不体现的额外依赖时，设置此函数
+   * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集
    */
-  staticDeps?: (readOnlyState: T) => any[] | void;
-  /**
-   * 除了收集到的依赖之外，补充的额外依赖项，如果设置 staticDeps 则此设置无效
-   */
-  extraDeps?: (readOnlyState: T) => any[] | void;
+  deps?: (readOnlyState: T) => any[] | void;
 }
 
 export interface IUseAtomOptions<T = any> extends IUseSharedOptionsBase {
-  staticDeps?: (readOnlyState: Atom<T>) => any[] | void;
-  extraDeps?: (readOnlyState: Atom<T>) => any[] | void;
+  /**
+   * 组件件可在渲染过实时收集到依赖，如需补充一些组件渲染过程中不体现的额外依赖时，设置此函数
+   * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集
+   */
+  deps?: (readOnlyState: Atom<T>) => any[] | void;
 }
 
 export interface IInnerUseSharedOptions<T = Dict> extends IUseSharedOptions<T> {
@@ -725,7 +724,7 @@ export interface IFnCtx {
   /**
    * 是否展示异步计算函数的变化过程
    */
-  showProcess: boolean;
+  showLoading: boolean;
   /** 是否是 atom 导出的结果 */
   forAtom: boolean;
   /**
@@ -823,11 +822,16 @@ export interface IInsCtx<T = Dict> {
   id: NumStrSymbol;
   /** 全局id，此属性只服务于 useGlobaId 设定的 globalId */
   globalId: NumStrSymbol;
-  way: DepCollectionWay;
-  /** 能否收集依赖 */
+  /**
+   * default: true
+   * 使用钩子函数时透传的能否收集依赖的标记
+   */
+  collectFlag: boolean;
+  /**
+   * default: true
+   * 计算出的能否收集依赖标记，如透传了 options.collect=false，会在首轮渲染结束后标记为 false
+   */
   canCollect: boolean;
-  /** 是否有静态依赖 */
-  hasStaticDeps: boolean;
   renderInfo: IRenderInfo;
   recordDep: (depKeyInfo: DepKeyInfo) => void;
 }
@@ -835,7 +839,8 @@ export interface IInsCtx<T = Dict> {
 export type InsCtxMap = Map<number, IInsCtx>;
 
 export interface ICreateDeriveLogicOptions {
-  showProcess?: boolean;
+  isAsync?: boolean;
+  showLoading?: boolean;
   scopeType?: ScopeType;
   fnCtxBase?: IFnCtx;
   isAsyncTransfer?: boolean;
@@ -869,13 +874,16 @@ interface ICallMutateFnOptions<T = SharedState> {
   throwErr?: boolean;
 }
 
-export interface IUseDerivedAsyncOptions {
+export interface IUseDerivedOptions {
   /**
-   * default: true
-   * 是否展示计算过程，const [ result , status ] = useDerivedAsync()
-   * 为 true 时，status.loading 是会变化并通知组件重渲染的
+   * default: undefined
+   * 大多数不需要人为控制此参数，内部会自己判断使用的导出结果是否含异步过程来确定是否有 loading
+   * ```ts
+   * // 人为控制无loading，不管是否使用异步结果
+   * const [ result ] = useDerivedAsync(result, { showLoading: false })
+   * ```
    */
-  showProcess?: boolean;
+  showLoading?: boolean;
 }
 
 export interface IWatchAndCallMutateDictOptions<T = SharedState> {

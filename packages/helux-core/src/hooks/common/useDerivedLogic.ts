@@ -8,15 +8,16 @@ import { genDerivedResult, IUseDerivedLogicOptions } from './derived';
 import { useSync } from './useSync';
 
 function useFnCtx(apiCtx: CoreApiCtx, options: IUseDerivedLogicOptions): IFnCtx {
-  const { fn, task, deps, showProcess, asyncType, forAtom } = options;
+  const { result, forAtom } = options;
   const { hookImpl, react } = apiCtx;
   const updater = hookImpl.useForceUpdate();
-  const deriveCtxRef = react.useRef({ input: fn, deriveFn: null });
-  const [fnCtx] = react.useState(() => {
-    return buildFnCtx({ updater, scopeType: SCOPE_TYPE.HOOK, forAtom });
-  });
+  const { current: deriveCtx } = react.useRef<{ input: any; deriveFn: any; fnCtx: any }>({ input: result, deriveFn: null, fnCtx: null });
+  if (!deriveCtx.fnCtx) {
+    deriveCtx.fnCtx = buildFnCtx({ updater, scopeType: SCOPE_TYPE.HOOK, forAtom });
+  }
+  const fnCtx = deriveCtx.fnCtx;
   fnCtx.renderStatus = RENDER_START;
-  genDerivedResult({ fn, task, deps, deriveCtx: deriveCtxRef.current, showProcess, fnCtx, asyncType, forAtom });
+  genDerivedResult(deriveCtx, options);
 
   return fnCtx;
 }
@@ -33,7 +34,7 @@ function useReplace(apiCtx: CoreApiCtx, fnCtx: IFnCtx) {
   });
 }
 
-function useDelFnCtxEffect(apiCtx: CoreApiCtx, fnCtx: IFnCtx) {
+function useFnCtxEffect(apiCtx: CoreApiCtx, fnCtx: IFnCtx) {
   apiCtx.react.useEffect(() => {
     fnCtx.mountStatus = MOUNTED;
     recoverDep(fnCtx);
@@ -57,7 +58,7 @@ export function getAtomTuple<R>(fnCtx: IFnCtx): [R, LoadingStatus, IRenderInfo] 
 export function useDerivedSimpleLogic(apiCtx: CoreApiCtx, options: IUseDerivedLogicOptions): IFnCtx {
   const fnCtx = useFnCtx(apiCtx, options);
   useSync(apiCtx, fnCtx.subscribe, () => getDepSharedStateFeature(fnCtx));
-  useDelFnCtxEffect(apiCtx, fnCtx);
+  useFnCtxEffect(apiCtx, fnCtx);
 
   return fnCtx;
 }
@@ -65,7 +66,7 @@ export function useDerivedSimpleLogic(apiCtx: CoreApiCtx, options: IUseDerivedLo
 export function useDerivedLogic(apiCtx: CoreApiCtx, options: IUseDerivedLogicOptions): IFnCtx {
   const fnCtx = useFnCtx(apiCtx, options);
   useReplace(apiCtx, fnCtx);
-  useDelFnCtxEffect(apiCtx, fnCtx);
+  useFnCtxEffect(apiCtx, fnCtx);
 
   return fnCtx;
 }

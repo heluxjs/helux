@@ -7,7 +7,7 @@ import { useSharedSimpleLogic } from '../../hooks/common/useSharedLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { IBlockCtx, LoadingStatus } from '../../types/base';
 
-export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, showProcess = false) {
+export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, showLoading = false) {
   let status: LoadingStatus = { loading: false, err: null, ok: true };
   blockCtx.map.forEach((depKeys, stateOrResult) => {
     // trust beblow statement, cause map data supplied by blockCtx is stable
@@ -22,7 +22,7 @@ export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, showProcess = fa
     } else {
       // will transfer depKeys in genDerivedResult process
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      const fnCtx = useDerivedSimpleLogic(apiCtx, { fn: stateOrResult, forAtom: isDerivedAtom(stateOrResult), showProcess });
+      const fnCtx = useDerivedSimpleLogic(apiCtx, { result: stateOrResult, forAtom: isDerivedAtom(stateOrResult), showLoading });
       if (!fnCtx.status.ok) {
         status = fnCtx.status;
       }

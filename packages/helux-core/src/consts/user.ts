@@ -11,11 +11,6 @@ export const LOADING_MODE = {
   GLOBAL: 'GLOBAL',
 } as const;
 
-export const WAY = {
-  FIRST_RENDER: 'FIRST_RENDER',
-  EVERY_RENDER: 'EVERY_RENDER',
-} as const;
-
 export const FROM = {
   MUTATE: 'Mutate',
   ACTION: 'Action',

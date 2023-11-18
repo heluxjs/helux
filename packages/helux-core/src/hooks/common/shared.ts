@@ -9,13 +9,7 @@ import type { Dict, IUseSharedOptions } from '../../types/base';
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {
   if (forAtom && !isAtom(mayAtom)) {
-    throw new Error('must supply atom state to useAtom');
-  }
-}
-
-export function checkAtomResult(mayAtom: any, forAtom?: boolean) {
-  if (forAtom && !isAtom(mayAtom)) {
-    throw new Error('must supply atom state to useAtom');
+    throw new Error('useAtom only accept atom');
   }
 }
 
@@ -46,13 +40,13 @@ export function delInsCtx(insCtx: InsCtxDef) {
   clearDep(insCtx);
 }
 
-/** 如已经设置 staticDeps，将不会执行 extraDeps */
-export function readExtraDeps(insCtx: InsCtxDef, options: IUseSharedOptions) {
-  if (insCtx.hasStaticDeps) {
+/** 读取人工补充的依赖项 */
+export function readManualDeps(insCtx: InsCtxDef, options: IUseSharedOptions) {
+  if (!insCtx.canCollect) {
     return;
   }
-  if (isFn(options.extraDeps)) {
-    options.extraDeps(insCtx.proxyState);
+  if (isFn(options.deps)) {
+    options.deps(insCtx.proxyState);
   }
 }
 

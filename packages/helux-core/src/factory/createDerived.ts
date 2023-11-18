@@ -1,59 +1,28 @@
-import { ASYNC_TYPE } from '../consts';
-import type {
-  Atom,
-  ICreateDeriveLogicOptions,
-  IDeriveAsyncOptions,
-  IDeriveAtomAsyncOptions,
-  IDeriveFnParams,
-  IFnCtx,
-  PlainObject,
-  ScopeType,
-} from '../types/base';
+import { isFn } from 'helux-utils';
+import type { Atom, DeriveAtomFn, DeriveAtomFnItem, DeriveFn, DeriveFnItem, ICreateDeriveLogicOptions, PlainObject } from '../types/base';
 import { initDeriveFn } from './common/derived';
 
-const { TASK } = ASYNC_TYPE;
-
 export function createDeriveLogic<T extends any = any>(
-  fn: (params: IDeriveFnParams<T>) => T,
-  options?: { scopeType?: ScopeType; fnCtxBase?: IFnCtx; forAtom?: boolean },
+  fn: DeriveFn<T> | DeriveFnItem | DeriveAtomFn<T> | DeriveAtomFnItem,
+  options?: ICreateDeriveLogicOptions,
 ) {
-  const fnCtx = initDeriveFn({ ...(options || {}), fn, isAsync: false });
-  return fnCtx;
-}
-
-export function createDeriveAsyncLogic(options: any, innerOptions?: ICreateDeriveLogicOptions) {
-  const fnCtx = initDeriveFn({ ...(innerOptions || {}), ...options, isAsync: true, asyncType: TASK });
+  const fnItem = isFn(fn) ? { fn } : fn;
+  const fnCtx = initDeriveFn({ ...(options || {}), ...fnItem });
   return fnCtx;
 }
 
 /**
- * 创建一个普通的派生结果
+ * 创建派生结果
  */
-export function derive<T = PlainObject>(deriveFn: (params: IDeriveFnParams<T>) => T): T {
+export function derive<T = PlainObject>(deriveFn: DeriveFn<T> | DeriveFnItem): T {
   const fnCtx = createDeriveLogic<T>(deriveFn);
   return fnCtx.proxyResult as T;
 }
 
 /**
- * 创建一个带有异步计算过程的派生结果
+ * 为 atom 创建一个派生结果，支持返回 pritimive 类型
  */
-export function deriveAsync<T = PlainObject, D = any[]>(options: IDeriveAsyncOptions<T, D>): T {
-  const fnCtx = createDeriveAsyncLogic(options);
-  return fnCtx.proxyResult as T;
-}
-
-/**
- * 为 atom 创建一个普通的派生结果，支持返回 pritimive 类型
- */
-export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T): Atom<T> {
+export function deriveAtom<T = any>(deriveFn: DeriveAtomFn | DeriveAtomFnItem): Atom<T> {
   const fnCtx = createDeriveLogic<T>(deriveFn, { forAtom: true });
-  return fnCtx.proxyResult as Atom<T>;
-}
-
-/**
- * 为 atom 创建一个带有异步计算过程的派生结果，支持返回 pritimive 类型
- */
-export function deriveAtomAsync<T = any, D = any[]>(options: IDeriveAtomAsyncOptions<T, D>): Atom<T> {
-  const fnCtx = createDeriveAsyncLogic(options, { forAtom: true });
   return fnCtx.proxyResult as Atom<T>;
 }

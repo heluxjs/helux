@@ -9,7 +9,7 @@ import pkg from './package.json';
 const external = Object.keys(pkg.peerDependencies || {});
 const env = process.env.BUILD_ENV;
 const bundleName = pkg.name.includes('/') ? pkg.name.split('/')[1] : pkg.name;
-const globalName = 'Helux';
+const globalName = 'HeluxHooks';
 
 const env2outputConf = {
   commonjs: {
@@ -41,7 +41,6 @@ const config = {
     globals: {
       react: 'React',
       'react-dom': 'ReactDOM',
-      limu: 'limu',
       'helux-hooks-impl': 'HeluxHooksImpl',
       'helux-utils': 'HeluxUtils',
       'helux-types': 'HeluxTypes',

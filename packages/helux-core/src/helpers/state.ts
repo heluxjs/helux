@@ -1,4 +1,4 @@
-import { getSafeNext, isDebug, isObj } from 'helux-utils';
+import { getSafeNext, isObj, warn } from 'helux-utils';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
@@ -67,13 +67,13 @@ export function getSharedState(sharedKey: number) {
 
 export function recordMod(sharedState: Dict, options: ParsedOptions) {
   const { rootState, ctx } = getRoot();
-  const { moduleName } = options;
-  const treeKey = moduleName || getSharedKey(sharedState);
-  if (rootState[treeKey] && !isDebug()) {
-    return console.error(`moduleName ${moduleName} duplicate!`);
+  const { moduleName, usefulName } = options;
+  const existedMod = rootState[usefulName];
+  if (moduleName && existedMod && existedMod.loc !== options.loc) {
+    return warn(`moduleName ${moduleName} duplicate!`);
   }
   // may hot replace for dev mode or add new mod
-  rootState[treeKey] = sharedState;
+  rootState[usefulName] = sharedState;
   const internal = getInternal(sharedState);
-  ctx.mod[treeKey] = { setState: internal.setState };
+  ctx.mod[usefulName] = { setState: internal.setState };
 }

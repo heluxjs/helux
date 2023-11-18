@@ -36,9 +36,7 @@ const config = {
   output: {
     ...env2outputConf[env],
     exports: 'named',
-    globals: {
-      limu: 'limu',
-    },
+    globals: {},
   },
   plugins: [
     resolve(),

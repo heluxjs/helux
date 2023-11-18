@@ -9,7 +9,7 @@ import pkg from './package.json';
 const external = Object.keys(pkg.peerDependencies);
 const env = process.env.BUILD_ENV;
 const bundleName = pkg.name.includes('/') ? pkg.name.split('/')[1] : pkg.name;
-const globalName = 'HeluxPluginReduxDevtool';
+const globalName = 'HeluxPluginDevtool';
 
 const env2outputConf = {
   commonjs: {
@@ -40,7 +40,7 @@ const config = {
     exports: 'named',
     globals: {
       helux: 'Helux',
-      'helux-core': 'HeluxCore',
+      redux: 'Redux',
     },
   },
   plugins: [

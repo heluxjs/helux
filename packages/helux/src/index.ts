@@ -12,19 +12,16 @@ export const {
   createShared,
   // derive api
   derive,
-  deriveAsync,
   deriveAtom,
-  deriveAtomAsync,
   runDerive,
+  runDeriveAsync,
   // watch api
   watch,
   // hooks api
   useAtom,
   useShared,
   useDerived,
-  useDerivedAsync,
   useDerivedAtom,
-  useDerivedAtomAsync,
   useWatch,
   useGlobalId,
   useService,
@@ -75,6 +72,5 @@ export const {
   addMiddleware,
   addPlugin,
   EVENT_NAME,
-  WAY,
   LOADING_MODE,
 } = api;

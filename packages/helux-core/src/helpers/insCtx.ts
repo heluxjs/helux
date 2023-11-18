@@ -1,6 +1,6 @@
-import { isFn, isSymbol, prefixValKey, warn } from 'helux-utils';
+import { isSymbol, prefixValKey, warn } from 'helux-utils';
 import { immut } from 'limu';
-import { EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START, WAY } from '../consts';
+import { EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START } from '../consts';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
@@ -24,14 +24,12 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined) {
 }
 
 export function attachInsProxyState(insCtx: InsCtxDef) {
-  const { way, internal, recordDep } = insCtx;
+  const { internal, recordDep } = insCtx;
   const { rawState, isDeep, level1ArrKeys, sharedKey } = internal;
 
   const collectDep = (info: DepKeyInfo, value: any) => {
-    if (
-      !insCtx.canCollect // 无需收集依赖
-      || (way === WAY.FIRST_RENDER && !insCtx.isFirstRender) // 仅第一轮渲染收集依赖
-    ) {
+    if (!insCtx.canCollect) {
+      // 无需收集依赖
       return;
     }
     if (Array.isArray(value)) {
@@ -69,7 +67,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
 }
 
 export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
-  const { updater, sharedState, id = '', globalId = '', staticDeps, way = WAY.EVERY_RENDER } = options;
+  const { updater, sharedState, id = '', globalId = '', collect = true } = options;
   const internal = getInternal(sharedState);
   if (!internal) {
     throw new Error('ERR_OBJ_NOT_SHARED: input object is not a result returned by share api');
@@ -95,9 +93,8 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
     ver,
     id,
     globalId,
-    way,
+    collectFlag: collect,
     canCollect: true,
-    hasStaticDeps: false,
     isFirstRender: true,
     subscribe: (cb) => {
       // call insDep subscribe after snap changed
@@ -135,11 +132,6 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
   attachInsProxyState(insCtx);
   internal.mapInsCtx(insCtx, insKey);
   internal.recordId(id, insKey);
-  if (isFn(staticDeps)) {
-    staticDeps(insCtx.proxyState);
-    insCtx.canCollect = false; // 让后续的收集行为无效
-    insCtx.hasStaticDeps = true;
-  }
   return insCtx;
 }
 

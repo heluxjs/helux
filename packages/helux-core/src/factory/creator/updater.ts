@@ -10,7 +10,7 @@ import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
 
 export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
-  const { mutateCtx, internal, desc, isFirstCall } = opts;
+  const { mutateCtx, internal, desc, isFirstCall, from } = opts;
   const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, sharedKey } = internal;
 
@@ -50,7 +50,7 @@ export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
 
   // start execute derive/watch fns
   allAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
-  allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, triggerReasons, internal, desc, isFirstCall }));
+  allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));
 
   const updateIns = (insCtxMap: InsCtxMap, insKey: number) => {
     const insCtx = insCtxMap.get(insKey) as InsCtxDef;

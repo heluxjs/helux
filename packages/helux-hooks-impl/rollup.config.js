@@ -39,7 +39,7 @@ const config = {
     ...env2outputConf[env],
     exports: 'named',
     globals: {
-      limu: 'limu',
+      'helux-types': 'HeluxTypes',
       'helux-utils': 'HeluxUtils',
     },
   },

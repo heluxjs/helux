@@ -1,4 +1,4 @@
-import { dedupList, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from 'helux-utils';
+import { dedupList, enureReturnArr, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from 'helux-utils';
 import { ASYNC_TYPE, DERIVE, IS_DERIVED_ATOM, SCOPE_TYPE } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { markFnEnd, markFnStart, registerFn, shouldShowComputing } from '../../helpers/fnCtx';
@@ -10,7 +10,7 @@ import type { AsyncType, Dict, Fn, IFnCtx, ScopeType } from '../../types/base';
 import { recordLastest } from './blockScope';
 import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
-const { TASK, MAY_TRANSFER } = ASYNC_TYPE;
+const { TASK } = ASYNC_TYPE;
 const { STATIC, HOOK } = SCOPE_TYPE;
 
 function checkResult(fnCtx: IFnCtx, result: Dict, forAtom?: boolean) {
@@ -58,11 +58,11 @@ export function attachStaticProxyResult(fnCtx: IFnCtx, forAtom: boolean) {
 }
 
 interface IInitDeriveFnOptions {
-  fn: Fn;
+  fn?: Fn;
   task?: Fn;
   deps?: Fn;
-  showProcess?: boolean;
   sourceFn?: Fn;
+  showLoading?: boolean;
   scopeType?: ScopeType;
   fnCtxBase?: IFnCtx;
   isAsync?: boolean;
@@ -94,34 +94,37 @@ function transferDep(fnCtx: IFnCtx, options: any) {
  */
 export function initDeriveFn(options: IInitDeriveFnOptions) {
   const {
-    fn = noop,
-    deps = noop,
-    task = noop,
-    isAsync = false,
     scopeType = STATIC,
     fnCtxBase,
     // 目前仅 hook 函数支持转移异步结果
     isAsyncTransfer = false,
-    asyncType = MAY_TRANSFER,
+    asyncType = TASK,
     returnUpstreamResult,
     runAsync = true,
-    showProcess = false,
     forAtom = false,
-    immediate = false,
+    immediate,
   } = options;
-  if (!isFn(fn)) {
-    throw new Error('ERR_NON_FN: derive need a function arg!');
+  if (!isFn(options.fn) && !isFn(options.deps)) {
+    throw new Error('ERR_NON_FN: derive need fn or deps arg at least!');
   }
+  const { fn = noop, deps = noop, task } = options;
+  const deriveFn = (params: Dict) => {
+    const list = enureReturnArr(deps);
+    if (params.isFirstCall) {
+      list.forEach((result: any) => transferDep(fnCtx, { result }));
+    }
+    return fn({ ...params, input: list });
+  };
+  const isAsync = options.isAsync ?? isFn(task); // task 是不是异步函数后续执行会做检查
+  const showLoading = options.showLoading ?? isAsync;
 
-  const fnCtx = registerFn(fn, {
-    specificProps: { forAtom, scopeType, fnType: DERIVE, task, deps, isAsync, asyncType, isAsyncTransfer, showProcess },
+  const fnCtx = registerFn(deriveFn, {
+    specificProps: { forAtom, scopeType, fnType: DERIVE, task, deps, isAsync, asyncType, isAsyncTransfer, showLoading },
     fnCtxBase,
   });
 
   markFnStart(fnCtx.fnKey);
-  const list = deps() || [];
-  let result = fn({ isFirstCall: true, prevResult: null, input: list, triggerReasons: [] });
-  list.forEach((result: any) => transferDep(fnCtx, { result }));
+  let result = deriveFn({ isFirstCall: true, prevResult: null, triggerReasons: [] });
   markFnEnd();
 
   const upstreamFnCtx = getFnCtxByObj(result);
@@ -150,7 +153,11 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
   // if (runAsync && asyncType === TASK && immediate && fnCtx.isFirstLevel) {
   // 是否实现上述 ATTENTION 条件语句里有无 fnCtx.isFirstLeve 的差异，效果见 LabDriveOfIsFirstLevel
   // 目前定的策略是用户定义了 immediate 就立即执行
-  if (runAsync && asyncType === TASK && immediate) {
+
+  // 此处和 mutateFn 的 task 触发逻辑保持一致
+  // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行，有 fn 则不执行
+  const canRunTask = runAsync && asyncType === TASK && (immediate ?? !options.fn);
+  if (task && canRunTask) {
     runFn(curFnKey, { isFirstCall: true, sn: fnCtx.renderInfo.sn + 1 })
       .then((data: any) => {
         checkResult(fnCtx, data, forAtom);

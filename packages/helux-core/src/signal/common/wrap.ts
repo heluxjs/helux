@@ -37,7 +37,7 @@ export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalComp): Fu
 
 export function wrapDerivedAtomSignalComp(apiCtx: CoreApiCtx, derivedAtom: DerivedAtom, compare?: Fn): FunctionComponent {
   const Comp = function () {
-    const fnCtx = useDerivedSimpleLogic(apiCtx, { fn: derivedAtom, forAtom: true });
+    const fnCtx = useDerivedSimpleLogic(apiCtx, { result: derivedAtom, forAtom: true });
     return fnCtx.proxyResult.val as any; // auto unbox atom result
   };
   return wrapComp(apiCtx, Comp, 'HeluxDerivedAtomSignal', true, compare);
@@ -45,7 +45,7 @@ export function wrapDerivedAtomSignalComp(apiCtx: CoreApiCtx, derivedAtom: Deriv
 
 export function wrapDerivedSignalComp(apiCtx: CoreApiCtx, derivedResult: DerivedAtom, keyPath: string[], compare?: Fn) {
   const Comp = function () {
-    useDerivedSimpleLogic(apiCtx, { fn: derivedResult, forAtom: false });
+    useDerivedSimpleLogic(apiCtx, { result: derivedResult, forAtom: false });
     return getVal(derivedResult, keyPath);
   };
   return wrapComp(apiCtx, Comp, 'HeluxDerivedSignal', true, compare);

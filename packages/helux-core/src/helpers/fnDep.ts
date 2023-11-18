@@ -1,6 +1,6 @@
-import { nodupPush, safeMapGet } from 'helux-utils';
+import { delListItem, nodupPush, safeMapGet } from 'helux-utils';
 import { PROTO_KEY } from '../consts';
-import { getFnCtx, getRunninFnCtx } from '../factory/common/fnScope';
+import { getFnCtx, getRunninFnCtx, opUpstreamFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
@@ -17,14 +17,8 @@ export function recordFnDepKeys(
   if (!fnCtx) {
     return;
   }
-  const { runningSharedState, DEPKEY_FNKEYS_MAP } = getFnScope();
-  const { belongCtx, sharedKey, sharedState } = options;
-  if (sharedState && sharedState === runningSharedState) {
-    // 因 mutate 里需要为自己重新赋值
-    // 避免自己的 mutate 函数为自己收集，稍微不注意就会照成死循环
-    // TODO: 如后期有需求，可删除此判断，允许同一个状态的不同值之间相互联动，但死循环后果需用户自己承担
-    // return;
-  }
+  const { DEPKEY_FNKEYS_MAP } = getFnScope();
+  const { belongCtx, sharedKey } = options;
 
   if (sharedKey) {
     nodupPush(fnCtx.depSharedKeys, sharedKey);
@@ -63,6 +57,7 @@ export function recoverDep(fnCtx: IFnCtx) {
   const { FNKEY_HOOK_CTX_MAP, UNMOUNT_INFO_MAP } = getFnScope();
   const { fnKey } = fnCtx;
   FNKEY_HOOK_CTX_MAP.set(fnKey, fnCtx);
+  opUpstreamFnKey(fnCtx, true);
 
   let info = UNMOUNT_INFO_MAP.get(fnKey);
   if (info) {
@@ -122,9 +117,6 @@ export function delFnDepData(fnCtx: IFnCtx) {
   const { depKeys, fnKey } = fnCtx;
   depKeys.forEach((key) => {
     const fnKeys = DEPKEY_FNKEYS_MAP.get(key) || [];
-    const idx = fnKeys.indexOf(fnKey);
-    if (idx >= 0) {
-      fnKeys.splice(idx, 1);
-    }
+    delListItem(fnKeys, fnKey);
   });
 }

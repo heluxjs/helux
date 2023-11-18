@@ -4,6 +4,7 @@ function getGlobalThis() {
   if (typeof globalThis !== 'undefined') return globalThis;
   if (typeof global !== 'undefined') return global;
   if (typeof window !== 'undefined') return window;
+  // @ts-ignore
   if (typeof this !== 'undefined') return this;
   throw new Error('no globalThis');
 }

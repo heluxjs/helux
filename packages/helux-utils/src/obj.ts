@@ -12,7 +12,7 @@ export function has(obj: any, key: any) {
 }
 
 /** safe obj get */
-export function safeObjGet<T = any>(obj: Record<NumStrSymbol, any>, key: NumStrSymbol, defaultValue: T): T {
+export function safeObjGet<T = any>(obj: Dict, key: NumStrSymbol, defaultValue: T): T {
   let item = obj[key];
   if (!item) {
     item = obj[key] = defaultValue;
@@ -60,6 +60,6 @@ export function setVal(obj: any, keyPath: string[], val: any) {
       parent[key] = val;
       return;
     }
-    parent = parent[key]; // for next cb
+    parent = parent[key]; // for next forEach scb
   });
 }

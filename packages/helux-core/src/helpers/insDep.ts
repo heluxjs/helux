@@ -38,9 +38,9 @@ export function clearDep(insCtx: InsCtxDef) {
 }
 
 export function updateDep(insCtx: InsCtxDef) {
-  const { insKey, readMap, readMapPrev, internal, hasStaticDeps } = insCtx;
-  // 设置了静态依赖则运行期间不做更新依赖的动作
-  if (hasStaticDeps) {
+  const { insKey, readMap, readMapPrev, internal, canCollect } = insCtx;
+  // 标记了不能收集依赖，则运行期间不做更新依赖的动作
+  if (!canCollect) {
     return;
   }
   Object.keys(readMapPrev).forEach((prevKey) => {
@@ -56,9 +56,9 @@ export function updateDep(insCtx: InsCtxDef) {
  * 重置读依赖 map
  */
 export function resetReadMap(insCtx: InsCtxDef) {
-  const { readMap, readMapStrict, hasStaticDeps } = insCtx;
-  // 设置了静态依赖则运行期间不做重置依赖的动作
-  if (hasStaticDeps) {
+  const { readMap, readMapStrict, canCollect } = insCtx;
+  // 标记了不能收集依赖，则运行期间不做重置依赖的动作
+  if (!canCollect) {
     return;
   }
   if (readMapStrict) {

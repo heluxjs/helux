@@ -7,8 +7,9 @@ export declare function matchListItem(list: string[], fullStr: string): string;
 export declare function enureReturnArr(fn?: Fn, arg?: any): any[];
 export declare const GLOBAL_REF: Dict & Window & typeof globalThis;
 export declare const DEV_FLAG: boolean;
-export declare function noop(...args: any[]): any;
-export declare function noopArgs(...args: any[]): any;
+export declare function noop(...args: any[]): undefined;
+export declare function noopVoid(...args: any[]): void;
+export declare function noopArgs<T extends any[] = any[]>(...args: T): T;
 export declare function noopArr(...args: any[]): any[];
 export declare function isMax(input: number): boolean;
 export declare function isDebug(): boolean;
@@ -19,8 +20,11 @@ export declare function isSymbol(maySymbol: any): maySymbol is symbol;
 export declare function isPromise(mayObj: any): boolean;
 export declare function isProxyRevoked(proxy: Dict): boolean;
 export declare function isProxyAvailable(): boolean;
+/**
+ * alert 提示错误格式为 `${customLabel}${errMsg}, see details in console.`，
+ * customLabel 可定制
+ */
 export declare function tryAlert(err: any, throwErr?: boolean, customLabel?: string): void;
-export declare function tryWarn(err: any): void;
 export declare function warn(msg: string): void;
 export declare function getSafeNext(input: number): number;
 export declare function has(obj: any, key: any): boolean;

@@ -1,4 +1,4 @@
-import { noop } from 'helux-utils';
+import { noop, noopArr } from 'helux-utils';
 import { EVENT_NAME, FROM, HELUX_GLOBAL_LOADING, LOADING_MODE, STATE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { createOb } from '../../helpers/obj';
@@ -14,7 +14,7 @@ const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
 const { PRIVATE, GLOBAL, NONE } = LOADING_MODE;
 const fakeExtra: Dict = {};
 const fakeLoading: Dict = {};
-const fakeRenderInfo: IRenderInfo = { sn: 0, getDeps: noop };
+const fakeRenderInfo: IRenderInfo = { sn: 0, getDeps: noopArr };
 const fakeTuple = [createSafeLoading(fakeExtra, fakeLoading, MUTATE), noop, fakeRenderInfo];
 
 interface IInitLoadingCtxOpt {

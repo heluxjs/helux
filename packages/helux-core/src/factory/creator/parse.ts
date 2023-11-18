@@ -73,7 +73,7 @@ export function parseDesc(fnKey: any, itemDesc?: any) {
   return desc;
 }
 
-export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dict) {
+export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: Dict) {
   let validItem: MutateFnStdItem | AtomMutateFnStdItem | null = null;
   let desc = inputDesc || '';
   if (isFn(fnItem) && fnItem !== noop) {
@@ -89,9 +89,9 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dic
     }
   }
 
-  if (validItem && cachedDict) {
+  if (validItem && checkDupDict) {
     const { oriDesc } = validItem;
-    if (!oriDesc || cachedDict[oriDesc]) {
+    if (!oriDesc || checkDupDict[oriDesc]) {
       // TODO tip desc duplicated
       validItem.desc = genFnKey(FROM.MUTATE);
     }
@@ -105,13 +105,14 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, cachedDict?: Dic
  */
 export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: StdDict) {
   const mutateFnDict: StdDict = {};
+  const checkDupDict: StdDict = cachedDict || {};
   if (!mutate) return mutateFnDict;
 
   const handleItem = (item: MutateFnLooseItem | MutateFn, inputDesc?: string) => {
-    const stdFn = parseMutateFn(item, inputDesc, cachedDict);
+    const stdFn = parseMutateFn(item, inputDesc, checkDupDict);
     if (stdFn) {
       mutateFnDict[stdFn.desc] = stdFn;
-      cachedDict && (cachedDict[stdFn.desc] = stdFn);
+      checkDupDict[stdFn.desc] = stdFn; // 如传递了 cachedDict，则存到透传的 cachedDict 里
     }
   };
 

@@ -2,28 +2,28 @@ import { GLOBAL_REF } from './cst';
 import { isDebug } from './is';
 
 export function tryAlert(err: any, throwErr = false, customLabel = '') {
-  let label = err;
+  let errMsg = err;
   let isErr = false;
-  if (isDebug()) {
-    if (err instanceof Error) {
-      isErr = true;
-      label = err.message;
-    }
-    err && GLOBAL_REF.alert?.(`${customLabel || label}, see details in console.`);
+  if (err instanceof Error) {
+    isErr = true;
+    errMsg = err.message;
   }
-  if (isErr && customLabel) {
-    err.message = `${customLabel}`;
+  if (isDebug()) {
+    err && GLOBAL_REF.alert?.(`${customLabel}${errMsg}, see details in console.`);
   }
   console.error(err);
   if (throwErr) {
-    throw isErr ? err : new Error(label);
+    throw isErr ? err : new Error(String(err));
   }
 }
 
-export function tryWarn(err: any) {
-  console.error(err);
-}
-
-export function warn(msg: string) {
-  console.warn?.(msg);
+export function warn(msg: string, level = 0) {
+  if (level === 0) {
+    console.error(msg);
+    isDebug() && console.trace(msg);
+  } else if (level === 1) {
+    console.error(msg);
+  } else {
+    console.warn(msg);
+  }
 }

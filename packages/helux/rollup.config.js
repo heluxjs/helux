@@ -4,7 +4,7 @@ import resolve from 'rollup-plugin-node-resolve'; // 支持内部的模块路径
 import { uglify } from 'rollup-plugin-uglify';
 import pkg from './package.json';
 
-const external = Object.keys(pkg.peerDependencies);
+const external = Object.keys(pkg.peerDependencies || {});
 const env = process.env.BUILD_ENV;
 const bundleName = pkg.name.includes('/') ? pkg.name.split('/')[1] : pkg.name;
 const globalName = 'Helux';

@@ -1,26 +1,25 @@
-import { isFn, isObj } from 'helux-utils';
+import { isFn } from 'helux-utils';
 import { ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
 import { isDerivedAtom } from '../../factory/common/atom';
 import { getFnCtxByObj } from '../../factory/common/fnScope';
-import { createDeriveAsyncLogic, createDeriveLogic } from '../../factory/createDerived';
+import { createDeriveLogic } from '../../factory/createDerived';
 import { delFnCtx } from '../../helpers/fnCtx';
 import { attachInsDerivedResult } from '../../helpers/insCtx';
-import type { AsyncType, IFnCtx, ScopeType } from '../../types/base';
+import type { AsyncType, IFnCtx } from '../../types/base';
 
-const InvalidInput = 'ERR_NON_DERIVED_FN_OR_RESULT: useDerived only accept a static derived result or derive fn';
-const NotDerivedAtom = 'ERR_NOT_ATOM_RESULT: useAtom series fn only accept derived atom';
+const InvalidInput = 'ERR_NOT_DERIVED_RESULT: useDerived only accept derived result';
+const NotDerivedAtom = 'ERR_NOT_ATOM_RESULT: useDerivedAtom only accept derived atom';
 
 export interface IUseDerivedLogicOptions {
-  fn: any;
-  task?: any;
-  deps?: any;
+  result: any;
   asyncType?: AsyncType;
-  showProcess?: boolean;
+  showLoading?: boolean;
   forAtom?: boolean;
 }
 
-interface IInitOptions extends IUseDerivedLogicOptions {
-  deriveCtx: { input: any; deriveFn: any };
+interface IDeriveCtx {
+  input: any;
+  deriveFn: any;
   fnCtx: IFnCtx;
 }
 
@@ -52,16 +51,14 @@ function ensureHotReload(fnCtx: IFnCtx) {
 }
 
 /** 生成导出结果 */
-export function genDerivedResult(options: IInitOptions) {
-  const { deriveCtx, fn, deps, task, fnCtx, showProcess, asyncType = ASYNC_TYPE.MAY_TRANSFER, forAtom } = options;
-  let isAsync = false;
-  let upstreamFnCtx: IFnCtx | null = null;
+export function genDerivedResult(deriveCtx: IDeriveCtx, options: IUseDerivedLogicOptions) {
+  const { result, forAtom, showLoading } = options;
+  const { fnCtx, input, deriveFn } = deriveCtx;
   let isCtxChanged = false;
-  const scopeType: ScopeType = SCOPE_TYPE.HOOK;
 
   // 已记录函数句柄，完成了导出结果的各种初始动作
-  if (deriveCtx.deriveFn) {
-    const isChanged = isInputChanged(fnCtx, deriveCtx.input, fn);
+  if (deriveFn) {
+    const isChanged = isInputChanged(fnCtx, input, result);
     if (!isChanged) {
       return;
     } else {
@@ -70,56 +67,33 @@ export function genDerivedResult(options: IInitOptions) {
     }
   }
 
-  deriveCtx.input = fn;
-  if (asyncType === ASYNC_TYPE.MAY_TRANSFER) {
-    // 传入了局部的临时计算函数，形如： useDerived(()=>{ ... })
-    if (isFn(fn)) {
-      deriveCtx.deriveFn = fn;
-    } else if (isObj(fn)) {
-      // may a static derived result
-      upstreamFnCtx = getFnCtxByObj(fn);
-      if (!upstreamFnCtx) {
-        throw new Error(InvalidInput);
-      }
-      const ensuredFnCtx = upstreamFnCtx;
-
-      if (forAtom && !isDerivedAtom(ensuredFnCtx.proxyResult)) {
-        throw new Error(NotDerivedAtom);
-      }
-
-      isAsync = upstreamFnCtx.isAsync;
-      // 做结果中转
-      deriveCtx.deriveFn = () => ensuredFnCtx.result;
-    } else {
-      throw new Error(InvalidInput);
-    }
-
-    // 使用了异步导出的结果 useDerived(asyncDerivedReuslt)
-    if (isAsync && upstreamFnCtx) {
-      const ensuredFnCtx = upstreamFnCtx;
-      createDeriveAsyncLogic(
-        { fn: () => ensuredFnCtx.result, deps: () => [], task: async () => ensuredFnCtx.result },
-        {
-          scopeType,
-          fnCtxBase: fnCtx,
-          isAsyncTransfer: true,
-          runAsync: false,
-          returnUpstreamResult: true,
-          showProcess: showProcess ?? true,
-          forAtom,
-        },
-      );
-    } else {
-      createDeriveLogic(deriveCtx.deriveFn, { scopeType, fnCtxBase: fnCtx, forAtom });
-    }
-  } else {
-    // source or task
-    deriveCtx.deriveFn = fn;
-    createDeriveAsyncLogic({ fn, task, deps }, { scopeType, fnCtxBase: fnCtx, showProcess, forAtom });
+  deriveCtx.input = result;
+  const upstreamFnCtx = getFnCtxByObj(result);
+  if (!upstreamFnCtx) {
+    throw new Error(InvalidInput);
+  }
+  if (forAtom && !isDerivedAtom(result)) {
+    throw new Error(NotDerivedAtom);
   }
 
-  attachInsDerivedResult(fnCtx);
+  // 做结果中转
+  deriveCtx.deriveFn = () => upstreamFnCtx.result;
+  createDeriveLogic(
+    { fn: () => upstreamFnCtx.result, deps: () => [], task: async () => upstreamFnCtx.result },
+    {
+      isAsync: upstreamFnCtx.isAsync,
+      scopeType: SCOPE_TYPE.HOOK,
+      fnCtxBase: fnCtx,
+      isAsyncTransfer: true,
+      runAsync: false,
+      returnUpstreamResult: true,
+      forAtom,
+      asyncType: ASYNC_TYPE.MAY_TRANSFER,
+      showLoading,
+    },
+  );
 
+  attachInsDerivedResult(fnCtx);
   if (isCtxChanged) {
     fnCtx.updater();
   }

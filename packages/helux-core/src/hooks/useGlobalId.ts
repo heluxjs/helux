@@ -7,6 +7,6 @@ import { useSharedSimpleLogic } from './common/useSharedLogic';
 export function useGlobalId(apiCtx: CoreApiCtx, globalId: NumStrSymbol) {
   ensureGlobal(apiCtx);
   const globalEmpty = getGlobalEmpty();
-  const insCtx = useSharedSimpleLogic(apiCtx, globalEmpty, { staticDeps: () => [], globalId });
+  const insCtx = useSharedSimpleLogic(apiCtx, globalEmpty, { collect: false, globalId });
   return insCtx.renderInfo;
 }

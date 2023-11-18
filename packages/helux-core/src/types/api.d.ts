@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.0.9
+| helux-core@3.1.0
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks.
 |------------------------------------------------------------------------------------------------
@@ -24,10 +24,10 @@ import type {
   BlockStatusComponent,
   BlockStatusProps,
   ChangeDraftCb,
-  DeriveAtomFn,
   DerivedAtom,
   DerivedDict,
-  DeriveDictFn,
+  DeriveFn,
+  DeriveFnItem,
   Dict,
   EffectCb,
   Fn,
@@ -35,14 +35,12 @@ import type {
   IAtomCtx,
   IBlockOptions,
   ICreateOptions,
-  IDeriveAsyncOptions,
-  IDeriveAtomAsyncOptions,
-  IDeriveAtomFnParams,
   IDeriveFnParams,
   IPlugin,
   IRenderInfo,
   IRunMutateOptions,
   ISharedCtx,
+  IUseDerivedOptions,
   IUseSharedOptions,
   IWatchFnParams,
   LoadingNone,
@@ -64,7 +62,6 @@ import type {
   SharedDict,
   SharedState,
   SingalVal,
-  TriggerReason,
   WatchOptionsType,
 } from './base';
 
@@ -77,11 +74,6 @@ export declare const LOADING_MODE: {
   NONE: LoadingNone;
   PRIVATE: 'PRIVATE';
   GLOBAL: 'GLOBAL';
-};
-
-export declare const WAY: {
-  FIRST_RENDER: 'FIRST_RENDER';
-  EVERY_RENDER: 'EVERY_RENDER';
 };
 
 /**
@@ -161,38 +153,31 @@ export function shareAtom<T = Dict, O extends IAtomCreateOptions<T> = IAtomCreat
 ): IAtomCtx<T, O>;
 
 /**
- * 以共享状态或其他计算结果为输入，创建计算函数
- * 需注意返回结果必须是 Object
- * @param deriveFn
- * ```
- */
-export function derive<T = PlainObject>(deriveFn: (params: IDeriveFnParams<T>) => T): T;
-
-interface IDeriveFnParams2<T = Dict, I extends readonly any[] = readonly any[]> {
-  isFirstCall: boolean;
-  prevResult: T | null;
-  triggerReasons: TriggerReason[];
-  input: I;
-}
-
-/**
- * 支持异步导出的接口
+ * 定义全量派生结果，支持同步和异步
  * ```ts
  * // 示例1：已一个共享对象和已导出结果作为输入源定义一个异步计算任务
  *  const [sharedState, setState, call] = share({ a: 1, b: { b1: { b2: 200 } } });
+ *  // 同步派生
  *  const doubleAResult = derive(() => ({ val: sharedState.a * 2 + random() }));
- *  const aPlusB2Result = deriveAsync({
- *    // 定义依赖项，会透传给 fn 和 task 的 input
+ *  // 等效于
+ *  const doubleAResult = derive({ fn: () => ({ val: sharedState.a * 2 + random() }) });
+ *
+ *  // 异步派生
+ *  const aPlusB2Result = derive({
+ *    // 【可选】定义依赖项，会透传给 fn 和 task 的 input
  *    deps: () => [sharedState.a, sharedState.b.b1.b2, doubleAResult.val] as const,
- *    fn: () => ({ val: 0 }), // 定义初始值函数
+ *    // 【可选】定义初始值函数
+ *    fn: () => ({ val: 0 }),
+ *    // 【可选】未显式定义 immediate 时，如定义了 fn，则 task 首次不执行，未定义则 task 首次执行
  *    task: async ({ input: [a, b2, val] }) => { // 定义异步运算任务，input 里可获取到 deps 返回的值
  *      await delay(1000);
  *      return { val: a + b2 + val + random() };
  *    },
- *    immediate: true, // 定义后就执行任务（默认首次不执行）
+ *    //【可选】定义后就首次执行任务 task（默认首次不执行）
+ *    immediate: true,
  *  });
  *
- *  // 示例2：初始值函数读取 input 计算初始值，并定义一个后续相关依赖发生变化后才计算的异步任务
+ *  // 异步派生示例2：初始值函数读取 input 计算初始值，并定义一个后续相关依赖发生变化后才计算的异步任务
  *  const aPlusB2Result = deriveAsync({
  *    deps: () => [sharedState.a, sharedState.b.b1.b2] as const,
  *    // 读取 deps 函数的返回并相加
@@ -202,48 +187,12 @@ interface IDeriveFnParams2<T = Dict, I extends readonly any[] = readonly any[]> 
  *  });
  * ```
  */
-export function deriveAsync<T = PlainObject, I = readonly any[]>(options: {
-  /**
-   * 依赖声明，会透传给 fn.input 和 task.input
-   */
-  deps?: () => I;
-  /**
-   * 异步函数的初始函数，仅首次会执行
-   * ```ts
-   * // written like this will lost result type ~_~
-   * fn: (params: IDeriveFnParams<T, I>) => T;
-   * ```
-   */
-  fn: (params: { isFirstCall: boolean; prevResult: T | null; triggerReasons: TriggerReason[]; input: I }) => T;
-  task: (params: IDeriveFnParams<T, I>) => Promise<T>;
-  immediate?: boolean;
-}): T;
-
-// export interface IDeriveAsyncOptions<T = Dict, I = any[]> {
-//   fn: (params: IDeriveFnParams<T, I>) => T;
-//   deps?: () => I;
-//   task: (params: IDeriveFnParams<T, I>) => Promise<T>;
-//   immediate?: boolean;
-// }
-
-// export function deriveAsync2<T = PlainObject, D = any[]>(options: IDeriveAsyncOptions<T, D>): T;
+export function derive<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T> | DeriveFnItem<T, I>): T;
 
 /**
- * 创建一个普通的派生新结果的atom任务，支持返回 pritimive 类型
+ * 创建一个派生atom新结果的任务，支持返回 pritimive 类型
  */
 export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T): Atom<T>;
-
-// export function deriveAtomAsync<T = any, D = any[]>(options: IDeriveAtomAsyncOptions<T, D>): Atom<T>;
-
-/**
- * 创建一个异步的派生新结果的atom任务，使用方法同 deriveAsync，支持返回 pritimive 类型
- */
-export function deriveAtomAsync<T = any, I = readonly any[]>(options: {
-  deps?: () => I;
-  fn: (params: { isFirstCall: boolean; prevResult: Atom<T> | null; triggerReasons: TriggerReason[]; input: I }) => T;
-  task: (params: IDeriveAtomFnParams<T, I>) => Promise<T>;
-  immediate?: boolean;
-}): Atom<T>;
 
 /**
  * 观察共享状态变化，默认 watchFn 立即执行
@@ -334,13 +283,9 @@ export function useEffect(cb: EffectCb, deps?: any[]): void;
  */
 export function useLayoutEffect(cb: EffectCb, deps?: any[]): void;
 
-export function useDerived<R = SharedDict>(resultOrFn: DerivedDict<R> | DeriveDictFn<R>): [R, LoadingStatus, IRenderInfo];
+export function useDerived<R = SharedDict>(resultOrFn: DerivedDict<R>, options?: IUseDerivedOptions): [R, LoadingStatus, IRenderInfo];
 
-export function useDerivedAsync<T = PlainObject, D = any[]>(options: IDeriveAsyncOptions<T, D>): [T, LoadingStatus, IRenderInfo];
-
-export function useDerivedAtom<T = any>(resultOrFn: DerivedAtom<T> | DeriveAtomFn<T>): [T, LoadingStatus, IRenderInfo];
-
-export function useDerivedAtomAsync<T = any, D = any[]>(options: IDeriveAtomAsyncOptions<T, D>): [T, LoadingStatus, IRenderInfo];
+export function useDerivedAtom<T = any>(resultOrFn: DerivedAtom<T>, options?: IUseDerivedOptions): [T, LoadingStatus, IRenderInfo];
 
 /**
  * 组件里监听来自 emit 接口发射的事件，会在组件销毁时自动取消监听
@@ -467,6 +412,8 @@ export function atomMutate<T extends any>(
 ): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnLooseItem<T, A> | AtomMutateFn<T, A>) => MutateWitness<T>;
 
 export function runDerive<T = SharedState>(result: T): T;
+
+export function runDeriveAsync<T = SharedState>(result: T): Promise<T>;
 
 /**
  * 生成 Block 组件，会自动绑定视图中的状态依赖，

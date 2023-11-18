@@ -126,6 +126,7 @@ function getGlobalThis() {
   if (typeof globalThis !== 'undefined') return globalThis;
   if (typeof global !== 'undefined') return global;
   if (typeof window !== 'undefined') return window;
+  // @ts-ignore
   if (typeof this !== 'undefined') return this;
   throw new Error('no globalThis');
 }
@@ -136,6 +137,7 @@ var DEV_FLAG = process.env.NODE_ENV === 'development' || process.env.NODE_ENV ==
 
 // @ts-nocheck
 function noop() {}
+var noopVoid = noop;
 function noopArgs() {
   for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
     args[_key] = arguments[_key];
@@ -194,30 +196,31 @@ function isProxyAvailable() {
 function tryAlert(err) {
   var throwErr = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
   var customLabel = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-  var label = err;
+  var errMsg = err;
   var isErr = false;
+  if (err instanceof Error) {
+    isErr = true;
+    errMsg = err.message;
+  }
   if (isDebug()) {
     var _GLOBAL_REF$alert;
-    if (err instanceof Error) {
-      isErr = true;
-      label = err.message;
-    }
-    err && ((_GLOBAL_REF$alert = GLOBAL_REF.alert) === null || _GLOBAL_REF$alert === void 0 ? void 0 : _GLOBAL_REF$alert.call(GLOBAL_REF, "".concat(customLabel || label, ", see details in console.")));
-  }
-  if (isErr && customLabel) {
-    err.message = "".concat(customLabel);
+    err && ((_GLOBAL_REF$alert = GLOBAL_REF.alert) === null || _GLOBAL_REF$alert === void 0 ? void 0 : _GLOBAL_REF$alert.call(GLOBAL_REF, "".concat(customLabel).concat(errMsg, ", see details in console.")));
   }
   console.error(err);
   if (throwErr) {
-    throw isErr ? err : new Error(label);
+    throw isErr ? err : new Error(String(err));
   }
 }
-function tryWarn(err) {
-  console.error(err);
-}
 function warn(msg) {
-  var _console$warn, _console;
-  (_console$warn = (_console = console).warn) === null || _console$warn === void 0 || _console$warn.call(_console, msg);
+  var level = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  if (level === 0) {
+    console.error(msg);
+    isDebug() && console.trace(msg);
+  } else if (level === 1) {
+    console.error(msg);
+  } else {
+    console.warn(msg);
+  }
 }
 
 function getSafeNext(input) {
@@ -279,7 +282,7 @@ function setVal(obj, keyPath, val) {
       parent[key] = val;
       return;
     }
-    parent = parent[key]; // for next cb
+    parent = parent[key]; // for next forEach scb
   });
 }
 
@@ -299,4 +302,4 @@ function canUseDeep(isDeep) {
   return isDeep && isProxyAvailable();
 }
 
-export { DEV_FLAG, GLOBAL_REF, asType, canUseDeep, dedupList, delListItem, enureReturnArr, getSafeNext, getVal, has, includeOne, isAsyncFn, isDebug, isFn, isMax, isObj, isPromise, isProxyAvailable, isProxyRevoked, isSymbol, matchDictKey, matchListItem, nodupPush, noop, noopArgs, noopArr, prefixValKey, safeMapGet, safeObjGet, setNoop, setVal, tryAlert, tryWarn, warn };
+export { DEV_FLAG, GLOBAL_REF, asType, canUseDeep, dedupList, delListItem, enureReturnArr, getSafeNext, getVal, has, includeOne, isAsyncFn, isDebug, isFn, isMax, isObj, isPromise, isProxyAvailable, isProxyRevoked, isSymbol, matchDictKey, matchListItem, nodupPush, noop, noopArgs, noopArr, noopVoid, prefixValKey, safeMapGet, safeObjGet, setNoop, setVal, tryAlert, warn };

@@ -1,6 +1,6 @@
 import { includeOne, noop, noopArr } from 'helux-utils';
 import { ASYNC_TYPE, NOT_MOUNT, RENDER_START } from '../consts';
-import { delHistoryUnmoutFnCtx, getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
+import { delHistoryUnmoutFnCtx, getCtxMap, getFnCtx, getFnKey, markFnKey, opUpstreamFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { Fn, IFnCtx, ScopeType } from '../types/base';
 import { delFnDepData } from './fnDep';
@@ -18,7 +18,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     status: { loading: false, err: null, ok: true },
     forAtom: false,
     remainRunCount: 0,
-    showProcess: false,
+    showLoading: false,
     nextLevelFnKeys: [],
     prevLevelFnKeys: [],
     mountStatus: NOT_MOUNT,
@@ -70,11 +70,8 @@ export function registerFn(fn: Fn, options: { specificProps: Partial<IFnCtx> & {
   const { scopeType } = specificProps;
   const fnKey = markFnKey(fn, scopeType);
   const props = { fn, fnKey, ...specificProps };
-  let fnCtx = buildFnCtx(props);
-  if (fnCtxBase) {
-    // 指向用户透传的 fnCtxBase
-    fnCtx = Object.assign(fnCtxBase, props);
-  }
+  // 如 fnCtxBase 存在则 fnCtx 指向用户透传的 fnCtxBase
+  const fnCtx = fnCtxBase ? Object.assign(fnCtxBase, props) : buildFnCtx(props);
   getCtxMap(scopeType).set(fnKey, fnCtx);
   return fnCtx;
 }
@@ -91,6 +88,8 @@ export function delFnCtx(fnCtx: IFnCtx) {
   const { FNKEY_HOOK_CTX_MAP, UNMOUNT_INFO_MAP } = getFnScope();
   const { fnKey } = fnCtx;
   delFnDepData(fnCtx);
+  opUpstreamFnKey(fnCtx);
+  // 删除当前fnKey 与 hookFnCtx 的映射关系
   FNKEY_HOOK_CTX_MAP.delete(fnKey);
 
   if (UNMOUNT_INFO_MAP.get(fnKey)?.c === 2) {

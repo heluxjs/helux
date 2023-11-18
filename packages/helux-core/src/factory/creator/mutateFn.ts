@@ -1,4 +1,4 @@
-import { enureReturnArr, isFn, isObj, noop } from 'helux-utils';
+import { enureReturnArr, isFn, isObj, noop, tryAlert } from 'helux-utils';
 import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';
@@ -23,13 +23,13 @@ interface ICallMutateFnLogicOptions<T = SharedState> extends ICallMutateFnLogicO
   draft?: T;
   fn: Fn;
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: SharedState; setState: Fn; desc: string }) => any[];
+  getArgs?: (param: { draft: SharedState; setState: Fn; desc: string; input: any[] }) => any[];
 }
 
 interface ICallAsyncMutateFnLogicOptions extends ICallMutateFnLogicOptionsBase {
   task: Fn;
   /** task 函数调用入参拼装，暂不像同步函数逻辑那样提供 draft 给用户直接操作，用户必须使用 setState 修改状态 */
-  getArgs?: (param: { desc: string; setState: Fn }) => any[];
+  getArgs?: (param: { desc: string; setState: Fn; input: any[] }) => any[];
 }
 
 function mayWrapVal(forAtom: boolean, val: any) {
@@ -138,8 +138,6 @@ export function callMutateFn<T = SharedState>(target: T, options: ICallMutateFnO
   return getInternal(target).snap;
 }
 
-let count = 0;
-
 /**
  * 监听并运行 mutate 函数
  * @param options
@@ -167,38 +165,28 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         try {
           // 已处于死循环中的函数，不再执行
           if (dc.isIn) {
-            throw dcErr(dc.cycle, desc);
+            throw dcErr(usefulName, dc.cycle, desc);
           }
-
           const baseOpt = { sn, desc, deps, throwErr: true, isFirstCall };
-
           if (fn) {
             // 包含 task 配置时，fn 只会在首次执行被调用一次
             if (isFirstCall || !task) {
-              if (count === 100) {
-                return;
-              }
-              count++;
-
-              console.error('---> before callMutateFn ', desc, ' isFirstCall ', isFirstCall);
               // 首次运行会复用 draft ，经过多次修改，最后一次才提交
               callMutateFn(target, { ...baseOpt, fn, forTask: false });
-              console.error('---> after callMutateFn ', desc, ' isFirstCall ', isFirstCall);
             }
           }
-
           if (task) {
             // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行，有 fn 则不执行
-            const canRunAtFirstCall = isFirstCall && (immediate ?? !fn);
-            if (!isFirstCall || canRunAtFirstCall) {
+            const canRunForFirstCall = isFirstCall && (immediate ?? !fn);
+            if (!isFirstCall || canRunForFirstCall) {
               callMutateFn(target, { ...baseOpt, task, forTask: true });
             }
           }
 
           // TODO: 此段代码为后面的 mutateSelf 接口做准备，初次执行自我变更的多个函数时会更高效
-          // 单因指提交一次draft的特效，对用户的mutate函数定义有特别要求，
-          // 即定义 deps 取 state，单计算时必须总取 draft，因为 draft 才是最新的
-          // 循环到最后时将收集所有函数对上游数据的依赖，然后刻意将 draft 置空，后续此段逻辑不会再触发
+          // 但因只提交一次draft的缘故，对用户的mutate函数定义有特别要求，
+          // deps 函数里取 state，fn 函数必须总取 draft，因为此时 draft 才是最新的
+          // 循环到最后时将收集所有函数对上游数据的依赖，然后刻意将 draft 置空，后续下面 if 逻辑不会再触发
           // if (lastIdx === idx && draft) {
           //   // ATTENTION: draft = null 必须放置到 finishMutate 之前，
           //   // 原理是 finishMutate 内部流程是先结束草稿，再触发 watch，如出现循环依赖的话，
@@ -215,8 +203,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
           if (err.cause === 'DeadCycle') {
             analyzeErrLog(usefulName, err);
           } else {
-            // tryAlert(err, false);
-            console.error(err);
+            tryAlert(err, false);
           }
           emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err });
         }
