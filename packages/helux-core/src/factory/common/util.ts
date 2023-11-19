@@ -1,4 +1,4 @@
-import { isDebug, isProxyAvailable, prefixValKey } from 'helux-utils';
+import { isDebug, isFn, isObj, isProxyAvailable, prefixValKey } from 'helux-utils';
 import { immut, IOperateParams } from 'limu';
 import { KEY_SPLITER } from '../../consts';
 import { createOb } from '../../helpers/obj';
@@ -71,4 +71,21 @@ export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) 
       return val;
     },
   });
+}
+
+/**
+ * 区分是 atom 还是 shared 返回的部分状态，atom 返回要自动装箱为 { val: T }
+ */
+export function wrapPartial(forAtom: boolean, val: any) {
+  if (val === undefined) return; // undefined 丢弃，如真需要赋值 undefined，对 draft 操作即可
+  if (forAtom) return { val };
+  if (isObj(val)) return val;
+}
+
+/**
+ * 处理 setState(()=>({...})) 和 setState({...}) 两种情况返回的部分状态
+ */
+export function runPartialCb(forAtom: boolean, mayCb: any, draft: any) {
+  const val = !isFn(mayCb) ? mayCb : mayCb(draft);
+  return wrapPartial(forAtom, val);
 }

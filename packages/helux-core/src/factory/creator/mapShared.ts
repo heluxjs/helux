@@ -1,6 +1,7 @@
 import { canUseDeep, isFn } from 'helux-utils';
 import { setInternal } from '../../helpers/state';
 import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types/base';
+import { runPartialCb, wrapPartial } from '../common/util';
 import { buildInternal } from './buildInternal';
 import { prepareDeepMutate } from './mutateDeep';
 import { prepareNormalMutate } from './mutateNormal';
@@ -23,13 +24,13 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
     if (isFn(partialState) && isDeep) {
       // now partialState is a draft recipe callback
       const handleCtx = prepareDeepMutate(mutateOptions);
-      // 后续流程会使用到 getPartial 的返回结果是为了对齐非deep模式的 setState，此时只支持一层依赖收集
-      const getPartial = () => partialState(handleCtx.draft);
+      // 后续流程会使用到 getPartial 的返回结果，这样做是为了对齐非 deep 模式的 setState，此时只支持一层依赖收集
+      const getPartial = () => wrapPartial(forAtom, partialState(handleCtx.draft));
       return { ...handleCtx, getPartial };
     }
 
     const handleCtx = prepareNormalMutate(mutateOptions);
-    const getPartial = () => (isFn(partialState) ? partialState(handleCtx.draft) : partialState);
+    const getPartial = () => runPartialCb(forAtom, partialState, handleCtx.draft);
     return { ...handleCtx, getPartial };
   };
   // for inner call
@@ -48,13 +49,12 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
     const partialVar = await Promise.resolve(ret.getPartial());
     return ret.finishMutate(partialVar);
   };
-  // setAtom implementation
+  // setAtom implementation，内部调用依然是 setState，独立出来是为了方便 internal 里标记合适的类型
   const setAtom: SetAtom = (atomVal, options) => {
-    const atomState = !isFn(atomVal) ? { val: atomVal } : atomVal;
-    setState(atomState, parseSetOptions<any>(options));
+    setState(atomVal, parseSetOptions<any>(options));
   };
-  const sync = createSyncFnBuilder(sharedKey, rawState, setState);
-  const syncer = createSyncerBuilder(sharedKey, rawState, setState);
+  const sync = createSyncFnBuilder(sharedKey, rawState, innerSetState);
+  const syncer = createSyncerBuilder(sharedKey, rawState, innerSetState);
   const setDraft = forAtom ? setAtom : setState;
 
   const internal = buildInternal(options, {

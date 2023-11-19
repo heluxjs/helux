@@ -27,13 +27,16 @@ function createTargetWrap(rawState: Dict) {
   return { target, getPath: () => latestPath };
 }
 
-function createSyncFn(setState: SetState, path: string[], before?: Fn) {
+function createSyncFn(setState: Fn, path: string[], before?: Fn) {
   const syncFn = (evOrVal: any) => {
     let val = tryEtractEventVal(evOrVal);
-    setState((draft) => {
-      setVal(draft, path, val);
-      before?.(val, draft); // 用户设置了想修改其他数据或自身数据的函数
-    });
+    setState(
+      (draft: any) => {
+        setVal(draft, path, val);
+        before?.(val, draft); // 用户设置了想修改其他数据或自身数据的函数
+      },
+      { from: 'Sync' },
+    );
   };
   return syncFn;
 }

@@ -8,12 +8,12 @@ const HEL_GIT = 'https://github.com/tnfe/hel';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'hel-micro',
+  title: 'helux',
   tagline: '模块联邦sdk化，免构建、热更新、工具链无关的微模块方案',
   // url: 'https://your-docusaurus-test-site.com',
   // baseUrl: '/',
   url: 'https://tnfe.github.io',
-  baseUrl: '/hel/',
+  baseUrl: '/helux/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/hel.ico',

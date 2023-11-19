@@ -1,8 +1,8 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
-# hel-micro
+# watch
 
 `hel-micro` sdk 主要提供以下功能
 

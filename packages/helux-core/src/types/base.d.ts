@@ -28,7 +28,7 @@ export type LoadingGlobal = 'GLOBAL';
 
 export type LoadingMode = LoadingNone | LoadingPrivate | LoadingGlobal;
 
-export type From = 'Mutate' | 'Action';
+export type From = 'Mutate' | 'Action' | 'SetState';
 
 export interface IBlockCtx {
   key: string;
@@ -530,7 +530,7 @@ export interface ICreateOptionsFull<T = Dict> extends ICreateOptionsBaseFull {
    */
   mutate: MutateFn<T> | MutateFnDict<T> | MutateFnList<T>;
   /**
-   * mutate 结束到提交状态之前的中间函数，如需要返回则建议返回一层json key path 的对象
+   * action、mutate、setState、sync提交状态之前的函数，可对draft操作，如需要返回则返回的部分对象是全新值才是安全的草稿，该函数执行时机是在中间件之前
    */
   before: (params: IMutateFnParams<T>) => void | Partial<T>;
 }
@@ -545,7 +545,7 @@ export interface IAtomCreateOptionsFull<T = any> extends ICreateOptionsBaseFull 
    */
   mutate: AtomMutateFn<T> | AtomMutateFnDict<T> | AtomMutateFnList<T>;
   /**
-   * mutate 结束到提交状态之前的中间函数
+   * action、mutate、setState、sync提交atom状态之前的函数，可对draft操作，也可返回新的atom值，该函数执行时机是在中间件之前
    */
   before: (params: IAtomMutateFnParams<T>) => void;
 }
