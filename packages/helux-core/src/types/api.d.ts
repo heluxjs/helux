@@ -62,6 +62,8 @@ import type {
   SharedDict,
   SharedState,
   SingalVal,
+  Syncer,
+  SyncFnBuilder,
   WatchOptionsType,
 } from './base';
 
@@ -261,6 +263,14 @@ export function useGlobalId(globalId: NumStrSymbol): IRenderInfo;
 export function useService<S = Dict, P = object>(serviceImpl: S, props?: P): S;
 
 export function storeSrv(ref: MutableRefObject<any>): void;
+
+export function sync<T extends SharedDict>(target: T): SyncFnBuilder<T>;
+
+export function syncer<T extends SharedDict>(target: T): Syncer<T>;
+
+export function atomSync<T extends any>(target: T): SyncFnBuilder<Atom<T>>;
+
+export function atomSyncer<T extends any>(target: T): Syncer<Atom<T>>;
 
 /**
  * 强制更新

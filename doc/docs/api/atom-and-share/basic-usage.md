@@ -506,7 +506,7 @@ setAtom((draft) => {
 
 使用`action`工厂函数接口创建修改共享对象的方法，更多使用方式可查看[action 章节](/helux/docs/api/action)。
 
-#### 同步函数
+#### 同步 action
 
 ```ts
 const normalAction = atomAction(numAtom)(({ setState, args, draft }) => {
@@ -516,7 +516,7 @@ const normalAction = atomAction(numAtom)(({ setState, args, draft }) => {
 normalAction(1); // 参数将透传给 args
 ```
 
-#### 异步函数
+#### 异步 action
 
 ```ts
 const asyncAction = atomActionAsync(numAtom)(async ({ setState, args }) => {
@@ -529,3 +529,47 @@ const asyncAction = atomActionAsync(numAtom)(async ({ setState, args }) => {
 ### mutate
 
 配置 `mutate` 可观察自身或者其他共享状态的 a 节点变化来自动引起当前共享状态的 b 节点变化，更多使用方式可查看[mutate 章节](/helux/docs/api/mutate)。
+
+#### 同步 mutate
+
+```ts
+const [share1] = share({ desc: 'helux atom', info: { born: 2023 } });
+const [share2] = share(
+  { suffixedDesc: '' },
+  {
+    mutate: {
+      // share1.desc 变化时自动触发 share2.suffixedDesc 计算
+      suffixedDesc: (draft) => {
+        draft.suffixedDesc = `${share1.desc}_${Date.now()}`;
+      },
+    },
+  },
+);
+```
+
+#### 异步 mutate
+
+异步 mutate 需要通过`deps`函数显式定义依赖
+
+```ts
+const [share1] = share({ desc: 'helux atom', info: { born: 2023 } });
+const [share2] = share(
+  { suffixedDesc: '' },
+  {
+    mutate: {
+      // share1.desc 变化时自动触发 share2.suffixedDesc 计算
+      suffixedDesc: {
+        // 定义依赖项
+        deps: () => [share1.desc],
+        // 异步计算任务
+        task: async ({ setState }) => {
+          await delay(1000);
+          setState((draft) => {
+            draft.suffixedDesc = `${share1.desc}_${Date.now()}`;
+          });
+        },
+      },
+    },
+  },
+);
+```

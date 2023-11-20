@@ -52,6 +52,9 @@ export const {
   atomMutate,
   runMutate,
   runMutateTask,
+  // sync api
+  sync,
+  syncer,
   // model api
   model,
   modelFactory,

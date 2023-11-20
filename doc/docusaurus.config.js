@@ -9,7 +9,7 @@ const HEL_GIT = 'https://github.com/tnfe/hel';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'helux',
-  tagline: '模块联邦sdk化，免构建、热更新、工具链无关的微模块方案',
+  tagline: '集atom、signal、dep collection为一体的状态库，支持所有类 react 框架',
   // url: 'https://your-docusaurus-test-site.com',
   // baseUrl: '/',
   url: 'https://tnfe.github.io',
