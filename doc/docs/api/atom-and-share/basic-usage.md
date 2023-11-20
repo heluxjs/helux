@@ -465,17 +465,32 @@ setAtom(Math.random());
 修改`atom`返回的共享对象
 
 ```ts
-const [dictAtom, setDict] = atom({ desc: 'helux atom', info: { born: 2023 } });
+const [dictAtom, setDictAtom] = atom({ desc: 'helux atom', info: { born: 2023 } });
 // 回调里基于草稿修改
-setDict((draft) => {
+setDictAtom((draft) => {
   draft.val.info.born = 2022;
 });
 ```
 
-`setShared`里可以直接部分对象做浅层次修改，但`setAtom`如果要返回则必须是整个全新对象，因为
+`setShared`里可以返回部分新状态，但`setAtom`如果要返回则必须是整个全新对象，因为内部会对`setAtom`返回结果做装箱操作
 
 ```ts
+// 返回新的原始数值，返回结果会自动装箱为 { val: 1 }
+setAtom(() => 1);
+// 等效于以下两种写法
+setAtom(1);
+setAtom((draft) => (draft.val = 1));
 
+// 返回新的对象，确保是完整的新对象
+setAtom((draft) => {
+  const val = { ...draft.val };
+  val.desc = 'new desc';
+  return val;
+});
+// 上诉写法仅为了演示必须返回完整状态，更好的替代写法应是
+setAtom((draft) => {
+  draft.desc = 'new desc';
+});
 ```
 
 :::tip setAtom 回调 draft 未拆箱
@@ -489,7 +504,7 @@ setDict((draft) => {
 
 ### action
 
-使用`action`工厂函数接口创建修改共享对象的方法
+使用`action`工厂函数接口创建修改共享对象的方法，更多使用方式可查看[action 章节](/helux/docs/api/action)。
 
 #### 同步函数
 
@@ -510,3 +525,7 @@ const asyncAction = atomActionAsync(numAtom)(async ({ setState, args }) => {
   setState((draft) => (draft.val = val)); // 异步函数里必须使用 setState 同步修改状态
 }, 'asyncAction');
 ```
+
+### mutate
+
+配置 `mutate` 可观察自身或者其他共享状态的 a 节点变化来自动引起当前共享状态的 b 节点变化，更多使用方式可查看[mutate 章节](/helux/docs/api/mutate)。

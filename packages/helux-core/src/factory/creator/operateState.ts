@@ -19,10 +19,17 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   // 可在此处扩展逻辑，如 oldVal 和 newVal 对比后相等则直接 return，不记录任何写入信息
   // const oldVal = getVal(internal.snap, fullKeyPath);
   // if (opParams.value === oldVal) return;
-
   const { moduleName, sharedKey, exact, ruleConf, level1ArrKeys } = internal;
-  const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
+
+  // 主动把数组自身节点 key 也记录一下
+  if (parentType === 'Array') {
+    const arrKey = getDepKeyByPath(keyPath, sharedKey);
+    writeKeyPathInfo[arrKey] = { sharedKey, moduleName, keyPath };
+    writeKeys[arrKey] = 1;
+  }
+
+  const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
   const { idsDict, globalIdsDict, stopDepInfo } = ruleConf;
 
   writeKeyPathInfo[writeKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
