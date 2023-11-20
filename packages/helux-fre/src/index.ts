@@ -1,6 +1,6 @@
-import * as Fre from 'fre';
 import { initHeluxContext } from '@helux/core';
 import { React18Like } from '@helux/types';
+import * as Fre from 'fre';
 
 const reactLib = { ...Fre } as unknown as React18Like;
 const api = initHeluxContext({ heluxCtxKey: '__HELUX_FRE__', reactLib });

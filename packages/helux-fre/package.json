@@ -37,8 +37,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "fre": ">=2.6.5",
-    "@helux/core": "^3.2.5"
+    "@helux/core": "^3.2.5",
+    "fre": ">=2.6.5"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.12.11",
@@ -46,8 +46,8 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "fre": ">=2.6.5",
-    "@helux/core": "^3.2.5"
+    "@helux/core": "^3.2.5",
+    "fre": ">=2.6.5"
   },
   "bundleDependencies": [],
   "publishConfig": {

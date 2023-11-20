@@ -41,11 +41,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@types/react": ">=16.8.0",
-    "@types/react-dom": ">=16.8.0",
     "@helux/hooks-impl": "^3.2.2",
     "@helux/types": "^3.2.2",
     "@helux/utils": "^3.2.2",
+    "@types/react": ">=16.8.0",
+    "@types/react-dom": ">=16.8.0",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
@@ -56,11 +56,11 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "@types/react": ">=16.8.0",
-    "@types/react-dom": ">=16.8.0",
     "@helux/hooks-impl": "^3.2.2",
     "@helux/types": "^3.2.2",
     "@helux/utils": "^3.2.2",
+    "@types/react": ">=16.8.0",
+    "@types/react-dom": ">=16.8.0",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },

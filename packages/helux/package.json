@@ -37,8 +37,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@types/react": ">=16.8.0",
     "@helux/core": "^3.2.5",
+    "@types/react": ">=16.8.0",
     "react": ">=16.8.0"
   },
   "devDependencies": {
@@ -47,8 +47,8 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "@types/react": ">=16.8.0",
     "@helux/core": "^3.2.5",
+    "@types/react": ">=16.8.0",
     "react": ">=16.8.0"
   },
   "bundleDependencies": false,
