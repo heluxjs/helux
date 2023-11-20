@@ -19,6 +19,16 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports":{
+    ".":{
+      "import":"./dist/index.mjs",
+      "require":"./dist/index.js",
+      "types":"./dist/index.d.ts"
+    },
+    "./types/*":{
+      "types":"./dist/types/*.d.ts"
+    }
+  },
   "files": [
     "dist",
     "src",
@@ -31,11 +41,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "limu": "^3.7.3",
     "helux-hooks-impl": "workspace:^",
     "helux-types": "workspace:^",
-    "helux-utils": "workspace:^"
+    "helux-utils": "workspace:^",
+    "limu": "^3.7.3"
   },
   "bundleDependencies": false,
-  "deprecated": false
+  "deprecated": false,
+  "devDependencies": {
+    "esbuild-copy-static-files": "^0.1.0"
+  }
 }
