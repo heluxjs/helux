@@ -11,6 +11,7 @@ export interface ICommitStateOptions extends IInnerSetStateOptions {
   internal: TInternal;
   mutateCtx: IMutateCtx;
   forAtom: boolean;
+  sn: number;
   desc?: any;
 }
 

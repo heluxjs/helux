@@ -78,15 +78,15 @@ export function prepareNormalMutate(opts: IPrepareNormalMutateOpts) {
         handleValueChange(key, newPartial[key]);
       });
 
-      beforeCommit(commitOpts, innerSetOptions, mockDraft);
+      const opts = beforeCommit(commitOpts, innerSetOptions, mockDraft);
       const { depKeys, triggerReasons } = mutateCtx;
       Object.keys(newPartial).forEach((key) => {
         const depKey = prefixValKey(key, sharedKey);
         nodupPush(depKeys, depKey);
         triggerReasons.push({ sharedKey, moduleName, keyPath: [depKey] });
       });
-      commitOpts.state = newPartial;
-      commitState(commitOpts);
+      opts.state = newPartial;
+      commitState(opts);
       emitDataChanged(internal, innerSetOptions, desc);
 
       return internal.snap;

@@ -41,9 +41,8 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     },
     extra: {},
     setLoading: (loading: boolean, err = null) => {
-      base.status.loading = loading;
-      base.status.err = err;
-      base.status.ok = !loading && !err;
+      const ok = !loading && !err;
+      base.status = { loading, err, ok };
     },
     renderInfo: {
       sn: 0,

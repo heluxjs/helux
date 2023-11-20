@@ -907,7 +907,10 @@ export interface IDataChangedInfo extends IChangeInfoBase {
 
 export interface IMiddlewareCtx extends IDataChangingInfo {
   setData(key: any, value: any);
+  /** 中间件下标 */
   idx: number;
+  /** 执行状态修改的批次编号 */
+  sn: number;
 }
 
 export type Middleware = (midCtx: IMiddlewareCtx) => void;
