@@ -4,6 +4,10 @@ sidebar_position: 0
 
 # atom&share
 
+本章节是 `atom`和`share` api 简介，更多详情可查看
+
+- [基础用法](/helux/docs/api/atom-and-share/basic-usage)
+
 ## 简介
 
 `atom` 支持传入所有类型的值（包括原值类型值），返回结果被自动装箱为 `{ val: T }` 结构，取值需做一次`.val`操作

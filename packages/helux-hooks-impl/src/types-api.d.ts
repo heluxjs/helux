@@ -45,24 +45,39 @@ export function useEffectLogic(cb: EffectCb, options: { isLayout?: boolean; deps
  */
 export function useForceUpdate(): () => void;
 
+export interface IObjApi<T> {
+  setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
+  /** 返回最新的状态，可能会变化，适用于透传给子组件 */
+  getLatestState: () => T;
+}
+
 /**
- * 使用普通对象，需注意此接口只接受普通对象，使用 useObject 替代 React.useState 将享受到以下两个好处
+ * 使用普通对象，需注意此接口只接受普通对象
+ * 应用里使用 useObject 替代 React.useState 将享受到以下两个好处
  * ```txt
  * 1 方便定义多个状态值时，少写很多 useState
  * 2 内部做了 unmount 判断，让异步函数也可以安全的调用 setState，避免 react 出现警告 :
  * "Called SetState() on an Unmounted Component" Errors
+ * 3 默认返回稳定引用状态
  * ```
- * 需注意此接口只接受普通对象，如传递共享对象给它会报错 OBJ_NOT_NORMAL_ERR
+ * 代码示例：
+ * ```ts
+ * const [ stableState, setState, objApi ] = useObject({a:1, b:2});
+ * // stableState 是稳定引用
+ * // objApi.getLatestState() // 获取最新的，适用于需要透传给子组件的场景
+ * ```
  * @param initialState
  * @returns
  */
-export function useObject<T = Dict>(initialState: T | (() => T)): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void];
+export function useObject<T = Dict>(
+  initialState: T | (() => T),
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];
 
 /**
- * 相比 useObject 多了一个是否呼叫传入的 setState 的开关
+ * 复用 useOjbect 内部逻辑，支持自己处理 state
  */
 export function useObjectLogic<T = Dict>(
-  state: T,
-  setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void,
-  callInputSet?: boolean,
-): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void];
+  initialState: T | (() => T),
+  handleState?: (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => T | null,
+  returnFull?: boolean,
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];

@@ -1,41 +1,78 @@
 import type { ApiCtx, Dict, PartialStateCb } from 'helux-types';
 import { isFn } from 'helux-utils';
+import { useForceUpdate } from './useForceUpdate';
+import { useStable } from './useStable';
 
-export function useObjectLogic<T = Dict>(
+interface IObjApi<T> {
+  setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
+  getLatestState: () => T;
+}
+
+interface ILogicRef {
+  state: any;
+  unmount: boolean;
+  shouldCopy: boolean;
+}
+
+export function useObjectLogic<T extends object = Dict>(
   apiCtx: ApiCtx,
-  state: T,
-  setState: (partialStateOrCb: any) => void,
-  callInputSet?: boolean,
-): [T, (partialStateOrCb: any) => void] {
-  const { react } = apiCtx;
-  const ctxRef = react.useRef({ state, unmount: false });
-  ctxRef.current.state = state;
+  initialState: T | (() => T),
+  handleState?: (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => T,
+  returnFull?: boolean,
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>] {
+  const { useState, useRef, useEffect } = apiCtx.react;
+  const [stableState] = useState<T>(initialState);
+  const forceUpdate = useForceUpdate(apiCtx);
+  const logicRef = useRef<ILogicRef>({ state: null, unmount: false, shouldCopy: true });
 
-  const stableSet = react.useCallback(
-    (partialStateOrCb: any) => {
-      if (ctxRef.current.unmount) {
+  const api: IObjApi<T> = useStable(apiCtx, {
+    setState(partialStateOrCb: any) {
+      const cur = logicRef.current;
+      if (cur.unmount) {
         // already unmounted
         return;
       }
-      if (callInputSet) {
-        return setState(partialStateOrCb); // take over by user cumtom setState
+      let partial;
+      const { state } = cur;
+      // user want to handle partial state self
+      if (handleState) {
+        // prevState 优先给已浅克隆的那个
+        partial = handleState(partialStateOrCb, cur.state || stableState);
+        // 处理者需自己保证返回的完整状态，目前此函数对接了 useMutable
+        if (returnFull && partial) {
+          cur.state = partial;
+          cur.shouldCopy = false;
+        } else {
+          cur.shouldCopy = true;
+        }
+      } else {
+        partial = (isFn(partialStateOrCb) ? partialStateOrCb(state) : partialStateOrCb) || {};
+        cur.shouldCopy = true; // 标记需要潜克隆，触发 getLatestState 时才做克隆操作
       }
 
-      const state = ctxRef.current.state;
-      const partial = (isFn(partialStateOrCb) ? partialStateOrCb(state) : partialStateOrCb) || {};
-      setState({ ...state, ...partial });
+      Object.assign(stableState, partial || {}); // 合并到稳定引用里
+      forceUpdate();
     },
-    [ctxRef],
-  ); // no need pass callInputSet here
+    getLatestState() {
+      const cur = logicRef.current;
+      if (cur.shouldCopy) {
+        cur.state = { ...stableState }; // 浅克隆为最新的
+        cur.shouldCopy = false;
+      }
+      return cur.state as T;
+    },
+  });
 
-  react.useEffect(() => {
-    ctxRef.current.unmount = false; // 防止 StrictMode 写为 true
+  useEffect(() => {
+    const cur = logicRef.current;
+    cur.unmount = false; // 防止 StrictMode 写为 true
     // cleanup callback，标记组件已卸载
     return () => {
-      ctxRef.current.unmount = true;
+      cur.unmount = true;
     };
-  }, []);
-  return [state, stableSet];
+  }, [logicRef]);
+
+  return [stableState, api.setState, api];
 }
 
 /**
@@ -44,14 +81,11 @@ export function useObjectLogic<T = Dict>(
  * 1 方便定义多个状态值时，少写很多 useState
  * 2 内部做了 unmount 判断，让异步函数也可以安全的调用 setState，避免 react 出现警告 :
  * "Called SetState() on an Unmounted Component" Errors
+ * 3 可调用 useObject(xxState, true) 让元组第一位参数返回稳定引用
  * ```
  * @param initialState
  * @returns
  */
-export function useObject<T = Dict>(
-  apiCtx: ApiCtx,
-  initialState: T | (() => T),
-): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void] {
-  const [state, setFullState] = apiCtx.react.useState<T>(initialState);
-  return useObjectLogic(apiCtx, state, setFullState);
+export function useObject<T extends object = Dict>(apiCtx: ApiCtx, initialState: T | (() => T)) {
+  return useObjectLogic(apiCtx, initialState);
 }

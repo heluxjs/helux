@@ -234,11 +234,20 @@ export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedOptio
  * 1 方便定义多个状态值时，少写很多 useState
  * 2 内部做了 unmount 判断，让异步函数也可以安全的调用 setState，避免 react 出现警告 :
  * "Called SetState() on an Unmounted Component" Errors
+ * 3 默认返回稳定引用状态
+ * ```
+ * 代码示例：
+ * ```ts
+ * const [ stableState, setState, objApi ] = useObject({a:1, b:2});
+ * // stableState 是稳定引用
+ * // objApi.getLatestState() // 获取最新的，适用于需要透传给子组件的场景
  * ```
  * @param initialState
  * @returns
  */
-export function useObject<T = Dict>(initialState: T | (() => T)): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void];
+export function useObject<T = Dict>(
+  initialState: T | (() => T),
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];
 
 export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType);
 
@@ -302,6 +311,12 @@ export function useDerivedAtom<T = any>(resultOrFn: DerivedAtom<T>, options?: IU
  */
 export function useOnEvent(name: string, cb: Fn): void;
 
+export interface IObjApi<T> {
+  setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
+  /** 返回最新的状态，可能会变化，适用于透传给子组件 */
+  getLatestState: () => T;
+}
+
 /**
  * 以 mutable 方式修改 react 状态
  * ```ts
@@ -312,7 +327,7 @@ export function useOnEvent(name: string, cb: Fn): void;
  */
 export function useMutable<T extends PlainObject>(
   initialState: T | (() => T),
-): [state: T, setDraft: (partialOrDraftCb: Partial<T> | ChangeDraftCb<T>) => void];
+): [state: T, setDraft: (partialStateOrCb: Partial<T> | ChangeDraftCb<T>) => void, objApi: IObjApi<T>];
 
 /**
  * 生成稳定的对象，对象的所有方法将转为稳定引用，且回调里始终可以读到外部的最新值，无闭包陷阱

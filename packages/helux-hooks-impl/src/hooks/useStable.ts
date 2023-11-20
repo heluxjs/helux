@@ -52,7 +52,7 @@ function wrapData(ref: StableRef) {
   ref.current.wrap = data;
 }
 
-export function useStable<T = any>(apiCtx: ApiCtx, data: T) {
+export function useStable<T = any>(apiCtx: ApiCtx, data: T): T {
   const { useRef, useMemo } = apiCtx.react;
   const stableRef = useRef<Stable>({ data, wrap: {}, inited: false });
   // 'stableRef.current = serviceImpl' will have problem in react devtool
