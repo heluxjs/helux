@@ -11,5 +11,11 @@ export default defineConfig([
     treeshake: false,
     minify: 'terser',
     external: [],
+    esbuildPlugins: [
+      copyStaticFile({
+        src: "./src/index.d.ts",
+        dest: "./dist/index.d.ts"
+      })
+    ]
   },
 ]);

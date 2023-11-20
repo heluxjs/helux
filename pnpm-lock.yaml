@@ -199,10 +199,10 @@ importers:
   packages/helux-hooks:
     dependencies:
       '@types/react':
-        specifier: '>=16.8.0'
+        specifier: <18.0.0
         version: 17.0.69
       '@types/react-dom':
-        specifier: '>=16.8.0'
+        specifier: <18.0.0
         version: 17.0.22
       helux-hooks-impl:
         specifier: workspace:^

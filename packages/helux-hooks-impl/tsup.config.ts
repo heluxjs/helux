@@ -16,6 +16,10 @@ export default defineConfig([
       copyStaticFile({
         src: "./src/index.d.ts",
         dest: "./dist/index.d.ts"
+      }),
+      copyStaticFile({
+        src: "./src/types-api.d.ts",
+        dest: "./dist/types-api.d.ts"
       })
     ]
   },
