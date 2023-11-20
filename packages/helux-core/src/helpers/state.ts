@@ -1,4 +1,4 @@
-import { getSafeNext, isObj, warn } from 'helux-utils';
+import { getSafeNext, isObj, warn } from '@helux/utils';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';

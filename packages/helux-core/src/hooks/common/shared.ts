@@ -1,4 +1,4 @@
-import { isFn } from 'helux-utils';
+import { isFn } from '@helux/utils';
 import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';

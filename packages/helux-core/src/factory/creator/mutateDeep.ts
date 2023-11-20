@@ -1,4 +1,4 @@
-import { isObj } from 'helux-utils';
+import { isObj } from '@helux/utils';
 import { createDraft, finishDraft } from 'limu';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { genRenderSN } from '../common/key';

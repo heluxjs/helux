@@ -1,4 +1,4 @@
-import type { Dict, Fn } from 'helux-types';
+import type { Dict, Fn } from '@helux/types';
 import { DEV_FLAG, GLOBAL_REF } from './cst';
 import { noop } from './fn';
 

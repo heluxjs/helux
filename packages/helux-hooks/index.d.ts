@@ -1,1 +1,1 @@
-export * from 'helux-hooks-impl/src/types-api';
+export * from '@helux/hooks-impl/src/types-api';

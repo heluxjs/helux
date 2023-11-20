@@ -1,4 +1,4 @@
-import { dedupList } from 'helux-utils';
+import { dedupList } from '@helux/utils';
 import { getDepFnStats } from '../../helpers/fnDep';
 import { runFn } from '../../helpers/fnRunner';
 import { markComputing } from '../../helpers/fnStatus';

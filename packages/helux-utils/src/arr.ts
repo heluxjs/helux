@@ -1,4 +1,4 @@
-import type { Fn, NumStrSymbol } from 'helux-types';
+import type { Fn, NumStrSymbol } from '@helux/types';
 
 export function nodupPush(list: NumStrSymbol[], toPush: NumStrSymbol) {
   if (!list.includes(toPush)) list.push(toPush);

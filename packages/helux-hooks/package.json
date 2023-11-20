@@ -1,6 +1,6 @@
 {
-  "name": "helux-hooks",
-  "version": "3.2.0",
+  "name": "@helux/hooks",
+  "version": "3.2.5",
   "description": "helux hooks lib for react",
   "keywords": [
     "helux",
@@ -43,9 +43,9 @@
   "dependencies": {
     "@types/react": ">=16.8.0",
     "@types/react-dom": ">=16.8.0",
-    "helux-hooks-impl": "^3.2.0",
-    "helux-types": "^3.1.0",
-    "helux-utils": "^3.1.0",
+    "@helux/hooks-impl": "^3.2.2",
+    "@helux/types": "^3.2.2",
+    "@helux/utils": "^3.2.2",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
@@ -58,12 +58,16 @@
   "peerDependencies": {
     "@types/react": ">=16.8.0",
     "@types/react-dom": ">=16.8.0",
-    "helux-hooks-impl": "^3.2.0",
-    "helux-types": "^3.1.0",
-    "helux-utils": "^3.1.0",
+    "@helux/hooks-impl": "^3.2.2",
+    "@helux/types": "^3.2.2",
+    "@helux/utils": "^3.2.2",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
   "bundleDependencies": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "deprecated": false
 }

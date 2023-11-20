@@ -1,4 +1,4 @@
-import { getSafeNext, isMax } from 'helux-utils';
+import { getSafeNext, isMax } from '@helux/utils';
 import { SCOPE_TYPE } from '../../consts';
 import type { ScopeType } from '../../types/base';
 import { getRootCtx } from '../root';

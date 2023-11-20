@@ -1,5 +1,5 @@
-import type { MutableRefObject } from 'helux-types';
-import { isFn, isObj } from 'helux-utils';
+import type { MutableRefObject } from '@helux/types';
+import { isFn, isObj } from '@helux/utils';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { Srv } from '../types/base';
 

@@ -1,4 +1,4 @@
-import { isFn } from 'helux-utils';
+import { isFn } from '@helux/utils';
 import type { Atom, DeriveAtomFn, DeriveAtomFnItem, DeriveFn, DeriveFnItem, ICreateDeriveLogicOptions, PlainObject } from '../types/base';
 import { initDeriveFn } from './common/derived';
 

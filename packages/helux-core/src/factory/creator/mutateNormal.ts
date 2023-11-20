@@ -1,4 +1,4 @@
-import { has, isObj, nodupPush, prefixValKey } from 'helux-utils';
+import { has, isObj, nodupPush, prefixValKey } from '@helux/utils';
 import { createOb } from '../../helpers/obj';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { emitDataChanged } from '../common/plugin';

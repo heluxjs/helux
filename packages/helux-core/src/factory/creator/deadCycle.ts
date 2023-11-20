@@ -1,7 +1,7 @@
 /**
  * 本模块用于辅助处理 mutate 函数可能遇到的死循环问题
  */
-import { nodupPush, safeMapGet, tryAlert } from 'helux-utils';
+import { nodupPush, safeMapGet, tryAlert } from '@helux/utils';
 import { TInternal } from './buildInternal';
 
 type Log = { sn: number; descs: string[]; timer: any; errs: any[]; cycle: string[] };

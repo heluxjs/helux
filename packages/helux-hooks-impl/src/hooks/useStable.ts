@@ -1,5 +1,5 @@
-import type { ApiCtx, Dict, MutableRefObject } from 'helux-types';
-import { isFn, isObj, isProxyAvailable, safeObjGet } from 'helux-utils';
+import type { ApiCtx, Dict, MutableRefObject } from '@helux/types';
+import { isFn, isObj, isProxyAvailable, safeObjGet } from '@helux/utils';
 
 type Stable = { data: any; wrap: any; inited: boolean };
 type StableRef = MutableRefObject<Stable>;

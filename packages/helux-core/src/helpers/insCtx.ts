@@ -1,4 +1,4 @@
-import { isSymbol, prefixValKey, warn } from 'helux-utils';
+import { isSymbol, prefixValKey, warn } from '@helux/utils';
 import { immut } from 'limu';
 import { EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START } from '../consts';
 import { genInsKey } from '../factory/common/key';

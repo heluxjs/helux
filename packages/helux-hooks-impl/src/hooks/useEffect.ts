@@ -1,4 +1,4 @@
-import type { ApiCtx, EffectCb } from 'helux-types';
+import type { ApiCtx, EffectCb } from '@helux/types';
 
 let insKey = 0;
 const MOUNT_MAP = new Map<number, { count: number }>();

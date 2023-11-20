@@ -1,4 +1,4 @@
-import { canUseDeep, isSymbol, prefixValKey, warn } from 'helux-utils';
+import { canUseDeep, isSymbol, prefixValKey, warn } from '@helux/utils';
 import { immut } from 'limu';
 import { HAS_SYMBOL, IS_ATOM, KEY_SPLITER } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';

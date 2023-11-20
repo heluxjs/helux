@@ -5,7 +5,7 @@
 | it supports all react like frameworks.
 |------------------------------------------------------------------------------------------------
 */
-import type { MutableRefObject, ReactNode } from 'helux-types';
+import type { MutableRefObject, ReactNode } from '@helux/types';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,

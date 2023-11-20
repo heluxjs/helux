@@ -1,4 +1,4 @@
-import { enureReturnArr, isPromise, noopVoid, tryAlert } from 'helux-utils';
+import { enureReturnArr, isPromise, noopVoid, tryAlert } from '@helux/utils';
 import { ASYNC_TYPE, WATCH } from '../consts';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
 import type { TInternal } from '../factory/creator/buildInternal';

@@ -1,5 +1,5 @@
-import type { ForwardedRef } from 'helux-types';
-import { noopArgs } from 'helux-utils';
+import type { ForwardedRef } from '@helux/types';
+import { noopArgs } from '@helux/utils';
 import { IS_BLOCK } from '../../consts';
 import { getAtom, isDerivedAtom } from '../../factory/common/atom';
 import { markBlockFnEnd, markBlockFnStart } from '../../helpers/blockCtx';

@@ -1,4 +1,4 @@
-import type { ReactLike } from 'helux-types';
+import type { ReactLike } from '@helux/types';
 import * as rawApiMod from './src/api';
 import * as api from './src/types-api';
 

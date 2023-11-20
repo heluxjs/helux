@@ -1,4 +1,4 @@
-import type { Dict, Fn, NumStrSymbol } from 'helux-types';
+import type { Dict, Fn, NumStrSymbol } from '@helux/types';
 export declare function nodupPush(list: NumStrSymbol[], toPush: NumStrSymbol): void;
 export declare function delListItem(list: NumStrSymbol[], toDel: NumStrSymbol): void;
 export declare function dedupList(list: Array<any>): any[];

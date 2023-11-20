@@ -1,4 +1,4 @@
-import { initHeluxContext } from 'helux-core';
+import { initHeluxContext } from '@helux/core';
 import * as React from 'react';
 
 const api = initHeluxContext({ heluxCtxKey: '__HELUX__', reactLib: React });

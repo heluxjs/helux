@@ -1,5 +1,5 @@
-import { ReactNode } from 'helux-types';
-import { isFn, prefixValKey } from 'helux-utils';
+import { ReactNode } from '@helux/types';
+import { isFn, prefixValKey } from '@helux/utils';
 import { IS_BLOCK } from '../consts';
 import { isAtom, isDerivedAtom } from '../factory/common/atom';
 import { getLastest } from '../factory/common/blockScope';

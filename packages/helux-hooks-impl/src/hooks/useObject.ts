@@ -1,5 +1,5 @@
-import type { ApiCtx, Dict, PartialStateCb } from 'helux-types';
-import { isFn } from 'helux-utils';
+import type { ApiCtx, Dict, PartialStateCb } from '@helux/types';
+import { isFn } from '@helux/utils';
 import { useForceUpdate } from './useForceUpdate';
 import { useStable } from './useStable';
 

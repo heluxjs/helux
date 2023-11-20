@@ -1,4 +1,4 @@
-import { delListItem, nodupPush, safeMapGet } from 'helux-utils';
+import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
 import { STATE_TYPE } from '../../consts';
 import { getInternal } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';

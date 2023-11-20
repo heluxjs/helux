@@ -1,4 +1,4 @@
-import { delListItem, nodupPush, safeMapGet } from 'helux-utils';
+import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
 import { PROTO_KEY } from '../consts';
 import { getFnCtx, getRunninFnCtx, opUpstreamFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';

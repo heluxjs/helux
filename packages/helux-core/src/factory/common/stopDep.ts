@@ -1,4 +1,4 @@
-import { matchListItem, nodupPush } from 'helux-utils';
+import { matchListItem, nodupPush } from '@helux/utils';
 import { KEY_SPLITER } from '../../consts';
 import type { IRuleConf } from '../../types/base';
 import type { DepKeyInfo, Level1ArrKeys } from '../../types/inner';

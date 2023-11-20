@@ -1,6 +1,6 @@
 {
-  "name": "helux-hooks-impl",
-  "version": "3.2.0",
+  "name": "@helux/hooks-impl",
+  "version": "3.2.5",
   "description": "helux hooks implement lib",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -37,8 +37,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux-types": "^3.1.1",
-    "helux-utils": "^3.1.1"
+    "@helux/types": "^3.2.2",
+    "@helux/utils": "^3.2.2"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.12.11",
@@ -46,9 +46,13 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "helux-types": "^3.1.1",
-    "helux-utils": "^3.1.1"
+    "@helux/types": "^3.2.2",
+    "@helux/utils": "^3.2.2"
   },
   "bundleDependencies": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "deprecated": false
 }

@@ -1,4 +1,4 @@
-import { GLOBAL_REF } from 'helux-utils';
+import { GLOBAL_REF } from '@helux/utils';
 import { buildHeluxApi } from '../apiFactory';
 import { createRoot, getRootData, HeluxRoot, setRootData } from './root';
 

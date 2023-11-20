@@ -1,4 +1,4 @@
-import { isFn, noop } from 'helux-utils';
+import { isFn, noop } from '@helux/utils';
 import { SCOPE_TYPE, WATCH } from '../consts';
 import { markFnEnd, markFnStart, registerFn } from '../helpers/fnCtx';
 import { recordFnDepKeys } from '../helpers/fnDep';

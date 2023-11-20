@@ -1,4 +1,4 @@
-import { isFn } from 'helux-utils';
+import { isFn } from '@helux/utils';
 import { ASYNC_TYPE, SCOPE_TYPE } from '../../consts';
 import { isDerivedAtom } from '../../factory/common/atom';
 import { getFnCtxByObj } from '../../factory/common/fnScope';

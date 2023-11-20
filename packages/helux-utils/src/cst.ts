@@ -1,4 +1,4 @@
-import type { Dict } from 'helux-types';
+import type { Dict } from '@helux/types';
 
 function getGlobalThis() {
   if (typeof globalThis !== 'undefined') return globalThis;

@@ -1,4 +1,4 @@
-import { isDebug, isFn, isObj, isProxyAvailable, prefixValKey } from 'helux-utils';
+import { isDebug, isFn, isObj, isProxyAvailable, prefixValKey } from '@helux/utils';
 import { immut, IOperateParams } from 'limu';
 import { KEY_SPLITER } from '../../consts';
 import { createOb } from '../../helpers/obj';

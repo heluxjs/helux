@@ -1,4 +1,4 @@
-import { noop, noopArr } from 'helux-utils';
+import { noop, noopArr } from '@helux/utils';
 import { EVENT_NAME, FROM, HELUX_GLOBAL_LOADING, LOADING_MODE, STATE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { createOb } from '../../helpers/obj';

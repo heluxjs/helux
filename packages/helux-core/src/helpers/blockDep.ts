@@ -1,4 +1,4 @@
-import { nodupPush, safeMapGet } from 'helux-utils';
+import { nodupPush, safeMapGet } from '@helux/utils';
 import { getBlockScope } from '../factory/common/speedup';
 
 /**

@@ -1,6 +1,6 @@
-import { buildApi } from 'helux-hooks-impl';
-import { Fn, React18Like, ReactLike } from 'helux-types';
-import { noop } from 'helux-utils';
+import { buildApi } from '@helux/hooks-impl';
+import { Fn, React18Like, ReactLike } from '@helux/types';
+import { noop } from '@helux/utils';
 import * as api from './api';
 import { CoreApiCtx } from './types/api-ctx';
 import { HeluxApi, model, modelFactory } from './types/model';

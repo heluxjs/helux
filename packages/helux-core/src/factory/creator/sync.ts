@@ -1,4 +1,4 @@
-import { setVal } from 'helux-utils';
+import { setVal } from '@helux/utils';
 import { createOneLevelOb } from '../../helpers/obj';
 import type { Dict, Fn, SetState } from '../../types/base';
 import { createImmut, getDepKeyByPath } from '../common/util';

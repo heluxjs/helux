@@ -1,4 +1,4 @@
-import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } from 'helux-types';
+import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } from '@helux/types';
 import type { DepKeyInfo } from './inner';
 
 /**

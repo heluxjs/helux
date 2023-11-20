@@ -1,4 +1,4 @@
-import { canUseDeep, isFn } from 'helux-utils';
+import { canUseDeep, isFn } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
 import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types/base';
 import { runPartialCb, wrapPartial } from '../common/util';

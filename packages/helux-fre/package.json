@@ -1,6 +1,6 @@
 {
-  "name": "helux-fre",
-  "version": "3.0.1",
+  "name": "@helux/fre",
+  "version": "3.2.5",
   "description": "State library for fre that integrates atom, signal, collection dep, derive and watch.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "fre": ">=2.6.5",
-    "helux-core": ">=3.0.39"
+    "@helux/core": "^3.2.5"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.12.11",
@@ -47,8 +47,12 @@
   },
   "peerDependencies": {
     "fre": ">=2.6.5",
-    "helux-core": ">=3.0.39"
+    "@helux/core": "^3.2.5"
   },
   "bundleDependencies": [],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "deprecated": false
 }

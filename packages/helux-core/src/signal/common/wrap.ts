@@ -1,5 +1,5 @@
-import type { FunctionComponent } from 'helux-types';
-import { getVal, noop } from 'helux-utils';
+import type { FunctionComponent } from '@helux/types';
+import { getVal, noop } from '@helux/utils';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
 import { useSharedSimpleLogic } from '../../hooks/common/useSharedLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';

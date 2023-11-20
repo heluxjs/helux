@@ -1,4 +1,4 @@
-import { isFn, isProxyAvailable } from 'helux-utils';
+import { isFn, isProxyAvailable } from '@helux/utils';
 import type { Dict, Fn } from '../types/base';
 
 function setProtoOf(obj: Dict, proto: any) {

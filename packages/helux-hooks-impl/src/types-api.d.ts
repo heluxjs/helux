@@ -1,4 +1,4 @@
-import { Dict, EffectCb, PartialStateCb } from 'helux-types';
+import { Dict, EffectCb, PartialStateCb } from '@helux/types';
 
 /**
  * 使用稳定的数据

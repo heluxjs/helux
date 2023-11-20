@@ -12,6 +12,11 @@ importers:
       '@commitlint/cli': ^17.1.2
       '@commitlint/config-conventional': ^17.1.0
       '@docusaurus/types': ^2.4.1
+      '@helux/core': workspace:*
+      '@helux/hooks': workspace:*
+      '@helux/hooks-impl': workspace:*
+      '@helux/types': workspace:*
+      '@helux/utils': workspace:*
       '@jest/transform': '29'
       '@types/jest': 27.5.2
       '@types/node': '>=12.0.0'
@@ -21,11 +26,6 @@ importers:
       eslint: ^8.24.0
       fs-extra: ^10.1.0
       helux: workspace:*
-      helux-core: workspace:*
-      helux-hooks: workspace:*
-      helux-hooks-impl: workspace:*
-      helux-types: workspace:*
-      helux-utils: workspace:*
       husky: ^8.0.1
       jest: 28.1.3
       jest-environment-jsdom: 27.5.1
@@ -50,14 +50,14 @@ importers:
       typescript: 4.8.3
     dependencies:
       '@docusaurus/types': 2.4.3_wcqkhtmu7mswc6yz4uyexck3ty
+      '@helux/core': link:packages/helux-core
+      '@helux/hooks': link:packages/helux-hooks
+      '@helux/hooks-impl': link:packages/helux-hooks-impl
+      '@helux/types': link:packages/helux-types
+      '@helux/utils': link:packages/helux-utils
       '@jest/transform': 29.7.0
       '@types/node': 20.8.10
       helux: link:packages/helux
-      helux-core: link:packages/helux-core
-      helux-hooks: link:packages/helux-hooks
-      helux-hooks-impl: link:packages/helux-hooks-impl
-      helux-types: link:packages/helux-types
-      helux-utils: link:packages/helux-utils
       limu: 3.7.3
     devDependencies:
       '@babel/core': 7.23.2
@@ -107,14 +107,14 @@ importers:
   packages/helux:
     specifiers:
       '@babel/preset-env': ^7.12.11
+      '@helux/core': ^3.2.2
       '@types/react': <18.0.0
       babel-cli: ^6.26.0
-      helux-core: '>=3.0.39'
       react: '>=16.8.0'
       rollup: ^2.23.0
     dependencies:
+      '@helux/core': link:../helux-core
       '@types/react': 17.0.69
-      helux-core: link:../helux-core
       react: 16.14.0
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
@@ -124,16 +124,16 @@ importers:
   packages/helux-core:
     specifiers:
       '@babel/preset-env': ^7.12.11
+      '@helux/hooks-impl': ^3.2.2
+      '@helux/types': ^3.2.2
+      '@helux/utils': ^3.2.2
       babel-cli: ^6.26.0
-      helux-hooks-impl: '>=3.0.13'
-      helux-types: '>=3.0.4'
-      helux-utils: '>=3.0.11'
       limu: ^3.7.3
       rollup: ^2.23.0
     dependencies:
-      helux-hooks-impl: link:../helux-hooks-impl
-      helux-types: link:../helux-types
-      helux-utils: link:../helux-utils
+      '@helux/hooks-impl': link:../helux-hooks-impl
+      '@helux/types': link:../helux-types
+      '@helux/utils': link:../helux-utils
       limu: 3.7.3
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
@@ -143,13 +143,13 @@ importers:
   packages/helux-fre:
     specifiers:
       '@babel/preset-env': ^7.12.11
+      '@helux/core': ^3.2.2
       babel-cli: ^6.26.0
       fre: '>=2.6.5'
-      helux-core: '>=3.0.39'
       rollup: ^2.23.0
     dependencies:
+      '@helux/core': link:../helux-core
       fre: 2.6.5
-      helux-core: link:../helux-core
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
       babel-cli: 6.26.0
@@ -159,21 +159,21 @@ importers:
     specifiers:
       '@babel/preset-env': ^7.12.11
       '@babel/preset-react': ^7.12.10
+      '@helux/hooks-impl': ^3.2.2
+      '@helux/types': ^3.2.2
+      '@helux/utils': ^3.2.2
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
       babel-cli: ^6.26.0
-      helux-hooks-impl: '>=3.0.13'
-      helux-types: '>=3.0.4'
-      helux-utils: '>=3.0.11'
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
       rollup: ^2.23.0
     dependencies:
+      '@helux/hooks-impl': link:../helux-hooks-impl
+      '@helux/types': link:../helux-types
+      '@helux/utils': link:../helux-utils
       '@types/react': 17.0.69
       '@types/react-dom': 17.0.22
-      helux-hooks-impl: link:../helux-hooks-impl
-      helux-types: link:../helux-types
-      helux-utils: link:../helux-utils
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
@@ -185,13 +185,13 @@ importers:
   packages/helux-hooks-impl:
     specifiers:
       '@babel/preset-env': ^7.12.11
+      '@helux/types': ^3.2.2
+      '@helux/utils': ^3.2.2
       babel-cli: ^6.26.0
-      helux-types: '>=3.0.4'
-      helux-utils: '>=3.0.11'
       rollup: ^2.23.0
     dependencies:
-      helux-types: link:../helux-types
-      helux-utils: link:../helux-utils
+      '@helux/types': link:../helux-types
+      '@helux/utils': link:../helux-utils
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
       babel-cli: 6.26.0
@@ -201,7 +201,7 @@ importers:
     specifiers:
       '@babel/preset-env': ^7.12.11
       babel-cli: ^6.26.0
-      helux: ^3.0.7
+      helux: ^3.2.2
       redux: ^4.2.1
       rollup: ^2.23.0
     dependencies:
@@ -216,11 +216,11 @@ importers:
     specifiers:
       '@babel/preset-env': ^7.12.11
       babel-cli: ^6.26.0
-      helux-core: ^3.0.39
+      helux-core: ^3.1.0
       preact: ^10.19.2
       rollup: ^2.23.0
     dependencies:
-      helux-core: link:../helux-core
+      helux-core: 3.2.0_yzh5lb27x7t23uosxkbne2bspa
       preact: 10.19.2
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
@@ -241,11 +241,11 @@ importers:
     specifiers:
       '@babel/preset-env': ^7.12.11
       '@babel/preset-react': ^7.12.10
+      '@helux/types': ^3.2.2
       babel-cli: ^6.26.0
-      helux-types: '>=3.0.4'
       rollup: ^2.23.0
     dependencies:
-      helux-types: link:../helux-types
+      '@helux/types': link:../helux-types
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
       '@babel/preset-react': 7.22.15_@babel+core@7.23.2
@@ -259,7 +259,7 @@ importers:
       helux-types: '>=3.0.3'
       rollup: ^2.23.0
     dependencies:
-      helux-types: link:../helux-types
+      helux-types: 3.1.1
     devDependencies:
       '@babel/preset-env': 7.23.2_@babel+core@7.23.2
       babel-cli: 6.26.0
@@ -5289,6 +5289,42 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       function-bind: 1.1.2
+
+  /helux-core/3.2.0_yzh5lb27x7t23uosxkbne2bspa:
+    resolution: {integrity: sha512-ZI6AULEzXENqOVkDf+EMtRuvs/g73vhlwcXAP4uMN3yVnuKEid3Pntv8xizbxUFLmp8fkwycFTdQAwoZuxixRg==}
+    peerDependencies:
+      helux-hooks-impl: ^3.2.0
+      helux-types: ^3.1.1
+      helux-utils: ^3.1.1
+      limu: ^3.7.3
+    dependencies:
+      helux-hooks-impl: 3.2.0_mpyuwunlxt5ipx7g2gdx7m5lvu
+      helux-types: 3.1.1
+      helux-utils: 3.1.2_helux-types@3.1.1
+      limu: 3.7.3
+    dev: false
+
+  /helux-hooks-impl/3.2.0_mpyuwunlxt5ipx7g2gdx7m5lvu:
+    resolution: {integrity: sha512-ZWWbmvyv5wqfLHTaL/j0ARRNIbyTwdNh+ff8a/qVQbPtY7hl8VyfymyFMt2v78iY7VWCNoG45WmoZZDzydfR5g==}
+    peerDependencies:
+      helux-types: ^3.1.1
+      helux-utils: ^3.1.1
+    dependencies:
+      helux-types: 3.1.1
+      helux-utils: 3.1.2_helux-types@3.1.1
+    dev: false
+
+  /helux-types/3.1.1:
+    resolution: {integrity: sha512-2lSnoL2mzHiIaE2V+EeTykmHPbRGQJDNrI2eYwFsGYbTZNLhcmFhcU7arYIiaanfEdJt+rUjZSlZDeUzf3KORw==}
+    dev: false
+
+  /helux-utils/3.1.2_helux-types@3.1.1:
+    resolution: {integrity: sha512-3zGA5DxOSfKZNmaSxV9nvoRWFiqEzkZN5uS4vYF3+GQ7Hla0kiZ71RRpBuGtyMweJ/tX+mUQKgcaCa2HpSDxHA==}
+    peerDependencies:
+      helux-types: ^3.1.1
+    dependencies:
+      helux-types: 3.1.1
+    dev: false
 
   /home-or-tmp/2.0.0:
     resolution: {integrity: sha512-ycURW7oUxE2sNiPVw1HVEFsW+ecOpJ5zaj7eC0RlwhibhRBod20muUN8qu/gzx956YrLolVvs1MTXwKgC2rVEg==}

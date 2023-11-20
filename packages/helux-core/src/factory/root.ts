@@ -1,4 +1,4 @@
-import { asType, safeObjGet } from 'helux-utils';
+import { asType, safeObjGet } from '@helux/utils';
 import { VER } from '../consts';
 import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types/base';
 import type { TInternal } from './creator/buildInternal';

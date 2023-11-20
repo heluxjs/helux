@@ -1,4 +1,4 @@
-import { tryAlert } from 'helux-utils';
+import { tryAlert } from '@helux/utils';
 import { getInternal } from '../../helpers/state';
 import type { SharedState } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';

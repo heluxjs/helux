@@ -1,4 +1,4 @@
-import { isFn, isObj } from 'helux-utils';
+import { isFn, isObj } from '@helux/utils';
 import { createDraft, finishDraft } from 'limu';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { PartialStateCb, PlainObject } from '../types/base';

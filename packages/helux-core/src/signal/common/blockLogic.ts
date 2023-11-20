@@ -1,5 +1,5 @@
-import type { ForwardedRef } from 'helux-types';
-import { noop } from 'helux-utils';
+import type { ForwardedRef } from '@helux/types';
+import { noop } from '@helux/utils';
 import { initBlockCtx } from '../../helpers/blockCtx';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { BlockCb, IBlockOptions } from '../../types/base';

@@ -1,6 +1,6 @@
 {
-  "name": "helux-plugin-devtool",
-  "version": "3.1.0",
+  "name": "@helux/plugin-devtool",
+  "version": "3.2.5",
   "description": "devtool for helux",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -37,7 +37,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux": "^3.1.0",
+    "helux": "^3.2.2",
     "redux": "^4.2.1"
   },
   "devDependencies": {
@@ -46,9 +46,13 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "helux": "^3.1.0",
+    "helux": "^3.2.2",
     "redux": "^4.2.1"
   },
   "bundleDependencies": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "deprecated": false
 }

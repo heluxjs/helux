@@ -1,4 +1,4 @@
-import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from 'helux-utils';
+import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from '@helux/utils';
 import { immut } from 'limu';
 import { FROM, LOADING_MODE, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';

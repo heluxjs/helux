@@ -1,4 +1,4 @@
-import { enureReturnArr, noop, tryAlert } from 'helux-utils';
+import { enureReturnArr, noop, tryAlert } from '@helux/utils';
 import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';

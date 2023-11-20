@@ -1,4 +1,4 @@
-import { delListItem, isFn, nodupPush, setNoop, setVal } from 'helux-utils';
+import { delListItem, isFn, nodupPush, setNoop, setVal } from '@helux/utils';
 import { immut } from 'limu';
 import { createOb } from '../../helpers/obj';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';

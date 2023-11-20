@@ -1,4 +1,4 @@
-import { delListItem, nodupPush, noop, safeObjGet } from 'helux-utils';
+import { delListItem, nodupPush, noop, safeObjGet } from '@helux/utils';
 import type {
   AsyncSetState,
   Dict,

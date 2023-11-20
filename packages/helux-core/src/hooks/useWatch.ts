@@ -1,4 +1,4 @@
-import { isFn } from 'helux-utils';
+import { isFn } from '@helux/utils';
 import { MOUNTED, SCOPE_TYPE } from '../consts';
 import { createWatchLogic } from '../factory/createWatch';
 import { parseWatchOptions } from '../factory/creator/parse';

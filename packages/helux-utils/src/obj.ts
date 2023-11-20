@@ -1,4 +1,4 @@
-import type { Dict, NumStrSymbol } from 'helux-types';
+import type { Dict, NumStrSymbol } from '@helux/types';
 
 // @ts-ignore
 const canUseReflect = !!Reflect;

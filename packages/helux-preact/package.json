@@ -1,6 +1,6 @@
 {
-  "name": "helux-preact",
-  "version": "3.0.9",
+  "name": "@helux/preact",
+  "version": "3.2.5",
   "description": "State library for preact that integrates atom, signal, collection dep, derive and watch.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -37,7 +37,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux-core": "^3.1.0",
+    "@helux/core": "^3.2.5",
     "preact": "^10.19.2"
   },
   "devDependencies": {
@@ -46,9 +46,13 @@
     "rollup": "^2.23.0"
   },
   "peerDependencies": {
-    "helux-core": "^3.1.0",
+    "@helux/core": "^3.2.5",
     "preact": "^10.19.2"
   },
   "bundleDependencies": [],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "deprecated": false
 }

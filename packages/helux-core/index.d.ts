@@ -1,4 +1,4 @@
-import type { ReactLike } from 'helux-types';
+import type { ReactLike } from '@helux/types';
 import type { HeluxApi, model, modelFactory } from './src/types/model';
 
 export type AllApi = HeluxApi & {
