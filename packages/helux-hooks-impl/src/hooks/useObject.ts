@@ -81,7 +81,7 @@ export function useObjectLogic<T extends object = Dict>(
  * 1 方便定义多个状态值时，少写很多 useState
  * 2 内部做了 unmount 判断，让异步函数也可以安全的调用 setState，避免 react 出现警告 :
  * "Called SetState() on an Unmounted Component" Errors
- * 3 可调用 useObject(xxState, true) 让元组第一位参数返回稳定引用
+ * 3 默认返回稳定引用状态
  * ```
  * @param initialState
  * @returns
