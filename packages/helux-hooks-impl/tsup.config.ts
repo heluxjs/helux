@@ -4,7 +4,7 @@ export default defineConfig([
   {
     entry: ['src/index.ts'],
     format: ['esm', 'cjs'],
-    dts: false,
+    dts: true,
     splitting: true,
     sourcemap: true,
     clean: true,
@@ -13,10 +13,6 @@ export default defineConfig([
     external: [],
 
     esbuildPlugins: [
-      copyStaticFile({
-        src: "./src/index.d.ts",
-        dest: "./dist/index.d.ts"
-      }),
       copyStaticFile({
         src: "./src/types-api.d.ts",
         dest: "./dist/types-api.d.ts"
