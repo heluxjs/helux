@@ -24,7 +24,6 @@ interface ISnCommitOpts extends ICommitOpts {
   sn: number;
 }
 
-
 /**
  * mutateNormal 和 mutateDepp 的 finishMutate 里提交之前可复用的公共逻辑
  */
