@@ -18,7 +18,7 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -42,7 +42,6 @@
   },
   "peerDependencies": {
     "@types/react": "workspace:^",
-    "helux-core": "workspace:^",
     "react": ">=16.8.0"
   },
   "bundleDependencies": false,

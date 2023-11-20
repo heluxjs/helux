@@ -18,11 +18,10 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "src",
-    "index.d.ts",
     "README.md",
     "tsconfig.json"
   ],
@@ -30,12 +29,7 @@
     "build": "tsup",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "@babel/preset-env": "^7.12.11",
-    "babel-cli": "^6.26.0",
-    "rollup": "^2.23.0"
-  },
-  "peerDependencies": {
+  "dependencies": {
     "helux-types": "workspace:^",
     "helux-utils": "workspace:^"
   },

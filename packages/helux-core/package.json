@@ -18,7 +18,7 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -31,18 +31,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "limu": "^3.7.3"
-  },
-  "devDependencies": {
-    "@babel/preset-env": "^7.12.11",
-    "babel-cli": "^6.26.0",
-    "rollup": "^2.23.0"
-  },
-  "peerDependencies": {
+    "limu": "^3.7.3",
     "helux-hooks-impl": "workspace:^",
     "helux-types": "workspace:^",
-    "helux-utils": "workspace:^",
-    "limu": "^3.7.3"
+    "helux-utils": "workspace:^"
   },
   "bundleDependencies": false,
   "deprecated": false

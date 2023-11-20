@@ -20,34 +20,19 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
-  "main": "lib/index.js",
-  "module": "es/index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "lib",
-    "es",
     "src",
-    "index.d.ts",
     "README.md",
     "tsconfig.json"
   ],
   "scripts": {
-    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
-    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
-    "build:es": "rollup -c --environment BUILD_ENV:es",
-    "build:tsup": "tsup",
-    "build:umd": "rollup -c --environment BUILD_ENV:development",
-    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup"
   },
-  "devDependencies": {
-    "@babel/preset-env": "^7.12.11",
-    "@babel/preset-react": "^7.12.10",
-    "babel-cli": "^6.26.0",
-    "rollup": "^2.23.0"
-  },
-  "peerDependencies": {
+  "dependencies": {
     "helux-types": "workspace:^"
   },
   "bundleDependencies": false,

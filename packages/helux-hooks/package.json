@@ -22,11 +22,10 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "src",
-    "index.d.ts",
     "README.md",
     "tsconfig.json"
   ],
@@ -35,26 +34,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@types/react": ">=16.8.0",
-    "@types/react-dom": ">=16.8.0",
-    "helux-hooks-impl": "^3.1.0",
-    "helux-types": "^3.1.0",
-    "helux-utils": "^3.1.0",
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
-  },
-  "devDependencies": {
-    "@babel/preset-env": "^7.12.11",
-    "@babel/preset-react": "^7.12.10",
-    "babel-cli": "^6.26.0",
-    "rollup": "^2.23.0"
+    "helux-hooks-impl": "workspace:^",
+    "helux-types": "workspace:^",
+    "helux-utils": "workspace:^"
   },
   "peerDependencies": {
     "@types/react": ">=16.8.0",
     "@types/react-dom": ">=16.8.0",
-    "helux-hooks-impl": "^3.1.0",
-    "helux-types": "^3.1.0",
-    "helux-utils": "^3.1.0",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
