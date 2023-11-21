@@ -5,7 +5,7 @@ import { resetReadMap, updateDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Dict, IInnerUseSharedOptions } from '../../types/base';
-import { checkAtom, checkStateVer, delInsCtx, isSharedKeyChanged, readManualDeps, recoverInsCtx } from './shared';
+import { checkAtom, checkStateVer, delInsCtx, isSharedKeyChanged, recoverInsCtx } from './shared';
 import { useSync } from './useSync';
 
 // for skip ts check out of if block
@@ -32,8 +32,8 @@ function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInner
  */
 function useInsCtxEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
   apiCtx.react.useEffect(() => {
-    // 设定了 options.collect=false，则首轮渲染结束后标记不能再收集依赖，阻值后续新的渲染流程里继续收集依赖的行为
-    if (!insCtx.collectFlag) {
+    // 设定了 options.collect='first' 则首轮渲染结束后标记不能再收集依赖，阻值后续新的渲染流程里继续收集依赖的行为
+    if (insCtx.collectType === 'first') {
       insCtx.canCollect = false;
     }
 
@@ -51,7 +51,6 @@ function useInsCtxEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
 function useDepCollection<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
   insCtx.renderStatus = RENDER_START;
   resetReadMap(insCtx);
-  readManualDeps(insCtx, options);
   // adapt to react 18
   useSync(apiCtx, insCtx.subscribe, () => getInternal(sharedState).snap);
 

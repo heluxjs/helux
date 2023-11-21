@@ -9,6 +9,6 @@ export default defineConfig([
     clean: true,
     treeshake: false,
     minify: 'terser',
-    external: []
+    external: [],
   },
 ]);

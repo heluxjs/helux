@@ -560,14 +560,16 @@ export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull
 
 export interface IUseSharedOptionsBase {
   /**
-   * default: true，设置为false可以进一步提高组件渲染性能，但需要注意如果组件的依赖时变化的，
-   * 会造成依赖丢失的情况产生，触发组件不会重渲染的bug
+   * default: every ，设置为 first 或 no 可以进一步提高组件渲染性能，但需要注意
+   * first 时如果组件的依赖是变化的，会造成依赖丢失的情况产生，触发组件不会重渲染的bug，
+   * no 时不会从ui渲染力收集到依赖，需 deps 函数补充依赖
    * ```txt
-   * true，每一轮渲染都实时收集最新的依赖项
-   * false，仅首轮渲染收集依赖，后续渲染流程不收集
+   * no ，此时依赖仅靠 deps 提供
+   * first ，仅首轮渲染收集依赖，后续渲染流程不收集
+   * every ，每一轮渲染流程都实时收集
    * ```
    */
-  collect?: boolean;
+  collectType?: 'no' | 'first' | 'every';
   /**
    * 视图的id，在 ICreateOptionsFull.rules 里配置更新的 ids 包含的值指的就是此处配置的id，
    * 此id属于传入的 sharedState ，即和共享状态绑定了对应关系，意味着组件使用不同的 sharedState，
@@ -823,10 +825,10 @@ export interface IInsCtx<T = Dict> {
   /** 全局id，此属性只服务于 useGlobaId 设定的 globalId */
   globalId: NumStrSymbol;
   /**
-   * default: true
+   * default: every
    * 使用钩子函数时透传的能否收集依赖的标记
    */
-  collectFlag: boolean;
+  collectType: 'no' | 'first' | 'every';
   /**
    * default: true
    * 计算出的能否收集依赖标记，如透传了 options.collect=false，会在首轮渲染结束后标记为 false
@@ -849,6 +851,8 @@ export interface ICreateDeriveLogicOptions {
   returnUpstreamResult?: boolean;
   forAtom?: boolean;
   immediate?: boolean;
+  /** 人工设定了依赖项 */
+  manualDepKeys?: string[];
 }
 
 export interface IRuleConf {

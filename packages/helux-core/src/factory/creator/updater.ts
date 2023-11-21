@@ -1,4 +1,5 @@
 import { dedupList } from '@helux/utils';
+import { markFnEnd } from '../../helpers/fnCtx';
 import { getDepFnStats } from '../../helpers/fnDep';
 import { runFn } from '../../helpers/fnRunner';
 import { markComputing } from '../../helpers/fnStatus';
@@ -22,6 +23,10 @@ export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
   let allFirstLevelFnKeys: string[] = [];
   let allAsyncFnKeys: string[] = [];
   const runCountStats: Dict<number> = {};
+
+  if (isFirstCall) {
+    markFnEnd();
+  }
 
   const analyzeDepKey = (key: string) => {
     // 值相等就忽略
@@ -50,7 +55,6 @@ export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
   allInsKeys = dedupList(allInsKeys);
   allFirstLevelFnKeys = dedupList(allFirstLevelFnKeys);
   allAsyncFnKeys = dedupList(allAsyncFnKeys);
-
   // start execute derive/watch fns
   allAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));

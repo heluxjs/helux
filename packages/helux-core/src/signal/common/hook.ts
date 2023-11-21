@@ -10,10 +10,11 @@ import type { IBlockCtx, LoadingStatus } from '../../types/base';
 export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, showLoading = false) {
   let status: LoadingStatus = { loading: false, err: null, ok: true };
   blockCtx.map.forEach((depKeys, stateOrResult) => {
+    // console.log('depKeys', depKeys, stateOrResult);
     // trust beblow statement, cause map data supplied by blockCtx is stable
     if (isSharedState(stateOrResult)) {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      const insCtx = useSharedSimpleLogic(apiCtx, stateOrResult);
+      const insCtx = useSharedSimpleLogic(apiCtx, stateOrResult, { collectType: 'no' });
       if (insCtx.isFirstRender) {
         // transfer depKeys
         depKeys.forEach((depKey) => insCtx.recordDep(getDepKeyInfo(depKey)));
@@ -22,7 +23,12 @@ export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, showLoading = fa
     } else {
       // will transfer depKeys in genDerivedResult process
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      const fnCtx = useDerivedSimpleLogic(apiCtx, { result: stateOrResult, forAtom: isDerivedAtom(stateOrResult), showLoading });
+      const fnCtx = useDerivedSimpleLogic(apiCtx, {
+        result: stateOrResult,
+        forAtom: isDerivedAtom(stateOrResult),
+        showLoading,
+        manualDepKeys: depKeys,
+      });
       if (!fnCtx.status.ok) {
         status = fnCtx.status;
       }

@@ -30,8 +30,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "fre": ">=2.6.5",
-    "@helux/core": "workspace:^"
+    "@helux/core": "workspace:^",
+    "fre": ">=2.6.5"
   },
   "bundleDependencies": [],
   "publishConfig": {

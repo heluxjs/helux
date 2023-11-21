@@ -1,4 +1,4 @@
-import { isSymbol, prefixValKey, warn } from '@helux/utils';
+import { isFn, isSymbol, prefixValKey, warn } from '@helux/utils';
 import { immut } from 'limu';
 import { EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, RENDER_END, RENDER_START } from '../consts';
 import { genInsKey } from '../factory/common/key';
@@ -67,7 +67,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
 }
 
 export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
-  const { updater, sharedState, id = '', globalId = '', collect = true } = options;
+  const { updater, sharedState, id = '', globalId = '', collectType = 'every', deps } = options;
   const internal = getInternal(sharedState);
   if (!internal) {
     throw new Error('ERR_OBJ_NOT_SHARED: input object is not a result returned by share api');
@@ -93,8 +93,9 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
     ver,
     id,
     globalId,
-    collectFlag: collect,
-    canCollect: true,
+    collectType,
+    // 设定了 no，则关闭依赖收集功能，此时依赖靠 deps 函数提供
+    canCollect: collectType === 'no',
     isFirstRender: true,
     subscribe: (cb) => {
       // call insDep subscribe after snap changed
@@ -132,6 +133,12 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
   attachInsProxyState(insCtx);
   internal.mapInsCtx(insCtx, insKey);
   internal.recordId(id, insKey);
+
+  // 首次渲染执行一次依赖项补充函数
+  if (isFn(deps)) {
+    deps(insCtx.proxyState);
+  }
+
   return insCtx;
 }
 

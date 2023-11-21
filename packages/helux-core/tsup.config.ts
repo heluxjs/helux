@@ -1,5 +1,5 @@
+import copyStaticFile from 'esbuild-copy-static-files';
 import { defineConfig } from 'tsup';
-import copyStaticFile from "esbuild-copy-static-files"
 
 export default defineConfig([
   {
@@ -14,13 +14,13 @@ export default defineConfig([
     external: [],
     esbuildPlugins: [
       copyStaticFile({
-        src: "./src/index.d.ts",
-        dest: "./dist/index.d.ts"
+        src: './src/index.d.ts',
+        dest: './dist/index.d.ts',
       }),
       copyStaticFile({
-        src: "./src/types",
-        dest: "./dist/types"
-      })
-    ]
-  }
+        src: './src/types',
+        dest: './dist/types',
+      }),
+    ],
+  },
 ]);

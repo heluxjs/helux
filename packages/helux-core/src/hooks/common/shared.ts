@@ -1,11 +1,10 @@
-import { isFn } from '@helux/utils';
 import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
-import type { Dict, IUseSharedOptions } from '../../types/base';
+import type { Dict } from '../../types/base';
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {
   if (forAtom && !isAtom(mayAtom)) {
@@ -38,16 +37,6 @@ export function delInsCtx(insCtx: InsCtxDef) {
   insCtx.internal.delId(id, insKey);
   delGlobalId(globalId, insKey);
   clearDep(insCtx);
-}
-
-/** 读取人工补充的依赖项 */
-export function readManualDeps(insCtx: InsCtxDef, options: IUseSharedOptions) {
-  if (!insCtx.canCollect) {
-    return;
-  }
-  if (isFn(options.deps)) {
-    options.deps(insCtx.proxyState);
-  }
 }
 
 /**

@@ -55,6 +55,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
 export function markFnEnd() {
   const fnScope = getFnScope();
   const { runningFnKey } = fnScope;
+  if (!runningFnKey) return;
 
   // 针对 derive watch 函数，fnCtx.depKeys 只记录最长路径
   const fnCtx = getFnCtx(runningFnKey);

@@ -1,6 +1,6 @@
 {
   "name": "@helux/core",
-  "version": "3.2.6",
+  "version": "3.2.7",
   "description": "A state library core that integrates atom, signal, collection dep, derive and watch, it supports all react like frameworks.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -36,9 +36,9 @@
     "@helux/utils": "workspace:^",
     "limu": "^3.7.3"
   },
-  "bundleDependencies": false,
-  "deprecated": false,
   "devDependencies": {
     "esbuild-copy-static-files": "^0.1.0"
-  }
+  },
+  "bundleDependencies": false,
+  "deprecated": false
 }

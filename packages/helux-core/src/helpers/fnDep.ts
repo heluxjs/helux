@@ -42,7 +42,7 @@ export function recordFnDepKeys(
     if (PROTO_KEY === depKey) {
       return;
     }
-    // 注意次数暂不记录到 fnCtx.depKeys 里，等到 markFnEnd 时再一次性记录，且只记最长路径
+    // 注意此处暂不记录到 fnCtx.depKeys 里，等到 markFnEnd 时再一次性记录，且只记最长路径
     nodupPush(depKeys, depKey);
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
