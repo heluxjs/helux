@@ -29,23 +29,14 @@
   },
   "dependencies": {
     "@docusaurus/types": "^2.4.1",
-    "@helux/core": "workspace:*",
-    "@helux/hooks": "workspace:*",
-    "@helux/hooks-impl": "workspace:*",
-    "@helux/types": "workspace:*",
-    "@helux/utils": "workspace:*",
     "@jest/transform": "29",
     "@types/node": ">=12.0.0",
-<<<<<<< HEAD
-    "helux": "workspace:*",
-=======
     "helux": "workspace:^",
-    "helux-core": "workspace:^",
-    "helux-hooks": "workspace:^",
-    "helux-hooks-impl": "workspace:^",
-    "helux-types": "workspace:^",
-    "helux-utils": "workspace:^",
->>>>>>> a9dcd796f0e3c81303bd2bd1f211a6dd6ad78038
+    "@helux/core": "workspace:^",
+    "@helux/hooks": "workspace:^",
+    "@helux/hooks-impl": "workspace:^",
+    "@helux/types": "workspace:^",
+    "@helux/utils": "workspace:^",
     "limu": "^3.5.5"
   },
   "devDependencies": {
