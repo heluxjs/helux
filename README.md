@@ -160,7 +160,7 @@ watch(() => {
 }, [shared]);
 ```
 
-立即执行，自动收集到依赖
+设置 `immediate=true`，立即执行，自动收集到依赖
 
 ```ts
 watch(
