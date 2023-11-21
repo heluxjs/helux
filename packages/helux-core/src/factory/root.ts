@@ -12,10 +12,8 @@ function buildFnScope() {
       Mutate: 0,
     },
     runningFnKey: '',
-    /**
-     * 避免 share 接口的 mutate 函数里收集到自己对自己的依赖，从而造成无限死循环
-     */
-    runningSharedState: null as any,
+    /** 函数运行结束收集到的 depKeys */
+    depKeys: [] as string[],
     /** globalId to Array<insKey> */
     GID_INSKEYS_MAP: new Map<NumStrSymbol, number[]>(),
     FNKEY_STATIC_CTX_MAP: new Map<string, IFnCtx>(),

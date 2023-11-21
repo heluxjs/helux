@@ -148,7 +148,8 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   // 后续 parseRules 步骤会转 stopArrDep stopDepth 到 stopDepInfo 上
   const stopArrDep = options.stopArrDep ?? true;
   const stopDepth = options.stopDepth || STOP_DEPTH;
-  const usefulName = moduleName || `${sharedKey}`;
+  const sharedKeyStr = `${sharedKey}`;
+  const usefulName = moduleName || sharedKeyStr;
   const loc = tryGetLoc(moduleName);
   const mutateFnDict = parseMutate(mutate);
 
@@ -156,6 +157,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     enableLoading,
     rawState,
     sharedKey,
+    sharedKeyStr,
     moduleName,
     usefulName,
     forAtom,

@@ -6,21 +6,8 @@ import { getInternal } from '../helpers/state';
 import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types/base';
 import { parseWatchOptions } from './creator/parse';
 
-export function createWatchLogic<T = SharedState>(
-  watchFn: (fnParams: IWatchFnParams) => void,
-  options: { scopeType: ScopeType; fnCtxBase?: IFnCtx; immediate?: boolean; deps?: Fn; sharedState?: T },
-) {
-  const { scopeType, fnCtxBase, immediate, deps = noop, sharedState } = options;
-  if (!isFn(watchFn)) {
-    throw new Error('ERR_NON_FN: pass an non-function to watch!');
-  }
-
-  const fnCtx = registerFn(watchFn, { specificProps: { scopeType, fnType: WATCH }, fnCtxBase });
-  markFnStart(fnCtx.fnKey, sharedState);
-  const list = deps() || [];
-  if (immediate) {
-    watchFn({ isFirstCall: true });
-  }
+function putSharedToDep(list: any[]) {
+  // list 里可能包含共享状态自身引用
   if (Array.isArray(list)) {
     list.forEach((sharedState: any) => {
       const internal = getInternal(sharedState);
@@ -30,7 +17,25 @@ export function createWatchLogic<T = SharedState>(
       }
     });
   }
+}
+
+export function createWatchLogic<T = SharedState>(
+  watchFn: (fnParams: IWatchFnParams) => void,
+  options: { scopeType: ScopeType; fnCtxBase?: IFnCtx; immediate?: boolean; deps?: Fn; sharedState?: T },
+) {
+  const { scopeType, fnCtxBase, immediate, deps = noop } = options;
+  if (!isFn(watchFn)) {
+    throw new Error('ERR_NON_FN: pass an non-function to watch!');
+  }
+
+  const fnCtx = registerFn(watchFn, { specificProps: { scopeType, fnType: WATCH }, fnCtxBase });
+  markFnStart(fnCtx.fnKey);
+  const list = deps() || [];
+  if (immediate) {
+    watchFn({ isFirstCall: true });
+  }
   markFnEnd();
+  putSharedToDep(list);
 
   return fnCtx;
 }

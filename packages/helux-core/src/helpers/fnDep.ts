@@ -1,7 +1,9 @@
 import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
 import { PROTO_KEY } from '../consts';
-import { getFnCtx, getRunninFnCtx, opUpstreamFnKey } from '../factory/common/fnScope';
+import { getFnCtx, getRunninFn, opUpstreamFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
+import { isValChanged } from '../factory/common/util';
+import type { TInternal } from '../factory/creator/buildInternal';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
 
@@ -12,7 +14,7 @@ export function recordFnDepKeys(
   inputDepKeys: string[],
   options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx; sharedState?: any },
 ) {
-  const runningFnCtx = getRunninFnCtx();
+  const { fnCtx: runningFnCtx, depKeys } = getRunninFn();
   const fnCtx: IFnCtx | null | undefined = options.specificCtx || runningFnCtx;
   if (!fnCtx) {
     return;
@@ -35,11 +37,12 @@ export function recordFnDepKeys(
     nodupPush(belongCtx.nextLevelFnKeys, runningFnCtx.fnKey);
   }
 
-  const { depKeys, fnKey } = fnCtx;
+  const { fnKey } = fnCtx;
   inputDepKeys.forEach((depKey: string) => {
     if (PROTO_KEY === depKey) {
       return;
     }
+    // 注意次数暂不记录到 fnCtx.depKeys 里，等到 markFnEnd 时再一次性记录，且只记最长路径
     nodupPush(depKeys, depKey);
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
@@ -87,7 +90,7 @@ export function getDepSharedStateFeature(fn: IFnCtx) {
 /**
  * 获得依赖的第一层函数、异步函数
  */
-export function getDepFnStats(depKey: string, runCountStats: Dict<number>) {
+export function getDepFnStats(internal: TInternal, depKey: string, runCountStats: Dict<number>) {
   const { DEPKEY_FNKEYS_MAP } = getFnScope();
   const fnKeys = DEPKEY_FNKEYS_MAP.get(depKey) || [];
   const firstLevelFnKeys: string[] = [];
@@ -96,14 +99,27 @@ export function getDepFnStats(depKey: string, runCountStats: Dict<number>) {
   fnKeys.forEach((fnKey) => {
     const fnCtx = getFnCtx(fnKey);
     if (!fnCtx) return;
-    if (fnCtx.isFirstLevel) {
-      firstLevelFnKeys.push(fnKey);
+    const { depKeys } = fnCtx;
+
+    let subValChanged = false;
+    for (const storedDepKey of depKeys) {
+      // 是 key 的子串，比较值是否有变化
+      if (storedDepKey.startsWith(depKey) && isValChanged(internal, storedDepKey)) {
+        subValChanged = true;
+      }
     }
-    if (fnCtx.isAsync) {
-      asyncFnKeys.push(fnKey);
+
+    // 子串对应值变化才加入到 firstLevelFnKeys
+    if (subValChanged) {
+      if (fnCtx.isFirstLevel) {
+        firstLevelFnKeys.push(fnKey);
+      }
+      if (fnCtx.isAsync) {
+        asyncFnKeys.push(fnKey);
+      }
+      const count = runCountStats[fnKey]; // 每个函数将要运行的次数统计
+      runCountStats[fnKey] = count === undefined ? 1 : count + 1;
     }
-    const count = runCountStats[fnKey]; // 每个函数将要运行的次数统计
-    runCountStats[fnKey] = count === undefined ? 1 : count + 1;
   });
 
   return { firstLevelFnKeys, asyncFnKeys };

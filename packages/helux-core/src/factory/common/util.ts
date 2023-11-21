@@ -1,9 +1,12 @@
-import { isDebug, isFn, isObj, isProxyAvailable, prefixValKey } from '@helux/utils';
+import { getVal, isDebug, isFn, isObj, isProxyAvailable, prefixValKey } from '@helux/utils';
 import { immut, IOperateParams } from 'limu';
-import { KEY_SPLITER } from '../../consts';
+import { KEY_SPLITER, STATE_TYPE } from '../../consts';
 import { createOb } from '../../helpers/obj';
 import type { Dict, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
 import { DepKeyInfo } from '../../types/inner';
+import type { TInternal } from '../creator/buildInternal';
+
+const { USER_STATE } = STATE_TYPE;
 
 export interface IMutateCtx {
   depKeys: string[];
@@ -56,6 +59,25 @@ export function getDepKeyInfo(depKey: string): DepKeyInfo {
 
 export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
   return prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
+}
+
+export function isValChanged(internal: TInternal, depKey: string) {
+  const { snap, prevSnap, stateType } = internal;
+  // 非用户状态，都返回 true（伴生状态有自己的key规则）
+  if (USER_STATE !== stateType) {
+    return true;
+  }
+
+  const { keyPath } = getDepKeyInfo(depKey);
+  try {
+    const currVal = getVal(snap, keyPath);
+    const prevVal = getVal(prevSnap, keyPath);
+    return currVal !== prevVal;
+  } catch (err: any) {
+    // 结构变异，出现了 read property of undefined 错误，返回值已变更，
+    // 让函数执行报错且此错误由用户自己承担
+    return true;
+  }
 }
 
 export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) {
