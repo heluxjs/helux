@@ -1,6 +1,6 @@
 import type { ReactLike } from '@helux/types';
-import * as rawApiMod from './src/api';
-import * as api from './src/types-api';
+import * as rawApiMod from './api';
+import * as api from './types-api';
 
 export type HooksApiImpl = typeof api;
 

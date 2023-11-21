@@ -20,21 +20,15 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
-  "main": "dist/helux-utils.min.js",
+  "main": "dist/index.js",
   "unpkg": "dist/helux-utils.min.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "lib",
     "src"
   ],
   "scripts": {
-    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
-    "build-legacy": "tsc & rollup -c",
-    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
-    "build:es": "rollup -c --environment BUILD_ENV:es",
-    "build:umd": "rollup -c --environment BUILD_ENV:development",
-    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
+    "build": "tsup",
     "dev": "tsc --watch",
     "lint": "eslint ./src --fix --ext js,ts,tsx",
     "test": "jest"
@@ -45,15 +39,7 @@
     ]
   },
   "dependencies": {
-    "helux-types": ">=3.0.3"
-  },
-  "devDependencies": {
-    "@babel/preset-env": "^7.12.11",
-    "babel-cli": "^6.26.0",
-    "rollup": "^2.23.0"
-  },
-  "peerDependencies": {
-    "helux-types": ">=3.0.3"
+    "@helux/types": "workspace:^"
   },
   "bundleDependencies": false,
   "deprecated": false,
