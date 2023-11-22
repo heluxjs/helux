@@ -5,6 +5,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "build:watch": {
+      "dependsOn": ["^build:watch"],
+      "outputs": ["dist/**"]
+    },
     "start": {
       "cache": false
     }
