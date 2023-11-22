@@ -19,7 +19,7 @@
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
     "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' --ignore-path .gitignore --ignore-unknown",
     "prepare": "husky install",
-    "release:auto": "pnpm build && pnpm version:all && pnpm release:all",
+    "release:auto": "pnpm build && pnpm version:all && pnpm release:all && pnpm sync",
     "changeset": "changeset",
     "release:all": "changeset publish",
     "version:all": "changelog version",
