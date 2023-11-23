@@ -1,18 +1,52 @@
-import React from 'react'
-import { renderHook,render, screen } from '@testing-library/react'
+import React, { useEffect, useState } from 'react'
+import { describe,test,expect,afterEach } from 'vitest';
+import { render, renderHook,screen,waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { useShared } from '../src';
 
+//import { useShared } from '../src';
 
 describe('useShared', () => {
-  test('渲染组件', () => {
-    render(<div>hello</div>);
-    expect(screen.getByText).toBeDefined();
+
+  test('渲染组件', async () => {
+    const table = document.createElement('table')
+
+    const result = render(<div>hello</div>);
+    // result是返回的渲染后的内容，以上可以进行断言
+    // 参阅 https://testing-library.com/docs/react-testing-library/api#render-result
+
 
   });
-  test('should increment the count', () => {
-    const { result } = renderHook(() => useShared({ count: 0}));
-    let [ share,setShare ] = result.current
-    expect(share.count).toBe(0);
+  test('useState', async () => {
+    const {result} = renderHook(() => {
+      const [name, setName] = useState('')
+      React.useEffect(() => {
+        setName('Alice')
+      }, [])
+
+      return name
+    })
+   await waitFor(() => {
+      expect(result.current).toBe('Alice')
+    });
+
+  });
+
+
+  test('useState1', async () => {
+    const CustomHookComponent = () => {
+      const [name, setName] = useState('');
+
+      useEffect(() => {
+        setName('Alice');
+      }, []);
+
+      return <div>{name}</div>;
+    };
+
+    render(<CustomHookComponent />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Alice')).toBe("Alice")
+    });
   });
 });

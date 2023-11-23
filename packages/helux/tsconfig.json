@@ -12,7 +12,7 @@
   "include": [
     "src/**/*",
     "__tests__/vitest-setup.ts",
-    "jest-setup.ts"
+    "__tests__/jest-setup.ts"
 
   ]
 }
