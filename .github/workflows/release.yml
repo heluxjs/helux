@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: 16
 
+      - name: Remove pnpm lockfile
+        run: rm pnpm-lock.yaml
+
       - name: Install pnpm
         run:
           npm install -g pnpm
