@@ -29,6 +29,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:watch": "tsup --watch",
     "dev": "tsc --watch",
     "lint": "eslint ./src --fix --ext js,ts,tsx",
     "test": "jest"

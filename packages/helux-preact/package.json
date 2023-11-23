@@ -27,6 +27,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:watch": "tsup --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

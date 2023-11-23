@@ -11,13 +11,19 @@
   "main": "index.js",
   "scripts": {
     "build": "turbo run build",
+    "build:watch": "turbo run build:watch",
     "build_devtool": "pnpm --filter=helux-devtool run build",
     "build_helux": "pnpm --filter=helux run build",
     "commitlint": "commitlint -e $HUSKY_GIT_PARAMS",
     "cpdoc": "rm -rf ../my-opensource/helux-gh-pages/* && cp -r ./doc/build/* ../my-opensource/helux-gh-pages",
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
     "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' --ignore-path .gitignore --ignore-unknown",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "release:auto": "pnpm build && pnpm version:all && pnpm release:all && pnpm sync",
+    "changeset": "changeset",
+    "release:all": "changeset publish",
+    "version:all": "changelog version",
+    "sync":"cnpm sync helux && cnpm sync @helux/core && cnpm sync @helux/hooks && cnpm sync @helux/hooks-impl && cnpm sync @helux/types && cnpm sync @helux/utils"
   },
   "lint-staged": {
     "*.{js,jsx,less,md,json}": [
