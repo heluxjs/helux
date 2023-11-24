@@ -1,0 +1,13 @@
+# @helux/plugin-devtool
+
+## 3.3.0
+
+### Minor Changes
+
+- 96a4fda: bump minor
+
+### Patch Changes
+
+- Updated dependencies [96a4fda]
+- Updated dependencies [f42b227]
+  - helux@3.3.0
