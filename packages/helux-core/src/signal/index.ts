@@ -1,2 +1,2 @@
-export { block, blockStatus, dynamicBlock, dynamicBlockStatus } from './block';
+export { block, dynamicBlock } from './block';
 export { signal } from './signal';

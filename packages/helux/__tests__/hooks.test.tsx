@@ -1,15 +1,15 @@
 import * as React from 'react'
-import { describe,test,expect,afterEach } from 'vitest';
-import { render, renderHook,screen,waitFor } from '@testing-library/react'
+import { describe, test, expect, afterEach } from 'vitest';
+import { render, renderHook, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-
-//import { useShared } from '../src';
+import { pfstr } from './util'
+import { useShared } from '../src';
 
 describe('useShared', () => {
 
   let idCounter = 1
 
-  const NumberDisplay = ({number}) => {
+  const NumberDisplay = ({ number }) => {
     const id = React.useRef(idCounter++) // to ensure we don't remount a different instance
 
     return (
@@ -21,7 +21,7 @@ describe('useShared', () => {
   }
 
   test('calling render with the same component on the same container does not remount', () => {
-    const {rerender} = render(<NumberDisplay number={1} />)
+    const { rerender } = render(<NumberDisplay number={1} />)
     expect(screen.getByTestId('number-display')).toHaveTextContent('1')
 
     // re-render the same component with different props
@@ -30,6 +30,7 @@ describe('useShared', () => {
     expect.extend
     expect(screen.getByTestId('instance-id')).toHaveTextContent('1')
   })
+
   test('渲染组件', async () => {
     const table = document.createElement('table')
 
@@ -39,8 +40,9 @@ describe('useShared', () => {
 
 
   });
-  test('useState', async () => {
-    const {result} = renderHook(() => {
+
+  test('useShared', async () => {
+    const { result } = renderHook(() => {
       const [name, setName] = React.useState('')
       React.useEffect(() => {
         setName('Alice')
@@ -48,18 +50,17 @@ describe('useShared', () => {
 
       return name
     })
-   await waitFor(() => {
+    await waitFor(() => {
       expect(result.current).toBe('Alice')
     });
 
   });
 
-
   test('useState1', async () => {
     const CustomHookComponent = () => {
       const [name, setName] = React.useState('');
 
-      useEffect(() => {
+      React.useEffect(() => {
         setName('Alice');
       }, []);
 
@@ -69,7 +70,7 @@ describe('useShared', () => {
     render(<CustomHookComponent />);
 
     await waitFor(() => {
-      expect(screen.getByText('Alice')).toBe("Alice")
+      expect(screen.getByText('Alice').textContent).toBe('Alice')
     });
   });
 });

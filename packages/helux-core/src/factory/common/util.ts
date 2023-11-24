@@ -27,7 +27,11 @@ export function tryGetLoc(moduleName: string, startCutIdx = 4) {
     try {
       throw new Error('loc');
     } catch (err: any) {
-      loc = err.stack.split('\n').slice(startCutIdx, 8).join('|');
+      const arr = err.stack.split('\n');
+      const pureArr = arr.map((codeLoc: string) => {
+        return codeLoc.substring(0, codeLoc.indexOf('(')).trim();
+      });
+      loc = pureArr.slice(startCutIdx, 8).join(' -> ');
     }
   }
   return loc;

@@ -68,9 +68,11 @@ export function getSharedState(sharedKey: number) {
 export function recordMod(sharedState: Dict, options: ParsedOptions) {
   const { rootState, ctx } = getRoot();
   const { moduleName, usefulName } = options;
-  const existedMod = rootState[usefulName];
-  if (moduleName && existedMod && existedMod.loc !== options.loc) {
-    return warn(`moduleName ${moduleName} duplicate!`);
+  const existedShared = rootState[usefulName];
+  const existedInternal = getInternal(existedShared);
+  if (moduleName && existedInternal && existedInternal.loc !== options.loc) {
+    const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
+    return warn(`moduleName ${moduleName} duplicate! ${locInfo}`);
   }
   // may hot replace for dev mode or add new mod
   rootState[usefulName] = sharedState;

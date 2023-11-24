@@ -45,6 +45,7 @@ export type ReactLike = {
   createElement: Fn;
   memo: Fn;
   useCallback: UseCallback;
+  forwardRef: Fn;
 };
 
 export type React18Like = ReactLike & {

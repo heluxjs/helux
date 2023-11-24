@@ -1,57 +1,33 @@
 import type { ForwardedRef } from '@helux/types';
-import { noopArgs } from '@helux/utils';
+import { noopArgs, noop, isDebug, has } from '@helux/utils';
 import { IS_BLOCK } from '../../consts';
 import { getAtom, isDerivedAtom } from '../../factory/common/atom';
 import { markBlockFnEnd, markBlockFnStart } from '../../helpers/blockCtx';
 import type { CoreApiCtx } from '../../types/api-ctx';
-import type { Dict, Fn, IBlockCtx, IBlockOptions, LoadingStatus } from '../../types/base';
-import { wrapComp, wrapDerivedAtomSignalComp } from './wrap';
+import type { Dict, Fn, IBlockCtx, IBlockOptions, BlockParams } from '../../types/base';
+import { wrapDerivedAtomSignalComp } from './wrap';
 
 interface IMarkBlockAndRunCbOptions {
   isDynamic: boolean;
   cb: Fn;
   props: Dict;
   ref: ForwardedRef<any>;
-  status: LoadingStatus;
-}
-
-interface ICallBlockCbOptions extends IMarkBlockAndRunCbOptions {
-  isFirstRender: boolean;
-  isHeadCall: boolean;
-  result?: any;
 }
 
 export function markBlockAndRunCb(blockCtx: IBlockCtx, options: IMarkBlockAndRunCbOptions) {
-  const { isDynamic, cb, props, ref, status } = options;
+  const { isDynamic, cb, props, ref } = options;
+  const { collected, status } = blockCtx;
   // start to collect dep
-  if (!blockCtx.collected) {
+  if (!collected) {
     markBlockFnStart(blockCtx, isDynamic);
   }
   // 渲染函数内部存在判断逻辑时，可使用 read 提前锁定住相关依赖
-  const result = cb({ ...props, status, read: noopArgs }, ref) || '';
-  if (!blockCtx.collected) {
+  const blockParams = { props, status, read: noopArgs, ref };
+  const result = cb(props, blockParams) || '';
+  if (!collected) {
     markBlockFnEnd(blockCtx);
   }
   return result;
-}
-
-export function callBlockCb(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, options: ICallBlockCbOptions) {
-  const { cb, props, ref, isFirstRender, isHeadCall, status } = options;
-  if (isFirstRender) {
-    if (!isHeadCall) {
-      return options.result; // call at function buttom, return head call's result
-    }
-    const result = markBlockAndRunCb(blockCtx, options);
-    return renderResult(apiCtx, blockCtx, result);
-  }
-
-  if (!isHeadCall) {
-    const blockProps = { ...props, status, read: noopArgs };
-    const result = cb(blockProps, ref) || '';
-    return renderResult(apiCtx, blockCtx, result);
-  }
-
-  return '';
 }
 
 export function renderResult(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, result: any) {
@@ -71,10 +47,32 @@ export function renderResult(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, result: an
   return getAtom(result as any);
 }
 
-export function makeBlockComp<P = object>(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, defComp: Fn, options?: IBlockOptions<P>) {
+export function makeBlockComp<P = object>(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, factory: Fn, options?: IBlockOptions<P>) {
   const { memo = true, compare } = options || {};
-  const CompRender = defComp(blockCtx);
-  const Block = wrapComp(apiCtx, CompRender, 'HeluxBlock', memo, compare);
+  const { key } = blockCtx;
+  const { react } = apiCtx;
+  const forwardRef = react.forwardRef || noop;
+  const Comp = factory();
+
+  // allow pass ref to block component
+  let RefComp = forwardRef(Comp);
+  // to let hot reload works well at debug mode, we give a key to comp,
+  // so that user can change block cb data binding logic whatever they want at dev mode
+  if (isDebug()) {
+    Comp.displayName = 'HeluxKeyedBlockForHMR';
+    RefComp = forwardRef((props: any, ref: any) => {
+      // cannot pass ref to props, so we store ref to blockCtx
+      // and then we can get ref from the closure blockCtx at dev mode
+      if (ref && has(ref, 'current')) {
+        // 热加载模式下，调整代码后，会触发 ref 为 {}，这里做一次额外的检查
+        blockCtx.ref = ref;
+      }
+      return react.createElement(Comp, { ...props, key });
+    });
+  }
+
+  const Block = memo ? react.memo(RefComp, compare) : RefComp;
+  Block.displayName = 'HeluxBlock';
   // @ts-ignore
   Block[IS_BLOCK] = true;
   return Block;

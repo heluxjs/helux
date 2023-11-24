@@ -1,32 +1,35 @@
 import { getBlockCtxMap } from '../factory/common/blockScope';
 import { genBlockKey } from '../factory/common/key';
 import { getBlockScope } from '../factory/common/speedup';
-import { IBlockCtx, SharedState } from '../types/base';
+import { IBlockCtx } from '../types/base';
 
 const SIZE_LIMIT = 100;
 const EXPIRE_LIMIT = 5000; // ms
 
-function newBlockCtx(key: string): IBlockCtx {
+function newBlockCtx(key: string, enableStatus: boolean): IBlockCtx {
   return {
     key,
-    map: new Map(),
+    results: [],
+    depKeys: [],
+    enableStatus,
     collected: false,
     mounted: false,
     renderAtomOnce: false,
     time: 0,
+    status: { loading: false, err: null, ok: true },
   };
 }
 
 /**
  * 为 block 函数初始一个执行上下文
  */
-export function initBlockCtx(isDynamic: boolean) {
+export function initBlockCtx(isDynamic: boolean, enableStatus = false) {
   const blockScope = getBlockScope();
   if (isDynamic) {
     blockScope.initCount += 1;
   }
   const blockKey = genBlockKey();
-  const blockCtx = newBlockCtx(blockKey);
+  const blockCtx = newBlockCtx(blockKey, enableStatus);
   getBlockCtxMap(isDynamic).set(blockKey, blockCtx);
   return blockCtx;
 }
@@ -77,17 +80,5 @@ export function markBlockFnEnd(blockCtx: IBlockCtx) {
   const blockScope = getBlockScope();
   blockScope.runningKey = ''; // let all execution context konw block fn is end status
   blockScope.isDynamic = false;
-  const { runningDepMap: runingDepMap } = blockScope;
   blockCtx.collected = true;
-  runingDepMap.forEach((depKeys, sharedState) => {
-    blockCtx.map.set(sharedState, depKeys);
-  });
-  runingDepMap.clear();
-}
-
-/**
- * 读取 block 执行完毕收集到依赖状态
- */
-export function getSharedState(blockCtx: IBlockCtx): IterableIterator<SharedState> {
-  return blockCtx.map.keys();
 }

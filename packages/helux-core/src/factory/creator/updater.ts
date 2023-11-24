@@ -5,7 +5,7 @@ import { runFn } from '../../helpers/fnRunner';
 import { markComputing } from '../../helpers/fnStatus';
 import { runInsUpdater } from '../../helpers/insCtx';
 import type { Dict, InsCtxMap } from '../../types/base';
-import { isValChanged } from '../common/util';
+import { diffVal, clearDiff } from '../common/sharedScope';
 import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
@@ -30,7 +30,7 @@ export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
 
   const analyzeDepKey = (key: string) => {
     // 值相等就忽略
-    if (key !== sharedKeyStr && !isValChanged(internal, key)) {
+    if (key !== sharedKeyStr && !diffVal(internal, key)) {
       return;
     }
 
@@ -42,6 +42,8 @@ export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
   depKeys.forEach(analyzeDepKey);
   // 直接设定 watchList 的 watch 函数，观察的共享对象本身的变化，这里以 sharedKey 为依赖去取查出来
   analyzeDepKey(sharedKeyStr);
+  // clear cached diff result
+  clearDiff();
   // find id's ins keys
   ids.forEach((id) => {
     allInsKeys = allInsKeys.concat(id2InsKeys[id] || []);

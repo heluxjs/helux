@@ -20,7 +20,7 @@ import { useOnEvent } from './hooks/useOnEvent';
 import { storeSrv, useService } from './hooks/useService';
 import { useAtom, useShared } from './hooks/useShared';
 import { useWatch } from './hooks/useWatch';
-import { block, blockStatus, dynamicBlock, dynamicBlockStatus, signal } from './signal';
+import { block, dynamicBlock, signal } from './signal';
 
 const { shallowCompare, isDiff } = limuUtils;
 const createShared = share; // for compatible wit v2 helux
@@ -60,9 +60,7 @@ export {
   $,
   signal,
   block,
-  blockStatus,
   dynamicBlock,
-  dynamicBlockStatus,
   // mutate api
   mutate,
   mutateDict,

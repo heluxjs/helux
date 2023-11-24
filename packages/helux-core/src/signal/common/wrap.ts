@@ -32,7 +32,7 @@ export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalComp): Fu
     valHook.get = () => val;
     return val;
   };
-  return wrapComp(apiCtx, Comp, 'HeluxPrimitiveSignal', true, compare);
+  return wrapComp(apiCtx, Comp, 'HeluxSignal', true, compare);
 }
 
 export function wrapDerivedAtomSignalComp(apiCtx: CoreApiCtx, derivedAtom: DerivedAtom, compare?: Fn): FunctionComponent {

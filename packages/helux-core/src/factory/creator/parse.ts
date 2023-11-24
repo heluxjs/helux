@@ -22,6 +22,8 @@ import type {
   NumStrSymbol,
   WatchDepFn,
   WatchOptionsType,
+  BlockOptionsType,
+  IBlockOptions,
 } from '../../types/base';
 import { genFnKey } from '../common/key';
 import { getDepKeyByPath, tryGetLoc } from '../common/util';
@@ -285,4 +287,15 @@ export function parseWatchOptions(options?: WatchOptionsType) {
     immediate = options.immediate ?? false;
   }
   return { immediate, deps };
+}
+
+export function parseBlockOptions(options?: BlockOptionsType): IBlockOptions {
+  if (!options) return {};
+  if (typeof options === 'boolean') {
+    return { enableStatus: options };
+  }
+  if (isObj(options)) {
+    return options;
+  }
+  return {};
 }

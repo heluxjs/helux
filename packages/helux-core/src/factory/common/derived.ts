@@ -48,7 +48,7 @@ export function attachStaticProxyResult(fnCtx: IFnCtx, forAtom: boolean) {
       // copy depKeys
       recordFnDepKeys(fnCtx.depKeys, { belongCtx: fnCtx });
       // transfer depKeys for block or signal
-      recordBlockDepKey(proxyResult, fnCtx.depKeys);
+      recordBlockDepKey(fnCtx.depKeys, proxyResult);
       recordLastest(0, val, proxyResult, '', [key], true, forAtom);
       return val;
     },
@@ -93,7 +93,6 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
     runAsync = true,
     forAtom = false,
     immediate,
-    manualDepKeys,
   } = options;
   if (!isFn(options.fn) && !isFn(options.deps)) {
     throw new Error('ERR_NON_FN: derive need fn or deps arg at least!');
@@ -133,12 +132,6 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
       fnCtx.returnUpstreamResult = returnUpstreamResult ?? !isAsync;
     },
   });
-
-  // 重置 fnCtx.depKeys
-  if (manualDepKeys) {
-    fnCtx.depKeys = manualDepKeys;
-  }
-
   ensureFnDepData(fnCtx); // 人工补录 depKey 和 fn 的依赖关系
 
   if (!fnCtx.returnUpstreamResult) {

@@ -20,7 +20,7 @@ export function buildSharedState(options: ParsedOptions) {
     const depKey = prefixValKey(valKey, sharedKey);
     // using shared state in derived/watch callback
     recordFnDepKeys([depKey], { sharedKey, sharedState });
-    recordBlockDepKey(sharedState, [depKey]);
+    recordBlockDepKey([depKey]);
     recordLastest(sharedKey, val, sharedState, depKey, keyPath);
   };
 

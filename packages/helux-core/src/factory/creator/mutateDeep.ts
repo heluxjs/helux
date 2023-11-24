@@ -30,6 +30,8 @@ interface ISnCommitOpts extends ICommitOpts {
 export function beforeCommit(opts: ICommitOpts, innerSetOptions: IInnerSetStateOptions, draft: any) {
   Object.assign(opts, innerSetOptions);
   // sn 序号相同表示同一批次触发重渲染
+  // 注意 sn 和 internal.ver 不能画等号，sn 对应的将要执行函数的会有很多（包括异步函数）
+  // ver 只代表提交后的最新状态版本号
   opts.sn = opts.sn || genRenderSN();
   opts.from = opts.from || 'SetState';
   const { from, sn, desc, internal } = opts;

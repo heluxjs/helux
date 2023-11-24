@@ -32,15 +32,32 @@ export type From = 'Mutate' | 'Action' | 'SetState';
 
 export interface IBlockCtx {
   key: string;
-  /** key: sharedState, value: depKeys */
-  map: Map<SharedState, string[]>;
+  results: DerivedDict[];
+  /** all depKeys */
+  depKeys: string[];
+  /** 是否开启响应 status 功能 */
+  enableStatus: boolean;
   collected: boolean;
   mounted: boolean;
   time: number;
   renderAtomOnce: boolean;
+  /** for helping store ref temporarily */
+  ref?: any;
+  /** for helping store status temporarily */
+  status: LoadingStatus;
 }
 
+/**
+ * default: false ，是否启用响应 status 变化的功能
+ * ```text
+ * 为了性能考虑，默认 false 表示没有启用（内部会少调用一些钩子）
+ * 如确认 block 组件内部有任何异步数据获取逻辑且需要使用透传的 status 做加载中判断，设置此选项为 true 即可
+ * ```
+ */
+export type EnableStatus = boolean;
+
 export interface IBlockOptions<P = object> {
+  enableStatus?: EnableStatus;
   /**
    * default: true
    * block()返回组件实是否包裹React.memo，默认包裹
@@ -48,10 +65,12 @@ export interface IBlockOptions<P = object> {
   memo?: boolean;
   /**
    * default: undefined
-   * memo 的比较函数，默认走 react 内置的浅比较规则，如确定 lock 不传递任何 props，建议设置为 ()=>true
+   * memo 的比较函数，默认走 react 内置的浅比较规则，如确定 block 不传递任何 props，建议设置为 ()=>true
    */
   compare?: (prevProps: Readonly<PropsWithChildren<P>>, nextProps: Readonly<PropsWithChildren<P>>) => boolean;
 }
+
+export type BlockOptionsType = EnableStatus | IBlockOptions;
 
 /**
  * block 渲染函数内部存在判断逻辑时，可使用 read 提前锁定住相关依赖
@@ -62,15 +81,14 @@ export interface IBlockOptions<P = object> {
  */
 export type Read = <A extends readonly any[] = readonly any[]>(...args: A) => A;
 
-export type BlockStatusProps<P = object> = P & { status: LoadingStatus; read: Read };
+export type BlockParams<P = object, T = any> = { props: P, status: LoadingStatus; read: Read, ref?: ForwardedRef<T> };
 
-export type BlockStatusCb<P = object> = (props: BlockStatusProps<P>, ref?: ForwardedRef<any>) => ReactNode;
+export type BlockCb<P = object, T = any> = (props: P, params?: BlockParams<T>) => ReactNode;
 
-export type BlockCb<P = object> = (props: P, ref?: ForwardedRef<any>) => ReactNode;
+// maybe add a new interface that pass 3 args in the future ?
+// export type BlockCbV2<P = object> = (props: P, ref?: ForwardedRef<any>, blockCtx: BlockCbCtx) => ReactNode;
 
-export type BlockComponent<P = object> = FunctionComponent<P>;
-
-export type BlockStatusComponent<P = object> = FunctionComponent<P>;
+export type BlockComponent<P = object> = FunctionComponent<P & { ref?: any }>;
 
 export type Srv<S = Dict, P = Dict, E = Dict> = S & { inner: { getProps: () => P; getExtra: () => E } };
 
@@ -137,7 +155,7 @@ export type AtomDraft<T = any> = { val: T };
 export type SharedState = SharedDict | Atom;
 
 /** can pass to signal fn */
-export type SingalVal = Atom | DerivedAtom | NumStrSymbol | ReactNode | BlockComponent | BlockStatusComponent;
+export type SingalVal = Atom | DerivedAtom | NumStrSymbol | ReactNode | BlockComponent;
 
 export type AtomValType<T> = T extends Atom<infer V> ? V : T;
 
@@ -663,18 +681,20 @@ export interface IWatchOptions {
 
 export type WatchOptionsType = WatchDepFn | IWatchOptions;
 
-export interface IDeriveFnParams<T = Dict, I = readonly any[]> {
+export interface IDeriveFnParamsBase<I = readonly any[]> {
+  /** 函数的运行编号，每次自增1 */
+  sn: number;
   isFirstCall: boolean;
-  prevResult: T | null;
   triggerReasons: TriggerReason[];
   input: I;
 }
 
-export interface IDeriveAtomFnParams<R = any, I = readonly any[]> {
-  isFirstCall: boolean;
+export interface IDeriveFnParams<T = Dict, I = readonly any[]> extends IDeriveFnParamsBase<I> {
+  prevResult: T | null;
+}
+
+export interface IDeriveAtomFnParams<R = any, I = readonly any[]> extends IDeriveFnParamsBase<I> {
   prevResult: Atom<R> | null;
-  triggerReasons: TriggerReason[];
-  input: I;
 }
 
 export interface IUnmountInfo {
@@ -851,8 +871,6 @@ export interface ICreateDeriveLogicOptions {
   returnUpstreamResult?: boolean;
   forAtom?: boolean;
   immediate?: boolean;
-  /** 人工设定了依赖项 */
-  manualDepKeys?: string[];
 }
 
 export interface IRuleConf {

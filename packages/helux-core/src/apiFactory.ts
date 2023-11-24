@@ -7,7 +7,7 @@ import { HeluxApi, model, modelFactory } from './types/model';
 // 依赖 api，故这里二次合并
 import * as modelApi from './factory/createModel';
 
-type AllApi = HeluxApi & { model: typeof model; modelFactory: typeof modelFactory };
+export type AllApi = HeluxApi & { model: typeof model; modelFactory: typeof modelFactory };
 const needApiCtxFns = [
   'createShared',
   'shareState',

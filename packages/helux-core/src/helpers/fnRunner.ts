@@ -79,7 +79,7 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
 
   const prevResult = forAtom ? result.val : result;
   const input = enureReturnArr(fnCtx.deps);
-  const fnParams: IDeriveFnParams = { isFirstCall, prevResult, triggerReasons, input };
+  const fnParams: IDeriveFnParams = { isFirstCall, prevResult, triggerReasons, input, sn };
   const shouldRunFn = !isAsync || forceFn || (isAsync && !task);
   if (shouldRunFn) {
     const result = fn(fnParams);

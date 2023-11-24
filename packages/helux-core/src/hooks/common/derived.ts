@@ -15,8 +15,6 @@ export interface IUseDerivedLogicOptions {
   asyncType?: AsyncType;
   showLoading?: boolean;
   forAtom?: boolean;
-  /** 人工设定 depKeys，为 block 服务 */
-  manualDepKeys?: string[];
 }
 
 interface IDeriveCtx {
@@ -54,7 +52,7 @@ function ensureHotReload(fnCtx: IFnCtx) {
 
 /** 生成导出结果 */
 export function genDerivedResult(deriveCtx: IDeriveCtx, options: IUseDerivedLogicOptions) {
-  const { result, forAtom, showLoading, manualDepKeys } = options;
+  const { result, forAtom, showLoading } = options;
   const { fnCtx, input, deriveFn } = deriveCtx;
   let isCtxChanged = false;
 
@@ -92,7 +90,6 @@ export function genDerivedResult(deriveCtx: IDeriveCtx, options: IUseDerivedLogi
       forAtom,
       asyncType: ASYNC_TYPE.MAY_TRANSFER,
       showLoading,
-      manualDepKeys,
     },
   );
 

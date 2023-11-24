@@ -94,8 +94,8 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
     id,
     globalId,
     collectType,
-    // 设定了 no，则关闭依赖收集功能，此时依赖靠 deps 函数提供
-    canCollect: collectType === 'no',
+    // 设定了 no，才关闭依赖收集功能，此时依赖靠 deps 函数提供
+    canCollect: collectType !== 'no',
     isFirstRender: true,
     subscribe: (cb) => {
       // call insDep subscribe after snap changed
@@ -117,7 +117,7 @@ export function buildInsCtx(options: Ext<IUseSharedOptions>): InsCtxDef {
           depKey = key;
         },
       });
-      recordBlockDepKey(sharedState, [depKey]);
+      recordBlockDepKey([depKey]);
 
       if (insCtx.readMap[depKey] !== 1) {
         insCtx.readMap[depKey] = 1;

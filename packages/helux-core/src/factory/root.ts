@@ -41,8 +41,6 @@ function buildBlockScope() {
       isDerivedAtom: false,
     },
     runningKey: '',
-    /** sharedState to depKeys */
-    runningDepMap: new Map<any, string[]>(),
     isDynamic: false,
     /** blockKey to IBlockCtx */
     KEY_CTX_MAP: new Map<string, IBlockCtx>(),
@@ -64,6 +62,8 @@ function buildSharedScope() {
     STATE_SHARED_KEY_MAP: new Map<any, number>(),
     /** sharedKey to internal */
     INTERMAL_MAP: new Map<number, TInternal>(),
+    /** cache value compare result */
+    COMPARE_MAP: new Map<string, boolean>(),
   };
 }
 

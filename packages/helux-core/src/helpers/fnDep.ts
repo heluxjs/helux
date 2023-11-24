@@ -1,6 +1,7 @@
 import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
 import { PROTO_KEY } from '../consts';
 import { getFnCtx, getRunninFn, opUpstreamFnKey } from '../factory/common/fnScope';
+import { diffVal } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
 import { isValChanged } from '../factory/common/util';
 import type { TInternal } from '../factory/creator/buildInternal';
@@ -42,8 +43,11 @@ export function recordFnDepKeys(
     if (PROTO_KEY === depKey) {
       return;
     }
-    // 注意此处暂不记录到 fnCtx.depKeys 里，等到 markFnEnd 时再一次性记录，且只记最长路径
-    nodupPush(depKeys, depKey);
+    // 注意此处暂不记录到 fnCtx.depKeys 里，而是记录到 fnScope.depKeys 里
+    // 等到 markFnEnd 时再按最长路径提取出所有 depKeys 转移到 fnCtx.depKeys 里
+    if (runningFnCtx) {
+      nodupPush(depKeys, depKey); // here depKeys is come from fnScope
+    }
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
   });
@@ -103,8 +107,9 @@ export function getDepFnStats(internal: TInternal, depKey: string, runCountStats
 
     let subValChanged = false;
     for (const storedDepKey of depKeys) {
+      // TODO 此处可优化，按执行批次 sn 缓存比较过的结果，进一步提高性能
       // 是 key 的子串，比较值是否有变化
-      if (storedDepKey.startsWith(depKey) && isValChanged(internal, storedDepKey)) {
+      if (storedDepKey.startsWith(depKey) && diffVal(internal, storedDepKey)) {
         subValChanged = true;
       }
     }

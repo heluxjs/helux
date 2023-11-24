@@ -5,7 +5,7 @@
 | it supports all react like frameworks.
 |------------------------------------------------------------------------------------------------
 */
-import type { MutableRefObject, ReactNode } from '@helux/types';
+import type { MutableRefObject, ReactNode, ForwardedRef } from '@helux/types';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,
@@ -21,8 +21,8 @@ import type {
   AtomMutateFnLooseItem,
   AtomValType,
   BlockComponent,
-  BlockStatusComponent,
-  BlockStatusProps,
+  BlockParams,
+  EnableStatus,
   ChangeDraftCb,
   DerivedAtom,
   DerivedDict,
@@ -453,27 +453,19 @@ export function runDeriveAsync<T = SharedState>(result: T): Promise<T>;
  * 其他地方渲染User即可 <User />
  * ```
  */
-export function block<P = object>(cb: (props: P) => ReactNode, options?: IBlockOptions<P>): BlockComponent<P>;
+export function block<P = object, T = any>(
+  cb: (props: P, params: BlockParams<P, T>) => ReactNode,
+  options?: EnableStatus | IBlockOptions<P>,
+): BlockComponent<P>;
 
 /**
  * 功能同 block，适用于在组件里调用动态生成组件的场景，会在组件销毁后自动释放掉占用的内存
  * 如果在组件里使用 block 生成组件，也能正常工作，但会额外占用一些不会释放的内存
  */
-export function dynamicBlock<P = object>(cb: (props: P) => ReactNode, options: IBlockOptions<P>): BlockComponent<P>;
-
-/**
- * 生成会透传 isCommputing 表示计算状态的 Block 组件，会自动绑定视图中的状态依赖
- */
-export function blockStatus<P = object>(cb: (props: BlockStatusProps<P>) => ReactNode, options?: IBlockOptions<P>): BlockStatusComponent<P>;
-
-/**
- * 功能同 blockStatus，适用于在组件里调用动态生成组件的场景，会在组件销毁后自动释放掉占用的内存
- * 如果在组件里使用 blockStatus 生成组件，也能正常工作，但会额外占用一些不会释放的内存
- */
-export function dynamicBlockStatus<P = object>(
-  cb: (props: BlockStatusProps<P>) => ReactNode,
-  options: IBlockOptions<P>,
-): BlockStatusComponent<P>;
+export function dynamicBlock<P = object, Ref = any>(
+  cb: (props: P, params: BlockParams<P, Ref>) => ReactNode,
+  options?: EnableStatus | IBlockOptions<P>,
+  ): BlockComponent<P>;
 
 /**
  * 创建一个具有 signal 响应粒度的视图，仅当传入的值发生变化才渲染且只渲染 signal 区域，helux 同时也导出了 $ 符号表示 signal 函数
