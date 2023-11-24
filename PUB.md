@@ -12,3 +12,5 @@
 2. 发布前执行 `pnpx changeset version` ，会在每一个包下生成 CHANGELOG，并且会自动升级版本。
 
 3. 发布时执行 `pnpx changeset publish`
+
+发布配置见 `.changeset/config.json` 文件
