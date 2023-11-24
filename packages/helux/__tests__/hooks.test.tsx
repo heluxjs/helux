@@ -27,7 +27,7 @@ describe('useShared', () => {
     // re-render the same component with different props
     rerender(<NumberDisplay number={2} />)
     expect(screen.getByTestId('number-display')).toHaveTextContent('2')
-
+    expect.extend
     expect(screen.getByTestId('instance-id')).toHaveTextContent('1')
   })
   test('渲染组件', async () => {
