@@ -5,9 +5,13 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "target": "esnext",
     "outDir": "src-js"
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*",
+    "__tests__/vitest-setup.ts"
+
+  ]
 }
