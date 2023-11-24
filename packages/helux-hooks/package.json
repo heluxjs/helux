@@ -37,16 +37,12 @@
   "dependencies": {
     "@helux/hooks-impl": "workspace:^",
     "@helux/types": "workspace:^",
-    "@helux/utils": "workspace:^",
-    "react": ">=16.8.0"
+    "@helux/utils": "workspace:^"
   },
   "devDependencies": {
     "@types/react": ">=16.8.0"
   },
   "peerDependencies": {
-    "@helux/hooks-impl": "workspace:^",
-    "@helux/types": "workspace:^",
-    "@helux/utils": "workspace:^",
     "react": ">=16.8.0"
   },
   "bundleDependencies": false,

@@ -36,7 +36,6 @@
     "@helux/types": "workspace:^"
   },
   "peerDependencies": {
-    "@helux/types": "workspace:^"
   },
   "bundleDependencies": false,
   "publishConfig": {

@@ -34,7 +34,6 @@
     "helux": "workspace:^"
   },
   "peerDependencies": {
-    "helux": "workspace:^",
     "redux": "^4.2.1"
   },
   "bundleDependencies": false,

@@ -31,8 +31,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@helux/core": "workspace:^",
-    "react": ">=16.8.0"
+    "@helux/core": "workspace:^"
   },
   "devDependencies": {
     "@types/react": ">=16.8.0",
@@ -45,7 +44,6 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "@helux/core": "workspace:^",
     "react": ">=16.8.0"
   },
   "bundleDependencies": false,
