@@ -6,6 +6,7 @@
 
 ### changeset 发布
 使用 changeset 分以下几步：
+
 1. 当代码变更后，执行 `pnpm changeset` ，会让你输入选择变更的包和输入变更日志.
 >变更日志会临时保存在.changeset文件夹中，如果输入了也可以再手工修改合并
 

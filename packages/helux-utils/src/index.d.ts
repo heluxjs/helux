@@ -1,3 +1,7 @@
+
+/**
+ * this lib export helux utils
+ */
 import type { Dict, Fn, NumStrSymbol } from '@helux/types';
 export declare function nodupPush(list: NumStrSymbol[], toPush: NumStrSymbol): void;
 export declare function delListItem(list: NumStrSymbol[], toDel: NumStrSymbol): void;
