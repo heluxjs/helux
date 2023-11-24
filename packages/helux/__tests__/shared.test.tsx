@@ -2,7 +2,7 @@ import * as React from 'react'
 import { describe, test, expect, afterEach } from 'vitest';
 import { render, renderHook, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { share } from './heluxCore';
+import { share } from './helux';
 
 describe('share', () => {
 
@@ -72,9 +72,10 @@ describe('share', () => {
   });
 
   test('change by top api, render multi comps', async () => {
+    // define shared state
     const [, setState, ctx] = share({ a: 1, b: { b1: 1 } });
+    // use shared state in component
     const SharedStateComp = (props) => {
-      // use shared state
       const [state] = ctx.useState();
       return <div data-testid={props.id}>{state.a}</div>
     };

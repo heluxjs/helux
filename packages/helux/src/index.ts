@@ -42,9 +42,7 @@ export const {
   // signal api
   signal,
   block,
-  blockStatus,
   dynamicBlock,
-  dynamicBlockStatus,
   $,
   // mutate api
   mutate,
