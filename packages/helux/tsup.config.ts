@@ -1,4 +1,9 @@
 import { defineConfig } from 'tsup';
+import copyStaticFile from 'esbuild-copy-static-files';
+import ep from 'esbuild-plugin-external-global';
+
+const { externalGlobalPlugin } = ep;
+
 export default defineConfig([
   {
     entry: ['src/index.ts'],
@@ -9,6 +14,16 @@ export default defineConfig([
     clean: true,
     treeshake: false,
     minify: 'terser',
-    external: ['helux-core'],
+    external: ['helux-core', 'react'],
+    globalName: 'Helux',
+    esbuildPlugins: [
+      copyStaticFile({
+        src: './src/index.d.ts',
+        dest: './dist/index.d.ts',
+      }),
+      externalGlobalPlugin({
+        'react': 'window.React',
+      }),
+    ],
   },
 ]);

@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "3.2.7",
+  "version": "3.2.9",
   "description": "A react state library that integrates atom, signal, collection dep, derive and watch, compatible with react 18.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -18,11 +18,10 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "index.d.ts",
+  "types": "src/index.d.ts",
   "files": [
     "dist",
     "src",
-    "index.d.ts",
     "README.md",
     "tsconfig.json"
   ],
@@ -32,9 +31,11 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@helux/core": "workspace:^"
+    "@helux/core": "workspace:^",
+    "react": ">=16.8.0"
   },
   "devDependencies": {
+    "@types/react": ">=16.8.0",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.1.2",
     "@vitejs/plugin-react": "^4.2.0",
@@ -44,9 +45,8 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "@types/react": "^18.2.38",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@helux/core": "workspace:^",
+    "react": ">=16.8.0"
   },
   "bundleDependencies": false,
   "deprecated": false

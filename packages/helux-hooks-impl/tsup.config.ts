@@ -11,7 +11,6 @@ export default defineConfig([
     treeshake: false,
     minify: 'terser',
     external: [],
-
     esbuildPlugins: [
       copyStaticFile({
         src: './src/types-api.d.ts',

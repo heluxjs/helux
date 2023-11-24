@@ -1,6 +1,6 @@
 {
   "name": "@helux/hooks",
-  "version": "3.2.5",
+  "version": "3.2.7",
   "description": "helux hooks lib for react",
   "keywords": [
     "helux",
@@ -37,16 +37,17 @@
   "dependencies": {
     "@helux/hooks-impl": "workspace:^",
     "@helux/types": "workspace:^",
-    "@helux/utils": "workspace:^"
+    "@helux/utils": "workspace:^",
+    "react": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@types/react": ">=16.8.0"
   },
   "peerDependencies": {
-    "@helux/hooks-impl": "^3.2.2",
-    "@helux/types": "^3.2.2",
-    "@helux/utils": "^3.2.2",
-    "@types/react": ">=16.8.0",
-    "@types/react-dom": ">=16.8.0",
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "@helux/hooks-impl": "workspace:^",
+    "@helux/types": "workspace:^",
+    "@helux/utils": "workspace:^",
+    "react": ">=16.8.0"
   },
   "bundleDependencies": false,
   "publishConfig": {

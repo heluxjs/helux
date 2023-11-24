@@ -1,1 +1,1 @@
-export * from '@helux/hooks-impl/dist/types-api';
+export * from '@helux/hooks-impl/dist/index';

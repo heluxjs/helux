@@ -1,6 +1,6 @@
 {
   "name": "@helux/hooks-impl",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "description": "helux hooks implement lib",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -31,6 +31,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@helux/types": "workspace:^",
+    "@helux/utils": "workspace:^"
+  },
+  "peerDependencies": {
     "@helux/types": "workspace:^",
     "@helux/utils": "workspace:^"
   },

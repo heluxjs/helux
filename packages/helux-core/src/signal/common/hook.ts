@@ -34,7 +34,6 @@ export function useDelBlockCtxEffect(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, is
       markBlockMounted(blockCtx);
     }
     return () => {
-      console.error(' delBlockCtx ');
       delBlockCtx(blockCtx.key, isDynamic)
     };
     // here ignore isDynamic

@@ -11,6 +11,7 @@ export default defineConfig([
     treeshake: false,
     minify: 'terser',
     external: [],
+    globalName: 'HeluxUtils',
     esbuildPlugins: [
       copyStaticFile({
         src: './src/index.d.ts',

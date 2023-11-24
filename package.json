@@ -23,7 +23,7 @@
     "changeset": "changeset",
     "release:all": "changeset publish",
     "version:all": "changelog version",
-    "sync":"cnpm sync helux && cnpm sync @helux/core && cnpm sync @helux/hooks && cnpm sync @helux/hooks-impl && cnpm sync @helux/types && cnpm sync @helux/utils"
+    "sync": "cnpm sync helux && cnpm sync @helux/core && cnpm sync @helux/hooks && cnpm sync @helux/hooks-impl && cnpm sync @helux/types && cnpm sync @helux/utils"
   },
   "lint-staged": {
     "*.{js,jsx,less,md,json}": [
@@ -42,6 +42,7 @@
     "@helux/utils": "workspace:^",
     "@jest/transform": "29",
     "@types/node": ">=12.0.0",
+    "esbuild-plugin-external-global": "^1.0.1",
     "helux": "workspace:^",
     "limu": "^3.5.5"
   },

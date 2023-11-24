@@ -1,6 +1,6 @@
 {
   "name": "@helux/utils",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "description": "helux utils lib",
   "keywords": [
     "helux",
@@ -33,6 +33,9 @@
     "build": "tsup"
   },
   "dependencies": {
+    "@helux/types": "workspace:^"
+  },
+  "peerDependencies": {
     "@helux/types": "workspace:^"
   },
   "bundleDependencies": false,

@@ -1,6 +1,6 @@
 {
   "name": "@helux/plugin-devtool",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "description": "devtool for helux",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -34,6 +34,7 @@
     "helux": "workspace:^"
   },
   "peerDependencies": {
+    "helux": "workspace:^",
     "redux": "^4.2.1"
   },
   "bundleDependencies": false,
