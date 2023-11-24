@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import * as React from 'react'
 import { describe,test,expect,afterEach } from 'vitest';
 import { render, renderHook,screen,waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
@@ -7,6 +7,29 @@ import '@testing-library/jest-dom'
 
 describe('useShared', () => {
 
+  let idCounter = 1
+
+  const NumberDisplay = ({number}) => {
+    const id = React.useRef(idCounter++) // to ensure we don't remount a different instance
+
+    return (
+      <div>
+        <span data-testid="number-display">{number}</span>
+        <span data-testid="instance-id">{id.current}</span>
+      </div>
+    )
+  }
+
+  test('calling render with the same component on the same container does not remount', () => {
+    const {rerender} = render(<NumberDisplay number={1} />)
+    expect(screen.getByTestId('number-display')).toHaveTextContent('1')
+
+    // re-render the same component with different props
+    rerender(<NumberDisplay number={2} />)
+    expect(screen.getByTestId('number-display')).toHaveTextContent('2')
+
+    expect(screen.getByTestId('instance-id')).toHaveTextContent('1')
+  })
   test('渲染组件', async () => {
     const table = document.createElement('table')
 
@@ -18,7 +41,7 @@ describe('useShared', () => {
   });
   test('useState', async () => {
     const {result} = renderHook(() => {
-      const [name, setName] = useState('')
+      const [name, setName] = React.useState('')
       React.useEffect(() => {
         setName('Alice')
       }, [])
@@ -34,7 +57,7 @@ describe('useShared', () => {
 
   test('useState1', async () => {
     const CustomHookComponent = () => {
-      const [name, setName] = useState('');
+      const [name, setName] = React.useState('');
 
       useEffect(() => {
         setName('Alice');
