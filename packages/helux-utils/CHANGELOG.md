@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.3.1
+
+### Patch Changes
+
+- ef57100: add comment to tryAlert
+  - @helux/types@3.3.1
+
 ## 3.3.0
 
 ### Minor Changes
