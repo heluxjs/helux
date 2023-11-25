@@ -1,3 +1,1 @@
-import { useWatchLogic } from './common/useWatchLogic';
-
-export const useWatch = useWatchLogic;
+export { useWatch } from './common/useWatchLogic';

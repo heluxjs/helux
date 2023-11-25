@@ -127,6 +127,7 @@ export type RootCtx = HeluxRoot['ctx'];
 /** will inited by calling initHeluxContext later  */
 let ROOT = asType<HeluxRoot>({});
 let inited = false;
+let API = asType<any>(null);
 
 export function getRootCtx() {
   return ROOT.ctx || asType<HeluxRoot['ctx']>({});
@@ -138,9 +139,10 @@ export function getRoot() {
 
 export function setRootData(options: Dict) {
   ROOT = options.ROOT;
+  API = options.api;
   inited = options.inited;
 }
 
 export function getRootData() {
-  return { ROOT, inited };
+  return { ROOT, inited, API };
 }

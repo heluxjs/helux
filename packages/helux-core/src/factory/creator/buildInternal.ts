@@ -2,6 +2,7 @@ import { delListItem, nodupPush, noop, safeObjGet } from '@helux/utils';
 import type {
   AsyncSetState,
   Dict,
+  Ext,
   Fn,
   IInsCtx,
   InnerSetState,
@@ -28,7 +29,7 @@ export function buildInternal(
     asyncSetState: AsyncSetState;
     innerSetState: InnerSetState;
     setStateImpl: (...any: any[]) => { draft: any; finishMutate: Fn; getPartial: Fn };
-    sharedState: SharedState;
+    sharedState: Ext<SharedState>;
     ruleConf: IRuleConf;
     isDeep: boolean;
     syncer: any;

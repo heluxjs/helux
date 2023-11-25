@@ -108,6 +108,8 @@ export function delFnCtx(fnCtx: IFnCtx) {
   const { fnKey } = fnCtx;
   delFnDepData(fnCtx);
   opUpstreamFnKey(fnCtx);
+  // 删除延迟的 watch 函数，严格模式下的下一次挂载无需再执行此函数
+  fnCtx.extra.deferedWatch = null;
   // 删除当前fnKey 与 hookFnCtx 的映射关系
   FNKEY_HOOK_CTX_MAP.delete(fnKey);
 

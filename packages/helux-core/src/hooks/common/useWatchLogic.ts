@@ -19,6 +19,7 @@ function useFnCtxEffect(useEffect: FnVoid, fnCtx: IFnCtx) {
   useEffect(() => {
     fnCtx.mountStatus = MOUNTED;
     recoverDep(fnCtx);
+    fnCtx.extra.deferedWatch?.();
     return () => {
       delFnCtx(fnCtx);
     };
@@ -46,7 +47,7 @@ export function useWatchSimpleLogic(apiCtx: CoreApiCtx, watchFn: Fn, options: IS
   useFnCtxEffect(useEffect, fnCtx);
 }
 
-export function useWatchLogic(apiCtx: CoreApiCtx, watchFn: Fn, options: WatchOptionsType) {
+export function useWatch(apiCtx: CoreApiCtx, watchFn: Fn, options: WatchOptionsType) {
   const { useRef, useState, useMemo, useEffect } = apiCtx.react;
   const fnRef = useRef<{ fn: Fn; wrap: any }>({ fn: watchFn, wrap: null });
   const [fnCtx] = useState(() => buildFnCtx());
@@ -58,10 +59,12 @@ export function useWatchLogic(apiCtx: CoreApiCtx, watchFn: Fn, options: WatchOpt
     const { deps, immediate } = parseWatchOptions(options);
     // 传入了局部的自定义观察函数
     fnRef.current.wrap = (params: any) => {
-      // 避免 strict 模式下冗余的触发
-      // 如果用户设置 immediate 为 true，组件未挂载也需要触发 watch 执行
-      if (fnCtx.mountStatus === MOUNTED || immediate === true) {
+      // 避免 strict 模式下冗余触发
+      if (fnCtx.mountStatus === MOUNTED) {
         fnRef.current.fn(params);
+      } else {
+        // 组件首次渲染，用户设置 immediate 为 true 时逻辑会走到这里，推迟到 MOUNTED 设置时再执行
+        fnCtx.extra.deferedWatch = () => fnRef.current.fn(params);
       }
     };
     createWatchLogic(fnRef.current.wrap, { scopeType: HOOK, fnCtxBase: fnCtx, deps, immediate, label: 'useWatch' });

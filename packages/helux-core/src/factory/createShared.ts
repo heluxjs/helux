@@ -17,14 +17,14 @@ function getFns(state: any, forAtom: boolean) {
     return {
       useFn: useAtom,
       actionCreator: atomAction(state),
-      asyncActionCreator: atomActionAsync(state),
+      actionAsyncCreator: atomActionAsync(state),
       mutateCreator: atomMutate(state),
     };
   }
   return {
     useFn: useShared,
     actionCreator: action(state),
-    asyncActionCreator: actionAsync(state),
+    actionAsyncCreator: actionAsync(state),
     mutateCreator: mutate(state),
   };
 }
@@ -42,7 +42,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   ensureGlobal(apiCtx, stateType);
   const { sharedState: state, internal } = buildSharedObject(innerOptions, createOptions);
   const { syncer, sync, forAtom, setDraft: setState } = internal;
-  const { useFn, actionCreator, asyncActionCreator, mutateCreator } = getFns(state, forAtom);
+  const { useFn, actionCreator, actionAsyncCreator, mutateCreator } = getFns(state, forAtom);
   const opt = { internal, from: MUTATE, apiCtx };
   const ldMutate = initLoadingCtx(createSharedLogic, opt);
   const ldAction = initLoadingCtx(createSharedLogic, { ...opt, from: ACTION });
@@ -54,9 +54,9 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(state, descOrOptions),
     runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(state, descOrOptions),
     action: actionCreator,
-    asyncAction: asyncActionCreator,
+    actionAsync: actionAsyncCreator,
     call: (fn: Fn, ...args: any[]) => actionCreator(fn)(...args),
-    asyncCall: (fn: Fn, ...args: any[]) => asyncActionCreator(fn)(...args),
+    callAsync: (fn: Fn, ...args: any[]) => actionAsyncCreator(fn)(...args),
     useState: (options?: any) => useFn(apiCtx, state, options),
     getMutateLoading: ldMutate.getLoading,
     useMutateLoading: ldMutate.useLoading,

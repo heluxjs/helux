@@ -178,23 +178,23 @@ export type ActionFnDef<A = any[], T = SharedState> = (param: ActionFnParam<A, T
 
 export type Action<A extends any[] = any[], T = SharedState> = (...args: A) => NextSharedDict<T>;
 
-export type AsyncActionFnDef<A = any[], T = SharedState> = (param: AsyncActionFnParam<A, T>) => void;
+export type ActionAsyncFnDef<A = any[], T = SharedState> = (param: AsyncActionFnParam<A, T>) => void;
 
-export type AsyncAction<A extends any[] = any[], T = SharedState> = (...args: A) => Promise<NextSharedDict<T>>;
+export type ActionAsync<A extends any[] = any[], T = SharedState> = (...args: A) => Promise<NextSharedDict<T>>;
 
 // atom action series
 
 export type AtomActionFnParam<A = any[], T = any> = { draft: AtomDraft<T>; setState: SetAtom<T>; desc: string; args: A };
 
-export type AtomAsyncActionFnParam<A = any[], T = any> = { setState: SetAtom<T>; desc: string; args: A };
+export type AtomActionAsyncFnParam<A = any[], T = any> = { setState: SetAtom<T>; desc: string; args: A };
 
 export type AtomActionFnDef<A = any[], T = any> = (param: AtomActionFnParam<A, T>) => Partial<T> | void;
 
 export type AtomAction<A extends any[] = any[], T = any> = (...args: A) => NextAtom<T>;
 
-export type AtomAsyncActionFnDef<A = any[], T = any> = (param: AtomAsyncActionFnParam<A, T>) => void;
+export type AtomActionAsyncFnDef<A = any[], T = any> = (param: AtomActionAsyncFnParam<A, T>) => void;
 
-export type AtomAsyncAction<A extends any[] = any[], T = any> = (...args: A) => Promise<NextAtom<T>>;
+export type AtomActionAsync<A extends any[] = any[], T = any> = (...args: A) => Promise<NextAtom<T>>;
 
 export type ReadOnlyArr = readonly any[];
 
@@ -405,9 +405,9 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
   call: Call<T>;
-  asyncCall: AsyncCall<T>;
+  callAsync: AsyncCall<T>;
   action: <A extends any[] = any[]>(fn: ActionFnDef<A, T>, desc?: FnDesc) => Action<A, T>;
-  asyncAction: <A extends any[] = any[]>(fn: AsyncActionFnDef<A, T>, desc?: FnDesc) => AsyncAction<A, T>;
+  actionAsync: <A extends any[] = any[]>(fn: ActionAsyncFnDef<A, T>, desc?: FnDesc) => ActionAsync<A, T>;
   state: SharedDict<T>;
   setState: SetState<T>;
   sync: SyncFnBuilder<T>;
@@ -426,9 +426,9 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
 export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnLooseItem<T, A> | AtomMutateFn<T, A>) => MutateWitness<T>;
   call: AtomCall<T>;
-  asyncCall: AtomAsyncCall<T>;
+  callAsync: AtomAsyncCall<T>;
   action: <A extends any[] = any[]>(fn: AtomActionFnDef<A, T>, desc?: FnDesc) => AtomAction<A, T>;
-  asyncAction: <A extends any[] = any[]>(fn: AtomAsyncActionFnDef<A, T>, desc?: FnDesc) => AtomAsyncAction<A, T>;
+  actionAsync: <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: FnDesc) => AtomActionAsync<A, T>;
   state: Atom<T>;
   setState: SetAtom<T>;
   sync: SyncFnBuilder<Atom<T>>;

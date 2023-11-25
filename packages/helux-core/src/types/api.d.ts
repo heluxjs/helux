@@ -9,20 +9,22 @@ import type { MutableRefObject, ReactNode } from '@helux/types';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,
+  ActionAsync,
+  ActionAsyncFnDef,
   ActionFnDef,
-  AsyncAction,
-  AsyncActionFnDef,
   Atom,
   AtomAction,
+  AtomActionAsync,
+  AtomActionAsyncFnDef,
   AtomActionFnDef,
-  AtomAsyncAction,
-  AtomAsyncActionFnDef,
   AtomMutateFn,
   AtomMutateFnLooseItem,
   AtomValType,
   BlockComponent,
   BlockParams,
   ChangeDraftCb,
+  DeriveAtomFn,
+  DeriveAtomFnItem,
   DerivedAtom,
   DerivedDict,
   DeriveFn,
@@ -35,7 +37,6 @@ import type {
   IAtomCtx,
   IBlockOptions,
   ICreateOptions,
-  IDeriveFnParams,
   IPlugin,
   IRenderInfo,
   IRunMutateOptions,
@@ -200,7 +201,8 @@ export function derive<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: De
  * const doubleResult = deriveAtom(()=>numAtom.val*2);
  * ```
  */
-export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T): Atom<T>;
+// export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T): Atom<T>;
+export function deriveAtom<T = any, I = readonly any[]>(deriveFnOrFnItem: DeriveAtomFn<T> | DeriveAtomFnItem<T, I>): Atom<T>;
 
 /**
  * 观察共享状态变化，默认 watchFn 立即执行
@@ -578,13 +580,13 @@ export function action<T = SharedDict>(sharedDict: T): <A extends any[] = any[]>
 
 export function actionAsync<T = SharedDict>(
   sharedDict: T,
-): <A extends any[] = any[]>(fn: AsyncActionFnDef<A, T>, desc?: string) => AsyncAction<A, T>;
+): <A extends any[] = any[]>(fn: ActionAsyncFnDef<A, T>, desc?: string) => ActionAsync<A, T>;
 
 export function atomAction<T = any>(atom: Atom<T>): <A extends any[] = any[]>(fn: AtomActionFnDef<A, T>, desc?: string) => AtomAction<A, T>;
 
 export function atomActionAsync<T = any>(
   atom: Atom<T>,
-): <A extends any[] = any[]>(fn: AtomAsyncActionFnDef<A, T>, desc?: string) => AtomAsyncAction<A, T>;
+): <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: string) => AtomActionAsync<A, T>;
 
 // ----------- shallowCompare isDiff produce 二次重导出会报错，这里手动声明一下 --------------
 // err: 如果没有引用 "../../helux-core/node_modules/limu/lib"，则无法命名 "produce" 的推断类型。这很可能不可移植。需要类型注释
