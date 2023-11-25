@@ -1,6 +1,6 @@
 {
   "name": "@helux/types",
-  "version": "3.3.3",
+  "version": "3.3.4",
   "description": "helux common types lib",
   "keywords": [
     "helux",
@@ -22,7 +22,7 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "src/index.d.ts",
   "files": [
     "dist",
     "src",

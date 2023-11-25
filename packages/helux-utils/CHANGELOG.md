@@ -1,5 +1,13 @@
 # @helux/utils
 
+## 3.3.4
+
+### Patch Changes
+
+- f68bbbc: set types file to src/index.d.ts in package.json
+- Updated dependencies [f68bbbc]
+  - @helux/types@3.3.4
+
 ## 3.3.3
 
 ### Patch Changes

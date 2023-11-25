@@ -1,6 +1,6 @@
 {
   "name": "@helux/fre",
-  "version": "3.3.3",
+  "version": "3.3.4",
   "description": "State library for fre that integrates atom, signal, collection dep, derive and watch.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -18,7 +18,7 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "src": "dist/index.d.ts",
   "files": [
     "dist",
     "src",
