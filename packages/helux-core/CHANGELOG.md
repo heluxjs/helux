@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.3.7
+
+### Patch Changes
+
+- f1e1254: add deferedWatch for useWatch
+  - @helux/hooks-impl@3.3.7
+  - @helux/types@3.3.7
+  - @helux/utils@3.3.7
+
 ## 3.3.6
 
 ### Patch Changes

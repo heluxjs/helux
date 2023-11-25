@@ -1,5 +1,11 @@
 # @helux/plugin-devtool
 
+## 3.3.7
+
+### Patch Changes
+
+- helux@3.3.7
+
 ## 3.3.6
 
 ### Patch Changes
