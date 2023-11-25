@@ -1,5 +1,7 @@
 # @helux/types
 
+## 3.3.3
+
 ## 3.3.2
 
 ### Patch Changes

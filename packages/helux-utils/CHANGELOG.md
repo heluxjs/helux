@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.3.3
+
+### Patch Changes
+
+- 43dd66a: optimize type import
+  - @helux/types@3.3.3
+
 ## 3.3.2
 
 ### Patch Changes
