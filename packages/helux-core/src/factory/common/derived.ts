@@ -94,8 +94,8 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
     forAtom = false,
     immediate,
   } = options;
-  if (!isFn(options.fn) && !isFn(options.deps)) {
-    throw new Error('ERR_NON_FN: derive need fn or deps arg at least!');
+  if (!isFn(options.fn)) {
+    throw new Error('ERR_NON_FN: derive need fn arg!');
   }
   const { fn = noop, deps = noop, task } = options;
   const deriveFn = (params: Dict) => {

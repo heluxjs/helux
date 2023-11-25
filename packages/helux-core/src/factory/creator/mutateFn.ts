@@ -1,6 +1,7 @@
 import { enureReturnArr, noop, tryAlert } from '@helux/utils';
 import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
+import { wrapPartial } from '../../factory/common/util';
 import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';
 import { setLoadStatus } from '../../factory/creator/loading';
 import { getInternal } from '../../helpers/state';
@@ -46,6 +47,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   setLoadStatus(internal, statusKey, { loading: true, err: null, ok: false });
   return Promise.resolve(task(...args))
     .then(() => {
+      // TODO 考虑要不要处理 task 返回的 partial
       setLoadStatus(internal, statusKey, { loading: false, err: null, ok: true });
       return internal.snap;
     })
@@ -59,19 +61,21 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnLogicOptions<T>) {
   const { desc = '', sn, fn, getArgs = noop, deps, from, throwErr, isFirstCall } = options;
   const internal = getInternal(targetState);
-  const { setStateImpl, innerSetState } = internal;
+  const { forAtom, setStateImpl, innerSetState } = internal;
   const innerSetOptions: IInnerSetStateOptions = { desc, sn, from, isFirstCall };
 
   let draft = options.draft as SharedState; // 如果传递了 draft 表示需要复用
   let finishMutate = noop;
 
-  // 现阶段此段逻辑不会触发，见 watchAndCallMutateDict TODO 解释（后续会考虑移除）
+  // 现阶段一定不会有 draft 传下来，这个判断后续可能会考虑移除
   if (!draft) {
-    // 不透传 draft 时，才指向一个真正有结束功能的 finishMutate 句柄
-    const ret = setStateImpl(noop);
-    draft = ret.draft;
-    finishMutate = ret.finishMutate;
+    // 不透传 draft 时，指向一个真正有结束功能的 finishMutate 句柄
+    const setCtx = setStateImpl(noop);
+    draft = setCtx.draft;
+    finishMutate = setCtx.finishMutate;
   }
+  // 透传 draft 目的见 watchAndCallMutateDict TODO 解释
+  // else if { ...}
 
   // 不定制同步函数入参的话，默认就是 (draft, input)，
   // 调用函数形如：(draft)=>draft.xxx+=1; 或 (draft, input)=>draft.xxx+=input[0]
@@ -83,8 +87,9 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
 
   // TODO 考虑同步函数的错误发送给插件
   try {
-    fn(...args);
-    return finishMutate(null, innerSetOptions);
+    const result = fn(...args);
+    const partial = wrapPartial(forAtom, result);
+    return finishMutate(partial, innerSetOptions);
   } catch (err: any) {
     if (throwErr) {
       throw err;
@@ -122,6 +127,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   const { mutateFnDict, usefulName } = internal;
   // TODO: 此段代码为后面的 mutateSelf 接口做准备
   // const { setStateImpl, mutateFnDict, usefulName } = internal;
+  // 考虑是否要首次运行会复用 draft ，然后经过多次修改，最后一次才提交，但这样做和死循环探测有逻辑冲突
   // let { draft, finishMutate } = setStateImpl(noop);
   // const lastIdx = keys.length - 1;
 
@@ -142,7 +148,6 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
           if (fn) {
             // 包含 task 配置时，fn 只会在首次执行被调用一次
             if (isFirstCall || !task) {
-              // 首次运行会复用 draft ，经过多次修改，最后一次才提交
               callMutateFn(target, { ...baseOpt, fn, forTask: false });
             }
           }

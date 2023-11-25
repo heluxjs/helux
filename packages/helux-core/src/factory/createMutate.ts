@@ -33,7 +33,7 @@ function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?
   const desc = inputDesc || SINGLE_MUTATE; // 未传递任何描述，尝试调用可能存在的单函数
 
   const item = mutateFnDict[desc];
-  if (!item) return;
+  if (!item) return snap;
   // 指定了 task 但未配置 task，返回最近一次修改结果的快照
   if (forTask && !item.task) return snap;
 

@@ -1,5 +1,21 @@
 import * as React from 'react'
 
+export function expectEqual(actualVal, expectVal) {
+  expect(actualVal === expectVal).toBeTruthy();
+}
+
+export function expectNotEqual(actualVal, expectVal) {
+  expect(actualVal === expectVal).toBeFalsy();
+}
+
+export function expectMatch(actualVal, expectVal) {
+  expect(actualVal).toMatchObject(expectVal);
+}
+
+export function expectTruthy(actualVal) {
+  expect(actualVal).toBeTruthy();
+}
+
 export function useForceUpdate() {
   const [, setState] = React.useState({});
   return () => setState({});

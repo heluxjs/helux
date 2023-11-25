@@ -119,7 +119,7 @@ export declare const LOADING_MODE: {
  * ```
  * 如需感知组件上下文，则需要`useService`接口去定义服务函数，可查看 useService 相关说明
  */
-export function share<T = Dict, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function share<T extends PlainObject = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): readonly [SharedDict<T>, SetState<T>, ISharedCtx<T, O>];
@@ -168,9 +168,11 @@ export function shareAtom<T = Dict, O extends IAtomCreateOptions<T> = IAtomCreat
  *  const aPlusB2Result = derive({
  *    // 【可选】定义依赖项，会透传给 fn 和 task 的 input
  *    deps: () => [sharedState.a, sharedState.b.b1.b2, doubleAResult.val] as const,
- *    // 【可选】定义初始值函数
+ *    // 【可选】定义初始值函数，首次一定会执行
  *    fn: () => ({ val: 0 }),
- *    // 【可选】未显式定义 immediate 时，如定义了 fn，则 task 首次不执行，未定义则 task 首次执行
+ *    // 【可选】如定义了 task，则定义的 fn 后续不再执行
+ *    // 1 未显式定义 immediate 时，如定义了 fn，则 task 首次不执行，未定义则 task 首次执行
+ *    // 2 显式定义 immediate 时，为 true 则立即执行 task，为 false 则下次再执行
  *    task: async ({ input: [a, b2, val] }) => { // 定义异步运算任务，input 里可获取到 deps 返回的值
  *      await delay(1000);
  *      return { val: a + b2 + val + random() };
@@ -193,6 +195,10 @@ export function derive<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: De
 
 /**
  * 创建一个派生atom新结果的任务，支持返回 pritimive 类型
+ * ```ts
+ * const [numAtom] = atom(1);
+ * const doubleResult = deriveAtom(()=>numAtom.val*2);
+ * ```
  */
 export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T): Atom<T>;
 
@@ -224,6 +230,21 @@ export function useShared<T = Dict>(sharedObject: T, IUseSharedOptions?: IUseSha
 
 /**
  * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
+ * ```ts
+ * // 使用原始类型 atom
+ * const [num, setNum] = useAtom(numAtom);
+ * // 修改原始类型 atom
+ * setNum(num+1);
+ * setNum(draft=>{draft.val+=1});
+ *
+ * // 使用对象类型 atom
+ * const [obj, setObj] = useAtom(objAtom);
+ * // 修改对象类型 atom（ 可使用 share 接口生成对象并配合 useShared 则此处无 .val 操作 ）
+ * setNum(draft=>{
+ *   draft.val.a+=1;
+ *   draft.val.b+=2;
+ * });
+ * ```
  */
 export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>, IRenderInfo];
 
@@ -465,7 +486,7 @@ export function block<P = object, T = any>(
 export function dynamicBlock<P = object, Ref = any>(
   cb: (props: P, params: BlockParams<P, Ref>) => ReactNode,
   options?: EnableStatus | IBlockOptions<P>,
-  ): BlockComponent<P>;
+): BlockComponent<P>;
 
 /**
  * 创建一个具有 signal 响应粒度的视图，仅当传入的值发生变化才渲染且只渲染 signal 区域，helux 同时也导出了 $ 符号表示 signal 函数

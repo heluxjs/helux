@@ -36,6 +36,7 @@ export type UseRef = <T = any>(initial: T) => { current: T };
 
 export type UseMemo = <T = any>(factory: () => T, deps?: any[]) => T;
 
+/** 目前 helux-core 只需要调用 react api */
 export type ReactLike = {
   useState: UseState;
   useRef: UseRef;

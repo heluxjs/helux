@@ -22,8 +22,10 @@ function putSharedToDep(list: any[]) {
     list.forEach((sharedState: any) => {
       const internal = getInternal(sharedState);
       if (internal) {
-        const { sharedKey } = internal;
-        recordFnDepKeys([`${sharedKey}`], { sharedKey });
+        const { sharedKey, forAtom } = internal;
+        // deps 列表里的 atom 结果自动拆箱
+        const suffix = forAtom ? '/val' : '';
+        recordFnDepKeys([`${sharedKey}${suffix}`], { sharedKey });
       }
     });
   }
@@ -47,12 +49,12 @@ export function createWatchLogic<T = SharedState>(
     if (immediate) {
       watchFn({ isFirstCall: true });
     }
+    putSharedToDep(list);
     // 注：markFnEnd 会两调用两次，factory/creator/updater 里的逻辑会提前触发一次，
     // 方便函数及时锁定依赖（ 不会因为查找到其他 watch 函数继续执行导致记录无效的依赖 ）
     // 然后 deadCycle 模块可以正常探测出死循环
     // 这里再调一次兜底是为了确保函数能够结束
     markFnEnd();
-    putSharedToDep(list);
   }
 
   return fnCtx;

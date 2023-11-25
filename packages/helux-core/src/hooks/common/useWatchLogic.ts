@@ -58,7 +58,8 @@ export function useWatchLogic(apiCtx: CoreApiCtx, watchFn: Fn, options: WatchOpt
     // 传入了局部的自定义观察函数
     fnRef.current.wrap = (params: any) => {
       // 避免 strict 模式下冗余的触发
-      if (fnCtx.mountStatus === MOUNTED) {
+      // 如果用户设置 immediate 为 true，组件未挂载也需要触发 watch 执行
+      if (fnCtx.mountStatus === MOUNTED || immediate === true) {
         fnRef.current.fn(params);
       }
     };

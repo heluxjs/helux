@@ -29,7 +29,12 @@ export declare function isProxyAvailable(): boolean;
  * customLabel 可定制
  */
 export declare function tryAlert(err: any, throwErr?: boolean, customLabel?: string): void;
-export declare function warn(msg: string): void;
+/**
+ *
+ * @param msg - 提示信息
+ * @param level - 提示级别，0：触发error待遇，如果是开发模式还会触发 trace 打印；1：只触发 error 打印；2：只触发 warn 打印
+ */
+export declare function warn(msg: string, level?: number): void;
 export declare function getSafeNext(input: number): number;
 export declare function has(obj: any, key: any): boolean;
 /** safe obj get */

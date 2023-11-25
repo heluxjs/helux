@@ -9,6 +9,11 @@ import type { TInternal } from '../creator/buildInternal';
 const { USER_STATE } = STATE_TYPE;
 
 export interface IMutateCtx {
+  /**
+   * 为 shared 记录一个第一层的 key 值，用于刷新 immut 生成的 代理对象，
+   * 刷新时机和具体解释见 factory/creator/commitState 逻辑
+   */
+  level1Key: string;
   depKeys: string[];
   triggerReasons: TriggerReason[];
   ids: NumStrSymbol[];
@@ -40,6 +45,7 @@ export function tryGetLoc(moduleName: string, startCutIdx = 4) {
 export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
   const { ids = [], globalIds = [] } = options; // 用户 setState 可能设定了 ids globalIds
   return {
+    level1Key: '',
     depKeys: [],
     triggerReasons: [],
     ids,
@@ -66,10 +72,14 @@ export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
 }
 
 export function isValChanged(internal: TInternal, depKey: string) {
-  const { snap, prevSnap, stateType } = internal;
+  const { snap, prevSnap, stateType, rootValKey } = internal;
   // 非用户状态，都返回 true（伴生状态有自己的key规则）
   if (USER_STATE !== stateType) {
     return true;
+  }
+
+  if (depKey === rootValKey) {
+
   }
 
   const { keyPath } = getDepKeyInfo(depKey);

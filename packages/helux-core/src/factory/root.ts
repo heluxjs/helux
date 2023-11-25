@@ -64,6 +64,7 @@ function buildSharedScope() {
     INTERMAL_MAP: new Map<number, TInternal>(),
     /** cache value compare result */
     COMPARE_MAP: new Map<string, boolean>(),
+    isStateChanged: false,
   };
 }
 

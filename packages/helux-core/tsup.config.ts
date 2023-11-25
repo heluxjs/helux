@@ -11,7 +11,8 @@ export default defineConfig([
     clean: true,
     treeshake: false,
     minify: 'terser',
-    external: [],
+    // external: ['limu', '@helux/hooks-impl', '@helux/types', '@helux/utils'],
+    // external: ['limu'],
     globalName: 'HeluxCore',
     esbuildPlugins: [
       copyStaticFile({

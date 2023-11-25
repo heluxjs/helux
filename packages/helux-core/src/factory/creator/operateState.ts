@@ -21,6 +21,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   // if (opParams.value === oldVal) return;
   const { moduleName, sharedKey, exact, ruleConf, level1ArrKeys } = internal;
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
+  mutateCtx.level1Key = fullKeyPath[0];
 
   // 主动把数组自身节点 key 也记录一下
   if (parentType === 'Array') {

@@ -3,7 +3,6 @@ import { PROTO_KEY } from '../consts';
 import { getFnCtx, getRunninFn, opUpstreamFnKey } from '../factory/common/fnScope';
 import { diffVal } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
-import { isValChanged } from '../factory/common/util';
 import type { TInternal } from '../factory/creator/buildInternal';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
@@ -48,6 +47,7 @@ export function recordFnDepKeys(
     if (runningFnCtx) {
       nodupPush(depKeys, depKey); // here depKeys is come from fnScope
     }
+
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
   });

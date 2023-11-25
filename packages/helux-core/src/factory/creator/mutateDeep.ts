@@ -1,4 +1,4 @@
-import { isObj } from '@helux/utils';
+import { isObj, noop } from '@helux/utils';
 import { createDraft, finishDraft } from 'limu';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { genRenderSN } from '../common/key';
@@ -59,9 +59,14 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
       const { writeKeys, writeKeyPathInfo } = mutateCtx;
       // 把深依赖和浅依赖收集到的keys合并起来
       if (isObj(partial)) {
-        Object.keys(partial).forEach((key) => {
-          draft[key] = partial[key]; // 触发 writeKeys 里记录当前变化key
-        });
+        // 触发 writeKeys 里记录当前变化key
+        if (internal.forAtom) {
+          draft.val = partial.val;
+        } else {
+          Object.keys(partial).forEach((key) => {
+            draft[key] = partial[key];
+          });
+        }
       }
       const opts = beforeCommit(commitOpts, innerSetOptions, draft);
 
@@ -70,6 +75,14 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
       mutateCtx.triggerReasons = Object.values(writeKeyPathInfo);
       commitState(opts);
       emitDataChanged(internal, innerSetOptions, desc);
+
+      /**
+       * limu 的 immut 接口生成的可读代理对象虽然能总是同步最新的快照，但同步时机是在读取对象任意值那一刻
+       * 用户修改完状态后直接使用 console.log(sharedState) 看到的会是旧值打印，其实已经是新值，
+       * 需要继续向下读任意一个值即可刷新sharedState，这是再执行 console.log(sharedState) 看到的就是正确的
+       * 为避免用户误会这是一个bug，这里提前随便读一个key，帮助用户主动刷新以下 sharedState 值
+       */
+      noop(internal.sharedState[mutateCtx.level1Key]);
 
       return internal.snap; // 返回最新的快照给调用者
     },

@@ -1,3 +1,39 @@
+
+## 奇怪的测试结果
+
+### atom数组变化
+
+如下代码
+```ts
+const [listAtom, setAtom] = atom([{ a: 1, b: { name: 2 } }, { a: 2, b: { name: 4 } }]);
+function changeItem() {
+  const prevItem0 = listAtom.val[0];
+  const prevItem1 = listAtom.val[1];
+  setAtom(draft => { draft.val[0].b.name = Date.now() });
+  const currItem0 = listAtom.val[0];
+  const currItem1 = listAtom.val[1];
+  console.log('prevItem0===currItem0 ', prevItem0 === currItem0);
+  console.log('prevItem1===currItem1 ', prevItem1 === currItem1);
+}
+changeItem();
+```
+
+浏览器里 或 jest里执行
+```text
+prevItem0===currItem0  false
+prevItem1===currItem1  true
+```
+
+vitest里执行
+```text
+prevItem0===currItem0  false
+prevItem1===currItem1  false
+```
+
+
+## 可参考的测试代码
+
+```ts
 import * as React from 'react'
 import { describe, test, expect, afterEach } from 'vitest';
 import { render, renderHook, screen, waitFor } from '@testing-library/react'
@@ -59,11 +95,9 @@ describe('useShared', () => {
   test('useState1', async () => {
     const CustomHookComponent = () => {
       const [name, setName] = React.useState('');
-
       React.useEffect(() => {
         setName('Alice');
       }, []);
-
       return <div>{name}</div>;
     };
 
@@ -74,3 +108,4 @@ describe('useShared', () => {
     });
   });
 });
+```

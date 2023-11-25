@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import '@testing-library/jest-dom'
 import { atom } from '../helux';
 
-describe('atom', () => {
+describe('create atom', () => {
 
   test('create primitive atom', async () => {
     const [numAtom] = atom(1);
