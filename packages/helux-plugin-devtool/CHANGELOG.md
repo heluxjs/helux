@@ -1,5 +1,12 @@
 # @helux/plugin-devtool
 
+## 3.3.6
+
+### Patch Changes
+
+- Updated dependencies [346895f]
+  - helux@3.3.6
+
 ## 3.3.5
 
 ### Patch Changes

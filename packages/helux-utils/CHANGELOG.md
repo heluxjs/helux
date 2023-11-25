@@ -1,5 +1,13 @@
 # @helux/utils
 
+## 3.3.6
+
+### Patch Changes
+
+- 346895f: add test case, add level1Key to refresh shared automatically, add wrapPartial for callMutateFnLogic, add rootValKey, optimize useWatch immediate === true logic, optimize parseMutate desc gen logic for single mutate arr conf
+- Updated dependencies [346895f]
+  - @helux/types@3.3.6
+
 ## 3.3.5
 
 ### Patch Changes
