@@ -44,7 +44,6 @@ describe('watch atom', () => {
     let w2TriggerCount = 0;
     watch(
       () => {
-        console.log('trigger bookStoreAtom watch');
         w2TriggerCount += 1;
       },
       { deps: () => [bookStoreAtom] },
