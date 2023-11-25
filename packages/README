@@ -4,8 +4,6 @@ helux： 适配 react 的库（ 基于 helux-core ）
 
 helux-core： 核心逻辑库（ 基于 limu ）
 
-
-
 ### types 配置
 
-packages.json 里的 `types` 值统一由 `dist/index.d.ts` 改为 `src/index.d.ts`，是因为每次构建后dist重新生成导致VSC 类型索引会失效，需要重启`ts server`，而执行稳定的`src/index.d.ts` 无此问题，但同时为了方便用户可以在dist目录看到类型文件，构建时会复制一份过去。
+packages.json 里的 `types` 值统一由 `dist/index.d.ts` 改为 `src/index.d.ts`，是因为每次构建后 dist 重新生成导致 VSC 类型索引会失效，需要重启`ts server`，而执行稳定的`src/index.d.ts` 无此问题，但同时为了方便用户可以在 dist 目录看到类型文件，构建时会复制一份过去。

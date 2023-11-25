@@ -5,7 +5,7 @@ import { runFn } from '../../helpers/fnRunner';
 import { markComputing } from '../../helpers/fnStatus';
 import { runInsUpdater } from '../../helpers/insCtx';
 import type { Dict, InsCtxMap } from '../../types/base';
-import { diffVal, clearDiff } from '../common/sharedScope';
+import { clearDiff, diffVal } from '../common/sharedScope';
 import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';

@@ -34,9 +34,9 @@
     "@helux/core": "workspace:^"
   },
   "devDependencies": {
-    "@types/react": ">=16.8.0",
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.1.2",
+    "@types/react": ">=16.8.0",
     "@vitejs/plugin-react": "^4.2.0",
     "jsdom": "^22.1.0",
     "tsup": "^8.0.0",

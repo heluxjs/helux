@@ -1,22 +1,20 @@
-import * as React from 'react'
-import { describe, test, expect, afterEach } from 'vitest';
-import { render, renderHook, screen, waitFor } from '@testing-library/react'
-import '@testing-library/jest-dom'
-import { pfstr } from './util'
-import { useShared } from '../src';
+import '@testing-library/jest-dom';
+import { renderHook, waitFor } from '@testing-library/react';
+import * as React from 'react';
+import { describe, expect, test } from 'vitest';
 
 describe('useShared', () => {
   test('useShared', async () => {
     const { result } = renderHook(() => {
-      const [name, setName] = React.useState('')
+      const [name, setName] = React.useState('');
       React.useEffect(() => {
-        setName('Alice')
-      }, [])
+        setName('Alice');
+      }, []);
 
-      return name
-    })
+      return name;
+    });
     await waitFor(() => {
-      expect(result.current).toBe('Alice')
+      expect(result.current).toBe('Alice');
     });
   });
 });

@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from 'react';
 
 export function expectEqual(actualVal, expectVal) {
   expect(actualVal === expectVal).toBeTruthy();

@@ -81,7 +81,7 @@ export type BlockOptionsType = EnableStatus | IBlockOptions;
  */
 export type Read = <A extends readonly any[] = readonly any[]>(...args: A) => A;
 
-export type BlockParams<P = object, T = any> = { props: P, status: LoadingStatus; read: Read, ref?: ForwardedRef<T> };
+export type BlockParams<P = object, T = any> = { props: P; status: LoadingStatus; read: Read; ref?: ForwardedRef<T> };
 
 export type BlockCb<P = object, T = any> = (props: P, params?: BlockParams<T>) => ReactNode;
 

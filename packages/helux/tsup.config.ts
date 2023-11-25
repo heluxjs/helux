@@ -1,6 +1,6 @@
-import { defineConfig } from 'tsup';
 import copyStaticFile from 'esbuild-copy-static-files';
 import ep from 'esbuild-plugin-external-global';
+import { defineConfig } from 'tsup';
 
 const { externalGlobalPlugin } = ep;
 
@@ -22,7 +22,7 @@ export default defineConfig([
         dest: './dist/index.d.ts',
       }),
       externalGlobalPlugin({
-        'react': 'window.React',
+        react: 'window.React',
       }),
     ],
   },

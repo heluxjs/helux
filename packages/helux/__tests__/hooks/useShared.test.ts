@@ -1,12 +1,11 @@
-import * as React from 'react'
-import { describe, test, expect, afterEach } from 'vitest';
-import { render, renderHook, screen, act } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
+import { act, renderHook } from '@testing-library/react';
+import * as React from 'react';
+import { describe, expect, test } from 'vitest';
 import { share, useShared } from '../helux';
 import { delay } from '../util';
 
 describe('useShared', () => {
-
   async function runSetTest(setCb) {
     const [state, topSet] = share({ a: 1, b: 2 });
     const { result } = renderHook(() => {
@@ -18,7 +17,7 @@ describe('useShared', () => {
           act(() => setCb({ topSet, hookSet }));
         };
         deferChange();
-      }, [])
+      }, []);
       return compState.a;
     });
     expect(result.current).toBe(1);
@@ -29,13 +28,17 @@ describe('useShared', () => {
 
   test('top set by draft cb', async () => {
     await runSetTest((params) => {
-      params.topSet(draft => { draft.a = 2 });
+      params.topSet((draft) => {
+        draft.a = 2;
+      });
     });
   });
 
   test('hook set by draft cb', async () => {
     await runSetTest((params) => {
-      params.hookSet(draft => { draft.a = 2 });
+      params.hookSet((draft) => {
+        draft.a = 2;
+      });
     });
   });
 
@@ -50,5 +53,4 @@ describe('useShared', () => {
       params.hookSet({ a: 2 });
     });
   });
-
 });

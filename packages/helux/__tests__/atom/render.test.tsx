@@ -1,11 +1,9 @@
-import * as React from 'react'
-import { describe, test, expect } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import { atom } from '../helux';
 
 describe('use atom', () => {
-
   test('read primitive', async () => {
     const [, , ctx] = atom(1);
     const Comp = () => {
@@ -52,7 +50,9 @@ describe('use atom', () => {
     expect(bRenderCount).toBe(1);
 
     act(() => {
-      setAtom(draft => { draft.val.a = 100 });
+      setAtom((draft) => {
+        draft.val.a = 100;
+      });
     });
 
     await waitFor(() => {
@@ -62,5 +62,4 @@ describe('use atom', () => {
     expect(aRenderCount).toBe(2);
     expect(bRenderCount).toBe(1);
   });
-
 });

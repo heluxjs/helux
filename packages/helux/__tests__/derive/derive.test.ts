@@ -1,8 +1,7 @@
-import { describe, test, expect } from 'vitest';
-import { share, derive } from '../helux';
+import { describe, expect, test } from 'vitest';
+import { derive, share } from '../helux';
 
 describe('derive dict', () => {
-
   test('derive shallow dict', async () => {
     const [state, setState] = share({ a: 1, b: 2 });
     const double = derive(() => ({ num1: state.a * 2, num2: state.b * 2 }));
@@ -12,7 +11,7 @@ describe('derive dict', () => {
     expect(plus100.num1).toBe(102);
     expect(plus100.num2).toBe(104);
 
-    setState(draft => {
+    setState((draft) => {
       draft.a = 10;
       draft.b = 20;
     });
@@ -31,7 +30,7 @@ describe('derive dict', () => {
     expect(plus100.num1).toBe(102);
     expect(plus100.num2).toBe(104);
 
-    setState(draft => {
+    setState((draft) => {
       draft.a.a1.a2 = 10;
       draft.b = 20;
     });
@@ -40,5 +39,4 @@ describe('derive dict', () => {
     expect(plus100.num1).toBe(120);
     expect(plus100.num2).toBe(140);
   });
-
 });

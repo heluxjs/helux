@@ -1,10 +1,10 @@
 import type { ForwardedRef } from '@helux/types';
-import { noopArgs, noop, isDebug, has } from '@helux/utils';
+import { has, isDebug, noop, noopArgs } from '@helux/utils';
 import { IS_BLOCK } from '../../consts';
 import { getAtom, isDerivedAtom } from '../../factory/common/atom';
 import { markBlockFnEnd, markBlockFnStart } from '../../helpers/blockCtx';
 import type { CoreApiCtx } from '../../types/api-ctx';
-import type { Dict, Fn, IBlockCtx, IBlockOptions, BlockParams } from '../../types/base';
+import type { Dict, Fn, IBlockCtx, IBlockOptions } from '../../types/base';
 import { wrapDerivedAtomSignalComp } from './wrap';
 
 interface IMarkBlockAndRunCbOptions {

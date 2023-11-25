@@ -1,8 +1,7 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { atom, deriveAtom } from '../helux';
 
 describe('derive atom', () => {
-
   test('derive primitive', async () => {
     const [numAtom, setAtom] = atom(1);
     const double = deriveAtom(() => numAtom.val * 2);
@@ -24,11 +23,12 @@ describe('derive atom', () => {
     expect(result2.val.plus100Double).toBe(202);
     expect(result2.val.plus200Double).toBe(402);
 
-    setAtom(draft => { draft.val.a = 10 });
+    setAtom((draft) => {
+      draft.val.a = 10;
+    });
     expect(result1.val.plus100).toBe(110);
     expect(result1.val.plus200).toBe(210);
     expect(result2.val.plus100Double).toBe(220);
     expect(result2.val.plus200Double).toBe(420);
   });
-
 });

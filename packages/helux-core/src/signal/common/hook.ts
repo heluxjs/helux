@@ -6,9 +6,13 @@ import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Fn, IBlockCtx, LoadingStatus } from '../../types/base';
 
 export function useStateDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn) {
-  useWatchSimpleLogic(apiCtx, () => {
-    forceUpdate();
-  }, { manualDepKeys: blockCtx.depKeys });
+  useWatchSimpleLogic(
+    apiCtx,
+    () => {
+      forceUpdate();
+    },
+    { manualDepKeys: blockCtx.depKeys },
+  );
 }
 
 export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn) {
@@ -34,7 +38,7 @@ export function useDelBlockCtxEffect(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, is
       markBlockMounted(blockCtx);
     }
     return () => {
-      delBlockCtx(blockCtx.key, isDynamic)
+      delBlockCtx(blockCtx.key, isDynamic);
     };
     // here ignore isDynamic
     // eslint-disable-next-line react-hooks/exhaustive-deps

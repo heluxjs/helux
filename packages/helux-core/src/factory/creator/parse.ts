@@ -7,7 +7,9 @@ import type { CoreApiCtx } from '../../types/api-ctx';
 import type {
   AtomMutateFnStdDict,
   AtomMutateFnStdItem,
+  BlockOptionsType,
   Dict,
+  IBlockOptions,
   ICreateOptions,
   IInnerCreateOptions,
   IRuleConf,
@@ -22,8 +24,6 @@ import type {
   NumStrSymbol,
   WatchDepFn,
   WatchOptionsType,
-  BlockOptionsType,
-  IBlockOptions,
 } from '../../types/base';
 import { genFnKey } from '../common/key';
 import { getDepKeyByPath, tryGetLoc } from '../common/util';

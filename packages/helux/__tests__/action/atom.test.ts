@@ -1,10 +1,9 @@
-import { describe, test, expect } from 'vitest';
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
+import { describe, expect, test } from 'vitest';
 import { atom, atomAction, atomActionAsync } from '../helux';
 import { delay } from '../util';
 
 describe('create atom action', () => {
-
   test('add num action', async () => {
     const [numAtom] = atom(1);
     const addAtom = atomAction(numAtom)<[toAdd: number]>(({ draft, args }) => {
@@ -24,7 +23,7 @@ describe('create atom action', () => {
     const [numAtom] = atom(1);
     const addAtom = atomActionAsync(numAtom)<[toAdd: number]>(async ({ setState, args }) => {
       await delay(100);
-      setState(draft => draft.val += args[0]);
+      setState((draft) => (draft.val += args[0]));
     });
 
     const snap = await addAtom(10);
@@ -35,5 +34,4 @@ describe('create atom action', () => {
     expect(snap2.val).toBe(21);
     expect(numAtom.val).toBe(21);
   });
-
 });

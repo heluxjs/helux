@@ -8,7 +8,7 @@ import { parseWatchOptions } from './creator/parse';
 
 interface ICreateWatchLogicOpts<T = SharedState> {
   scopeType: ScopeType;
-  sharedState?: T
+  sharedState?: T;
   fnCtxBase?: IFnCtx;
   immediate?: boolean;
   deps?: Fn;
@@ -31,10 +31,7 @@ function putSharedToDep(list: any[]) {
   }
 }
 
-export function createWatchLogic<T = SharedState>(
-  watchFn: (fnParams: IWatchFnParams) => void,
-  options: ICreateWatchLogicOpts<T>,
-) {
+export function createWatchLogic<T = SharedState>(watchFn: (fnParams: IWatchFnParams) => void, options: ICreateWatchLogicOpts<T>) {
   const { scopeType, fnCtxBase, immediate, deps = noop, manualDepKeys, label = 'watch' } = options;
   if (!isFn(watchFn)) {
     throw new Error(`ERR_NON_FN: pass an non-function to ${label}!`);

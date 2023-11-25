@@ -22,7 +22,6 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "src": "dist/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -50,5 +49,6 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "deprecated": false
+  "deprecated": false,
+  "src": "dist/index.d.ts"
 }

@@ -1,5 +1,5 @@
-import { defineConfig } from 'tsup';
 import ep from 'esbuild-plugin-external-global';
+import { defineConfig } from 'tsup';
 
 const { externalGlobalPlugin } = ep;
 
@@ -17,7 +17,7 @@ export default defineConfig([
     globalName: 'HeluxHooks',
     esbuildPlugins: [
       externalGlobalPlugin({
-        'react': 'window.React',
+        react: 'window.React',
       }),
     ],
   },

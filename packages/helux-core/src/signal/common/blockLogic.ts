@@ -1,9 +1,9 @@
 import type { ForwardedRef } from '@helux/types';
 import { noop } from '@helux/utils';
-import { initBlockCtx } from '../../helpers/blockCtx';
 import { parseBlockOptions } from '../../factory/creator/parse';
+import { initBlockCtx } from '../../helpers/blockCtx';
 import type { CoreApiCtx } from '../../types/api-ctx';
-import type { BlockCb, IBlockOptions, IBlockCtx, BlockOptionsType } from '../../types/base';
+import type { BlockCb, BlockOptionsType, IBlockCtx, IBlockOptions } from '../../types/base';
 import { useDelBlockCtxEffect, useDep } from './hook';
 import { makeBlockComp, markBlockAndRunCb, renderResult } from './util';
 
@@ -78,7 +78,6 @@ export function blockStatusLogic<P = object>(innerOptions: IBlockLogicOptions<P>
     options,
   );
 }
-
 
 /**
  * 用户在组件里调用，推荐使用 dynamicBlock 替代 block

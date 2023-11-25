@@ -1,10 +1,9 @@
-import { describe, test, expect } from 'vitest';
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
+import { describe, expect, test } from 'vitest';
 import { atom, runMutateTask } from '../helux';
 import { delay } from '../util';
 
 describe('create atom mutate', () => {
-
   test('single mutate, pass (fn,deps)', async () => {
     const [numAtom, setAtom] = atom(1);
     // 有fn，未指定 immediate 时，task 首次不执行
@@ -15,10 +14,10 @@ describe('create atom mutate', () => {
           fn: (state, [num]) => state.val + num,
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState(draft => draft.val += num);
+            setState((draft) => (draft.val += num));
           },
-        }
-      ]
+        },
+      ],
     });
     expect(bAtom.val).toBe(1);
     await delay(120);
@@ -35,12 +34,12 @@ describe('create atom mutate', () => {
           fn: (state, [num]) => state.val + num,
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState(draft => draft.val += num);
+            setState((draft) => (draft.val += num));
           },
           immediate: true,
-          desc: 'changeVal'
-        }
-      ]
+          desc: 'changeVal',
+        },
+      ],
     });
     expect(bAtom.val).toBe(1); // change by fn
     await delay(120);
@@ -60,11 +59,11 @@ describe('create atom mutate', () => {
           deps: () => [numAtom.val],
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState(draft => draft.val += num);
+            setState((draft) => (draft.val += num));
           },
           // immediate: undefined,
-        }
-      ]
+        },
+      ],
     });
     await delay(120);
     expect(bAtom.val).toBe(1); // change by task
@@ -79,11 +78,11 @@ describe('create atom mutate', () => {
           deps: () => [numAtom.val],
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState(draft => draft.val += num);
+            setState((draft) => (draft.val += num));
           },
           immediate: false,
-        }
-      ]
+        },
+      ],
     });
     await delay(120);
     expect(bAtom.val).toBe(0); // change by task
@@ -92,5 +91,4 @@ describe('create atom mutate', () => {
     await delay(120);
     expect(bAtom.val).toBe(1); // change by runMutateTask
   });
-
 });

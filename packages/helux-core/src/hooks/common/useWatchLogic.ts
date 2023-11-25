@@ -1,14 +1,14 @@
-import { noop, getVal } from '@helux/utils';
 import { FnVoid } from '@helux/types';
+import { getVal, noop } from '@helux/utils';
 import { MOUNTED, SCOPE_TYPE } from '../../consts';
+import { getDepKeyInfo } from '../../factory/common/util';
 import { createWatchLogic } from '../../factory/createWatch';
 import { parseWatchOptions } from '../../factory/creator/parse';
-import { getDepKeyInfo } from '../../factory/common/util';
 import { buildFnCtx, delFnCtx } from '../../helpers/fnCtx';
-import { getSharedState } from '../../helpers/state';
 import { recoverDep } from '../../helpers/fnDep';
+import { getSharedState } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
-import type { Fn, IWatchOptions, WatchOptionsType, IFnCtx } from '../../types/base';
+import type { Fn, IFnCtx, IWatchOptions, WatchOptionsType } from '../../types/base';
 
 const { HOOK } = SCOPE_TYPE;
 interface ISimpleWatchOptions extends IWatchOptions {
@@ -35,11 +35,12 @@ export function useWatchSimpleLogic(apiCtx: CoreApiCtx, watchFn: Fn, options: IS
   if (fnCtx.fn === noop) {
     const { manualDepKeys = [] } = options;
     // replay get logic for transfering deps
-    const deps = () => manualDepKeys.map((depKey) => {
-      const { sharedKey, keyPath } = getDepKeyInfo(depKey);
-      const state = getSharedState(sharedKey);
-      return getVal(state, keyPath);
-    });
+    const deps = () =>
+      manualDepKeys.map((depKey) => {
+        const { sharedKey, keyPath } = getDepKeyInfo(depKey);
+        const state = getSharedState(sharedKey);
+        return getVal(state, keyPath);
+      });
     createWatchLogic(watchFn, { scopeType: HOOK, fnCtxBase: fnCtx, deps });
   }
   useFnCtxEffect(useEffect, fnCtx);

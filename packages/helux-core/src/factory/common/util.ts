@@ -79,7 +79,6 @@ export function isValChanged(internal: TInternal, depKey: string) {
   }
 
   if (depKey === rootValKey) {
-
   }
 
   const { keyPath } = getDepKeyInfo(depKey);

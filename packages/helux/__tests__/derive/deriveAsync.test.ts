@@ -1,9 +1,8 @@
-import { describe, test, expect } from 'vitest';
-import { share, derive, runDeriveAsync } from '../helux';
+import { describe, expect, test } from 'vitest';
+import { derive, runDeriveAsync, share } from '../helux';
 import { delay } from '../util';
 
 describe('derive async', () => {
-
   test('immediate=undefined, pass fn and task', async () => {
     const [state, setState] = share({ a: 1, b: 2 });
     const double = derive({
@@ -15,14 +14,13 @@ describe('derive async', () => {
     });
     expect(double.num1).toBe(2);
     expect(double.num2).toBe(4);
-    setState(draft => {
+    setState((draft) => {
       draft.a = 10;
       draft.b = 20;
     });
     await delay(200);
     expect(double.num1).toBe(40);
     expect(double.num2).toBe(80);
-
   });
 
   test('immediate=undefined, only pass task', async () => {
@@ -76,7 +74,7 @@ describe('derive async', () => {
     expect(double.num1).toBe(4); // result form task 1 * 4
     expect(double.num2).toBe(8); // result form task 2 * 4
 
-    setState(draft => {
+    setState((draft) => {
       draft.a = 10;
       draft.b = 20;
     });
@@ -110,5 +108,4 @@ describe('derive async', () => {
     expect(double.num1).toBe(4);
     expect(double.num2).toBe(8);
   });
-
 });
