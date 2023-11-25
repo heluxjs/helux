@@ -1,24 +1,10 @@
 # @helux/hooks-impl
 
-## 3.3.1
+## 3.3.2
 
 ### Patch Changes
 
-- Updated dependencies [ef57100]
-  - @helux/utils@3.3.1
-  - @helux/types@3.3.1
-
-## 3.3.0
-
-### Minor Changes
-
-- 96a4fda: bump minor
-
-### Patch Changes
-
-- Updated dependencies [128c5fc]
-- Updated dependencies [96a4fda]
-- Updated dependencies [d222802]
-- Updated dependencies [f42b227]
-  - @helux/utils@3.3.0
-  - @helux/types@3.3.0
+- f0c176b: optimize types, add externalGlobalPlugin to tsupo config
+- Updated dependencies [f0c176b]
+  - @helux/types@3.3.2
+  - @helux/utils@3.3.2

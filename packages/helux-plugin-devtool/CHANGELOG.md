@@ -1,19 +1,9 @@
 # @helux/plugin-devtool
 
-## 3.3.1
+## 3.3.2
 
 ### Patch Changes
 
-- helux@3.3.1
-
-## 3.3.0
-
-### Minor Changes
-
-- 96a4fda: bump minor
-
-### Patch Changes
-
-- Updated dependencies [96a4fda]
-- Updated dependencies [f42b227]
-  - helux@3.3.0
+- f0c176b: optimize types, add externalGlobalPlugin to tsupo config
+- Updated dependencies [f0c176b]
+  - helux@3.3.2
