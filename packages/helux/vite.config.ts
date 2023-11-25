@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    // setupFiles: './vitest-setup.ts',
-    setupFiles: './__tests__/vitest-setup.ts',
+    setupFiles: './vitest-setup.ts', // for vitest runner
+    // setupFiles: './__tests__/vitest-setup.ts', // for local command 'npm run test'
   },
 });
