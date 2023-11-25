@@ -1,5 +1,15 @@
 # @helux/core
 
+## 3.3.5
+
+### Patch Changes
+
+- 26c7ff4: add comment to ReactLike type
+- Updated dependencies [26c7ff4]
+  - @helux/types@3.3.5
+  - @helux/utils@3.3.5
+  - @helux/hooks-impl@3.3.5
+
 ## 3.3.4
 
 ### Patch Changes
