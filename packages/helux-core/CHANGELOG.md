@@ -1,5 +1,15 @@
 # @helux/core
 
+## 3.4.3
+
+### Patch Changes
+
+- 81459ef: build(3.4.3): support merge returned atom dict
+- Updated dependencies [81459ef]
+  - @helux/utils@3.4.3
+  - @helux/hooks-impl@3.4.3
+  - @helux/types@3.4.3
+
 ## 3.4.2
 
 ### Patch Changes
