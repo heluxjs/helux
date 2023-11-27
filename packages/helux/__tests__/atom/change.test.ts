@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
-import { atom, shallowCompare } from '../helux';
 import { describe, expect, test } from 'vitest';
+import { atom, shallowCompare } from '../helux';
 import { expectEqual, expectMatch, expectTruthy } from '../util';
 
 describe('change atom', () => {
@@ -12,7 +12,7 @@ describe('change atom', () => {
 
   test('change primitive by draft cb', async () => {
     const [numAtom, setNum] = atom(1);
-    setNum((draft) => (draft + 1));
+    setNum((draft) => draft + 1);
     expect(numAtom.val === 2).toBeTruthy();
   });
 

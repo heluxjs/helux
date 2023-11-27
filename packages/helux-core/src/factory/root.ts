@@ -12,6 +12,17 @@ function buildFnScope() {
       Mutate: 0,
     },
     runningFnKey: '',
+    /**
+     * 从 sharedKey 维度辅助 helpers/fnDep 丢弃一些异步逻辑中收集的依赖信息
+     */
+    runningSharedKey: 0,
+    /**
+     * 从 isTaskRunning 维度辅助 helpers/fnDep 丢弃一些异步逻辑中收集的依赖信息
+     * 标记 task 是否运行中用于控制 helpers/fnDep 逻辑发现是 task 运行时不记录 depKeys，
+     * 避免 mutate 配置的 task 里多次变化当前共享对象的状态是误判为死循环
+     */
+    isTaskRunning: false,
+    isIgnore: false,
     /** 函数运行结束收集到的 depKeys */
     depKeys: [] as string[],
     /** globalId to Array<insKey> */

@@ -19,7 +19,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   // 可在此处扩展逻辑，如 oldVal 和 newVal 对比后相等则直接 return，不记录任何写入信息
   // const oldVal = getVal(internal.snap, fullKeyPath);
   // if (opParams.value === oldVal) return;
-  const { moduleName, sharedKey, exact, ruleConf, level1ArrKeys } = internal;
+  const { moduleName, exact, sharedKey, ruleConf, level1ArrKeys } = internal;
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
   mutateCtx.level1Key = fullKeyPath[0];
   mutateCtx.handleAtomCbReturn = false;
@@ -31,9 +31,8 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     writeKeys[arrKey] = 1;
   }
 
-  const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
   const { idsDict, globalIdsDict, stopDepInfo } = ruleConf;
-
+  const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
   writeKeyPathInfo[writeKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
 
   // 设定了非精确更新策略时，提取出第一层更新路径即可

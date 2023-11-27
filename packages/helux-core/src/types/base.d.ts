@@ -206,7 +206,7 @@ export type AtomAction<A extends any[] = any[], T = any> = (...args: A) => NextA
 
 export type AtomActionAsyncFnDef<A = any[], T = any> = (param: AtomActionAsyncFnParam<A, T>) => void;
 
-export type AtomAsyncAction<A extends any[] = any[], T = any> = (...args: A) => Promise<NextAtom<T>>;
+export type AtomActionAsync<A extends any[] = any[], T = any> = (...args: A) => Promise<NextAtom<T>>;
 
 export type ReadOnlyArr = readonly any[];
 
@@ -255,7 +255,7 @@ export type MutateWitness<T = any> = {
 export type MutateTask<T = SharedDict, A = ReadOnlyArr> = (param: IMutateTaskParam<T, A>) => Promise<void>;
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
-export type MutateFn<T = SharedDict, A = ReadOnlyArr> = (draft: DraftRoot<T>, input: A) => void;
+export type MutateFn<T = SharedDict, A = ReadOnlyArr> = (draft: DraftRoot<T>, params: { input: A; state: T }) => void;
 
 export type MutateFnItem<T = SharedDict, A = ReadOnlyArr> = {
   /** 异步 mutate 的依赖项列表 */
@@ -292,7 +292,7 @@ export type MutateFnList<T = SharedDict> = Array<MutateFn<T> | MutateFnLooseItem
 export type AtomMutateTask<T = any, A = ReadOnlyArr> = (param: IAtomMutateTaskParam<T, A>) => Promise<void>;
 
 /** 如定义了 task 函数，则 atom fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
-export type AtomMutateFn<T = any, A = ReadOnlyArr> = (draft: AtomDraft<T>, input: A) => void;
+export type AtomMutateFn<T = any, A = ReadOnlyArr> = (draft: AtomDraft<T>, params: { input: A; state: T }) => void;
 
 export type AtomMutateFnItem<T = any, A = ReadOnlyArr> = {
   /** 如定义了 task，fn 只会执行一次 */
@@ -460,7 +460,7 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
   call: AtomCall<T>;
   callAsync: AtomCallAsync<T>;
   action: <A extends any[] = any[]>(fn: AtomActionFnDef<A, T>, desc?: FnDesc) => AtomAction<A, T>;
-  actionAsync: <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: FnDesc) => AtomAsyncAction<A, T>;
+  actionAsync: <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: FnDesc) => AtomActionAsync<A, T>;
   state: Atom<T>;
   setState: SetAtom<T>;
   sync: AtomSyncFnBuilder<T>;

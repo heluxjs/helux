@@ -118,10 +118,7 @@ export function getFnCtxByObj<T = Dict>(obj: T) {
 }
 
 export function getRunninFn() {
-  const { runningFnKey, depKeys } = getFnScope();
-
-  if (!runningFnKey) {
-    return { fnCtx: null, depKeys };
-  }
-  return { fnCtx: getFnCtx(runningFnKey), depKeys };
+  const { runningFnKey, depKeys, isTaskRunning, runningSharedKey, isIgnore } = getFnScope();
+  const fnCtx = !runningFnKey ? null : getFnCtx(runningFnKey);
+  return { fnCtx, depKeys, isTaskRunning, isIgnore, runningSharedKey };
 }

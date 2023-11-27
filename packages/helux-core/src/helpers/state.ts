@@ -72,7 +72,11 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
   const existedInternal = getInternal(existedShared);
   if (moduleName && existedInternal && existedInternal.loc !== options.loc) {
     const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
-    return warn(`moduleName ${moduleName} duplicate! ${locInfo}`);
+    return warn(
+      `only-dev-mode tip: moduleName ${moduleName} duplicate! `
+        + 'this does not effect helux but the duplicated module will be ignored by devtool'
+        + locInfo,
+    );
   }
   // may hot replace for dev mode or add new mod
   rootState[usefulName] = sharedState;

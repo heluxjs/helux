@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
-import { getSnap, share } from '../helux';
 import { isDiff } from 'limu';
 import { describe, expect, test } from 'vitest';
+import { getSnap, share } from '../helux';
 
 describe('change shared', () => {
   test('change shared dict by passing new state', async () => {

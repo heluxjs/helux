@@ -4,6 +4,7 @@ import { emitPluginEvent } from '../../factory/common/plugin';
 import { wrapPartial } from '../../factory/common/util';
 import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';
 import { setLoadStatus } from '../../factory/creator/loading';
+import { markIgnore, markTaskRunning } from '../../helpers/fnDep';
 import { getInternal } from '../../helpers/state';
 import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types/base';
 import { createWatchLogic } from '../createWatch';
@@ -46,6 +47,8 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   const defaultParams = { desc, setState, input: enureReturnArr(deps, targetState) };
   const args = getArgs(defaultParams) || [defaultParams];
   setLoadStatus(internal, statusKey, { loading: true, err: null, ok: false });
+  // 标记 task 运行中，避免 helpers/fnDep 模块 recordFnDepKeys 方法收集冗余的 depKey 造成 mutate 死循环探测逻辑误判
+  markTaskRunning();
   return Promise.resolve(task(...args))
     .then(() => {
       // TODO 考虑要不要处理 task 返回的 partial
@@ -62,7 +65,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnLogicOptions<T>) {
   const { desc = '', sn, fn, getArgs = noop, deps, from, throwErr, isFirstCall } = options;
   const internal = getInternal(targetState);
-  const { forAtom, setStateImpl, innerSetState } = internal;
+  const { forAtom, setStateImpl, innerSetState, sharedState } = internal;
   const innerSetOptions: IInnerSetStateOptions = { desc, sn, from, isFirstCall };
 
   // 如果传递了 draft 表示需要复用
@@ -87,7 +90,15 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     return innerSetState(cb, innerSetOptions); // 继续透传 sn from 等信息
   };
   const input = enureReturnArr(deps, targetState);
-  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, input];
+  // atom 自动拆箱
+  let state = sharedState;
+  if (forAtom) {
+    // sharedState.val 会产生一次影响运行逻辑的依赖收集，这里标记一下 ignore
+    markIgnore(true); // stop dep collect
+    state = sharedState.val;
+    markIgnore(false); // recover dep collect
+  }
+  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state }];
 
   // TODO 考虑同步函数的错误发送给插件
   try {

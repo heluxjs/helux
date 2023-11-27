@@ -23,7 +23,7 @@ describe('create atom action', () => {
     const [numAtom] = atom(1);
     const addAtom = atomActionAsync(numAtom)<[toAdd: number]>(async ({ setState, args }) => {
       await delay(100);
-      setState((draft) => (draft + args[0]));
+      setState((draft) => draft + args[0]);
     });
 
     const snap = await addAtom(10);

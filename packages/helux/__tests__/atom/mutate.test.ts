@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { atom, runMutate } from '../helux';
 
 describe('create atom mutate', () => {
-  test('single mutate, return result', async () => {
+  test('single mutate, return result 1121', async () => {
     const [numAtom, setAtom] = atom(1);
     const [bAtom] = atom(0, {
       mutate: () => numAtom.val + 10,
@@ -17,7 +17,7 @@ describe('create atom mutate', () => {
   test('single mutate, change draft', async () => {
     const [numAtom, setAtom] = atom(1);
     const [bAtom] = atom(0, {
-      mutate: (draft) => (numAtom.val + 10),
+      mutate: (draft) => numAtom.val + 10,
     });
     expect(bAtom.val).toBe(11);
 
@@ -94,5 +94,26 @@ describe('create atom mutate', () => {
     expect(runCount).toBe(1);
     runMutate(bAtom, 'a');
     expect(runCount).toBe(2);
+  });
+
+  test('single mutate, watch self', async () => {
+    const [bAtom, setAtom] = atom(
+      { a: 1, b: 2 },
+      {
+        mutate: (draft, { state }) => {
+          draft.a = state.b + 10;
+        },
+      },
+    );
+
+    expect(bAtom.val.b).toBe(2);
+    expect(bAtom.val.a).toBe(12);
+
+    setAtom((draft) => {
+      draft.b = 100;
+    });
+    console.log('---> setAtom ', bAtom.val.b);
+    expect(bAtom.val.b).toBe(100);
+    expect(bAtom.val.a).toBe(110);
   });
 });

@@ -113,7 +113,7 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
     fnCtxBase,
   });
 
-  markFnStart(fnCtx.fnKey);
+  markFnStart(fnCtx.fnKey, 0);
   let result = deriveFn({ isFirstCall: true, prevResult: null, triggerReasons: [] });
   markFnEnd();
 

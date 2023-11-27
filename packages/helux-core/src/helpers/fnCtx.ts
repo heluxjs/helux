@@ -77,11 +77,17 @@ export function markFnEnd() {
 
   fnScope.runningFnKey = '';
   fnScope.depKeys = [];
+  fnScope.isTaskRunning = false;
+  fnScope.runningSharedKey = 0;
 }
 
-export function markFnStart(fnKey: string) {
+export function markFnStart(fnKey: string, sharedKey: number) {
   const fnScope = getFnScope();
   fnScope.runningFnKey = fnKey;
+  fnScope.runningSharedKey = sharedKey;
+  /** 待到 task 运行时会被标记为 true */
+  fnScope.isTaskRunning = false;
+  fnScope.isIgnore = false;
 }
 
 export function registerFn(fn: Fn, options: { specificProps: Partial<IFnCtx> & { scopeType: ScopeType }; fnCtxBase?: IFnCtx }) {

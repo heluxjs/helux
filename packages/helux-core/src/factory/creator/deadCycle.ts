@@ -42,7 +42,9 @@ export function probeDeadCycle(sn: number, desc: string, internal?: TInternal) {
 
     const { descs } = log;
     // found dead cycle
-    if (descs[0] === desc) {
+    // fn task 同时存在且设定了 immediate=true 时，fn 和 task 都会执行，
+    // 判断 descs.length > 1 避免此处出现误判
+    if (descs.length > 1 && descs[0] === desc) {
       const listCopy = descs.slice();
       log.cycle = listCopy; // 记录死循环desc列表
       descs.length = 0;

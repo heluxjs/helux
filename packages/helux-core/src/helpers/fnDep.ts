@@ -7,14 +7,21 @@ import type { TInternal } from '../factory/creator/buildInternal';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
 
+export function markTaskRunning() {
+  const fnScope = getFnScope();
+  fnScope.isTaskRunning = true;
+}
+
+export function markIgnore(isIgnore = true) {
+  const fnScope = getFnScope();
+  fnScope.isIgnore = isIgnore;
+}
+
 /**
  * 自动记录当前正在运行的函数对 depKey 的依赖，以及 depKey 对应的函数记录
  */
-export function recordFnDepKeys(
-  inputDepKeys: string[],
-  options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx; sharedState?: any },
-) {
-  const { fnCtx: runningFnCtx, depKeys } = getRunninFn();
+export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx }) {
+  const { fnCtx: runningFnCtx, depKeys, isTaskRunning, isIgnore, runningSharedKey } = getRunninFn();
   const fnCtx: IFnCtx | null | undefined = options.specificCtx || runningFnCtx;
   if (!fnCtx) {
     return;
@@ -38,16 +45,18 @@ export function recordFnDepKeys(
   }
 
   const { fnKey } = fnCtx;
+  // 一些异步 task 里的 depKey 需丢弃
+  const canRecordDepKey = runningSharedKey ? runningFnCtx && !isIgnore && !isTaskRunning : runningFnCtx;
+
   inputDepKeys.forEach((depKey: string) => {
     if (PROTO_KEY === depKey) {
       return;
     }
     // 注意此处暂不记录到 fnCtx.depKeys 里，而是记录到 fnScope.depKeys 里
     // 等到 markFnEnd 时再按最长路径提取出所有 depKeys 转移到 fnCtx.depKeys 里
-    if (runningFnCtx) {
+    if (canRecordDepKey) {
       nodupPush(depKeys, depKey); // here depKeys is come from fnScope
     }
-
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
   });

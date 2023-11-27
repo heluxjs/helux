@@ -3,7 +3,7 @@ import { derive, runDeriveAsync, share } from '../helux';
 import { delay } from '../util';
 
 describe('derive async', () => {
-  test('immediate=undefined, pass fn and task', async () => {
+  test('immediate=undefined, pass fn and task 2', async () => {
     const [state, setState] = share({ a: 1, b: 2 });
     const double = derive({
       fn: () => ({ num1: state.a * 2, num2: state.b * 2 }),

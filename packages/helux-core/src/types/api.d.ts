@@ -57,6 +57,7 @@ import type {
   PartialStateCb,
   PlainObject,
   ReadOnlyArr,
+  ReadonlyAtom,
   SafeLoading,
   SetAtom,
   SetState,
@@ -131,7 +132,7 @@ export function share<T extends PlainObject = PlainObject, O extends ICreateOpti
 export function atom<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): readonly [Atom<T>, SetAtom<T>, IAtomCtx<T, O>];
+): readonly [ReadonlyAtom<T>, SetAtom<T>, IAtomCtx<T, O>];
 
 /**
  * for compatible wit v2 helux
