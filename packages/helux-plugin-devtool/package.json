@@ -1,6 +1,6 @@
 {
   "name": "@helux/plugin-devtool",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "devtool for helux",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"

@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.2
+
+### Patch Changes
+
+- 3e97065: (build:3.4.2)add markIgnore, and support watch self in options.mutate
+- Updated dependencies [3e97065]
+  - @helux/core@3.4.2
+
 ## 3.4.1
 
 ### Patch Changes

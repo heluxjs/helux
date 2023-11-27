@@ -1,5 +1,12 @@
 # @helux/fre
 
+## 3.4.2
+
+### Patch Changes
+
+- Updated dependencies [3e97065]
+  - @helux/core@3.4.2
+
 ## 3.4.1
 
 ### Patch Changes
