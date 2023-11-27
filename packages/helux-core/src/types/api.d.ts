@@ -58,6 +58,7 @@ import type {
   PlainObject,
   ReadOnlyArr,
   ReadonlyAtom,
+  ReadOnlyDict,
   SafeLoading,
   SetAtom,
   SetState,
@@ -67,7 +68,6 @@ import type {
   Syncer,
   SyncFnBuilder,
   WatchOptionsType,
-  ReadOnlyDict,
 } from './base';
 
 export declare const EVENT_NAME: {

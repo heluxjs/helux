@@ -1,4 +1,4 @@
-import { isObj, isJsObj, noop } from '@helux/utils';
+import { isJsObj, isObj, noop } from '@helux/utils';
 import { createDraft, finishDraft, limuUtils } from 'limu';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { genRenderSN } from '../common/key';
@@ -41,7 +41,8 @@ function handlePartial(opts: any) {
     const handleObjVal = () => {
       if (isJsObj(val)) {
         // 仅字典做合并，其他的走完整替换策略
-        if (limuUtils.isObject(val)) { // [object Object]
+        if (limuUtils.isObject(val)) {
+          // [object Object]
           Object.keys(val).forEach((key) => {
             draftNode[key] = val[key];
           });
@@ -57,7 +58,8 @@ function handlePartial(opts: any) {
       } else {
         handleObjVal();
       }
-    } else { // 未做任何改变时，继续处理返回的对象
+    } else {
+      // 未做任何改变时，继续处理返回的对象
       handleObjVal();
     }
   } else {
@@ -109,7 +111,7 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
     finishMutate(partial?: Dict, innerSetOptions: IInnerSetStateOptions = {}) {
       const { writeKeys, writeKeyPathInfo } = mutateCtx;
       // TODO: discussion 是否添加 ignoreCbReturn 参数，允许用户强制忽略 cb 返回值
-      handlePartial({ partial, forAtom, mutateCtx, isPrimitive, draftRoot, draftNode })
+      handlePartial({ partial, forAtom, mutateCtx, isPrimitive, draftRoot, draftNode });
       const opts = beforeCommit(commitOpts, innerSetOptions, draftRoot);
       mutateCtx.depKeys = Object.keys(writeKeys);
       DRAFT_ROOT.del();

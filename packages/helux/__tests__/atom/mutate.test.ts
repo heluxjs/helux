@@ -1,10 +1,9 @@
 import '@testing-library/jest-dom';
-import { describe, expect, test } from 'vitest';
 import { IPlugin } from 'helux';
-import { atom, runMutate, addPlugin, currentDraftRoot, setAtomVal } from '../helux';
+import { describe, expect, test } from 'vitest';
+import { addPlugin, atom, currentDraftRoot, runMutate, setAtomVal } from '../helux';
 
 describe('create atom mutate', () => {
-
   function runReturnLogic(cbLogic: any) {
     const [numAtom, setAtom] = atom(1);
     const [bAtom] = atom(0, {
@@ -31,11 +30,15 @@ describe('create atom mutate', () => {
   });
 
   test('single mutate, return result ( currentDraftRoot )', async () => {
-    runReturnLogic((numAtom) => { currentDraftRoot().val = numAtom.val + 10 });
+    runReturnLogic((numAtom) => {
+      currentDraftRoot().val = numAtom.val + 10;
+    });
   });
 
   test('single mutate, return result ( setAtomVal )', async () => {
-    runReturnLogic((numAtom) => { setAtomVal(numAtom.val + 10) });
+    runReturnLogic((numAtom) => {
+      setAtomVal(numAtom.val + 10);
+    });
   });
 
   test('single mutate, return result after atom( cb has no {} )', async () => {
@@ -43,15 +46,21 @@ describe('create atom mutate', () => {
   });
 
   test('single mutate, return result after atom( currentDraftRoot )', async () => {
-    runReturnLogicAfterAtom((numAtom) => { currentDraftRoot().val = numAtom.val + 10 });
+    runReturnLogicAfterAtom((numAtom) => {
+      currentDraftRoot().val = numAtom.val + 10;
+    });
   });
 
   test('single mutate, return result after atom( setAtomVal )', async () => {
-    runReturnLogicAfterAtom((numAtom) => { setAtomVal(numAtom.val + 10) });
+    runReturnLogicAfterAtom((numAtom) => {
+      setAtomVal(numAtom.val + 10);
+    });
   });
 
   test('single mutate, return result after atom( ctx.setAtomVal )', async () => {
-    runReturnLogicAfterAtom((numAtom, ctx) => { ctx.setAtomVal(numAtom.val + 10) });
+    runReturnLogicAfterAtom((numAtom, ctx) => {
+      ctx.setAtomVal(numAtom.val + 10);
+    });
   });
 
   test('single mutate, change draft', async () => {
@@ -213,7 +222,7 @@ describe('create atom mutate', () => {
   });
 
   test('multi mutate, watch self with dead cycle', async () => {
-    window.alert = () => { }
+    window.alert = () => {};
     let err: any = null;
     const errPlugin: IPlugin = {
       install(pluginCtx) {
@@ -244,5 +253,4 @@ describe('create atom mutate', () => {
     expect(err).toBeTruthy();
     expect(err.message.includes('dead cycle')).toBeTruthy();
   });
-
 });
