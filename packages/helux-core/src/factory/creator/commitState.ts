@@ -4,7 +4,7 @@ import { createOb } from '../../helpers/obj';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
-import { execDepFnAndInsUpdater } from './updater';
+import { execDepFns } from './notify';
 
 export interface ICommitStateOptions extends IInnerSetStateOptions {
   state: Dict;
@@ -72,5 +72,5 @@ export function commitState(opts: ICommitStateOptions) {
   }
   interveneDeps(true, opts);
   interveneDeps(false, opts);
-  execDepFnAndInsUpdater(opts);
+  execDepFns(opts);
 }

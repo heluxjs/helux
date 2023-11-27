@@ -21,31 +21,39 @@ const [numAtom, setAtom] = atom(1);
 ### 组件外修改
 
 ```ts
-const changeAtom = (newNum)=> setAtom(newNum);
-const changeAtomByDraft = (newNum)=> setAtom(draft=>{ draft.val = newNum });
+const changeAtom = (newNum) => setAtom(newNum);
+const changeAtomByDraft = (newNum) =>
+  setAtom((draft) => {
+    draft.val = newNum;
+  });
 ```
 
 ### 可变派生
 
 ```ts
 const [doubleAtom] = atom(0, {
-  mutate: (draft)=> { draft.val = numAtom.val *2 },
+  mutate: (draft) => {
+    draft.val = numAtom.val * 2;
+  },
 });
 ```
 
 ### 全量派生
 
 ```ts
-const doubuleResult = deriveAtom(()=> numAtom.val * 2 );
+const doubuleResult = deriveAtom(() => numAtom.val * 2);
 ```
 
 ### 组件内使用
 
 ```ts
-function Demo(){
+function Demo() {
   const [num, setNum] = useAtom(numAtom);
   // 此处的调用和 changeAtom changeAtomByDraft 等效
-  const innerChangeAtom = (newNum)=> setNum(newNum);
-  const innerChangeAtomByDraft = (newNum)=> setNum(draft=>{ draft.val = newNum });
+  const innerChangeAtom = (newNum) => setNum(newNum);
+  const innerChangeAtomByDraft = (newNum) =>
+    setNum((draft) => {
+      draft.val = newNum;
+    });
 }
 ```

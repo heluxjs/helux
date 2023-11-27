@@ -34,6 +34,7 @@ export function buildSharedState(options: ParsedOptions) {
       },
     });
   } else {
+    // TODO 为{}对象型的 atom.val 再包一层监听
     sharedState = createOb(rawState, {
       set: () => {
         warn('changing shared state is invalid');

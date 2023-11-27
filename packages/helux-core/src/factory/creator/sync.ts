@@ -1,7 +1,8 @@
-import { setVal } from '@helux/utils';
+import { isJsObj, setVal } from '@helux/utils';
 import { createOneLevelOb } from '../../helpers/obj';
 import type { Dict, Fn, SetState } from '../../types/base';
 import { createImmut, getDepKeyByPath } from '../common/util';
+import { DRAFT_ROOT, MUTATE_CTX } from './current';
 
 export function getEventVal(e: any) {
   let val = e;
@@ -32,13 +33,35 @@ function createSyncFn(setState: Fn, path: string[], before?: Fn) {
     let val = getEventVal(evOrVal);
     setState(
       (draft: any) => {
-        setVal(draft, path, val);
-        before?.(val, draft); // 用户设置了想修改其他数据或自身数据的函数
+        // 使用 draftRoot 做赋值，透传拆箱后的 draft 给用户（ 如果是 atom ）
+        const draftRoot = DRAFT_ROOT.current();
+        setVal(draftRoot, path, val);
+        // 刻意再次标记为 true，让 before 返回的结果生效（如用户未修改 draftRoot的话）
+        MUTATE_CTX.current().handleAtomCbReturn = true;
+        // 用户设置了想修改其他数据或自身数据的函数
+        return before?.(val, draft);
       },
       { from: 'Sync' },
     );
   };
   return syncFn;
+}
+
+interface ICreateOpts {
+  forAtom?: boolean;
+  sharedKey: number;
+  setState: SetState;
+}
+
+function syncerFn(keyPath: string[], options: ICreateOpts) {
+  const { sharedKey, setState } = options;
+  let cacheKey = getDepKeyByPath(keyPath, sharedKey);
+  let dataSyncer = dataSyncerCahce.get(cacheKey);
+  if (!dataSyncer) {
+    dataSyncer = createSyncFn(setState, keyPath);
+    dataSyncerCahce.set(cacheKey, dataSyncer);
+  }
+  return dataSyncer;
 }
 
 const dataSyncerCahce = new Map<string, Fn>();
@@ -47,20 +70,23 @@ const dataSyncerCahce = new Map<string, Fn>();
  * <div onClick={syncer.a}></div>
  * @return syncerBuilder
  */
-export function createSyncerBuilder(sharedKey: number, rawState: Dict, setState: SetState) {
-  const syncer = createOneLevelOb(rawState, {
-    get(target, key) {
-      let cacheKey = getDepKeyByPath([key], sharedKey);
-      let dataSyncer = dataSyncerCahce.get(cacheKey);
-      if (!dataSyncer) {
-        dataSyncer = createSyncFn(setState, [key]);
-        dataSyncerCahce.set(cacheKey, dataSyncer);
-      }
+export function createSyncerBuilder(rawState: Dict, options: ICreateOpts) {
+  if (options.forAtom) {
+    // 原始值 atom，用户可使用 syncer 直接绑定
+    // <div onClick={syncer}></div>
+    if (!isJsObj(rawState.val)) {
+      return syncerFn(['val'], options);
+    }
 
-      return dataSyncer;
-    },
+    // 对象结果自动拆箱，对 rawState.val 的各个 key 做 syncer 函数集合
+    return createOneLevelOb(rawState.val, {
+      get: (target, key) => syncerFn(['val', key], options),
+    });
+  }
+
+  return createOneLevelOb(rawState, {
+    get: (target, key) => syncerFn([key], options),
   });
-  return syncer;
 }
 
 const syncFnCahce = new Map<string, Fn>();
@@ -70,15 +96,19 @@ const syncFnCahce = new Map<string, Fn>();
  * <div onClick={to(t=>t.a.b, val=>val+1)}></div>
  * @return syncFnBuilder
  */
-export function createSyncFnBuilder(sharedKey: number, rawState: Dict, setState: SetState) {
+export function createSyncFnBuilder(rawState: Dict, options: ICreateOpts) {
+  const { forAtom, sharedKey, setState } = options;
   const targetWrap = createTargetWrap(rawState);
   return (pathOrRecorder: any, before?: (val: any) => any) => {
     let path: string[] = [];
     if (Array.isArray(pathOrRecorder)) {
-      path = pathOrRecorder;
+      // atom 自动补齐 val
+      path = forAtom ? ['val', ...pathOrRecorder] : pathOrRecorder;
     } else {
-      pathOrRecorder(targetWrap.target);
-      path = targetWrap.getPath();
+      const { target, getPath } = targetWrap;
+      // atom sync 读路径回调自动拆箱
+      pathOrRecorder(forAtom ? target.val : target);
+      path = getPath();
     }
 
     let cacheKey = getDepKeyByPath(path, sharedKey);

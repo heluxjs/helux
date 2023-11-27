@@ -17,7 +17,7 @@ describe('create atom mutate', () => {
   test('single mutate, change draft', async () => {
     const [numAtom, setAtom] = atom(1);
     const [bAtom] = atom(0, {
-      mutate: (draft) => (draft.val = numAtom.val + 10),
+      mutate: (draft) => (numAtom.val + 10),
     });
     expect(bAtom.val).toBe(11);
 
@@ -32,10 +32,10 @@ describe('create atom mutate', () => {
       {
         mutate: {
           a: (draft) => {
-            draft.val.a = numAtom.val + 10;
+            draft.a = numAtom.val + 10;
           },
           b: (draft) => {
-            draft.val.b = numAtom.val + 100;
+            draft.b = numAtom.val + 100;
           },
         },
       },
@@ -56,12 +56,12 @@ describe('create atom mutate', () => {
         mutate: {
           a: {
             fn: (draft) => {
-              draft.val.a = numAtom.val + 10;
+              draft.a = numAtom.val + 10;
             },
           },
           b: {
             fn: (draft) => {
-              draft.val.b = numAtom.val + 100;
+              draft.b = numAtom.val + 100;
             },
           },
         },
@@ -85,7 +85,7 @@ describe('create atom mutate', () => {
           a: {
             fn: (draft) => {
               runCount += 1;
-              draft.val.a = numAtom.val + 10;
+              draft.a = numAtom.val + 10;
             },
           },
         },

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import '@testing-library/jest-dom';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
@@ -51,7 +52,7 @@ describe('use atom', () => {
 
     act(() => {
       setAtom((draft) => {
-        draft.val.a = 100;
+        draft.a = 100;
       });
     });
 

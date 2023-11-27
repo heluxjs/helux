@@ -5,6 +5,7 @@ import { emitDataChanged } from '../common/plugin';
 import { newMutateCtx, newOpParams } from '../common/util';
 import type { TInternal } from './buildInternal';
 import { commitState } from './commitState';
+import { DRAFT_ROOT, MUTATE_CTX } from './current';
 import { beforeCommit } from './mutateDeep';
 import { handleOperate } from './operateState';
 
@@ -19,7 +20,7 @@ interface IPrepareNormalMutateOpts extends IInnerSetStateOptions {
  */
 export function prepareNormalMutate(opts: IPrepareNormalMutateOpts) {
   const { internal, desc } = opts;
-  const { rawState, sharedKey, moduleName } = internal;
+  const { rawState, sharedKey, moduleName, forAtom } = internal;
   const newPartial: Dict = {};
   const mayChangedKeys: string[] = [];
 
@@ -29,6 +30,7 @@ export function prepareNormalMutate(opts: IPrepareNormalMutateOpts) {
     handleOperate(newOpParams(key, value), { internal, mutateCtx });
   };
 
+  // TODO 为{}对象型的 atom.val 再包一层监听
   // 为了和 deep 模式下返回的 setState 保持行为一致
   const mockDraft = createOb(rawState, {
     set: (target: Dict, key: any, value: any) => {
@@ -46,9 +48,14 @@ export function prepareNormalMutate(opts: IPrepareNormalMutateOpts) {
       return has(newPartial, key) ? newPartial[key] : target[key];
     },
   });
+  // 记录正在执行中的 draftRoot mutateCtx
+  DRAFT_ROOT.set(mockDraft);
+  MUTATE_CTX.set(mutateCtx);
+  const draftNode = forAtom ? mockDraft.val : mockDraft;
 
   return {
-    draft: mockDraft,
+    draftRoot: mockDraft,
+    draftNode,
     finishMutate(partial?: Dict, innerSetOptions: IInnerSetStateOptions = {}) {
       /**
        * 兼容非 deep 模式下用户的以下代码
@@ -85,6 +92,8 @@ export function prepareNormalMutate(opts: IPrepareNormalMutateOpts) {
         nodupPush(depKeys, depKey);
         triggerReasons.push({ sharedKey, moduleName, keyPath: [depKey] });
       });
+      DRAFT_ROOT.del();
+      MUTATE_CTX.del();
       opts.state = newPartial;
       commitState(opts);
       emitDataChanged(internal, innerSetOptions, desc);

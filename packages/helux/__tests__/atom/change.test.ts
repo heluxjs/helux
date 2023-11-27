@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { atom, shallowCompare } from 'helux';
+import { atom, shallowCompare } from '../helux';
 import { describe, expect, test } from 'vitest';
 import { expectEqual, expectMatch, expectTruthy } from '../util';
 
@@ -12,7 +12,7 @@ describe('change atom', () => {
 
   test('change primitive by draft cb', async () => {
     const [numAtom, setNum] = atom(1);
-    setNum((draft) => (draft.val += 1));
+    setNum((draft) => (draft + 1));
     expect(numAtom.val === 2).toBeTruthy();
   });
 
@@ -22,16 +22,22 @@ describe('change atom', () => {
     expect(dictAtom.val).toMatchObject({ a: 3, b: 4 });
   });
 
+  test('change dict by new state cb', async () => {
+    const [dictAtom, setAtom] = atom({ a: 1, b: 2 });
+    setAtom(() => ({ a: 3, b: 4 }));
+    expect(dictAtom.val).toMatchObject({ a: 3, b: 4 });
+  });
+
   test('change dict by draft cb', async () => {
     const [dictAtom, setAtom] = atom({ a: 1, b: 2 });
     setAtom((draft) => {
-      draft.val.a = 3;
+      draft.a = 3;
     });
     expect(dictAtom.val.a === 3).toBeTruthy();
     expect(dictAtom.val.b === 2).toBeTruthy();
 
     setAtom((draft) => {
-      draft.val.b = 4;
+      draft.b = 4;
     });
     expect(dictAtom.val.a === 3).toBeTruthy();
     expect(dictAtom.val.b === 4).toBeTruthy();
@@ -41,7 +47,7 @@ describe('change atom', () => {
     const [listAtom, setAtom] = atom([1, 2, 3]);
     expectTruthy(listAtom);
     setAtom((draft) => {
-      draft.val = [4, 5, 6];
+      return [4, 5, 6];
     });
     expectMatch(listAtom.val, [4, 5, 6]);
   });
@@ -50,7 +56,7 @@ describe('change atom', () => {
     const [listAtom, setAtom] = atom([1, 2, 3]);
     expect(listAtom).toBeTruthy();
     setAtom((draft) => {
-      draft.val[0] = 4;
+      draft[0] = 4;
     });
     expectEqual(listAtom.val[0], 4);
     expectEqual(listAtom.val[1], 2);
@@ -63,8 +69,8 @@ describe('change atom', () => {
       { a: 2, b: { name: 4 } },
     ]);
     expect(listAtom).toBeTruthy();
-    setAtom((draft) => {
-      draft.val = [{ a: 6, b: { name: 8 } }];
+    setAtom(() => {
+      return [{ a: 6, b: { name: 8 } }];
     });
     expectMatch(listAtom.val, [{ a: 6, b: { name: 8 } }]);
   });
@@ -77,7 +83,7 @@ describe('change atom', () => {
     const prevItem0 = listAtom.val[0];
     const prevItem1 = listAtom.val[1];
     setAtom((draft) => {
-      draft.val[0].b.name = 100;
+      draft[0].b.name = 100;
     });
     const currItem0 = listAtom.val[0];
     const currItem1 = listAtom.val[1];

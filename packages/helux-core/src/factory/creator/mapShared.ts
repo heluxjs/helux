@@ -1,7 +1,7 @@
-import { canUseDeep, isFn } from '@helux/utils';
+import { canUseDeep } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
 import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types/base';
-import { runPartialCb, wrapPartial } from '../common/util';
+import { runPartialCb } from '../common/util';
 import { buildInternal } from './buildInternal';
 import { prepareDeepMutate } from './mutateDeep';
 import { prepareNormalMutate } from './mutateNormal';
@@ -16,22 +16,17 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   const setStateImpl = (partialState: any, options: IInnerSetStateOptions = {}) => {
     if (partialState === internal.snap) {
       // do nothing
-      return { draft: {}, getPartial: () => partialState, finishMutate: () => partialState };
+      const obj = {};
+      const fn = () => partialState;
+      return { draftRoot: obj, draftNode: obj, getPartial: fn, finishMutate: fn };
     }
 
     const mutateOptions = { ...options, forAtom, internal, sharedState };
     // deep 模式修改： setState(draft=>{draft.x.y=1})
-    if (isFn(partialState) && isDeep) {
-      // now partialState is a draft recipe callback
-      const handleCtx = prepareDeepMutate(mutateOptions);
-      // 后续流程会使用到 getPartial 的返回结果，这样做是为了对齐非 deep 模式的 setState，此时只支持一层依赖收集
-      const getPartial = () => wrapPartial(forAtom, partialState(handleCtx.draft));
-      return { ...handleCtx, getPartial };
-    }
-
-    const handleCtx = prepareNormalMutate(mutateOptions);
-    const getPartial = () => runPartialCb(forAtom, partialState, handleCtx.draft);
-    return { ...handleCtx, getPartial };
+    const preparedInfo = isDeep ? prepareDeepMutate(mutateOptions) : prepareNormalMutate(mutateOptions);
+    // 后续流程会使用到 getPartial 的返回结果，注意非 deep 模式的 setState只支持一层依赖收集
+    const getPartial = () => runPartialCb(forAtom, partialState, preparedInfo.draftNode);
+    return { ...preparedInfo, getPartial };
   };
   // for inner call
   const innerSetState: InnerSetState = (partialState, options) => {
@@ -53,8 +48,9 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   const setAtom: SetAtom = (atomVal, options) => {
     setState(atomVal, parseSetOptions<any>(options));
   };
-  const sync = createSyncFnBuilder(sharedKey, rawState, innerSetState);
-  const syncer = createSyncerBuilder(sharedKey, rawState, innerSetState);
+  const syncOpts = { forAtom, sharedKey, setState: innerSetState };
+  const sync = createSyncFnBuilder(rawState, syncOpts);
+  const syncer = createSyncerBuilder(rawState, syncOpts);
   const setDraft = forAtom ? setAtom : setState;
 
   const internal = buildInternal(options, {

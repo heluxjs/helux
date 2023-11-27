@@ -21,8 +21,21 @@ export interface IMutateCtx {
   writeKeys: Dict;
   arrKeyDict: Dict;
   writeKeyPathInfo: Dict<TriggerReason>;
-  /** TODO ：记录变化值的路径，用于异步执行环境合并到 rawState 时，仅合并变化的那一部分节点，避免数据脏写 */
+  /**
+   * default: true
+   * 是否处理 atom setState((draft)=>xxx) 返回结果xxx，
+   * 目前规则是修改了 draft 则 handleAtomCbReturn 被会置为 false，
+   * 避免无括号写法 draft=>draft.xx = 1 隐式返回的结果 1 被写入到草稿，
+   * 备注：安全写法应该是draft=>{draft.xx = 1}
+   */
+  handleAtomCbReturn: boolean;
+  /**
+   * TODO ：记录变化值的路径，用于异步执行环境合并到 rawState 时，仅合并变化的那一部分节点，避免数据脏写
+   * 但异步执行环境直接修改 draft 本身就是很危险的行为，该特性需要慎重考虑是否要实现
+   */
   keyPathValue: Map<string[], any>;
+  /** 为 atom 记录的 draft.val 引用 */
+  draftVal: any;
 }
 
 // for hot reload of buildShared
@@ -54,6 +67,8 @@ export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
     arrKeyDict: {}, // 记录读取过程中遇到的数组key
     writeKeyPathInfo: {},
     keyPathValue: new Map(),
+    handleAtomCbReturn: true,
+    draftVal: null,
   };
 }
 

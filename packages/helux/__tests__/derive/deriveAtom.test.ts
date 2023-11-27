@@ -24,7 +24,7 @@ describe('derive atom', () => {
     expect(result2.val.plus200Double).toBe(402);
 
     setAtom((draft) => {
-      draft.val.a = 10;
+      draft.a = 10;
     });
     expect(result1.val.plus100).toBe(110);
     expect(result1.val.plus200).toBe(210);

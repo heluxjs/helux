@@ -50,7 +50,7 @@ describe('watch atom', () => {
     );
 
     setAtom((draft) => {
-      draft.val.books.push({ name: 'book2' });
+      draft.books.push({ name: 'book2' });
     });
 
     expect(triggerCount).toBe(1);

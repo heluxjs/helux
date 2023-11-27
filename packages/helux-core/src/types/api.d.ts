@@ -588,6 +588,17 @@ export function atomActionAsync<T = any>(
   atom: Atom<T>,
 ): <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: string) => AtomActionAsync<A, T>;
 
+/**
+ * get current draft root
+ * here pass state just for get return type
+ */
+export function currentDraftRoot<T = any>(state?: T): T;
+
+/**
+ * setAtomVal('xx') 等效于 currentDraftRoot().val = 'xx';
+ */
+export function setAtomVal<T = any>(val?: T): T;
+
 // ----------- shallowCompare isDiff produce 二次重导出会报错，这里手动声明一下 --------------
 // err: 如果没有引用 "../../helux-core/node_modules/limu/lib"，则无法命名 "produce" 的推断类型。这很可能不可移植。需要类型注释
 

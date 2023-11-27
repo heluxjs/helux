@@ -1,4 +1,4 @@
-import { canUseDeep, isFn, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from '@helux/utils';
+import { canUseDeep, enureReturnArr, isFn, isJsObj, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from '@helux/utils';
 import { immut } from 'limu';
 import { FROM, LOADING_MODE, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
@@ -56,8 +56,12 @@ export function parseRawState(innerOptions: IInnerOptions) {
   const { forAtom = false } = innerOptions;
   let rawState: any = innerOptions.rawState;
   const isStateFn = isFn(rawState);
+  let isPrimitive = false;
   if (forAtom) {
     rawState = isStateFn ? { val: rawState() } : { val: rawState };
+    // 记录 atom 值的最初类型，如果是 undefined null 也当做原始类型记录
+    // TODO disscussion 这里后续是否需要进一步细分待用户讨论
+    isPrimitive = !rawState.val || !isJsObj(rawState.val);
   } else {
     rawState = isStateFn ? rawState() : rawState;
     if (!isObj(rawState)) {
@@ -67,7 +71,7 @@ export function parseRawState(innerOptions: IInnerOptions) {
       throw new Error('ERR_ALREADY_SHARED: pass a shared object to createShared!');
     }
   }
-  return rawState;
+  return { isPrimitive, rawState };
 }
 
 export function parseDesc(fnKey: any, itemDesc?: any) {
@@ -139,7 +143,7 @@ export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cache
 
 export function parseOptions(innerOptions: IInnerOptions, options: ICreateOptions = {}) {
   const { forAtom = false, forGlobal = false, stateType = STATE_TYPE.USER_STATE } = innerOptions;
-  const rawState = parseRawState(innerOptions);
+  const { rawState, isPrimitive } = parseRawState(innerOptions);
   const sharedKey = markSharedKeyOnState(rawState);
   const moduleName = options.moduleName || '';
   const deep = options.deep ?? true;
@@ -179,6 +183,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     loadingMode,
     stopArrDep,
     stopDepth,
+    isPrimitive,
   };
 }
 
@@ -188,7 +193,7 @@ export type ParsedOptions = ReturnType<typeof parseOptions>;
  * 解析出 createShared 里配置的 rules
  */
 export function parseRules(options: ParsedOptions): IRuleConf {
-  const { rawState, sharedKey, deep, rules, stopDepth, stopArrDep } = options;
+  const { rawState, sharedKey, deep, rules, stopDepth, stopArrDep, forAtom } = options;
   const idsDict: KeyIdsDict = {};
   const globalIdsDict: KeyIdsDict = {};
   const stopDepInfo: IRuleConf['stopDepInfo'] = { keys: [], isArrDict: {}, arrKeyStopDcit: {}, depth: stopDepth, stopArrDep };
@@ -236,7 +241,9 @@ export function parseRules(options: ParsedOptions): IRuleConf {
       });
     }
 
-    const result = when(state);
+    // atom 自动拆箱
+    const stateNode = forAtom ? state.val : state;
+    const result = enureReturnArr(when, stateNode);
     // record id, globalId, stopDep
     const setRuleConf = (confKey: string) => {
       const idList = safeObjGet(idsDict, confKey, [] as NumStrSymbol[]);
@@ -259,12 +266,8 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     };
     confKeys.forEach(setRuleConf);
 
-    // 为让 globalId 机制能够正常工作，需要补上 sharedKey
-    if (
-      keyReaded
-      || result === state // 返回了state自身
-      || (Array.isArray(result) && result.includes(state)) // 返回了数组，包含有state自身
-    ) {
+    // 为让 globalId 机制能够正常工作，有 key 读取或返回的数组包含有state自身时，需补上 sharedKey
+    if (keyReaded || result.includes(stateNode)) {
       setRuleConf(`${sharedKey}`);
     }
   });

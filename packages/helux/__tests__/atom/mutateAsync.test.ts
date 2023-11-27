@@ -11,10 +11,10 @@ describe('create atom mutate', () => {
       mutate: [
         {
           deps: () => [numAtom.val],
-          fn: (state, [num]) => state.val + num,
+          fn: (state, [num]) => state + num,
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState((draft) => (draft.val += num));
+            setState((draft) => (draft + num));
           },
         },
       ],
@@ -31,10 +31,10 @@ describe('create atom mutate', () => {
       mutate: [
         {
           deps: () => [numAtom.val],
-          fn: (state, [num]) => state.val + num,
+          fn: (state, [num]) => state + num,
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState((draft) => (draft.val += num));
+            setState((draft) => (draft + num));
           },
           immediate: true,
           desc: 'changeVal',
@@ -59,7 +59,7 @@ describe('create atom mutate', () => {
           deps: () => [numAtom.val],
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState((draft) => (draft.val += num));
+            setState((draft) => (draft + num));
           },
           // immediate: undefined,
         },
@@ -78,7 +78,7 @@ describe('create atom mutate', () => {
           deps: () => [numAtom.val],
           task: async ({ setState, input: [num] }) => {
             await delay(100);
-            setState((draft) => (draft.val += num));
+            setState((draft) => (draft + num));
           },
           immediate: false,
         },

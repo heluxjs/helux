@@ -6,7 +6,7 @@ function innerCreate(target: any, options: { label: string; forAtom?: boolean; i
   const { label, forAtom, isSyncer } = options;
   const { sharedKey, rawState, innerSetState } = checkSharedStrict(target, { label, forAtom });
   const fn = isSyncer ? createSyncerBuilder : createSyncFnBuilder;
-  return fn(sharedKey, rawState, innerSetState);
+  return fn(rawState, { forAtom, sharedKey, setState: innerSetState });
 }
 
 export function sync<T extends SharedDict>(target: T) {

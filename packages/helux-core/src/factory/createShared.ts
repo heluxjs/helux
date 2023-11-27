@@ -1,3 +1,4 @@
+import { noop } from '@helux/utils';
 import { FROM, STATE_TYPE } from '../consts';
 import { useAtom, useShared } from '../hooks/useShared';
 import type { CoreApiCtx } from '../types/api-ctx';
@@ -5,6 +6,7 @@ import type { Dict, Fn, IAtomCreateOptions, IAtomCtx, ICreateOptions, IRunMutate
 import { action, actionAsync, atomAction, atomActionAsync } from './createAction';
 import { atomMutate, mutate, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';
+import { setAtomVal } from './creator/current';
 import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
 import { initGlobalLoading, initLoadingCtx } from './creator/loading';
 import type { IInnerOptions } from './creator/parse';
@@ -19,6 +21,7 @@ function getFns(state: any, forAtom: boolean) {
       actionCreator: atomAction(state),
       actionAsyncCreator: atomActionAsync(state),
       mutateCreator: atomMutate(state),
+      setAtomVal, // ctx上也放一个，方便推导类型
     };
   }
   return {
@@ -26,6 +29,7 @@ function getFns(state: any, forAtom: boolean) {
     actionCreator: action(state),
     actionAsyncCreator: actionAsync(state),
     mutateCreator: mutate(state),
+    setAtomVal: noop, // 非 atom 调用此方法无效，类型上目前不不标记此方法的存在
   };
 }
 
@@ -42,7 +46,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   ensureGlobal(apiCtx, stateType);
   const { sharedState: state, internal } = buildSharedObject(innerOptions, createOptions);
   const { syncer, sync, forAtom, setDraft: setState } = internal;
-  const { useFn, actionCreator, actionAsyncCreator, mutateCreator } = getFns(state, forAtom);
+  const { useFn, actionCreator, actionAsyncCreator, mutateCreator, setAtomVal } = getFns(state, forAtom);
   const opt = { internal, from: MUTATE, apiCtx };
   const ldMutate = initLoadingCtx(createSharedLogic, opt);
   const ldAction = initLoadingCtx(createSharedLogic, { ...opt, from: ACTION });
@@ -64,6 +68,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     useActionLoading: ldAction.useLoading,
     sync,
     syncer,
+    setAtomVal,
   };
 }
 

@@ -20,7 +20,7 @@ function innerCreate<T = SharedState>(state: T, options: { fn: Fn; desc: string;
     return callMutateFnLogic(state, {
       fn,
       desc,
-      getArgs: ({ draft, setState, desc }) => [{ draft, setState, desc, args }],
+      getArgs: ({ draft, draftRoot, setState, desc }) => [{ draft, draftRoot, setState, desc, args }],
       from: 'Action',
     });
   }; // now fn can have a name 'action' at dev mode

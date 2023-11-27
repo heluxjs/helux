@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { getSnap, share } from 'helux';
+import { getSnap, share } from '../helux';
 import { isDiff } from 'limu';
 import { describe, expect, test } from 'vitest';
 

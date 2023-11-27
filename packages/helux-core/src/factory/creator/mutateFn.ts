@@ -21,9 +21,10 @@ interface ICallMutateFnLogicOptionsBase {
 
 interface ICallMutateFnLogicOptions<T = SharedState> extends ICallMutateFnLogicOptionsBase {
   draft?: T;
+  draftRoot?: T;
   fn: Fn;
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: SharedState; setState: Fn; desc: string; input: any[] }) => any[];
+  getArgs?: (param: { draft: SharedState; draftRoot: SharedState; setState: Fn; desc: string; input: any[] }) => any[];
 }
 
 interface ICallAsyncMutateFnLogicOptions extends ICallMutateFnLogicOptionsBase {
@@ -64,14 +65,17 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
   const { forAtom, setStateImpl, innerSetState } = internal;
   const innerSetOptions: IInnerSetStateOptions = { desc, sn, from, isFirstCall };
 
-  let draft = options.draft as SharedState; // 如果传递了 draft 表示需要复用
+  // 如果传递了 draft 表示需要复用
+  let draft = options.draft as SharedState;
+  let draftRoot = options.draftRoot as SharedState;
   let finishMutate = noop;
 
   // 现阶段一定不会有 draft 传下来，这个判断后续可能会考虑移除
   if (!draft) {
     // 不透传 draft 时，指向一个真正有结束功能的 finishMutate 句柄
     const setCtx = setStateImpl(noop);
-    draft = setCtx.draft;
+    draft = setCtx.draftNode;
+    draftRoot = setCtx.draftRoot;
     finishMutate = setCtx.finishMutate;
   }
   // 透传 draft 目的见 watchAndCallMutateDict TODO 解释
@@ -83,7 +87,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     return innerSetState(cb, innerSetOptions); // 继续透传 sn from 等信息
   };
   const input = enureReturnArr(deps, targetState);
-  const args = getArgs({ draft, setState, desc, input }) || [draft, input];
+  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, input];
 
   // TODO 考虑同步函数的错误发送给插件
   try {
@@ -128,7 +132,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   // TODO: 此段代码为后面的 mutateSelf 接口做准备
   // const { setStateImpl, mutateFnDict, usefulName } = internal;
   // 考虑是否要首次运行会复用 draft ，然后经过多次修改，最后一次才提交，但这样做和死循环探测有逻辑冲突
-  // let { draft, finishMutate } = setStateImpl(noop);
+  // let { draftNode: draft, finishMutate } = setStateImpl(noop);
   // const lastIdx = keys.length - 1;
 
   keys.forEach((descKey) => {

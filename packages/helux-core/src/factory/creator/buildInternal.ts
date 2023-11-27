@@ -28,7 +28,7 @@ export function buildInternal(
     setDraft: SetAtom | SetState;
     asyncSetState: AsyncSetState;
     innerSetState: InnerSetState;
-    setStateImpl: (...any: any[]) => { draft: any; finishMutate: Fn; getPartial: Fn };
+    setStateImpl: (...any: any[]) => { draftRoot: any; draftNode: any; finishMutate: Fn; getPartial: Fn };
     sharedState: Ext<SharedState>;
     ruleConf: IRuleConf;
     isDeep: boolean;

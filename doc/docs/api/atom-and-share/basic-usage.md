@@ -360,7 +360,7 @@ const snap = runMutateTask(share2, 'suffixedDesc');
 ```ts
 import { share, syncer, sync } from 'helux';
 
-const [sharedState,,ctx] = share({a:1});
+const [sharedState, , ctx] = share({ a: 1 });
 
 // 基于顶层 api 创建 syncer
 const mySyncer = syncer(sharedState);

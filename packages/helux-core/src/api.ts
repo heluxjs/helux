@@ -10,6 +10,7 @@ import { atomMutate, mutate, mutateDict, runMutate, runMutateTask } from './fact
 import { atom, share, shareAtom, shareState } from './factory/createShared';
 import { sync, syncer } from './factory/createSync';
 import { watch } from './factory/createWatch';
+import { currentDraftRoot, setAtomVal } from './factory/creator/current';
 import { getDeriveLoading, runDerive, runDeriveAsync } from './helpers/fnRunner';
 import { getRawState, getSnap } from './helpers/state';
 import { useDerived, useDerivedAtom } from './hooks/useDerived';
@@ -74,6 +75,8 @@ export {
   emit,
   on,
   // util api
+  currentDraftRoot,
+  setAtomVal,
   storeSrv,
   produce,
   shallowCompare,

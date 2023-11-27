@@ -10,7 +10,7 @@ import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
 
-export function execDepFnAndInsUpdater(opts: ICommitStateOptions) {
+export function execDepFns(opts: ICommitStateOptions) {
   const { mutateCtx, internal, desc, isFirstCall, from, sn } = opts;
   const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;

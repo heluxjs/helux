@@ -60,6 +60,8 @@ export const {
   emit,
   on,
   // util api
+  currentDraftRoot,
+  setAtomVal,
   storeSrv,
   shallowCompare,
   isDiff,
@@ -75,5 +77,3 @@ export const {
   EVENT_NAME,
   LOADING_MODE,
 } = api;
-
-export default api;

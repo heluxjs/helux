@@ -28,17 +28,13 @@ describe('useAtom', () => {
 
   test('top set by draft cb', async () => {
     await runSetTest((params) => {
-      params.topSet((draft) => {
-        draft.val = 2;
-      });
+      params.topSet(() => 2);
     });
   });
 
   test('hook set by draft cb', async () => {
     await runSetTest((params) => {
-      params.hookSet((draft) => {
-        draft.val = 2;
-      });
+      params.hookSet(() => 2);
     });
   });
 

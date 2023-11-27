@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # 共享上下文
 
-调用`atom`或`share`会返回共享上下文对象， 对象里的各个方法自动绑定了当前共享对象，让用户可以免去使用顶层api绑定的步骤
+调用`atom`或`share`会返回共享上下文对象， 对象里的各个方法自动绑定了当前共享对象，让用户可以免去使用顶层 api 绑定的步骤
 
 ## 获取方式
 
@@ -12,23 +12,24 @@ sidebar_position: 2
 
 ```ts
 // numCtx 即共享上下文对象
-const [ numAtom, setNum, numAtomCtx ] = atom(1);
+const [numAtom, setNum, numAtomCtx] = atom(1);
 
 // sharedCtx 即共享上下文对象
-const [ sharedState, setShared, sharedCtx ] = share({a:1});
+const [sharedState, setShared, sharedCtx] = share({ a: 1 });
 ```
 
 也可以使用`shareAtom` 和 `shareState` 接口直接返回共享上下文
 
 ```ts
 const numCtx = shareAtom(1);
-const sharedCtx = shareState({a:1});
+const sharedCtx = shareState({ a: 1 });
 ```
 
-## 可映射为顶层api的方法
+## 可映射为顶层 api 的方法
 
 ### mutate
-`ctx.mutate` 映射顶层api `mutate`
+
+`ctx.mutate` 映射顶层 api `mutate`
 
 ```ts
 import { mutate } from 'helux';
@@ -40,25 +41,24 @@ mutate(numAtom)(fn);
 
 ### sync & syncer
 
-`ctx.sync` 映射顶层api `sync`，`ctx.syncer` 映射顶层api `syncer`
+`ctx.sync` 映射顶层 api `sync`，`ctx.syncer` 映射顶层 api `syncer`
 
 ```ts
 import { sync, syncer } from 'helux';
 
 // 两者等效
-const infoSyncer = numAtomCtx.sync(to=>to.val.info.name);
-const infoSyncer = sync(numAtomCtx)(to=>to.val.info.name);
+const infoSyncer = numAtomCtx.sync((to) => to.val.info.name);
+const infoSyncer = sync(numAtomCtx)((to) => to.val.info.name);
 
 // 两者等效
 const nameSyncer = numAtomCtx.syncer.name;
 const nameSyncer = syncer(numAtom).name;
 ```
 
-
 ```ts
 // 两者等效
-const infoSyncer = sharedCtx.sync(to=>to.info.name);
-const infoSyncer = sync(numAtomCtx)(to=>to.info.name);
+const infoSyncer = sharedCtx.sync((to) => to.info.name);
+const infoSyncer = sync(numAtomCtx)((to) => to.info.name);
 
 // 两者等效
 const nameSyncer = numAtomCtx.syncer.name;
@@ -67,23 +67,23 @@ const nameSyncer = syncer(numAtom).name;
 
 ### runMutate & runMutateTask
 
-`ctx.runMutate` 映射顶层api `runMutate`，`ctx.runMutateTask` 映射顶层api `runMutateTask`
+`ctx.runMutate` 映射顶层 api `runMutate`，`ctx.runMutateTask` 映射顶层 api `runMutateTask`
 
 ```ts
 import { runMutate, runMutateTask } from 'helux';
 
 // 两者等效
 numAtomCtx.runMutate('fnName');
-runMutate(numAtom)
+runMutate(numAtom);
 
 // 两者等效
-numAtomCtx.runMutateTask('fnName')
-runMutateTask(numAtom)
+numAtomCtx.runMutateTask('fnName');
+runMutateTask(numAtom);
 ```
 
 ### aciton & acitonAsync
 
-`share` 返回的共享上下文里`aciton` 和 `acitonAsync` 方法对应顶层api `aciton` 和 `acitonAsync`
+`share` 返回的共享上下文里`aciton` 和 `acitonAsync` 方法对应顶层 api `aciton` 和 `acitonAsync`
 
 ```ts
 import { aciton, acitonAsync } from 'helux';
@@ -97,7 +97,7 @@ const myActionAsync = sharedCtx.acitonAsync(actionFnDef);
 const myActionAsync = acitonAsync(sharedState)(actionFnDef);
 ```
 
-`atom` 返回的共享上下文里`aciton` 和 `acitonAsync` 方法对应顶层api `atomAciton` 和 `atomAcitonAsync`
+`atom` 返回的共享上下文里`aciton` 和 `acitonAsync` 方法对应顶层 api `atomAciton` 和 `atomAcitonAsync`
 
 ```ts
 import { atomAciton, atomAcitonAsync } from 'helux';
@@ -119,19 +119,19 @@ const myActionAsync = atomAcitonAsync(numAtom)(actionFnDef);
 
 ### useState
 
-`share` 返回的共享上下文里 `useState` 方法对应顶层api `useShared`
+`share` 返回的共享上下文里 `useState` 方法对应顶层 api `useShared`
 
 ```ts
 import { useShared } from 'helux';
 
 // 组件里使用，两者等效
-const [ state, setState ] = useShared(sharedState);
-const [ state, setState ] = sharedCtx.useState();
+const [state, setState] = useShared(sharedState);
+const [state, setState] = sharedCtx.useState();
 ```
 
 ### getMutateLoading
 
-`share` 返回的共享上下文里 `getMutateLoading` 方法对应顶层api `getMutateLoading`
+`share` 返回的共享上下文里 `getMutateLoading` 方法对应顶层 api `getMutateLoading`
 
 ```ts
 import { getMutateLoading } from 'helux';
@@ -143,7 +143,7 @@ const loadingObj = sharedCtx.getMutateLoading();
 
 ### useMutateLoading
 
-`share` 返回的共享上下文里 `useMutateLoading` 方法对应顶层api `useMutateLoading`
+`share` 返回的共享上下文里 `useMutateLoading` 方法对应顶层 api `useMutateLoading`
 
 ```ts
 import { getMutateLoading } from 'helux';
@@ -155,7 +155,7 @@ const loadingObj = sharedCtx.useMutateLoading();
 
 ### getActionLoading
 
-`share` 返回的共享上下文里 `getActionLoading` 方法对应顶层api `getActionLoading`
+`share` 返回的共享上下文里 `getActionLoading` 方法对应顶层 api `getActionLoading`
 
 ```ts
 import { getActionLoading } from 'helux';
@@ -165,10 +165,9 @@ const loadingObj = getActionLoading(sharedState);
 const loadingObj = sharedCtx.getActionLoading();
 ```
 
-
 ### useActionLoading
 
-`share` 返回的共享上下文里 `useActionLoading` 方法对应顶层api `useActionLoading`
+`share` 返回的共享上下文里 `useActionLoading` 方法对应顶层 api `useActionLoading`
 
 ```ts
 import { useActionLoading } from 'helux';
