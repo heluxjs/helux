@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.4.0
+
+### Minor Changes
+
+- 48bc8fb: automatically unbox atom in all cb
+
 ## 3.3.8
 
 ## 3.3.7

@@ -1,5 +1,18 @@
 # @helux/core
 
+## 3.4.0
+
+### Minor Changes
+
+- 48bc8fb: automatically unbox atom in all cb
+
+### Patch Changes
+
+- Updated dependencies [48bc8fb]
+  - @helux/hooks-impl@3.4.0
+  - @helux/types@3.4.0
+  - @helux/utils@3.4.0
+
 ## 3.3.8
 
 ### Patch Changes
