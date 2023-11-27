@@ -110,8 +110,10 @@ export type FnA<A extends ReadOnlyArr = ReadOnlyArr> = (...args: A) => void;
 
 export type Off = Fn;
 
-/** returned by share */
 export type SharedDict<T = PlainObject> = T;
+
+/** returned by share */
+export type ReadOnlyDict<T = PlainObject> = T;
 
 /** returned by derive */
 export type DerivedDict<R = PlainObject> = R;
@@ -440,7 +442,7 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
   callAsync: CallAsync<T>;
   action: <A extends any[] = any[]>(fn: ActionFnDef<A, T>, desc?: FnDesc) => Action<A, T>;
   actionAsync: <A extends any[] = any[]>(fn: ActionAsyncFnDef<A, T>, desc?: FnDesc) => ActionAsync<A, T>;
-  state: SharedDict<T>;
+  state: ReadOnlyDict<T>;
   setState: SetState<T>;
   sync: SyncFnBuilder<T>;
   syncer: Syncer<T>;
@@ -461,7 +463,7 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
   callAsync: AtomCallAsync<T>;
   action: <A extends any[] = any[]>(fn: AtomActionFnDef<A, T>, desc?: FnDesc) => AtomAction<A, T>;
   actionAsync: <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: FnDesc) => AtomActionAsync<A, T>;
-  state: Atom<T>;
+  state: ReadonlyAtom<T>;
   setState: SetAtom<T>;
   sync: AtomSyncFnBuilder<T>;
   syncer: AtomSyncer<T>;
@@ -919,7 +921,6 @@ export interface IRuleConf {
 
 interface ICallMutateFnOptions<T = SharedState> {
   forTask: boolean;
-  draft?: T;
   fn?: MutateFn<T> | AtomMutateFn<T>;
   task?: MutateTask<T> | AtomMutateTask<T>;
   desc?: FnDesc;

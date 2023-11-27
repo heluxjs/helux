@@ -16,6 +16,9 @@ export declare function noopArgs<T extends any[] = any[]>(...args: T): T;
 export declare function noopArr(...args: any[]): any[];
 export declare function isMax(input: number): boolean;
 export declare function isDebug(): boolean;
+/**
+ * 此方法排除了数组，仅把 {} Map Set 都认为是 obj
+ */
 export declare function isObj(mayObj: any): mayObj is Dict;
 /**
  * 区别于 isObj，此方法把 {} Map Set Array 都认为是 obj

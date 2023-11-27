@@ -21,8 +21,6 @@ interface ICallMutateFnLogicOptionsBase {
 }
 
 interface ICallMutateFnLogicOptions<T = SharedState> extends ICallMutateFnLogicOptionsBase {
-  draft?: T;
-  draftRoot?: T;
   fn: Fn;
   /** fn 函数调用入参拼装 */
   getArgs?: (param: { draft: SharedState; draftRoot: SharedState; setState: Fn; desc: string; input: any[] }) => any[];
@@ -67,23 +65,6 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
   const internal = getInternal(targetState);
   const { forAtom, setStateImpl, innerSetState, sharedState } = internal;
   const innerSetOptions: IInnerSetStateOptions = { desc, sn, from, isFirstCall };
-
-  // 如果传递了 draft 表示需要复用
-  let draft = options.draft as SharedState;
-  let draftRoot = options.draftRoot as SharedState;
-  let finishMutate = noop;
-
-  // 现阶段一定不会有 draft 传下来，这个判断后续可能会考虑移除
-  if (!draft) {
-    // 不透传 draft 时，指向一个真正有结束功能的 finishMutate 句柄
-    const setCtx = setStateImpl(noop);
-    draft = setCtx.draftNode;
-    draftRoot = setCtx.draftRoot;
-    finishMutate = setCtx.finishMutate;
-  }
-  // 透传 draft 目的见 watchAndCallMutateDict TODO 解释
-  // else if { ...}
-
   // 不定制同步函数入参的话，默认就是 (draft, input)，
   // 调用函数形如：(draft)=>draft.xxx+=1; 或 (draft, input)=>draft.xxx+=input[0]
   const setState: any = (cb: any) => {
@@ -98,6 +79,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     state = sharedState.val;
     markIgnore(false); // recover dep collect
   }
+  const { draftNode: draft, draftRoot, finishMutate } = setStateImpl(noop);
   const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state }];
 
   // TODO 考虑同步函数的错误发送给插件
@@ -137,14 +119,8 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   const { target, dict } = options;
   const keys = Object.keys(dict);
   if (!keys.length) return;
-
   const internal = getInternal(target);
   const { mutateFnDict, usefulName } = internal;
-  // TODO: 此段代码为后面的 mutateSelf 接口做准备
-  // const { setStateImpl, mutateFnDict, usefulName } = internal;
-  // 考虑是否要首次运行会复用 draft ，然后经过多次修改，最后一次才提交，但这样做和死循环探测有逻辑冲突
-  // let { draftNode: draft, finishMutate } = setStateImpl(noop);
-  // const lastIdx = keys.length - 1;
 
   keys.forEach((descKey) => {
     const item = mutateFnDict[descKey];
@@ -173,23 +149,6 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
               callMutateFn(target, { ...baseOpt, task, forTask: true });
             }
           }
-
-          // TODO: 此段代码为后面的 mutateSelf 接口做准备，初次执行自我变更的多个函数时会更高效
-          // 但因只提交一次draft的缘故，对用户的mutate函数定义有特别要求，
-          // deps 函数里取 state，fn 函数必须总取 draft，因为此时 draft 才是最新的
-          // 循环到最后时将收集所有函数对上游数据的依赖，然后刻意将 draft 置空，后续下面 if 逻辑不会再触发
-          // if (lastIdx === idx && draft) {
-          //   // ATTENTION: draft = null 必须放置到 finishMutate 之前，
-          //   // 原理是 finishMutate 内部流程是先结束草稿，再触发 watch，如出现循环依赖的话，
-          //   // 后续会复用已撤销的 draft 或再次结束 draft 导致以下错误产生
-          //   // 1 Not a Limu root draft or draft has been finished
-          //   // 2 Cannot perform 'get' on a proxy that has been revoked
-          //   draft = null;
-          //   console.error('------> start finish draft');
-          //   // 结束草稿，并开始触发收集到依赖对应的各个 watch 函数
-          //   // 此阶段由 helpers/fnRunner 模块调用 probeDeadCycle 收集运行信息来避免循环依赖照成的 watch 执行死循环
-          //   // finishMutate(null, { desc });
-          // }
         } catch (err: any) {
           if (err.cause === 'DeadCycle') {
             analyzeErrLog(usefulName, err);

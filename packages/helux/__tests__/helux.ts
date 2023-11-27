@@ -60,6 +60,8 @@ export const {
   emit,
   on,
   // util api
+  currentDraftRoot,
+  setAtomVal,
   storeSrv,
   shallowCompare,
   isDiff,

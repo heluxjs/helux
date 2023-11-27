@@ -1,7 +1,15 @@
-1 packages/helux-preact/index.d.ts 被删除
+## todo
 
-2 packages/helux-hooks/rollup.config.js 被删除
+### 支持 atom 对象返回 partial
 
-3 CONFLICT (modify/delete): packages/helux-hooks/index.d.ts deleted
+## 整理用户的可能犯错的集合
 
-4 CONFLICT (modify/delete): packages/helux-fre/index.d.ts deleted
+### 就近读取才有依赖
+
+### 使用只可读代理才有依赖
+
+### 避免 mutate 死循环
+
+### pritive atom 如何设置 undefined
+
+### atom 返回值必须

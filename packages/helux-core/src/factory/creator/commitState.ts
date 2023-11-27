@@ -54,6 +54,7 @@ export function commitState(opts: ICommitStateOptions) {
   const { state, internal, isAsync, mutateCtx } = opts;
   const { rawState, isDeep } = internal;
 
+  // 当前此特性暂不支持，后续考虑移除这段逻辑
   if (isAsync) {
     // for dangerous async mutate
     mutateCtx.keyPathValue.forEach((keyPath, value) => {

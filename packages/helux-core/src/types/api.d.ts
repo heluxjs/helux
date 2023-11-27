@@ -67,6 +67,7 @@ import type {
   Syncer,
   SyncFnBuilder,
   WatchOptionsType,
+  ReadOnlyDict,
 } from './base';
 
 export declare const EVENT_NAME: {
@@ -124,7 +125,7 @@ export declare const LOADING_MODE: {
 export function share<T extends PlainObject = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): readonly [SharedDict<T>, SetState<T>, ISharedCtx<T, O>];
+): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T, O>];
 
 /**
  * 支持共享 primitive 类型值的接口

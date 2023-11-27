@@ -1,5 +1,5 @@
-import { isObj, noop } from '@helux/utils';
-import { createDraft, finishDraft } from 'limu';
+import { isObj, isJsObj, noop } from '@helux/utils';
+import { createDraft, finishDraft, limuUtils } from 'limu';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
 import { genRenderSN } from '../common/key';
 import { runMiddlewares } from '../common/middleware';
@@ -23,6 +23,48 @@ interface ICommitOpts extends IPrepareDeepMutateOpts {
 
 interface ISnCommitOpts extends ICommitOpts {
   sn: number;
+}
+
+function handlePartial(opts: any) {
+  const { partial, forAtom, mutateCtx, isPrimitive, draftRoot, draftNode } = opts;
+  // 把深依赖和浅依赖收集到的 keys 合并起来
+  if (!isObj(partial)) {
+    return;
+  }
+  // 触发 writeKeys 里记录当前变化key
+  if (forAtom) {
+    // 对于 primitive atom 来说，如果操作了 currentDraftRoot().val=xx 赋值，则丢弃 partial.val
+    // 例如写为 sync(to=>to.a, ()=>currentDraftRoot().val=1) 而不是 sync(to=>to.a, draft=>{currentDraftRoot().val=1}) 时
+    // 这里的 ()=>currentDraftRoot().val=1 其实还同时返回了值 1，这个 1 被包裹为 { val: 1 } 到这里后，
+    // 如果写入就会造成草稿对象被污染，故这里判断一下 mutateCtx.isChanged 做个保护
+    const val = partial.val;
+    const handleObjVal = () => {
+      if (isJsObj(val)) {
+        // 仅字典做合并，其他的走完整替换策略
+        if (limuUtils.isObject(val)) { // [object Object]
+          Object.keys(val).forEach((key) => {
+            draftNode[key] = val[key];
+          });
+        } else {
+          draftRoot.val = val;
+        }
+      }
+    };
+
+    if (mutateCtx.handleAtomCbReturn) {
+      if (isPrimitive) {
+        draftRoot.val = val;
+      } else {
+        handleObjVal();
+      }
+    } else { // 未做任何改变时，继续处理返回的对象
+      handleObjVal();
+    }
+  } else {
+    Object.keys(partial).forEach((key) => {
+      draftRoot[key] = partial[key];
+    });
+  }
 }
 
 /**
@@ -66,23 +108,8 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
     draftNode,
     finishMutate(partial?: Dict, innerSetOptions: IInnerSetStateOptions = {}) {
       const { writeKeys, writeKeyPathInfo } = mutateCtx;
-      // 把深依赖和浅依赖收集到的keys合并起来
-      if (isObj(partial)) {
-        // 触发 writeKeys 里记录当前变化key
-        if (forAtom && isPrimitive) {
-          // 对于 primitive atom 来说，如果操作了 currentDraftRoot().val=xx 赋值，则丢弃 partial.val
-          // 例如写为 sync(to=>to.a, ()=>currentDraftRoot().val=1) 而不是 sync(to=>to.a, draft=>{currentDraftRoot().val=1}) 时
-          // 这里的 ()=>currentDraftRoot().val=1 其实还同时返回了值 1，这个 1 被包裹为 { val: 1 } 到这里后，
-          // 如果写入就会造成草稿对象被污染，故这里判断一下 mutateCtx.isChanged 做个保护
-          if (mutateCtx.handleAtomCbReturn) {
-            draftRoot.val = partial.val;
-          }
-        } else {
-          Object.keys(partial).forEach((key) => {
-            draftRoot[key] = partial[key];
-          });
-        }
-      }
+      // TODO: discussion 是否添加 ignoreCbReturn 参数，允许用户强制忽略 cb 返回值
+      handlePartial({ partial, forAtom, mutateCtx, isPrimitive, draftRoot, draftNode })
       const opts = beforeCommit(commitOpts, innerSetOptions, draftRoot);
       mutateCtx.depKeys = Object.keys(writeKeys);
       DRAFT_ROOT.del();
@@ -95,8 +122,8 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
       /**
        * limu 的 immut 接口生成的可读代理对象虽然能总是同步最新的快照，但同步时机是在读取对象任意值那一刻
        * 用户修改完状态后直接使用 console.log(sharedState) 看到的会是旧值打印，其实已经是新值，
-       * 需要继续向下读任意一个值即可刷新sharedState，这是再执行 console.log(sharedState) 看到的就是正确的
-       * 为避免用户误会这是一个bug，这里提前随便读一个key，帮助用户主动刷新以下 sharedState 值
+       * 需要继续向下读任意一个值即可刷新sharedState，然后再执行 console.log(sharedState) 看到的才是正确的
+       * 为避免用户误会这是一个bug，这里提前随便读一个key，帮助用户主动刷新一下 sharedState 值
        */
       noop(internal.sharedState[mutateCtx.level1Key]);
 

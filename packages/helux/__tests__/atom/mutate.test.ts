@@ -1,17 +1,57 @@
 import '@testing-library/jest-dom';
 import { describe, expect, test } from 'vitest';
-import { atom, runMutate } from '../helux';
+import { IPlugin } from 'helux';
+import { atom, runMutate, addPlugin, currentDraftRoot, setAtomVal } from '../helux';
 
 describe('create atom mutate', () => {
-  test('single mutate, return result 1121', async () => {
+
+  function runReturnLogic(cbLogic: any) {
     const [numAtom, setAtom] = atom(1);
     const [bAtom] = atom(0, {
-      mutate: () => numAtom.val + 10,
+      mutate: () => cbLogic(numAtom),
     });
     expect(bAtom.val).toBe(11);
 
     setAtom(10);
     expect(bAtom.val).toBe(20);
+  }
+
+  function runReturnLogicAfterAtom(cbLogic: any) {
+    const [numAtom, setAtom] = atom(1);
+    const [bAtom, , ctx] = atom(0);
+    ctx.mutate(() => cbLogic(numAtom, ctx));
+
+    expect(bAtom.val).toBe(11);
+    setAtom(10);
+    expect(bAtom.val).toBe(20);
+  }
+
+  test('single mutate, return result ( cb has no {} )', async () => {
+    runReturnLogic((numAtom) => numAtom.val + 10);
+  });
+
+  test('single mutate, return result ( currentDraftRoot )', async () => {
+    runReturnLogic((numAtom) => { currentDraftRoot().val = numAtom.val + 10 });
+  });
+
+  test('single mutate, return result ( setAtomVal )', async () => {
+    runReturnLogic((numAtom) => { setAtomVal(numAtom.val + 10) });
+  });
+
+  test('single mutate, return result after atom( cb has no {} )', async () => {
+    runReturnLogicAfterAtom((numAtom) => numAtom.val + 10);
+  });
+
+  test('single mutate, return result after atom( currentDraftRoot )', async () => {
+    runReturnLogicAfterAtom((numAtom) => { currentDraftRoot().val = numAtom.val + 10 });
+  });
+
+  test('single mutate, return result after atom( setAtomVal )', async () => {
+    runReturnLogicAfterAtom((numAtom) => { setAtomVal(numAtom.val + 10) });
+  });
+
+  test('single mutate, return result after atom( ctx.setAtomVal )', async () => {
+    runReturnLogicAfterAtom((numAtom, ctx) => { ctx.setAtomVal(numAtom.val + 10) });
   });
 
   test('single mutate, change draft', async () => {
@@ -112,8 +152,97 @@ describe('create atom mutate', () => {
     setAtom((draft) => {
       draft.b = 100;
     });
-    console.log('---> setAtom ', bAtom.val.b);
     expect(bAtom.val.b).toBe(100);
     expect(bAtom.val.a).toBe(110);
   });
+
+  test('multi mutate, watch self', async () => {
+    const [bAtom, setAtom] = atom(
+      { a: 1, b: 0, c: 0 },
+      {
+        mutate: {
+          changeB: (draft, { state }) => {
+            draft.b = state.a + 10;
+          },
+          changeC: (draft, { state }) => {
+            draft.c = state.b + 20;
+          },
+        },
+      },
+    );
+
+    expect(bAtom.val.a).toBe(1);
+    expect(bAtom.val.b).toBe(11);
+    expect(bAtom.val.c).toBe(31);
+
+    // change a, mutate b, c
+    setAtom((draft) => {
+      draft.a = 2;
+    });
+    expect(bAtom.val.a).toBe(2);
+    expect(bAtom.val.b).toBe(12);
+    expect(bAtom.val.c).toBe(32);
+
+    // change b, mutate c
+    setAtom((draft) => {
+      draft.b = 100;
+    });
+    expect(bAtom.val.a).toBe(2);
+    expect(bAtom.val.b).toBe(100);
+    expect(bAtom.val.c).toBe(120);
+  });
+
+  test('single mutate, watch self', async () => {
+    const [bAtom, setAtom] = atom(
+      { a: 1, b: 2 },
+      {
+        mutate: (draft, { state }) => {
+          draft.a = state.b + 10;
+        },
+      },
+    );
+
+    expect(bAtom.val.b).toBe(2);
+    expect(bAtom.val.a).toBe(12);
+
+    setAtom((draft) => {
+      draft.b = 100;
+    });
+    expect(bAtom.val.b).toBe(100);
+    expect(bAtom.val.a).toBe(110);
+  });
+
+  test('multi mutate, watch self with dead cycle', async () => {
+    window.alert = () => { }
+    let err: any = null;
+    const errPlugin: IPlugin = {
+      install(pluginCtx) {
+        pluginCtx.on('ON_ERROR_OCCURED', (info) => {
+          err = info.data.err;
+        });
+      },
+    };
+    addPlugin(errPlugin);
+
+    atom(
+      { a: 1, b: 0, c: 0 },
+      {
+        mutate: {
+          changeB: (draft, { state }) => {
+            draft.b = state.a + 10;
+          },
+          changeC: (draft, { state }) => {
+            draft.c = state.b + 20;
+          },
+          changeA: (draft, { state }) => {
+            draft.a = state.c + 30;
+          },
+        },
+      },
+    );
+
+    expect(err).toBeTruthy();
+    expect(err.message.includes('dead cycle')).toBeTruthy();
+  });
+
 });

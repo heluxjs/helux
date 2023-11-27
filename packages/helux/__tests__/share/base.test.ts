@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { share } from '../helux';
 
 describe('create share', () => {
-  test('create shared dict ', async () => {
+  test('create shared dict', async () => {
     const [state] = share({ a: 1, b: 2 });
     expect(state).toBeTruthy();
     expect(state.a === 1).toBeTruthy();
