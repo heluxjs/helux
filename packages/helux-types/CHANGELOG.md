@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.4.1
+
+### Patch Changes
+
+- 10670b8: to 3.4.1
+
 ## 3.4.0
 
 ### Minor Changes
