@@ -21,6 +21,10 @@ export function isObj(mayObj: any): mayObj is Dict {
   return mayObj && typeof mayObj === 'object' && !Array.isArray(mayObj);
 }
 
+export function isJsObj(mayObj: any): mayObj is Dict {
+  return mayObj && typeof mayObj === 'object';
+}
+
 export function isFn(mayFn: any): mayFn is Fn {
   return typeof mayFn === 'function';
 }

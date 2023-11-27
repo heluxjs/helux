@@ -95,7 +95,7 @@ function Comp1() {
 
 ```ts
 // 仅首轮渲染收集依赖
-useShared(numAtom, { collect: false });
+useShared(numAtom, { collectType: 'first' });
 ```
 
 :::caution 依赖丢失

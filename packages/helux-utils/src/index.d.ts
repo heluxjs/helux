@@ -17,6 +17,10 @@ export declare function noopArr(...args: any[]): any[];
 export declare function isMax(input: number): boolean;
 export declare function isDebug(): boolean;
 export declare function isObj(mayObj: any): mayObj is Dict;
+/**
+ * 区别于 isObj，此方法把 {} Map Set Array 都认为是 obj
+ */
+export declare function isJsObj(mayObj: any): mayObj is Dict | Array<any>;
 export declare function isFn(mayFn: any): mayFn is Fn;
 export declare function isAsyncFn(mayFn: any): mayFn is Fn;
 export declare function isSymbol(maySymbol: any): maySymbol is symbol;

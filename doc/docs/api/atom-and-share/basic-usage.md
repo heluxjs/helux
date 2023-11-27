@@ -96,6 +96,8 @@ import { $ } from 'helux';
 使用`block`创建局部响应块
 
 ```tsx
+import { block } from 'helux';
+
 // UserBlock 已被 memo
 const UserBlock = block(() => (
   <div>
@@ -306,6 +308,15 @@ const [share2] = share(
 );
 ```
 
+`mutate`函数是基于数据变化自动驱动的，也支持人工重运行
+
+```ts
+import { runMutate } from 'helux';
+
+// 重运行 share2 的 suffixedDesc 可变派生函数
+const snap = runMutate(share2, 'suffixedDesc');
+```
+
 #### 异步 mutate
 
 异步 mutate 需要通过`deps`函数显式定义依赖，更多使用方式可查看[sync 章节](/helux/docs/api/sync)。
@@ -333,18 +344,37 @@ const [share2] = share(
 );
 ```
 
+异步可变派生函数也支持人工重运行
+
+```ts
+import { runMutateTask } from 'helux';
+
+// 重运行 share2 的 suffixedDesc 可变派生异步函数
+const snap = runMutateTask(share2, 'suffixedDesc');
+```
+
 ### sync
 
 基于 `sync` 工厂函数生成获取具体的数据同步器来直接修改表单数据，达到**双向绑定**的效果！
+
+```ts
+import { share, syncer, sync } from 'helux';
+
+const [sharedState,,ctx] = share({a:1});
+
+// 基于顶层 api 创建 syncer
+const mySyncer = syncer(sharedState);
+const mySync = sync(sharedState);
+
+// 或者基于共享上下文导出当前共享状态的 syncer sync
+const { syncer: mySyncer, sync: mySync } = ctx;
+```
 
 #### 一层路径
 
 提供 `syncer` 或 `sync` 生成数据同步函数
 
 ```tsx
-const mySyncer = syncer(sharedState);
-const mySync = sync(sharedState);
-
 function Demo() {
   const [shared] = useShared(sharedState);
   return <input value={shared.a} onChange={mySyncer.a} />;

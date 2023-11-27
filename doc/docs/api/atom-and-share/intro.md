@@ -72,6 +72,12 @@ console.log(sharedDict.info.born);
 setDict((draft) => (draft.info.born = 2022));
 ```
 
+:::tip share 优先
+
+优先考虑 share 共享对象由于`share`接口没有装箱`{val: T}` 的操作，当共享对象为 `object` 时，可优先使用`share`来共享对象，避免一些无自动拆箱的场景多做一次`.val`取值操作
+
+:::
+
 `atom` 和`share`接口返回的元组结果完整信息如下
 
 ```ts
