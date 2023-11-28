@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.4
+
+### Patch Changes
+
+- e204769: build(3.5.5): wrap Promise.resolve with callMutateAsync, fix getLoadingInfo logic to let top api useMutateLoading works, add act to CoreApiCtx
+- Updated dependencies [e204769]
+  - @helux/core@3.4.4
+
 ## 3.4.3
 
 ### Patch Changes
