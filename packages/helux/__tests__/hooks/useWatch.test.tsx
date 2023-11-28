@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { act, renderHook } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { atom, useWatch } from '../helux';
 
@@ -18,9 +18,7 @@ describe('useWatch', () => {
     });
 
     expect(runCount).toBe(0);
-    act(() => {
-      setAtom(1);
-    });
+    setAtom(1);
     expect(runCount).toBe(0);
   });
 
@@ -38,9 +36,7 @@ describe('useWatch', () => {
     });
 
     expect(runCount).toBe(0);
-    act(() => {
-      setAtom(2);
-    });
+    setAtom(2);
     expect(runCount).toBe(1);
   });
 
@@ -58,9 +54,7 @@ describe('useWatch', () => {
     });
 
     expect(runCount).toBe(1); // trigger by immediate=true
-    act(() => {
-      setAtom(1);
-    });
+    setAtom(1);
     expect(runCount).toBe(1);
   });
 });

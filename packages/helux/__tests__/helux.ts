@@ -1,7 +1,12 @@
+import { act } from '@testing-library/react';
 import * as React from 'react';
 import { initHeluxContext } from '../../helux-core/src/index';
 
-const api = initHeluxContext({ heluxCtxKey: '__HELUX__', reactLib: React });
+// pass act to avlid Warning:
+// An update to TestComponent inside a test was not wrapped in act(...).
+// This ensures that you're testing the behavior the user would see in the browser.
+// Learn more at https://reactjs.org/link/wrap-tests-with-act
+const api = initHeluxContext({ heluxCtxKey: '__HELUX__', reactLib: React, act });
 
 // 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json的 types 配置）
 export const {

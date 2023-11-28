@@ -112,7 +112,7 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
       if (!loadingProxy) {
         loadingProxy = createLoading(createFn, options);
         internal.extra.loadingProxy = loadingProxy;
-        // 向宿主上写入私有的 loadingInternal 实现
+        // 向宿主上挂上私有的 loadingInternal 实现
         internal.loadingInternal = getInternal(loadingProxy);
       }
       loadingState = createSafeLoading(internal.extra, loadingProxy, from);
@@ -122,7 +122,13 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
       // 向宿主上挂上全局的 globalLoadingInternal 实现
       internal.loadingInternal = globalLoadingInternal;
       loadingState = createSafeLoading(globalLoadingInternal.extra, loadingProxy, from);
+    } else {
+      throw new Error(`unknown loadingMode [${loadingMode}]`);
     }
+  } else {
+    // 此刻的 internal 即 globalLoadingInternal
+    loadingProxy = internal.sharedState;
+    loadingState = createSafeLoading(internal.extra, loadingProxy, from);
   }
   return { loadingState, loadingProxy };
 }

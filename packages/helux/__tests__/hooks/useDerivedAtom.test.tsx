@@ -15,6 +15,8 @@ describe('useDerivedAtom', () => {
     });
 
     expect(result.current).toBe(2);
+    // TODO: why here must wrap act?
+    // setAtom(2);
     act(() => {
       setAtom(2);
     });
@@ -40,9 +42,7 @@ describe('useDerivedAtom', () => {
 
     expect(result.current).toBe(2);
     expect(runCount).toBe(1);
-    act(() => {
-      setAtom(2);
-    });
+    setAtom(2);
     await delay(120);
     expect(result.current).toBe(102); // returned by task
     expect(runCount).toBe(3); // loading wil trigger one time render
@@ -67,9 +67,7 @@ describe('useDerivedAtom', () => {
 
     expect(result.current).toBe(2);
     expect(runCount).toBe(1);
-    act(() => {
-      setAtom(2);
-    });
+    setAtom(2);
     await delay(120);
     expect(result.current).toBe(102); // returned by task
     expect(runCount).toBe(2); // now only render 2 times

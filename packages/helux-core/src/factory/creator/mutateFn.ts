@@ -47,6 +47,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   setLoadStatus(internal, statusKey, { loading: true, err: null, ok: false });
   // 标记 task 运行中，避免 helpers/fnDep 模块 recordFnDepKeys 方法收集冗余的 depKey 造成 mutate 死循环探测逻辑误判
   markTaskRunning();
+
   return Promise.resolve(task(...args))
     .then(() => {
       // TODO 考虑要不要处理 task 返回的 partial

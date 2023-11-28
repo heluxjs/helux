@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { atom } from '../helux';
 
@@ -49,10 +49,8 @@ describe('use atom', () => {
     expect(aRenderCount).toBe(1);
     expect(bRenderCount).toBe(1);
 
-    act(() => {
-      setAtom((draft) => {
-        draft.a = 100;
-      });
+    setAtom((draft) => {
+      draft.a = 100;
     });
 
     await waitFor(() => {

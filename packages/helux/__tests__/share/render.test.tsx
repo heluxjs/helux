@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { share } from '../helux';
 
@@ -37,10 +37,8 @@ describe('use shared', () => {
     expect(aRenderCount).toBe(1);
     expect(bRenderCount).toBe(1);
 
-    act(() => {
-      setState((draft) => {
-        draft.a.a1.a2 = 100;
-      });
+    setState((draft) => {
+      draft.a.a1.a2 = 100;
     });
 
     await waitFor(() => {
@@ -68,10 +66,8 @@ describe('use shared', () => {
     render(<CompA id="1" />);
     expect(aRenderCount).toBe(1);
 
-    act(() => {
-      setState((draft) => {
-        draft.b = 3;
-      });
+    setState((draft) => {
+      draft.b = 3;
     });
     await waitFor(() => {
       expect(screen.getByTestId('1').textContent).toBe('0');
@@ -79,16 +75,12 @@ describe('use shared', () => {
     expect(aRenderCount).toBe(2);
 
     // comp lost dep state.a.a1.a2
-    act(() => {
-      setState((draft) => {
-        draft.a.a1.a2 = Date.now();
-      });
+    setState((draft) => {
+      draft.a.a1.a2 = Date.now();
     });
     expect(aRenderCount).toBe(2);
-    act(() => {
-      setState((draft) => {
-        draft.a.a1.a2 = Date.now();
-      });
+    setState((draft) => {
+      draft.a.a1.a2 = Date.now();
     });
     expect(aRenderCount).toBe(2);
   });
@@ -97,7 +89,7 @@ describe('use shared', () => {
     const [state, setState, ctx] = share(
       { a: { a1: { a2: 1 }, a11: { a22: 2 } }, b: 2 },
       {
-        rules: [{ when: (state) => state.b, ids: ['JustUpdate'] }],
+        rules: [{ when: (state) => [state.b], ids: ['JustUpdate'] }],
       },
     );
     let aRenderCount = 0;
@@ -113,10 +105,8 @@ describe('use shared', () => {
 
     render(<CompA id="1" />);
     expect(aRenderCount).toBe(1);
-    act(() => {
-      setState((draft) => {
-        draft.a.a1.a2 = 2;
-      });
+    setState((draft) => {
+      draft.a.a1.a2 = 2;
     });
     await waitFor(() => {
       expect(screen.getByTestId('1').textContent).toBe('2');
@@ -124,10 +114,8 @@ describe('use shared', () => {
     expect(aRenderCount).toBe(2);
 
     // Comps only has dep state.a.a1.a2
-    act(() => {
-      setState((draft) => {
-        draft.b = 3;
-      });
+    setState((draft) => {
+      draft.b = 3;
     });
     // but still rerender by 'JustUpdate' id
     expect(aRenderCount).toBe(3);

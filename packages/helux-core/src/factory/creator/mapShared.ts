@@ -46,7 +46,7 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   };
   // setAtom implementation，内部调用依然是 setState，独立出来是为了方便 internal 里标记合适的类型
   const setAtom: SetAtom = (atomVal, options) => {
-    setState(atomVal, parseSetOptions<any>(options));
+    return setState(atomVal, parseSetOptions<any>(options));
   };
   const syncOpts = { forAtom, sharedKey, setState: innerSetState };
   const sync = createSyncFnBuilder(rawState, syncOpts);

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { act, renderHook } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { atom, useAtom, useService } from '../helux';
 
@@ -27,9 +27,7 @@ describe('useService', () => {
     const prevSrv = result.current;
     const prevFnA = prevSrv.a;
     const prevFnB = prevSrv.b;
-    act(() => {
-      setAtom(Date.now());
-    });
+    setAtom(Date.now());
     expect(renderCount).toBe(2);
     const currSrv = result.current;
     const currFnA = currSrv.a;

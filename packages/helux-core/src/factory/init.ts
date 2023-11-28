@@ -1,3 +1,4 @@
+import { Fn } from '@helux/types';
 import { GLOBAL_REF } from '@helux/utils';
 import { AllApi, buildHeluxApi } from '../apiFactory';
 import { createRoot, getRootData, HeluxRoot, setRootData } from './root';
@@ -5,17 +6,18 @@ import { createRoot, getRootData, HeluxRoot, setRootData } from './root';
 export function initHeluxContext(options: {
   heluxCtxKey: string | symbol;
   reactLib: any;
+  act?: Fn;
   standalone?: boolean;
   transfer?: (existedRoot: any, newRoot: any) => any;
 }): AllApi {
   const { inited, API } = getRootData();
   if (inited) return API as AllApi; // only can be call one time!
 
-  const { heluxCtxKey, standalone, transfer, reactLib } = options;
+  const { heluxCtxKey, standalone, transfer, reactLib, act } = options;
   const existedRoot: HeluxRoot = GLOBAL_REF[heluxCtxKey];
   const done = (key: string | symbol) => {
     const ROOT = createRoot();
-    const api = buildHeluxApi(reactLib);
+    const api = buildHeluxApi(reactLib, act);
     setRootData({ ROOT, inited: true, api });
     GLOBAL_REF[key] = ROOT;
     return api;

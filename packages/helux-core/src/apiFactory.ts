@@ -36,15 +36,24 @@ function to18(react: ReactLike): React18Like {
  * 提供给 adapter 库使用，用于绑定具体的 react 运行时，实际类型由 types/api 提供，
  * 依靠绑定 react 运行时可以做到多个类 react 框架共同使用 helux 包时，helux-core 可完美被复用
  */
-export function buildHeluxApi(react: ReactLike): AllApi {
+export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
   const hookImpl = buildApi(react);
-  const { useEffect, useLayoutEffect, useStable, useObject, useForceUpdate } = hookImpl;
-  const baseApi = { useEffect, useLayoutEffect, useStable, useObject, useForceUpdate } as HeluxApi;
+  // All apis will be filled later
+  const baseApi = { ...hookImpl } as unknown as HeluxApi;
   // 注意用户层面调用api时不需要感知这个参数，由 adapter 层自动绑定
-  const apiCtx: CoreApiCtx = { react: to18(react), hookImpl };
+  const apiCtx: CoreApiCtx = { react: to18(react), hookImpl, act };
+  if (act) {
+    // to avoid Warning from @testing-library/react:
+    // Warning: An update to TestComponent inside a test was not wrapped in act(...)
+    // This ensures that you're testing the behavior the user would see in the browser.
+    // @see test file: https://github.com/heluxjs/helux/blob/master/packages/helux/__tests__/helux.ts
+    hookImpl.useForceUpdate = () => {
+      const [, set] = react.useState({});
+      return () => act(() => set({}));
+    };
+  }
 
   const apiVar: any = api; // fot skip ts check instead of ts-ignore
-  const baseApiVar: any = baseApi;
   Object.keys(apiVar).forEach((key) => {
     const val = apiVar[key];
     if (shouldInjectApiCtx(key)) {
@@ -56,9 +65,9 @@ export function buildHeluxApi(react: ReactLike): AllApi {
       // baseApiVar[key] = wrap[key];
 
       // code 3: use bind
-      baseApiVar[key] = val.bind(null, apiCtx);
+      baseApi[key] = val.bind(null, apiCtx);
     } else {
-      baseApiVar[key] = val;
+      baseApi[key] = val;
     }
   });
 

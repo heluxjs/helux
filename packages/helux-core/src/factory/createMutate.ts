@@ -44,7 +44,7 @@ function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?
 function makeWitness(target: SharedState, desc: string, oriDesc: string) {
   return {
     call: () => runMutateFnItem({ target, desc }), // 呼叫同步函数的句柄
-    callTask: () => runMutateFnItem({ target, desc, forTask: true }), // 呼叫异步函数的句柄
+    callTask: () => Promise.resolve(runMutateFnItem({ target, desc, forTask: true })), // 呼叫异步函数的句柄
     desc,
     oriDesc,
   };
