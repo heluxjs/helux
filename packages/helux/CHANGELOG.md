@@ -1,5 +1,16 @@
 # helux
 
+## 4.0.0
+
+### Major Changes
+
+- a177829: build(3.4.6): wrap act at top; return result for setAtom
+
+### Patch Changes
+
+- Updated dependencies [a177829]
+  - @helux/core@4.0.0
+
 ## 3.4.4
 
 ### Patch Changes

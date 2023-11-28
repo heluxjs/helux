@@ -1,5 +1,12 @@
 # @helux/plugin-devtool
 
+## 4.0.0
+
+### Patch Changes
+
+- Updated dependencies [a177829]
+  - helux@4.0.0
+
 ## 3.4.4
 
 ### Patch Changes

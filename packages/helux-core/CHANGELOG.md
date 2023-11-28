@@ -1,5 +1,17 @@
 # @helux/core
 
+## 4.0.0
+
+### Major Changes
+
+- a177829: build(3.4.6): wrap act at top; return result for setAtom
+
+### Patch Changes
+
+- @helux/hooks-impl@4.0.0
+- @helux/types@4.0.0
+- @helux/utils@4.0.0
+
 ## 3.4.4
 
 ### Patch Changes
