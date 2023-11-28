@@ -1,12 +1,14 @@
 # @helux/hooks
 
-## 4.0.0
+## 3.4.5
 
 ### Patch Changes
 
-- @helux/hooks-impl@4.0.0
-- @helux/types@4.0.0
-- @helux/utils@4.0.0
+- 70b0c7c: build(3.4.5): wrap act at top; return setAtom result
+- Updated dependencies [70b0c7c]
+  - @helux/hooks-impl@3.4.5
+  - @helux/types@3.4.5
+  - @helux/utils@3.4.5
 
 ## 3.4.4
 

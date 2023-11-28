@@ -1,6 +1,10 @@
 # @helux/types
 
-## 4.0.0
+## 3.4.5
+
+### Patch Changes
+
+- 70b0c7c: build(3.4.5): wrap act at top; return setAtom result
 
 ## 3.4.4
 
