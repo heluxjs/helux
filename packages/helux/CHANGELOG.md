@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.6
+
+### Patch Changes
+
+- 01c801c: build(3.4.6): export isAtom isDerivedAtom
+- Updated dependencies [01c801c]
+  - @helux/core@3.4.6
+
 ## 3.4.5
 
 ### Patch Changes

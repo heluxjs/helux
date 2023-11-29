@@ -1,5 +1,12 @@
 # @helux/fre
 
+## 3.4.6
+
+### Patch Changes
+
+- Updated dependencies [01c801c]
+  - @helux/core@3.4.6
+
 ## 3.4.5
 
 ### Patch Changes

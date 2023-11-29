@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.6
+
+### Patch Changes
+
+- 01c801c: build(3.4.6): export isAtom isDerivedAtom
+  - @helux/hooks-impl@3.4.6
+  - @helux/types@3.4.6
+  - @helux/utils@3.4.6
+
 ## 3.4.5
 
 ### Patch Changes
