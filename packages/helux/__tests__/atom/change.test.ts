@@ -96,7 +96,7 @@ describe('change atom', () => {
     expect(prevItem0 === currItem0).toBeFalsy();
     // TODO: resolve this strange result problem
     // browser console print ture but vitest console print false
-    // but 'true' is the expected result，what's wrong with vitest?
+    // and 'true' is the expected result，what's wrong with vitest?
     // visit https://codesandbox.io/p/sandbox/strange-testcase-rl45wx?file=%2Fsrc%2FDemo.js ,
     // open console to the log
     // expect(prevItem1 === currItem1).toBeTruthy();

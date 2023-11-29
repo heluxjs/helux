@@ -39,10 +39,10 @@ export function checkShared<T = SharedState>(sharedState: T, options?: ICheckSha
   // 传递了具体的 forAtom 布尔值，才严格校验是否是 atom 或 shared
   if (forAtom !== undefined) {
     if (forAtom && !internal.forAtom) {
-      tryAlert(`${prefix} expect for a shared but recived a atom`, true);
+      tryAlert(`${prefix} expect a shared but recived a atom`, true);
     }
     if (!forAtom && internal.forAtom) {
-      tryAlert(`${prefix} expect for a atom but recived a shared`, true);
+      tryAlert(`${prefix} expect a atom but recived a shared`, true);
     }
   }
   return internal;

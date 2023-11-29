@@ -2,7 +2,9 @@ import { act } from '@testing-library/react';
 import * as React from 'react';
 import { initHeluxContext } from '../../helux-core/src/index';
 
-// pass act to avlid Warning:
+window.alert = () => {};
+
+// pass act to avoid Warning:
 // An update to TestComponent inside a test was not wrapped in act(...).
 // This ensures that you're testing the behavior the user would see in the browser.
 // Learn more at https://reactjs.org/link/wrap-tests-with-act
@@ -67,6 +69,8 @@ export const {
   // util api
   currentDraftRoot,
   setAtomVal,
+  isAtom,
+  isDerivedAtom,
   storeSrv,
   shallowCompare,
   isDiff,

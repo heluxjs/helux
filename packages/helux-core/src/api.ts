@@ -1,6 +1,6 @@
 import { limuUtils, produce } from 'limu';
 import { EVENT_NAME, LOADING_MODE } from './consts/user';
-import { getAtom } from './factory/common/atom';
+import { getAtom, isAtom, isDerivedAtom } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
 import { emit, on } from './factory/common/userBus';
@@ -77,6 +77,8 @@ export {
   // util api
   currentDraftRoot,
   setAtomVal,
+  isAtom,
+  isDerivedAtom,
   storeSrv,
   produce,
   shallowCompare,

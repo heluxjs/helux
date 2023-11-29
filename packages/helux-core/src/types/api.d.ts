@@ -601,6 +601,16 @@ export function currentDraftRoot<T = any>(state?: T): T;
  */
 export function setAtomVal<T = any>(val?: T): T;
 
+/**
+ * test if the input arg is a result returned by atom()
+ */
+export function isAtom(mayAtom: any): boolean;
+
+/**
+ * test if the input arg is a result returned by driveAtom()
+ */
+export function isDerivedAtom(mayDerivedAtom: any): boolean;
+
 // ----------- shallowCompare isDiff produce 二次重导出会报错，这里手动声明一下 --------------
 // err: 如果没有引用 "../../helux-core/node_modules/limu/lib"，则无法命名 "produce" 的推断类型。这很可能不可移植。需要类型注释
 

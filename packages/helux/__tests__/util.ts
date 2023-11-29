@@ -25,6 +25,10 @@ export function delay(ms = 1000) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+export function noop(...args: any[]) {
+  return args;
+}
+
 /**
  * for getting pretty format multi line string when use \`...\`
  * this function will remove indent of every line automatically

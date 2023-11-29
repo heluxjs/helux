@@ -62,6 +62,8 @@ export const {
   // util api
   currentDraftRoot,
   setAtomVal,
+  isAtom,
+  isDerivedAtom,
   storeSrv,
   shallowCompare,
   isDiff,
