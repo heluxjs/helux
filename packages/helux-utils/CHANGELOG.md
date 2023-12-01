@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.4.7
+
+### Patch Changes
+
+- a0c7d71: build(3.4.7): add pure arg for useAtom useShared
+  - @helux/types@3.4.7
+
 ## 3.4.6
 
 ### Patch Changes
