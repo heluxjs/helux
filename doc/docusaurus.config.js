@@ -32,13 +32,15 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          editUrl: 'https://github.com/tnfe/hel/doc',
+          editUrl: ({ docPath }) => {
+            return `https://holocron.so/github/pr/heluxjs/helux/master/editor/doc/docs/${docPath}`
+          },
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          editUrl: 'http://localhost:3000/hel/blog',
+          editUrl: ({ docPath }) => {
+            return `https://holocron.so/github/pr/heluxjs/helux/master/editor/doc/blog/${docPath}`
+          },
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
