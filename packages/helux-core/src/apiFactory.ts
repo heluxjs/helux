@@ -39,7 +39,7 @@ function to18(react: ReactLike): React18Like {
 export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
   const hookImpl = buildApi(react);
   // All apis will be filled later
-  const baseApi = { ...hookImpl } as unknown as HeluxApi;
+  const baseApi: any = { ...hookImpl };
   // 注意用户层面调用api时不需要感知这个参数，由 adapter 层自动绑定
   const apiCtx: CoreApiCtx = { react: to18(react), hookImpl, act };
   if (act) {
@@ -52,7 +52,6 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
       return () => act(() => set({}));
     };
   }
-
   const apiVar: any = api; // fot skip ts check instead of ts-ignore
   Object.keys(apiVar).forEach((key) => {
     const val = apiVar[key];

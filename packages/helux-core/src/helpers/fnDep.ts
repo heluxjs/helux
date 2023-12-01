@@ -1,7 +1,7 @@
 import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
 import { PROTO_KEY } from '../consts';
-import { getFnCtx, getRunninFn, opUpstreamFnKey } from '../factory/common/fnScope';
-import { diffVal } from '../factory/common/sharedScope';
+import { getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
+import { hasChangedNode } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
 import type { Dict, IFnCtx } from '../types/base';
@@ -21,7 +21,7 @@ export function markIgnore(isIgnore = true) {
  * 自动记录当前正在运行的函数对 depKey 的依赖，以及 depKey 对应的函数记录
  */
 export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx }) {
-  const { fnCtx: runningFnCtx, depKeys, isTaskRunning, isIgnore, runningSharedKey } = getRunninFn();
+  const { fnCtx: runningFnCtx, depKeys, isTaskRunning, isIgnore, runningSharedKey } = getRunningFn();
   const fnCtx: IFnCtx | null | undefined = options.specificCtx || runningFnCtx;
   if (!fnCtx) {
     return;
@@ -112,19 +112,8 @@ export function getDepFnStats(internal: TInternal, depKey: string, runCountStats
   fnKeys.forEach((fnKey) => {
     const fnCtx = getFnCtx(fnKey);
     if (!fnCtx) return;
-    const { depKeys } = fnCtx;
-
-    let subValChanged = false;
-    for (const storedDepKey of depKeys) {
-      // TODO 此处可优化，按执行批次 sn 缓存比较过的结果，进一步提高性能
-      // 是 key 的子串，比较值是否有变化
-      if (storedDepKey.startsWith(depKey) && diffVal(internal, storedDepKey)) {
-        subValChanged = true;
-      }
-    }
-
     // 子串对应值变化才加入到 firstLevelFnKeys
-    if (subValChanged) {
+    if (hasChangedNode(internal, fnCtx.depKeys, depKey)) {
       if (fnCtx.isFirstLevel) {
         firstLevelFnKeys.push(fnKey);
       }

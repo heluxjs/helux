@@ -9,7 +9,7 @@ const HEL_GIT = 'https://github.com/tnfe/hel';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'helux',
-  tagline: '集atom、signal、dep collection为一体的状态库，支持所有类 react 框架',
+  tagline: '集原子、信号、依赖收集为一体的状态库，支持所有类 react 框架',
   // url: 'https://your-docusaurus-test-site.com',
   // baseUrl: '/',
   url: 'https://tnfe.github.io',
@@ -51,7 +51,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'hel-micro',
+        title: 'helux',
         logo: {
           alt: 'hel-micro-logo',
           src: 'https://tnfe.gtimg.com/image/1k4xi9izbk_1651642720099.png',

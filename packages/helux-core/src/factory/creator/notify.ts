@@ -1,18 +1,26 @@
-import { dedupList } from '@helux/utils';
+import { dedupList, nodupPush } from '@helux/utils';
 import { markFnEnd } from '../../helpers/fnCtx';
 import { getDepFnStats } from '../../helpers/fnDep';
 import { runFn } from '../../helpers/fnRunner';
 import { markComputing } from '../../helpers/fnStatus';
 import { runInsUpdater } from '../../helpers/insCtx';
 import type { Dict, InsCtxMap } from '../../types/base';
-import { clearDiff, diffVal } from '../common/sharedScope';
+import { clearDiff, diffVal, hasChangedNode } from '../common/sharedScope';
 import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
 
+function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
+  const insCtx = insCtxMap.get(insKey) as InsCtxDef;
+  if (insCtx) {
+    insCtx.renderInfo.sn = sn;
+    runInsUpdater(insCtx);
+  }
+}
+
 export function execDepFns(opts: ICommitStateOptions) {
   const { mutateCtx, internal, desc, isFirstCall, from, sn } = opts;
-  const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
+  const { ids, globalIds, depKeys, triggerReasons, isDictInfo } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;
 
   internal.ver += 1;
@@ -35,8 +43,32 @@ export function execDepFns(opts: ICommitStateOptions) {
     }
 
     if (!skipFindIns) {
-      allInsKeys = allInsKeys.concat(key2InsKeys[key] || []);
+      const insKeys = key2InsKeys[key] || [];
+      let validInsKeys: number[] = insKeys;
+
+      // TODO  支持 compareDict 设置
+      // 值为字典对象 {}，对比 depKey 相关子路径依赖值是否真的发生变化
+      if (isDictInfo[key]) {
+        // 重置 validInsKeys，按节点变化去过滤出目标 ins
+        validInsKeys = [];
+        for (const insKey of insKeys) {
+          if (allInsKeys.includes(insKey)) {
+            continue;
+          }
+          const insCtx = insCtxMap.get(insKey);
+          if (!insCtx) {
+            continue;
+          }
+          const depKeys = insCtx.renderInfo.getDeps();
+          if (hasChangedNode(internal, depKeys, key)) {
+            validInsKeys.push(insKey);
+          }
+        }
+      }
+
+      allInsKeys = allInsKeys.concat(validInsKeys);
     }
+
     const { firstLevelFnKeys, asyncFnKeys } = getDepFnStats(internal, key, runCountStats);
     allFirstLevelFnKeys = allFirstLevelFnKeys.concat(firstLevelFnKeys);
     allAsyncFnKeys = allAsyncFnKeys.concat(asyncFnKeys);
@@ -57,7 +89,7 @@ export function execDepFns(opts: ICommitStateOptions) {
   });
   // find globalId's ins keys, fn keys
   globalIds.forEach((id) => {
-    getGlobalIdInsKeys(id).forEach((insKey) => globalInsKeys.push(insKey));
+    getGlobalIdInsKeys(id).forEach((insKey) => nodupPush(globalInsKeys, insKey));
   });
 
   // deduplicate
@@ -68,18 +100,11 @@ export function execDepFns(opts: ICommitStateOptions) {
   allAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));
 
-  const updateIns = (insCtxMap: InsCtxMap, insKey: number) => {
-    const insCtx = insCtxMap.get(insKey) as InsCtxDef;
-    if (insCtx) {
-      insCtx.renderInfo.sn = sn;
-      runInsUpdater(insCtx);
-    }
-  };
   // start update
-  allInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey));
+  allInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));
   // start update globalId ins
   if (globalInsKeys.length) {
     const globalInsCtxMap = getGlobalEmptyInternal().insCtxMap;
-    globalInsKeys.forEach((insKey) => updateIns(globalInsCtxMap, insKey));
+    globalInsKeys.forEach((insKey) => updateIns(globalInsCtxMap, insKey, sn));
   }
 }

@@ -47,6 +47,9 @@ export declare function has(obj: any, key: any): boolean;
 export declare function safeObjGet<T = any>(obj: Record<NumStrSymbol, any>, key: NumStrSymbol, defaultValue: T): T;
 /** safe map get */
 export declare function safeMapGet<T = any>(map: Map<any, any>, key: any, defaultValue: T): T;
+/**
+ * 尝试匹配 dict 的 key 列表里是 fullStr 子串的 key
+ */
 export declare function matchDictKey(dict: Dict, fullStr: string): string;
 export declare function getVal(obj: any, keyPath: string[]): any;
 export declare function setVal(obj: any, keyPath: string[], val: any): void;

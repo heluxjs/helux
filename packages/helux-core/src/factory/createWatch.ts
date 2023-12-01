@@ -3,6 +3,7 @@ import { SCOPE_TYPE, WATCH } from '../consts';
 import { markFnEnd, markFnStart, registerFn } from '../helpers/fnCtx';
 import { recordFnDepKeys } from '../helpers/fnDep';
 import { getInternal, getSharedKey } from '../helpers/state';
+import { getAtomValInternal } from '../hooks/common/shared';
 import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types/base';
 import { parseWatchOptions } from './creator/parse';
 
@@ -19,7 +20,8 @@ function putSharedToDep(list: any[]) {
   // list 里可能包含共享状态自身引用
   if (Array.isArray(list)) {
     list.forEach((sharedState: any) => {
-      const internal = getInternal(sharedState);
+      // sharedState may a atom val passed useWatch deps fn
+      const internal = getInternal(sharedState) || getAtomValInternal(sharedState);
       if (internal) {
         const { sharedKey, forAtom } = internal;
         // deps 列表里的 atom 结果自动拆箱

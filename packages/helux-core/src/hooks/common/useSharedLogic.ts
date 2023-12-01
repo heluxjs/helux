@@ -5,7 +5,7 @@ import { resetReadMap, updateDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Dict, IInnerUseSharedOptions } from '../../types/base';
-import { checkAtom, checkStateVer, delInsCtx, isSharedKeyChanged, recoverInsCtx } from './shared';
+import { checkAtom, checkStateVer, delAtomVal, delInsCtx, isSharedKeyChanged, recordAtomVal, recoverInsCtx } from './shared';
 import { useSync } from './useSync';
 
 // for skip ts check out of if block
@@ -30,8 +30,9 @@ function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInner
 /**
  * 组件初次加载、卸载前相关副作用
  */
-function useInsCtxEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
+function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
   apiCtx.react.useEffect(() => {
+    delAtomVal(insCtx.atomVal);
     // 设定了 options.collect='first' 则首轮渲染结束后标记不能再收集依赖，阻值后续新的渲染流程里继续收集依赖的行为
     if (insCtx.collectType === 'first') {
       insCtx.canCollect = false;
@@ -46,9 +47,9 @@ function useInsCtxEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
 }
 
 /**
- * 收集组件渲染需要的依赖
+ * 收集组件渲染需要的依赖，做一些其他设置逻辑
  */
-function useDepCollection<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
+function useCollectDep<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
   insCtx.renderStatus = RENDER_START;
   resetReadMap(insCtx);
   // adapt to react 18
@@ -73,7 +74,7 @@ export function useSharedSimpleLogic<T extends Dict = Dict>(
   const insCtx = useInsCtx(apiCtx, sharedState, options);
   // adapt to react 18
   useSync(apiCtx, insCtx.subscribe, () => getInternal(sharedState).snap);
-  useInsCtxEffect(apiCtx, insCtx);
+  useClearEffect(apiCtx, insCtx);
 
   return insCtx;
 }
@@ -81,9 +82,9 @@ export function useSharedSimpleLogic<T extends Dict = Dict>(
 export function useSharedLogic<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInnerUseSharedOptions<T> = {}): InsCtxDef {
   checkAtom(sharedState, options.forAtom);
   const insCtx = useInsCtx(apiCtx, sharedState, options);
-  useDepCollection(apiCtx, sharedState, insCtx, options);
-  useInsCtxEffect(apiCtx, insCtx);
+  useCollectDep(apiCtx, sharedState, insCtx, options);
+  useClearEffect(apiCtx, insCtx);
   checkStateVer(insCtx);
-
+  recordAtomVal(insCtx);
   return insCtx;
 }

@@ -5,4 +5,9 @@
  */
 export type Level1ArrKeys = string[];
 
-export type DepKeyInfo = { depKey: string; keyPath: string[]; sharedKey: number };
+export type DepKeyInfo = {
+  depKey: string;
+  keyPath: string[];
+  parentKeyPath?: string[];
+  sharedKey: number;
+};

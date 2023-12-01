@@ -137,7 +137,7 @@ const handelChange = () =>
 修改`share`返回的共享对象
 
 ```ts
-const [shared, setShared] = atom({ info: { name: 'helux', age: 1 }, desc: 'awesome lib' });
+const [shared, setShared] = share({ info: { name: 'helux', age: 1 }, desc: 'awesome lib' });
 
 // 这是一个组件外部的函数，可全局任意地方使用
 function changName(name) {
@@ -155,10 +155,10 @@ function changName(name) {
 ```ts
 const [numAtom, setAtom] = atom(1);
 
-// 回调里基于草稿修改
-setAtom((draft) => {
-  draft.val = Math.random();
-});
+// 回调里返回最新值
+setAtom(() => Math.random());
+// 回调里基于草稿修改，回调里已对atom拆箱，因atom是原始值，此刻的草稿也是原始值
+setAtom((draft) => draft + Math.random());
 // 直接传入最新值修改
 setAtom(Math.random());
 ```
@@ -169,16 +169,13 @@ setAtom(Math.random());
 const [dictAtom, setDict] = atom({ desc: 'helux atom', info: { born: 2023 } });
 // 回调里基于草稿修改
 setDict((draft) => {
-  draft.val.info.born = 2022;
+  draft.info.born = 2022;
 });
 ```
 
-:::tip setAtom 回调 draft 未拆箱
+:::tip setAtom 回调 draft 已拆箱
 
-`setAtom` 内部未对 `draft` 做类似 `setAtom(draftVal => { draftVal.info.born = 2022 })` 的拆箱操作，即回调参数直接给 `draft.val` 的值
-
-> 主要是考虑到需要对原始值 atom 赋值 `undefined` 的场景，  
-> 基于 `draft.val` 方便且没有歧义：`setAtom(draft => { draft.val = undefined })`;
+`setAtom` 回调已对 `draft` 已做拆箱操作，如果是原始值 atom，draft 也是原始值
 
 :::
 
@@ -186,22 +183,41 @@ setDict((draft) => {
 
 使用`action`工厂函数接口创建修改共享对象的方法
 
-#### 同步函数
+#### atom 同步函数
 
 ```ts
-const normalAction = atomAction(numAtom)(({ setState, args, draft }) => {
+import { atomAction } from 'helux';
+
+const normalAction = atomAction(numAtom)(({ setState, args, draft, draftRoot }) => {
   const val = args[0] && Number.isInteger(args[0]) ? args[0] : random();
-  draft.val = val; // 可直接修改 draft
+  // 返回新值
+  return val;
+
+  // 参考当前值返回新值
+  // return draft + val;
+
+  // 修改draftRoot
+  // draftRoot.val = val;
 }, 'normalAction');
 normalAction(1); // 参数将透传给 args
 ```
 
-#### 异步函数
+#### atom 异步函数
 
 ```ts
+import { atomActionAsync } from 'helux';
+
 const asyncAction = atomActionAsync(numAtom)(async ({ setState, args }) => {
   await delay(2000);
   const val = args[0] && Number.isInteger(args[0]) ? args[0] : random();
-  setState((draft) => (draft.val = val)); // 异步函数里必须使用 setState 同步修改状态
+  return val;
+
+  // 如果 atom 定义的是对象，此处需基于草稿修改
+  // setState((draft) => (draft.xx = 'new val'));
+  // 返回字典的话会按浅合并策略处理
+  // return { xx: 'new val' };
 }, 'asyncAction');
+
+// 调用 action 返回 Promise
+asyncAction(1);
 ```

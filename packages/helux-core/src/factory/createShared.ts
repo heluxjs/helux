@@ -29,7 +29,7 @@ function getFns(state: any, forAtom: boolean) {
     actionCreator: action(state),
     actionAsyncCreator: actionAsync(state),
     mutateCreator: mutate(state),
-    setAtomVal: noop, // 非 atom 调用此方法无效，类型上目前不不标记此方法的存在
+    setAtomVal: noop, // 非 atom 调用此方法无效，类型上目前不标记此方法的存在
   };
 }
 

@@ -37,18 +37,25 @@ export function clearDep(insCtx: InsCtxDef) {
   internal.delInsCtx(insKey);
 }
 
+/**
+ * 每轮渲染完毕的 effect 里触发更新依赖更新
+ */
 export function updateDep(insCtx: InsCtxDef) {
-  const { insKey, readMap, readMapPrev, internal, canCollect } = insCtx;
+  const { insKey, readMap, readMapPrev, internal, canCollect, pure, currentDepKeys } = insCtx;
   // 标记了不能收集依赖，则运行期间不做更新依赖的动作
   if (!canCollect) {
+    insCtx.depKeys = currentDepKeys.slice();
     return;
   }
-  Object.keys(readMapPrev).forEach((prevKey) => {
-    if (!readMap[prevKey]) {
-      // lost dep
-      internal.delDep(prevKey, insKey);
-    }
-  });
+  if (!pure) {
+    Object.keys(readMapPrev).forEach((prevKey) => {
+      if (!readMap[prevKey]) {
+        // lost dep
+        internal.delDep(prevKey, insKey);
+      }
+    });
+  }
+  insCtx.depKeys = currentDepKeys.slice();
   insCtx.readMapStrict = null;
 }
 
@@ -61,13 +68,17 @@ export function resetReadMap(insCtx: InsCtxDef) {
   if (!canCollect) {
     return;
   }
-  if (readMapStrict) {
-    // second call
-    insCtx.readMapPrev = readMapStrict;
-    insCtx.readMapStrict = null;
-  } else {
+
+  if (!readMapStrict) {
+    // from strict-mode or non-strict-mode first call
     insCtx.readMapPrev = readMap;
     insCtx.readMapStrict = readMap;
     insCtx.readMap = {}; // reset read map
+    insCtx.depKeys = insCtx.currentDepKeys.slice();
+    insCtx.currentDepKeys.length = 0;
+  } else {
+    // from strict-mode second call
+    insCtx.readMapPrev = readMapStrict;
+    insCtx.readMapStrict = null;
   }
 }

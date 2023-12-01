@@ -18,6 +18,8 @@ export interface IMutateCtx {
   triggerReasons: TriggerReason[];
   ids: NumStrSymbol[];
   globalIds: NumStrSymbol[];
+  /** 记录 depKey 对应值是否是字典 */
+  isDictInfo: Dict<boolean>;
   writeKeys: Dict;
   arrKeyDict: Dict;
   writeKeyPathInfo: Dict<TriggerReason>;
@@ -63,8 +65,9 @@ export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
     triggerReasons: [],
     ids,
     globalIds,
+    isDictInfo: {},
     writeKeys: {},
-    arrKeyDict: {}, // 记录读取过程中遇到的数组key
+    arrKeyDict: {}, // 记录读取过程中遇到的数组 key
     writeKeyPathInfo: {},
     keyPathValue: new Map(),
     handleAtomCbReturn: true,
@@ -127,7 +130,7 @@ export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) 
  * 区分是 atom 还是 shared 返回的部分状态，atom 返回要自动装箱为 { val: T }
  */
 export function wrapPartial(forAtom: boolean, val: any) {
-  if (val === undefined) return; // undefined 丢弃，如真需要赋值 undefined，对 draft 操作即可
+  if (val === undefined) return; // undefined 丢弃，如真需要赋值 undefined，调用 setAtomVal
   if (forAtom) return { val };
   if (isObj(val)) return val;
 }

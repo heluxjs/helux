@@ -38,22 +38,20 @@ const [dictAtom, setDict] = atom({ desc: 'helux atom', info: { born: 2023 } });
 
 // 原始值读取
 console.log(numAtom.val);
-// 原始值修改，可传入回调基于草稿修改，也可直接传入最新值
-setAtom((draft) => (draft.val = Math.random()));
-setAtom(Math.random());
+
+setAtom(() => Math.random()); // 回调返回最新值
+setAtom((draft) => draft + Math.random()); // 复用回调草稿返回最新值
+setAtom(Math.random()); // 直接传入最新值
 
 // 对象值读取
 console.log(dictAtom.val.info.born);
 // 对象值修改，修改结束后，会生成一份具有结构共享特性的新状态
-setDict((draft) => (draft.val.info.born = 2022));
+setDict((draft) => (draft.info.born = 2022));
 ```
 
-:::tip setAtom 回调 draft 未拆箱原因
+:::tip setAtom 回调 draft 已拆箱
 
-为何 `setAtom` 内部未对 `draft` 做拆箱操作呢，形如：`setAtom(draft => { draft.num += 1 })`
-
-> 主要是考虑到需要对原始值 atom 赋值 `undefined` 的场景，  
-> 基于 `draft.val` 方便且没有歧义：`setAtom(draft => { draft.val = undefined })`;
+`setAtom` 回调已对 `draft` 已做拆箱操作，如果是原始值 atom，draft 也是原始值
 
 :::
 
@@ -67,9 +65,12 @@ const [sharedDict, setDict] = share({ desc: 'helux atom', info: { born: 2023 } }
 // 传入对象工厂函数
 const [sharedDict, setDict] = share(() => ({ desc: 'helux atom', info: { born: 2023 } }));
 
-// 读取与修改，区别于 atom，无 .val 取值操作
+// 读取，区别于 atom，无 .val 取值操作
 console.log(sharedDict.info.born);
+// 修改直接修改草稿
 setDict((draft) => (draft.info.born = 2022));
+// 会返回整个状态的全新值
+setDict(() => aTotallyNewState);
 ```
 
 :::tip share 优先
@@ -93,9 +94,9 @@ const [shared, setShared, sharedCtx] = share({ name: 'helux' });
 //    runMutate           <-- 运行指定的可变派生函数
 //    runMutateTask       <-- 运行指定的可变派生函数异步任务
 //    action              <-- 创建修改状态的动作函数
-//    asyncAction         <-- 创建修改状态的异步动作函数
+//    actionAsync         <-- 创建修改状态的异步动作函数
 //    call                <-- 定义并呼叫一个动作函数
-//    asyncCall           <-- 定义并呼叫一个异步动作函数
+//    callAsync           <-- 定义并呼叫一个异步动作函数
 //    useState            <-- 是用当前状态的钩子函数，供react组件调用
 //    getMutateLoading    <-- 组件外获取 mutate 可变派生函数的运行状态
 //    useMutateLoading    <-- 组件内使用 mutate 可变派生函数运行状态的钩子

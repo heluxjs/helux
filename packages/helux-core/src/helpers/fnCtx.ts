@@ -64,10 +64,11 @@ export function markFnEnd() {
     const { depKeys } = fnCtx;
     const dict: Dict<number> = {};
     afterRunDepKeys.forEach((k) => (dict[k] = 1));
-    afterRunDepKeys.forEach((depKey, idx) => {
+    afterRunDepKeys.forEach((depKey) => {
       const matched = matchDictKey(dict, depKey);
-      // 匹配到了子串，就丢弃它
-      if (matched !== depKey) {
+      // 匹配到的子串不是 depKey 自身，就丢弃该子串
+      // 随着子串不停地被丢弃，最长路径的多个 depKey 就保留下来了
+      if (matched && matched !== depKey) {
         delete dict[matched];
       }
     });

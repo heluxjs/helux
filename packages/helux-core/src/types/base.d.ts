@@ -446,7 +446,7 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
   setState: SetState<T>;
   sync: SyncFnBuilder<T>;
   syncer: Syncer<T>;
-  useState: (IUseSharedOptions?: IUseSharedOptions<T>) => [T, SetState<T>, IRenderInfo];
+  useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IRenderInfo];
   /** 获取 Mutate 状态 */
   getMutateLoading: () => SafeLoading<T, O>;
   /** 使用 Mutate 状态 */
@@ -467,7 +467,7 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
   setState: SetAtom<T>;
   sync: AtomSyncFnBuilder<T>;
   syncer: AtomSyncer<T>;
-  useState: (IUseSharedOptions?: IUseAtomOptions<T>) => [T, SetAtom<T>, IRenderInfo];
+  useState: (options?: IUseSharedStateOptions<T>) => [T, SetAtom<T>, IRenderInfo];
   /** 获取 Mutate 状态 */
   getMutateLoading: () => AtomSafeLoading<T, O>;
   /** 使用 Mutate 状态 */
@@ -610,7 +610,7 @@ export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull
   mutateFns: Array<MutateFnLooseItem<T>>;
 }
 
-export interface IUseSharedOptionsBase {
+export interface IUseSharedStateOptions<T = any> {
   /**
    * default: every ，设置为 first 或 no 可以进一步提高组件渲染性能，但需要注意
    * first 时如果组件的依赖是变化的，会造成依赖丢失的情况产生，触发组件不会重渲染的bug，
@@ -624,13 +624,52 @@ export interface IUseSharedOptionsBase {
   collectType?: 'no' | 'first' | 'every';
   /**
    * 视图的id，在 ICreateOptionsFull.rules 里配置更新的 ids 包含的值指的就是此处配置的id，
-   * 此id属于传入的 sharedState ，即和共享状态绑定了对应关系，意味着组件使用不同的 sharedState，
-   * 时传入了相同的id，是相互隔离的状态
+   * 此id属于传入的 sharedState ，即和共享状态绑定了对应关系，意味着组件使用不同的 sharedState
+   * 时传入了相同的id，是相互隔离的
    */
   id?: NumStrSymbol;
-}
-
-export interface IUseSharedOptions<T = Dict> extends IUseSharedOptionsBase {
+  /**
+   * default: false，是否以 pure 模式使用状态
+   * ```
+   * 1 为 false，表示状态不只是用于当前组件ui渲染，还会透传给 memo 的子组件，透传给 useEffect 依赖数组，
+   *   此模式下会收集中间态依赖，不丢弃记录过的字典依赖
+   * 2 为 true，表示状态仅用于当前组件ui渲染，此模式下不会收集中间态依赖，只记录最长路径依赖
+   * ```
+   * 组件 Demo 使用示例
+   * ```ts
+   * function Demo(){
+   *  const [state] = useAtom(dictAtom, { pure: true });
+   *  const { extra, name, desc } = state;
+   *  // 这里继续下钻读取了 state.extra 的子节点，故state.extra 算作一个中间态的依赖
+   *  const { list, mark } = extra;
+   * }
+   *
+   * // pure = false 时，extra 被收集
+   * 此时依赖为: name, desc, extra, extra.list, extra.mask
+   *
+   * // pure = true 时，extra 被忽略
+   * 此时依赖为: name, desc, extra.list, extra.mask
+   *
+   * ```
+   * pure = true ，拥有更好的重渲染命中精准度
+   * ```ts
+   * // 重新赋值了 extra，但其实 extra.list, extra.mask 孩子节点没变化，
+   * // helux 内部经过比较 extra.list, extra.mask 值发现无变化后不会重渲染 Demo
+   * setState(draft=> draft.extra = { ...draft.extra });
+   *
+   * // 👻 但要注意，此时如果 extra 传给了 useEffect，并不会因为 extra的变化而引起 Effect 重新执行
+   * useEffect(()=>{//...logic}, [state.extra]);
+   * // 如执行了则是因为其他依赖引起组件重渲染刚好顺带触发了 Effect 执行
+   *
+   * // 所以这里如需要中间态依赖也能正常收集到，有以下两种方式
+   * // 1 设置 pure 为 false, 或不设置 pure
+   * useAtom(dictAtom, { pure: false });
+   * useAtom(dictAtom);
+   * // 2 人工补上 extrta 依赖（相当于固定住依赖）
+   * useAtom(dictAtom, { deps: state=>state.extra });
+   * ```
+   */
+  pure?: boolean;
   /**
    * 组件件可在渲染过实时收集到依赖，如需补充一些组件渲染过程中不体现的额外依赖时，设置此函数
    * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集
@@ -638,15 +677,7 @@ export interface IUseSharedOptions<T = Dict> extends IUseSharedOptionsBase {
   deps?: (readOnlyState: T) => any[] | void;
 }
 
-export interface IUseAtomOptions<T = any> extends IUseSharedOptionsBase {
-  /**
-   * 组件件可在渲染过实时收集到依赖，如需补充一些组件渲染过程中不体现的额外依赖时，设置此函数
-   * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集
-   */
-  deps?: (readOnlyState: Atom<T>) => any[] | void;
-}
-
-export interface IInnerUseSharedOptions<T = Dict> extends IUseSharedOptions<T> {
+export interface IInnerUseSharedOptions<T = Dict> extends IUseSharedStateOptions<T> {
   /**
    * 全局id，在 ICreateOptionsFull.rules 子项里配置 globalIds，
    * 此 id 需通过 useGlobalId 设定
@@ -841,10 +872,23 @@ export interface IRenderInfo {
   /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
   sn: number;
   /**
-   * 获取当前组件的依赖列表，通常需要再 useEffect 里调用能获取当前渲染收集的依赖，
-   * 如在渲染过程中直接调用获取的是前一次渲染收集的依赖
+   * 获取派生结果对应的依赖
    */
   getDeps: () => string[];
+}
+
+export interface IInsRenderInfo {
+  /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
+  sn: number;
+  /**
+   * 获取组件的当前渲染周期里收集到依赖列表，通常需要再 useEffect 里调用能获取当前渲染周期收集的所有依赖，
+   * 如在渲染过程中直接调用获取的是正在收集中的依赖
+   */
+  getDeps: () => string[];
+  /**
+   * 获取组件的前一次渲染周期里收集到依赖列表
+   */
+  getPrevDeps: () => string[];
 }
 
 export interface IInsCtx<T = Dict> {
@@ -854,6 +898,12 @@ export interface IInsCtx<T = Dict> {
   readMapPrev: Dict;
   /** StrictMode 下辅助 resetDepMap 函数能够正确重置 readMapPrev 值 */
   readMapStrict: null | Dict;
+  /** 已标记删除的 key 记录 */
+  delReadMap: Dict;
+  /** 是否是 pure 模式 */
+  pure: boolean;
+  depKeys: string[];
+  currentDepKeys: string[];
   /** 是否是深度依赖收集模式 */
   isDeep: boolean;
   /** 是否是第一次渲染 */
@@ -865,6 +915,7 @@ export interface IInsCtx<T = Dict> {
   rawState: Dict;
   sharedState: Dict;
   proxyState: Dict;
+  atomVal: any;
   updater: Fn;
   /** 未挂载 已挂载 已卸载 */
   mountStatus: MountStatus;
@@ -888,8 +939,8 @@ export interface IInsCtx<T = Dict> {
    * 计算出的能否收集依赖标记，如透传了 options.collect=false，会在首轮渲染结束后标记为 false
    */
   canCollect: boolean;
-  renderInfo: IRenderInfo;
-  recordDep: (depKeyInfo: DepKeyInfo) => void;
+  renderInfo: IInsRenderInfo;
+  recordDep: (depKeyInfo: DepKeyInfo, parentType?: string) => void;
 }
 
 export type InsCtxMap = Map<number, IInsCtx>;

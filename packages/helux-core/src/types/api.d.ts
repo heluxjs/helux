@@ -42,7 +42,7 @@ import type {
   IRunMutateOptions,
   ISharedCtx,
   IUseDerivedOptions,
-  IUseSharedOptions,
+  IUseSharedStateOptions,
   IWatchFnParams,
   LoadingNone,
   LoadingState,
@@ -230,7 +230,7 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: Wat
  * const [ obj, setObj ] = useShared(sharedObj);
  * ```
  */
-export function useShared<T = Dict>(sharedObject: T, IUseSharedOptions?: IUseSharedOptions<T>): [SharedDict<T>, SetState<T>, IRenderInfo];
+export function useShared<T = Dict>(sharedObject: T, options?: IUseSharedStateOptions<T>): [SharedDict<T>, SetState<T>, IRenderInfo];
 
 /**
  * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
@@ -250,7 +250,7 @@ export function useShared<T = Dict>(sharedObject: T, IUseSharedOptions?: IUseSha
  * });
  * ```
  */
-export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedOptions<Atom<T>>): [T, SetAtom<T>, IRenderInfo];
+export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedStateOptions<T>): [T, SetAtom<T>, IRenderInfo];
 
 /**
  * 使用普通对象，需注意此接口只接受普通对象
@@ -594,7 +594,7 @@ export function atomActionAsync<T = any>(
  * get current draft root
  * here pass state just for get return type
  */
-export function currentDraftRoot<T = any>(state?: T): T;
+export function currentDraftRoot<T = any>(state?: T): T extends Atom ? { val: T['val'] } : T;
 
 /**
  * setAtomVal('xx') 等效于 currentDraftRoot().val = 'xx';

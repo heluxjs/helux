@@ -15,8 +15,8 @@ export function diffVal(internal: TInternal, depKey: string) {
     return result;
   }
 
-  // 对于 shared 根对象的比较，rootValKey 和 sharedKeyStr相同，此时可安全复用 isStateChanged 结果
-  // 原因见 factory/common/update 45 行，analyzeDepKey(rootValKey)
+  // 对于 shared 根对象的比较，rootValKey 和 sharedKeyStr 相同，此时可安全复用 isStateChanged 结果
+  // 原因见 factory/common/notify 45 行，analyzeDepKey(rootValKey)
   if (internal.sharedKeyStr === depKey) {
     return scope.isStateChanged;
   }
@@ -30,6 +30,17 @@ export function diffVal(internal: TInternal, depKey: string) {
   }
 
   return result;
+}
+
+export function hasChangedNode(internal: TInternal, depKeys: string[], depKey: string) {
+  let subValChanged = false;
+  for (const storedDepKey of depKeys) {
+    // 是 key 的子串，比较值是否有变化
+    if (storedDepKey.startsWith(depKey) && diffVal(internal, storedDepKey)) {
+      subValChanged = true;
+    }
+  }
+  return subValChanged;
 }
 
 /**

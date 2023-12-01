@@ -189,19 +189,35 @@ setShared((draft) => {
 });
 ```
 
-特别注意，总是保持对最小目标做数据修改可让`helux`缩小渲染范围，如非必须不用替换整个对象
+注意，helux 总是会对所有使用方比较新旧值确定是否要重运行相关依赖函数（包含派生函数、渲染函数），如非必须不用替换整个对象，总是保持对最小目标做数据修改可缩小依赖函数运行范围。
 
 ```tsx
-// 💢 此修改是重新生成整个 info 对象，会造成以下两个组件都重渲染（尽管 age 没有发生变化 ）
+const [shared, setShared] = share({ info: { name: 'helux', age: 1 }, desc: 'awesome lib' });
+
+// 💢 此修改是重新生成整个 info 对象，但仅会造成 Info 重新渲染
 setShared((draft) => {
   draft.info = { ...draft.info, name: 'new name' };
 });
 
+// 💢 触发执行，因为 info 引用已变化
+function Info() {
+  const [state] = useShared(shared);
+  console.log(state.info);
+  return <h1>just read info</h1>;
+}
+
+// ✅ 不被执行
+watch(() => {
+  console.log('name changed');
+}, [shared.info.name]);
+// ✅ 不被执行
+const nameResult = deriveAtom(() => `prefix:${shared.info.name}`);
+// ✅ 不被执行
 function Name() {
   const [state] = useShared(shared);
   return <h1>{state.info.name}</h1>;
 }
-
+// ✅ 不被执行
 function Age() {
   const [state] = useShared(shared);
   return <h1>{state.info.age}</h1>;
@@ -210,48 +226,76 @@ function Age() {
 
 #### atom 修改
 
-修改`atom`返回的共享原始值
+修改`atom`共享原始值，返回结果均会被自动装箱为 `{ val: T }`
 
 ```ts
 const [numAtom, setAtom] = atom(1);
 
-// 回调里基于草稿修改
-setAtom((draft) => {
-  draft.val = Math.random();
-});
+// 回调里返回最新值
+setAtom(() => Math.random());
+// 回调里基于草稿修改，回调里已对atom拆箱，因atom是原始值，此刻的草稿也是原始值
+setAtom((draft) => draft + Math.random());
 // 直接传入最新值修改
 setAtom(Math.random());
 ```
 
-修改`atom`返回的共享对象
+修改`atom`共享原始值为 `undefined`
+
+> 内部默认忽略 setAtom 返回的有歧义的 undefined 值，如需设置 undefined 值，可使用 `setAtomVal` 或 `currentDraftRoot`
+
+```ts
+import { setAtomVal, currentDraftRoot } from 'helux';
+
+setAtom(() => setAtomVal(undefind));
+setAtom(() => (currentDraftRoot().val = undefind));
+```
+
+修改`atom`字典型共享对象
+
+- 深层次修改
 
 ```ts
 const [dictAtom, setDictAtom] = atom({ desc: 'helux atom', info: { born: 2023 } });
 // 回调里基于草稿修改
 setDictAtom((draft) => {
-  draft.val.info.born = 2022;
+  draft.info.born = 2022;
 });
 ```
 
-`setShared`里可以返回部分新状态，但`setAtom`如果要返回则必须是整个全新对象，因为内部会对`setAtom`返回结果做装箱操作
+- 浅层次修改
 
 ```ts
-// 返回新的原始数值，返回结果会自动装箱为 { val: 1 }
-setAtom(() => 1);
-// 等效于以下两种写法
-setAtom(1);
-setAtom((draft) => (draft.val = 1));
+const [dictAtom, setDictAtom] = atom({ desc: 'helux atom', info: { born: 2023 } });
+// 回调里基于草稿修改
+setDictAtom((draft) => {
+  draft.desc = 'helux atom';
+});
 
-// 返回新的对象，确保是完整的新对象
-setAtom((draft) => {
-  const val = { ...draft.val };
-  val.desc = 'new desc';
-  return val;
+// 也可返回部分状态，和上面写法等效
+setDictAtom(() => ({ desc: 'helux atom' }));
+```
+
+- 混合修改
+
+既基于草稿修改，也返回部分状态
+
+```ts
+// 内部会自动将返回的部分字典补到草稿上 draft.desc = 'helux atom';
+setDictAtom((draft) => {
+  draft.info.born = 2022;
+  return { desc: 'helux atom' };
 });
-// 上诉写法仅为了演示必须返回完整状态，更好的替代写法应是
-setAtom((draft) => {
-  draft.desc = 'new desc';
-});
+```
+
+修改`atom`非字典型共享对象，通常指`Array`、`Map`、`Set` 数据结构
+
+- 修改部分节点
+
+```ts
+const [listAtom, setListAtom] = atom([{ name: 1 }, { name: 2 }]);
+
+// 返回的对象为字典对象，可以是部分对象
+setListAtom((draft) => (draft[1].name = 3));
 ```
 
 :::tip setAtom 回调 draft 未拆箱

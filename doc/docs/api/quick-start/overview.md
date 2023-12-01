@@ -237,24 +237,21 @@ function Demo() {
 :::
 
 ```ts
-const [numAtom, setAtom] = atom({ num: 1 }); // { va: { num: 1 } }
+const [numAtom, setAtom] = atom({ num: 1 }); // { val: { num: 1 } }
 const [numState, setState] = share({ num: 1 }); // { num: 1 }
 
 // 基于可变数据修改生成新状态
 setAtom((draft) => {
-  draft.val.num += 1;
+  draft.num += 1;
 });
 setState((draft) => {
   draft.num += 1;
 });
 ```
 
-:::tip setAtom 回调里 draft 未拆箱
+:::tip setAtom 回调 draft 已拆箱
 
-为何 `setAtom` 内部未对 `draft` 做拆箱操作呢，形如：`setAtom(draft => { draft.num += 1 })`
-
-> 主要是考虑到需要对原始值 atom 赋值 `undefined` 的场景，  
-> 基于 `draft.val` 方便且没有歧义：`setAtom(draft => { draft.val = undefined })`;
+`setAtom` 回调已对 `draft` 已做拆箱操作，如果是原始值 atom，draft 也是原始值
 
 :::
 
@@ -282,7 +279,7 @@ function methodA(input: number) {
 ```ts
 const normalAction = atomAction(numAtom)<[number, string]>(({ setState, args, draft }) => {
   const val = args[0] && Number.isInteger(args[0]) ? args[0] : random();
-  draft.val = val; // 可直接修改 draft
+  return val;
 }, 'normalAction');
 normalAction(1, 1); // ❌ 第二位参数将提示：类型“number”的参数不能赋给类型“string”的参数
 ```
@@ -293,7 +290,7 @@ normalAction(1, 1); // ❌ 第二位参数将提示：类型“number”的参�
 const asyncAction = atomActionAsync(numAtom)<[number, string]>(async ({ setState, args }) => {
   await delay(2000);
   const val = args[0] && Number.isInteger(args[0]) ? args[0] : random();
-  setState((draft) => (draft.val = val)); // 异步函数里必须使用 setState 同步修改状态
+  return val;
 }, 'asyncAction');
 ```
 
@@ -328,7 +325,7 @@ const [numState, setState, { syncer }] = share({ a: 1, b: { b1: 1 } });
 
 :::tip 同步函数自动缓存
 
-多次对同一个路径调用返回的同步函数，指向的是同一个：  
+多次调用指定了同一个路径时返回的同步函数，指向的是同一个：  
 `ctx.sync(to=> to.b.b1) === ctx.sync(to=> to.b.b1)`
 
 :::
@@ -342,21 +339,27 @@ const [numState, setState, { syncer }] = share({ a: 1, b: { b1: 1 } });
 观察函数立即执行，收集到相关依赖
 
 ```ts
-import  share, watch, getPrevSnap } from 'helux';
+import { share, watch, getSnap } from 'helux';
 
 const [priceState, setPrice] = share({ a: 1 });
 
-watch(() => {
-  // 首次执行日志如下
-  // price change from 1 to 1
-  //
-  // 反复调用 changePrice，日志变化如下
-  // price change from 1 to 101
-  // price change from 101 to 201
-  console.log(`price change from ${getPrevSnap(priceState).a} to ${priceState.a}`);
-}, { immediate: true });
+watch(
+  () => {
+    // 首次执行日志如下
+    // price change from 1 to 1
+    //
+    // 反复调用 changePrice，日志变化如下
+    // price change from 1 to 101
+    // price change from 101 to 201
+    console.log(`price change from ${getSnap(priceState).a} to ${priceState.a}`);
+  },
+  { immediate: true },
+);
 
-const changePrice = ()=>setPrice(draft => { draft.a += 100 });
+const changePrice = () =>
+  setPrice((draft) => {
+    draft.a += 100;
+  });
 ```
 
 观察函数不立即执行，通过 deps 函数定义需要观察的数据，观察的粒度可以任意定制
@@ -489,7 +492,7 @@ const [listAtom, setAtom] = atom([
 function change(idx: number) {
   // 当前修改仅会引起 List 和 Item1 重渲染
   setAtom((draft) => {
-    draft.val[idx].name = Date.now();
+    draft[idx].name = Date.now();
   });
 }
 
@@ -533,12 +536,12 @@ function Comp1() {
 }
 ```
 
-如不需要，可设置为仅首轮渲染需要收集依赖，进一步提高渲染性能
+如不需要，可设置`collectionType`为仅首轮渲染需要收集依赖，进一步提高渲染性能
 
 ```ts
-import { WAY } from 'helux';
+useShared(shared, { collectionType: 'first' });
 
-useShared(numAtom, { way: WAY.FIRST_RENDER });
+useAtom(numAtom, { collectionType: 'first' });
 ```
 
 ### 自定义收集规则
@@ -675,8 +678,6 @@ const [finalPriceState] = share({ retA: 0, time: 0 }, {
       // 定义好上游数据依赖
       deps: [priceState.a , numAtom.val],
       task: async ({ setState }) => { ... },
-      // 触发task立即执行，默认情况 task 首次不执行
-      immediate: true,
     },
   },
 });
@@ -722,7 +723,7 @@ const [obj] = share({ a: 1 });
 
 // 为 atom 对象创建 mutate 函数
 atomMutate(numAtom)({
-  fn: (draft) => (draft.val = baseAtom.val + 100),
+  fn: () => baseAtom.val + 100,
   desc: 'mutateNumAtomVal',
 });
 
@@ -750,27 +751,15 @@ objCtx.mutate({ ... });
 
 `mutate`函数默认运行时机是基于监听的数据变更后被触发运行的，也支持人工调用的方式主动触发重运行
 
-- 触发`options.mutate`里的可变派生函数重运行
+- 触发可变派生函数重运行
 
 ```ts
-import { runInnerMutate, runInnerMutateTask } from 'helux';
+import { runMutate, runMutateTask } from 'helux';
 
 // 触发 someState 的 retA mutate 配置的同步函数
-runInnerMutate(someState, 'retA');
-
-// 触发 someState 的 retA mutate 配置的异步函数
-runInnerMutateTask(someState, 'retA');
-```
-
-- 触发外部定义的可变派生函数重运行
-
-```ts
-import { runMutate, runInnerMutateTask } from 'helux';
-
-// 触发 someState 的外部 mutate 配置的 retA 同步函数，如存在才会执行
 runMutate(someState, 'retA');
 
-// 触发 someState 的外部 mutate 配置的 retA 异步函数，如存在才会执行
+// 触发 someState 的 retA mutate 配置的异步函数
 runMutateTask(someState, 'retA');
 ```
 
