@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.12
+
+### Patch Changes
+
+- d8dbcff: build(3.4.12): add snap to witness
+  - @helux/hooks-impl@3.4.12
+  - @helux/types@3.4.12
+  - @helux/utils@3.4.12
+
 ## 3.4.11
 
 ### Patch Changes
