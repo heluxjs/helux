@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.15
+
+### Patch Changes
+
+- 6dd813c: build(3.4.15): del notify redundant excludedInsKeyDict logic
+  - @helux/hooks-impl@3.4.15
+  - @helux/types@3.4.15
+  - @helux/utils@3.4.15
+
 ## 3.4.14
 
 ### Patch Changes

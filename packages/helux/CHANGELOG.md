@@ -1,5 +1,12 @@
 # helux
 
+## 3.4.15
+
+### Patch Changes
+
+- Updated dependencies [6dd813c]
+  - @helux/core@3.4.15
+
 ## 3.4.14
 
 ### Patch Changes
