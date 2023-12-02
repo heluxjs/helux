@@ -1,34 +1,55 @@
+import { DICT } from '../../consts';
 import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef, TInternal } from '../../factory/creator/buildInternal';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
-import type { Dict } from '../../types/base';
+import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
 
 /**
- * let code beblow works;
+ * let code below works
+ * ```ts
  * const [dict] = useAtom(dictAtom);
  * useWatch(()=>{}, ()=>[dict]);
+ *
+ * const [state] = useShared(dictShared);
+ * useWatch(()=>{}, ()=>[state]);
+ * ```
  */
-const atomValMap = new Map<any, any>();
-window.ww = atomValMap;
+const rootValMap = new Map<any, any>();
 
-export function recordAtomVal(insCtx: InsCtxDef) {
-  if (insCtx.isFirstRender && insCtx.internal.forAtom) {
-    insCtx.atomVal = insCtx.proxyState.val;
+/**
+ * 记录一些必要的辅助数据，返回 useAtom useShared 需要的元组数据
+ */
+export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, IInsRenderInfo] {
+  const { proxyState, internal, renderInfo } = insCtx;
+  const { sharedKey, sharedKeyStr, setDraft } = internal;
+  renderInfo.snap = internal.snap;
+  // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
+  const rootVal = forAtom ? proxyState.val : proxyState;
+  // 首次渲染时，记录一下 rootVal
+  if (insCtx.isFirstRender) {
+    // ATTENTION：这里提前触发一次 .val 根值依赖记录
+    insCtx.rootVal = rootVal;
     // 如果 val 是原始值，多个相同的值会覆盖，造成 useWatch 判断失误
     // 这里会写到文档的常见使用错误里，警示作者避免直接传递原始值给 useWatch deps 函数
-    atomValMap.set(insCtx.atomVal, insCtx.internal);
+    rootValMap.set(insCtx.rootVal, internal);
   }
+  if (!forAtom) {
+    // 记录一次根值依赖，让未对 useAtom useShared 返回值有任何读操作的组件也响应更新
+    insCtx.recordDep({ depKey: sharedKeyStr, keyPath: [], sharedKey }, DICT);
+  }
+
+  return [rootVal, setDraft, renderInfo];
 }
 
-export function delAtomVal(val: any) {
-  atomValMap.delete(val);
+export function delRootVal(val: any) {
+  rootValMap.delete(val);
 }
 
-export function getAtomValInternal(val: any): TInternal | undefined {
-  return atomValMap.get(val);
+export function getRootValInternal(val: any): TInternal | undefined {
+  return rootValMap.get(val);
 }
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {
@@ -43,7 +64,7 @@ export function checkStateVer(insCtx: InsCtxDef) {
     internal: { ver: dataVer },
   } = insCtx;
   if (ver !== dataVer) {
-    // 替换 proxyState，让把共享对象透传给 memo 组件的场景也能正常触发重新渲染
+    // 替换 proxyState，让把共享对象透传给 memo 组件、useEffect deps 的场景也能正常触发重新渲染
     insCtx.ver = dataVer;
     attachInsProxyState(insCtx);
   }

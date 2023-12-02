@@ -1,4 +1,5 @@
 import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } from '@helux/types';
+import type { IOperateParams } from 'limu';
 import type { DepKeyInfo } from './inner';
 
 /**
@@ -446,15 +447,15 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
   setState: SetState<T>;
   sync: SyncFnBuilder<T>;
   syncer: Syncer<T>;
-  useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IRenderInfo];
+  useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 获取 Mutate 状态 */
   getMutateLoading: () => SafeLoading<T, O>;
   /** 使用 Mutate 状态 */
-  useMutateLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IRenderInfo];
+  useMutateLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
   /** 获取 Action 状态 */
   getActionLoading: () => SafeLoading<T, O>;
   /** 使用 Action 状态 */
-  useActionLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IRenderInfo];
+  useActionLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
 }
 
 export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> {
@@ -467,15 +468,15 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
   setState: SetAtom<T>;
   sync: AtomSyncFnBuilder<T>;
   syncer: AtomSyncer<T>;
-  useState: (options?: IUseSharedStateOptions<T>) => [T, SetAtom<T>, IRenderInfo];
+  useState: (options?: IUseSharedStateOptions<T>) => [T, SetAtom<T>, IInsRenderInfo];
   /** 获取 Mutate 状态 */
   getMutateLoading: () => AtomSafeLoading<T, O>;
   /** 使用 Mutate 状态 */
-  useMutateLoading: () => [AtomSafeLoading<T, O>, SetState<LoadingState>, IRenderInfo];
+  useMutateLoading: () => [AtomSafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
   /** 获取 Action 状态 */
   getActionLoading: () => AtomSafeLoading<T, O>;
   /** 使用 Action 状态 */
-  useActionLoading: () => [AtomSafeLoading<T, O>, SetState<LoadingState>, IRenderInfo];
+  useActionLoading: () => [AtomSafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
   setAtomVal: (val: T) => void;
 }
 
@@ -578,6 +579,11 @@ export interface ICreateOptionsBaseFull<T = any> {
    * 配置状态变更联动视图更新规则
    */
   rules: IDataRule<T>[];
+  /**
+   * 暴露给开发者使用的钩子函数，所有值读取操作均触发此钩子函数，
+   * 如果读操作返回了具体指，则会透传给用户，这是一个危险的操作，用户需自己为此负责
+   */
+  onRead: (opParams: IOperateParams) => any;
 }
 
 export interface ICreateOptionsFull<T = Dict> extends ICreateOptionsBaseFull<T> {
@@ -629,11 +635,11 @@ export interface IUseSharedStateOptions<T = any> {
    */
   id?: NumStrSymbol;
   /**
-   * default: false，是否以 pure 模式使用状态
+   * default: false，是否以 pure 模式使用状态，此参数只影响字典数据的依赖收集规则
    * ```
    * 1 为 false，表示状态不只是用于当前组件ui渲染，还会透传给 memo 的子组件，透传给 useEffect 依赖数组，
-   *   此模式下会收集中间态依赖，不丢弃记录过的字典依赖
-   * 2 为 true，表示状态仅用于当前组件ui渲染，此模式下不会收集中间态依赖，只记录最长路径依赖
+   *   此模式下会收集中间态字典依赖，不丢弃记录过的字典依赖
+   * 2 为 true，表示状态仅用于当前组件ui渲染，此模式下不会收集中间态字典依赖，只记录字典最长依赖
    * ```
    * 组件 Demo 使用示例
    * ```ts
@@ -675,6 +681,42 @@ export interface IUseSharedStateOptions<T = any> {
    * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集
    */
   deps?: (readOnlyState: T) => any[] | void;
+  /**
+   * default: true，是否记录数组自身依赖，当确认是孩子组件自己读数组下标渲染的场景，可设置为 false，
+   * 这样数组被重置时不会触发重渲染
+   * ```ts
+   * // true: 记录数组自身依赖
+   * const [ dict ] = useAtom(dictAtom);
+   * // 此时依赖是 dict, dict.list[0]
+   * dict.list[0];
+   * // 重置 list，引发当前组件重渲染
+   * setDictAtom(draft=> draft.list = draft.list.slice());
+   *
+   * // false: 不记录数组自身依赖，适用于孩子组件自己读数组下标渲染的场景
+   * const [ dict ] = useAtom(dictAtom, { arrDep: false });
+   * // 此时依赖是 dict.list[0]
+   * dict.list[0];
+   * // 重置 list，不会引发当前组件重渲染
+   * setDictAtom(draft=> draft.list = draft.list.slice());
+   * ```
+   */
+  arrDep?: boolean;
+  /**
+   * default: true，是否记录数组下标依赖，当通过循环数组生成孩子的场景，可设置为 false，减少组件自身的依赖记录数量，
+   * 此参数在 arrDep=true 时设置有效，arrDep=false 时，arrIndexDep 被自动强制设为 true
+   *
+   * ```ts
+   * arrDep=true arrIndexDep = true
+   * deps: list list[0] list[...]
+   *
+   * arrDep=true arrIndexDep = false
+   * deps: list
+   *
+   * arrDep=false
+   * deps: list[0] list[...]
+   * ```
+   */
+  arrIndexDep?: boolean;
 }
 
 export interface IInnerUseSharedOptions<T = Dict> extends IUseSharedStateOptions<T> {
@@ -880,11 +922,14 @@ export interface IRenderInfo {
 export interface IInsRenderInfo {
   /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
   sn: number;
+  /** 实例 key */
+  insKey: number;
   /**
    * 获取组件的当前渲染周期里收集到依赖列表，通常需要再 useEffect 里调用能获取当前渲染周期收集的所有依赖，
    * 如在渲染过程中直接调用获取的是正在收集中的依赖
    */
   getDeps: () => string[];
+  snap: any;
   /**
    * 获取组件的前一次渲染周期里收集到依赖列表
    */
@@ -915,7 +960,7 @@ export interface IInsCtx<T = Dict> {
   rawState: Dict;
   sharedState: Dict;
   proxyState: Dict;
-  atomVal: any;
+  rootVal: any;
   updater: Fn;
   /** 未挂载 已挂载 已卸载 */
   mountStatus: MountStatus;
@@ -939,8 +984,9 @@ export interface IInsCtx<T = Dict> {
    * 计算出的能否收集依赖标记，如透传了 options.collect=false，会在首轮渲染结束后标记为 false
    */
   canCollect: boolean;
+  getDeps: IInsRenderInfo['getDeps'];
   renderInfo: IInsRenderInfo;
-  recordDep: (depKeyInfo: DepKeyInfo, parentType?: string) => void;
+  recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, isValArr?: boolean) => void;
 }
 
 export type InsCtxMap = Map<number, IInsCtx>;

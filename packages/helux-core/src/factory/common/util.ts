@@ -18,8 +18,6 @@ export interface IMutateCtx {
   triggerReasons: TriggerReason[];
   ids: NumStrSymbol[];
   globalIds: NumStrSymbol[];
-  /** 记录 depKey 对应值是否是字典 */
-  isDictInfo: Dict<boolean>;
   writeKeys: Dict;
   arrKeyDict: Dict;
   writeKeyPathInfo: Dict<TriggerReason>;
@@ -65,7 +63,6 @@ export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
     triggerReasons: [],
     ids,
     globalIds,
-    isDictInfo: {},
     writeKeys: {},
     arrKeyDict: {}, // 记录读取过程中遇到的数组 key
     writeKeyPathInfo: {},
@@ -76,7 +73,17 @@ export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
 }
 
 export function newOpParams(key: string, value: any, isChange = true): IOperateParams {
-  return { isChange, op: 'set', key, value, parentType: 'Object', keyPath: [], fullKeyPath: [key], isBuiltInFnKey: false };
+  return {
+    isChange,
+    op: 'set',
+    key,
+    value,
+    proxyValue: value,
+    parentType: 'Object',
+    keyPath: [],
+    fullKeyPath: [key],
+    isBuiltInFnKey: false,
+  };
 }
 
 export function getDepKeyInfo(depKey: string): DepKeyInfo {
@@ -141,4 +148,12 @@ export function wrapPartial(forAtom: boolean, val: any) {
 export function runPartialCb(forAtom: boolean, mayCb: any, draft: any) {
   const val = !isFn(mayCb) ? mayCb : mayCb(draft);
   return wrapPartial(forAtom, val);
+}
+
+export function chooseVal(mayReplacedVal: any, value: any) {
+  return mayReplacedVal !== undefined ? mayReplacedVal : value;
+}
+
+export function chooseProxyVal(mayReplacedVal: any, proxyVal: any, rawVal: any) {
+  return mayReplacedVal !== undefined ? { proxyVal: mayReplacedVal, rawVal: mayReplacedVal } : { proxyVal, rawVal };
 }

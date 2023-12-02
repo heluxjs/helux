@@ -1,11 +1,12 @@
+import { Fn } from 'helux';
 import { MOUNTED, RENDER_END, RENDER_START } from '../../consts';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { buildInsCtx } from '../../helpers/insCtx';
-import { resetReadMap, updateDep } from '../../helpers/insDep';
+import { resetDepHelpData, updateDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
-import type { Dict, IInnerUseSharedOptions } from '../../types/base';
-import { checkAtom, checkStateVer, delAtomVal, delInsCtx, isSharedKeyChanged, recordAtomVal, recoverInsCtx } from './shared';
+import type { Dict, IInnerUseSharedOptions, IInsRenderInfo } from '../../types/base';
+import { checkAtom, checkStateVer, delInsCtx, delRootVal, isSharedKeyChanged, prepareTuple, recoverInsCtx } from './shared';
 import { useSync } from './useSync';
 
 // for skip ts check out of if block
@@ -15,8 +16,9 @@ const nullInsCtx = null as unknown as InsCtxDef;
  * 生成组件对应的上下文
  */
 function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInnerUseSharedOptions<T>): InsCtxDef {
-  const updater = apiCtx.hookImpl.useForceUpdate();
-  const ctxRef = apiCtx.react.useRef<{ ctx: InsCtxDef }>({ ctx: nullInsCtx });
+  const { hookImpl, react } = apiCtx;
+  const updater = hookImpl.useForceUpdate();
+  const ctxRef = react.useRef<{ ctx: InsCtxDef }>({ ctx: nullInsCtx });
   // start build or rebuild ins ctx
   let insCtx = ctxRef.current.ctx;
   if (!insCtx || isSharedKeyChanged(insCtx, sharedState)) {
@@ -32,7 +34,7 @@ function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInner
  */
 function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
   apiCtx.react.useEffect(() => {
-    delAtomVal(insCtx.atomVal);
+    delRootVal(insCtx.rootVal);
     // 设定了 options.collect='first' 则首轮渲染结束后标记不能再收集依赖，阻值后续新的渲染流程里继续收集依赖的行为
     if (insCtx.collectType === 'first') {
       insCtx.canCollect = false;
@@ -51,7 +53,7 @@ function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
  */
 function useCollectDep<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
   insCtx.renderStatus = RENDER_START;
-  resetReadMap(insCtx);
+  resetDepHelpData(insCtx);
   // adapt to react 18
   useSync(apiCtx, insCtx.subscribe, () => getInternal(sharedState).snap);
 
@@ -79,12 +81,18 @@ export function useSharedSimpleLogic<T extends Dict = Dict>(
   return insCtx;
 }
 
-export function useSharedLogic<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInnerUseSharedOptions<T> = {}): InsCtxDef {
-  checkAtom(sharedState, options.forAtom);
+export function useSharedLogic<T = Dict>(
+  apiCtx: CoreApiCtx,
+  sharedState: T,
+  options: IInnerUseSharedOptions<T> = {},
+): { tuple: [any, Fn, IInsRenderInfo]; insCtx: InsCtxDef } {
+  const { forAtom } = options;
+  checkAtom(sharedState, forAtom);
   const insCtx = useInsCtx(apiCtx, sharedState, options);
   useCollectDep(apiCtx, sharedState, insCtx, options);
   useClearEffect(apiCtx, insCtx);
   checkStateVer(insCtx);
-  recordAtomVal(insCtx);
-  return insCtx;
+  const tuple = prepareTuple(insCtx, forAtom);
+
+  return { tuple, insCtx };
 }

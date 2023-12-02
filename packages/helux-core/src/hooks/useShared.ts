@@ -7,9 +7,8 @@ export function useShared<T = Dict>(
   sharedState: T,
   options: IUseSharedStateOptions<T> = {},
 ): [T, SetState<T>, IRenderInfo] {
-  const insCtx = useSharedLogic(apiCtx, sharedState, options);
-  const { proxyState, internal, renderInfo } = insCtx;
-  return [proxyState, internal.setState, renderInfo];
+  const { tuple } = useSharedLogic(apiCtx, sharedState, options);
+  return tuple;
 }
 
 export function useAtom<T = any>(
@@ -17,7 +16,6 @@ export function useAtom<T = any>(
   sharedState: T,
   options: IUseSharedStateOptions<T> = {},
 ): [T, SetAtom<T>, IRenderInfo] {
-  const insCtx = useSharedLogic(apiCtx, sharedState, { ...options, forAtom: true });
-  const { proxyState, internal, renderInfo } = insCtx;
-  return [proxyState.val, internal.setAtom, renderInfo];
+  const { tuple } = useSharedLogic(apiCtx, sharedState, { ...options, forAtom: true });
+  return tuple;
 }

@@ -153,6 +153,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const rules = options.rules || [];
   const before = options.before || noop;
   const mutate = options.mutate || noop;
+  const onRead = options.onRead || noop;
   // 后续 parseRules 步骤会转 stopArrDep stopDepth 到 stopDepInfo 上
   const stopArrDep = options.stopArrDep ?? true;
   const stopDepth = options.stopDepth || STOP_DEPTH;
@@ -179,6 +180,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     before,
     mutate,
     mutateFnDict,
+    onRead,
     stateType,
     loadingMode,
     stopArrDep,

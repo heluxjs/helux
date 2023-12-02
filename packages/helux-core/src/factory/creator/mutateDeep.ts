@@ -1,6 +1,6 @@
 import { isJsObj, isObj, noop } from '@helux/utils';
 import { createDraft, finishDraft, limuUtils } from 'limu';
-import type { Dict, IInnerSetStateOptions } from '../../types/base';
+import type { Dict, Ext, IInnerSetStateOptions } from '../../types/base';
 import { genRenderSN } from '../common/key';
 import { runMiddlewares } from '../common/middleware';
 import { emitDataChanged } from '../common/plugin';
@@ -25,7 +25,7 @@ interface ISnCommitOpts extends ICommitOpts {
   sn: number;
 }
 
-function handlePartial(opts: any) {
+function handlePartial(opts: Ext<{ mutateCtx: IMutateCtx }>) {
   const { partial, forAtom, mutateCtx, isPrimitive, draftRoot, draftNode } = opts;
   // 把深依赖和浅依赖收集到的 keys 合并起来
   if (!isObj(partial)) {

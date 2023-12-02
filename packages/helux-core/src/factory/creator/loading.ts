@@ -146,7 +146,9 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
   if (isUserState && NONE !== loadingMode) {
     useLoading = () => {
       const loadingProxy = getLoadingInfo(createFn, options).loadingProxy;
-      const { proxyState, internal, extra, renderInfo } = useSharedLogic(apiCtx, loadingProxy);
+      const {
+        insCtx: { proxyState, internal, extra, renderInfo },
+      } = useSharedLogic(apiCtx, loadingProxy);
       // 注意此处用实例的 extra 记录 safeLoading，实例存在期间 safeLoading 创建一次后会被后续一直复用
       return [createSafeLoading(extra, proxyState, from), internal.setState, renderInfo];
     };

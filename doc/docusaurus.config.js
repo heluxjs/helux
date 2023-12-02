@@ -33,13 +33,13 @@ const config = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: ({ docPath }) => {
-            return `https://holocron.so/github/pr/heluxjs/helux/master/editor/doc/docs/${docPath}`
+            return `https://holocron.so/github/pr/heluxjs/helux/master/editor/doc/docs/${docPath}`;
           },
         },
         blog: {
           showReadingTime: true,
           editUrl: ({ docPath }) => {
-            return `https://holocron.so/github/pr/heluxjs/helux/master/editor/doc/blog/${docPath}`
+            return `https://holocron.so/github/pr/heluxjs/helux/master/editor/doc/blog/${docPath}`;
           },
         },
         theme: {

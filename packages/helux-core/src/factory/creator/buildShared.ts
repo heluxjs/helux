@@ -8,6 +8,7 @@ import { mapSharedState } from '../../helpers/state';
 import type { Dict } from '../../types/base';
 import { getMarkAtomMap } from '../common/atom';
 import { recordLastest } from '../common/blockScope';
+import { chooseProxyVal, chooseVal, newOpParams } from '../common/util';
 import type { ParsedOptions } from './parse';
 
 /**
@@ -15,7 +16,7 @@ import type { ParsedOptions } from './parse';
  */
 export function buildSharedState(options: ParsedOptions) {
   let sharedState: any = {};
-  const { rawState, sharedKey, deep, forAtom } = options;
+  const { rawState, sharedKey, deep, forAtom, onRead } = options;
   const collectDep = (valKey: string, keyPath: string[], val: any) => {
     const depKey = prefixValKey(valKey, sharedKey);
     // using shared state in derived/watch callback
@@ -29,8 +30,13 @@ export function buildSharedState(options: ParsedOptions) {
       customKeys: [IS_ATOM as symbol],
       customGet: () => forAtom,
       onOperate: (params) => {
-        const { isBuiltInFnKey, fullKeyPath } = params;
-        !isBuiltInFnKey && collectDep(fullKeyPath.join(KEY_SPLITER), fullKeyPath, params.value);
+        const { isBuiltInFnKey } = params;
+        if (!isBuiltInFnKey) {
+          const { fullKeyPath, value, proxyValue } = params;
+          const { proxyVal, rawVal } = chooseProxyVal(onRead(params), proxyValue, value);
+          collectDep(fullKeyPath.join(KEY_SPLITER), fullKeyPath, rawVal);
+          return proxyVal;
+        }
       },
     });
   } else {
@@ -48,8 +54,9 @@ export function buildSharedState(options: ParsedOptions) {
         if (isSymbol(key)) {
           return val;
         }
-        collectDep(key, [key], val);
-        return val;
+        const finalVar = chooseVal(onRead(newOpParams(key, val, false)), val);
+        collectDep(key, [key], finalVar);
+        return finalVar;
       },
     });
   }

@@ -37,6 +37,7 @@ import type {
   IAtomCtx,
   IBlockOptions,
   ICreateOptions,
+  IInsRenderInfo,
   IPlugin,
   IRenderInfo,
   IRunMutateOptions,
@@ -230,7 +231,7 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: Wat
  * const [ obj, setObj ] = useShared(sharedObj);
  * ```
  */
-export function useShared<T = Dict>(sharedObject: T, options?: IUseSharedStateOptions<T>): [SharedDict<T>, SetState<T>, IRenderInfo];
+export function useShared<T = Dict>(sharedObject: T, options?: IUseSharedStateOptions<T>): [SharedDict<T>, SetState<T>, IInsRenderInfo];
 
 /**
  * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
@@ -250,7 +251,7 @@ export function useShared<T = Dict>(sharedObject: T, options?: IUseSharedStateOp
  * });
  * ```
  */
-export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedStateOptions<T>): [T, SetAtom<T>, IRenderInfo];
+export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedStateOptions<T>): [T, SetAtom<T>, IInsRenderInfo];
 
 /**
  * 使用普通对象，需注意此接口只接受普通对象
@@ -400,13 +401,13 @@ export function useStable<T = any>(data: T): T;
  * loading['whatever-key']; // 均能返回 status 对象，对于不存在的 mutate key，返回的 status 不变
  * ```
  */
-export function useMutateLoading<T = SharedState>(target?: T): [SafeLoading, SetState<LoadingState>, IRenderInfo];
+export function useMutateLoading<T = SharedState>(target?: T): [SafeLoading, SetState<LoadingState>, IInsRenderInfo];
 
 /** 组件外部读取 Mutate loading */
 export function getMutateLoading<T = SharedState>(target?: T): SafeLoading;
 
 /** 组件外部读取 Action loading */
-export function useActionLoading<T = SharedState>(target?: T): [SafeLoading, SetState<LoadingState>, IRenderInfo];
+export function useActionLoading<T = SharedState>(target?: T): [SafeLoading, SetState<LoadingState>, IInsRenderInfo];
 
 /** 组件外部读取 loading */
 export function getActionLoading<T = SharedState>(target?: T): SafeLoading;

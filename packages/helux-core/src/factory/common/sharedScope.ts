@@ -33,6 +33,12 @@ export function diffVal(internal: TInternal, depKey: string) {
 }
 
 export function hasChangedNode(internal: TInternal, depKeys: string[], depKey: string) {
+  // 优先比较自身值有无变化
+  if (depKeys.includes(depKey) && diffVal(internal, depKey)) {
+    return true;
+  }
+
+  // 再查找子串值有无变化
   let subValChanged = false;
   for (const storedDepKey of depKeys) {
     // 是 key 的子串，比较值是否有变化

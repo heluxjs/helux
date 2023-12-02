@@ -1,12 +1,12 @@
 import { matchDictKey, nodupPush, prefixValKey } from '@helux/utils';
-import { IOperateParams, limuUtils } from 'limu';
+import { IOperateParams } from 'limu';
 import type { KeyIdsDict, NumStrSymbol } from '../../types/base';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
 
 export function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
-  const { isChange, fullKeyPath, keyPath, parentType, value } = opParams;
+  const { isChange, fullKeyPath, keyPath, parentType } = opParams;
   const { internal, mutateCtx } = opts;
   const { arrKeyDict } = mutateCtx;
   if (!isChange) {
@@ -20,7 +20,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   // const oldVal = getVal(internal.snap, fullKeyPath);
   // if (opParams.value === oldVal) return;
   const { moduleName, exact, sharedKey, ruleConf, level1ArrKeys } = internal;
-  const { writeKeyPathInfo, ids, globalIds, writeKeys, isDictInfo } = mutateCtx;
+  const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
   mutateCtx.level1Key = fullKeyPath[0];
   mutateCtx.handleAtomCbReturn = false;
 
@@ -34,7 +34,6 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   const { idsDict, globalIdsDict, stopDepInfo } = ruleConf;
   const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
   writeKeyPathInfo[writeKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
-  isDictInfo[writeKey] = limuUtils.isObject(value);
 
   // 设定了非精确更新策略时，提取出第一层更新路径即可
   if (!exact) {

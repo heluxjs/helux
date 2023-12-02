@@ -22,8 +22,8 @@ function getArrIndexKey(confKey: string, fullKey: string) {
  * 辅助 stopDep 主逻辑之用
  */
 export function recordArrKey(arrKeys: string[], depKey: string) {
-  const faterDepKey = matchListItem(arrKeys, depKey);
-  if (faterDepKey) return;
+  const parentDepKey = matchListItem(arrKeys, depKey);
+  if (parentDepKey) return;
   nodupPush(arrKeys, depKey);
 }
 

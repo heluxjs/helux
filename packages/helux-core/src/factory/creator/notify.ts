@@ -18,10 +18,14 @@ function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
   }
 }
 
+/**
+ * 相关依赖函数执行（render渲染函数，derive派生函数，watch观察函数）
+ */
 export function execDepFns(opts: ICommitStateOptions) {
   const { mutateCtx, internal, desc, isFirstCall, from, sn } = opts;
-  const { ids, globalIds, depKeys, triggerReasons, isDictInfo } = mutateCtx;
+  const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;
+  console.log('depKeys ', depKeys);
 
   internal.ver += 1;
   // find associate ins keys
@@ -36,39 +40,38 @@ export function execDepFns(opts: ICommitStateOptions) {
     markFnEnd();
   }
 
-  const analyzeDepKey = (key: string, skipFindIns?: boolean) => {
+  const analyzeDepKey = (key: string) => {
     // 值相等就忽略
     if (!diffVal(internal, key)) {
       return;
     }
 
-    if (!skipFindIns) {
-      const insKeys = key2InsKeys[key] || [];
-      let validInsKeys: number[] = insKeys;
+    const insKeys = key2InsKeys[key] || [];
+    const validInsKeys: number[] = [];
+    for (const insKey of insKeys) {
+      if (allInsKeys.includes(insKey)) {
+        continue;
+      }
+      const insCtx = insCtxMap.get(insKey);
+      if (!insCtx) {
+        continue;
+      }
+      const depKeys = insCtx.getDeps();
 
-      // TODO  支持 compareDict 设置
-      // 值为字典对象 {}，对比 depKey 相关子路径依赖值是否真的发生变化
-      if (isDictInfo[key]) {
-        // 重置 validInsKeys，按节点变化去过滤出目标 ins
-        validInsKeys = [];
-        for (const insKey of insKeys) {
-          if (allInsKeys.includes(insKey)) {
-            continue;
-          }
-          const insCtx = insCtxMap.get(insKey);
-          if (!insCtx) {
-            continue;
-          }
-          const depKeys = insCtx.renderInfo.getDeps();
-          if (hasChangedNode(internal, depKeys, key)) {
-            validInsKeys.push(insKey);
-          }
+      // 未对 useState useAtom 返回值有任何读操作时
+      if (depKeys[0] === rootValKey) {
+        if (diffVal(internal, rootValKey)) {
+          validInsKeys.push(insKey);
         }
+        continue;
       }
 
-      allInsKeys = allInsKeys.concat(validInsKeys);
+      if (hasChangedNode(internal, depKeys, key)) {
+        validInsKeys.push(insKey);
+      }
     }
 
+    allInsKeys = allInsKeys.concat(validInsKeys);
     const { firstLevelFnKeys, asyncFnKeys } = getDepFnStats(internal, key, runCountStats);
     allFirstLevelFnKeys = allFirstLevelFnKeys.concat(firstLevelFnKeys);
     allAsyncFnKeys = allAsyncFnKeys.concat(asyncFnKeys);
@@ -79,7 +82,7 @@ export function execDepFns(opts: ICommitStateOptions) {
   // 因这里补上 rootValKey 仅为了查 watch derive 函数，故刻意传递 skipFindIns = true 跳过 ins 查询
   // 否则会导致不该更新的实例也触发更新了，影响精确更新结果
   if (!depKeys.includes(rootValKey)) {
-    analyzeDepKey(rootValKey, true);
+    analyzeDepKey(rootValKey);
   }
   // clear cached diff result
   clearDiff();
@@ -100,7 +103,7 @@ export function execDepFns(opts: ICommitStateOptions) {
   allAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));
 
-  // start update
+  // start trigger rerender
   allInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));
   // start update globalId ins
   if (globalInsKeys.length) {
