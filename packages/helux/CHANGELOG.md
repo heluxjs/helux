@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.14
+
+### Patch Changes
+
+- 2f25934: build(3.4.14): optimize handleOperate, add canRecord to avoid dead cycle; optimize inCtx, del readMapPrev readMapStrict; optimize insDep updateDep logic, add resetDepKeys; optimize notify logic, add excludedInsKeyDict to speedup analyzeDepKey
+- Updated dependencies [2f25934]
+  - @helux/core@3.4.14
+
 ## 3.4.13
 
 ### Patch Changes
