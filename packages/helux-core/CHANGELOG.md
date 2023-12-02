@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.10
+
+### Patch Changes
+
+- 384ca24: build(3.4.10): support onRead
+  - @helux/hooks-impl@3.4.10
+  - @helux/types@3.4.10
+  - @helux/utils@3.4.10
+
 ## 3.4.9
 
 ### Patch Changes
