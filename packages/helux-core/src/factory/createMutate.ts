@@ -41,12 +41,13 @@ function runMutateFnItem(options: { target: SharedState; desc?: string; forTask?
   return callMutateFn(target, { ...item, forTask });
 }
 
-function makeWitness(target: SharedState, desc: string, oriDesc: string) {
+function makeWitness(target: SharedState, desc: string, oriDesc: string, snap: any) {
   return {
     call: () => runMutateFnItem({ target, desc }), // 呼叫同步函数的句柄
     callTask: () => Promise.resolve(runMutateFnItem({ target, desc, forTask: true })), // 呼叫异步函数的句柄
     desc,
     oriDesc,
+    snap,
   };
 }
 
@@ -77,7 +78,7 @@ function configureMutateFn(options: IConfigureMutateFnOpt) {
   internal.mutateFnDict[stdFnItem.desc] = stdFnItem;
   const dict = { [stdFnItem.desc]: stdFnItem };
   watchAndCallMutateDict({ target, dict });
-  return makeWitness(target, stdFnItem.desc, stdFnItem.oriDesc);
+  return makeWitness(target, stdFnItem.desc, stdFnItem.oriDesc, internal.snap);
 }
 
 /**
@@ -90,7 +91,7 @@ function configureMutateDict(options: IConfigureMutateDictOpt): any {
   watchAndCallMutateDict({ target, dict });
   const witnessDict: Dict<MutateWitness> = {}; // 具体类型定义见 types-api multiDict
   Object.keys(dict).forEach((desc) => {
-    witnessDict[desc] = makeWitness(target, desc, desc);
+    witnessDict[desc] = makeWitness(target, desc, desc, internal.snap);
   });
   return witnessDict;
 }

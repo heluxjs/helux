@@ -258,6 +258,7 @@ export type MutateWitness<T = any> = {
   oriDesc: string;
   /** 内部生成的实际描述值 */
   desc: string;
+  snap: T;
 };
 
 // for dict
