@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.9
+
+### Patch Changes
+
+- 22a0203: build(3.4.8): refactor atomValMap to rootValMap; refactor analyzeDepKey logic by rootValKey; add arrDep,arrIndexDep,pure to useAtom and useShared; add createOptions.onRead
+  - @helux/hooks-impl@3.4.9
+  - @helux/types@3.4.9
+  - @helux/utils@3.4.9
+
 ## 3.4.7
 
 ### Patch Changes
