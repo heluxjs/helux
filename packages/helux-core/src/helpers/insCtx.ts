@@ -76,7 +76,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
 }
 
 export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
-  const { updater, sharedState, id = '', globalId = '', collectType = 'every', deps, pure = false, arrDep = true } = options;
+  const { updater, sharedState, id = '', globalId = '', collectType = 'every', deps, pure = true, arrDep = true } = options;
   const arrIndexDep = !arrDep ? true : options.arrIndexDep ?? true;
   const internal = getInternal(sharedState);
   if (!internal) {
@@ -88,8 +88,6 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
   const { stopDepInfo } = ruleConf;
   const insCtx: InsCtxDef = {
     readMap: {},
-    readMapPrev: {},
-    readMapStrict: null,
     delReadMap: {},
     pure,
     depKeys: [],

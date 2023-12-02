@@ -25,7 +25,6 @@ export function execDepFns(opts: ICommitStateOptions) {
   const { mutateCtx, internal, desc, isFirstCall, from, sn } = opts;
   const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;
-  console.log('depKeys ', depKeys);
 
   internal.ver += 1;
   // find associate ins keys
@@ -48,8 +47,10 @@ export function execDepFns(opts: ICommitStateOptions) {
 
     const insKeys = key2InsKeys[key] || [];
     const validInsKeys: number[] = [];
+    const excludedInsKeyDict: Dict = {};
     for (const insKey of insKeys) {
-      if (allInsKeys.includes(insKey)) {
+      // 已包含或已排除，都跳过当次循环
+      if (allInsKeys.includes(insKey) || excludedInsKeyDict[insKey]) {
         continue;
       }
       const insCtx = insCtxMap.get(insKey);
@@ -68,6 +69,8 @@ export function execDepFns(opts: ICommitStateOptions) {
 
       if (hasChangedNode(internal, depKeys, key)) {
         validInsKeys.push(insKey);
+      } else {
+        excludedInsKeyDict[insKey] = 1;
       }
     }
 
@@ -77,10 +80,12 @@ export function execDepFns(opts: ICommitStateOptions) {
     allAsyncFnKeys = allAsyncFnKeys.concat(asyncFnKeys);
   };
   depKeys.forEach((k) => analyzeDepKey(k));
-  // 直接设定 deps 的 watch derive 函数，观察的共享对象本身的变化，这里以 rootValKey 为依赖去查出来
-  // 注意这里刻意放 depKeys.forEach 之后执行，是需要复用 sharedScope.isStateChanged 结果
-  // 因这里补上 rootValKey 仅为了查 watch derive 函数，故刻意传递 skipFindIns = true 跳过 ins 查询
-  // 否则会导致不该更新的实例也触发更新了，影响精确更新结果
+  // 分析 rootValKey 结果刻意放 depKeys.forEach 之后执行，是需要复用 sharedScope.isStateChanged 结果，有以下2个作用
+  // 1 watch derive 的 deps 函数里如观察的共享对象本身的变化，需以 rootValKey 为依赖去查出来
+  // 2 子串更新时，还能够查出只读取了父路径的组件并触发更新
+  // 例如，comp1: a.b.c.d , comp2: a.b
+  // 更新 draft.a.b.c.d = 1000, 导致 a.b 也变了，按 a.b.c.d 去查组件实例是查不到 comp2 的
+  // 这里通过 rootValKey 可找到 comp2 并触发其实例更新
   if (!depKeys.includes(rootValKey)) {
     analyzeDepKey(rootValKey);
   }

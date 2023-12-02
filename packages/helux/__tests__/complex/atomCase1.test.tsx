@@ -97,13 +97,14 @@ describe('atom draft sub node ref changed', () => {
     );
   });
 
+  // pure=true by default
   test('pure=undefined, reassign info obj', async () => {
     await testLogic({
       watch: 0,
       nameResult: 1,
       infoComp: 2,
-      nameComp: 2,
-      ageComp: 2,
+      nameComp: 1,
+      ageComp: 1,
     });
   });
 });

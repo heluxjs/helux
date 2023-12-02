@@ -41,39 +41,39 @@ export function clearDep(insCtx: InsCtxDef) {
  * 每轮渲染完毕的 effect 里触发依赖数据更新
  */
 export function updateDep(insCtx: InsCtxDef) {
-  const { canCollect, isFirstRender, currentDepKeys } = insCtx;
+  const { canCollect, isFirstRender, currentDepKeys, pure, internal } = insCtx;
+  const resetDepKeys = () => {
+    // pure 模式下仅导出了状态，但未使用过，是非原始值状态时清空 depKeys
+    if (pure && currentDepKeys.length === 1) {
+      const { isPrimitive, rootValKey } = internal;
+      if (currentDepKeys[0] === rootValKey && !isPrimitive) {
+        insCtx.currentDepKeys = [];
+      }
+    }
+    insCtx.depKeys = currentDepKeys.slice();
+  };
+
   // 标记了不能收集依赖，则运行期间不做更新依赖的动作
   if (!canCollect) {
     if (isFirstRender) {
-      insCtx.depKeys = currentDepKeys.slice();
+      resetDepKeys();
     }
     return;
   }
-  insCtx.depKeys = currentDepKeys.slice();
-  insCtx.readMapStrict = null;
+  resetDepKeys();
 }
 
 /**
  * 重置记录读依赖需要的辅助数据
  */
 export function resetDepHelpData(insCtx: InsCtxDef) {
-  const { readMap, readMapStrict, canCollect } = insCtx;
+  const { canCollect } = insCtx;
   // 标记了不能收集依赖，则运行期间不做重置依赖的动作
   if (!canCollect) {
     return;
   }
-
-  if (!readMapStrict) {
-    // from strict-mode or non-strict-mode first call
-    insCtx.readMapPrev = readMap;
-    insCtx.readMapStrict = readMap;
-    insCtx.readMap = {}; // reset read map
-    insCtx.delReadMap = {};
-    insCtx.depKeys = insCtx.currentDepKeys.slice();
-    insCtx.currentDepKeys.length = 0;
-  } else {
-    // from strict-mode second call
-    insCtx.readMapPrev = readMapStrict;
-    insCtx.readMapStrict = null;
-  }
+  insCtx.readMap = {}; // reset read map
+  insCtx.delReadMap = {};
+  insCtx.depKeys = insCtx.currentDepKeys.slice();
+  insCtx.currentDepKeys.length = 0;
 }

@@ -1,5 +1,24 @@
 import * as React from 'react';
 
+export function dictFictory() {
+  return {
+    a: {
+      b: { c: 1 },
+      b1: { c1: 1 },
+    },
+    info: { name: 'helux', age: 1 },
+    desc: 'awesome lib',
+    extra: {
+      mark: 'extra',
+      list: [
+        { id: 1, name: 'helux1' },
+        { id: 2, name: 'helux2' },
+      ],
+      c: (draft: any) => (draft.extra.c = draft.a.b.c + 103),
+    },
+  };
+}
+
 export function expectEqual(actualVal, expectVal) {
   expect(actualVal === expectVal).toBeTruthy();
 }
@@ -27,6 +46,17 @@ export function delay(ms = 1000) {
 
 export function noop(...args: any[]) {
   return args;
+}
+
+export function getDepKey(rootValKey: string, keyPath: string[] | string) {
+  let keyPathVar: string[] = [];
+  if (typeof keyPath === 'string') {
+    keyPathVar = keyPath.split('.');
+  } else {
+    keyPathVar = keyPath as string[];
+  }
+  const firstSpliter = rootValKey.endsWith('/val') ? '|' : '/';
+  return `${rootValKey}${firstSpliter}${keyPathVar.join('|')}`;
 }
 
 /**

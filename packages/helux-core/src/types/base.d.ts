@@ -467,6 +467,10 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
    * 配置 onRead 钩子函数
    */
   setOnReadHook: (onRead: OnRead) => void;
+  /** 共享状态唯一 key */
+  sharedKey: number;
+  sharedKeyStr: string;
+  rootValKey: string;
 }
 
 export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> {
@@ -493,6 +497,10 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
    * 配置 onRead 钩子函数
    */
   setOnReadHook: (onRead: OnRead) => void;
+  /** 共享状态唯一 key */
+  sharedKey: number;
+  sharedKeyStr: string;
+  rootValKey: string;
 }
 
 interface IMutateFnParamsBase {
@@ -949,10 +957,6 @@ export interface IInsRenderInfo {
 export interface IInsCtx<T = Dict> {
   /** 当前渲染完毕所依赖的 key 记录 */
   readMap: Dict;
-  /** 上一次渲染完毕所依赖的 key 记录 */
-  readMapPrev: Dict;
-  /** StrictMode 下辅助 resetDepMap 函数能够正确重置 readMapPrev 值 */
-  readMapStrict: null | Dict;
   /** 已标记删除的 key 记录 */
   delReadMap: Dict;
   /** 是否是 pure 模式 */

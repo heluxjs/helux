@@ -16,7 +16,9 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   if (!isChange) {
     if (getRunningFn().fnCtx) {
       // 支持对draft操作时可以收集到依赖： draft.a = draft.b + 1
-      recordFnDepKeys([getDepKeyByPath(fullKeyPath, sharedKey)], { sharedKey });
+      // atom 判断一下长度，避免记录根值依赖导致死循环
+      const canRecord = internal.forAtom ? fullKeyPath.length > 1 : true;
+      canRecord && recordFnDepKeys([getDepKeyByPath(fullKeyPath, sharedKey)], { sharedKey });
     }
     if (parentType === 'Array') {
       arrKeyDict[getDepKeyByPath(keyPath, sharedKey)] = 1;

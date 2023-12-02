@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 import { share } from '../helux';
 
@@ -17,7 +18,7 @@ describe('use shared', () => {
   });
 
   /** 测试精确更新 */
-  test('exact update', async () => {
+  test('exact update 1', async () => {
     const [state, setState, ctx] = share({ a: { a1: { a2: 1 }, a11: { a22: 2 } }, b: 2 });
     let aRenderCount = 0;
     let bRenderCount = 0;
