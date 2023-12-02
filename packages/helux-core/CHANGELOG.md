@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.11
+
+### Patch Changes
+
+- 715f23c: build(3.4.11): del onRead, add setOnReadHook to ctx
+  - @helux/hooks-impl@3.4.11
+  - @helux/types@3.4.11
+  - @helux/utils@3.4.11
+
 ## 3.4.10
 
 ### Patch Changes
