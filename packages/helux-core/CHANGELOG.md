@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.13
+
+### Patch Changes
+
+- 60f9b8c: build(3.4.13): support draft collection dep
+  - @helux/hooks-impl@3.4.13
+  - @helux/types@3.4.13
+  - @helux/utils@3.4.13
+
 ## 3.4.12
 
 ### Patch Changes
