@@ -50,6 +50,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const opt = { internal, from: MUTATE, apiCtx };
   const ldMutate = initLoadingCtx(createSharedLogic, opt);
   const ldAction = initLoadingCtx(createSharedLogic, { ...opt, from: ACTION });
+  const setOnReadHook = (onRead: Fn) => (internal.onRead = onRead);
 
   return {
     state,
@@ -69,6 +70,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     sync,
     syncer,
     setAtomVal,
+    setOnReadHook,
   };
 }
 

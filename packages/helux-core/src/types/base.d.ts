@@ -31,6 +31,12 @@ export type LoadingMode = LoadingNone | LoadingPrivate | LoadingGlobal;
 
 export type From = 'Mutate' | 'Action' | 'SetState';
 
+/**
+ * onRead用于给开发者配置读操作钩子函数，所有值读取操作均触发此钩子函数，
+ * 如果 onReadFn 返回了具体指，则会透传给用户，这是一个危险的操作，用户需自己为此负责
+ */
+export type OnRead = (opParams: IOperateParams) => any;
+
 export interface IBlockCtx {
   key: string;
   results: DerivedDict[];
@@ -456,6 +462,10 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
   getActionLoading: () => SafeLoading<T, O>;
   /** 使用 Action 状态 */
   useActionLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
+  /**
+   * 配置 onRead 钩子函数
+   */
+  setOnReadHook: (onRead: OnRead) => void;
 }
 
 export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> {
@@ -478,6 +488,10 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
   /** 使用 Action 状态 */
   useActionLoading: () => [AtomSafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
   setAtomVal: (val: T) => void;
+  /**
+   * 配置 onRead 钩子函数
+   */
+  setOnReadHook: (onRead: OnRead) => void;
 }
 
 interface IMutateFnParamsBase {
@@ -579,11 +593,6 @@ export interface ICreateOptionsBaseFull<T = any> {
    * 配置状态变更联动视图更新规则
    */
   rules: IDataRule<T>[];
-  /**
-   * 暴露给开发者使用的钩子函数，所有值读取操作均触发此钩子函数，
-   * 如果读操作返回了具体指，则会透传给用户，这是一个危险的操作，用户需自己为此负责
-   */
-  onRead: (opParams: IOperateParams) => any;
 }
 
 export interface ICreateOptionsFull<T = Dict> extends ICreateOptionsBaseFull<T> {
