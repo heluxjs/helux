@@ -1,6 +1,8 @@
 import { matchDictKey, nodupPush, prefixValKey } from '@helux/utils';
 import { IOperateParams } from 'limu';
+import { recordFnDepKeys } from '../../helpers/fnDep';
 import type { KeyIdsDict, NumStrSymbol } from '../../types/base';
+import { getRunningFn } from '../common/fnScope';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
@@ -9,17 +11,22 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   const { isChange, fullKeyPath, keyPath, parentType } = opParams;
   const { internal, mutateCtx } = opts;
   const { arrKeyDict } = mutateCtx;
+  const { sharedKey } = internal;
+
   if (!isChange) {
+    if (getRunningFn().fnCtx) {
+      // 支持对draft操作时可以收集到依赖： draft.a = draft.b + 1
+      recordFnDepKeys([getDepKeyByPath(fullKeyPath, sharedKey)], { sharedKey });
+    }
     if (parentType === 'Array') {
-      arrKeyDict[getDepKeyByPath(keyPath, internal.sharedKey)] = 1;
+      arrKeyDict[getDepKeyByPath(keyPath, sharedKey)] = 1;
     }
     return;
   }
-  // TODO FEATURE: 对于 limu 来说触发 set 就算变化了，如将来需要配置特性【丢弃无变化的值】，
-  // 可在此处扩展逻辑，如 oldVal 和 newVal 对比后相等则直接 return，不记录任何写入信息
-  // const oldVal = getVal(internal.snap, fullKeyPath);
-  // if (opParams.value === oldVal) return;
-  const { moduleName, exact, sharedKey, ruleConf, level1ArrKeys } = internal;
+  // 对于 limu 来说触发 set 就算变化了，如将来需要配置特性【丢弃无变化的值】，
+  // 具体是否需要通知相关函数重执行见 notify 逻辑，里面包含了值比较过程
+
+  const { moduleName, exact, ruleConf, level1ArrKeys } = internal;
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
   mutateCtx.level1Key = fullKeyPath[0];
   mutateCtx.handleAtomCbReturn = false;

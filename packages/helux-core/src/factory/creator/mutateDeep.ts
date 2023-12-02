@@ -44,7 +44,7 @@ function handlePartial(opts: Ext<{ mutateCtx: IMutateCtx }>) {
         if (limuUtils.isObject(val)) {
           // [object Object]
           Object.keys(val).forEach((key) => {
-            draftNode[key] = val[key];
+            draftNode[key] = (val as any)[key];
           });
         } else {
           draftRoot.val = val;
