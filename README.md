@@ -41,7 +41,7 @@ import { useAtom } from 'helux';
 const [objAtom, setObj] = atom({ a: 1, b: { b1: 1 } });
 
 // 修改草稿，生成具有数据结构共享的新状态，当前修改只会触发 Demo1 组件渲染
-setObj((draft) => (draft.val.a = Math.random()));
+setObj((draft) => (draft.a = Math.random()));
 
 function Demo1() {
   const [obj] = useAtom(objAtom);
@@ -75,27 +75,16 @@ const [objAtom] = atom({ a: 1, b: { b1: 1 } });
 
 const UserBlock = block(() => (
   <div>
-    <h1>{objAtom.val.a}</h1>
-    <h1>{objAtom.val.b.b1}</h1>
+    <h1>{objAtom.a}</h1>
+    <h1>{objAtom.b.b1}</h1>
   </div>
 ));
 
-// 依赖是 obj.val.a obj.val.b.b1
+// 依赖是 obj.val.a, obj.val.b.b1
 <UserBlock />;
-```
 
-或使用`share`创建共享对象，免去`.val`操作
-
-```tsx
-import { share } from 'helux';
-const [shared] = share({ a: 1, b: { b1: 1 } });
-
-const UserBlock = block(() => (
-  <div>
-    <h1>{shared.a}</h1>
-    <h1>{shared.b.b1}</h1>
-  </div>
-));
+// 如使用 share 创建共享对象，则 UserBlock 实例的依赖是 obj.a, obj.b.b1
+const [objAtom] = share({ a: 1, b: { b1: 1 } });
 ```
 
 ### mutate derive
