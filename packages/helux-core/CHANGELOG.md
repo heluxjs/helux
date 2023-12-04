@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.23
+
+### Patch Changes
+
+- fda289e: build(3.4.22): add enableDraftDep
+  - @helux/hooks-impl@3.4.23
+  - @helux/types@3.4.23
+  - @helux/utils@3.4.23
+
 ## 3.4.22
 
 ### Patch Changes

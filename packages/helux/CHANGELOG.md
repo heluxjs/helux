@@ -1,5 +1,12 @@
 # helux
 
+## 3.4.23
+
+### Patch Changes
+
+- Updated dependencies [fda289e]
+  - @helux/core@3.4.23
+
 ## 3.4.22
 
 ### Patch Changes
