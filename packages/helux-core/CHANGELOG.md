@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.18
+
+### Patch Changes
+
+- cec21ab: build(3.4.18): optimize operateState logic for useGlobalId, compare value with snap
+  - @helux/hooks-impl@3.4.18
+  - @helux/types@3.4.18
+  - @helux/utils@3.4.18
+
 ## 3.4.17
 
 ### Patch Changes

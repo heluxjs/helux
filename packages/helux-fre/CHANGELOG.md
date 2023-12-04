@@ -1,5 +1,12 @@
 # @helux/fre
 
+## 3.4.18
+
+### Patch Changes
+
+- Updated dependencies [cec21ab]
+  - @helux/core@3.4.18
+
 ## 3.4.17
 
 ### Patch Changes

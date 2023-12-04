@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.18
+
+### Patch Changes
+
+- cec21ab: build(3.4.18): optimize operateState logic for useGlobalId, compare value with snap
+- Updated dependencies [cec21ab]
+  - @helux/core@3.4.18
+
 ## 3.4.17
 
 ### Patch Changes
