@@ -1,5 +1,15 @@
 # @helux/core
 
+## 3.4.19
+
+### Patch Changes
+
+- a891bbb: build(3.4.19): support map get
+- Updated dependencies [a891bbb]
+  - @helux/utils@3.4.19
+  - @helux/hooks-impl@3.4.19
+  - @helux/types@3.4.19
+
 ## 3.4.18
 
 ### Patch Changes

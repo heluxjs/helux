@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.4.19
+
+### Patch Changes
+
+- a891bbb: build(3.4.19): support map get
+  - @helux/types@3.4.19
+
 ## 3.4.18
 
 ### Patch Changes
