@@ -1,5 +1,12 @@
 # helux
 
+## 3.4.22
+
+### Patch Changes
+
+- Updated dependencies [cf9b726]
+  - @helux/core@3.4.22
+
 ## 3.4.21
 
 ### Patch Changes

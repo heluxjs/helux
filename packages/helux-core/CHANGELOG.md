@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.22
+
+### Patch Changes
+
+- cf9b726: build(3.4.22): add enableDraftDep, del exact
+  - @helux/hooks-impl@3.4.22
+  - @helux/types@3.4.22
+  - @helux/utils@3.4.22
+
 ## 3.4.21
 
 ### Patch Changes
