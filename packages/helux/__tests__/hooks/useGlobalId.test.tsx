@@ -51,7 +51,15 @@ describe('useGlobalId', () => {
     expect(runCount).toBe(2);
   }
 
-  const dataFactory = () => ({ a: 1, b: { b1: 1 }, c: { c1: { c2: 1 } } });
+  const dataFactory = () => ({
+    a: 1,
+    b: { b1: 1 },
+    c: { c1: { c2: 1 } },
+    map: new Map([
+      [1, { id: 1, name: 'helux1' }],
+      [2, { id: 2, name: 'helux2' }],
+    ]),
+  });
 
   function runDictSubNodeLogic(api: any, options: { setLogic: (draft: ReturnType<typeof dataFactory>) => void; afterSetRunCount: number }) {
     const [, setDict] = (api as typeof atom)(dataFactory, {
@@ -75,19 +83,19 @@ describe('useGlobalId', () => {
     expect(runCount).toBe(afterSetRunCount);
   }
 
-  test('dict atom', async () => {
+  test('atom dict', async () => {
     runDictLogic(atom);
   });
 
-  test('dict atom, sub node changed', async () => {
+  test('atom dict, sub node changed', async () => {
     runDictSubNodeLogic(atom, { setLogic: (draft) => (draft.c.c1.c2 += 1), afterSetRunCount: 2 });
   });
 
-  test('dict atom, sub node not changed', async () => {
+  test('atom dict, sub node not changed', async () => {
     runDictSubNodeLogic(atom, { setLogic: (draft) => (draft.c.c1.c2 = draft.c.c1.c2), afterSetRunCount: 1 });
   });
 
-  test('dict atom, change node not draft.c ', async () => {
+  test('atom dict, change node not draft.c ', async () => {
     runDictSubNodeLogic(atom, { setLogic: (draft) => (draft.b = { ...draft.b }), afterSetRunCount: 1 });
   });
 
@@ -95,15 +103,27 @@ describe('useGlobalId', () => {
     runDictLogic(share);
   });
 
-  test('share atom, sub node changed', async () => {
-    runDictSubNodeLogic(atom, { setLogic: (draft) => (draft.c.c1.c2 += 1), afterSetRunCount: 2 });
+  test('share, sub node changed', async () => {
+    runDictSubNodeLogic(share, { setLogic: (draft) => (draft.c.c1.c2 += 1), afterSetRunCount: 2 });
   });
 
-  test('share atom, sub node not changed', async () => {
-    runDictSubNodeLogic(atom, { setLogic: (draft) => (draft.c.c1.c2 = draft.c.c1.c2), afterSetRunCount: 1 });
+  test('share, sub node not changed', async () => {
+    runDictSubNodeLogic(share, { setLogic: (draft) => (draft.c.c1.c2 = draft.c.c1.c2), afterSetRunCount: 1 });
   });
 
-  test('share atom, change node not draft.c ', async () => {
-    runDictSubNodeLogic(atom, { setLogic: (draft) => (draft.b = { ...draft.b }), afterSetRunCount: 1 });
+  test('share, change map node', async () => {
+    runDictSubNodeLogic(share, {
+      setLogic: (draft) => {
+        const item = draft.map.get(1);
+        if (item) {
+          item.name = 'new';
+        }
+      },
+      afterSetRunCount: 1,
+    });
+  });
+
+  test('share, change node not draft.c ', async () => {
+    runDictSubNodeLogic(share, { setLogic: (draft) => (draft.b = { ...draft.b }), afterSetRunCount: 1 });
   });
 });

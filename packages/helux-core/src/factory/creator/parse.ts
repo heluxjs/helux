@@ -267,9 +267,9 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     };
     confKeys.forEach(setRuleConf);
 
-    // 为让 globalId 机制能够正常工作，有 key 读取或返回的数组包含有state自身时，需补上 rootValKey
+    // 返回的数组包含有根状态自身时，需补上 rootValKey
     if (result.includes(stateNode)) {
-      pushId(globalIdsDict, globalIds, rootValKey);
+      setRuleConf(rootValKey);
     }
   });
 

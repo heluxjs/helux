@@ -15,6 +15,10 @@ export function dictFictory() {
         { id: 1, name: 'helux1' },
         { id: 2, name: 'helux2' },
       ],
+      map: new Map([
+        [1, { id: 1, name: 'helux1' }],
+        [2, { id: 2, name: 'helux2' }],
+      ]),
     },
   };
 }

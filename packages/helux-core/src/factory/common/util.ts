@@ -79,6 +79,7 @@ export function newOpParams(key: string, value: any, isChange = true): IOperateP
     key,
     value,
     proxyValue: value,
+    grandpaType: 'Object',
     parentType: 'Object',
     keyPath: [],
     fullKeyPath: [key],

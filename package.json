@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "3.4.18",
+  "version": "3.4.20",
   "description": "A state library core that integrates atom, signal, collection dep, derive and watch, it supports all react like frameworks( including react 18 ).",
   "keywords": [],
   "author": {
@@ -45,7 +45,7 @@
     "@types/node": ">=12.0.0",
     "esbuild-plugin-external-global": "^1.0.1",
     "helux": "workspace:^",
-    "limu": "^3.9.1"
+    "limu": "^3.9.2"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",

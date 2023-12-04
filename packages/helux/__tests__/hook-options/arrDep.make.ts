@@ -40,6 +40,20 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
     expect(result.current).toMatchObject(getMatchObj(rootValKey));
   }
 
+  async function testReadMap(options: IOptions) {
+    const { arrIndexDep, arrDep, getMatchObj } = options;
+    const [dictAtom, setDictAtom, { rootValKey }] = atom(dictFictory);
+    const { result } = renderHook(() => {
+      const [state, , info] = useAtom(dictAtom, { arrIndexDep, arrDep });
+      noop(state.extra.map);
+      noop(state.extra.map.get(1)?.id);
+      noop(state.extra.map.get(2)?.name);
+      return info.getDeps();
+    });
+
+    expect(result.current).toMatchObject(getMapDep(rootValKey));
+  }
+
   const getArrDepAndIndexDep = (rootValKey) => [
     getDepKey(rootValKey, 'extra.list'),
     getDepKey(rootValKey, 'extra.list.0'),
@@ -49,6 +63,8 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
   const getArrDep = (rootValKey) => [getDepKey(rootValKey, 'extra.list')];
 
   const getIndexDep = (rootValKey) => [getDepKey(rootValKey, 'extra.list.0'), getDepKey(rootValKey, 'extra.list.1')];
+
+  const getMapDep = (rootValKey) => [getDepKey(rootValKey, 'extra.map.1.id'), getDepKey(rootValKey, 'extra.map.2.name')];
 
   describe(`${label} arrDep=undefined`, () => {
     test('arrIndexDep=undefined, not read list', async () => {
@@ -148,6 +164,14 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
         arrDep: false,
         arrIndexDep: undefined,
         getMatchObj: getIndexDep,
+      });
+    });
+
+    test('arrIndexDep=undefined, read map', async () => {
+      await testReadMap({
+        arrDep: true,
+        arrIndexDep: true,
+        getMatchObj: getMapDep,
       });
     });
   });

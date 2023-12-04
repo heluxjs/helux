@@ -11,6 +11,7 @@ export default defineConfig({
     // setupFiles: './__tests__/vitest-setup.ts', // for local command 'npm run test',
     // include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     // include: ['./__tests__/hooks/useGlobalId.test.tsx'],
-    // include: ['./__tests__/hook-options/id.test.ts'],
+    // include: ['./__tests__/hook-options/arrDep.test.ts'],
+    // include: ['./__tests__/hooks/useAtom.test.ts'],
   },
 });

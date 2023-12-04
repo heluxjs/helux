@@ -1,6 +1,6 @@
 import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
 import { immut, limuUtils } from 'limu';
-import { ARR, DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
+import { ARR, DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, MAP, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
@@ -16,16 +16,17 @@ import { getInternal } from './state';
 
 const { isObject: isDict } = limuUtils;
 
-function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, parentType: string, value: any) {
+function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { grandpaType: string; parentType: string; rawVal: any }) {
   if (!insCtx.canCollect) {
     // 无需收集依赖
     return;
   }
-  const isValArr = Array.isArray(value);
+  const { grandpaType, parentType, rawVal } = options;
+  const isValArr = Array.isArray(rawVal);
   if (isValArr) {
     recordArrKey(insCtx.internal.level1ArrKeys, info.depKey);
   }
-  insCtx.recordDep(info, parentType, isValArr);
+  insCtx.recordDep(info, parentType, grandpaType, isValArr);
 }
 
 function getInsDeps(insCtx: InsCtxDef, isCurrent: boolean) {
@@ -50,12 +51,12 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
     insCtx.proxyState = immut(rawState, {
       onOperate: (opParams) => {
         if (opParams.isBuiltInFnKey) return;
-        const { fullKeyPath, keyPath, parentType, value, proxyValue } = opParams;
+        const { fullKeyPath, keyPath, parentType, grandpaType, value, proxyValue } = opParams;
         // 触发用户定义的钩子函数
         const { proxyVal, rawVal } = chooseProxyVal(onRead(opParams), proxyValue, value);
         const depKey = prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
         const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
-        collectDep(insCtx, depKeyInfo, parentType, rawVal);
+        collectDep(insCtx, depKeyInfo, { grandpaType, parentType, rawVal });
         return proxyVal;
       },
       compareVer: true,
@@ -72,11 +73,11 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
           return value;
         }
 
-        const finalVal = chooseVal(onRead(newOpParams(key, value, false)), value);
+        const rawVal = chooseVal(onRead(newOpParams(key, value, false)), value);
         const depKey = prefixValKey(key, sharedKey);
         const parentType = isDict(target) ? DICT : OTHER;
-        collectDep(insCtx, { depKey, keyPath: [key], sharedKey }, parentType, finalVal);
-        return finalVal;
+        collectDep(insCtx, { depKey, keyPath: [key], sharedKey }, { parentType, grandpaType: '', rawVal });
+        return rawVal;
       },
     });
   }
@@ -133,7 +134,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
       // depKeys 的后续更新流程在 helpers/insDep.resetReadMap 和 updateDep 函数里，做了双保险备份
       getPrevDeps: () => getInsDeps(insCtx, false),
     },
-    recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, isValArr?: boolean) => {
+    recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, grandpaType?: string, isValArr?: boolean) => {
       let depKey = depKeyInfo.depKey;
       // depKey 可能因为配置了 rules[]stopDep 的关系被 recordCb 改写
       cutDepKeyByStop(depKeyInfo, {
@@ -172,12 +173,21 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
 
       // 还未被记录，也未被标记删除
       if (!readMap[depKey] && !delReadMap[depKey]) {
+        const { parentKeyPath } = depKeyInfo;
         // pure 模式下针对字典只记录最长路径依赖
-        if (pure && parentType === DICT) {
-          const { parentKeyPath } = depKeyInfo;
+        if (pure && parentType === DICT && parentKeyPath) {
+          const len = parentKeyPath.length;
           // 无 parentKeyPath 的话就是dict根对象自身，此时 parentDepKey 指向 sharedKey
-          const isValidPath = parentKeyPath && parentKeyPath.length;
-          const parentDepKey = isValidPath ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
+          let parentDepKey = len ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
+
+          // 爷爷节点是 map 的话，因 map 获取是 map.get(key) 获取的值，名字到这里时已经是 item 自身读取操作
+          // 故这里需消除的爷爷节点路径
+          if (grandpaType === MAP) {
+            // 消掉末尾两个即可
+            // [ 'val', 'extra', 'map', 1, 'name' ] ---> [ 'val', 'extra', 'map']
+            const path = parentKeyPath.slice(0, len - 1);
+            parentDepKey = prefixValKey(path.join(KEY_SPLITER), sharedKey);
+          }
           // 删除父路径记录
           if (readMap[parentDepKey]) {
             delete readMap[parentDepKey];

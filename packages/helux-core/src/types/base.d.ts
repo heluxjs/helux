@@ -997,7 +997,8 @@ export interface IInsCtx<T = Dict> {
   canCollect: boolean;
   getDeps: IInsRenderInfo['getDeps'];
   renderInfo: IInsRenderInfo;
-  recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, isValArr?: boolean) => void;
+  /** inner high frequency call func, for perf, no options */
+  recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, grandpaType?: string, isValArr?: boolean) => void;
 }
 
 export type InsCtxMap = Map<number, IInsCtx>;
