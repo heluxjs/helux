@@ -1,5 +1,5 @@
 import { noop, noopArr } from '@helux/utils';
-import { EVENT_NAME, FROM, HELUX_GLOBAL_LOADING, LOADING_MODE, STATE_TYPE } from '../../consts';
+import { EVENT_NAME, FROM, HELUX_GLOBAL_LOADING, RECORD_LOADING, STATE_TYPE } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { createOb } from '../../helpers/obj';
 import { getInternal } from '../../helpers/state';
@@ -11,7 +11,7 @@ import type { TInternal } from './buildInternal';
 
 const { MUTATE } = FROM;
 const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
-const { PRIVATE, GLOBAL, NONE } = LOADING_MODE;
+const { PRIVATE, GLOBAL, NO } = RECORD_LOADING;
 const fakeExtra: Dict = {};
 const fakeLoading: Dict = {};
 const fakeRenderInfo: IRenderInfo = { sn: 0, getDeps: noopArr };
@@ -98,7 +98,7 @@ export function createSafeLoading(extra: Dict, loadingObj: any, from: From) {
 
 export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
   const { internal, from } = options;
-  const { stateType, loadingMode } = internal;
+  const { stateType, recordLoading } = internal;
   const isUserState = STATE_TYPE.USER_STATE === stateType;
 
   // 可供用户在组件外部安全读状态的 loading 对象
@@ -107,7 +107,7 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
   let loadingProxy = {};
   // 仅用户自己创建的状态才需要创建伴生的 loading 对象
   if (isUserState) {
-    if (PRIVATE === loadingMode) {
+    if (PRIVATE === recordLoading) {
       loadingProxy = internal.extra.loadingProxy;
       if (!loadingProxy) {
         loadingProxy = createLoading(createFn, options);
@@ -116,14 +116,14 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
         internal.loadingInternal = getInternal(loadingProxy);
       }
       loadingState = createSafeLoading(internal.extra, loadingProxy, from);
-    } else if (GLOBAL === loadingMode) {
+    } else if (GLOBAL === recordLoading) {
       const globalLoadingInternal = getGlobalLoadingInternal();
       loadingProxy = getGlobalLoading();
       // 向宿主上挂上全局的 globalLoadingInternal 实现
       internal.loadingInternal = globalLoadingInternal;
       loadingState = createSafeLoading(globalLoadingInternal.extra, loadingProxy, from);
     } else {
-      throw new Error(`unknown loadingMode [${loadingMode}]`);
+      throw new Error(`unknown recordLoading [${recordLoading}]`);
     }
   } else {
     // 此刻的 internal 即 globalLoadingInternal
@@ -138,12 +138,12 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
  */
 export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
   const { internal: leaderInternal, from, apiCtx } = options;
-  const { stateType, loadingMode } = leaderInternal;
+  const { stateType, recordLoading } = leaderInternal;
   const isUserState = STATE_TYPE.USER_STATE === stateType;
 
   let useLoading = () => fakeTuple;
   // 当前状态是用户状态，且未禁用伴生loading
-  if (isUserState && NONE !== loadingMode) {
+  if (isUserState && NO !== recordLoading) {
     useLoading = () => {
       const loadingProxy = getLoadingInfo(createFn, options).loadingProxy;
       const {

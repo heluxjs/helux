@@ -5,10 +5,10 @@ export const EVENT_NAME = {
   ON_ERROR_OCCURED: 'ON_ERROR_OCCURED',
 } as const;
 
-export const LOADING_MODE = {
-  NONE: 'NONE',
-  PRIVATE: 'PRIVATE',
-  GLOBAL: 'GLOBAL',
+export const RECORD_LOADING = {
+  NO: 'no',
+  PRIVATE: 'private',
+  GLOBAL: 'global',
 } as const;
 
 export const FROM = {

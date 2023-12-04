@@ -1,5 +1,5 @@
 import { limuUtils, produce } from 'limu';
-import { EVENT_NAME, LOADING_MODE } from './consts/user';
+import { EVENT_NAME, RECORD_LOADING } from './consts/user';
 import { getAtom, isAtom, isDerivedAtom } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
@@ -92,5 +92,5 @@ export {
   addMiddleware,
   addPlugin,
   EVENT_NAME,
-  LOADING_MODE,
+  RECORD_LOADING,
 };

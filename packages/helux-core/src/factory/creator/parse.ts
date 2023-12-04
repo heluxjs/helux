@@ -1,6 +1,6 @@
 import { canUseDeep, enureReturnArr, isFn, isJsObj, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from '@helux/utils';
 import { immut } from 'limu';
-import { FROM, LOADING_MODE, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
+import { FROM, RECORD_LOADING, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
@@ -147,9 +147,8 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const sharedKey = markSharedKeyOnState(rawState);
   const moduleName = options.moduleName || '';
   const deep = options.deep ?? true;
-  const exact = options.exact ?? true;
-  const enableLoading = options.enableLoading ?? true;
-  const loadingMode = options.loadingMode || LOADING_MODE.PRIVATE;
+  const enableDraftDep = options.enableDraftDep ?? false;
+  const recordLoading = options.recordLoading || RECORD_LOADING.PRIVATE;
   const rules = options.rules || [];
   const before = options.before || noop;
   const mutate = options.mutate || noop;
@@ -163,7 +162,6 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const mutateFnDict = parseMutate(mutate);
 
   return {
-    enableLoading,
     rawState,
     sharedKey,
     sharedKeyStr,
@@ -174,17 +172,17 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     forGlobal,
     loc,
     deep,
-    exact,
     rules,
     before,
     mutate,
     mutateFnDict,
     onRead: noop, // 等待 setOnReadHook 写入
     stateType,
-    loadingMode,
+    recordLoading,
     stopArrDep,
     stopDepth,
     isPrimitive,
+    enableDraftDep,
   };
 }
 

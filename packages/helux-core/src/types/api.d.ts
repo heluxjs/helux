@@ -45,7 +45,6 @@ import type {
   IUseDerivedOptions,
   IUseSharedStateOptions,
   IWatchFnParams,
-  LoadingNone,
   LoadingState,
   LoadingStatus,
   Middleware,
@@ -53,6 +52,7 @@ import type {
   MutateFnDict,
   MutateFnLooseItem,
   MutateWitness,
+  NoRecord,
   NumStrSymbol,
   Off,
   PartialStateCb,
@@ -76,10 +76,10 @@ export declare const EVENT_NAME: {
   ON_SHARE_CREATED: 'ON_SHARE_CREATED';
 };
 
-export declare const LOADING_MODE: {
-  NONE: LoadingNone;
-  PRIVATE: 'PRIVATE';
-  GLOBAL: 'GLOBAL';
+export declare const RECORD_LOADING: {
+  NONE: NoRecord;
+  PRIVATE: 'private';
+  GLOBAL: 'global';
 };
 
 /**

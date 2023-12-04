@@ -27,8 +27,8 @@ import { atom, useAtom } from 'helux';
 const [numAtom] = atom(1); // { val: 1 }
 
 function Demo() {
-   const [num, setAtom] = useAtom(numAtom); // num is automatically unboxed
-   return <h1 onClick={setAtom(Math.random())}>{num}</h1>;
+  const [num, setAtom] = useAtom(numAtom); // num is automatically unboxed
+  return <h1 onClick={setAtom(Math.random())}>{num}</h1>;
 }
 ```
 
@@ -44,15 +44,15 @@ const [objAtom, setObj] = atom({ a: 1, b: { b1: 1 } });
 setObj((draft) => (draft.a = Math.random()));
 
 function Demo1() {
-   const [obj] = useAtom(objAtom);
-   // Trigger re-rendering only when obj.a changes
-   return <h1>{obj.a}</h1>;
+  const [obj] = useAtom(objAtom);
+  // Trigger re-rendering only when obj.a changes
+  return <h1>{obj.a}</h1>;
 }
 
 function Demo2() {
-   const [obj] = useAtom(objAtom);
-   // Trigger re-rendering only when obj.b.b1 changes
-   return <h1>{obj.b.b1}</h1>;
+  const [obj] = useAtom(objAtom);
+  // Trigger re-rendering only when obj.b.b1 changes
+  return <h1>{obj.b.b1}</h1>;
 }
 ```
 
@@ -74,10 +74,10 @@ import { block } from 'helux';
 const [objAtom] = atom({ a: 1, b: { b1: 1 } });
 
 const UserBlock = block(() => (
-   <div>
-     <h1>{objAtom.a}</h1>
-     <h1>{objAtom.b.b1}</h1>
-   </div>
+  <div>
+    <h1>{objAtom.a}</h1>
+    <h1>{objAtom.b.b1}</h1>
+  </div>
 ));
 
 // Dependencies are obj.val.a, obj.val.b.b1
@@ -96,8 +96,8 @@ import { share, mutate } from 'helux';
 const [shared] = share({ a: 1, b: 0, c: 0 });
 
 mutate(shared)({
-   changeB: (draft) => (draft.b = shared.a + 1),
-   changeC: (draft) => (draft.c = shared.a + 2),
+  changeB: (draft) => (draft.b = shared.a + 1),
+  changeC: (draft) => (draft.c = shared.a + 2),
 });
 ```
 
@@ -109,8 +109,8 @@ const [shared] = share({ a: 1 });
 const [sharedB] = share({ b: 0, c: 0 });
 
 mutate(sharedB)({
-   changeB: (draft) => (draft.b = shared.a + 1),
-   changeC: (draft) => (draft.c = shared.a + 2),
+  changeB: (draft) => (draft.b = shared.a + 1),
+  changeC: (draft) => (draft.c = shared.a + 2),
 });
 ```
 
@@ -140,12 +140,12 @@ import { watch } from 'helux';
 
 // Only when changes in a are observed, the callback execution is notified
 watch(() => {
-   console.log('a change');
+  console.log('a change');
 }, [shared.a]);
 
 //Notify callback execution when any shared node changes
 watch(() => {
-   console.log('shared change');
+  console.log('shared change');
 }, [shared]);
 ```
 
@@ -153,9 +153,9 @@ Set `immediate=true` to execute immediately and automatically collect dependenci
 
 ```ts
 watch(
-   () => {
-     console.log('a change', shared.a);
-   },
-   { immediate: true },
+  () => {
+    console.log('a change', shared.a);
+  },
+  { immediate: true },
 );
 ```

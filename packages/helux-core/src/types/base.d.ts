@@ -14,20 +14,20 @@ export type FnDesc = string;
 /**
  * 不使用 loading 模块，设置此项后，shared/atom 的异步 action 执行状态将不发送到 loading 模块
  */
-export type LoadingNone = 'NONE';
+export type NoRecord = 'no';
 
 /**
- * 使用 loading 模块，异步 action 执行状态只发送到自己的 loading 模块，降低函数 desc 命名冲突可能性
+ * 使用共享状态配套的伴生 loading 模块记录，异步 action 执行状态只发送到此伴生 loading 模块，降低函数 desc 命名冲突可能性
  */
-export type LoadingPrivate = 'PRIVATE';
+export type RecordToPrivate = 'private';
 
 /**
- * 使用 global loading 模块，异步 action 执行状态会发送到全局 loading 模块，会少占用一些内存
+ * 使用 global loading 模块记录，异步 action 执行状态会发送到全局 loading 模块，会少占用一些内存
  * 但需要注意其他共享状态的 异步action函数的 desc 命名方式，避免相互覆盖
  */
-export type LoadingGlobal = 'GLOBAL';
+export type RecordToGlobal = 'global';
 
-export type LoadingMode = LoadingNone | LoadingPrivate | LoadingGlobal;
+export type RecordLoading = NoRecord | RecordToPrivate | RecordToGlobal;
 
 export type From = 'Mutate' | 'Action' | 'SetState';
 
@@ -547,41 +547,10 @@ export interface ICreateOptionsBaseFull<T = any> {
    */
   deep: boolean;
   /**
-   * default: true ，是否使用精确更新策略
-   * ```
-   * 为 true 时，表示使用精确更新策略，此时相信用户用稳定方式去修改状态，helux 内部会使用深度依赖收集到的最长路径（即更新凭据）
-   * 去更新视图，有助于缩小更新视图范围，达到更精确通知视图更新的目的，开启此设置需谨慎，确保开启后按约定使用稳定方式去修改状态，
-   * 否则会造成冗余更新，具体原因见下面代码解释
-   * ```
-   * ```ts
-   * // 如下为稳定方式更新，在 exact 为 true 时，会查 a1|b、a2|b|c、a2|b|e 这些依赖对应的视图更新
-   * // exact 为 false 时，会查 a1、a1|b、a2、a2|b、a2|b|c、a2|b|e 这些依赖对应的视图更新
-   * // 所以只要用户按约定一定使用稳定方式去修改状态的话，通知范围会减少
-   * setState(draft=>{
-   *  draft.a1.b = 1;
-   *  draft.a2.b.c = 2
-   *  draft.a2.b.e = 3
-   * });
-   *
-   * // 如下使用非稳定方式更新时，此时只会查 a2 去更新视图，则可能造成部分视图冗余更新
-   * setState(draft=>{
-   *  draft.a2 = { b: { ...draft.a2.b, c: 2, e: 3 } };
-   * });
-   * // 冗余更新的原因是，假如视图V1读的是 a2.b.f，它的依赖是 a2、a2|b、a2|b|f，
-   * // 上面的更新语句其实只改了 a2.b.c  a2.b.e，但更新凭据是 a2，则也会通知V1更新
-   * // 如果使用稳定更新方式，用最长路径去更新视图的话，更新路径是 a2|b|c  a2|b|e，则不同通知V1更新
-   * ```
+   * default: 'private' ，表示loading 对象记录的位置，具体含义见 recordLoading，
+   * 注：loading 对象用于辅助查询 mutate 或者 action 异步函数的执行状态
    */
-  exact: boolean;
-  /**
-   * default: true
-   * 是否自动生成伴生的loading对象，用于辅助查询 mutate 或者 action 异步函数的执行状态
-   */
-  enableLoading: boolean;
-  /**
-   * default: PRIVATE，表示生成伴生 loading 的方式，具体含义见 LoadingMode
-   */
-  loadingMode: LoadingMode;
+  recordLoading: RecordLoading;
   /**
    * default: 6
    * 依赖收集的深度，默认 6， 意味着对复杂对象至多收集到第六层 json path 作为依赖
@@ -597,6 +566,12 @@ export interface ICreateOptionsBaseFull<T = any> {
    * 配置状态变更联动视图更新规则
    */
   rules: IDataRule<T>[];
+  /**
+   * default: fasle，是否允许对草稿对象读值时收集依赖，
+   * 默认不允许，否则 mutate 回调里使用类似 draft.a +=1 时很容易造成死循环，
+   * 此参数偏向于面向库开发者来使用
+   */
+  enableDraftDep: boolean;
 }
 
 export interface ICreateOptionsFull<T = Dict> extends ICreateOptionsBaseFull<T> {

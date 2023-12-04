@@ -1,8 +1,8 @@
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
-export { EVENT_NAME, FROM, LOADING_MODE } from './user';
+export { EVENT_NAME, FROM, RECORD_LOADING } from './user';
 export { HAS_SYMBOL };
 
-export const VER = '3.4.20';
+export const VER = '3.4.23';
 
 export const PROD_FLAG = true;
 
