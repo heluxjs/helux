@@ -177,11 +177,11 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
         // pure 模式下针对字典只记录最长路径依赖
         if (pure && parentType === DICT && parentKeyPath) {
           const len = parentKeyPath.length;
-          // 无 parentKeyPath 的话就是dict根对象自身，此时 parentDepKey 指向 sharedKey
+          // 无 parentKeyPath 的话就是 dict 根对象自身，此时 parentDepKey 指向 sharedKey
           let parentDepKey = len ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
 
-          // 爷爷节点是 map 的话，因 map 获取是 map.get(key) 获取的值，名字到这里时已经是 item 自身读取操作
-          // 故这里需消除的爷爷节点路径
+          // 爷爷节点是 map 的话，因 map 获取是 map.get(key) 获取的值，运行到这里时已经是 item 自身读取操作
+          // 故这里需消除的是爷爷节点路径
           if (grandpaType === MAP) {
             // 消掉末尾两个即可
             // [ 'val', 'extra', 'map', 1, 'name' ] ---> [ 'val', 'extra', 'map']
