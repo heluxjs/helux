@@ -1,6 +1,6 @@
 {
   "name": "@helux/hooks-impl",
-  "version": "3.4.19",
+  "version": "3.4.20",
   "description": "helux hooks implement lib",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"

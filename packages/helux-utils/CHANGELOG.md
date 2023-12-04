@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.4.20
+
+### Patch Changes
+
+- 1592c51: build(3.4.20): bump limu and use grandpaType to del map node dep
+  - @helux/types@3.4.20
+
 ## 3.4.19
 
 ### Patch Changes

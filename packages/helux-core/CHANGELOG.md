@@ -1,5 +1,15 @@
 # @helux/core
 
+## 3.4.20
+
+### Patch Changes
+
+- 1592c51: build(3.4.20): bump limu and use grandpaType to del map node dep
+- Updated dependencies [1592c51]
+  - @helux/utils@3.4.20
+  - @helux/hooks-impl@3.4.20
+  - @helux/types@3.4.20
+
 ## 3.4.19
 
 ### Patch Changes
