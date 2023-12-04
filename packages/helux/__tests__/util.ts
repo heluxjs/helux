@@ -14,7 +14,6 @@ export function dictFictory() {
         { id: 1, name: 'helux1' },
         { id: 2, name: 'helux2' },
       ],
-      c: (draft: any) => (draft.extra.c = draft.a.b.c + 103),
     },
   };
 }
@@ -62,6 +61,15 @@ export function getDepKey(rootValKey: string, keyPath?: string[] | string) {
   }
   const firstSpliter = rootValKey.endsWith('/val') ? '|' : '/';
   return `${rootValKey}${firstSpliter}${keyPathVar.join('|')}`;
+}
+
+export function randomStr(length = 8) {
+  let str = '';
+  let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let i = 0; i < length; i++) {
+    str += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return str;
 }
 
 /**

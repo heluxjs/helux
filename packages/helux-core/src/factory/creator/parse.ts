@@ -194,7 +194,7 @@ export type ParsedOptions = ReturnType<typeof parseOptions>;
  * 解析出 createShared 里配置的 rules
  */
 export function parseRules(options: ParsedOptions): IRuleConf {
-  const { rawState, sharedKey, deep, rules, stopDepth, stopArrDep, forAtom } = options;
+  const { rawState, sharedKey, rootValKey, deep, rules, stopDepth, stopArrDep, forAtom } = options;
   const idsDict: KeyIdsDict = {};
   const globalIdsDict: KeyIdsDict = {};
   const stopDepInfo: IRuleConf['stopDepInfo'] = { keys: [], isArrDict: {}, arrKeyStopDcit: {}, depth: stopDepth, stopArrDep };
@@ -245,12 +245,15 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     // atom 自动拆箱
     const stateNode = forAtom ? state.val : state;
     const result = enureReturnArr(when, stateNode);
-    // record id, globalId, stopDep
-    const setRuleConf = (confKey: string) => {
+    const pushId = (idsDict: KeyIdsDict, ids: NumStrSymbol[], confKey: string) => {
       const idList = safeObjGet(idsDict, confKey, [] as NumStrSymbol[]);
       ids.forEach((id) => nodupPush(idList, id));
-      const globalIdList = safeObjGet(globalIdsDict, confKey, [] as NumStrSymbol[]);
-      globalIds.forEach((id) => nodupPush(globalIdList, id));
+    };
+
+    // record id, globalId, stopDep
+    const setRuleConf = (confKey: string) => {
+      pushId(idsDict, ids, confKey);
+      pushId(globalIdsDict, globalIds, confKey);
 
       let stopKeyDep;
       if (isArrDict[confKey]) {
@@ -269,7 +272,7 @@ export function parseRules(options: ParsedOptions): IRuleConf {
 
     // 为让 globalId 机制能够正常工作，有 key 读取或返回的数组包含有state自身时，需补上 sharedKey
     if (keyReaded || result.includes(stateNode)) {
-      setRuleConf(`${sharedKey}`);
+      setRuleConf(rootValKey);
     }
   });
 
