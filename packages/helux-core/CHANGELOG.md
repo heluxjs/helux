@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.16
+
+### Patch Changes
+
+- ea2b8b1: build(3.4.16): add fixedDepKeys
+  - @helux/hooks-impl@3.4.16
+  - @helux/types@3.4.16
+  - @helux/utils@3.4.16
+
 ## 3.4.15
 
 ### Patch Changes

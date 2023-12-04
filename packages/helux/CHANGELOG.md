@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.16
+
+### Patch Changes
+
+- ea2b8b1: build(3.4.16): add fixedDepKeys
+- Updated dependencies [ea2b8b1]
+  - @helux/core@3.4.16
+
 ## 3.4.15
 
 ### Patch Changes
