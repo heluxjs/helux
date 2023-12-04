@@ -1,4 +1,4 @@
-import { matchDictKey, nodupPush, prefixValKey } from '@helux/utils';
+import { getVal, matchDictKey, nodupPush, prefixValKey } from '@helux/utils';
 import { IOperateParams } from 'limu';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import type { KeyIdsDict, NumStrSymbol } from '../../types/base';
@@ -7,11 +7,29 @@ import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, IMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
 
+/**
+ * 如果变化命中了 rules[].ids 或 globaIds 规则，则添加到 mutateCtx.ids 或 globalIds 里
+ */
+function putId(keyIds: KeyIdsDict, options: { writeKey: string; ids: NumStrSymbol[]; internal: TInternal; opParams: IOperateParams }) {
+  const { writeKey, ids, internal, opParams } = options;
+  const { snap } = internal;
+  const { fullKeyPath, value } = opParams;
+  // find update ids configured in rules
+  Object.keys(keyIds).forEach((confKey) => {
+    // writeKey: 1/a|list|0|name
+    // confKey: 1/a|list
+    // writeKey 是配置 confKey 的孩子节点，且值已发送变化
+    if (writeKey.startsWith(confKey) && getVal(snap, fullKeyPath) !== value) {
+      keyIds[confKey].forEach((id) => nodupPush(ids, id));
+    }
+  });
+}
+
 export function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
-  const { isChange, fullKeyPath, keyPath, parentType } = opParams;
+  const { isChange, fullKeyPath, keyPath, parentType, value } = opParams;
   const { internal, mutateCtx } = opts;
   const { arrKeyDict } = mutateCtx;
-  const { sharedKey } = internal;
+  const { sharedKey, snap } = internal;
 
   if (!isChange) {
     if (getRunningFn().fnCtx) {
@@ -40,7 +58,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     writeKeys[arrKey] = 1;
   }
 
-  const { idsDict, globalIdsDict, stopDepInfo } = ruleConf;
+  const { hasIds, hasGlobalIds, stopDepInfo } = ruleConf;
   const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
   writeKeyPathInfo[writeKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
 
@@ -51,6 +69,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     writeKeys[level1Key] = 1;
     return;
   }
+
   // 用户设定了精确更新策略，则只查当前更新路径的视图
 
   // 筛出当前写入 key 对应的可能存在的数组 key
@@ -75,17 +94,10 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     writeKeys[writeKey] = 1;
   }
 
-  // 如果变化命中了 rules[].ids 或 globaIds 规则，则添加到 mutateCtx.ids 或 globalIds 里
-  const putId = (keyIds: KeyIdsDict, ids: NumStrSymbol[]) => {
-    // find update ids configured in rules
-    Object.keys(keyIds).forEach((confKey) => {
-      // writeKey: 1/a|list|0|name
-      // confKey: 1/a|list
-      if (writeKey.startsWith(confKey)) {
-        keyIds[confKey].forEach((id) => nodupPush(ids, id));
-      }
-    });
-  };
-  putId(idsDict, ids);
-  putId(globalIdsDict, globalIds);
+  if (hasIds) {
+    putId(ruleConf.idsDict, { ids, writeKey, internal, opParams });
+  }
+  if (hasGlobalIds) {
+    putId(ruleConf.globalIdsDict, { ids: globalIds, writeKey, internal, opParams });
+  }
 }

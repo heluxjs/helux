@@ -3,8 +3,6 @@ import { describe, expect, test } from 'vitest';
 import { atom, useAtom } from '../helux';
 import { dictFictory, noop, randomStr } from '../util';
 
-const getRootValDep = (rootValKey) => [rootValKey];
-
 export function makeTest(options: { label: string; atom: typeof atom; useAtom: typeof useAtom }) {
   const { label, atom, useAtom } = options;
 
@@ -60,7 +58,6 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
       noop(state.info);
       return info.getDeps();
     });
-    console.log(result.current);
     expect(renderCount).toBe(1);
 
     setDictAtom((draft) => {
@@ -88,9 +85,9 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
     });
   });
 
-  // describe(`${label} id for state.a.b.c`, () => {
-  //   test('update root', async () => {
-  //     await testLevel1UpdateA();
-  //   });
-  // });
+  describe(`${label} id for state.a.b.c`, () => {
+    test('update root', async () => {
+      await testLevel1UpdateA();
+    });
+  });
 }

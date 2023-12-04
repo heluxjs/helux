@@ -6,6 +6,7 @@ export function dictFictory() {
       b: { c: 1 },
       b1: { c1: 1 },
     },
+    num: 1,
     info: { name: 'helux', age: 1 },
     desc: 'awesome lib',
     extra: {

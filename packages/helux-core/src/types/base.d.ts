@@ -1016,7 +1016,9 @@ export interface ICreateDeriveLogicOptions {
 }
 
 export interface IRuleConf {
+  hasIds: boolean;
   idsDict: KeyIdsDict;
+  hasGlobalIds: boolean;
   globalIdsDict: KeyIdsDict;
   stopDepInfo: {
     depth: number;

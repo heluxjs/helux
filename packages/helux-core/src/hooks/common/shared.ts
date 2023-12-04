@@ -12,7 +12,7 @@ import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
  * 记录一些必要的辅助数据，返回 useAtom useShared 需要的元组数据
  */
 export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, IInsRenderInfo] {
-  const { proxyState, internal, renderInfo } = insCtx;
+  const { proxyState, internal, renderInfo, canCollect } = insCtx;
   const { sharedKey, sharedKeyStr, setDraft } = internal;
   renderInfo.snap = internal.snap;
   // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
@@ -26,7 +26,7 @@ export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, II
     // 此数据会在 useClearEffect 回调里清除
     INS_CTX.set(insCtx.rootVal, insCtx);
   }
-  if (!forAtom) {
+  if (!forAtom && canCollect) {
     // 记录一次根值依赖，让未对 useAtom useShared 返回值有任何读操作的组件也响应更新
     insCtx.recordDep({ depKey: sharedKeyStr, keyPath: [], sharedKey }, DICT);
   }

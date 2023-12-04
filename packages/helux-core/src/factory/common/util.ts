@@ -106,13 +106,10 @@ export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
 }
 
 export function isValChanged(internal: TInternal, depKey: string) {
-  const { snap, prevSnap, stateType, rootValKey } = internal;
+  const { snap, prevSnap, stateType } = internal;
   // 非用户状态，都返回 true（伴生状态有自己的key规则）
   if (USER_STATE !== stateType) {
     return true;
-  }
-
-  if (depKey === rootValKey) {
   }
 
   const { keyPath } = getDepKeyInfo(depKey);

@@ -208,7 +208,6 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     const { when, ids = [], globalIds = [], stopDep } = rule;
 
     let state: any;
-    let keyReaded = false;
     if (isDeep) {
       let pervKey = '';
       state = immut(rawState, {
@@ -225,7 +224,6 @@ export function parseRules(options: ParsedOptions): IRuleConf {
           confKeys.push(confKey);
           isArrDict[confKey] = Array.isArray(value);
           pervKey = confKey;
-          keyReaded = true;
         },
       });
     } else {
@@ -236,7 +234,6 @@ export function parseRules(options: ParsedOptions): IRuleConf {
           confKeys.push(confKey);
           const value = target[key];
           isArrDict[confKey] = Array.isArray(value);
-          keyReaded = true;
           return value;
         },
       });
@@ -270,13 +267,15 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     };
     confKeys.forEach(setRuleConf);
 
-    // 为让 globalId 机制能够正常工作，有 key 读取或返回的数组包含有state自身时，需补上 sharedKey
-    if (keyReaded || result.includes(stateNode)) {
-      setRuleConf(rootValKey);
+    // 为让 globalId 机制能够正常工作，有 key 读取或返回的数组包含有state自身时，需补上 rootValKey
+    if (result.includes(stateNode)) {
+      pushId(globalIdsDict, globalIds, rootValKey);
     }
   });
 
-  return { idsDict, globalIdsDict, stopDepInfo };
+  const hasIds = Object.keys(idsDict).length > 0;
+  const hasGlobalIds = Object.keys(globalIdsDict).length > 0;
+  return { hasIds, idsDict, hasGlobalIds, globalIdsDict, stopDepInfo };
 }
 
 export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions) {
