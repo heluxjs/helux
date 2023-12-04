@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.21
+
+### Patch Changes
+
+- f753724: build(3.4.21): del enableLoading, rename loadingMode to recordLoading
+  - @helux/hooks-impl@3.4.21
+  - @helux/types@3.4.21
+  - @helux/utils@3.4.21
+
 ## 3.4.20
 
 ### Patch Changes
