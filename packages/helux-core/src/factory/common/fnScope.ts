@@ -122,3 +122,7 @@ export function getRunningFn() {
   const fnCtx = !runningFnKey ? null : getFnCtx(runningFnKey);
   return { fnCtx, depKeys, isTaskRunning, isIgnore, runningSharedKey };
 }
+
+export function hasRunningFn() {
+  return getFnScope().runningFnKey;
+}

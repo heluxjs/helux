@@ -1,12 +1,12 @@
 import { isFn, noop } from '@helux/utils';
 import { SCOPE_TYPE, WATCH } from '../consts';
+import { getRootValDepKeyInfo } from '../factory/common/util';
 import { markFnEnd, markFnStart, registerFn } from '../helpers/fnCtx';
 import { recordFnDepKeys } from '../helpers/fnDep';
 import { getInternal, getSharedKey } from '../helpers/state';
-import { getRootValInternal } from '../hooks/common/shared';
 import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types/base';
+import { INS_CTX } from './creator/current';
 import { parseWatchOptions } from './creator/parse';
-
 interface ICreateWatchLogicOpts<T = SharedState> {
   scopeType: ScopeType;
   sharedState?: T;
@@ -20,13 +20,17 @@ function putSharedToDep(list: any[]) {
   // list 里可能包含共享状态自身引用
   if (Array.isArray(list)) {
     list.forEach((sharedState: any) => {
-      // sharedState may a atom val passed useWatch deps fn
-      const internal = getInternal(sharedState) || getRootValInternal(sharedState);
+      // sharedState may a atom val returned by useWatch deps fn
+      const insCtx = INS_CTX.current(sharedState);
+      const internal = getInternal(sharedState) || insCtx?.internal;
       if (internal) {
-        const { sharedKey, forAtom } = internal;
-        // deps 列表里的 atom 结果自动拆箱
-        const suffix = forAtom ? '/val' : '';
-        recordFnDepKeys([`${sharedKey}${suffix}`], { sharedKey });
+        const { depKey, sharedKey } = getRootValDepKeyInfo(internal);
+        recordFnDepKeys([depKey], { sharedKey });
+      }
+      // TODO  discuss 加一个参数控制关闭此逻辑?
+      // 有实例使用的 useWatch 的 deps 函数返回值里包含了根值自身
+      if (insCtx) {
+        insCtx.recordDep(getRootValDepKeyInfo(internal));
       }
     });
   }

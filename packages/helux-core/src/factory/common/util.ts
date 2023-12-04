@@ -92,6 +92,15 @@ export function getDepKeyInfo(depKey: string): DepKeyInfo {
   return { sharedKey: Number(sharedKey), keyPath, depKey };
 }
 
+/** 获取根值依赖 key 信息 */
+export function getRootValDepKeyInfo(internal: TInternal) {
+  const { sharedKey, forAtom } = internal;
+  // deps 列表里的 atom 结果自动拆箱
+  const suffix = forAtom ? '/val' : '';
+  const keyPath = forAtom ? ['val'] : [];
+  return { depKey: `${sharedKey}${suffix}`, keyPath, sharedKey };
+}
+
 export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
   return prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
 }

@@ -57,7 +57,6 @@ export function execDepFns(opts: ICommitStateOptions) {
         continue;
       }
       const depKeys = insCtx.getDeps();
-
       // 未对 useState useAtom 返回值有任何读操作时
       if (depKeys[0] === rootValKey) {
         if (diffVal(internal, rootValKey)) {

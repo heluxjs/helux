@@ -1,5 +1,5 @@
 import { atom, share, useAtom, useShared } from '../helux';
-import { makeTest } from './arrDep.make';
+import { makeTest } from './deps.make';
 
 makeTest({ label: 'useAtom', atom, useAtom });
 

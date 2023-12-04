@@ -19,6 +19,8 @@ export function dictFictory() {
   };
 }
 
+export type DictState = ReturnType<typeof dictFictory>;
+
 export function expectEqual(actualVal, expectVal) {
   expect(actualVal === expectVal).toBeTruthy();
 }
@@ -48,7 +50,10 @@ export function noop(...args: any[]) {
   return args;
 }
 
-export function getDepKey(rootValKey: string, keyPath: string[] | string) {
+export function getDepKey(rootValKey: string, keyPath?: string[] | string) {
+  if (!keyPath) {
+    return rootValKey;
+  }
   let keyPathVar: string[] = [];
   if (typeof keyPath === 'string') {
     keyPathVar = keyPath.split('.');

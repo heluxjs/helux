@@ -41,26 +41,15 @@ export function clearDep(insCtx: InsCtxDef) {
  * 每轮渲染完毕的 effect 里触发依赖数据更新
  */
 export function updateDep(insCtx: InsCtxDef) {
-  const { canCollect, isFirstRender, currentDepKeys, pure, internal } = insCtx;
-  const resetDepKeys = () => {
-    // pure 模式下仅导出了状态，但未使用过，是非原始值状态时清空 depKeys
-    if (pure && currentDepKeys.length === 1) {
-      const { isPrimitive, rootValKey } = internal;
-      if (currentDepKeys[0] === rootValKey && !isPrimitive) {
-        insCtx.currentDepKeys = [];
-      }
-    }
-    insCtx.depKeys = currentDepKeys.slice();
-  };
-
+  const { canCollect, isFirstRender, currentDepKeys } = insCtx;
   // 标记了不能收集依赖，则运行期间不做更新依赖的动作
   if (!canCollect) {
     if (isFirstRender) {
-      resetDepKeys();
+      insCtx.depKeys = currentDepKeys.slice();
     }
     return;
   }
-  resetDepKeys();
+  insCtx.depKeys = currentDepKeys.slice();
 }
 
 /**

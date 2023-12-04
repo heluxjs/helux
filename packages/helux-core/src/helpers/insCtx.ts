@@ -1,6 +1,7 @@
-import { delListItem, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
+import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
 import { immut, limuUtils } from 'limu';
 import { ARR, DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
+import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
 import { chooseProxyVal, chooseVal, newOpParams } from '../factory/common/util';
@@ -25,6 +26,12 @@ function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, parentType: string, val
     recordArrKey(insCtx.internal.level1ArrKeys, info.depKey);
   }
   insCtx.recordDep(info, parentType, isValArr);
+}
+
+function getInsDeps(insCtx: InsCtxDef, isCurrent: boolean) {
+  const { depKeys, currentDepKeys, fixedDepKeys } = insCtx;
+  const dynamic = isCurrent ? currentDepKeys : depKeys;
+  return dynamic.concat(fixedDepKeys);
 }
 
 export function runInsUpdater(insCtx: InsCtxDef | undefined) {
@@ -91,6 +98,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
     delReadMap: {},
     pure,
     depKeys: [],
+    fixedDepKeys: [],
     currentDepKeys: [],
     isDeep,
     insKey,
@@ -114,16 +122,16 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
       // call insDep subscribe after snap changed
       cb();
     },
-    /** 记录一些需复用的中间生成的数据 */
+    /** 记录一些需复用的中间生成数据 */
     extra: {},
-    getDeps: () => insCtx.currentDepKeys,
+    getDeps: () => getInsDeps(insCtx, true),
     renderInfo: {
       sn: 0,
       snap,
       insKey,
-      getDeps: () => insCtx.currentDepKeys.slice(),
+      getDeps: () => getInsDeps(insCtx, true),
       // depKeys 的后续更新流程在 helpers/insDep.resetReadMap 和 updateDep 函数里，做了双保险备份
-      getPrevDeps: () => insCtx.depKeys.slice(),
+      getPrevDeps: () => getInsDeps(insCtx, false),
     },
     recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, isValArr?: boolean) => {
       let depKey = depKeyInfo.depKey;
@@ -135,7 +143,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
           depKey = key;
         },
       });
-      const { renderStatus } = insCtx;
+      const { renderStatus, fixedDepKeys } = insCtx;
       if (renderStatus === RENDER_END) {
         return;
       }
@@ -144,13 +152,22 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
       // record watch dep
       // 支持 useWatch 的 deps 函数直接传入 useShared 返回的 state 作为依赖项传入
       fnDep.recordFnDepKeys([depKey], {});
+      // 在 useWatch deps 中执行，记为固定依赖
+      if (hasRunningFn()) {
+        delListItem(currentDepKeys, depKey);
+        nodupPush(insCtx.fixedDepKeys, depKey);
+      }
+
       const doRecord = () => {
-        nodupPush(currentDepKeys, depKey);
+        readMap[depKey] = 1;
         // 注意 depKey 对应的 insKeys，和 insKey->insCtx.depKeys 记录是不对称的
         // 即 depKey a, a.b, a.b.c 都会记录 insKey 1
         // 但 insKey 1 在 pure 模式下 depKeys 就只有 a.b.c
         internal.recordDep(depKey, insKey);
-        readMap[depKey] = 1;
+        // 未在固定列表时才记录
+        if (!fixedDepKeys.includes(depKey)) {
+          nodupPush(currentDepKeys, depKey);
+        }
       };
 
       // 还未被记录，也未被标记删除
@@ -161,6 +178,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
           // 无 parentKeyPath 的话就是dict根对象自身，此时 parentDepKey 指向 sharedKey
           const isValidPath = parentKeyPath && parentKeyPath.length;
           const parentDepKey = isValidPath ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
+          // 删除父路径记录
           if (readMap[parentDepKey]) {
             delete readMap[parentDepKey];
             delReadMap[parentDepKey] = 1;
@@ -185,11 +203,19 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
   internal.mapInsCtx(insCtx, insKey);
   internal.recordId(id, insKey);
 
-  // 首次渲染执行一次依赖项补充函数
+  // 首次渲染执行一次依赖项补充函数，并记录为固定依赖项
   if (isFn(deps)) {
     // atom 自动拆箱
-    const state = forAtom ? insCtx.proxyState.val : insCtx.proxyState;
-    deps(state);
+    const rootVal = forAtom ? insCtx.proxyState.val : insCtx.proxyState;
+    const list = enureReturnArr(deps, rootVal);
+    // 获得已收集到依赖并转为固定依赖
+    const fixedDepKeys = insCtx.getDeps().slice();
+    // 补上可能存在的根值依赖本身
+    if (list.includes(rootVal)) {
+      fixedDepKeys.push(internal.rootValKey);
+    }
+    // 存储到 insCtx
+    insCtx.fixedDepKeys = fixedDepKeys;
   }
 
   return insCtx;

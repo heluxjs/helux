@@ -1,3 +1,20 @@
+## renderHook 注意事项
+
+### useEffect 会在外部调用前调用
+
+// 打印顺序 1 2 3 4
+
+```ts
+renderHook(() => {
+  console.log('1');
+  useEffect(() => {
+    console.log('3');
+  }, []);
+  console.log('2');
+});
+console.log('4');
+```
+
 ## 奇怪的测试结果
 
 ### atom 数组变化

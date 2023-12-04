@@ -1,23 +1,12 @@
 import { DICT } from '../../consts';
 import { isAtom } from '../../factory/common/atom';
-import type { InsCtxDef, TInternal } from '../../factory/creator/buildInternal';
+import type { InsCtxDef } from '../../factory/creator/buildInternal';
+import { INS_CTX } from '../../factory/creator/current';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
 import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
-
-/**
- * let code below works
- * ```ts
- * const [dict] = useAtom(dictAtom);
- * useWatch(()=>{}, ()=>[dict]);
- *
- * const [state] = useShared(dictShared);
- * useWatch(()=>{}, ()=>[state]);
- * ```
- */
-const rootValMap = new Map<any, any>();
 
 /**
  * 记录一些必要的辅助数据，返回 useAtom useShared 需要的元组数据
@@ -30,11 +19,12 @@ export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, II
   const rootVal = forAtom ? proxyState.val : proxyState;
   // 首次渲染时，记录一下 rootVal
   if (insCtx.isFirstRender) {
-    // ATTENTION：这里提前触发一次 .val 根值依赖记录
+    // ATTENTION：这里会提前触发一次 .val 根值依赖记录
     insCtx.rootVal = rootVal;
     // 如果 val 是原始值，多个相同的值会覆盖，造成 useWatch 判断失误
     // 这里会写到文档的常见使用错误里，警示作者避免直接传递原始值给 useWatch deps 函数
-    rootValMap.set(insCtx.rootVal, internal);
+    // 此数据会在 useClearEffect 回调里清除
+    INS_CTX.set(insCtx.rootVal, insCtx);
   }
   if (!forAtom) {
     // 记录一次根值依赖，让未对 useAtom useShared 返回值有任何读操作的组件也响应更新
@@ -42,14 +32,6 @@ export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, II
   }
 
   return [rootVal, setDraft, renderInfo];
-}
-
-export function delRootVal(val: any) {
-  rootValMap.delete(val);
-}
-
-export function getRootValInternal(val: any): TInternal | undefined {
-  return rootValMap.get(val);
 }
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {

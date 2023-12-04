@@ -442,7 +442,18 @@ export type AtomSafeLoading<T = any, O extends IAtomCreateOptions<T> = IAtomCrea
   ? Ext<LoadingState<O['mutate']>, LoadingStatus>
   : Ext<LoadingState, LoadingStatus>;
 
-export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> {
+export interface ISharedStateCtxBase {
+  /**
+   * 配置 onRead 钩子函数
+   */
+  setOnReadHook: (onRead: OnRead) => void;
+  /** 共享状态唯一 key */
+  sharedKey: number;
+  sharedKeyStr: string;
+  rootValKey: string;
+}
+
+export interface ISharedCtx<T = SharedDict, O extends ICreateOptions<T> = ICreateOptions<T>> extends ISharedStateCtxBase {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
@@ -463,17 +474,9 @@ export interface ISharedCtx<T = SharedState, O extends ICreateOptions<T> = ICrea
   getActionLoading: () => SafeLoading<T, O>;
   /** 使用 Action 状态 */
   useActionLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
-  /**
-   * 配置 onRead 钩子函数
-   */
-  setOnReadHook: (onRead: OnRead) => void;
-  /** 共享状态唯一 key */
-  sharedKey: number;
-  sharedKeyStr: string;
-  rootValKey: string;
 }
 
-export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> {
+export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> extends ISharedStateCtxBase {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnLooseItem<T, A> | AtomMutateFn<T, A>) => MutateWitness<T>;
   call: AtomCall<T>;
   callAsync: AtomCallAsync<T>;
@@ -493,14 +496,6 @@ export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreate
   /** 使用 Action 状态 */
   useActionLoading: () => [AtomSafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
   setAtomVal: (val: T) => void;
-  /**
-   * 配置 onRead 钩子函数
-   */
-  setOnReadHook: (onRead: OnRead) => void;
-  /** 共享状态唯一 key */
-  sharedKey: number;
-  sharedKeyStr: string;
-  rootValKey: string;
 }
 
 interface IMutateFnParamsBase {
@@ -653,11 +648,11 @@ export interface IUseSharedStateOptions<T = any> {
    */
   id?: NumStrSymbol;
   /**
-   * default: false，是否以 pure 模式使用状态，此参数只影响字典数据的依赖收集规则
+   * default: true ，是否以 pure 模式使用状态，此参数只影响字典数据的依赖收集规则
    * ```
-   * 1 为 false，表示状态不只是用于当前组件ui渲染，还会透传给 memo 的子组件，透传给 useEffect 依赖数组，
+   * 1 为 true，表示状态仅用于当前组件ui渲染，此模式下不会收集中间态字典依赖，只记录字典最长依赖
+   * 2 为 false，表示状态不只是用于当前组件ui渲染，还会透传给 memo 的子组件，透传给 useEffect 依赖数组，
    *   此模式下会收集中间态字典依赖，不丢弃记录过的字典依赖
-   * 2 为 true，表示状态仅用于当前组件ui渲染，此模式下不会收集中间态字典依赖，只记录字典最长依赖
    * ```
    * 组件 Demo 使用示例
    * ```ts
@@ -668,11 +663,11 @@ export interface IUseSharedStateOptions<T = any> {
    *  const { list, mark } = extra;
    * }
    *
-   * // pure = false 时，extra 被收集
-   * 此时依赖为: name, desc, extra, extra.list, extra.mask
-   *
    * // pure = true 时，extra 被忽略
    * 此时依赖为: name, desc, extra.list, extra.mask
+   *
+   * // pure = false 时，extra 被收集
+   * 此时依赖为: name, desc, extra, extra.list, extra.mask
    *
    * ```
    * pure = true ，拥有更好的重渲染命中精准度
@@ -686,11 +681,11 @@ export interface IUseSharedStateOptions<T = any> {
    * // 如执行了则是因为其他依赖引起组件重渲染刚好顺带触发了 Effect 执行
    *
    * // 所以这里如需要中间态依赖也能正常收集到，有以下两种方式
-   * // 1 设置 pure 为 false, 或不设置 pure
+   * // 1 【推荐】人工补上 extrta 依赖（相当于固定住依赖）
+   * useAtom(dictAtom, { deps: state=>state.extra });
+   * // 2 设置 pure 为 false
    * useAtom(dictAtom, { pure: false });
    * useAtom(dictAtom);
-   * // 2 人工补上 extrta 依赖（相当于固定住依赖）
-   * useAtom(dictAtom, { deps: state=>state.extra });
    * ```
    */
   pure?: boolean;
@@ -943,13 +938,13 @@ export interface IInsRenderInfo {
   /** 实例 key */
   insKey: number;
   /**
-   * 获取组件的当前渲染周期里收集到依赖列表，通常需要再 useEffect 里调用能获取当前渲染周期收集的所有依赖，
-   * 如在渲染过程中直接调用获取的是正在收集中的依赖
+   * 获取组件的当前渲染周期里收集到依赖列表，通常需要在 useEffect 里调用能获取当前渲染周期收集的所有依赖，
+   * 如在渲染过程中直接调用获取的是正在收集中的依赖（注：依赖包含了 deps 函数固定住的依赖）
    */
   getDeps: () => string[];
   snap: any;
   /**
-   * 获取组件的前一次渲染周期里收集到依赖列表
+   * 获取组件的前一次渲染周期里收集到依赖列表（注：依赖包含了 deps 函数固定住的依赖）
    */
   getPrevDeps: () => string[];
 }
@@ -962,6 +957,8 @@ export interface IInsCtx<T = Dict> {
   /** 是否是 pure 模式 */
   pure: boolean;
   depKeys: string[];
+  /** deps 函数写入的固定依赖 */
+  fixedDepKeys: string[];
   currentDepKeys: string[];
   /** 是否是深度依赖收集模式 */
   isDeep: boolean;
