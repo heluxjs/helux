@@ -1,5 +1,12 @@
 # @helux/fre
 
+## 3.4.24
+
+### Patch Changes
+
+- Updated dependencies [ba43829]
+  - @helux/core@3.4.24
+
 ## 3.4.23
 
 ### Patch Changes

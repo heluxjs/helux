@@ -1,5 +1,15 @@
 # @helux/core
 
+## 3.4.24
+
+### Patch Changes
+
+- ba43829: build(3.4.24): bump limu to get right isChanged
+- Updated dependencies [ba43829]
+  - @helux/utils@3.4.24
+  - @helux/hooks-impl@3.4.24
+  - @helux/types@3.4.24
+
 ## 3.4.23
 
 ### Patch Changes
