@@ -1,5 +1,16 @@
 # helux
 
+## 3.5.0
+
+### Minor Changes
+
+- f66f7f9: build(3.5.0): expose reactive data
+
+### Patch Changes
+
+- Updated dependencies [f66f7f9]
+  - @helux/core@3.5.0
+
 ## 3.4.26
 
 ### Patch Changes
