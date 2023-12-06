@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // latest total test case count: 209
   test: {
     globals: true,
     environment: 'jsdom',

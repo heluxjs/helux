@@ -2,7 +2,7 @@ import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 export { EVENT_NAME, FROM, RECORD_LOADING } from './user';
 export { HAS_SYMBOL };
 
-export const VER = '3.4.23';
+export const VER = '3.4.24';
 
 export const PROD_FLAG = true;
 
@@ -71,9 +71,9 @@ export const STATE_TYPE = {
 export const DERIVE = 'derive';
 export const WATCH = 'watch';
 
-/** 来自 limu 的字典类型表达 */
+/** 来自 limu 的数据类型表达 */
 export const DICT = 'Object';
 export const MAP = 'Map';
-/** 来自 limu 的数组类型表达 */
 export const ARR = 'Array';
+/** 不属于 DICT MAP ARR 算作其他 */
 export const OTHER = 'Other';

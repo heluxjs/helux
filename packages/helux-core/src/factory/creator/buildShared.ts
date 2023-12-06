@@ -8,7 +8,7 @@ import { mapSharedState } from '../../helpers/state';
 import type { Dict } from '../../types/base';
 import { getMarkAtomMap } from '../common/atom';
 import { recordLastest } from '../common/blockScope';
-import { chooseProxyVal, chooseVal, newOpParams } from '../common/util';
+import { callOnRead, newOpParams } from '../common/util';
 import type { ParsedOptions } from './parse';
 
 /**
@@ -32,10 +32,10 @@ export function buildSharedState(options: ParsedOptions) {
       onOperate: (params) => {
         const { isBuiltInFnKey } = params;
         if (!isBuiltInFnKey) {
-          const { fullKeyPath, value, proxyValue } = params;
-          const { proxyVal, rawVal } = chooseProxyVal(onRead(params), proxyValue, value);
+          const { fullKeyPath } = params;
+          const { proxyValue, rawVal } = callOnRead(params, onRead);
           collectDep(fullKeyPath.join(KEY_SPLITER), fullKeyPath, rawVal);
-          return proxyVal;
+          return proxyValue;
         }
       },
     });
@@ -54,9 +54,10 @@ export function buildSharedState(options: ParsedOptions) {
         if (isSymbol(key)) {
           return val;
         }
-        const finalVar = chooseVal(onRead(newOpParams(key, val, false)), val);
-        collectDep(key, [key], finalVar);
-        return finalVar;
+
+        const { rawVal } = callOnRead(newOpParams(key, val, false), onRead);
+        collectDep(key, [key], rawVal);
+        return rawVal;
       },
     });
   }

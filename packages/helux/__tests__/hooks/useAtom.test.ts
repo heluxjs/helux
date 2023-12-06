@@ -65,7 +65,7 @@ describe('useAtom dict', () => {
     const { result } = renderHook(() => {
       renderCount += 1;
       const [dict, setDictInner, info] = useAtom(dictAtom);
-      noop(dict.extra.map.get(1)?.name);
+      noop(dict.extra.map.get(1));
       React.useEffect(() => {
         const deferChange = async () => {
           await delay(100);

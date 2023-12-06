@@ -64,7 +64,11 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
 
   const getIndexDep = (rootValKey) => [getDepKey(rootValKey, 'extra.list.0'), getDepKey(rootValKey, 'extra.list.1')];
 
-  const getMapDep = (rootValKey) => [getDepKey(rootValKey, 'extra.map.1.id'), getDepKey(rootValKey, 'extra.map.2.name')];
+  const getMapDep = (rootValKey) => [
+    getDepKey(rootValKey, 'extra.map'),
+    getDepKey(rootValKey, 'extra.map.1'),
+    getDepKey(rootValKey, 'extra.map.2'),
+  ];
 
   describe(`${label} arrDep=undefined`, () => {
     test('arrIndexDep=undefined, not read list', async () => {

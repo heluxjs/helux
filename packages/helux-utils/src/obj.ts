@@ -1,5 +1,5 @@
 import type { Dict, NumStrSymbol } from '@helux/types';
-import { isMap } from 'is';
+import { isMap } from './is';
 
 // @ts-ignore
 const canUseReflect = !!Reflect;

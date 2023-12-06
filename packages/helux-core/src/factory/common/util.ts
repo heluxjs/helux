@@ -1,13 +1,13 @@
-import { getVal, isDebug, isFn, isObj, isProxyAvailable, prefixValKey } from '@helux/utils';
+import { getVal, isDebug, isFn, isObj, isProxyAvailable, prefixValKey, isMap, noop } from '@helux/utils';
 import { immut, IOperateParams } from 'limu';
-import { KEY_SPLITER, STATE_TYPE } from '../../consts';
+import { KEY_SPLITER, STATE_TYPE, MAP, ARR } from '../../consts';
 import { createOb } from '../../helpers/obj';
 import type { Dict, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
 import { DepKeyInfo } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';
 
 const { USER_STATE } = STATE_TYPE;
-
+const fakeGetReplaced = () => ({ isReplaced: false, replacedValue: null as any });
 export interface IMutateCtx {
   /**
    * 为 shared 记录一个第一层的 key 值，用于刷新 immut 生成的 代理对象，
@@ -72,18 +72,19 @@ export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
   };
 }
 
-export function newOpParams(key: string, value: any, isChange = true): IOperateParams {
+export function newOpParams(key: string, value: any, isChanged = true): IOperateParams {
   return {
-    isChange,
+    isChanged,
     op: 'set',
     key,
     value,
     proxyValue: value,
-    grandpaType: 'Object',
     parentType: 'Object',
     keyPath: [],
     fullKeyPath: [key],
     isBuiltInFnKey: false,
+    replaceValue: noop,
+    getReplaced: fakeGetReplaced,
   };
 }
 
@@ -157,10 +158,25 @@ export function runPartialCb(forAtom: boolean, mayCb: any, draft: any) {
   return wrapPartial(forAtom, val);
 }
 
-export function chooseVal(mayReplacedVal: any, value: any) {
-  return mayReplacedVal !== undefined ? mayReplacedVal : value;
+export function callOnRead(opParams: IOperateParams, onRead: any) {
+  let { value, proxyValue } = opParams;
+  // 触发用户定义的钩子函数
+  if (onRead) {
+    onRead(opParams);
+    const { replacedValue, isReplaced } = opParams.getReplaced();
+    if (isReplaced) {
+      proxyValue = replacedValue;
+      value = replacedValue;
+    }
+  }
+  return { rawVal: value, proxyValue };
 }
 
-export function chooseProxyVal(mayReplacedVal: any, proxyVal: any, rawVal: any) {
-  return mayReplacedVal !== undefined ? { proxyVal: mayReplacedVal, rawVal: mayReplacedVal } : { proxyVal, rawVal };
+export function isArrLike(parentType?: string) {
+  // @ts-ignore
+  return [ARR, MAP].includes(parentType);
+}
+
+export function isArrLikeVal(val: any) {
+  return Array.isArray(val) || isMap(val);
 }

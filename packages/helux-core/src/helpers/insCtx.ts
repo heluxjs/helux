@@ -1,10 +1,10 @@
 import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
-import { immut, limuUtils } from 'limu';
-import { ARR, DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, MAP, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
+import { immut, limuUtils, IOperateParams } from 'limu';
+import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
-import { chooseProxyVal, chooseVal, newOpParams } from '../factory/common/util';
+import { callOnRead, newOpParams, isArrLikeVal, isArrLike } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
 import { mapGlobalId } from '../factory/creator/globalId';
 import type { Dict, Ext, IFnCtx, IUseSharedStateOptions } from '../types/base';
@@ -16,17 +16,17 @@ import { getInternal } from './state';
 
 const { isObject: isDict } = limuUtils;
 
-function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { grandpaType: string; parentType: string; rawVal: any }) {
+function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { parentType: string; rawVal: any }) {
   if (!insCtx.canCollect) {
     // 无需收集依赖
     return;
   }
-  const { grandpaType, parentType, rawVal } = options;
-  const isValArr = Array.isArray(rawVal);
-  if (isValArr) {
+  const { parentType, rawVal } = options;
+  const isValArrLike = isArrLikeVal(rawVal);
+  if (isValArrLike) {
     recordArrKey(insCtx.internal.level1ArrKeys, info.depKey);
   }
-  insCtx.recordDep(info, parentType, grandpaType, isValArr);
+  insCtx.recordDep(info, parentType, isValArrLike);
 }
 
 function getInsDeps(insCtx: InsCtxDef, isCurrent: boolean) {
@@ -51,13 +51,12 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
     insCtx.proxyState = immut(rawState, {
       onOperate: (opParams) => {
         if (opParams.isBuiltInFnKey) return;
-        const { fullKeyPath, keyPath, parentType, grandpaType, value, proxyValue } = opParams;
-        // 触发用户定义的钩子函数
-        const { proxyVal, rawVal } = chooseProxyVal(onRead(opParams), proxyValue, value);
+        const { fullKeyPath, keyPath, parentType } = opParams;
+        const { rawVal, proxyValue } = callOnRead(opParams, onRead);
         const depKey = prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
         const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
-        collectDep(insCtx, depKeyInfo, { grandpaType, parentType, rawVal });
-        return proxyVal;
+        collectDep(insCtx, depKeyInfo, { parentType, rawVal });
+        return proxyValue;
       },
       compareVer: true,
     });
@@ -72,11 +71,10 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
         if (isSymbol(key)) {
           return value;
         }
-
-        const rawVal = chooseVal(onRead(newOpParams(key, value, false)), value);
+        const { rawVal } = callOnRead(newOpParams(key, value, false), onRead);
         const depKey = prefixValKey(key, sharedKey);
         const parentType = isDict(target) ? DICT : OTHER;
-        collectDep(insCtx, { depKey, keyPath: [key], sharedKey }, { parentType, grandpaType: '', rawVal });
+        collectDep(insCtx, { depKey, keyPath: [key], sharedKey }, { parentType, rawVal });
         return rawVal;
       },
     });
@@ -134,7 +132,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
       // depKeys 的后续更新流程在 helpers/insDep.resetReadMap 和 updateDep 函数里，做了双保险备份
       getPrevDeps: () => getInsDeps(insCtx, false),
     },
-    recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, grandpaType?: string, isValArr?: boolean) => {
+    recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, isValArrLike?: boolean) => {
       let depKey = depKeyInfo.depKey;
       // depKey 可能因为配置了 rules[]stopDep 的关系被 recordCb 改写
       cutDepKeyByStop(depKeyInfo, {
@@ -174,20 +172,11 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
       // 还未被记录，也未被标记删除
       if (!readMap[depKey] && !delReadMap[depKey]) {
         const { parentKeyPath } = depKeyInfo;
+
         // pure 模式下针对字典只记录最长路径依赖
         if (pure && parentType === DICT && parentKeyPath) {
-          const len = parentKeyPath.length;
           // 无 parentKeyPath 的话就是 dict 根对象自身，此时 parentDepKey 指向 sharedKey
-          let parentDepKey = len ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
-
-          // 爷爷节点是 map 的话，因 map 获取是 map.get(key) 获取的值，运行到这里时已经是 item 自身读取操作
-          // 故这里需消除的是爷爷节点路径
-          if (grandpaType === MAP) {
-            // 消掉末尾两个即可
-            // [ 'val', 'extra', 'map', 1, 'name' ] ---> [ 'val', 'extra', 'map']
-            const path = parentKeyPath.slice(0, len - 1);
-            parentDepKey = prefixValKey(path.join(KEY_SPLITER), sharedKey);
-          }
+          const parentDepKey = parentKeyPath.length ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
           // 删除父路径记录
           if (readMap[parentDepKey]) {
             delete readMap[parentDepKey];
@@ -196,13 +185,15 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
           }
         }
 
-        const isParentArr = parentType === ARR;
-        if (isParentArr) {
+        const isParentArrLike = isArrLike(parentType);
+        if (isParentArrLike) {
           arrIndexDep && doRecord();
           return;
         }
-        // 值是数组时，开启了 arrDep 才记录
-        if (!isValArr || (!isParentArr && arrDep)) {
+        if (
+          !isValArrLike
+          || (!isParentArrLike && arrDep)  // 值是数组或 Map 时，开启了 arrDep 才记录
+        ) {
           doRecord();
         }
       }

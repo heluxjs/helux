@@ -33,7 +33,7 @@ importers:
       husky: ^8.0.1
       jest: 28.1.3
       jest-environment-jsdom: 27.5.1
-      limu: ^3.9.2
+      limu: ^3.11.2
       lint-staged: ^10.5.3
       prettier: npm:@btmills/prettier@^2.7.1
       prettier-plugin-organize-imports: ^3.1.1
@@ -43,7 +43,7 @@ importers:
       turbo: ^1.10.16
       typescript: 4.8.3
     dependencies:
-      '@docusaurus/types': 2.4.3_rhy33dx4oal5jdoigjwgtkejfe
+      '@docusaurus/types': 2.4.3_4eqvplsl2jy6f6vdxqwrsmwaiy
       '@helux/core': link:packages/helux-core
       '@helux/hooks': link:packages/helux-hooks
       '@helux/hooks-impl': link:packages/helux-hooks-impl
@@ -53,7 +53,7 @@ importers:
       '@types/node': 20.8.10
       esbuild-plugin-external-global: 1.0.1
       helux: link:packages/helux
-      limu: 3.9.2
+      limu: 3.11.2
     devDependencies:
       '@babel/core': 7.23.2
       '@changesets/cli': 2.26.2
@@ -110,12 +110,12 @@ importers:
       '@helux/types': workspace:^
       '@helux/utils': workspace:^
       esbuild-copy-static-files: ^0.1.0
-      limu: ^3.9.2
+      limu: ^3.11.2
     dependencies:
       '@helux/hooks-impl': link:../helux-hooks-impl
       '@helux/types': link:../helux-types
       '@helux/utils': link:../helux-utils
-      limu: 3.9.2
+      limu: 3.11.2
     devDependencies:
       esbuild-copy-static-files: 0.1.0
 
@@ -990,7 +990,7 @@ packages:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
 
-  /@docusaurus/types/2.4.3_rhy33dx4oal5jdoigjwgtkejfe:
+  /@docusaurus/types/2.4.3_4eqvplsl2jy6f6vdxqwrsmwaiy:
     resolution: {integrity: sha512-W6zNLGQqfrp/EoPD0bhb9n7OobP+RHpmvVzpA+Z/IuU3Q63njJM24hmT0GYboovWcDtFmnIJC9wcyx4RVPQscw==}
     peerDependencies:
       react: ^16.8.4 || ^17.0.0
@@ -1004,7 +1004,7 @@ packages:
       react-dom: 16.14.0_react@16.14.0
       react-helmet-async: 1.3.0_wcqkhtmu7mswc6yz4uyexck3ty
       utility-types: 3.10.0
-      webpack: 5.89.0_@swc+core@1.3.99
+      webpack: 5.89.0_gnlaygz4gjcl57ua2oyzscl75y
       webpack-merge: 5.10.0
     transitivePeerDependencies:
       - '@swc/core'
@@ -1019,7 +1019,6 @@ packages:
     cpu: [arm]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/android-arm64/0.19.7:
@@ -1028,7 +1027,6 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/android-x64/0.19.7:
@@ -1037,7 +1035,6 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/darwin-arm64/0.19.7:
@@ -1046,7 +1043,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/darwin-x64/0.19.7:
@@ -1055,7 +1051,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/freebsd-arm64/0.19.7:
@@ -1064,7 +1059,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/freebsd-x64/0.19.7:
@@ -1073,7 +1067,6 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-arm/0.19.7:
@@ -1082,7 +1075,6 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-arm64/0.19.7:
@@ -1091,7 +1083,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-ia32/0.19.7:
@@ -1100,7 +1091,6 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-loong64/0.19.7:
@@ -1109,7 +1099,6 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-mips64el/0.19.7:
@@ -1118,7 +1107,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-ppc64/0.19.7:
@@ -1127,7 +1115,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-riscv64/0.19.7:
@@ -1136,7 +1123,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-s390x/0.19.7:
@@ -1145,7 +1131,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-x64/0.19.7:
@@ -1154,7 +1139,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/netbsd-x64/0.19.7:
@@ -1163,7 +1147,6 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/openbsd-x64/0.19.7:
@@ -1172,7 +1155,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/sunos-x64/0.19.7:
@@ -1181,7 +1163,6 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/win32-arm64/0.19.7:
@@ -1190,7 +1171,6 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/win32-ia32/0.19.7:
@@ -1199,7 +1179,6 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/win32-x64/0.19.7:
@@ -1208,7 +1187,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@eslint-community/eslint-utils/4.4.0_eslint@8.52.0:
@@ -3906,7 +3884,6 @@ packages:
       '@esbuild/win32-arm64': 0.19.7
       '@esbuild/win32-ia32': 0.19.7
       '@esbuild/win32-x64': 0.19.7
-    dev: true
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -5778,8 +5755,8 @@ packages:
     engines: {node: '>=14'}
     dev: true
 
-  /limu/3.9.2:
-    resolution: {integrity: sha512-A2uVoCS15iF4T96qadrNKnVPL4UodHnoby+yC2JKpcdiAtXdDGMQ5JWjfDeyifilCR42/k1/YcVl75iVn8xzlA==}
+  /limu/3.11.2:
+    resolution: {integrity: sha512-B+G0a5ZJLHj3bB7mA8Q732GFoGIeVjENjp34ka7VCJ1/ekJzLyR2k5vx/Z+2KjxlI8xLg2383N+baGcX7tzGXQ==}
     dev: false
 
   /lines-and-columns/1.2.4:
@@ -7653,7 +7630,7 @@ packages:
       supports-hyperlinks: 2.3.0
     dev: true
 
-  /terser-webpack-plugin/5.3.9_gd72cxvvx5qaaio3g2qwf55ra4:
+  /terser-webpack-plugin/5.3.9_g5ko475alf2xnubwx4dlflstdu:
     resolution: {integrity: sha512-ZuXsqE07EcggTWQjXUj+Aot/OMcD0bMKGgF63f7UxYcu5/AJF53aIpK1YoP5xR9l6s/Hy2b+t1AM0bLNPRuhwA==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -7671,11 +7648,12 @@ packages:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.20
       '@swc/core': 1.3.99
+      esbuild: 0.19.7
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.1
       terser: 5.24.0
-      webpack: 5.89.0_@swc+core@1.3.99
+      webpack: 5.89.0_gnlaygz4gjcl57ua2oyzscl75y
     dev: false
 
   /terser/5.24.0:
@@ -8447,7 +8425,7 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: false
 
-  /webpack/5.89.0_@swc+core@1.3.99:
+  /webpack/5.89.0_gnlaygz4gjcl57ua2oyzscl75y:
     resolution: {integrity: sha512-qyfIC10pOr70V+jkmud8tMfajraGCZMBWJtrmuBymQKCrLTRejBI8STDp1MCyZu/QTdZSeacCQYpYNQVOzX5kw==}
     engines: {node: '>=10.13.0'}
     hasBin: true
@@ -8478,7 +8456,7 @@ packages:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.9_gd72cxvvx5qaaio3g2qwf55ra4
+      terser-webpack-plugin: 5.3.9_g5ko475alf2xnubwx4dlflstdu
       watchpack: 2.4.0
       webpack-sources: 3.2.3
     transitivePeerDependencies:
