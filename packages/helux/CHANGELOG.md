@@ -1,5 +1,13 @@
 # helux
 
+## 3.4.25
+
+### Patch Changes
+
+- f2f827c: build(3.4.25): reexport limu; optimize clearInternal; ctx.mod now map to internal
+- Updated dependencies [f2f827c]
+  - @helux/core@3.4.25
+
 ## 3.4.24
 
 ### Patch Changes
