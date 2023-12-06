@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.1
+
+### Patch Changes
+
+- e6fde9a: build(3.5.1): add ctx.useReactive
+  - @helux/hooks-impl@3.5.1
+  - @helux/types@3.5.1
+  - @helux/utils@3.5.1
+
 ## 3.5.0
 
 ### Minor Changes

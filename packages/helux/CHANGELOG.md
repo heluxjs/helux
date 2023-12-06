@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.1
+
+### Patch Changes
+
+- e6fde9a: build(3.5.1): add ctx.useReactive
+- Updated dependencies [e6fde9a]
+  - @helux/core@3.5.1
+
 ## 3.5.0
 
 ### Minor Changes
