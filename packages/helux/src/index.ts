@@ -80,6 +80,4 @@ export const {
   RECORD_LOADING,
   VER,
   LIMU_VER,
-  // reexport limu
-  limu,
 } = api;

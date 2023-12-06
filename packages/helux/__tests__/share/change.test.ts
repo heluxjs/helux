@@ -45,6 +45,7 @@ describe('change shared', () => {
     expect(state.a.a1.a2).toBe(2);
 
     const prev = getSnap(state);
-    expect(isDiff(state.a.a11, prev.a.a11)).toBeFalsy();
+    // 孩子节点变化，两者应该不等了
+    expect(isDiff(state.a.a11, prev.a.a11)).toBeTruthy();
   });
 });

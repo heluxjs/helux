@@ -1,5 +1,5 @@
-import { VER as LIMU_VER } from 'limu';
 import { asType, safeObjGet } from '@helux/utils';
+import { VER as LIMU_VER } from 'limu';
 import { VER } from '../consts';
 import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types/base';
 import type { TInternal } from './creator/buildInternal';

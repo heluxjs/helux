@@ -1,5 +1,5 @@
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
-export { EVENT_NAME, FROM, RECORD_LOADING, VER, LIMU_VER } from './user';
+export { EVENT_NAME, FROM, LIMU_VER, RECORD_LOADING, VER } from './user';
 export { HAS_SYMBOL };
 
 export const PROTO_KEY = '__proto__';
