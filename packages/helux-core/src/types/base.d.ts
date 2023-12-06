@@ -458,6 +458,7 @@ export interface ISharedStateCtxBase<T = any> {
   sharedKeyStr: string;
   rootValKey: string;
   reactive: T;
+  useReactive: (options?: IUseSharedStateOptions<T>) => [InsReactiveState<T>, IInsRenderInfo];
 }
 
 export interface ISharedCtx<T = SharedDict, O extends ICreateOptions<T> = ICreateOptions<T>> extends ISharedStateCtxBase<T> {
