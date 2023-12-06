@@ -2,7 +2,7 @@ import { getVal, isDebug, isFn, isMap, isObj, isProxyAvailable, noop, prefixValK
 import { immut, IOperateParams } from 'limu';
 import { ARR, KEY_SPLITER, MAP, STATE_TYPE } from '../../consts';
 import { createOb } from '../../helpers/obj';
-import type { Dict, ISetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
+import type { Dict, IInnerSetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
 import { DepKeyInfo } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';
 
@@ -36,6 +36,8 @@ export interface IMutateCtx {
   keyPathValue: Map<string[], any>;
   /** 为 atom 记录的 draft.val 引用 */
   draftVal: any;
+  enableDraftDep: boolean;
+  isReactive: boolean;
 }
 
 // for hot reload of buildShared
@@ -55,8 +57,8 @@ export function tryGetLoc(moduleName: string, startCutIdx = 4) {
   return loc;
 }
 
-export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
-  const { ids = [], globalIds = [] } = options; // 用户 setState 可能设定了 ids globalIds
+export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
+  const { ids = [], globalIds = [], enableDraftDep = false, isReactive = false } = options; // 用户 setState 可能设定了 ids globalIds
   return {
     level1Key: '',
     depKeys: [],
@@ -69,6 +71,8 @@ export function newMutateCtx(options: ISetStateOptions): IMutateCtx {
     keyPathValue: new Map(),
     handleAtomCbReturn: true,
     draftVal: null,
+    enableDraftDep,
+    isReactive,
   };
 }
 

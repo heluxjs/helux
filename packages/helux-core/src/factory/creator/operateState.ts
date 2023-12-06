@@ -1,11 +1,15 @@
 import { getVal, matchDictKey, nodupPush } from '@helux/utils';
 import { IOperateParams } from 'limu';
+import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import type { KeyIdsDict, NumStrSymbol } from '../../types/base';
+import { recordLastest } from '../common/blockScope';
 import { getRunningFn } from '../common/fnScope';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, IMutateCtx, isArrLike } from '../common/util';
 import type { TInternal } from './buildInternal';
+import { flush } from './buildReactive';
+import { INS_ON_READ } from './current';
 
 /**
  * 如果变化命中了 rules[].ids 或 globaIds 规则，则添加到 mutateCtx.ids 或 globalIds 里
@@ -26,18 +30,29 @@ function putId(keyIds: KeyIdsDict, options: { writeKey: string; ids: NumStrSymbo
 }
 
 export function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
-  const { isChanged, fullKeyPath, keyPath, parentType } = opParams;
+  const { isChanged, fullKeyPath, keyPath, parentType, value } = opParams;
   const { internal, mutateCtx } = opts;
-  const { arrKeyDict } = mutateCtx;
+  const { arrKeyDict, isReactive } = mutateCtx;
   const { sharedKey, enableDraftDep } = internal;
   const arrLike = isArrLike(parentType);
 
   if (!isChanged) {
-    if (enableDraftDep && getRunningFn().fnCtx) {
+    if (enableDraftDep || mutateCtx.enableDraftDep) {
       // 支持对draft操作时可以收集到依赖： draft.a = draft.b + 1
       // atom 判断一下长度，避免记录根值依赖导致死循环
       const canRecord = internal.forAtom ? fullKeyPath.length > 1 : true;
-      canRecord && recordFnDepKeys([getDepKeyByPath(fullKeyPath, sharedKey)], { sharedKey });
+      if (canRecord) {
+        const currentOnRead = INS_ON_READ.current();
+        // 来自实例响应式对象的定制读行为
+        if (isReactive && currentOnRead) {
+          currentOnRead(opParams);
+        } else {
+          const depKey = getDepKeyByPath(fullKeyPath, sharedKey);
+          getRunningFn().fnCtx && recordFnDepKeys([depKey], { sharedKey });
+          recordBlockDepKey([depKey]);
+          recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
+        }
+      }
     }
     if (arrLike) {
       arrKeyDict[getDepKeyByPath(keyPath, sharedKey)] = 1;
@@ -89,5 +104,10 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   }
   if (hasGlobalIds) {
     putId(ruleConf.globalIdsDict, { ids: globalIds, writeKey, internal, opParams });
+  }
+
+  // 来自响应对象的变更操作，主动 flush 状态
+  if (isReactive) {
+    flush(sharedKey);
   }
 }

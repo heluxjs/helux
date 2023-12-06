@@ -46,6 +46,8 @@ export function buildInternal(
 
   return {
     ver: 0,
+    // reactive will be replaced in buildReactive process later
+    reactive: rawState,
     // snap and prevSnap will be replaced after changing state
     snap: copy,
     prevSnap: copy,

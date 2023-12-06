@@ -45,7 +45,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const { stateType, apiCtx } = innerOptions;
   ensureGlobal(apiCtx, stateType);
   const { sharedState: state, internal } = buildSharedObject(innerOptions, createOptions);
-  const { syncer, sync, forAtom, setDraft: setState, sharedKey, sharedKeyStr, rootValKey } = internal;
+  const { syncer, sync, forAtom, setDraft: setState, sharedKey, sharedKeyStr, rootValKey, reactive } = internal;
   const { useFn, actionCreator, actionAsyncCreator, mutateCreator, setAtomVal } = getFns(state, forAtom);
   const opt = { internal, from: MUTATE, apiCtx };
   const ldMutate = initLoadingCtx(createSharedLogic, opt);
@@ -74,6 +74,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     sharedKey,
     sharedKeyStr,
     rootValKey,
+    reactive,
   };
 }
 

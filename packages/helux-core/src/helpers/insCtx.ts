@@ -6,8 +6,9 @@ import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
 import { callOnRead, isArrLike, isArrLikeVal, newOpParams } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
+import { buildReactive, flush } from '../factory/creator/buildReactive';
 import { mapGlobalId } from '../factory/creator/globalId';
-import type { Dict, Ext, IFnCtx, IUseSharedStateOptions } from '../types/base';
+import type { Dict, Ext, IFnCtx, IInnerUseSharedOptions, OnOperate } from '../types/base';
 import type { DepKeyInfo } from '../types/inner';
 import * as fnDep from './fnDep';
 import { clearDep } from './insDep';
@@ -45,21 +46,25 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined) {
 }
 
 export function attachInsProxyState(insCtx: InsCtxDef) {
-  const { internal } = insCtx;
+  const { internal, isReactive } = insCtx;
   const { rawState, isDeep, sharedKey, onRead } = internal;
   if (isDeep) {
-    insCtx.proxyState = immut(rawState, {
-      onOperate: (opParams) => {
-        if (opParams.isBuiltInFnKey) return;
-        const { fullKeyPath, keyPath, parentType } = opParams;
-        const { rawVal, proxyValue } = callOnRead(opParams, onRead);
-        const depKey = prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
-        const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
-        collectDep(insCtx, depKeyInfo, { parentType, rawVal });
-        return proxyValue;
-      },
-      compareVer: true,
-    });
+    const onOperate: OnOperate = (opParams) => {
+      if (opParams.isBuiltInFnKey) return;
+      const { fullKeyPath, keyPath, parentType } = opParams;
+      const { rawVal, proxyValue } = callOnRead(opParams, onRead);
+      const depKey = prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
+      const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
+      collectDep(insCtx, depKeyInfo, { parentType, rawVal });
+
+      // 响应式对象会触发到变化行为
+      if (opParams.isChanged) {
+        flush(sharedKey);
+      }
+      return proxyValue;
+    };
+
+    insCtx.proxyState = isReactive ? buildReactive(internal, onOperate) : immut(rawState, { onOperate, compareVer: true });
   } else {
     insCtx.proxyState = createOb(rawState, {
       set: () => {
@@ -81,8 +86,18 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
   }
 }
 
-export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
-  const { updater, sharedState, id = '', globalId = '', collectType = 'every', deps, pure = true, arrDep = true } = options;
+export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
+  const {
+    updater,
+    sharedState,
+    id = '',
+    globalId = '',
+    collectType = 'every',
+    deps,
+    pure = true,
+    arrDep = true,
+    isReactive = false,
+  } = options;
   const arrIndexDep = !arrDep ? true : options.arrIndexDep ?? true;
   const internal = getInternal(sharedState);
   if (!internal) {
@@ -100,6 +115,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
     fixedDepKeys: [],
     currentDepKeys: [],
     isDeep,
+    isReactive,
     insKey,
     internal,
     rawState,

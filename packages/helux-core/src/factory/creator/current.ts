@@ -28,6 +28,13 @@ export function currentDraftRoot() {
   return CURRENT_DRAFT_ROOT;
 }
 
+let CURRENT_INS_ON_READ: any = null;
+
+export const INS_ON_READ = {
+  current: () => CURRENT_INS_ON_READ,
+  set: (onRead: any) => (CURRENT_INS_ON_READ = onRead),
+};
+
 export const INS_CTX = {
   current: (rootVal: any) => CURRENT_INS_CTX.get(rootVal),
   set: (rootVal: any, insCtx: InsCtxDef) => CURRENT_INS_CTX.set(rootVal, insCtx),

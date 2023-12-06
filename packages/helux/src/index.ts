@@ -20,6 +20,7 @@ export const {
   // hooks api
   useAtom,
   useShared,
+  useReactive,
   useDerived,
   useDerivedAtom,
   useWatch,

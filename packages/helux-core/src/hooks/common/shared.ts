@@ -12,7 +12,7 @@ import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
  * 记录一些必要的辅助数据，返回 useAtom useShared 需要的元组数据
  */
 export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, IInsRenderInfo] {
-  const { proxyState, internal, renderInfo, canCollect } = insCtx;
+  const { proxyState, internal, renderInfo, canCollect, isReactive } = insCtx;
   const { sharedKey, sharedKeyStr, setDraft } = internal;
   renderInfo.snap = internal.snap;
   // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
@@ -31,7 +31,9 @@ export function prepareTuple(insCtx: InsCtxDef, forAtom?: boolean): [any, Fn, II
     insCtx.recordDep({ depKey: sharedKeyStr, keyPath: [], sharedKey }, DICT);
   }
 
-  return [rootVal, setDraft, renderInfo];
+  // 提供给 useReactive 使用的响应对象无拆箱行为
+  const finalRoot = isReactive ? proxyState : rootVal;
+  return [finalRoot, setDraft, renderInfo];
 }
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {
@@ -45,11 +47,12 @@ export function checkStateVer(insCtx: InsCtxDef) {
     ver,
     internal: { ver: dataVer },
   } = insCtx;
-  if (ver !== dataVer) {
-    // 替换 proxyState，让把共享对象透传给 memo 组件、useEffect deps 的场景也能正常触发重新渲染
-    insCtx.ver = dataVer;
-    attachInsProxyState(insCtx);
+  if (ver === dataVer) {
+    return;
   }
+  insCtx.ver = dataVer;
+  // 替换 proxyState，让把共享对象透传给 memo 组件、useEffect deps 的场景也能正常触发重新渲染
+  attachInsProxyState(insCtx);
 }
 
 // recover ins ctx (dep,updater etc...) for double mount behavior under react 18 strict mode

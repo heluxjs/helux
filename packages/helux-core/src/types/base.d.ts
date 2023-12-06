@@ -163,6 +163,12 @@ export type AtomDraft<T = any> = T;
 
 export type SharedState = SharedDict | Atom;
 
+export type InsReactiveState<T = SharedDict | Atom<any>> = InsReactiveDict<T> | InsReactiveAtom<T>;
+
+export type InsReactiveDict<T = SharedDict> = T;
+
+export type InsReactiveAtom<T = Atom<any>> = T;
+
 /** can pass to signal fn */
 export type SingalVal = Atom | DerivedAtom | NumStrSymbol | ReactNode | BlockComponent;
 
@@ -442,7 +448,7 @@ export type AtomSafeLoading<T = any, O extends IAtomCreateOptions<T> = IAtomCrea
   ? Ext<LoadingState<O['mutate']>, LoadingStatus>
   : Ext<LoadingState, LoadingStatus>;
 
-export interface ISharedStateCtxBase {
+export interface ISharedStateCtxBase<T = any> {
   /**
    * 配置 onRead 钩子函数
    */
@@ -451,9 +457,10 @@ export interface ISharedStateCtxBase {
   sharedKey: number;
   sharedKeyStr: string;
   rootValKey: string;
+  reactive: T;
 }
 
-export interface ISharedCtx<T = SharedDict, O extends ICreateOptions<T> = ICreateOptions<T>> extends ISharedStateCtxBase {
+export interface ISharedCtx<T = SharedDict, O extends ICreateOptions<T> = ICreateOptions<T>> extends ISharedStateCtxBase<T> {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
@@ -476,7 +483,7 @@ export interface ISharedCtx<T = SharedDict, O extends ICreateOptions<T> = ICreat
   useActionLoading: () => [SafeLoading<T, O>, SetState<LoadingState>, IInsRenderInfo];
 }
 
-export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> extends ISharedStateCtxBase {
+export interface IAtomCtx<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>> extends ISharedStateCtxBase<Atom<T>> {
   mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnLooseItem<T, A> | AtomMutateFn<T, A>) => MutateWitness<T>;
   call: AtomCall<T>;
   callAsync: AtomCallAsync<T>;
@@ -714,6 +721,7 @@ export interface IInnerUseSharedOptions<T = Dict> extends IUseSharedStateOptions
    */
   globalId?: NumStrSymbol;
   forAtom?: boolean;
+  isReactive?: boolean;
 }
 
 export interface ISetStateOptions<T = any> {
@@ -739,11 +747,16 @@ export interface ISetStateOptions<T = any> {
   globalIds?: NumStrSymbol[];
 }
 
+export type OnOperate = (opParams: IOperateParams) => any;
+
 export interface IInnerSetStateOptions<T = Dict> extends ISetStateOptions<T> {
   from?: From;
   isAsync?: boolean;
   isFirstCall?: boolean;
   sn?: number;
+  enableDraftDep?: boolean;
+  isReactive?: boolean;
+  insKey?: number;
 }
 
 export type ICreateOptions<T = Dict> = Partial<ICreateOptionsFull<T>>;
@@ -939,6 +952,8 @@ export interface IInsCtx<T = Dict> {
   isDeep: boolean;
   /** 是否是第一次渲染 */
   isFirstRender: boolean;
+  /** 是否响应式 */
+  isReactive: boolean;
   insKey: number;
   /** 记录一些需复用的中间生成的数据 */
   extra: Dict;
