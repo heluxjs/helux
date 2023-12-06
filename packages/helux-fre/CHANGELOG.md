@@ -1,5 +1,12 @@
 # @helux/fre
 
+## 3.4.26
+
+### Patch Changes
+
+- Updated dependencies [d77dc37]
+  - @helux/core@3.4.26
+
 ## 3.4.25
 
 ### Patch Changes

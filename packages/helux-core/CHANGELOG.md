@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.4.26
+
+### Patch Changes
+
+- d77dc37: build(3.4.26): del limu reexport, cause codesandbox will throw immut not a function error
+  - @helux/hooks-impl@3.4.26
+  - @helux/types@3.4.26
+  - @helux/utils@3.4.26
+
 ## 3.4.25
 
 ### Patch Changes
