@@ -77,5 +77,9 @@ export const {
   addMiddleware,
   addPlugin,
   EVENT_NAME,
-  LOADING_MODE,
+  RECORD_LOADING,
+  VER,
+  LIMU_VER,
+  // reexport limu
+  limu,
 } = api;

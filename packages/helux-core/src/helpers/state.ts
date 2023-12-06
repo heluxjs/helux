@@ -80,6 +80,5 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
   }
   // may hot replace for dev mode or add new mod
   rootState[usefulName] = sharedState;
-  const internal = getInternal(sharedState);
-  ctx.mod[usefulName] = { setState: internal.setState };
+  ctx.mod[usefulName] = getInternal(sharedState);
 }

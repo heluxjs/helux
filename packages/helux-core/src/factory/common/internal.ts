@@ -9,22 +9,28 @@ export function getInternalMap() {
 
 /**
  * for hot reload
- * see window.__HELUX__.help.shared.INTERMAL_MAP
+ * see window.__HELUX__.ctx.shared.INTERMAL_MAP
  */
 export function clearInternal(moduleName: string, loc: string) {
   if (!moduleName || !isDebug() || !loc) return;
-  const map = getInternalMap();
+  const { INTERMAL_MAP, SHARED_KEY_STATE_MAP, STATE_SHARED_KEY_MAP } = getSharedScope();
   let matchedKeys: number[] = [];
   let cleared = false;
-  map.forEach((item) => {
+  INTERMAL_MAP.forEach((item) => {
     if (item.moduleName === moduleName && item.loc === loc) {
       matchedKeys.push(item.sharedKey);
     }
   });
+
   // 清除第一个即可
   if (matchedKeys.length > 1) {
-    Reflect.deleteProperty(map, matchedKeys[0]);
-    cleared = true;
+    const key = matchedKeys[0];
+    const prev = INTERMAL_MAP.get(key);
+    INTERMAL_MAP.delete(key);
+    if (prev) {
+      SHARED_KEY_STATE_MAP.delete(prev.sharedKey);
+      STATE_SHARED_KEY_MAP.delete(prev.rawState);
+    }
   }
 
   return cleared;

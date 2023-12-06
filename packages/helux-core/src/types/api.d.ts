@@ -1,8 +1,8 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.1.2
+| helux-core@3.4.25
 | A state library core that integrates atom, signal, collection dep, derive and watch,
-| it supports all react like frameworks.
+| it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
 */
 import type { MutableRefObject, ReactNode } from '@helux/types';
@@ -70,6 +70,14 @@ import type {
   SyncFnBuilder,
   WatchOptionsType,
 } from './base';
+import * as limuMod from 'limu';
+
+export declare const VER: '3.4.25';
+
+export declare const LIMU_VER: string;
+
+// reexport limu
+export declare const limu: typeof limuMod;
 
 export declare const EVENT_NAME: {
   ON_DATA_CHANGED: 'ON_DATA_CHANGED';

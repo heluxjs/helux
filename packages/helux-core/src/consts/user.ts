@@ -1,3 +1,9 @@
+import { VER as limuVer } from 'limu';
+
+export const VER = '3.4.25';
+
+export const LIMU_VER = limuVer;
+
 /** 可按需注册更多的事件名并实现，方便插件收集更多的运行时数据做对应分析 */
 export const EVENT_NAME = {
   ON_DATA_CHANGED: 'ON_DATA_CHANGED',

@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "3.4.24",
+  "version": "3.4.25",
   "description": "A state library core that integrates atom, signal, collection dep, derive and watch, it supports all react like frameworks( including react 18 ).",
   "keywords": [],
   "author": {
@@ -10,7 +10,6 @@
   },
   "main": "index.js",
   "scripts": {
-    "limu": "pnpm i limu@latest --filter @helux/core",
     "build": "turbo run build",
     "build:watch": "turbo run build:watch",
     "build_devtool": "pnpm --filter=helux-devtool run build",
@@ -20,6 +19,7 @@
     "cpdoc": "rm -rf ../my-opensource/helux-gh-pages/* && cp -r ./doc/build/* ../my-opensource/helux-gh-pages",
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
     "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' --ignore-path .gitignore --ignore-unknown",
+    "limu": "pnpm i limu@latest --filter @helux/core",
     "prepare": "husky install",
     "release:all": "changeset publish",
     "release:auto": "pnpm build && pnpm version:all && pnpm release:all && pnpm sync",

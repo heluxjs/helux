@@ -1,10 +1,10 @@
 import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
-import { immut, limuUtils, IOperateParams } from 'limu';
+import { immut, limuUtils } from 'limu';
 import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
-import { callOnRead, newOpParams, isArrLikeVal, isArrLike } from '../factory/common/util';
+import { callOnRead, isArrLike, isArrLikeVal, newOpParams } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
 import { mapGlobalId } from '../factory/creator/globalId';
 import type { Dict, Ext, IFnCtx, IUseSharedStateOptions } from '../types/base';
@@ -192,7 +192,7 @@ export function buildInsCtx(options: Ext<IUseSharedStateOptions>): InsCtxDef {
         }
         if (
           !isValArrLike
-          || (!isParentArrLike && arrDep)  // 值是数组或 Map 时，开启了 arrDep 才记录
+          || (!isParentArrLike && arrDep) // 值是数组或 Map 时，开启了 arrDep 才记录
         ) {
           doRecord();
         }

@@ -1,3 +1,4 @@
+import { VER as LIMU_VER } from 'limu';
 import { asType, safeObjGet } from '@helux/utils';
 import { VER } from '../consts';
 import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types/base';
@@ -70,6 +71,7 @@ function buildSharedScope() {
   return {
     keySeed: 0, // for sharedKey
     SHARED_KEY_STATE_MAP: new Map<number, Dict>(),
+    /** rawState to sharedKey */
     STATE_SHARED_KEY_MAP: new Map<any, number>(),
     /** sharedKey to internal */
     INTERMAL_MAP: new Map<number, TInternal>(),
@@ -103,6 +105,7 @@ function buildEventBus() {
 export function createRoot() {
   const root = {
     VER,
+    LIMU_VER,
     rootState: {} as Dict,
     setState: (moduleName: string, partialState: Dict) => {
       const modData = root.ctx.mod[moduleName];

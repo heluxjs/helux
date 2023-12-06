@@ -110,12 +110,12 @@ importers:
       '@helux/types': workspace:^
       '@helux/utils': workspace:^
       esbuild-copy-static-files: ^0.1.0
-      limu: ^3.11.2
+      limu: ^3.11.3
     dependencies:
       '@helux/hooks-impl': link:../helux-hooks-impl
       '@helux/types': link:../helux-types
       '@helux/utils': link:../helux-utils
-      limu: 3.11.2
+      limu: 3.11.3
     devDependencies:
       esbuild-copy-static-files: 0.1.0
 
@@ -5757,6 +5757,10 @@ packages:
 
   /limu/3.11.2:
     resolution: {integrity: sha512-B+G0a5ZJLHj3bB7mA8Q732GFoGIeVjENjp34ka7VCJ1/ekJzLyR2k5vx/Z+2KjxlI8xLg2383N+baGcX7tzGXQ==}
+    dev: false
+
+  /limu/3.11.3:
+    resolution: {integrity: sha512-X30oyTI5fzXjimJkypzFfPQeEdAEZVRdqRu4cRDSMIzLL6Q/yd1obLPCDzcYjP/sa58oSYmgtpPcSmPS2XIEjg==}
     dev: false
 
   /lines-and-columns/1.2.4:
