@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.2
+
+### Patch Changes
+
+- 83e8fc3: build(3.5.2): merge action,actionAsync,atomAtion,atomAsyncAsync to action, merge mutate,atomMuate to mutate, del atomSync atomSyncer, del atomCall, del useShared
+  - @helux/hooks-impl@3.5.2
+  - @helux/types@3.5.2
+  - @helux/utils@3.5.2
+
 ## 3.5.1
 
 ### Patch Changes
