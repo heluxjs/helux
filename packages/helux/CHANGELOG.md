@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.3
+
+### Patch Changes
+
+- c2d09a8: build(3.5.3): add markExpired in buildReactive
+- Updated dependencies [c2d09a8]
+  - @helux/core@3.5.3
+
 ## 3.5.2
 
 ### Patch Changes

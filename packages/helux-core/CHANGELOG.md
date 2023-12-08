@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.3
+
+### Patch Changes
+
+- c2d09a8: build(3.5.3): add markExpired in buildReactive
+  - @helux/hooks-impl@3.5.3
+  - @helux/types@3.5.3
+  - @helux/utils@3.5.3
+
 ## 3.5.2
 
 ### Patch Changes
