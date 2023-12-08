@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.1
+| helux-core@3.5.3
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -9,16 +9,8 @@ import type { MutableRefObject, ReactNode } from '@helux/types';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,
-  ActionAsync,
-  ActionAsyncFnDef,
   ActionFnDef,
   Atom,
-  AtomAction,
-  AtomActionAsync,
-  AtomActionAsyncFnDef,
-  AtomActionFnDef,
-  AtomMutateFn,
-  AtomMutateFnLooseItem,
   AtomValType,
   BlockComponent,
   BlockParams,
@@ -33,12 +25,10 @@ import type {
   EffectCb,
   EnableStatus,
   Fn,
-  IAtomCreateOptions,
   IAtomCtx,
   IBlockOptions,
   ICreateOptions,
   IInsRenderInfo,
-  InsReactiveState,
   IPlugin,
   IRenderInfo,
   IRunMutateOptions,
@@ -59,10 +49,9 @@ import type {
   PartialStateCb,
   PlainObject,
   ReadOnlyArr,
-  ReadonlyAtom,
+  ReadOnlyAtom,
   ReadOnlyDict,
   SafeLoading,
-  SetAtom,
   SetState,
   SharedDict,
   SharedState,
@@ -72,7 +61,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.1';
+export declare const VER: '3.5.3';
 
 export declare const LIMU_VER: string;
 
@@ -128,18 +117,18 @@ export declare const RECORD_LOADING: {
  * ```
  * 如需感知组件上下文，则需要`useService`接口去定义服务函数，可查看 useService 相关说明
  */
-export function share<T extends PlainObject = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function share<T extends PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T, O>];
+): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T>];
 
 /**
  * 支持共享 primitive 类型值的接口
  */
-export function atom<T = any, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>>(
+export function atom<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): readonly [ReadonlyAtom<T>, SetAtom<T>, IAtomCtx<T, O>];
+): readonly [ReadOnlyAtom<T>, SetState<T>, IAtomCtx<T>];
 
 /**
  * for compatible wit v2 helux
@@ -150,18 +139,18 @@ export const createShared: typeof share;
 /**
  * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] ，shareState 返回 ctx 自身
  */
-export function shareState<T = Dict, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function shareState<T = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): ISharedCtx<T, O>;
+): ISharedCtx<T>;
 
 /**
  * 效果完全等同 atom，唯一的区别是 share 返回元组 [state,setState,call] ，shareAtom 返回 ctx 自身
  */
-export function shareAtom<T = Dict, O extends IAtomCreateOptions<T> = IAtomCreateOptions<T>>(
+export function shareAtom<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): IAtomCtx<T, O>;
+): IAtomCtx<T>;
 
 /**
  * 定义全量派生结果，支持同步和异步
@@ -225,20 +214,7 @@ export function deriveAtom<T = any, I = readonly any[]>(deriveFnOrFnItem: Derive
  * watch(()=>{ console.log('shared1 or shared2.val changed')}, {dep:()=>[shared1,shared2.val]});
  * ```
  */
-export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType): void;
-
-/**
- * 使用共享对象，需注意此接口只接受共享对象，如传递普通对象给它会报错 OBJ_NOT_SHARED_ERR
- * ```ts
- * // 在组件外部其他地方创建共享对象
- * const [ sharedObj ] = share({a:1, b:2});
- * // 然后在任意组件里使用即可
- * const [ obj, setObj ] = useShared(sharedObj);
- * ```
- */
-export function useShared<T = Dict>(sharedObject: T, options?: IUseSharedStateOptions<T>): [SharedDict<T>, SetState<T>, IInsRenderInfo];
-
-export function useReactive<T = SharedState>(sharedState: T, options?: IUseSharedStateOptions<T>): [InsReactiveState<T>, IInsRenderInfo];
+export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType): { run: Fn; unwatch: Fn };
 
 /**
  * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
@@ -247,18 +223,27 @@ export function useReactive<T = SharedState>(sharedState: T, options?: IUseShare
  * const [num, setNum] = useAtom(numAtom);
  * // 修改原始类型 atom
  * setNum(num+1);
- * setNum(draft=>{draft.val+=1});
+ * setNum(draft=>{draft+=1});
  *
  * // 使用对象类型 atom
  * const [obj, setObj] = useAtom(objAtom);
- * // 修改对象类型 atom（ 可使用 share 接口生成对象并配合 useShared 则此处无 .val 操作 ）
+ * // 修改对象类型 atom
  * setNum(draft=>{
- *   draft.val.a+=1;
- *   draft.val.b+=2;
+ *   draft.a+=1;
+ *   draft.b+=2;
  * });
  * ```
  */
-export function useAtom<T = any>(sharedState: Atom<T>, options?: IUseSharedStateOptions<T>): [T, SetAtom<T>, IInsRenderInfo];
+export function useAtom<T = any>(
+  sharedState: T,
+  options?: IUseSharedStateOptions<T>,
+): [T extends ReadOnlyAtom ? AtomValType<T> : T, SetState<T>, IInsRenderInfo];
+
+export function useReactive<T = any>(
+  sharedState: T,
+  options?: IUseSharedStateOptions<T>,
+  // 针对 atom，第一位 reactive 参数自动拆箱
+): [T extends Atom ? T['val'] : T, T, IInsRenderInfo];
 
 /**
  * 使用普通对象，需注意此接口只接受普通对象
@@ -306,13 +291,9 @@ export function useService<S = Dict, P = object>(serviceImpl: S, props?: P): S;
 
 export function storeSrv(ref: MutableRefObject<any>): void;
 
-export function sync<T extends SharedDict>(target: T): SyncFnBuilder<T>;
+export function sync<T extends SharedState>(target: T): SyncFnBuilder<T>;
 
-export function syncer<T extends SharedDict>(target: T): Syncer<T>;
-
-export function atomSync<T extends any>(target: T): SyncFnBuilder<Atom<T>>;
-
-export function atomSyncer<T extends any>(target: T): Syncer<Atom<T>>;
+export function syncer<T extends SharedState>(target: T): Syncer<T>;
 
 /**
  * 强制更新
@@ -449,25 +430,16 @@ export function runMutate<T extends SharedState>(target: T, descOrOptions?: stri
 export function runMutateTask<T extends SharedState>(target: T, descOrOptions?: string | IRunMutateOptions): Promise<T>;
 
 /**
- * 外部为 shared 创建一个 mutate 函数，不定义在 share 接口的 options 参数里，生成 shared 后再对其定义 mutate 函数
+ * 外部为 atom 或 share 创建一个 mutate 函数，不定义在(atom,share)接口的 options 参数里，生成共享对象后再对其定义 mutate 函数
  * 此处采用柯里化风格api，可拥有更好的类型编码提示，会自动把 deps 类型映射到 task 函数的回调函数的 input 参数上
  */
-export function mutate<T extends SharedDict>(
+export function mutate<T extends SharedState>(
   target: T,
 ): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
 
-// export function mutateDict<T extends SharedDict>(target: T)
-//   : <D = MutateFnDict<T>>(fnItem: D) => { [K in keyof D]: MutateWitness<T> };
-export function mutateDict<T extends SharedDict>(
+export function mutateDict<T extends SharedState>(
   target: T,
 ): <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: MutateWitness<T> };
-
-/**
- * 作用同 mutate，为 atom 生成的对象创建一个 mutate 函数
- */
-export function atomMutate<T extends any>(
-  target: Atom<T>,
-): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: AtomMutateFnLooseItem<T, A> | AtomMutateFn<T, A>) => MutateWitness<T>;
 
 export function runDerive<T = SharedState>(result: T): T;
 
@@ -586,17 +558,7 @@ export function addPlugin(plugin: IPlugin): void;
  * ```
  * @param sharedDict
  */
-export function action<T = SharedDict>(sharedDict: T): <A extends any[] = any[]>(fn: ActionFnDef<A, T>, desc?: string) => Action<A, T>;
-
-export function actionAsync<T = SharedDict>(
-  sharedDict: T,
-): <A extends any[] = any[]>(fn: ActionAsyncFnDef<A, T>, desc?: string) => ActionAsync<A, T>;
-
-export function atomAction<T = any>(atom: Atom<T>): <A extends any[] = any[]>(fn: AtomActionFnDef<A, T>, desc?: string) => AtomAction<A, T>;
-
-export function atomActionAsync<T = any>(
-  atom: Atom<T>,
-): <A extends any[] = any[]>(fn: AtomActionAsyncFnDef<A, T>, desc?: string) => AtomActionAsync<A, T>;
+export function action<T = any>(sharedState: T): <P = any>(fn: ActionFnDef<P, T>, desc?: string) => Action<P, T>;
 
 /**
  * get current draft root
@@ -618,6 +580,18 @@ export function isAtom(mayAtom: any): boolean;
  * test if the input arg is a result returned by driveAtom()
  */
 export function isDerivedAtom(mayDerivedAtom: any): boolean;
+
+/**
+ * set one-time used reactive modification desc
+ * 设置一次性使用的响应式变更数据描述，方便 devtool 查看
+ */
+export function reactiveDesc(stateOrDraftRoot: any, desc: string): number;
+
+/**
+ * manually triggering reactive change data submission
+ * 主动触发响应式变更数据提交
+ */
+export function flush(state: SharedState, desc?: string): void;
 
 // ----------- shallowCompare isDiff produce 二次重导出会报错，这里手动声明一下 --------------
 // err: 如果没有引用 "../../helux-core/node_modules/limu/lib"，则无法命名 "produce" 的推断类型。这很可能不可移植。需要类型注释

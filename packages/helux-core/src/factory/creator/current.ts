@@ -20,6 +20,10 @@ let CURRENT_MUTATE_CTX = fakeMutateCtx;
  */
 const CURRENT_INS_CTX = new Map<any, InsCtxDef>();
 
+const CURRENT_REACTIVE_DESC = new Map<number, string>();
+
+const CURRENT_INS_ON_READ = new Map<number, any>();
+
 export function setAtomVal(val: any) {
   CURRENT_DRAFT_ROOT.val = val;
 }
@@ -28,11 +32,15 @@ export function currentDraftRoot() {
   return CURRENT_DRAFT_ROOT;
 }
 
-let CURRENT_INS_ON_READ: any = null;
+export const REACTIVE_DESC = {
+  current: (key: number) => CURRENT_REACTIVE_DESC.get(key) || 'setState',
+  set: (key: number, desc: string) => CURRENT_REACTIVE_DESC.set(key, desc),
+  del: (key: number) => CURRENT_REACTIVE_DESC.delete(key),
+};
 
 export const INS_ON_READ = {
-  current: () => CURRENT_INS_ON_READ,
-  set: (onRead: any) => (CURRENT_INS_ON_READ = onRead),
+  current: (key: number) => CURRENT_INS_ON_READ.get(key),
+  set: (key: number, onRead: any) => CURRENT_INS_ON_READ.set(key, onRead),
 };
 
 export const INS_CTX = {

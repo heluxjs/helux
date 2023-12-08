@@ -3,7 +3,7 @@ import { EVENT_NAME, FROM, HELUX_GLOBAL_LOADING, RECORD_LOADING, STATE_TYPE } fr
 import { emitPluginEvent } from '../../factory/common/plugin';
 import { createOb } from '../../helpers/obj';
 import { getInternal } from '../../helpers/state';
-import { useSharedLogic } from '../../hooks/common/useSharedLogic';
+import { useAtomLogic } from '../../hooks/common/useAtomLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Dict, Fn, From, IRenderInfo, LoadingState, LoadingStatus } from '../../types/base';
 import { getRootCtx } from '../root';
@@ -148,7 +148,7 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
       const loadingProxy = getLoadingInfo(createFn, options).loadingProxy;
       const {
         insCtx: { proxyState, internal, extra, renderInfo },
-      } = useSharedLogic(apiCtx, loadingProxy);
+      } = useAtomLogic(apiCtx, loadingProxy);
       // 注意此处用实例的 extra 记录 safeLoading，实例存在期间 safeLoading 创建一次后会被后续一直复用
       return [createSafeLoading(extra, proxyState, from), internal.setState, renderInfo];
     };
@@ -156,6 +156,6 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
 
   return {
     useLoading,
-    getLoading: () => getLoadingInfo(createFn, options).loadingState,
+    getLoading: () => getLoadingInfo(createFn, options).loadingProxy,
   };
 }

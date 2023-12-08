@@ -4,7 +4,7 @@ import { createSharedLogic, ensureGlobal } from '../factory/createShared';
 import { createSafeLoading, getGlobalLoadingInternal, getLoadingInfo } from '../factory/creator/loading';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { From, IRenderInfo, LoadingState, SafeLoading, SetState, SharedState } from '../types/base';
-import { useSharedSimpleLogic } from './common/useSharedLogic';
+import { useAtomSimpleLogic } from './common/useAtomLogic';
 
 const { ACTION, MUTATE } = FROM;
 
@@ -25,14 +25,14 @@ function useLoadingLogic<T = SharedState>(
   options: { target?: T; from: From },
 ): [SafeLoading, SetState<LoadingState>, IRenderInfo] {
   const { loadingProxy, internal, from } = getLoadingCtx(apiCtx, options);
-  const { proxyState, extra, renderInfo } = useSharedSimpleLogic(apiCtx, loadingProxy);
+  const { proxyState, extra, renderInfo } = useAtomSimpleLogic(apiCtx, loadingProxy);
   return [createSafeLoading(extra, proxyState, from), internal.setState, renderInfo];
 }
 
 /** 获取 mutate 函数产生的 loading */
 export function getMutateLoading<T = SharedState>(apiCtx: CoreApiCtx, target?: T): SafeLoading {
-  const { loadingState } = getLoadingCtx(apiCtx, { target, from: MUTATE });
-  return loadingState;
+  const { loadingProxy } = getLoadingCtx(apiCtx, { target, from: MUTATE });
+  return loadingProxy;
 }
 
 /** 使用 mutate 函数产生的 loading */
@@ -42,8 +42,8 @@ export function useMutateLoading<T = SharedState>(apiCtx: CoreApiCtx, target?: T
 
 /** 获取 action 函数产生的 loading */
 export function getActionLoading<T = SharedState>(apiCtx: CoreApiCtx, target?: T): SafeLoading {
-  const { loadingState } = getLoadingCtx(apiCtx, { target, from: ACTION });
-  return loadingState;
+  const { loadingProxy } = getLoadingCtx(apiCtx, { target, from: ACTION });
+  return loadingProxy;
 }
 
 /** 使用 action 函数产生的 loading */

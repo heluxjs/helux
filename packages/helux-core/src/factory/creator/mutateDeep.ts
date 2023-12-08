@@ -6,6 +6,7 @@ import { runMiddlewares } from '../common/middleware';
 import { emitDataChanged } from '../common/plugin';
 import { IMutateCtx, newMutateCtx } from '../common/util';
 import type { TInternal } from './buildInternal';
+import { markExpired } from './buildReactive';
 import { commitState } from './commitState';
 import { DRAFT_ROOT, MUTATE_CTX } from './current';
 import { handleOperate } from './operateState';
@@ -99,7 +100,7 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
     },
   });
 
-  const { forAtom, isPrimitive } = internal;
+  const { forAtom, isPrimitive, sharedKey } = internal;
   // 记录正在执行中的 draftRoot mutateCtx
   DRAFT_ROOT.set(draftRoot);
   MUTATE_CTX.set(mutateCtx);
@@ -129,6 +130,9 @@ export function prepareDeepMutate(opts: IPrepareDeepMutateOpts) {
        * 为避免用户误会这是一个bug，这里提前随便读一个key，帮助用户主动刷新一下 sharedState 值
        */
       noop(internal.sharedState[mutateCtx.level1Key]);
+
+      // 因变更可能来自于 ctx.setState 句柄，这里需主动标记响应式对象过期
+      markExpired(sharedKey);
 
       return internal.snap; // 返回最新的快照给调用者
     },

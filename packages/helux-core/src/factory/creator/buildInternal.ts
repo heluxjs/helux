@@ -1,6 +1,5 @@
 import { delListItem, nodupPush, noop, safeObjGet } from '@helux/utils';
 import type {
-  AsyncSetState,
   Dict,
   Ext,
   Fn,
@@ -9,7 +8,6 @@ import type {
   IRuleConf,
   KeyInsKeysDict,
   NumStrSymbol,
-  SetAtom,
   SetState,
   SharedState,
 } from '../../types/base';
@@ -22,18 +20,12 @@ const fakeInternal: any = { setState: noop };
 export function buildInternal(
   parsedOptions: ParsedOptions,
   innerOptions: {
-    setAtom: SetAtom;
     setState: SetState;
-    /** 这个函数指向正确的 set 句柄，无需判断是 atom 还是 shared */
-    setDraft: SetAtom | SetState;
-    asyncSetState: AsyncSetState;
     innerSetState: InnerSetState;
     setStateImpl: (...any: any[]) => { draftRoot: any; draftNode: any; finishMutate: Fn; getPartial: Fn };
     sharedState: Ext<SharedState>;
     ruleConf: IRuleConf;
     isDeep: boolean;
-    syncer: any;
-    sync: any;
   },
 ) {
   const { rawState } = parsedOptions;
@@ -46,8 +38,12 @@ export function buildInternal(
 
   return {
     ver: 0,
-    // reactive will be replaced in buildReactive process later
+    // reactive and reactiveRoot will be replaced in buildReactive process later
     reactive: rawState,
+    reactiveRoot: rawState,
+    // sync and syncer will be replaced after buildInternal
+    sync: noop as any,
+    syncer: noop as any,
     // snap and prevSnap will be replaced after changing state
     snap: copy,
     prevSnap: copy,

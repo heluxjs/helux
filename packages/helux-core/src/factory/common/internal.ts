@@ -1,4 +1,5 @@
 import { isDebug } from '@helux/utils';
+import { STATE_TYPE } from '../../consts';
 import type { TInternal } from '../creator/buildInternal';
 import { getSharedScope } from './speedup';
 
@@ -17,13 +18,15 @@ export function clearInternal(moduleName: string, loc: string) {
   let matchedKeys: number[] = [];
   let cleared = false;
   INTERMAL_MAP.forEach((item) => {
-    if (item.moduleName === moduleName && item.loc === loc) {
+    // 清理逻辑仅处理用户状态即可
+    if (item.moduleName === moduleName && item.loc === loc && item.stateType === STATE_TYPE.USER_STATE) {
       matchedKeys.push(item.sharedKey);
     }
   });
 
   // 清除第一个即可
   if (matchedKeys.length > 1) {
+    console.trace(matchedKeys);
     const key = matchedKeys[0];
     const prev = INTERMAL_MAP.get(key);
     INTERMAL_MAP.delete(key);

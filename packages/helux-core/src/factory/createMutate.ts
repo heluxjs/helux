@@ -1,19 +1,6 @@
 import { SINGLE_MUTATE } from '../consts';
 import { getInternal } from '../helpers/state';
-import type {
-  Atom,
-  AtomMutateFn,
-  AtomMutateFnDict,
-  AtomMutateFnLooseItem,
-  Dict,
-  IRunMutateOptions,
-  MutateFn,
-  MutateFnDict,
-  MutateFnLooseItem,
-  MutateWitness,
-  SharedDict,
-  SharedState,
-} from '../types/base';
+import type { Dict, IRunMutateOptions, MutateFn, MutateFnDict, MutateFnLooseItem, MutateWitness, SharedState } from '../types/base';
 import { checkShared, checkSharedStrict } from './common/check';
 import { callMutateFn, watchAndCallMutateDict } from './creator/mutateFn';
 import { parseCreateMutateOpt, parseMutate, parseMutateFn } from './creator/parse';
@@ -58,7 +45,7 @@ interface IConfigureMutateFnOptBase {
 }
 
 interface IConfigureMutateFnOpt extends IConfigureMutateFnOptBase {
-  fnItem: MutateFnLooseItem | AtomMutateFnLooseItem | MutateFn | AtomMutateFn;
+  fnItem: MutateFnLooseItem | MutateFn;
 }
 
 interface IConfigureMutateDictOpt extends IConfigureMutateFnOptBase {
@@ -69,8 +56,8 @@ interface IConfigureMutateDictOpt extends IConfigureMutateFnOptBase {
  * 创建一个外部执行的 mutate 函数（ 即不定义在生成 share 或 atom 时的 options 参数里，生成后再定义 mutate 函数 ）
  */
 function configureMutateFn(options: IConfigureMutateFnOpt) {
-  const { target, fnItem, forAtom = false, label } = options;
-  const internal = checkSharedStrict(target, { forAtom, label });
+  const { target, fnItem, label } = options;
+  const internal = checkSharedStrict(target, { label });
   const stdFnItem = parseMutateFn(fnItem, '', internal.mutateFnDict);
   if (!stdFnItem) {
     throw new Error('not a fn or fnItem { fn }');
@@ -85,8 +72,8 @@ function configureMutateFn(options: IConfigureMutateFnOpt) {
  * 配置 mutate 字典，暂返回 any，具体约束见 types-api multiDict
  */
 function configureMutateDict(options: IConfigureMutateDictOpt): any {
-  const { target, fnDict, forAtom = false, label } = options;
-  const internal = checkSharedStrict(target, { forAtom, label });
+  const { target, fnDict, label } = options;
+  const internal = checkSharedStrict(target, { label });
   const dict = parseMutate(fnDict, internal.mutateFnDict); // trust dict here
   watchAndCallMutateDict({ target, dict });
   const witnessDict: Dict<MutateWitness> = {}; // 具体类型定义见 types-api multiDict
@@ -146,19 +133,6 @@ export function mutate(target: SharedState) {
 /**
  * 为 shared 创建多个 mutate 函数，接收一个字典配置来完成多函数配置，更详细的泛型定义见 types-api.d.ts
  */
-export function mutateDict<T extends SharedDict>(target: T) {
+export function mutateDict<T extends SharedState>(target: T) {
   return <D = MutateFnDict<T>>(fnDict: D) => configureMutateDict({ target, fnDict, label: 'mutateDict' });
-}
-
-/**
- * 为 atom 创建一个 mutate 函数，如需创建异步计算结果，配置 task 即可
- * 更详细的泛型定义见 types-api.d.ts
- */
-export function atomMutate(target: Atom) {
-  return (fnItem: AtomMutateFnLooseItem<any, any> | AtomMutateFn<any, any>) =>
-    configureMutateFn({ target, fnItem, label: 'atomMutate', forAtom: true });
-}
-
-export function atomMutateDict(target: Atom) {
-  return (fnDict: AtomMutateFnDict) => configureMutateDict({ target, fnDict, label: 'atomMutateDict' });
 }

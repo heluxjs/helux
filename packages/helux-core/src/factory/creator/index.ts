@@ -1,5 +1,5 @@
-import { getInternal, recordMod } from '../../helpers/state';
-import type { Dict, ICreateOptions } from '../../types/base';
+import { recordMod } from '../../helpers/state';
+import type { ICreateOptions } from '../../types/base';
 import { markFnExpired } from '../common/fnScope';
 import { clearInternal } from '../common/internal';
 import { emitShareCreated } from '../common/plugin';
@@ -15,17 +15,19 @@ export { prepareNormalMutate } from './mutateNormal';
 /**
  * 创建共享对象
  */
-export function buildSharedObject<T = Dict>(innerOptions: IInnerOptions, createOptions?: ICreateOptions<T>) {
+export function buildSharedObject<T = any>(innerOptions: IInnerOptions, createOptions?: ICreateOptions<T>) {
   const parsedOptions = parseOptions(innerOptions, createOptions);
   const sharedState = buildSharedState(parsedOptions);
-  mapSharedToInternal(sharedState, parsedOptions);
+  const internal = mapSharedToInternal(sharedState, parsedOptions);
+
   recordMod(sharedState, parsedOptions);
   markFnExpired();
   watchAndCallMutateDict({ target: sharedState, dict: parsedOptions.mutateFnDict });
 
-  const internal = getInternal(sharedState);
   // 创建顶层使用的响应式对象
-  internal.reactive = buildReactive(internal);
+  const { draft, draftRoot } = buildReactive(internal);
+  internal.reactive = draft;
+  internal.reactiveRoot = draftRoot;
   clearInternal(parsedOptions.moduleName, internal.loc);
   clearDcLog(internal.usefulName);
   emitShareCreated(internal);

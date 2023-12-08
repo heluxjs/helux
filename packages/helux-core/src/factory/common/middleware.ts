@@ -1,4 +1,4 @@
-import { Dict, DraftRoot, IMiddlewareCtx, Middleware } from '../../types/base';
+import { Dict, DraftRootType, DraftType, IMiddlewareCtx, Middleware } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 
@@ -10,7 +10,7 @@ export function addMiddleware(mid: Middleware) {
 /**
  * middle only support sync call, so no next fn handler in middleware fn args
  */
-export function runMiddlewares(internal: TInternal, draftRoot: DraftRoot, draft: DraftRoot, sn: number) {
+export function runMiddlewares(internal: TInternal, draftRoot: DraftRootType, draft: DraftType, sn: number) {
   const { middlewares } = getRootCtx();
   if (!middlewares.length) {
     return;

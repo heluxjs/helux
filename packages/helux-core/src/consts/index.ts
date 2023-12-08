@@ -6,6 +6,9 @@ export const PROTO_KEY = '__proto__';
 
 export const FN_KEY = createSymbol('HeluxFnKey');
 
+/** get reactive obj's sharedKey */
+export const SHARED_KEY = createSymbol('HeluxSharedKey');
+
 /** see if the target is returned by block series api */
 export const IS_BLOCK = createSymbol('HeluxIsBlock');
 

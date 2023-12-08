@@ -1,4 +1,5 @@
 import { getSafeNext, isObj, warn } from '@helux/utils';
+import { SHARED_KEY } from '../consts';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
@@ -36,7 +37,11 @@ export function getSharedKey<T = SharedState>(state: T) {
   if (!isObj(state)) return 0;
   const scope = getSharedScope();
   const { STATE_SHARED_KEY_MAP } = scope;
-  return STATE_SHARED_KEY_MAP.get(state) || 0;
+  let key = STATE_SHARED_KEY_MAP.get(state) || 0;
+  if (!key) {
+    key = state[SHARED_KEY] || 0; // state 可能是 useAtom 动态创建的代理对象
+  }
+  return key;
 }
 
 export function isSharedState(maySharedState: any) {

@@ -2,7 +2,8 @@ import { isFn, noop } from '@helux/utils';
 import { SCOPE_TYPE, WATCH } from '../consts';
 import { getRootValDepKeyInfo } from '../factory/common/util';
 import { markFnEnd, markFnStart, registerFn } from '../helpers/fnCtx';
-import { recordFnDepKeys } from '../helpers/fnDep';
+import { delFnDep, recordFnDepKeys } from '../helpers/fnDep';
+import { runFn } from '../helpers/fnRunner';
 import { getInternal, getSharedKey } from '../helpers/state';
 import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types/base';
 import { INS_CTX } from './creator/current';
@@ -60,5 +61,9 @@ export function createWatchLogic<T = SharedState>(watchFn: (fnParams: IWatchFnPa
 
 export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType) {
   const { deps, immediate } = parseWatchOptions(options);
-  createWatchLogic(watchFn, { scopeType: SCOPE_TYPE.STATIC, deps, immediate });
+  const fnCtx = createWatchLogic(watchFn, { scopeType: SCOPE_TYPE.STATIC, deps, immediate });
+  return {
+    run: () => runFn(fnCtx.fnKey),
+    unwatch: () => delFnDep(fnCtx),
+  };
 }

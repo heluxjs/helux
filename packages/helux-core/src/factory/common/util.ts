@@ -29,11 +29,6 @@ export interface IMutateCtx {
    * 备注：安全写法应该是draft=>{draft.xx = 1}
    */
   handleAtomCbReturn: boolean;
-  /**
-   * TODO ：记录变化值的路径，用于异步执行环境合并到 rawState 时，仅合并变化的那一部分节点，避免数据脏写
-   * 但异步执行环境直接修改 draft 本身就是很危险的行为，该特性需要慎重考虑是否要实现
-   */
-  keyPathValue: Map<string[], any>;
   /** 为 atom 记录的 draft.val 引用 */
   draftVal: any;
   enableDraftDep: boolean;
@@ -41,7 +36,10 @@ export interface IMutateCtx {
 }
 
 // for hot reload of buildShared
-export function tryGetLoc(moduleName: string, startCutIdx = 4) {
+/**
+ * 考虑到有伴生状态的存在，这里取6
+ */
+export function tryGetLoc(moduleName: string, endCutIdx = 8) {
   let loc = '';
   if (isDebug() && moduleName) {
     try {
@@ -51,7 +49,7 @@ export function tryGetLoc(moduleName: string, startCutIdx = 4) {
       const pureArr = arr.map((codeLoc: string) => {
         return codeLoc.substring(0, codeLoc.indexOf('(')).trim();
       });
-      loc = pureArr.slice(startCutIdx, 8).join(' -> ');
+      loc = pureArr.slice(4, endCutIdx).join(' -> ');
     }
   }
   return loc;
@@ -68,7 +66,6 @@ export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
     writeKeys: {},
     arrKeyDict: {}, // 记录读取过程中遇到的数组 key
     writeKeyPathInfo: {},
-    keyPathValue: new Map(),
     handleAtomCbReturn: true,
     draftVal: null,
     enableDraftDep,

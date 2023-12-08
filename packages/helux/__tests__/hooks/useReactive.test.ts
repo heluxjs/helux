@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { derive, share, useDerived, useReactive } from '../helux';
-import { delay, dictFictory } from '../util';
+import { share, useReactive } from '../helux';
+import { dictFictory } from '../util';
 
 describe('useReactive', () => {
   test('simple use', async () => {
@@ -15,5 +15,4 @@ describe('useReactive', () => {
 
     expect(result.current).toBe(1);
   });
-
 });

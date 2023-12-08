@@ -69,7 +69,7 @@ function useCollectDep<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: Ins
 /**
  * 裁剪后的 useSharedLogic，供 signal 模块 和 useGlobalId 调用
  */
-export function useSharedSimpleLogic<T extends Dict = Dict>(
+export function useAtomSimpleLogic<T extends Dict = Dict>(
   apiCtx: CoreApiCtx,
   sharedState: T,
   options: IInnerUseSharedOptions<T> = {},
@@ -82,7 +82,7 @@ export function useSharedSimpleLogic<T extends Dict = Dict>(
   return insCtx;
 }
 
-export function useSharedLogic<T = Dict>(
+export function useAtomLogic<T = Dict>(
   apiCtx: CoreApiCtx,
   sharedState: T,
   options: IInnerUseSharedOptions<T> = {},
@@ -93,7 +93,7 @@ export function useSharedLogic<T = Dict>(
   useCollectDep(apiCtx, sharedState, insCtx, options);
   useClearEffect(apiCtx, insCtx);
   checkStateVer(insCtx);
-  const tuple = prepareTuple(insCtx, forAtom);
+  const tuple = prepareTuple(insCtx);
 
   return { tuple, insCtx };
 }

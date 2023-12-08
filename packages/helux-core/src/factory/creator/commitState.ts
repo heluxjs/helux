@@ -1,4 +1,4 @@
-import { delListItem, isFn, nodupPush, setNoop, setVal } from '@helux/utils';
+import { delListItem, isFn, nodupPush, setNoop } from '@helux/utils';
 import { immut } from 'limu';
 import { createOb } from '../../helpers/obj';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
@@ -51,18 +51,9 @@ function interveneDeps(isAdd: boolean, opts: ICommitStateOptions) {
 }
 
 export function commitState(opts: ICommitStateOptions) {
-  const { state, internal, isAsync, mutateCtx } = opts;
+  const { state, internal } = opts;
   const { rawState, isDeep } = internal;
-
-  // 当前此特性暂不支持，后续考虑移除这段逻辑
-  if (isAsync) {
-    // for dangerous async mutate
-    mutateCtx.keyPathValue.forEach((keyPath, value) => {
-      setVal(rawState, keyPath, value);
-    });
-  } else {
-    Object.assign(rawState, state);
-  }
+  Object.assign(rawState, state);
 
   if (isDeep) {
     internal.prevSnap = internal.snap;

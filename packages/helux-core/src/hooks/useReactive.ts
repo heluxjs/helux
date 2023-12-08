@@ -1,10 +1,11 @@
 import { isAtom } from '../factory/common/atom';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { IRenderInfo, IUseSharedStateOptions } from '../types/base';
-import { useSharedLogic } from './common/useSharedLogic';
+import { useAtomLogic } from './common/useAtomLogic';
 
-export function useReactive<T = any>(apiCtx: CoreApiCtx, sharedState: T, options: IUseSharedStateOptions<T> = {}): [T, IRenderInfo] {
+export function useReactive<T = any>(apiCtx: CoreApiCtx, sharedState: T, options: IUseSharedStateOptions<T> = {}): [T, T, IRenderInfo] {
+  // 具体关于 Atom 的类型体操见 types/api
   const forAtom = isAtom(sharedState);
-  const { tuple } = useSharedLogic(apiCtx, sharedState, { ...options, forAtom, isReactive: true });
-  return [tuple[0], tuple[2]];
+  const { insCtx } = useAtomLogic(apiCtx, sharedState, { ...options, forAtom, isReactive: true });
+  return [insCtx.proxyStateVal, insCtx.proxyState, insCtx.renderInfo];
 }

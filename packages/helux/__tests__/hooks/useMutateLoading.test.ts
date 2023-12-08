@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { atom, atomMutate, useMutateLoading } from '../helux';
+import { atom, mutate, useMutateLoading } from '../helux';
 import { delay } from '../util';
 
 describe('useMutateLoading', () => {
@@ -46,7 +46,7 @@ describe('useMutateLoading', () => {
 
   test('topApi.atomMutate, ctx.useMutateLoading', async () => {
     const [state, , ctx] = atom({ a: 1, b: 2 });
-    await testLoading(atomMutate(state), () => [state.val.a], ctx.useMutateLoading);
+    await testLoading(mutate(state), () => [state.val.a], ctx.useMutateLoading);
   });
 
   test('ctx.mutate, topApi.useMutateLoading', async () => {
@@ -58,6 +58,6 @@ describe('useMutateLoading', () => {
   test('topApi.atomMutate, topApi.useMutateLoading 1', async () => {
     const [state, , ctx] = atom({ a: 1, b: 2 });
     const useLoading = () => useMutateLoading(state);
-    await testLoading(atomMutate(state), () => [state.val.a], useLoading);
+    await testLoading(mutate(state), () => [state.val.a], useLoading);
   });
 });

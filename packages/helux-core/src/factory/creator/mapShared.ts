@@ -1,6 +1,6 @@
 import { canUseDeep } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
-import type { AsyncSetState, IInnerSetStateOptions, InnerSetState, SetAtom, SetState, SharedState } from '../../types/base';
+import type { IInnerSetStateOptions, InnerSetState, SetState, SharedState } from '../../types/base';
 import { runPartialCb } from '../common/util';
 import { buildInternal } from './buildInternal';
 import { prepareDeepMutate } from './mutateDeep';
@@ -9,7 +9,7 @@ import { ParsedOptions, parseRules, parseSetOptions } from './parse';
 import { createSyncerBuilder, createSyncFnBuilder } from './sync';
 
 export function mapSharedToInternal(sharedState: SharedState, options: ParsedOptions) {
-  const { rawState, sharedKey, deep, forAtom } = options;
+  const { deep, forAtom } = options;
   const ruleConf = parseRules(options);
   const isDeep = canUseDeep(deep);
 
@@ -38,32 +38,18 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
     const ret = setStateImpl(partialState, parseSetOptions(options));
     return ret.finishMutate(ret.getPartial());
   };
-  // async setState definition
-  const asyncSetState: AsyncSetState = async (partialState, options) => {
-    const ret = setStateImpl(partialState, parseSetOptions(options));
-    const partialVar = await Promise.resolve(ret.getPartial());
-    return ret.finishMutate(partialVar);
-  };
-  // setAtom implementation，内部调用依然是 setState，独立出来是为了方便 internal 里标记合适的类型
-  const setAtom = setState as SetAtom;
-  const syncOpts = { forAtom, sharedKey, setState: innerSetState };
-  const sync = createSyncFnBuilder(rawState, syncOpts);
-  const syncer = createSyncerBuilder(rawState, syncOpts);
-  const setDraft = forAtom ? setAtom : setState;
 
   const internal = buildInternal(options, {
     sharedState,
     setState,
-    asyncSetState,
-    setAtom,
-    setDraft,
     setStateImpl,
     innerSetState,
     ruleConf,
     isDeep,
-    syncer,
-    sync,
   });
+  internal.sync = createSyncFnBuilder(internal);
+  internal.syncer = createSyncerBuilder(internal);
 
   setInternal(sharedState, internal);
+  return internal;
 }

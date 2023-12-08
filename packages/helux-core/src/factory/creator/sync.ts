@@ -1,7 +1,8 @@
 import { isJsObj, setVal } from '@helux/utils';
 import { createOneLevelOb } from '../../helpers/obj';
-import type { Dict, Fn, SetState } from '../../types/base';
+import type { Dict, Fn } from '../../types/base';
 import { createImmut, getDepKeyByPath } from '../common/util';
+import type { TInternal } from './buildInternal';
 import { DRAFT_ROOT, MUTATE_CTX } from './current';
 
 export function getEventVal(e: any) {
@@ -47,18 +48,12 @@ function createSyncFn(setState: Fn, path: string[], before?: Fn) {
   return syncFn;
 }
 
-interface ICreateOpts {
-  forAtom?: boolean;
-  sharedKey: number;
-  setState: SetState;
-}
-
-function syncerFn(keyPath: string[], options: ICreateOpts) {
-  const { sharedKey, setState } = options;
+function syncerFn(keyPath: string[], internal: TInternal) {
+  const { sharedKey, innerSetState } = internal;
   let cacheKey = getDepKeyByPath(keyPath, sharedKey);
   let dataSyncer = dataSyncerCahce.get(cacheKey);
   if (!dataSyncer) {
-    dataSyncer = createSyncFn(setState, keyPath);
+    dataSyncer = createSyncFn(innerSetState, keyPath);
     dataSyncerCahce.set(cacheKey, dataSyncer);
   }
   return dataSyncer;
@@ -70,22 +65,23 @@ const dataSyncerCahce = new Map<string, Fn>();
  * <div onClick={syncer.a}></div>
  * @return syncerBuilder
  */
-export function createSyncerBuilder(rawState: Dict, options: ICreateOpts) {
-  if (options.forAtom) {
+export function createSyncerBuilder(internal: TInternal) {
+  const { forAtom, rawState } = internal;
+  if (forAtom) {
     // 原始值 atom，用户可使用 syncer 直接绑定
     // <div onClick={syncer}></div>
     if (!isJsObj(rawState.val)) {
-      return syncerFn(['val'], options);
+      return syncerFn(['val'], internal);
     }
 
     // 对象结果自动拆箱，对 rawState.val 的各个 key 做 syncer 函数集合
     return createOneLevelOb(rawState.val, {
-      get: (target, key) => syncerFn(['val', key], options),
+      get: (target, key) => syncerFn(['val', key], internal),
     });
   }
 
   return createOneLevelOb(rawState, {
-    get: (target, key) => syncerFn([key], options),
+    get: (target, key) => syncerFn([key], internal),
   });
 }
 
@@ -96,8 +92,8 @@ const syncFnCahce = new Map<string, Fn>();
  * <div onClick={to(t=>t.a.b, val=>val+1)}></div>
  * @return syncFnBuilder
  */
-export function createSyncFnBuilder(rawState: Dict, options: ICreateOpts) {
-  const { forAtom, sharedKey, setState } = options;
+export function createSyncFnBuilder(internal: TInternal) {
+  const { forAtom, sharedKey, innerSetState, rawState } = internal;
   const targetWrap = createTargetWrap(rawState);
   return (pathOrRecorder: any, before?: (val: any) => any) => {
     let path: string[] = [];
@@ -118,7 +114,7 @@ export function createSyncFnBuilder(rawState: Dict, options: ICreateOpts) {
 
     let syncFn = syncFnCahce.get(cacheKey);
     if (!syncFn) {
-      syncFn = createSyncFn(setState, path, before);
+      syncFn = createSyncFn(innerSetState, path, before);
       syncFnCahce.set(cacheKey, syncFn);
     }
 

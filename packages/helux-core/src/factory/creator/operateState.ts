@@ -8,7 +8,7 @@ import { getRunningFn } from '../common/fnScope';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, IMutateCtx, isArrLike } from '../common/util';
 import type { TInternal } from './buildInternal';
-import { flush } from './buildReactive';
+import { nextTickFlush } from './buildReactive';
 import { INS_ON_READ } from './current';
 
 /**
@@ -42,7 +42,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
       // atom 判断一下长度，避免记录根值依赖导致死循环
       const canRecord = internal.forAtom ? fullKeyPath.length > 1 : true;
       if (canRecord) {
-        const currentOnRead = INS_ON_READ.current();
+        const currentOnRead = INS_ON_READ.current(sharedKey);
         // 来自实例响应式对象的定制读行为
         if (isReactive && currentOnRead) {
           currentOnRead(opParams);
@@ -108,6 +108,6 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
 
   // 来自响应对象的变更操作，主动 flush 状态
   if (isReactive) {
-    flush(sharedKey);
+    nextTickFlush(sharedKey);
   }
 }

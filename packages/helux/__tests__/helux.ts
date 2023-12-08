@@ -2,7 +2,7 @@ import { act } from '@testing-library/react';
 import * as React from 'react';
 import { initHeluxContext } from '../../helux-core/src/index';
 
-window.alert = () => { };
+window.alert = () => {};
 
 // pass act to avoid Warning:
 // An update to TestComponent inside a test was not wrapped in act(...).
@@ -26,7 +26,6 @@ export const {
   watch,
   // hooks api
   useAtom,
-  useShared,
   useReactive,
   useDerived,
   useDerivedAtom,
@@ -44,9 +43,6 @@ export const {
   useObject,
   // action api
   action,
-  actionAsync,
-  atomAction,
-  atomActionAsync,
   // signal api
   signal,
   block,
@@ -55,7 +51,6 @@ export const {
   // mutate api
   mutate,
   mutateDict,
-  atomMutate,
   runMutate,
   runMutateTask,
   // sync api
@@ -89,3 +84,8 @@ export const {
   VER,
   LIMU_VER,
 } = api;
+
+export const useShared = useAtom;
+export const actionAsync = action;
+export const atomAction = action;
+export const atomActionAsync = action;

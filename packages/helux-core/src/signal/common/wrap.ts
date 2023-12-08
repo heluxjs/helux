@@ -1,7 +1,7 @@
 import type { FunctionComponent } from '@helux/types';
 import { getVal, noop } from '@helux/utils';
+import { useAtomSimpleLogic } from '../../hooks/common/useAtomLogic';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
-import { useSharedSimpleLogic } from '../../hooks/common/useSharedLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { DerivedAtom, Dict, Fn } from '../../types/base';
 
@@ -26,7 +26,7 @@ export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalComp): Fu
   const { sharedState, depKey, keyPath, compare, sharedKey } = options;
   const valHook = { get: noop };
   const Comp = function () {
-    const insCtx = useSharedSimpleLogic(apiCtx, sharedState);
+    const insCtx = useAtomSimpleLogic(apiCtx, sharedState);
     insCtx.recordDep({ sharedKey, depKey, keyPath });
     const val = getVal(sharedState, keyPath);
     valHook.get = () => val;

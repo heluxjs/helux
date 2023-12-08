@@ -19,7 +19,6 @@ export const {
   watch,
   // hooks api
   useAtom,
-  useShared,
   useReactive,
   useDerived,
   useDerivedAtom,
@@ -37,9 +36,6 @@ export const {
   useObject,
   // action api
   action,
-  actionAsync,
-  atomAction,
-  atomActionAsync,
   // signal api
   signal,
   block,
@@ -48,7 +44,6 @@ export const {
   // mutate api
   mutate,
   mutateDict,
-  atomMutate,
   runMutate,
   runMutateTask,
   // sync api
@@ -61,6 +56,8 @@ export const {
   emit,
   on,
   // util api
+  reactiveDesc,
+  flush,
   currentDraftRoot,
   setAtomVal,
   isAtom,

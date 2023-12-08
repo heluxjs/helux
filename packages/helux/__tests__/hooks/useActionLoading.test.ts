@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { actionAsync, atom, atomActionAsync, isAtom, share, useActionLoading, useAtom, useShared } from '../helux';
+import { action, actionAsync, atom, atomActionAsync, isAtom, share, useActionLoading, useAtom, useShared } from '../helux';
 import { delay, noop } from '../util';
 
 async function testLoading(state, asyncAction, useActionLoading) {
@@ -66,17 +66,17 @@ async function testLoadingWithUseStateHook(state, asyncAction, useActionLoading,
 describe('atom useActionLoading', () => {
   test('ctx.actionAsync, ctx.useActionLoading', async () => {
     const [numAtom, , ctx] = atom(1);
-    await testLoading(numAtom, ctx.actionAsync, ctx.useActionLoading);
+    await testLoading(numAtom, ctx.action, ctx.useActionLoading);
   });
 
   test('topApi.asyncAction, ctx.useActionLoading', async () => {
     const [numAtom, , ctx] = atom(1);
-    await testLoading(numAtom, atomActionAsync(numAtom), ctx.useActionLoading);
+    await testLoading(numAtom, action(numAtom), ctx.useActionLoading);
   });
 
   test('ctx.actionAsync, topApi.useActionLoading', async () => {
     const [numAtom, , ctx] = atom(1);
-    await testLoading(numAtom, ctx.actionAsync, () => useActionLoading(numAtom));
+    await testLoading(numAtom, ctx.action, () => useActionLoading(numAtom));
   });
 
   test('topApi.asyncAction, topApi.useActionLoading', async () => {
@@ -86,7 +86,7 @@ describe('atom useActionLoading', () => {
 
   test('useAtom: ctx.actionAsync, ctx.useActionLoading', async () => {
     const [numAtom, , ctx] = atom(1);
-    await testLoadingWithUseStateHook(numAtom, ctx.actionAsync, ctx.useActionLoading);
+    await testLoadingWithUseStateHook(numAtom, ctx.action, ctx.useActionLoading);
   });
 
   test('useAtom: topApi.asyncAction, ctx.useActionLoading', async () => {
@@ -96,7 +96,7 @@ describe('atom useActionLoading', () => {
 
   test('useAtom: ctx.actionAsync, topApi.useActionLoading', async () => {
     const [numAtom, , ctx] = atom(1);
-    await testLoadingWithUseStateHook(numAtom, ctx.actionAsync, () => useActionLoading(numAtom));
+    await testLoadingWithUseStateHook(numAtom, ctx.action, () => useActionLoading(numAtom));
   });
 
   test('useAtom: topApi.asyncAction, topApi.useActionLoading', async () => {
@@ -108,7 +108,7 @@ describe('atom useActionLoading', () => {
 describe('share useActionLoading', () => {
   test('ctx.actionAsync, ctx.useActionLoading', async () => {
     const [state, , ctx] = share({ val: 1 });
-    await testLoading(state, ctx.actionAsync, ctx.useActionLoading);
+    await testLoading(state, ctx.action, ctx.useActionLoading);
   });
 
   test('topApi.asyncAction, ctx.useActionLoading', async () => {
@@ -118,7 +118,7 @@ describe('share useActionLoading', () => {
 
   test('ctx.actionAsync, topApi.useActionLoading', async () => {
     const [state, , ctx] = share({ val: 1 });
-    await testLoading(state, ctx.actionAsync, () => useActionLoading(state));
+    await testLoading(state, ctx.action, () => useActionLoading(state));
   });
 
   test('topApi.asyncAction, topApi.useActionLoading', async () => {
@@ -128,7 +128,7 @@ describe('share useActionLoading', () => {
 
   test('useShared: ctx.actionAsync, ctx.useActionLoading', async () => {
     const [state, , ctx] = share({ val: 1 });
-    await testLoadingWithUseStateHook(state, ctx.actionAsync, ctx.useActionLoading, useShared);
+    await testLoadingWithUseStateHook(state, ctx.action, ctx.useActionLoading, useShared);
   });
 
   test('useShared: topApi.asyncAction, ctx.useActionLoading', async () => {
@@ -138,7 +138,7 @@ describe('share useActionLoading', () => {
 
   test('useShared: ctx.actionAsync, topApi.useActionLoading', async () => {
     const [state, , ctx] = share({ val: 1 });
-    await testLoadingWithUseStateHook(state, ctx.actionAsync, () => useActionLoading(state), useShared);
+    await testLoadingWithUseStateHook(state, ctx.action, () => useActionLoading(state), useShared);
   });
 
   test('useShared: topApi.asyncAction, topApi.useActionLoading', async () => {

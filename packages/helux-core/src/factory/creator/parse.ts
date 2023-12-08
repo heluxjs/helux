@@ -5,8 +5,6 @@ import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type {
-  AtomMutateFnStdDict,
-  AtomMutateFnStdItem,
   BlockOptionsType,
   Dict,
   IBlockOptions,
@@ -36,8 +34,6 @@ export interface IInnerOptions<T = any> {
   isLoading?: boolean;
   stateType?: string;
 }
-
-export type StdDict = MutateFnStdDict | AtomMutateFnStdDict;
 
 function markSharedKeyOnState(rawState: Dict) {
   injectHeluxProto(rawState);
@@ -80,7 +76,7 @@ export function parseDesc(fnKey: any, itemDesc?: any) {
 }
 
 export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: Dict) {
-  let validItem: MutateFnStdItem | AtomMutateFnStdItem | null = null;
+  let validItem: MutateFnStdItem | null = null;
   let desc = inputDesc || '';
   if (isFn(fnItem) && fnItem !== noop) {
     validItem = { fn: fnItem, deps: noopArr, oriDesc: desc, desc };
@@ -109,9 +105,9 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
 /**
  * 解析伴随创建share对象时配置的 mutate 对象，如果传入已存在字典则写入
  */
-export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: StdDict) {
-  const mutateFnDict: StdDict = {};
-  const checkDupDict: StdDict = cachedDict || {};
+export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: MutateFnStdDict) {
+  const mutateFnDict: MutateFnStdDict = {};
+  const checkDupDict: MutateFnStdDict = cachedDict || {};
   if (!mutate) return mutateFnDict;
 
   const handleItem = (item: MutateFnLooseItem | MutateFn, inputDesc?: string) => {

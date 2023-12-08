@@ -1,6 +1,6 @@
-import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
-import { PROTO_KEY } from '../consts';
-import { getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
+import { nodupPush, safeMapGet } from '@helux/utils';
+import { EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
+import { delFnDepData, getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
 import { hasChangedNode } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
@@ -128,14 +128,24 @@ export function getDepFnStats(internal: TInternal, depKey: string, runCountStats
   return { firstLevelFnKeys, asyncFnKeys };
 }
 
-/**
- * 删除已记录的相关依赖数据
- */
-export function delFnDepData(fnCtx: IFnCtx) {
-  const { DEPKEY_FNKEYS_MAP } = getFnScope();
-  const { depKeys, fnKey } = fnCtx;
-  depKeys.forEach((key) => {
-    const fnKeys = DEPKEY_FNKEYS_MAP.get(key) || [];
-    delListItem(fnKeys, fnKey);
-  });
+export function delFnDep(fnCtx: IFnCtx) {
+  delFnDepData(fnCtx);
+  opUpstreamFnKey(fnCtx);
+}
+
+export function delHistoryUnmoutFnCtx() {
+  const { FNKEY_HOOK_CTX_MAP } = getFnScope();
+  // works for strict mode
+  if (FNKEY_HOOK_CTX_MAP.size >= SIZE_LIMIT) {
+    const now = Date.now();
+    FNKEY_HOOK_CTX_MAP.forEach((fnCtx) => {
+      const { mountStatus, createTime, fnKey } = fnCtx;
+      if ([NOT_MOUNT, UNMOUNT].includes(mountStatus) && now - createTime > EXPIRE_MS) {
+        delFnDep(fnCtx);
+        // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
+        // deleting item in map.forEach is doable
+        FNKEY_HOOK_CTX_MAP.delete(fnKey);
+      }
+    });
+  }
 }

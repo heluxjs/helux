@@ -1,5 +1,5 @@
 import { delListItem, isDebug, isFn, isObj, nodupPush, safeMapGet } from '@helux/utils';
-import { EXPIRE_MS, FN_KEY, NOT_MOUNT, SIZE_LIMIT, UNMOUNT } from '../../consts';
+import { FN_KEY } from '../../consts';
 import { injectHeluxProto } from '../../helpers/obj';
 import type { Dict, IFnCtx, ScopeType } from '../../types/base';
 import { genFnKey } from '../common/key';
@@ -49,24 +49,6 @@ export function opUpstreamFnKey(fnCtx: IFnCtx, isAdd?: boolean) {
       isAdd ? nodupPush(next, fnKey) : delListItem(next, fnKey);
     }
   });
-}
-
-export function delHistoryUnmoutFnCtx() {
-  const { FNKEY_HOOK_CTX_MAP } = getFnScope();
-  // works for strict mode
-  if (FNKEY_HOOK_CTX_MAP.size >= SIZE_LIMIT) {
-    const now = Date.now();
-    FNKEY_HOOK_CTX_MAP.forEach((fnCtx) => {
-      const { mountStatus, createTime, fnKey } = fnCtx;
-      if ([NOT_MOUNT, UNMOUNT].includes(mountStatus) && now - createTime > EXPIRE_MS) {
-        delFnDepData(fnCtx);
-        opUpstreamFnKey(fnCtx);
-        // see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach
-        // deleting item in map.forEach is doable
-        FNKEY_HOOK_CTX_MAP.delete(fnKey);
-      }
-    });
-  }
 }
 
 /**
