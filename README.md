@@ -2,7 +2,7 @@
 
 # helux 简介
 
-[helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`为一体的 react 状态库，它拥有以下特性：
+[helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`为一体，支持细粒度响应式更新的 react 状态库，它拥有以下特性：
 
 - 基于最快的不可变 js 库[limu](https://github.com/tnfe/limu)开发，拥有超强性能
 - atom 支持依赖收集，意味着 atom 不用拆分的很细，atom 就可以等同于 model，天然对 `DDD` 领域驱动设计友好
