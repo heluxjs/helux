@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.4
+
+### Patch Changes
+
+- 03296b6: build(3.5.4): add defineActions defineMutateDerive defineFullDerive, fix getLoading not change in block, fix mutate task deadcycle
+- Updated dependencies [03296b6]
+  - @helux/core@3.5.4
+
 ## 3.5.3
 
 ### Patch Changes
