@@ -10,11 +10,11 @@ describe('create share action', () => {
       draft.a += payload[0];
     });
 
-    const snap = addA([10]);
+    const [snap] = addA([10]);
     expect(snap.a).toBe(11);
     expect(shared.a).toBe(11);
 
-    const snap2 = addA([10]);
+    const [snap2] = addA([10]);
     expect(snap2.a).toBe(21);
     expect(shared.a).toBe(21);
   });
@@ -28,11 +28,11 @@ describe('create share action', () => {
       });
     });
 
-    const snap = await addA([10]);
+    const [snap] = await addA([10]);
     expect(snap.a).toBe(11);
     expect(shared.a).toBe(11);
 
-    const snap2 = await addA([10]);
+    const [snap2] = await addA([10]);
     expect(snap2.a).toBe(21);
     expect(shared.a).toBe(21);
   });

@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { atom, deriveAtom, useAtom, watch } from '../helux';
+import { atom, derive, useAtom, watch } from '../helux';
 import { noop } from '../util';
 
 describe('atom draft sub node ref changed', () => {
@@ -30,7 +30,7 @@ describe('atom draft sub node ref changed', () => {
       () => [shared.val.info.name],
     );
     // ✅ 不被执行
-    const nameResult = deriveAtom(() => {
+    const nameResult = derive(() => {
       countStat.nameResult += 1;
       return `prefix:${shared.val.info.name}`;
     });

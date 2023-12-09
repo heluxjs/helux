@@ -1,5 +1,5 @@
 import { getVal, isDebug, isFn, isMap, isObj, isProxyAvailable, noop, prefixValKey } from '@helux/utils';
-import { immut, IOperateParams } from 'limu';
+import { immut, IOperateParams, limuUtils } from 'limu';
 import { ARR, KEY_SPLITER, MAP, STATE_TYPE } from '../../consts';
 import { createOb } from '../../helpers/obj';
 import type { Dict, IInnerSetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
@@ -181,3 +181,5 @@ export function isArrLike(parentType?: string) {
 export function isArrLikeVal(val: any) {
   return Array.isArray(val) || isMap(val);
 }
+
+export const { isObject: isDict } = limuUtils;

@@ -12,7 +12,7 @@ import { callOnRead, newOpParams } from '../common/util';
 import type { ParsedOptions } from './parse';
 
 /**
- * 创建全局使用的共享对象，可提供给 useShared useDerived useWatch derived watch 函数使用
+ * 创建全局使用的共享对象，可提供给 useAtom useDerived useWatch derived watch 函数使用
  */
 export function buildSharedState(options: ParsedOptions) {
   let sharedState: any = {};

@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { derive, runDeriveAsync, share } from '../helux';
+import { deriveDict, runDeriveTask, share } from '../helux';
 import { delay } from '../util';
 
 describe('derive async', () => {
   test('immediate=undefined, pass fn and task 2', async () => {
     const [state, setState] = share({ a: 1, b: 2 });
-    const double = derive({
+    const double = deriveDict({
       fn: () => ({ num1: state.a * 2, num2: state.b * 2 }),
       task: async () => {
         await delay(100);
@@ -26,7 +26,7 @@ describe('derive async', () => {
   test('immediate=undefined, only pass task', async () => {
     const [state] = share({ a: 1, b: 2 });
     try {
-      const double = derive({
+      const double = deriveDict({
         task: async () => {
           await delay(100);
           return { num1: state.a * 4, num2: state.b * 4 };
@@ -40,7 +40,7 @@ describe('derive async', () => {
   test('immediate=undefined, only pass task and deps', async () => {
     const [state] = share({ a: 1, b: 2 });
     try {
-      const double = derive({
+      const double = deriveDict({
         deps: () => [state.a, state.b],
         task: async ({ input: [a, b] }) => {
           await delay(100);
@@ -55,7 +55,7 @@ describe('derive async', () => {
   test('immediate=true', async () => {
     const [state, setState] = share({ a: 1, b: 2 });
     let funRunCount = 0;
-    const double = derive({
+    const double = deriveDict({
       fn: () => {
         funRunCount += 1;
         return { num1: state.a * 2, num2: state.b * 2 };
@@ -87,7 +87,7 @@ describe('derive async', () => {
 
   test('immediate=false, pass deps', async () => {
     const [state] = share({ a: 1, b: 2 });
-    const double = derive({
+    const double = deriveDict({
       deps: () => [state.a, state.b],
       fn: ({ input: [a, b] }) => ({ num1: a * 2, num2: b * 2 }),
       task: async ({ input: [a, b] }) => {
@@ -103,7 +103,7 @@ describe('derive async', () => {
     expect(double.num2).toBe(4);
 
     // rerun derive task
-    runDeriveAsync(double);
+    runDeriveTask(double);
     await delay(200);
     expect(double.num1).toBe(4);
     expect(double.num2).toBe(8);

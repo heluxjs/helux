@@ -90,7 +90,7 @@ export type BlockOptionsType = EnableStatus | IBlockOptions;
  * const [val1, val2, val3] = read(1,2,3);
  * ```
  */
-export type Read = <A extends readonly any[] = readonly any[]>(...args: A) => A;
+export type Read = <P extends readonly any[] = readonly any[]>(...args: P) => P;
 
 export type BlockParams<P = object, T = any> = { props: P; status: LoadingStatus; read: Read; ref?: ForwardedRef<T> };
 
@@ -117,7 +117,7 @@ export type DictS<T = any> = Record<string, T>;
 
 export type Fn<T = any> = (...args: any[]) => T;
 
-export type FnA<A extends ReadOnlyArr = ReadOnlyArr> = (...args: A) => void;
+export type FnA<P extends ReadOnlyArr = ReadOnlyArr> = (...args: P) => void;
 
 export type Off = Fn;
 
@@ -126,11 +126,8 @@ export type SharedDict<T = PlainObject> = T;
 /** returned by share */
 export type ReadOnlyDict<T = PlainObject> = T;
 
-/** returned by derive */
+/** returned by deriveDict */
 export type DerivedDict<R = PlainObject> = R;
-
-/** shared result derive fn definition  */
-export type DeriveFn<R = PlainObject> = (params: IDeriveFnParams<R>) => R;
 
 export type NextSharedDict<T = PlainObject> = T;
 
@@ -139,11 +136,11 @@ export type NextAtom<T = any> = { val: T };
 /** returned by atom */
 export type Atom<T = any> = { val: T };
 
-/** returned by deriveAtom */
-export type DerivedAtom<R = any> = { val: R };
+/** returned by derive */
+export type DerivedAtom<R = any> = { val: R; __helux_ts_type_helper_attr__: any };
 
-/** derive atom fn definition  */
-export type DeriveAtomFn<R = any> = (params: IDeriveAtomFnParams<R>) => R;
+/** derive fn definition  */
+export type DeriveFn<R = any, I = readonly any[]> = (params: IDeriveFnParams<R, I>) => R;
 
 export type NextAtomVal<T> = T;
 
@@ -176,6 +173,8 @@ export type SingalVal = Atom | DerivedAtom | NumStrSymbol | ReactNode | BlockCom
 
 export type AtomValType<T> = T extends Atom<infer V> ? V : T extends ReadOnlyAtom<infer V> ? V : T;
 
+export type DerivedResultType<T = DerivedDict | DerivedAtom> = T extends DerivedAtom<infer V> ? V : T;
+
 export type LoadingStatus = {
   loading: boolean;
   err: Error | null;
@@ -198,7 +197,7 @@ export type ActionFnParam<P = any, T = any> = {
   payload: P;
 };
 
-export type Action<P = any, T = SharedDict> = (payload: P) => NextSharedDict<T>;
+export type Action<P = any, T = SharedDict> = (payload: P) => [NextSharedDict<T>, Error | null];
 
 export type ActionFnReturnType<T> = T extends Primitive
   ? Promise<void | T> | void | T
@@ -222,7 +221,7 @@ export interface IRunMutateOptions {
   strict?: boolean;
 }
 
-export interface IMutateTaskParam<T = SharedState, A = any[]> {
+export interface IMutateTaskParam<T = SharedState, P = any[]> {
   /** 异步任务提供的 draft 是全局响应式对象 */
   draftRoot: DraftRootType<T>;
   draft: DraftType<T>;
@@ -231,13 +230,13 @@ export interface IMutateTaskParam<T = SharedState, A = any[]> {
    */
   desc: string;
   setState: SetState<T>;
-  input: A;
+  input: P;
 }
 
 /** 呼叫 mutate 的句柄，由顶层api mutate 和 atomMutate 返回，可直接无理由重运行 mutate 函数 */
-export type MutateCall<T = any> = () => T;
+export type MutateCall<T = any> = () => [T, Error | null];
 
-export type MutateTaskCall<T = any> = () => Promise<T>;
+export type MutateTaskCall<T = any> = () => Promise<[T, Error | null]>;
 
 export type MutateWitness<T = any> = {
   /** 人工调用 mutate 配置里的同步函数 */
@@ -248,36 +247,40 @@ export type MutateWitness<T = any> = {
   oriDesc: string;
   /** 内部生成的实际描述值 */
   desc: string;
+  /** 此函数可获取最新的快照 */
+  getSnap: () => T;
+  /** snap 只代表生成 witness 那一刻对应的共享状态的快照 */
   snap: T;
 };
 
 // for mutate task
-export type MutateTask<T = SharedState, A = ReadOnlyArr> = (param: IMutateTaskParam<T, A>) => Promise<void>;
+export type MutateTask<T = SharedState, P = ReadOnlyArr> = (param: IMutateTaskParam<T, P>) => Promise<void>;
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
-export type MutateFn<T = SharedState, A = ReadOnlyArr> = (
+export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
   draft: DraftType<T>,
-  params: { input: A; state: StateType<T>; draftRoot: DraftRootType<T> },
+  params: { input: P; state: StateType<T>; draftRoot: DraftRootType<T> },
 ) => void;
 
-export type MutateFnItem<T = SharedState, A = ReadOnlyArr> = {
+export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
   /** 异步 mutate 的依赖项列表 */
-  deps?: (state: StateType<T>) => A;
-  fn?: MutateFn<T, A>;
-  task?: MutateTask<T, A>;
+  deps?: (state: StateType<T>) => P;
+  /** fn 和 deps 均可以收集依赖，对应存在 task 的场景，deps 或 fn 两者保证至少有一个 */
+  fn?: MutateFn<T, P>;
+  task?: MutateTask<T, P>;
   /** default: false, task 是否立即执行 */
   immediate?: boolean;
 };
 
 /** std item 确保了 desc 一定存在 */
-export type MutateFnStdItem<T = any, A = ReadOnlyArr> = MutateFnItem<T, A> & {
+export type MutateFnStdItem<T = any, P = ReadOnlyArr> = MutateFnItem<T, P> & {
   /** 用户透传的原始 desc */
   oriDesc: string;
   /** 可能是内部生成的 desc */
   desc: string;
 };
 
-export type MutateFnLooseItem<T = SharedState, A = ReadOnlyArr> = MutateFnItem<T, A> & {
+export type MutateFnLooseItem<T = SharedState, P = ReadOnlyArr> = MutateFnItem<T, P> & {
   /** 建议用户指定，无指定时内部会自动生成唯一 desc */
   desc?: FnDesc;
 };
@@ -295,18 +298,20 @@ export type PartialStateCb<T = Dict> = (prev: T) => Partial<T> | void;
 
 export type ChangeDraftCb<T = Dict> = (mutableDraft: T) => Partial<T> | void;
 
-export type DeriveFnItem<T = Dict, I = readonly any[]> = {
-  deps?: () => I;
+export type DeriveFnItem<T = any, I = readonly any[]> = {
   fn?: (params: IDeriveFnParams<T, I>) => T;
+  // task?: (params: IDeriveFnParams<T, I>) => Promise<T>;
   task?: (params: IDeriveFnParams<T, I>) => Promise<T>;
+  deps?: () => I;
   immediate?: boolean;
 };
 
-export type DeriveAtomFnItem<T = any, I = readonly any[]> = {
-  fn: (params: IDeriveAtomFnParams<T, I>) => T;
-  deps?: () => I;
-  task: (params: IDeriveAtomFnParams<T, I>) => Promise<T>;
-  immediate?: boolean;
+export type DepsResult = { deps?: any[]; result: any };
+
+export type DepsResultDict = Dict<DepsResult>;
+
+export type MultiDeriveFn<DR extends DepsResultDict> = {
+  [K in keyof DR]: DeriveFn<DR[K]['result']> | DeriveFnItem<DR[K]['result'], DR[K]['deps']>;
 };
 
 /** partial state or cb */
@@ -322,15 +327,15 @@ export type InnerSetState<T = Dict> = (
   options?: IInnerSetStateOptions<T>,
 ) => NextSharedDict<T>;
 
-export type Call<T = SharedState> = <A extends any[] = any[]>(
+export type Call<T = SharedState> = <P extends any[] = any[]>(
   srvFn: (ctx: {
-    args: A;
+    args: P;
     state: Readonly<T>;
     draftRoot: DraftRootType<T>;
     draft: DraftType<T>;
     setState: SetState<T>;
   }) => Partial<T> | void,
-  ...args: A
+  ...args: P
 ) => NextSharedDict<T>;
 
 /** share 返回的共享对象， draftRoot 和 draft 相等，atom 返回的共享对象， draftRoot = { val: draft } */
@@ -364,12 +369,28 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
   ? Ext<LoadingState<O['mutate']>, LoadingStatus>
   : Ext<LoadingState, LoadingStatus>;
 
+type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
+  ? T['fn'] extends Fn
+    ? DerivedAtom<ReturnType<T['fn']>>
+    : DerivedAtom<any>
+  : T extends DeriveFn
+  ? DerivedAtom<ReturnType<T>>
+  : DerivedAtom<any>;
+
+type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
+  ? T['fn'] extends Fn
+    ? ReturnType<T['fn']>
+    : any
+  : T extends DeriveFn
+  ? ReturnType<T>
+  : any;
+
 export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICreateOptions<T>> {
   action: <P = any>(fn: ActionFnDef<P, T>, desc?: FnDesc) => Action<P, T>;
   sync: SyncFnBuilder<T>;
   syncer: Syncer<T>;
   setState: SetState<T>;
-  mutate: <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
+  mutate: <P extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, P> | MutateFn<T, P>) => MutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
   call: Call<T>;
@@ -400,10 +421,45 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   reactiveRoot: T;
   /** 立即提交响应式对象的变更数据 */
   flush: (desc: string) => void;
-  /** 因需提供各函数入口类型约束，这里采用柯里化方式 */
-  defineActions: <A = Dict>() => <D extends { [K in keyof A]: ActionFnDef<A[K], T> }>(
+  /** 为方便提供各函数 payload 类型约束，这里采用柯里化方式 */
+  defineActions: <P = Dict>(
+    throwErr?: boolean,
+  ) => <D extends { [K in keyof P]: ActionFnDef<P[K], T> }>(
     actionsDef: D,
-  ) => { [K in keyof A]: (payload: A[K]) => ReturnType<D[K]> extends Promise<any> ? Promise<NextState<T>> : NextState<T> };
+  ) => {
+    actions: {
+      [K in keyof P]: (
+        payload: P[K],
+        throwErr?: boolean,
+      ) => ReturnType<D[K]> extends Promise<any> ? Promise<[NextState<T>, Error | null]> : [NextState<T>, Error | null];
+    };
+    getLoading: () => Ext<LoadingState<P>>;
+    useLoading: () => [Ext<LoadingState<P>>, SetState<LoadingState>, IInsRenderInfo];
+  };
+  defineMutateDerive: <T = SharedDict, D = MutateFnDict<T>>(
+    inital: T,
+    mutateDef: D,
+  ) => {
+    derivedState: T;
+    witnessDict: { [K in keyof D]: MutateWitness<T> };
+    getLoading: () => Ext<LoadingState<D>>;
+    useLoading: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
+  };
+  /** 为方便提供各函数 deps 和 result 类型约束，这里采用柯里化方式 */
+  defineFullDerive: <DR extends DepsResultDict>(
+    throwErr?: boolean,
+  ) => <D extends MultiDeriveFn<DR>>(
+    deriveFnDict: D,
+  ) => {
+    derivedResult: { [K in keyof D]: FnResultType<D[K]> };
+    helper: {
+      [K in keyof D]: {
+        runDeriveFn: () => FnResultType<D[K]>;
+        runDeriveTask: () => Promise<FnResultType<D[K]>>;
+        useDerived: () => [FnResultValType<D[K]>, LoadingStatus, IRenderInfo];
+      };
+    };
+  };
 }
 
 export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
@@ -432,11 +488,11 @@ export interface IDataRule<T = any> {
    */
   when: (stateNode: T) => any[] | void;
   /**
-   * 变化时，需要触发重渲染的和共享状态绑定关系的 id 对应的组件（ id 可在调用 useShared 时可设定 ）
+   * 变化时，需要触发重渲染的和共享状态绑定关系的 id 对应的组件（ id 可在调用 useAtom 时可设定 ）
    */
   ids?: NumStrSymbol[];
   /**
-   * 变化时，需要触发重渲染的全局 id 对应的组件（ id 可在调用 useShared 或 useGlobalId 时可设定 ）
+   * 变化时，需要触发重渲染的全局 id 对应的组件（ id 可在调用 useAtom 或 useGlobalId 时可设定 ）
    */
   globalIds?: NumStrSymbol[];
   /**
@@ -673,24 +729,22 @@ export interface IWatchOptions {
    * deps 定义的和 watch 首次执行后收集到的两者合并的结果
    */
   immediate?: boolean;
+  /**
+   * default: false
+   * 是否抛出错误，默认不抛出（重执行函数可独立设定抛出），错误会发送给插件
+   */
+  throwErr?: boolean;
 }
 
 export type WatchOptionsType = WatchDepFn | IWatchOptions;
 
-export interface IDeriveFnParamsBase<I = readonly any[]> {
+export interface IDeriveFnParams<T = any, I = readonly any[]> {
   /** 函数的运行编号，每次自增1 */
   sn: number;
   isFirstCall: boolean;
   triggerReasons: TriggerReason[];
   input: I;
-}
-
-export interface IDeriveFnParams<T = Dict, I = readonly any[]> extends IDeriveFnParamsBase<I> {
   prevResult: T | null;
-}
-
-export interface IDeriveAtomFnParams<R = any, I = readonly any[]> extends IDeriveFnParamsBase<I> {
-  prevResult: Atom<R> | null;
 }
 
 export interface IUnmountInfo {

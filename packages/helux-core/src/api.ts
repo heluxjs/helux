@@ -5,17 +5,17 @@ import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
 import { emit, on } from './factory/common/userBus';
 import { action } from './factory/createAction';
-import { derive, deriveAtom } from './factory/createDerived';
+import { derive, deriveDict } from './factory/createDerived';
 import { mutate, mutateDict, runMutate, runMutateTask } from './factory/createMutate';
 import { atom, share, shareAtom, shareState } from './factory/createShared';
 import { sync, syncer } from './factory/createSync';
 import { watch } from './factory/createWatch';
 import { flush, reactiveDesc } from './factory/creator/buildReactive';
 import { currentDraftRoot, setAtomVal } from './factory/creator/current';
-import { getDeriveLoading, runDerive, runDeriveAsync } from './helpers/fnRunner';
+import { getDeriveLoading, runDerive, runDeriveTask } from './helpers/fnRunner';
 import { getRawState, getSnap } from './helpers/state';
 import { useAtom } from './hooks/useAtom';
-import { useDerived, useDerivedAtom } from './hooks/useDerived';
+import { useDerived } from './hooks/useDerived';
 import { useGlobalId } from './hooks/useGlobalId';
 import { getActionLoading, getMutateLoading, useActionLoading, useMutateLoading } from './hooks/useLoading';
 import { useMutable } from './hooks/useMutable';
@@ -37,16 +37,15 @@ export {
   createShared,
   // derive api
   derive,
-  deriveAtom,
+  deriveDict,
   runDerive,
-  runDeriveAsync,
+  runDeriveTask,
   // watch api
   watch,
   // hooks api
   useAtom,
   useReactive,
   useDerived,
-  useDerivedAtom,
   useWatch,
   useGlobalId,
   useService,

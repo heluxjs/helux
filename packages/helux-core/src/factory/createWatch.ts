@@ -63,7 +63,7 @@ export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: Wat
   const { deps, immediate } = parseWatchOptions(options);
   const fnCtx = createWatchLogic(watchFn, { scopeType: SCOPE_TYPE.STATIC, deps, immediate });
   return {
-    run: () => runFn(fnCtx.fnKey),
+    run: (throwErr?: boolean) => runFn(fnCtx.fnKey, { throwErr }),
     unwatch: () => delFnDep(fnCtx),
   };
 }

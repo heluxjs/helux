@@ -1,16 +1,20 @@
 import { noop } from '@helux/utils';
 import { FROM, STATE_TYPE } from '../consts';
+import { runDerive, runDeriveTask } from '../helpers/fnRunner';
 import { useAtom } from '../hooks/useAtom';
+import { useDerived } from '../hooks/useDerived';
 import { useReactive } from '../hooks/useReactive';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { Dict, Fn, IAtomCtx, ICreateOptions, IRunMutateOptions, ISharedCtx } from '../types/base';
 import { action } from './createAction';
+import { derive } from './createDerived';
 import { mutate, mutateDict, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';
+import type { TInternal } from './creator/buildInternal';
 import { flush, reactiveDesc } from './creator/buildReactive';
 import { setAtomVal } from './creator/current';
 import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
-import { initGlobalLoading, initLoadingCtx } from './creator/loading';
+import { getLoadingInfo, initGlobalLoading, initLoadingCtx } from './creator/loading';
 import type { IInnerOptions } from './creator/parse';
 
 const { USER_STATE } = STATE_TYPE;
@@ -24,18 +28,53 @@ export function ensureGlobal(apiCtx: CoreApiCtx, inputStateType?: string) {
   }
 }
 
-function defineActions(actionCreator: any, actionDict: Dict) {
+function defineActions(
+  options: { internal: TInternal; apiCtx: CoreApiCtx; createFn: any; ldAction: Dict; actionCreator: any; actionDict: Dict },
+  throwErr?: boolean,
+) {
+  const { createFn, ldAction, actionDict, actionCreator, internal, apiCtx } = options;
+  // 提前触发伴生loading状态创建
+  getLoadingInfo(createFn, { internal, from: 'Action', apiCtx });
   const actions: Dict = {};
   Object.keys(actionDict).forEach((key) => {
-    actions[key] = actionCreator(actionDict[key], key);
+    actions[key] = actionCreator(actionDict[key], key, throwErr);
   });
-  return actions;
+  return {
+    actions,
+    getLoading: () => ldAction.getLoading(actions),
+    useLoading: () => ldAction.useLoading(actions),
+  };
 }
 
-function defineMutateDerives(apiCtx: CoreApiCtx, initalState: Dict, deriveDict: Dict) {
-  const [state] = share(apiCtx, initalState);
-  const resultDict = mutateDict(state)(deriveDict);
-  return resultDict;
+function defineMutateDerive(options: { apiCtx: CoreApiCtx; ldMutate: Dict; inital: Dict; mutateFnDict: Dict }) {
+  const { apiCtx, ldMutate, inital, mutateFnDict } = options;
+  const [state] = share(apiCtx, inital);
+  const witnessDict = mutateDict(state)(mutateFnDict);
+  return {
+    derivedState: state,
+    witnessDict,
+    getLoading: () => ldMutate.getLoading(witnessDict),
+    useLoading: () => ldMutate.useLoading(witnessDict),
+  };
+}
+
+function defineFullDerive(options: { apiCtx: CoreApiCtx; deriveFnDict: Dict; throwErr?: boolean }) {
+  const { apiCtx, deriveFnDict, throwErr } = options;
+  const derivedResult: Dict = {};
+  const helper: Dict = {};
+  Object.keys(deriveFnDict).forEach((key) => {
+    const result = derive(deriveFnDict[key]);
+    derivedResult[key] = result;
+    helper[key] = {
+      runDerive: (te?: boolean) => runDerive(result, te ?? throwErr),
+      runDeriveTask: (te?: boolean) => runDeriveTask(result, te ?? throwErr),
+      useDerived: (options: any) => useDerived(apiCtx, result, options),
+    };
+  });
+  return {
+    derivedResult,
+    helper,
+  };
 }
 
 export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: any): any {
@@ -45,17 +84,19 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const { syncer, sync, forAtom, setState, sharedKey, sharedKeyStr, rootValKey, reactive, reactiveRoot } = internal;
   const actionCreator = action(state);
   const opt = { internal, from: MUTATE, apiCtx };
-  const ldMutate = initLoadingCtx(createSharedLogic, opt);
-  const ldAction = initLoadingCtx(createSharedLogic, { ...opt, from: ACTION });
+  const createFn = createSharedLogic;
+  const ldAction = initLoadingCtx(createFn, { ...opt, from: ACTION });
+  const ldMutate = initLoadingCtx(createFn, opt);
   const setOnReadHook = (onRead: Fn) => (internal.onRead = onRead);
-  // TODO
-  // add defineActions defineMutates defineWatches
+  const common = { createFn, internal, apiCtx };
 
   return {
     state,
     setState,
-    defineActions: () => (actionDict: Dict) => defineActions(actionCreator, actionDict),
-    defineMutateDerives: (initalState: Dict, deriveDict: Dict) => defineMutateDerives(apiCtx, initalState, deriveDict),
+    defineActions: (throwErr?: boolean) => (actionDict: Dict) =>
+      defineActions({ ...common, ldAction, actionCreator, actionDict }, throwErr),
+    defineMutateDerive: (inital: Dict, mutateFnDict: Dict) => defineMutateDerive({ ...common, ldMutate, inital, mutateFnDict }),
+    defineFullDerive: (throwErr?: boolean) => (deriveFnDict: Dict) => defineFullDerive({ apiCtx, deriveFnDict, throwErr }),
     mutate: mutate(state),
     runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(state, descOrOptions),
     runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(state, descOrOptions),

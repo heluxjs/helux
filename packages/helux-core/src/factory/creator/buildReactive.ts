@@ -1,6 +1,5 @@
 import { canUseDeep } from '@helux/utils';
 import { SHARED_KEY } from '../../consts';
-import { createOb } from '../../helpers/obj';
 import { getSharedKey } from '../../helpers/state';
 import type { IInnerSetStateOptions, OnOperate } from '../../types/base';
 import type { TInternal } from './buildInternal';
@@ -133,7 +132,7 @@ export function buildReactive(internal: TInternal, onRead?: OnOperate) {
       return draftVal[key];
     };
 
-    draftRoot = createOb(rawState, {
+    draftRoot = new Proxy(rawState, {
       set: (t: any, key: any, value: any) => set(false, key, value),
       get: (t: any, key: any) => get(false, key),
     });
@@ -141,7 +140,7 @@ export function buildReactive(internal: TInternal, onRead?: OnOperate) {
     if (forAtom) {
       draft = isPrimitive
         ? rawState.val
-        : createOb(rawState, {
+        : new Proxy(rawState, {
             set: (t: any, key: any, value: any) => set(true, key, value),
             get: (t: any, key: any) => get(true, key),
           });

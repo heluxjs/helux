@@ -28,11 +28,11 @@ export function execDepFns(opts: ICommitStateOptions) {
 
   internal.ver += 1;
   // find associate ins keys
-  let allInsKeys: number[] = [];
-  let globalInsKeys: number[] = [];
+  let dirtyInsKeys: number[] = [];
+  let dirtyGlobalInsKeys: number[] = [];
   // find associate derived/watch fn ctxs
-  let allFirstLevelFnKeys: string[] = [];
-  let allAsyncFnKeys: string[] = [];
+  let dirtyFnKeys: string[] = [];
+  let dirtyAsyncFnKeys: string[] = [];
   const runCountStats: Dict<number> = {};
 
   if (isFirstCall) {
@@ -49,7 +49,7 @@ export function execDepFns(opts: ICommitStateOptions) {
     const validInsKeys: number[] = [];
     for (const insKey of insKeys) {
       // 已包含或已排除，都跳过当次循环
-      if (allInsKeys.includes(insKey)) {
+      if (dirtyInsKeys.includes(insKey)) {
         continue;
       }
       const insCtx = insCtxMap.get(insKey);
@@ -57,7 +57,7 @@ export function execDepFns(opts: ICommitStateOptions) {
         continue;
       }
       const depKeys = insCtx.getDeps();
-      // 未对 useState useAtom 返回值有任何读操作时
+      // 未对 useAtom 返回值有任何读操作时
       if (depKeys[0] === rootValKey) {
         if (diffVal(internal, rootValKey)) {
           validInsKeys.push(insKey);
@@ -70,10 +70,10 @@ export function execDepFns(opts: ICommitStateOptions) {
       }
     }
 
-    allInsKeys = allInsKeys.concat(validInsKeys);
+    dirtyInsKeys = dirtyInsKeys.concat(validInsKeys);
     const { firstLevelFnKeys, asyncFnKeys } = getDepFnStats(internal, key, runCountStats);
-    allFirstLevelFnKeys = allFirstLevelFnKeys.concat(firstLevelFnKeys);
-    allAsyncFnKeys = allAsyncFnKeys.concat(asyncFnKeys);
+    dirtyFnKeys = dirtyFnKeys.concat(firstLevelFnKeys);
+    dirtyAsyncFnKeys = dirtyAsyncFnKeys.concat(asyncFnKeys);
   };
   depKeys.forEach((k) => analyzeDepKey(k));
   // 分析 rootValKey 结果刻意放 depKeys.forEach 之后执行，是需要复用 sharedScope.isStateChanged 结果，有以下2个作用
@@ -89,26 +89,27 @@ export function execDepFns(opts: ICommitStateOptions) {
   clearDiff();
   // find id's ins keys
   ids.forEach((id) => {
-    allInsKeys = allInsKeys.concat(id2InsKeys[id] || []);
+    dirtyInsKeys = dirtyInsKeys.concat(id2InsKeys[id] || []);
   });
   // find globalId's ins keys, fn keys
   globalIds.forEach((id) => {
-    getGlobalIdInsKeys(id).forEach((insKey) => nodupPush(globalInsKeys, insKey));
+    getGlobalIdInsKeys(id).forEach((insKey) => nodupPush(dirtyGlobalInsKeys, insKey));
   });
 
   // deduplicate
-  allInsKeys = dedupList(allInsKeys);
-  allFirstLevelFnKeys = dedupList(allFirstLevelFnKeys);
-  allAsyncFnKeys = dedupList(allAsyncFnKeys);
+  dirtyInsKeys = dedupList(dirtyInsKeys);
+  dirtyFnKeys = dedupList(dirtyFnKeys);
+  dirtyAsyncFnKeys = dedupList(dirtyAsyncFnKeys);
+  // start mark async derive fn computing
+  dirtyAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   // start execute derive/watch fns
-  allAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
-  allFirstLevelFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));
+  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));
 
   // start trigger rerender
-  allInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));
+  dirtyInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));
   // start update globalId ins
-  if (globalInsKeys.length) {
+  if (dirtyGlobalInsKeys.length) {
     const globalInsCtxMap = getGlobalEmptyInternal().insCtxMap;
-    globalInsKeys.forEach((insKey) => updateIns(globalInsCtxMap, insKey, sn));
+    dirtyGlobalInsKeys.forEach((insKey) => updateIns(globalInsCtxMap, insKey, sn));
   }
 }

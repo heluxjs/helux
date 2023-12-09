@@ -6,12 +6,14 @@ import { getInternal } from '../../helpers/state';
 import { useAtomLogic } from '../../hooks/common/useAtomLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Dict, Fn, From, IRenderInfo, LoadingState, LoadingStatus } from '../../types/base';
+import { checkSharedStrict } from '../common/check';
+import { isDict } from '../common/util';
 import { getRootCtx } from '../root';
 import type { TInternal } from './buildInternal';
 
 const { MUTATE } = FROM;
 const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
-const { PRIVATE, GLOBAL, NO } = RECORD_LOADING;
+const { PRIVATE, GLOBAL } = RECORD_LOADING;
 const fakeExtra: Dict = {};
 const fakeLoading: Dict = {};
 const fakeRenderInfo: IRenderInfo = { sn: 0, getDeps: noopArr };
@@ -63,6 +65,11 @@ export function initGlobalLoading(apiCtx: CoreApiCtx, createFn: Fn) {
   return shared;
 }
 
+export function getStatusKey(from: string, desc: string) {
+  // 基于 > 分割 ，否则 getDepKeyInfo 还原 key 错误，导致 block 里无法正确补上相关 loading 的依赖
+  return `${from}>${desc}`;
+}
+
 export function setLoadStatus(internal: TInternal, statusKey: string, status: LoadingStatus) {
   if (!statusKey) return;
   const { loadingInternal } = internal;
@@ -87,7 +94,7 @@ export function createSafeLoading(extra: Dict, loadingObj: any, from: From) {
     safeLoading = createOb(loadingObj, {
       get(target, key) {
         // 通过 from 避免 mutate 和 action 重复key，同时也方便 devtool 知道调用来源
-        const realKey = `${from}/${key}`;
+        const realKey = getStatusKey(from, key);
         return target[realKey] || { loading: false, ok: true, err: null };
       },
     });
@@ -123,14 +130,37 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
       internal.loadingInternal = globalLoadingInternal;
       loadingState = createSafeLoading(globalLoadingInternal.extra, loadingProxy, from);
     } else {
-      throw new Error(`unknown recordLoading [${recordLoading}]`);
+      loadingProxy = loadingState;
     }
   } else {
     // 此刻的 internal 即 globalLoadingInternal
     loadingProxy = internal.sharedState;
     loadingState = createSafeLoading(internal.extra, loadingProxy, from);
   }
+
+  // loadingState 给用户使用的读安全对象，loadingProxy 给 hook 使用的对象
   return { loadingState, loadingProxy };
+}
+
+/**
+ * 未指定 actions 或 mutate 时，使用的自身对应的 action 和 mutate loading
+ */
+function getLoadingOpts(options: IInitLoadingCtxOpt, actionsOrMutate?: Dict) {
+  if (!isDict(actionsOrMutate)) {
+    return options;
+  }
+  const keys = Object.keys(actionsOrMutate);
+  if (!keys.length) {
+    return options;
+  }
+  const oneItem = actionsOrMutate[keys[0]];
+  if (!oneItem.__sharedKey) {
+    return options;
+  }
+  return {
+    ...options,
+    internal: checkSharedStrict(oneItem.__sharedKey),
+  };
 }
 
 /**
@@ -138,14 +168,15 @@ export function getLoadingInfo(createFn: Fn, options: IInitLoadingCtxOpt) {
  */
 export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
   const { internal: leaderInternal, from, apiCtx } = options;
-  const { stateType, recordLoading } = leaderInternal;
+  const { stateType } = leaderInternal;
   const isUserState = STATE_TYPE.USER_STATE === stateType;
 
   let useLoading = () => fakeTuple;
-  // 当前状态是用户状态，且未禁用伴生loading
-  if (isUserState && NO !== recordLoading) {
-    useLoading = () => {
-      const loadingProxy = getLoadingInfo(createFn, options).loadingProxy;
+  // 当前状态是用户状态
+  if (isUserState) {
+    useLoading = (actionsOrMutate?: Dict) => {
+      const targetOptions = getLoadingOpts(options, actionsOrMutate);
+      const loadingProxy = getLoadingInfo(createFn, targetOptions).loadingProxy;
       const {
         insCtx: { proxyState, internal, extra, renderInfo },
       } = useAtomLogic(apiCtx, loadingProxy);
@@ -156,6 +187,10 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
 
   return {
     useLoading,
-    getLoading: () => getLoadingInfo(createFn, options).loadingProxy,
+    getLoading: (actionsOrMutate?: Dict) => {
+      const targetOptions = getLoadingOpts(options, actionsOrMutate);
+      // 返回读安全的 loading 对象给用户
+      return getLoadingInfo(createFn, targetOptions).loadingState;
+    },
   };
 }

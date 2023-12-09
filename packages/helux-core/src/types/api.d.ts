@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.3
+| helux-core@3.5.4
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -15,10 +15,9 @@ import type {
   BlockComponent,
   BlockParams,
   ChangeDraftCb,
-  DeriveAtomFn,
-  DeriveAtomFnItem,
   DerivedAtom,
   DerivedDict,
+  DerivedResultType,
   DeriveFn,
   DeriveFnItem,
   Dict,
@@ -53,7 +52,6 @@ import type {
   ReadOnlyDict,
   SafeLoading,
   SetState,
-  SharedDict,
   SharedState,
   SingalVal,
   Syncer,
@@ -61,7 +59,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.3';
+export declare const VER: '3.5.4';
 
 export declare const LIMU_VER: string;
 
@@ -153,27 +151,28 @@ export function shareAtom<T = any, O extends ICreateOptions<T> = ICreateOptions<
 ): IAtomCtx<T>;
 
 /**
- * 定义全量派生结果，支持同步和异步
+ * 定义全量派生结果，支持同步和异步，支持返回 pritimive 类型，如果确定返回 dict 数据，可优先考虑使用 deriveDict 接口，
+ * 返回结果无装箱操作
  * ```ts
  * // 示例1：已一个共享对象和已导出结果作为输入源定义一个异步计算任务
  *  const [sharedState, setState, call] = share({ a: 1, b: { b1: { b2: 200 } } });
- *  // 同步派生
- *  const doubleAResult = derive(() => ({ val: sharedState.a * 2 + random() }));
- *  // 等效于
- *  const doubleAResult = derive({ fn: () => ({ val: sharedState.a * 2 + random() }) });
+ *  // 同步派生，会自动装箱 { val: any }
+ *  const doubleAResult = derive(() => sharedState.a * 2 + random());
+ *  // 等效于 deriveDict ，但 deriveDict 还可以在第一层扩展其他属性，故确定返回 dict 数据的话可优先考虑使用 deriveDict 接口
+ *  const doubleAResult = deriveDict({ fn: () => ({ val: sharedState.a * 2 + random() }) });
  *
  *  // 异步派生
  *  const aPlusB2Result = derive({
  *    // 【可选】定义依赖项，会透传给 fn 和 task 的 input
  *    deps: () => [sharedState.a, sharedState.b.b1.b2, doubleAResult.val] as const,
- *    // 【可选】定义初始值函数，首次一定会执行
- *    fn: () => ({ val: 0 }),
+ *    // 【必须】定义初始值函数，首次一定会执行
+ *    fn: () => 0,
  *    // 【可选】如定义了 task，则定义的 fn 后续不再执行
  *    // 1 未显式定义 immediate 时，如定义了 fn，则 task 首次不执行，未定义则 task 首次执行
  *    // 2 显式定义 immediate 时，为 true 则立即执行 task，为 false 则下次再执行
  *    task: async ({ input: [a, b2, val] }) => { // 定义异步运算任务，input 里可获取到 deps 返回的值
  *      await delay(1000);
- *      return { val: a + b2 + val + random() };
+ *      return a + b2 + val + random();
  *    },
  *    //【可选】定义后就首次执行任务 task（默认首次不执行）
  *    immediate: true,
@@ -189,7 +188,7 @@ export function shareAtom<T = any, O extends ICreateOptions<T> = ICreateOptions<
  *  });
  * ```
  */
-export function derive<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T> | DeriveFnItem<T, I>): T;
+export function derive<T = any, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T> | DeriveFnItem<T, I>): DerivedAtom<T>;
 
 /**
  * 创建一个派生atom新结果的任务，支持返回 pritimive 类型
@@ -198,8 +197,7 @@ export function derive<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: De
  * const doubleResult = deriveAtom(()=>numAtom.val*2);
  * ```
  */
-// export function deriveAtom<T = any>(deriveFn: (params: IDeriveFnParams<T>) => T): Atom<T>;
-export function deriveAtom<T = any, I = readonly any[]>(deriveFnOrFnItem: DeriveAtomFn<T> | DeriveAtomFnItem<T, I>): Atom<T>;
+export function deriveDict<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T> | DeriveFnItem<T, I>): DerivedDict<T>;
 
 /**
  * 观察共享状态变化，默认 watchFn 立即执行
@@ -214,7 +212,10 @@ export function deriveAtom<T = any, I = readonly any[]>(deriveFnOrFnItem: Derive
  * watch(()=>{ console.log('shared1 or shared2.val changed')}, {dep:()=>[shared1,shared2.val]});
  * ```
  */
-export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType): { run: Fn; unwatch: Fn };
+export function watch(
+  watchFn: (fnParams: IWatchFnParams) => void,
+  options?: WatchOptionsType,
+): { run: (throwErr?: boolean) => void; unwatch: Fn };
 
 /**
  * 组件使用 atom，注此接口只接受 atom 生成的对象，如传递 share 生成的对象会报错
@@ -276,7 +277,7 @@ export function useGlobalId(globalId: NumStrSymbol): IRenderInfo;
 
 /**
  * ```ts
- *  const [state, setState] = useShared(sharedObj);
+ *  const [state, setState] = useAtom(sharedObj);
  *  // 返回的 srv 是一个稳定的引用，它包含的方式也是稳定的引用，方法里能总是读取闭包外的最新值
  *  const srv = useService({
  *    change(label: string) {
@@ -316,9 +317,10 @@ export function useEffect(cb: EffectCb, deps?: any[]): void;
  */
 export function useLayoutEffect(cb: EffectCb, deps?: any[]): void;
 
-export function useDerived<R = SharedDict>(resultOrFn: DerivedDict<R>, options?: IUseDerivedOptions): [R, LoadingStatus, IRenderInfo];
-
-export function useDerivedAtom<T = any>(resultOrFn: DerivedAtom<T>, options?: IUseDerivedOptions): [T, LoadingStatus, IRenderInfo];
+export function useDerived<R = DerivedDict | DerivedAtom>(
+  resultOrFn: R,
+  options?: IUseDerivedOptions,
+): [DerivedResultType<R>, LoadingStatus, IRenderInfo];
 
 /**
  * 组件里监听来自 emit 接口发射的事件，会在组件销毁时自动取消监听
@@ -441,9 +443,9 @@ export function mutateDict<T extends SharedState>(
   target: T,
 ): <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: MutateWitness<T> };
 
-export function runDerive<T = SharedState>(result: T): T;
+export function runDerive<T = SharedState>(result: T, throwErr?: boolean): [T, Error | null];
 
-export function runDeriveAsync<T = SharedState>(result: T): Promise<T>;
+export function runDeriveTask<T = SharedState>(result: T, throwErr?: boolean): Promise<[T, Error | null]>;
 
 /**
  * 生成 Block 组件，会自动绑定视图中的状态依赖，

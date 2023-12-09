@@ -10,6 +10,9 @@ export type DraftType<T = SharedState> = T extends Atom | ReadOnlyAtom ? AtomDra
 export type StateRootType<T = SharedState> = T extends Atom | ReadOnlyAtom ? ReadOnlyAtom<T> : ReadOnlyDict<T>;
 
 export type StateType<T = SharedState> = T extends Atom | ReadOnlyAtom ? ReadOnlyAtomVal<T> : ReadOnlyDict<T>;
+
+/** partial state or cb */
+export type PartialArgType<T> = T extends PlainObject ? Partial<T> | ((draft: T) => void | Partial<T>) : T | ((draft: T) => void | T);
 ```
 
 ## to del

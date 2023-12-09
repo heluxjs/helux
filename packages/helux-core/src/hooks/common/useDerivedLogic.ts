@@ -3,7 +3,7 @@ import { buildFnCtx, delFnCtx } from '../../helpers/fnCtx';
 import { getDepSharedStateFeature, recoverDep } from '../../helpers/fnDep';
 import { attachInsDerivedResult } from '../../helpers/insCtx';
 import type { CoreApiCtx } from '../../types/api-ctx';
-import type { IFnCtx, IRenderInfo, LoadingStatus } from '../../types/base';
+import type { IFnCtx } from '../../types/base';
 import { genDerivedResult, IUseDerivedLogicOptions } from './derived';
 import { useSync } from './useSync';
 
@@ -42,14 +42,6 @@ function useFnCtxEffect(apiCtx: CoreApiCtx, fnCtx: IFnCtx) {
       delFnCtx(fnCtx);
     };
   }, [fnCtx]);
-}
-
-export function getTuple<R>(fnCtx: IFnCtx): [R, LoadingStatus, IRenderInfo] {
-  return [fnCtx.proxyResult as R, fnCtx.status, fnCtx.renderInfo];
-}
-
-export function getAtomTuple<R>(fnCtx: IFnCtx): [R, LoadingStatus, IRenderInfo] {
-  return [fnCtx.proxyResult.val as R, fnCtx.status, fnCtx.renderInfo];
 }
 
 /**

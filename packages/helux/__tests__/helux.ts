@@ -19,16 +19,15 @@ export const {
   createShared,
   // derive api
   derive,
-  deriveAtom,
+  deriveDict,
   runDerive,
-  runDeriveAsync,
+  runDeriveTask,
   // watch api
   watch,
   // hooks api
   useAtom,
   useReactive,
   useDerived,
-  useDerivedAtom,
   useWatch,
   useGlobalId,
   useService,

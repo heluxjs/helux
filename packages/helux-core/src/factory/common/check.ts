@@ -1,5 +1,5 @@
 import { tryAlert } from '@helux/utils';
-import { getInternal } from '../../helpers/state';
+import { getInternal, getInternalByKey } from '../../helpers/state';
 import type { SharedState } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 
@@ -23,9 +23,15 @@ interface ICheckSharedOptions extends ICheckSharedOptionsBase {
   strict?: boolean;
 }
 
-export function checkShared<T = SharedState>(sharedState: T, options?: ICheckSharedOptions): TInternal | null {
+export function checkShared<T = SharedState | number>(sharedStateOrKey: T, options?: ICheckSharedOptions): TInternal | null {
   const { forAtom, label, strict = false } = options || {};
-  const internal = getInternal(sharedState);
+  let internal: TInternal;
+  if (typeof sharedStateOrKey === 'number') {
+    internal = getInternalByKey(sharedStateOrKey);
+  } else {
+    internal = getInternal(sharedStateOrKey);
+  }
+
   let prefix = label ? `[[${label}]] err:` : 'err:';
 
   if (!internal) {
@@ -51,6 +57,6 @@ export function checkShared<T = SharedState>(sharedState: T, options?: ICheckSha
 /**
  * 不抛错误的话，一定返回 internal
  */
-export function checkSharedStrict<T = SharedState>(sharedState: T, options?: ICheckSharedOptionsBase): TInternal {
-  return checkShared(sharedState, { ...(options || {}), strict: true }) as TInternal;
+export function checkSharedStrict<T = SharedState | number>(sharedStateOrKey: T, options?: ICheckSharedOptionsBase): TInternal {
+  return checkShared(sharedStateOrKey, { ...(options || {}), strict: true }) as TInternal;
 }

@@ -11,11 +11,8 @@ let CURRENT_MUTATE_CTX = fakeMutateCtx;
 /**
  * let code below works
  * ```ts
- * const [dict] = useAtom(dictAtom);
- * useWatch(()=>{}, ()=>[dict]);
- *
- * const [state] = useShared(dictShared);
- * useWatch(()=>{}, ()=>[state]);
+ * const [shared] = useAtom(data);
+ * useWatch(()=>{}, ()=>[shared]);
  * ```
  */
 const CURRENT_INS_CTX = new Map<any, InsCtxDef>();

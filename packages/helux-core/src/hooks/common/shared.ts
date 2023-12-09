@@ -9,7 +9,7 @@ import { getInternal } from '../../helpers/state';
 import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
 
 /**
- * 记录一些必要的辅助数据，返回 useAtom useShared 需要的元组数据
+ * 记录一些必要的辅助数据，返回 useAtom 需要的元组数据
  */
 export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
   const { proxyState, internal, renderInfo, canCollect, isReactive } = insCtx;
@@ -27,7 +27,7 @@ export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
     INS_CTX.set(insCtx.rootVal, insCtx);
   }
   if (!forAtom && canCollect) {
-    // 记录一次根值依赖，让未对 useAtom useShared 返回值有任何读操作的组件也响应更新
+    // 记录一次根值依赖，让未对 useAtom 返回值有任何读操作的组件也响应更新
     insCtx.recordDep({ depKey: sharedKeyStr, keyPath: [], sharedKey }, DICT);
   }
 

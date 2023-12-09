@@ -149,8 +149,8 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
   const canRunTask = runAsync && asyncType === TASK && (immediate ?? !options.fn);
   if (task && canRunTask) {
     runFn(curFnKey, { isFirstCall: true, sn: fnCtx.renderInfo.sn + 1 })
-      .then((data: any) => {
-        checkResult(fnCtx, data, forAtom);
+      .then((data: [any, Error | null]) => {
+        checkResult(fnCtx, data[0], forAtom);
       })
       .catch((err: any) => tryAlert(err));
   }

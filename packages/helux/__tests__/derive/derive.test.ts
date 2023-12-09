@@ -1,42 +1,34 @@
 import { describe, expect, test } from 'vitest';
-import { derive, share } from '../helux';
+import { atom, derive } from '../helux';
 
-describe('derive dict', () => {
-  test('derive shallow dict', async () => {
-    const [state, setState] = share({ a: 1, b: 2 });
-    const double = derive(() => ({ num1: state.a * 2, num2: state.b * 2 }));
-    const plus100 = derive(() => ({ num1: double.num1 + 100, num2: double.num2 + 100 }));
-    expect(double.num1).toBe(2);
-    expect(double.num2).toBe(4);
-    expect(plus100.num1).toBe(102);
-    expect(plus100.num2).toBe(104);
+describe('derive atom', () => {
+  test('derive primitive', async () => {
+    const [numAtom, setAtom] = atom(1);
+    const double = derive(() => numAtom.val * 2);
+    const plus100 = derive(() => double.val + 100);
+    expect(double.val).toBe(2);
+    expect(plus100.val).toBe(102);
 
-    setState((draft) => {
-      draft.a = 10;
-      draft.b = 20;
-    });
-    expect(double.num1).toBe(20);
-    expect(double.num2).toBe(40);
-    expect(plus100.num1).toBe(120);
-    expect(plus100.num2).toBe(140);
+    setAtom(10);
+    expect(double.val).toBe(20);
+    expect(plus100.val).toBe(120);
   });
 
-  test('derive deep dict', async () => {
-    const [state, setState] = share({ a: { a1: { a2: 1 }, a11: { a22: 2 } }, b: 2 });
-    const double = derive(() => ({ num1: state.a.a1.a2 * 2, num2: state.b * 2 }));
-    const plus100 = derive(() => ({ num1: double.num1 + 100, num2: double.num2 + 100 }));
-    expect(double.num1).toBe(2);
-    expect(double.num2).toBe(4);
-    expect(plus100.num1).toBe(102);
-    expect(plus100.num2).toBe(104);
+  test('derive dict', async () => {
+    const [dictAtom, setAtom] = atom({ a: 1, b: 2 });
+    const result1 = derive(() => ({ plus100: dictAtom.val.a + 100, plus200: dictAtom.val.a + 200 }));
+    const result2 = derive(() => ({ plus100Double: result1.val.plus100 * 2, plus200Double: result1.val.plus200 * 2 }));
+    expect(result1.val.plus100).toBe(101);
+    expect(result1.val.plus200).toBe(201);
+    expect(result2.val.plus100Double).toBe(202);
+    expect(result2.val.plus200Double).toBe(402);
 
-    setState((draft) => {
-      draft.a.a1.a2 = 10;
-      draft.b = 20;
+    setAtom((draft) => {
+      draft.a = 10;
     });
-    expect(double.num1).toBe(20);
-    expect(double.num2).toBe(40);
-    expect(plus100.num1).toBe(120);
-    expect(plus100.num2).toBe(140);
+    expect(result1.val.plus100).toBe(110);
+    expect(result1.val.plus200).toBe(210);
+    expect(result2.val.plus100Double).toBe(220);
+    expect(result2.val.plus200Double).toBe(420);
   });
 });

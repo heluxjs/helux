@@ -10,11 +10,11 @@ describe('create atom action', () => {
       return draft + payload[0];
     });
 
-    const snap = addAtom([10]);
+    const [snap] = addAtom([10]);
     expect(snap.val).toBe(11);
     expect(numAtom.val).toBe(11);
 
-    const snap2 = addAtom([10]);
+    const [snap2] = addAtom([10]);
     expect(snap2.val).toBe(21);
     expect(numAtom.val).toBe(21);
   });
@@ -26,11 +26,11 @@ describe('create atom action', () => {
       setState((draft) => draft + payload[0]);
     });
 
-    const snap = await addAtom([10]);
+    const [snap] = await addAtom([10]);
     expect(snap.val).toBe(11);
     expect(numAtom.val).toBe(11);
 
-    const snap2 = await addAtom([10]);
+    const [snap2] = await addAtom([10]);
     expect(snap2.val).toBe(21);
     expect(numAtom.val).toBe(21);
   });

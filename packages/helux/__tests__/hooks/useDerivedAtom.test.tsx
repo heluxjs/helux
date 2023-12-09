@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { atom, deriveAtom, useDerivedAtom } from '../helux';
+import { atom, derive as deriveAtom, useDerived as useDerivedAtom } from '../helux';
 import { delay } from '../util';
 
 describe('useDerivedAtom', () => {

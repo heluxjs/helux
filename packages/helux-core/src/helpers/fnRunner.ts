@@ -20,16 +20,28 @@ interface IRnFnOpt {
   desc?: any;
   forceFn?: boolean;
   forceTask?: boolean;
+  throwErr?: boolean;
 }
 
 /**
- * 执行 derive 设置的导出函数
+ * 执行 derive 设置函数
  */
 export function runFn(fnKey: string, options?: IRnFnOpt) {
-  const { isFirstCall = false, forceFn = false, forceTask = false, triggerReasons = [], sn = 0, from, err, internal, desc } = options || {};
+  const {
+    isFirstCall = false,
+    forceFn = false,
+    forceTask = false,
+    throwErr = false,
+    triggerReasons = [],
+    sn = 0,
+    from,
+    err,
+    internal,
+    desc,
+  } = options || {};
   const fnCtx = getFnCtx(fnKey);
   if (!fnCtx) {
-    return;
+    return [null, new Error(`not a valid watch or derive cb for key ${fnKey}`)];
   }
   if (fnCtx.fnType === WATCH) {
     // 来自 mutate 触发的 watch 才探测死循环
@@ -84,7 +96,7 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
   if (shouldRunFn) {
     const result = fn(fnParams);
     updateAndDrillDown({ data: result });
-    return fnCtx.result;
+    return [fnCtx.result, null];
   }
 
   // mark computing for first async task run
@@ -94,11 +106,12 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
   // only works for useDerived
   if (isAsyncTransfer) {
     updateAndDrillDown({ err });
-    return fnCtx.result;
+    return [fnCtx.result, null];
   }
   if (fnCtx.asyncType === MAY_TRANSFER) {
     const result = fn(fnParams);
-    return updateAndDrillDown({ data: result });
+    updateAndDrillDown({ data: result });
+    return [fnCtx.result, null];
   }
   if (task) {
     let del = noopVoid;
@@ -114,7 +127,7 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
       const result = task(fnParams);
       // 检查 result 是否是 Promise 来反推 task 是否是 async 函数
       if (!isPromise(result)) {
-        tryAlert('ERR_NON_FN: derive task arg should be async function!', false);
+        tryAlert('ERR_NON_FN: derive task arg should be async function!', throwErr);
         return null;
       }
       return result;
@@ -123,23 +136,27 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
       .then((data: any) => {
         del();
         updateAndDrillDown({ data });
-        return fnCtx.result;
+        return [fnCtx.result, null];
       })
       .catch((err: any) => {
         // TODO: emit ON_DERIVE_ERROR_OCCURED to plugin
         del();
         updateAndDrillDown({ err }); // 向下传递错误
-        return fnCtx.result;
+        if (throwErr) throw err;
+        return [fnCtx.result, err];
       });
   }
 
-  return fnCtx.result;
+  return [fnCtx.result, null];
 }
 
 /**
  * run redive fn by result
  */
-export function rerunDeriveFn<T = Dict>(result: T, options?: { forceFn?: boolean; forceTask?: boolean }): T {
+export function rerunDeriveFn<T = Dict>(
+  result: T,
+  options?: { forceFn?: boolean; forceTask?: boolean; throwErr?: boolean },
+): [T, Error | null] {
   const fnCtx = getFnCtxByObj(result);
   if (!fnCtx) {
     throw new Error('[Helux]: not a derived result');
@@ -147,12 +164,12 @@ export function rerunDeriveFn<T = Dict>(result: T, options?: { forceFn?: boolean
   return runFn(fnCtx.fnKey, { ...(options || {}) });
 }
 
-export function runDerive<T = Dict>(result: T): T {
-  return rerunDeriveFn(result, { forceFn: true });
+export function runDerive<T = Dict>(result: T, throwErr?: boolean): [T, Error | null] {
+  return rerunDeriveFn(result, { forceFn: true, throwErr });
 }
 
-export function runDeriveAsync<T = Dict>(result: T): Promise<T> {
-  return Promise.resolve(rerunDeriveFn(result, { forceTask: true }));
+export function runDeriveTask<T = Dict>(result: T, throwErr?: boolean): Promise<[T, Error | null]> {
+  return Promise.resolve(rerunDeriveFn(result, { forceTask: true, throwErr }));
 }
 
 export function getDeriveLoading<T = Dict>(result: T) {
