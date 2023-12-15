@@ -1,10 +1,9 @@
 import { canUseDeep } from '@helux/utils';
-import { SHARED_KEY, REACTIVE_META_KEY, FROM, IS_ATOM } from '../../consts';
+import { FROM, IS_ATOM, REACTIVE_META_KEY, SHARED_KEY } from '../../consts';
 import { getSharedKey } from '../../helpers/state';
-import { getReactiveKey } from '../common/key';
 import type { Dict, From, OnOperate } from '../../types/base';
-import type { IReactiveMeta } from '../../types/inner';
-import type { IReactive } from '../../types/inner';
+import type { IReactive, IReactiveMeta } from '../../types/inner';
+import { getReactiveKey } from '../common/key';
 import type { TInternal } from './buildInternal';
 import { REACTIVE_DESC, REACTIVE_META } from './current';
 
@@ -123,11 +122,7 @@ function getReactiveVal(internal: TInternal, forAtom: boolean) {
 /**
  * 创建全局使用的响应式共享对象
  */
-export function buildReactive(
-  internal: TInternal,
-  fnDepKeys: string[],
-  options?: { desc?: string, onRead?: OnOperate, from?: From }
-) {
+export function buildReactive(internal: TInternal, fnDepKeys: string[], options?: { desc?: string; onRead?: OnOperate; from?: From }) {
   // 提供 draftRoot、draft，和 mutate、aciont 回调里对齐，方便用户使用 atom 时少一层 .val 操作
   let draftRoot: any = {};
   let draft: any = {};
@@ -172,9 +167,9 @@ export function buildReactive(
       draft = isPrimitive
         ? rawState.val
         : new Proxy(rawState.val, {
-          set: (t: any, key: any, value: any) => set(true, key, value),
-          get: (t: any, key: any) => get(true, key, subInnerData),
-        });
+            set: (t: any, key: any, value: any) => set(true, key, value),
+            get: (t: any, key: any) => get(true, key, subInnerData),
+          });
     }
   } else {
     // 非 Proxy 环境暂不支持 reactive

@@ -1,4 +1,4 @@
-import type { Dict, IMutateCtx, IInnerSetStateOptions } from '../../types/base';
+import type { Dict, IInnerSetStateOptions, IMutateCtx } from '../../types/base';
 import type { TInternal } from './buildInternal';
 import { execDepFns } from './notify';
 

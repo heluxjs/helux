@@ -1,10 +1,10 @@
 import { enureReturnArr, isFn } from '@helux/utils';
+import { checkSharedStrict } from '../factory/common/check';
+import type { TInternal } from '../factory/creator/buildInternal';
+import { DEPS_CB } from '../factory/creator/current';
+import { updateIns } from '../factory/creator/notify';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { Dict } from '../types/base';
-import { checkSharedStrict } from '../factory/common/check';
-import { DEPS_CB } from '../factory/creator/current';
-import type { TInternal } from '../factory/creator/buildInternal';
-import { updateIns } from '../factory/creator/notify';
 
 function getDepKeyDict<T = any>(internal: TInternal, deps?: (sharedState: T) => any[], defaultDict?: any) {
   if (deps === null) {
@@ -18,12 +18,12 @@ function getDepKeyDict<T = any>(internal: TInternal, deps?: (sharedState: T) => 
   const rootVal = forAtom ? sharedState.val : sharedState;
 
   const depKeyDict: Dict = {};
-  DEPS_CB.set((keys: string[]) => depKeyDict[keys[0]] = 1);
+  DEPS_CB.set((keys: string[]) => (depKeyDict[keys[0]] = 1));
   const depItems = enureReturnArr(deps, rootVal);
   DEPS_CB.del();
   // 返回了自身则表示更新所有实例
   if (depItems.includes(rootVal)) {
-    return internal.key2InsKeys
+    return internal.key2InsKeys;
   }
 
   return depKeyDict;
@@ -32,11 +32,7 @@ function getDepKeyDict<T = any>(internal: TInternal, deps?: (sharedState: T) => 
 /**
  * 慎用此功能，会造成使用了某个共享状态的所以实例被强制更新
  */
-export function useAtomForceUpdate<T = any>(
-  apiCtx: CoreApiCtx,
-  sharedState: T,
-  presetDeps?: (sharedState: T) => any[],
-) {
+export function useAtomForceUpdate<T = any>(apiCtx: CoreApiCtx, sharedState: T, presetDeps?: (sharedState: T) => any[]) {
   const internal = checkSharedStrict(sharedState);
   const [presetDepKeyDict] = apiCtx.react.useState(() => {
     return getDepKeyDict(internal, presetDeps, null);
@@ -54,7 +50,7 @@ export function useAtomForceUpdate<T = any>(
     // 查找到绑定了依赖关系的各个实例，用字典去重
     Object.keys(depKeyDict).forEach((depKey) => {
       const insKeys = key2InsKeys[depKey] || [];
-      insKeys.forEach(insKey => insKeyDict[insKey] = 1);
+      insKeys.forEach((insKey) => (insKeyDict[insKey] = 1));
     });
 
     const insKeys = Object.keys(insKeyDict);

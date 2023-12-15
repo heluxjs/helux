@@ -4,11 +4,11 @@ import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, NOT_MOUNT, OTHER, RENDER_END, RENDER_
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
-import { callOnRead, isArrLike, isArrLikeVal, isDict, newOpParams, getDepKeyByPath } from '../factory/common/util';
+import { callOnRead, getDepKeyByPath, isArrLike, isArrLikeVal, isDict, newOpParams } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
-import { handleHeluxKey, handleCustomKey } from '../factory/creator/buildShared';
-import { buildReactive, nextTickFlush } from '../factory/creator/reactive';
+import { handleCustomKey, handleHeluxKey } from '../factory/creator/buildShared';
 import { mapGlobalId } from '../factory/creator/globalId';
+import { buildReactive, nextTickFlush } from '../factory/creator/reactive';
 import type { Dict, Ext, IFnCtx, IInnerUseSharedOptions, OnOperate } from '../types/base';
 import type { DepKeyInfo } from '../types/inner';
 import * as fnDep from './fnDep';

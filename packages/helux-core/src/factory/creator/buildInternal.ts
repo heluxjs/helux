@@ -3,12 +3,12 @@ import type {
   Dict,
   Ext,
   IInsCtx,
-  SetStateFactory,
   InnerSetState,
   IRuleConf,
   KeyInsKeysDict,
   NumStrSymbol,
   SetState,
+  SetStateFactory,
   SharedState,
 } from '../../types/base';
 import type { Level1ArrKeys } from '../../types/inner';

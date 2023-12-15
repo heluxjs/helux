@@ -1,16 +1,16 @@
 import { getVal, matchDictKey, nodupPush } from '@helux/utils';
 import { IOperateParams } from 'limu';
+import { FROM } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
-import type { KeyIdsDict, NumStrSymbol, IMutateCtx } from '../../types/base';
-import { FROM } from '../../consts';
+import type { IMutateCtx, KeyIdsDict, NumStrSymbol } from '../../types/base';
 import { recordLastest } from '../common/blockScope';
 import { getRunningFn } from '../common/fnScope';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, isArrLike } from '../common/util';
 import type { TInternal } from './buildInternal';
-import { nextTickFlush, markExpired } from './reactive';
-import { REACTIVE_META, REACTIVE_DESC } from './current';
+import { REACTIVE_META } from './current';
+import { markExpired, nextTickFlush } from './reactive';
 
 const { MUTATE } = FROM;
 

@@ -3,12 +3,12 @@ import type { ICreateOptions } from '../../types/base';
 import { markFnExpired } from '../common/fnScope';
 import { clearInternal } from '../common/internal';
 import { emitShareCreated } from '../common/plugin';
-import { buildReactive } from './reactive';
 import { buildSharedState } from './buildShared';
 import { clearDcLog } from './deadCycle';
 import { mapSharedToInternal } from './mapShared';
 import { watchAndCallMutateDict } from './mutateFn';
 import { IInnerOptions, parseOptions } from './parse';
+import { buildReactive } from './reactive';
 export { prepareDeepMutate } from './mutateDeep';
 export { prepareDowngradeMutate as prepareNormalMutate } from './mutateDowngrade';
 

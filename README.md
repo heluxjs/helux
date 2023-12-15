@@ -2,9 +2,10 @@
 
 # helux 简介
 
-[helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`、`派生`、`观察`为一体，支持细粒度响应式更新的 react 状态库，支持所有类react框架（包括react 18）
+[helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`、`派生`、`观察`为一体，支持细粒度响应式更新的 react 状态库，支持所有类 react 框架（包括 react 18）
 
 特性简介：
+
 - 基于最快的不可变 js 库[limu](https://github.com/tnfe/limu)开发，拥有超强性能
 - atom 支持依赖收集，意味着 atom 不用拆分的很细，atom 就可以等同于 model，天然对 `DDD` 领域驱动设计友好
 - 内置 signal 响应机制，可实现 0 hook 编码 + dom 粒度的更新

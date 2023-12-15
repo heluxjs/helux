@@ -1,16 +1,16 @@
 import { enureReturnArr, isPromise, noop, tryAlert } from '@helux/utils';
-import { EVENT_NAME, SCOPE_TYPE, FROM } from '../../consts';
-import { emitPluginEvent } from '../../factory/common/plugin';
+import { EVENT_NAME, FROM, SCOPE_TYPE } from '../../consts';
 import { getRunningFn } from '../../factory/common/fnScope';
-import { buildReactive, innerFlush } from './reactive';
+import { emitPluginEvent } from '../../factory/common/plugin';
+import { FN_DEP_KEYS, REACTIVE_META } from '../../factory/creator/current';
 import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';
 import { getStatusKey, setLoadStatus } from '../../factory/creator/loading';
-import { REACTIVE_META, FN_DEP_KEYS } from '../../factory/creator/current';
+import { markFnEnd } from '../../helpers/fnCtx';
 import { markIgnore } from '../../helpers/fnDep';
 import { getInternal } from '../../helpers/state';
-import { markFnEnd } from '../../helpers/fnCtx';
 import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types/base';
 import { createWatchLogic } from '../createWatch';
+import { buildReactive, innerFlush } from './reactive';
 
 interface ICallMutateBase {
   desc?: string;
@@ -33,7 +33,7 @@ interface ICallAsyncMutateFnOpt extends ICallMutateBase {
   depKeys: string[];
   task: Fn;
   /** task 函数调用入参拼装，暂不像同步函数逻辑那样提供 draft 给用户直接操作，用户必须使用 setState 修改状态 */
-  getArgs?: (param: { flush: any, draft: any; draftRoot: any; desc: string; setState: Fn; input: any[] }) => any[];
+  getArgs?: (param: { flush: any; draft: any; draftRoot: any; desc: string; setState: Fn; input: any[] }) => any[];
 }
 
 const fnProm = new Map<any, boolean>();
@@ -142,7 +142,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
 
   try {
     const result = fn(...args);
-    finish(result, innerSetOptions)
+    finish(result, innerSetOptions);
     return [internal.snap, null];
   } catch (err: any) {
     // TODO 同步函数错误发送给插件

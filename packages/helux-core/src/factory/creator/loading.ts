@@ -9,8 +9,8 @@ import type { Dict, Fn, From, IRenderInfo, LoadingState, LoadingStatus } from '.
 import { checkSharedStrict } from '../common/check';
 import { isDict } from '../common/util';
 import { getRootCtx } from '../root';
-import { getGlobalEmpty } from './globalId';
 import type { TInternal } from './buildInternal';
+import { getGlobalEmpty } from './globalId';
 
 const { MUTATE, LOADING } = FROM;
 const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
@@ -75,9 +75,12 @@ export function getStatusKey(from: string, desc: string) {
 export function setLoadStatus(internal: TInternal, statusKey: string, status: LoadingStatus) {
   if (!statusKey) return;
   const { loadingInternal } = internal;
-  loadingInternal.innerSetState((draft: any) => {
-    draft[statusKey] = status;
-  }, { from: LOADING });
+  loadingInternal.innerSetState(
+    (draft: any) => {
+      draft[statusKey] = status;
+    },
+    { from: LOADING },
+  );
   if (status.err) {
     emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err: status.err });
     console.error(status.err);

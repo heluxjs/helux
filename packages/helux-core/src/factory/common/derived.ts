@@ -1,5 +1,5 @@
-import { limuUtils } from 'limu';
 import { dedupList, enureReturnArr, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '@helux/utils';
+import { limuUtils } from 'limu';
 import { ASYNC_TYPE, DERIVE, IS_DERIVED_ATOM, SCOPE_TYPE } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { markFnEnd, markFnStart, registerFn, shouldShowComputing } from '../../helpers/fnCtx';

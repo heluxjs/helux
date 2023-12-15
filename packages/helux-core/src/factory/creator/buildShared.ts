@@ -1,14 +1,14 @@
-import { canUseDeep, prefixValKey, warn } from '@helux/utils';
+import { canUseDeep, warn } from '@helux/utils';
 import type { IOperateParams } from 'limu';
 import { immut } from 'limu';
-import { IS_ATOM, KEY_SPLITER, SHARED_KEY, OP_KEYS } from '../../consts';
+import { IS_ATOM, OP_KEYS, SHARED_KEY } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import { createOb } from '../../helpers/obj';
 import { mapSharedState } from '../../helpers/state';
 import type { Dict } from '../../types/base';
 import { recordLastest } from '../common/blockScope';
-import { callOnRead, newOpParams, isDict, getDepKeyByPath } from '../common/util';
+import { callOnRead, getDepKeyByPath, isDict, newOpParams } from '../common/util';
 import type { ParsedOptions } from './parse';
 
 function cannotSet() {
@@ -64,39 +64,42 @@ export function buildSharedState(options: ParsedOptions) {
     });
   } else {
     // TODO 这段逻辑迁移到 helux-mini
-    const toShallowProxy = (obj: any, keyLevel: number, parentKeyPath: string[]): any => createOb(obj, {
-      set: cannotSet,
-      get: (target: Dict, key: any) => {
-        const value = target[key];
-        if (OP_KEYS.includes(key)) {
-          return handleHeluxKey(keyLevel === 1, forAtom, sharedKey, key, value);
-        }
-        const opParams = newOpParams(key, value, { isChanged: false, parentKeyPath });
-        // 为 {} 字典的 atom.val 再包一层监听
-        if (keyLevel < stopDepth && isDict(value)) {
-          return toShallowProxy(value, keyLevel + 1, opParams.fullKeyPath);
-        }
+    const toShallowProxy = (obj: any, keyLevel: number, parentKeyPath: string[]): any =>
+      createOb(obj, {
+        set: cannotSet,
+        get: (target: Dict, key: any) => {
+          const value = target[key];
+          if (OP_KEYS.includes(key)) {
+            return handleHeluxKey(keyLevel === 1, forAtom, sharedKey, key, value);
+          }
+          const opParams = newOpParams(key, value, { isChanged: false, parentKeyPath });
+          // 为 {} 字典的 atom.val 再包一层监听
+          if (keyLevel < stopDepth && isDict(value)) {
+            return toShallowProxy(value, keyLevel + 1, opParams.fullKeyPath);
+          }
 
-        const rawVal = callOnRead(opParams, onRead);
-        collectDep(opParams.fullKeyPath, rawVal);
-        return rawVal;
-      },
-    });
+          const rawVal = callOnRead(opParams, onRead);
+          collectDep(opParams.fullKeyPath, rawVal);
+          return rawVal;
+        },
+      });
 
     sharedRoot = toShallowProxy(rawState, 1, []);
   }
 
   let sharedState = sharedRoot;
   if (forAtom) {
-    sharedState = isPrimitive ? rawState.val : new Proxy(rawState, {
-      set: cannotSet,
-      get: (t: any, k: any) => {
-        // TODO FIXME 修复 k 传递 val 的问题
-        // 从 sharedRoot 去获取
-        const v = sharedRoot.val[k];
-        return v;
-      },
-    });
+    sharedState = isPrimitive
+      ? rawState.val
+      : new Proxy(rawState, {
+          set: cannotSet,
+          get: (t: any, k: any) => {
+            // TODO FIXME 修复 k 传递 val 的问题
+            // 从 sharedRoot 去获取
+            const v = sharedRoot.val[k];
+            return v;
+          },
+        });
   }
 
   mapSharedState(sharedKey, sharedRoot);

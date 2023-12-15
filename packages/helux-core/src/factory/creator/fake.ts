@@ -1,7 +1,7 @@
 import { noop } from '@helux/utils';
 import { FROM } from '../../consts';
-import type { IReactiveMeta } from '../../types/inner';
 import type { MutateFnStdItem } from '../../types/base';
+import type { IReactiveMeta } from '../../types/inner';
 import { newMutateCtx } from '../common/util';
 import { buildInternal } from './buildInternal';
 
@@ -26,6 +26,6 @@ export const fakeMutateFnItem: MutateFnStdItem = {
   depKeys: [],
   oriDesc: '',
   desc: '',
-}
+};
 
 export const fakeInternal = buildInternal({ rawState: {}, forAtom: false, usefulName: '' } as any, {} as any);

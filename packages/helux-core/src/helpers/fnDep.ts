@@ -1,10 +1,10 @@
-import { nodupPush, safeMapGet, noop } from '@helux/utils';
+import { nodupPush, noop, safeMapGet } from '@helux/utils';
 import { EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
 import { delFnDepData, getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
-import { DEPS_CB } from '../factory/creator/current';
 import { hasChangedNode } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
+import { DEPS_CB } from '../factory/creator/current';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
 

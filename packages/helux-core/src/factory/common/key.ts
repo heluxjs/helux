@@ -49,6 +49,6 @@ export function genFnKey(keyType: ScopeType | 'Mutate' | 'Reactive') {
   return `${prefix}${keySeed}`;
 }
 
-export function getReactiveKey(){
+export function getReactiveKey() {
   return genFnKey('Reactive');
 }

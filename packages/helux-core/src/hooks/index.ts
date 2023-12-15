@@ -1,9 +1,9 @@
 export { useAtom } from './useAtom';
 export { useAtomForceUpdate } from './useAtomForceUpdate';
 export { useDerived } from './useDerived';
-export { useLocalForceUpdate } from './useLocalForceUpdate';
 export { useGlobalId } from './useGlobalId';
-export { getMutateLoading, useMutateLoading, getActionLoading, useActionLoading } from './useLoading';
+export { getActionLoading, getMutateLoading, useActionLoading, useMutateLoading } from './useLoading';
+export { useLocalForceUpdate } from './useLocalForceUpdate';
 export { useMutable } from './useMutable';
 export { useOnEvent } from './useOnEvent';
 export { useReactive } from './useReactive';

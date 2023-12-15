@@ -1,7 +1,7 @@
 import { noop } from '@helux/utils';
 import { FROM, STATE_TYPE } from '../consts';
 import { runDerive, runDeriveTask } from '../helpers/fnRunner';
-import { useAtom, useDerived, useReactive, useMutable, useAtomForceUpdate, useLocalForceUpdate } from '../hooks';
+import { useAtom, useAtomForceUpdate, useDerived, useLocalForceUpdate, useMutable, useReactive } from '../hooks';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { Dict, Fn, IAtomCtx, ICreateOptions, IRunMutateOptions, ISharedCtx } from '../types/base';
 import { action } from './createAction';
@@ -9,11 +9,11 @@ import { derive } from './createDerived';
 import { mutate, mutateDict, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';
 import type { TInternal } from './creator/buildInternal';
-import { flush, reactiveDesc } from './creator/reactive';
 import { setAtomVal } from './creator/current';
 import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
 import { getLoadingInfo, initGlobalLoading, initLoadingCtx } from './creator/loading';
 import type { IInnerOptions } from './creator/parse';
+import { flush, reactiveDesc } from './creator/reactive';
 
 const { USER_STATE } = STATE_TYPE;
 const { MUTATE, ACTION } = FROM;
@@ -44,7 +44,7 @@ function defineActions(
   };
 }
 
-function defineMutate(options: { state: any, ldMutate: Dict; mutateFnDict: Dict }) {
+function defineMutate(options: { state: any; ldMutate: Dict; mutateFnDict: Dict }) {
   const { state, ldMutate, mutateFnDict } = options;
   const witnessDict = mutateDict(state)(mutateFnDict);
   return {
@@ -98,10 +98,11 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const common = { createFn, internal, apiCtx };
 
   return {
-    state, // 指向 root 
+    state, // 指向 root
     stateVal, // atom 的话 stateVal 是拆箱后的值，share 对象的话，stateVal 指向 root 自身
     setState,
-    defineActions: (throwErr?: boolean) => (actionDict: Dict) => defineActions({ ...common, ldAction, actionCreator, actionDict }, throwErr),
+    defineActions: (throwErr?: boolean) => (actionDict: Dict) =>
+      defineActions({ ...common, ldAction, actionCreator, actionDict }, throwErr),
     defineMutateDerive: (inital: Dict, mutateFnDict: Dict) => defineMutateDerive({ ...common, ldMutate, inital, mutateFnDict }),
     defineMutateSelf: (mutateFnDict: Dict) => defineMutate({ ldMutate, state, mutateFnDict }),
     defineFullDerive: (throwErr?: boolean) => (deriveFnDict: Dict) => defineFullDerive({ apiCtx, deriveFnDict, throwErr }),
@@ -133,7 +134,6 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     isAtom: forAtom,
   };
 }
-
 
 /** expose share ctx as tuple */
 export function share<T = Dict, O extends ICreateOptions<T> = ICreateOptions<T>>(apiCtx: CoreApiCtx, rawState: T | (() => T), options?: O) {

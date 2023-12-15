@@ -1,7 +1,7 @@
 import { isJsObj, isObj } from '@helux/utils';
 import { createDraft, finishDraft, IOperateParams, limuUtils } from 'limu';
-import type { Dict, Ext, ISetFactoryOpts, IInnerSetStateOptions, IMutateCtx } from '../../types/base';
 import { OP_KEYS } from '../../consts';
+import type { Dict, Ext, IInnerSetStateOptions, IMutateCtx, ISetFactoryOpts } from '../../types/base';
 import { genRenderSN } from '../common/key';
 import { runMiddlewares } from '../common/middleware';
 import { emitDataChanged } from '../common/plugin';
@@ -88,7 +88,13 @@ export function beforeCommit(opts: ICommitOpts, innerSetOptions: IInnerSetStateO
   return opts as ISnCommitOpts; // 已确保打上 sn 标记
 }
 
-export function execFinish(commitOpts: ICommitOpts, draftRoot: any, draftNode: any, partial?: Dict, innerSetOptions: IInnerSetStateOptions = {}) {
+export function execFinish(
+  commitOpts: ICommitOpts,
+  draftRoot: any,
+  draftNode: any,
+  partial?: Dict,
+  innerSetOptions: IInnerSetStateOptions = {},
+) {
   const { mutateCtx, internal } = commitOpts;
   const { writeKeys, writeKeyPathInfo } = mutateCtx;
   const { forAtom, isPrimitive } = internal;

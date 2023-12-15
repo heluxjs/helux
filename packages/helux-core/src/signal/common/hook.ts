@@ -6,11 +6,7 @@ import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Fn, IBlockCtx, LoadingStatus } from '../../types/base';
 
 export function useStateDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn) {
-  useWatchSimpleLogic(
-    apiCtx,
-    forceUpdate,
-    { manualDepKeys: blockCtx.depKeys },
-  );
+  useWatchSimpleLogic(apiCtx, forceUpdate, { manualDepKeys: blockCtx.depKeys });
 }
 
 export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn) {

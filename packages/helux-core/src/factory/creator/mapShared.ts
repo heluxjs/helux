@@ -1,13 +1,13 @@
 import { canUseDeep } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
-import type { IInnerSetStateOptions, SetStateFactory, SetState, InnerSetState, SharedState } from '../../types/base';
+import type { IInnerSetStateOptions, InnerSetState, SetState, SetStateFactory, SharedState } from '../../types/base';
 import { runPartialCb } from '../common/util';
 import { buildInternal } from './buildInternal';
-import { flush } from './reactive';
+import { REACTIVE_DESC } from './current';
 import { prepareDeepMutate } from './mutateDeep';
 import { prepareDowngradeMutate } from './mutateDowngrade';
-import { REACTIVE_DESC } from './current';
 import { ParsedOptions, parseRules, pureSetOptions } from './parse';
+import { flush } from './reactive';
 import { createSyncerBuilder, createSyncFnBuilder } from './sync';
 
 export function mapSharedToInternal(sharedState: SharedState, options: ParsedOptions) {

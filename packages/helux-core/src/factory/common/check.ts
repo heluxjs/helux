@@ -1,6 +1,6 @@
 import { tryAlert } from '@helux/utils';
-import { getInternal, getInternalByKey } from '../../helpers/state';
 import { REACTIVE_META_KEY } from '../../consts';
+import { getInternal, getInternalByKey } from '../../helpers/state';
 import type { SharedState } from '../../types/base';
 import type { IReactiveMeta } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';

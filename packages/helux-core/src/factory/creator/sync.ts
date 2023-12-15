@@ -1,7 +1,7 @@
 import { isJsObj, setVal } from '@helux/utils';
+import { FROM } from '../../consts';
 import { createOneLevelOb } from '../../helpers/obj';
 import type { Dict, Fn, InnerSetState } from '../../types/base';
-import { FROM } from '../../consts';
 import { createImmut, getDepKeyByPath } from '../common/util';
 import type { TInternal } from './buildInternal';
 import { DRAFT_ROOT, MUTATE_CTX } from './current';
@@ -33,15 +33,18 @@ function createTargetWrap(rawState: Dict) {
 function createSyncFn(innerSetState: InnerSetState, path: string[], before?: Fn) {
   const syncFn = (evOrVal: any) => {
     let val = getEventVal(evOrVal);
-    innerSetState((draft: any) => {
-      // 使用 draftRoot 做赋值，透传拆箱后的 draft 给用户（ 如果是 atom ）
-      const draftRoot = DRAFT_ROOT.current();
-      setVal(draftRoot, path, val);
-      // 刻意再次标记为 true，让 before 返回的结果生效（如用户未修改 draftRoot的话）
-      MUTATE_CTX.current().handleAtomCbReturn = true;
-      // 用户设置了想修改其他数据或自身数据的函数
-      return before?.(val, draft);
-    }, { from: FROM.SYNC, calledBy: 'sync' });
+    innerSetState(
+      (draft: any) => {
+        // 使用 draftRoot 做赋值，透传拆箱后的 draft 给用户（ 如果是 atom ）
+        const draftRoot = DRAFT_ROOT.current();
+        setVal(draftRoot, path, val);
+        // 刻意再次标记为 true，让 before 返回的结果生效（如用户未修改 draftRoot的话）
+        MUTATE_CTX.current().handleAtomCbReturn = true;
+        // 用户设置了想修改其他数据或自身数据的函数
+        return before?.(val, draft);
+      },
+      { from: FROM.SYNC, calledBy: 'sync' },
+    );
   };
   return syncFn;
 }

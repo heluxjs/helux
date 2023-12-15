@@ -1,11 +1,11 @@
 import type { FunctionComponent } from '@helux/types';
 import { getVal } from '@helux/utils';
+import { DICT } from '../../consts';
 import { getDepKeyByPath } from '../../factory/common/util';
 import { useAtomSimpleLogic } from '../../hooks/common/useAtomLogic';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { DerivedAtom, Dict, Fn } from '../../types/base';
-import { DICT } from '../../consts';
 
 export const alwaysEqual = () => true;
 const noopVal = (val: any) => val;
@@ -42,12 +42,15 @@ export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalComp): Fu
         const paths = getAllPath(keyPath);
         // 基于不对称记录机制，这里需要把走过的父路径都记录一遍
         paths.forEach((keyPath) => {
-          insCtx.recordDep({
-            sharedKey,
-            depKey: getDepKeyByPath(keyPath, sharedKey),
-            keyPath,
-            parentKeyPath: keyPath.slice(0, keyPath.length - 1),
-          }, DICT); // 默认父节点都是 Dict，让 recordDep 内部逻辑按最长读取路径来记录
+          insCtx.recordDep(
+            {
+              sharedKey,
+              depKey: getDepKeyByPath(keyPath, sharedKey),
+              keyPath,
+              parentKeyPath: keyPath.slice(0, keyPath.length - 1),
+            },
+            DICT,
+          ); // 默认父节点都是 Dict，让 recordDep 内部逻辑按最长读取路径来记录
         });
       } else {
         insCtx.recordDep({ sharedKey, depKey, keyPath });

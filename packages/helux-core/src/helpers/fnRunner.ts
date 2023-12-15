@@ -1,11 +1,11 @@
 import { enureReturnArr, isPromise, noopVoid, tryAlert } from '@helux/utils';
-import { ASYNC_TYPE, WATCH, FROM } from '../consts';
+import { ASYNC_TYPE, FROM, WATCH } from '../consts';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
 import type { TInternal } from '../factory/creator/buildInternal';
-import { probeFnDeadCycle, probeDepKeyDeadCycle } from '../factory/creator/deadCycle';
 import { REACTIVE_META } from '../factory/creator/current';
+import { probeDepKeyDeadCycle, probeFnDeadCycle } from '../factory/creator/deadCycle';
 import { fakeInternal } from '../factory/creator/fake';
-import type { Dict, From, IDeriveFnParams, TriggerReason, IFnCtx } from '../types/base';
+import type { Dict, From, IDeriveFnParams, IFnCtx, TriggerReason } from '../types/base';
 import { shouldShowComputing } from './fnCtx';
 import { markComputing } from './fnStatus';
 
@@ -78,15 +78,7 @@ function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
  * 执行 derive 设置函数
  */
 export function runFn(fnKey: string, options: IRnFnOpt = {}) {
-  const {
-    isFirstCall = false,
-    forceFn = false,
-    forceTask = false,
-    throwErr = false,
-    triggerReasons = [],
-    sn = 0,
-    err,
-  } = options;
+  const { isFirstCall = false, forceFn = false, forceTask = false, throwErr = false, triggerReasons = [], sn = 0, err } = options;
   const fnCtx = getFnCtx(fnKey);
   if (!fnCtx) {
     return [null, new Error(`not a valid watch or derive cb for key ${fnKey}`)];

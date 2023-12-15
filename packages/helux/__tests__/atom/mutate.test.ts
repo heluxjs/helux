@@ -1,5 +1,5 @@
-import '@testing-library/jest-dom';
 import type { IPlugin } from '@helux/core';
+import '@testing-library/jest-dom';
 import { describe, expect, test } from 'vitest';
 import { addPlugin, atom, currentDraftRoot, runMutate, setAtomVal } from '../helux';
 
@@ -222,7 +222,7 @@ describe('create atom mutate', () => {
   });
 
   test('multi mutate, watch self state with dead cycle', async () => {
-    window.alert = () => { };
+    window.alert = () => {};
     let err: any = null;
     const errPlugin: IPlugin = {
       install(pluginCtx) {
@@ -255,7 +255,7 @@ describe('create atom mutate', () => {
   });
 
   test('multi mutate, watch self draft with dead cycle', async () => {
-    window.alert = () => { };
+    window.alert = () => {};
     let err: any = null;
     const errPlugin: IPlugin = {
       install(pluginCtx) {

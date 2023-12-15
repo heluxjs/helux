@@ -1,10 +1,10 @@
 /**
  * 本模块用于辅助处理 mutate 函数可能遇到的死循环问题
  */
-import { nodupPush, safeMapGet, tryAlert, includeOne, noop } from '@helux/utils';
+import { includeOne, nodupPush, noop, safeMapGet, tryAlert } from '@helux/utils';
+import { fmtDepKeys } from '../../helpers/debug';
 import type { IFnCtx } from '../../types/base';
 import { TInternal } from './buildInternal';
-import { fmtDepKeys } from '../../helpers/debug';
 
 type Log = { sn: number; descs: string[]; timer: any; errs: any[]; cycle: string[] };
 const logMap = new Map<string, Log>();
@@ -16,7 +16,7 @@ const cbTips = {
   [cbTypes.WATCH]: 'watch',
   [cbTypes.MUTATE]: 'mutate fn or task',
 };
-type CbType = typeof cbTypes[keyof typeof cbTypes];
+type CbType = (typeof cbTypes)[keyof typeof cbTypes];
 
 function newLog(sn = 0): Log {
   return { sn, descs: [], errs: [], timer: null, cycle: [] };
@@ -41,9 +41,10 @@ export function depKeyDcError(internal: TInternal, fnCtx: IFnCtx, depKeys: strin
   const tip = cbTips[cbType];
   const { desc, task, fn } = fnCtx.subFnInfo;
   const descStr = desc ? `(${desc})` : '';
-  const dcInfo = `DEAD_CYCLE: found reactive object in ${tip}${descStr} cb`
+  const dcInfo =
+    `DEAD_CYCLE: found reactive object in ${tip}${descStr} cb`
     + ` is changing module(${internal.usefulName})'s keys(${fmtDepKeys(depKeys, false, '.')}) by its self, `
-    + 'but some of these keys are also the watched dep keys, it will cause a infinity loop call!'
+    + 'but some of these keys are also the watched dep keys, it will cause a infinity loop call!';
 
   const mutateFn = task || fn;
   const targetFn = mutateFn === noop ? fnCtx.fn : mutateFn;
@@ -80,7 +81,7 @@ export function probeFnDeadCycle(internal: TInternal, sn: number, desc: string) 
 }
 
 /**
- * 发现类似 
+ * 发现类似
  * 1 watch(()=>{ reactive.a = 1 }, ()=>[reactive.a])
  * 2 matate(draft=>draft+=1)
  * 等场景的死循环
@@ -97,7 +98,11 @@ export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changed
   const foundDc = includeOne(shortArr, longArr);
   if (foundDc) {
     const cbType: CbType = subFnInfo.desc ? cbTypes.MUTATE : cbTypes.WATCH;
-    tryAlert(depKeyDcError(internal, fnCtx, changedDepKeys, cbType), { logErr: false, throwErr: false, alertErr: internal.alertDeadCycleErr });
+    tryAlert(depKeyDcError(internal, fnCtx, changedDepKeys, cbType), {
+      logErr: false,
+      throwErr: false,
+      alertErr: internal.alertDeadCycleErr,
+    });
   }
   return foundDc;
 }

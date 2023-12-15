@@ -1,8 +1,8 @@
 import { getVal, isDebug, isFn, isMap, isObj, isProxyAvailable, noop, prefixValKey } from '@helux/utils';
 import { immut, IOperateParams, limuUtils } from 'limu';
-import { ARR, KEY_SPLITER, MAP, STATE_TYPE, FROM } from '../../consts';
+import { ARR, FROM, KEY_SPLITER, MAP, STATE_TYPE } from '../../consts';
 import { createOb } from '../../helpers/obj';
-import type { IMutateCtx, Dict, IInnerSetStateOptions } from '../../types/base';
+import type { Dict, IInnerSetStateOptions, IMutateCtx } from '../../types/base';
 import { DepKeyInfo } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';
 
@@ -53,7 +53,7 @@ export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
 export function newOpParams(
   key: string,
   value: any,
-  options: { isChanged?: boolean, parentKeyPath: string[], op?: any, parentType?: any }
+  options: { isChanged?: boolean; parentKeyPath: string[]; op?: any; parentType?: any },
 ): IOperateParams {
   const { isChanged = true, parentKeyPath = [], op = 'set', parentType = 'Object' } = options;
   const fullKeyPath = parentKeyPath.slice();

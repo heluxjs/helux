@@ -139,10 +139,7 @@ export function sharex<T = PlainObject, O extends ICreateOptions<T> = ICreateOpt
 /**
  * 效果完全等同 atom，唯一的区别是 share 返回元组 [state,setState,call] atom 返回 ctx 自身
  */
-export function atomx<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
-  rawState: T | (() => T),
-  createOptions?: O,
-): IAtomCtx<T>;
+export function atomx<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(rawState: T | (() => T), createOptions?: O): IAtomCtx<T>;
 
 /**
  * 定义全量派生结果，支持同步和异步，支持返回 pritimive 类型，如果确定返回 dict 数据，可优先考虑使用 deriveDict 接口，
