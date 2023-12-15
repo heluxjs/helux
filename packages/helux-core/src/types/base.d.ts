@@ -535,7 +535,7 @@ export interface ICreateOptionsFull<T = SharedState> {
   rules: IDataRule<T>[];
   /**
    * default: fasle，是否允许对草稿对象读值时收集依赖，
-   * 默认不允许，否则 mutate 回调里使用类似 draft.a +=1 时很容易造成死循环，
+   * 默认不允许，否则 mutate 回调里使用类似 draft.a +=1 时就造成死循环，
    * 此参数偏向于面向库开发者来使用
    */
   enableDraftDep: boolean;
