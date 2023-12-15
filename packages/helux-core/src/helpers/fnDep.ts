@@ -1,15 +1,18 @@
-import { nodupPush, safeMapGet } from '@helux/utils';
+import { nodupPush, safeMapGet, noop } from '@helux/utils';
 import { EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
 import { delFnDepData, getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
+import { DEPS_CB } from '../factory/creator/current';
 import { hasChangedNode } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
 
+// TODO DEL
 export function markTaskRunning() {
   const fnScope = getFnScope();
-  fnScope.isTaskRunning = true;
+  // fnScope.isTaskRunning = true;
+  noop(fnScope);
 }
 
 export function markIgnore(isIgnore = true) {
@@ -21,9 +24,11 @@ export function markIgnore(isIgnore = true) {
  * 自动记录当前正在运行的函数对 depKey 的依赖，以及 depKey 对应的函数记录
  */
 export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx }) {
-  const { fnCtx: runningFnCtx, depKeys, isTaskRunning, isIgnore, runningSharedKey } = getRunningFn();
+  const { fnCtx: runningFnCtx, depKeys, isIgnore, runningSharedKey } = getRunningFn();
   const fnCtx: IFnCtx | null | undefined = options.specificCtx || runningFnCtx;
   if (!fnCtx) {
+    // 来自 useAtomForceUpdate 的 deps 收集
+    DEPS_CB.current()(inputDepKeys);
     return;
   }
   const { DEPKEY_FNKEYS_MAP } = getFnScope();
@@ -46,7 +51,7 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
 
   const { fnKey } = fnCtx;
   // 一些异步 task 里的 depKey 需丢弃
-  const canRecordDepKey = runningSharedKey ? runningFnCtx && !isIgnore && !isTaskRunning : runningFnCtx;
+  const canRecordDepKey = runningSharedKey ? runningFnCtx && !isIgnore : runningFnCtx;
 
   inputDepKeys.forEach((depKey: string) => {
     if (PROTO_KEY === depKey) {

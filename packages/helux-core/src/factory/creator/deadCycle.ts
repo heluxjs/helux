@@ -1,18 +1,29 @@
 /**
  * 本模块用于辅助处理 mutate 函数可能遇到的死循环问题
  */
-import { nodupPush, safeMapGet, tryAlert } from '@helux/utils';
+import { nodupPush, safeMapGet, tryAlert, includeOne, noop } from '@helux/utils';
+import type { IFnCtx } from '../../types/base';
 import { TInternal } from './buildInternal';
+import { fmtDepKeys } from '../../helpers/debug';
 
 type Log = { sn: number; descs: string[]; timer: any; errs: any[]; cycle: string[] };
 const logMap = new Map<string, Log>();
+const cbTypes = {
+  WATCH: '1',
+  MUTATE: '2',
+} as const;
+const cbTips = {
+  [cbTypes.WATCH]: 'watch',
+  [cbTypes.MUTATE]: 'mutate fn or task',
+};
+type CbType = typeof cbTypes[keyof typeof cbTypes];
 
 function newLog(sn = 0): Log {
   return { sn, descs: [], errs: [], timer: null, cycle: [] };
 }
 
 export function dcErr(usefulName: string, descs: string[], runDesc: string) {
-  const err = new Error(`module(${usefulName}) found mutate fn(${runDesc}) in these dead cycle fns [${descs.join(',')}]`);
+  const err = new Error(`DEAD_CYCLE: module(${usefulName}) found mutate fn(${runDesc}) in these dead cycle fns [${descs.join(',')}]`);
   err.cause = 'DeadCycle';
   // @ts-ignore
   err.data = descs;
@@ -26,10 +37,24 @@ export function clearDcLog(usefulName: string) {
   logMap.delete(usefulName);
 }
 
+export function depKeyDcError(internal: TInternal, fnCtx: IFnCtx, depKeys: string[], cbType: CbType) {
+  const tip = cbTips[cbType];
+  const { desc, task, fn } = fnCtx.subFnInfo;
+  const descStr = desc ? `(${desc})` : '';
+  const dcInfo = `DEAD_CYCLE: found reactive object in ${tip}${descStr} cb`
+    + ` is changing module(${internal.usefulName})'s keys(${fmtDepKeys(depKeys, false, '.')}) by its self, `
+    + 'but some of these keys are also the watched dep keys, it will cause a infinity loop call!'
+
+  const mutateFn = task || fn;
+  const targetFn = mutateFn === noop ? fnCtx.fn : mutateFn;
+  console.error(` ${dcInfo} open the stack to find the below fn: \n`, targetFn);
+  return new Error(`[only-dev-mode alert] ${dcInfo}`);
+}
+
 /**
- * 探测循环依赖存在的可能性，避免死循环卡死整个应用
+ * 探测 多个 mutate fn 之间有循环依赖存在的可能性，避免死循环卡死整个应用
  */
-export function probeDeadCycle(sn: number, desc: string, internal?: TInternal) {
+export function probeFnDeadCycle(internal: TInternal, sn: number, desc: string) {
   if (internal && desc) {
     const { usefulName } = internal;
     const log = safeMapGet(logMap, usefulName, newLog(sn));
@@ -54,6 +79,32 @@ export function probeDeadCycle(sn: number, desc: string, internal?: TInternal) {
   }
 }
 
+/**
+ * 发现类似 
+ * 1 watch(()=>{ reactive.a = 1 }, ()=>[reactive.a])
+ * 2 matate(draft=>draft+=1)
+ * 等场景的死循环
+ */
+export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changedDepKeys: string[]): boolean {
+  const { depKeys, subFnInfo } = fnCtx;
+  let shortArr = fnCtx.depKeys;
+  let longArr = changedDepKeys;
+  if (depKeys.length > changedDepKeys.length) {
+    shortArr = changedDepKeys;
+    longArr = depKeys;
+  }
+
+  const foundDc = includeOne(shortArr, longArr);
+  if (foundDc) {
+    const cbType: CbType = subFnInfo.desc ? cbTypes.MUTATE : cbTypes.WATCH;
+    tryAlert(depKeyDcError(internal, fnCtx, changedDepKeys, cbType), { logErr: false, throwErr: false, alertErr: internal.alertDeadCycleErr });
+  }
+  return foundDc;
+}
+
+/**
+ * 多个函数间是否已处于死循环状态
+ */
 export function inDeadCycle(usefulName: string, desc: string) {
   const log = logMap.get(usefulName);
   if (!log || !log.cycle.includes(desc)) {
@@ -62,6 +113,9 @@ export function inDeadCycle(usefulName: string, desc: string) {
   return { isIn: true, cycle: log.cycle };
 }
 
+/**
+ * 分析错误日志
+ */
 export function analyzeErrLog(usefulName: string, err: any) {
   const log = logMap.get(usefulName);
   if (!log) return;
@@ -79,7 +133,6 @@ export function analyzeErrLog(usefulName: string, err: any) {
       }
     }
     if (targetErr) {
-      // console.error('dead cycle', targetErr);
       tryAlert(targetErr);
     }
     errs.length = 0;

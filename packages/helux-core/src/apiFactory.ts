@@ -9,11 +9,10 @@ import * as modelApi from './factory/createModel';
 
 export type AllApi = HeluxApi & { model: typeof model; modelFactory: typeof modelFactory };
 const needApiCtxFns = [
-  'createShared',
-  'shareState',
-  'shareAtom',
-  'share',
   'atom',
+  'atomx',
+  'share',
+  'sharex',
   'getMutateLoading',
   'getActionLoading',
   '$',

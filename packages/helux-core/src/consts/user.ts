@@ -1,6 +1,6 @@
 import { VER as limuVer } from 'limu';
 
-export const VER = '3.5.4';
+export const VER = '3.5.5';
 
 export const LIMU_VER = limuVer;
 
@@ -15,9 +15,4 @@ export const RECORD_LOADING = {
   NO: 'no',
   PRIVATE: 'private',
   GLOBAL: 'global',
-} as const;
-
-export const FROM = {
-  MUTATE: 'Mutate',
-  ACTION: 'Action',
 } as const;

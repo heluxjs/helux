@@ -9,7 +9,7 @@ function buildFnScope() {
     keySeed: {
       static: 0,
       hook: 0,
-      InnerMutate: 0,
+      Reactive: 0,
       Mutate: 0,
     },
     runningFnKey: '',
@@ -18,13 +18,11 @@ function buildFnScope() {
      */
     runningSharedKey: 0,
     /**
-     * 从 isTaskRunning 维度辅助 helpers/fnDep 丢弃一些异步逻辑中收集的依赖信息
-     * 标记 task 是否运行中用于控制 helpers/fnDep 逻辑发现是 task 运行时不记录 depKeys，
-     * 避免 mutate 配置的 task 里多次变化当前共享对象的状态是误判为死循环
+     * 忽略依赖收集，辅助 helpers/fnDep mutateFn/callAsyncMutateFnLogic 里丢弃一些异步逻辑中收集的依赖信息
+     * helux强制用户必须把依赖放置于同步逻辑中
      */
-    isTaskRunning: false,
     isIgnore: false,
-    /** 函数运行结束收集到的 depKeys */
+    /** 函数运行结束收集到的读依赖 depKeys */
     depKeys: [] as string[],
     /** globalId to Array<insKey> */
     GID_INSKEYS_MAP: new Map<NumStrSymbol, number[]>(),

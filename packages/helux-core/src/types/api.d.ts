@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.4
+| helux-core@3.5.5
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.4';
+export declare const VER: '3.5.5';
 
 export declare const LIMU_VER: string;
 
@@ -129,23 +129,17 @@ export function atom<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
 ): readonly [ReadOnlyAtom<T>, SetState<T>, IAtomCtx<T>];
 
 /**
- * for compatible wit v2 helux
- * 这个接口仅为了兼容 helux v2 升级到 v3 后不报错
+ * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] sharex 返回 ctx 自身
  */
-export const createShared: typeof share;
-
-/**
- * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] ，shareState 返回 ctx 自身
- */
-export function shareState<T = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function sharex<T = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): ISharedCtx<T>;
 
 /**
- * 效果完全等同 atom，唯一的区别是 share 返回元组 [state,setState,call] ，shareAtom 返回 ctx 自身
+ * 效果完全等同 atom，唯一的区别是 share 返回元组 [state,setState,call] atom 返回 ctx 自身
  */
-export function shareAtom<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function atomx<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): IAtomCtx<T>;
@@ -247,6 +241,40 @@ export function useReactive<T = any>(
 ): [T extends Atom ? T['val'] : T, T, IInsRenderInfo];
 
 /**
+ * 更新当前共享状态的所有实例组件，谨慎使用此功能，会触发大面积的更新，
+ * 推荐设定 presetDeps、overWriteDeps 函数减少更新范围
+ * ```ts
+ * const updateAllAtomIns = useAtomForceUpdate(someShared);
+ * // 和从 ctx 上获取的 useForceUpdate 效果一样，useForceUpdate 自动绑定了对应的共享状态
+ * const updateAllAtomIns = ctx.useForceUpdate();
+ *
+ * // 支持预设更新范围，以下两种写法等效
+ * const updateSomeAtomIns = useAtomForceUpdate(someShared, state=>[state.a, state.b]);
+ * const updateSomeAtomIns = ctx.useForceUpdate(state=>[state.a, state.b]);
+ *
+ * // 支持调用时重写更新范围
+ * updateSomeAtomIns(state=>[state.c]); // 本次更新只更新 c 相关的实例
+ *
+ * // 重写为 null，表示更新所有实例，强制覆盖可能存在的 presetDeps
+ * updateSomeAtomIns(null)
+ *
+ * // 返回空数组不会做任何更新
+ * updateSomeAtomIns(state=>[]);
+ *
+ * // 返回里包含了自身也会触发更新所有实例
+ * updateSomeAtomIns(state=>[state]);
+ *
+ * // 因 updateSomeAtomIns 内部对 overWriteDeps 做了是否是函数的检查，
+ * // 故 overWriteDeps 类型联合了 Dict， 让 ts 编程不设定 overWriteDeps 时可直接绑定到组件的 onClick 事件而不报编译错误
+ * <button onClick={updateSomeAtomIns}>updateSomeAtomIns</button>
+ * ```
+ */
+export function useAtomForceUpdate<T = any>(
+  sharedState: T,
+  presetDeps?: (sharedState: T) => any[],
+): (overWriteDeps?: ((sharedState: T) => any[]) | Dict | null) => void;
+
+/**
  * 使用普通对象，需注意此接口只接受普通对象
  * 应用里使用 useObject 替代 React.useState 将享受到以下两个好处
  * ```txt
@@ -290,16 +318,16 @@ export function useGlobalId(globalId: NumStrSymbol): IRenderInfo;
  */
 export function useService<S = Dict, P = object>(serviceImpl: S, props?: P): S;
 
+/**
+ * 返回一个可以强制更新当前组件的更新函数
+ */
+export function useLocalForceUpdate(): () => void;
+
 export function storeSrv(ref: MutableRefObject<any>): void;
 
 export function sync<T extends SharedState>(target: T): SyncFnBuilder<T>;
 
 export function syncer<T extends SharedState>(target: T): Syncer<T>;
-
-/**
- * 强制更新
- */
-export function useForceUpdate(): () => void;
 
 /**
  * 对齐 React.useEffect
@@ -507,7 +535,7 @@ export function dynamicBlock<P = object, Ref = any>(
  * ```
  * @param inputVar
  */
-export function signal(inputVar: SingalVal | (() => SingalVal)): ReactNode;
+export function signal(inputVar: SingalVal | (() => SingalVal), format?: (val: any) => any): ReactNode;
 
 /**
  * signal 函数的简写导出

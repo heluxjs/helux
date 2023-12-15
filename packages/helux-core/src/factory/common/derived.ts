@@ -1,3 +1,4 @@
+import { limuUtils } from 'limu';
 import { dedupList, enureReturnArr, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '@helux/utils';
 import { ASYNC_TYPE, DERIVE, IS_DERIVED_ATOM, SCOPE_TYPE } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
@@ -12,6 +13,8 @@ import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
 const { TASK } = ASYNC_TYPE;
 const { STATIC, HOOK } = SCOPE_TYPE;
+// @ts-ignore
+const { getDataType } = limuUtils;
 
 function checkResult(fnCtx: IFnCtx, result: Dict, forAtom?: boolean) {
   if (!forAtom) {

@@ -8,9 +8,7 @@ import type { Fn, IBlockCtx, LoadingStatus } from '../../types/base';
 export function useStateDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn) {
   useWatchSimpleLogic(
     apiCtx,
-    () => {
-      forceUpdate();
-    },
+    forceUpdate,
     { manualDepKeys: blockCtx.depKeys },
   );
 }

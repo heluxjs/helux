@@ -17,14 +17,15 @@ export function model<T = any>(cb: (api: HeluxApi) => Model<T>): Model<T>;
  *   console.log('received build extra param ', extra);
  *
  *   // you can also create multi sharedState
- *   const userCtx = api.shareState({ a: 1, b: 2 });
- *   const { state, setState } = userCtx;
+ *   const userCtx = api.atom({ a: 1, b: 2 });
+ *   const { state, useState, setState } = userCtx;
  *   const someResult = api.derive(() => state.a + 100);
  *
  *  return { // export anything you want
  *    state,
- *     someResult,
- *     setState,
+ *    useState,
+ *    setState,
+ *    someResult,
  *   }
  * });
  * // build model for reusing logic, but their state is isolated

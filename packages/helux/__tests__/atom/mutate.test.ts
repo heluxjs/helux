@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { IPlugin } from 'helux';
+import type { IPlugin } from '@helux/core';
 import { describe, expect, test } from 'vitest';
 import { addPlugin, atom, currentDraftRoot, runMutate, setAtomVal } from '../helux';
 
@@ -221,8 +221,8 @@ describe('create atom mutate', () => {
     expect(bAtom.val.a).toBe(110);
   });
 
-  test('multi mutate, watch self with dead cycle', async () => {
-    window.alert = () => {};
+  test('multi mutate, watch self state with dead cycle', async () => {
+    window.alert = () => { };
     let err: any = null;
     const errPlugin: IPlugin = {
       install(pluginCtx) {
@@ -245,6 +245,39 @@ describe('create atom mutate', () => {
           },
           changeA: (draft, { state }) => {
             draft.a = state.c + 30;
+          },
+        },
+      },
+    );
+
+    // expect(err).toBeTruthy();
+    // expect(err.message.includes('dead cycle')).toBeTruthy();
+  });
+
+  test('multi mutate, watch self draft with dead cycle', async () => {
+    window.alert = () => { };
+    let err: any = null;
+    const errPlugin: IPlugin = {
+      install(pluginCtx) {
+        pluginCtx.on('ON_ERROR_OCCURED', (info) => {
+          err = info.data.err;
+        });
+      },
+    };
+    addPlugin(errPlugin);
+
+    atom(
+      { a: 1, b: 0, c: 0 },
+      {
+        mutate: {
+          changeB: (draft) => {
+            draft.b = draft.a + 10;
+          },
+          changeC: (draft) => {
+            draft.c = draft.b + 20;
+          },
+          changeA: (draft) => {
+            draft.a = draft.c + 30;
           },
         },
       },

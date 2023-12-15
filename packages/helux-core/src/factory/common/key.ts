@@ -6,6 +6,7 @@ import { getBlockScope, getFnScope, getInsScope } from './speedup';
 
 const fnKeyPrefix = {
   Mutate: '',
+  Reactive: 'r',
   [SCOPE_TYPE.STATIC]: 's',
   [SCOPE_TYPE.HOOK]: 'h',
 };
@@ -39,11 +40,15 @@ export function genRenderSN() {
   return nextNo;
 }
 
-export function genFnKey(keyType: ScopeType | 'Mutate') {
+export function genFnKey(keyType: ScopeType | 'Mutate' | 'Reactive') {
   const prefix = fnKeyPrefix[keyType];
   const fnScope = getFnScope();
   const keyMap = fnScope.keySeed;
   const keySeed = getSafeNext(keyMap[keyType]);
   keyMap[keyType] = keySeed;
   return `${prefix}${keySeed}`;
+}
+
+export function getReactiveKey(){
+  return genFnKey('Reactive');
 }

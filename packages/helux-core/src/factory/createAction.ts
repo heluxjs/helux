@@ -20,8 +20,9 @@ function innerCreate<T = SharedState>(state: T, options: { task: Fn; desc: strin
       desc,
       task,
       from: Action,
+      depKeys: [],
       throwErr: throwErrVar,
-      getArgs: ({ draft, draftRoot, setState, desc }) => [{ draft, draftRoot, setState, desc, payload }],
+      getArgs: ({ draft, draftRoot, setState, desc, flush }) => [{ draft, draftRoot, setState, desc, payload, flush }],
     });
   };
   // 提前记录一个值，方便用户使用 getLoading 时可收集到依赖

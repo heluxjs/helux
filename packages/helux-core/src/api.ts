@@ -7,22 +7,18 @@ import { emit, on } from './factory/common/userBus';
 import { action } from './factory/createAction';
 import { derive, deriveDict } from './factory/createDerived';
 import { mutate, mutateDict, runMutate, runMutateTask } from './factory/createMutate';
-import { atom, share, shareAtom, shareState } from './factory/createShared';
+import { atom, atomx, share, sharex } from './factory/createShared';
 import { sync, syncer } from './factory/createSync';
 import { watch } from './factory/createWatch';
-import { flush, reactiveDesc } from './factory/creator/buildReactive';
+import { flush, reactiveDesc } from './factory/creator/reactive';
 import { currentDraftRoot, setAtomVal } from './factory/creator/current';
 import { getDeriveLoading, runDerive, runDeriveTask } from './helpers/fnRunner';
 import { getRawState, getSnap } from './helpers/state';
-import { useAtom } from './hooks/useAtom';
-import { useDerived } from './hooks/useDerived';
-import { useGlobalId } from './hooks/useGlobalId';
-import { getActionLoading, getMutateLoading, useActionLoading, useMutateLoading } from './hooks/useLoading';
-import { useMutable } from './hooks/useMutable';
-import { useOnEvent } from './hooks/useOnEvent';
-import { useReactive } from './hooks/useReactive';
-import { storeSrv, useService } from './hooks/useService';
-import { useWatch } from './hooks/useWatch';
+import {
+  useAtom, useAtomForceUpdate, useDerived, useGlobalId, useLocalForceUpdate,
+  getActionLoading, getMutateLoading, useActionLoading, useMutateLoading,
+  useMutable, useOnEvent, useReactive, useService, storeSrv, useWatch,
+} from './hooks';
 import { block, dynamicBlock, signal } from './signal';
 
 const { shallowCompare, isDiff } = limuUtils;
@@ -31,9 +27,9 @@ const $ = signal; // signal api alias
 
 export {
   atom,
+  atomx,
   share,
-  shareState,
-  shareAtom,
+  sharex,
   createShared,
   // derive api
   derive,
@@ -44,6 +40,7 @@ export {
   watch,
   // hooks api
   useAtom,
+  useAtomForceUpdate,
   useReactive,
   useDerived,
   useWatch,
@@ -53,6 +50,7 @@ export {
   useMutable,
   useMutateLoading,
   useActionLoading,
+  useLocalForceUpdate,
   // action api
   action,
   // signal api

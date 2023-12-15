@@ -1,48 +1,63 @@
 import { canUseDeep } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
-import type { IInnerSetStateOptions, InnerSetState, SetState, SharedState } from '../../types/base';
+import type { IInnerSetStateOptions, SetStateFactory, SetState, InnerSetState, SharedState } from '../../types/base';
 import { runPartialCb } from '../common/util';
 import { buildInternal } from './buildInternal';
+import { flush } from './reactive';
 import { prepareDeepMutate } from './mutateDeep';
-import { prepareNormalMutate } from './mutateNormal';
-import { ParsedOptions, parseRules, parseSetOptions } from './parse';
+import { prepareDowngradeMutate } from './mutateDowngrade';
+import { REACTIVE_DESC } from './current';
+import { ParsedOptions, parseRules, pureSetOptions } from './parse';
 import { createSyncerBuilder, createSyncFnBuilder } from './sync';
 
 export function mapSharedToInternal(sharedState: SharedState, options: ParsedOptions) {
-  const { deep, forAtom } = options;
+  const { deep, forAtom, sharedKey } = options;
   const ruleConf = parseRules(options);
   const isDeep = canUseDeep(deep);
 
-  const setStateImpl = (partialState: any, options: IInnerSetStateOptions = {}) => {
-    if (partialState === internal.snap) {
-      // do nothing
-      const obj = {};
-      const fn = () => partialState;
-      return { draftRoot: obj, draftNode: obj, getPartial: fn, finishMutate: fn };
-    }
-
+  const setStateImpl = (options: IInnerSetStateOptions = {}) => {
     const mutateOptions = { ...options, forAtom, internal, sharedState };
     // deep 模式修改： setState(draft=>{draft.x.y=1})
-    const preparedInfo = isDeep ? prepareDeepMutate(mutateOptions) : prepareNormalMutate(mutateOptions);
+    const { finishMutate, draftRoot, draftNode } = isDeep ? prepareDeepMutate(mutateOptions) : prepareDowngradeMutate(mutateOptions);
     // 后续流程会使用到 getPartial 的返回结果，注意非 deep 模式的 setState只支持一层依赖收集
-    const getPartial = () => runPartialCb(forAtom, partialState, preparedInfo.draftNode);
-    return { ...preparedInfo, getPartial };
+    return {
+      // 注意非 deep 模式的 finish(setState) 只支持一层依赖收集
+      finish: (partialState: any, options: IInnerSetStateOptions = {}) => {
+        const snap = internal.snap;
+        if (partialState === snap) {
+          return snap;
+        }
+        const partial = runPartialCb(forAtom, partialState, draftNode);
+        finishMutate(partial, options);
+        return internal.snap; // 此处注意 internal.snap 才是指向最新的快照
+      },
+      draftRoot,
+      draftNode,
+    };
   };
-  // for inner call
-  const innerSetState: InnerSetState = (partialState, options) => {
-    const ret = setStateImpl(partialState, options);
-    return ret.finishMutate(ret.getPartial());
+  // 内部专用，支持预埋一些参数，返回对象里的 finish 句柄支持扩展其他参数，支持在 finish之前做一些其他操作
+  const setStateFactory: SetStateFactory = (options = {}) => {
+    return setStateImpl(options);
   };
-  // setState definition
+  // 内部专用，调用就触发修改
+  const innerSetState: InnerSetState = (partialState, options = {}) => {
+    return setStateImpl().finish(partialState, options);
+  };
+  // 提供给 useAtom() atom() 返回的 setState 使用
   const setState: SetState = (partialState, options) => {
-    const ret = setStateImpl(partialState, parseSetOptions(options));
-    return ret.finishMutate(ret.getPartial());
+    // ATTENTION LABEL( flush )
+    // 调用 setState 主动把响应式对象可能存在的变更先提交
+    // reactive.a = 66;
+    // setState(draft=>draft.a+100); // flush后回调里可拿到draft.a最新值为66
+    flush(sharedState, REACTIVE_DESC.current(sharedKey));
+    const ret = setStateImpl();
+    return ret.finish(partialState, pureSetOptions(options));
   };
 
   const internal = buildInternal(options, {
     sharedState,
     setState,
-    setStateImpl,
+    setStateFactory,
     innerSetState,
     ruleConf,
     isDeep,

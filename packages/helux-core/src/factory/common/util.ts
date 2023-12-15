@@ -1,39 +1,14 @@
 import { getVal, isDebug, isFn, isMap, isObj, isProxyAvailable, noop, prefixValKey } from '@helux/utils';
 import { immut, IOperateParams, limuUtils } from 'limu';
-import { ARR, KEY_SPLITER, MAP, STATE_TYPE } from '../../consts';
+import { ARR, KEY_SPLITER, MAP, STATE_TYPE, FROM } from '../../consts';
 import { createOb } from '../../helpers/obj';
-import type { Dict, IInnerSetStateOptions, NumStrSymbol, TriggerReason } from '../../types/base';
+import type { IMutateCtx, Dict, IInnerSetStateOptions } from '../../types/base';
 import { DepKeyInfo } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';
 
 const { USER_STATE } = STATE_TYPE;
+const { SET_STATE } = FROM;
 const fakeGetReplaced = () => ({ isReplaced: false, replacedValue: null as any });
-export interface IMutateCtx {
-  /**
-   * 为 shared 记录一个第一层的 key 值，用于刷新 immut 生成的 代理对象，
-   * 刷新时机和具体解释见 factory/creator/commitState 逻辑
-   */
-  level1Key: string;
-  depKeys: string[];
-  triggerReasons: TriggerReason[];
-  ids: NumStrSymbol[];
-  globalIds: NumStrSymbol[];
-  writeKeys: Dict;
-  arrKeyDict: Dict;
-  writeKeyPathInfo: Dict<TriggerReason>;
-  /**
-   * default: true
-   * 是否处理 atom setState((draft)=>xxx) 返回结果xxx，
-   * 目前规则是修改了 draft 则 handleAtomCbReturn 被会置为 false，
-   * 避免无括号写法 draft=>draft.xx = 1 隐式返回的结果 1 被写入到草稿，
-   * 备注：安全写法应该是draft=>{draft.xx = 1}
-   */
-  handleAtomCbReturn: boolean;
-  /** 为 atom 记录的 draft.val 引用 */
-  draftVal: any;
-  enableDraftDep: boolean;
-  isReactive: boolean;
-}
 
 // for hot reload of buildShared
 /**
@@ -56,33 +31,44 @@ export function tryGetLoc(moduleName: string, endCutIdx = 8) {
 }
 
 export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
-  const { ids = [], globalIds = [], enableDraftDep = false, isReactive = false } = options; // 用户 setState 可能设定了 ids globalIds
+  const { ids = [], globalIds = [], isReactive = false, from = SET_STATE, enableDep = false } = options; // 用户 setState 可能设定了 ids globalIds
   return {
-    level1Key: '',
     depKeys: [],
+    forcedDepKeys: [],
     triggerReasons: [],
     ids,
     globalIds,
+    readKeys: {},
     writeKeys: {},
     arrKeyDict: {}, // 记录读取过程中遇到的数组 key
     writeKeyPathInfo: {},
     handleAtomCbReturn: true,
     draftVal: null,
-    enableDraftDep,
+    from,
     isReactive,
+    enableDep,
   };
 }
 
-export function newOpParams(key: string, value: any, isChanged = true): IOperateParams {
+export function newOpParams(
+  key: string,
+  value: any,
+  options: { isChanged?: boolean, parentKeyPath: string[], op?: any, parentType?: any }
+): IOperateParams {
+  const { isChanged = true, parentKeyPath = [], op = 'set', parentType = 'Object' } = options;
+  const fullKeyPath = parentKeyPath.slice();
+  fullKeyPath.push(key);
   return {
     isChanged,
-    op: 'set',
+    isCustom: false,
+    op,
+    immutBase: false,
     key,
     value,
     proxyValue: value,
-    parentType: 'Object',
-    keyPath: [],
-    fullKeyPath: [key],
+    parentType,
+    keyPath: parentKeyPath,
+    fullKeyPath,
     isBuiltInFnKey: false,
     replaceValue: noop,
     getReplaced: fakeGetReplaced,
@@ -105,7 +91,13 @@ export function getRootValDepKeyInfo(internal: TInternal) {
 }
 
 export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
-  return prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
+  try {
+    // console.trace(fullKeyPath);
+    return prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
+  } catch (err) {
+    console.trace('found Symbol key in your path :', fullKeyPath);
+    return `${sharedKey}`;
+  }
 }
 
 export function isValChanged(internal: TInternal, depKey: string) {
@@ -116,6 +108,7 @@ export function isValChanged(internal: TInternal, depKey: string) {
   }
 
   const { keyPath } = getDepKeyInfo(depKey);
+
   try {
     const currVal = getVal(snap, keyPath);
     const prevVal = getVal(prevSnap, keyPath);
@@ -129,13 +122,14 @@ export function isValChanged(internal: TInternal, depKey: string) {
 
 export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) {
   if (isProxyAvailable()) {
-    return immut(obj, { onOperate });
+    return immut(obj, { onOperate, compareVer: true });
   }
 
+  // TODO  整合 toShallowProxy 为一个公共方法，并复用到此处
   return createOb(obj, {
     get(target, key) {
       const val = target[key];
-      const op = newOpParams(key, val, false);
+      const op = newOpParams(key, val, { isChanged: false, parentKeyPath: [] });
       onOperate(op);
       return val;
     },
@@ -160,17 +154,16 @@ export function runPartialCb(forAtom: boolean, mayCb: any, draft: any) {
 }
 
 export function callOnRead(opParams: IOperateParams, onRead: any) {
-  let { value, proxyValue } = opParams;
+  let { value } = opParams;
   // 触发用户定义的钩子函数
   if (onRead) {
     onRead(opParams);
     const { replacedValue, isReplaced } = opParams.getReplaced();
     if (isReplaced) {
-      proxyValue = replacedValue;
       value = replacedValue;
     }
   }
-  return { rawVal: value, proxyValue };
+  return value;
 }
 
 export function isArrLike(parentType?: string) {
@@ -182,4 +175,4 @@ export function isArrLikeVal(val: any) {
   return Array.isArray(val) || isMap(val);
 }
 
-export const { isObject: isDict } = limuUtils;
+export const { isObject: isDict, getDataType } = limuUtils;

@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // latest total test case count: 225
+  // latest total test case count: 227
   test: {
     globals: true,
     environment: 'jsdom',
@@ -14,5 +14,8 @@ export default defineConfig({
     // include: ['./__tests__/hooks/useGlobalId.test.tsx'],
     // include: ['./__tests__/hook-options/arrDep.test.ts'],
     // include: ['./__tests__/hooks/useAtom.test.ts'],
+    // include: ['./__tests__/atom/base.test.ts'],
+    // include: ['./__tests__/atom/mutate.test.ts'],
+    // include: ['./__tests__/share/change.test.ts'],
   },
 });

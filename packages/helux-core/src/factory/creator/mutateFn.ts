@@ -1,12 +1,14 @@
 import { enureReturnArr, isPromise, noop, tryAlert } from '@helux/utils';
-import { EVENT_NAME, SCOPE_TYPE } from '../../consts';
+import { EVENT_NAME, SCOPE_TYPE, FROM } from '../../consts';
 import { emitPluginEvent } from '../../factory/common/plugin';
-import { wrapPartial } from '../../factory/common/util';
-import { buildReactive, flush } from '../../factory/creator/buildReactive';
+import { getRunningFn } from '../../factory/common/fnScope';
+import { buildReactive, innerFlush } from './reactive';
 import { analyzeErrLog, dcErr, inDeadCycle } from '../../factory/creator/deadCycle';
 import { getStatusKey, setLoadStatus } from '../../factory/creator/loading';
-import { markIgnore, markTaskRunning } from '../../helpers/fnDep';
+import { REACTIVE_META, FN_DEP_KEYS } from '../../factory/creator/current';
+import { markIgnore } from '../../helpers/fnDep';
 import { getInternal } from '../../helpers/state';
+import { markFnEnd } from '../../helpers/fnCtx';
 import type { Fn, From, ICallMutateFnOptions, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, SharedState } from '../../types/base';
 import { createWatchLogic } from '../createWatch';
 
@@ -28,9 +30,10 @@ interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
 }
 
 interface ICallAsyncMutateFnOpt extends ICallMutateBase {
+  depKeys: string[];
   task: Fn;
   /** task 函数调用入参拼装，暂不像同步函数逻辑那样提供 draft 给用户直接操作，用户必须使用 setState 修改状态 */
-  getArgs?: (param: { draft: any; draftRoot: any; desc: string; setState: Fn; input: any[] }) => any[];
+  getArgs?: (param: { flush: any, draft: any; draftRoot: any; desc: string; setState: Fn; input: any[] }) => any[];
 }
 
 const fnProm = new Map<any, boolean>();
@@ -40,26 +43,37 @@ export function callAsyncMutateFnLogic<T = SharedState>(
   targetState: T,
   options: ICallAsyncMutateFnOpt,
 ): [any, Error | null] | Promise<[any, Error | null]> {
-  const { desc = '', sn, task, getArgs = noop, deps, from, throwErr } = options;
+  const { desc = '', sn, task, getArgs = noop, deps, from, throwErr, depKeys } = options;
   const internal = getInternal(targetState);
+  const { sharedKey } = internal;
   const customOptions: IInnerSetStateOptions = { desc, sn, from };
   const statusKey = getStatusKey(from, desc);
-  const setState: any = (cb: any) => {
-    return internal.innerSetState(cb, customOptions); // 继续透传 sn from 等信息
+  const { draft, draftRoot, meta } = buildReactive(internal, depKeys, { desc, from });
+  const flush = (desc: string) => {
+    innerFlush(sharedKey, desc);
   };
 
-  const { draft, draftRoot } = buildReactive(internal);
-  const defaultParams = { desc, setState, input: enureReturnArr(deps, targetState), draft, draftRoot };
+  const setState: any = (cb: any) => {
+    // ATTENTION LABEL( flush )
+    // 调用 setState 主动把响应式对象可能存在的变更先提交
+    // reactive.a = 66;
+    // setState(draft=>draft.a+100); // flush 后回调里可拿到 draft.a 最新值为 66
+    flush(desc);
+    const { finish } = internal.setStateFactory(customOptions); // 透传 sn from 等信息
+    return finish(cb);
+  };
+
+  const defaultParams = { desc, setState, input: enureReturnArr(deps, targetState), draft, draftRoot, flush };
   const args = getArgs(defaultParams) || [defaultParams];
   const isProm = fnProm.get(task);
   const isUnconfirmedFn = isProm === undefined;
   const setStatus = (loading: boolean, err: any, ok: boolean) => {
     if (isUnconfirmedFn || isProm) {
       /**
-       * 异步函数调用发起前 已标记忽略依赖收集行为，之前未标记这里照成死循环（ 注：禁止异步函数依赖收集本就是合理行为 ）
+       * 异步函数调用发起前 已标记忽略依赖收集行为，之前未标记这里会造成死循环（ 注：禁止异步函数依赖收集本就是合理行为 ）
        * 死循环案例：
        * mutate({ async task(){ ..... } }) 是一个会立即执行的异步任务，setLoadStatus 内部读取 loading 的状态，
-       * 依赖 Mutate/1 算到当前函数，mutate 结束后又发起一个请求 loading 变为为 false 的动作，然后又找到当前函数
+       * 依赖 Mutate/1 算到当前函数上，mutate 结束后又发起一个请求 loading 变为为 false 的动作，然后又找到当前函数
        * 当前函数执行又标记 loading 为 true，如此往复形成死循环
        */
       setLoadStatus(internal, statusKey, { loading, err, ok });
@@ -67,9 +81,9 @@ export function callAsyncMutateFnLogic<T = SharedState>(
   };
 
   setStatus(true, null, false);
-  // 标记 task 运行中，避免 helpers/fnDep 模块 recordFnDepKeys 方法收集冗余的 depKey 造成 mutate 死循环探测逻辑误判
-  markTaskRunning();
   const handleErr = (err: any): [any, Error | null] => {
+    REACTIVE_META.del(meta.key);
+    FN_DEP_KEYS.del();
     setStatus(false, err, false);
     if (throwErr) {
       throw err;
@@ -81,14 +95,17 @@ export function callAsyncMutateFnLogic<T = SharedState>(
     setStatus(false, null, true);
     // 这里需要主动 flush 一次，让返回的 snap 是最新值
     // const nextState = actions.xxxMethod(); //  nextState 为最新值
-    flush(draftRoot, desc);
+    flush(desc);
+    // del mutate or action reactive data
+    REACTIVE_META.del(meta.key);
+
     return [internal.snap, null];
   };
 
   try {
     const result = task(...args);
     const isResultProm = isPromise(result);
-    // 注：只能从从结果判断函数是否是 Promise，因为编译后的函数很可能是再套一层函数的状态
+    // 注：只能从结果判断函数是否是 Promise，因为编译后的函数很可能再套一层函数
     fnProm.set(task, isResultProm);
     if (isResultProm) {
       return Promise.resolve(result).then(handlePartial).catch(handleErr);
@@ -103,12 +120,13 @@ export function callAsyncMutateFnLogic<T = SharedState>(
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnOpt<T>): [any, Error | null] {
   const { desc = '', sn, fn, getArgs = noop, deps, from, throwErr, isFirstCall } = options;
   const internal = getInternal(targetState);
-  const { forAtom, setStateImpl, innerSetState, sharedState } = internal;
+  const { forAtom, setStateFactory, sharedState } = internal;
   const innerSetOptions: IInnerSetStateOptions = { desc, sn, from, isFirstCall };
   // 不定制同步函数入参的话，默认就是 (draft, input)，
   // 调用函数形如：(draft)=>draft.xxx+=1; 或 (draft, input)=>draft.xxx+=input[0]
   const setState: any = (cb: any) => {
-    return innerSetState(cb, innerSetOptions); // 继续透传 sn from 等信息
+    const { finish } = setStateFactory(); // 继续透传 sn from 等信息
+    return finish(cb, innerSetOptions);
   };
   const input = enureReturnArr(deps, targetState);
   // atom 自动拆箱
@@ -119,16 +137,15 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     state = sharedState.val;
     markIgnore(false); // recover dep collect
   }
-  const { draftNode: draft, draftRoot, finishMutate } = setStateImpl(noop);
-  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state }];
+  const { draftNode: draft, draftRoot, finish } = setStateFactory({ from, enableDep: true });
+  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state, draftRoot }];
 
-  // TODO 考虑同步函数的错误发送给插件
   try {
     const result = fn(...args);
-    const partial = wrapPartial(forAtom, result);
-    return [finishMutate(partial, innerSetOptions), null];
+    finish(result, innerSetOptions)
+    return [internal.snap, null];
   } catch (err: any) {
-    setLoadStatus(internal, `${from}/${desc}`, { loading: false, err, ok: false });
+    // TODO 同步函数错误发送给插件
     if (throwErr) {
       throw err;
     }
@@ -137,9 +154,9 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
 }
 
 /** 调用 mutate 函数，优先处理 task，且最多只处理一个，调用方自己保证只传一个 */
-export function callMutateFn(target: any, options: ICallMutateFnOptions = { forTask: false }) {
+export function callMutateFn(target: any, options: ICallMutateFnOptions = { forTask: false, depKeys: [] }) {
   const { fn, task, forTask } = options;
-  const from = 'Mutate';
+  const from = FROM.MUTATE;
   if (forTask && task) {
     // 处理异步函数
     return callAsyncMutateFnLogic(target, { ...options, task, from });
@@ -168,6 +185,12 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
     createWatchLogic(
       ({ sn, isFirstCall }) => {
         const { desc, fn, task, deps, immediate } = item;
+        const fnCtx = getRunningFn().fnCtx;
+        if (isFirstCall && fnCtx) {
+          fnCtx.subFnInfo = item; // 将子函数信息挂上去
+        }
+
+        FN_DEP_KEYS.del();
         const dc = inDeadCycle(usefulName, desc);
 
         try {
@@ -180,24 +203,36 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
             // 包含 task 配置时，fn 只会在首次执行被调用一次
             if (isFirstCall || !task) {
               markIgnore(false);
-              callMutateFn(target, { ...baseOpt, fn, forTask: false });
+              callMutateFn(target, { ...baseOpt, fn, forTask: false, depKeys: [] });
             }
           }
+
+          // 存档一下收集到依赖，方便后续探测异步函数里的死循环可能存在的情况
+          if (isFirstCall) {
+            if (fnCtx) {
+              // 异步函数强制忽略依赖收集行为
+              item.depKeys = markFnEnd();
+            } else {
+              // 可能在 notify 里已经执行过 markFnEnd 了，这里将 FN_DEP_KEYS.current 转移出来
+              item.depKeys = FN_DEP_KEYS.current();
+            }
+            FN_DEP_KEYS.del();
+          }
+
           if (task) {
-            // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行，有 fn 则不执行
+            // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行 task，有 fn 则不执行 task
             const canRunForFirstCall = isFirstCall && (immediate ?? !fn);
             if (!isFirstCall || canRunForFirstCall) {
-              // 异步函数强制忽略依赖收集行为
-              markIgnore(true);
-              callMutateFn(target, { ...baseOpt, task, forTask: true });
-              markIgnore(false);
+              callMutateFn(target, { ...baseOpt, task, forTask: true, depKeys: item.depKeys });
             }
           }
+
+          return item;
         } catch (err: any) {
           if (err.cause === 'DeadCycle') {
             analyzeErrLog(usefulName, err);
           } else {
-            tryAlert(err, false);
+            tryAlert(err);
           }
           emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err });
         }

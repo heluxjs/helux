@@ -1,12 +1,13 @@
 import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
 import { immut } from 'limu';
-import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, KEY_SPLITER, NOT_MOUNT, OTHER, RENDER_END, RENDER_START, SHARED_KEY } from '../consts';
+import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
-import { callOnRead, isArrLike, isArrLikeVal, isDict, newOpParams } from '../factory/common/util';
+import { callOnRead, isArrLike, isArrLikeVal, isDict, newOpParams, getDepKeyByPath } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
-import { buildReactive, nextTickFlush } from '../factory/creator/buildReactive';
+import { handleHeluxKey, handleCustomKey } from '../factory/creator/buildShared';
+import { buildReactive, nextTickFlush } from '../factory/creator/reactive';
 import { mapGlobalId } from '../factory/creator/globalId';
 import type { Dict, Ext, IFnCtx, IInnerUseSharedOptions, OnOperate } from '../types/base';
 import type { DepKeyInfo } from '../types/inner';
@@ -45,36 +46,36 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined) {
 
 export function attachInsProxyState(insCtx: InsCtxDef) {
   const { internal, isReactive } = insCtx;
-  const { rawState, isDeep, sharedKey, onRead } = internal;
+  const { rawState, isDeep, sharedKey, onRead, forAtom } = internal;
   if (isDeep) {
     const onOperate: OnOperate = (opParams) => {
-      if (opParams.isBuiltInFnKey) return;
+      const { isBuiltInFnKey, key } = opParams;
+      if (isBuiltInFnKey) return;
+      if (isSymbol(key)) {
+        return handleCustomKey(opParams, forAtom, sharedKey);
+      }
+
       const { fullKeyPath, keyPath, parentType } = opParams;
-      const { rawVal, proxyValue } = callOnRead(opParams, onRead);
-      const depKey = prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
+      const rawVal = callOnRead(opParams, onRead);
+      const depKey = getDepKeyByPath(fullKeyPath, sharedKey);
       const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
       collectDep(insCtx, depKeyInfo, { parentType, rawVal });
 
       // 响应式对象会触发到变化行为
-      if (opParams.isChanged) {
+      if (isReactive && opParams.isChanged) {
         nextTickFlush(sharedKey);
       }
-      return proxyValue;
     };
 
     if (isReactive) {
-      const { draft, draftRoot } = buildReactive(internal, onOperate);
+      const { draft, draftRoot } = buildReactive(internal, [], { onRead: onOperate });
       insCtx.proxyState = draftRoot;
       insCtx.proxyStateVal = draft;
     } else {
-      insCtx.proxyState = immut(rawState, {
-        customKeys: [SHARED_KEY as symbol],
-        customGet: () => sharedKey,
-        onOperate,
-        compareVer: true,
-      });
+      insCtx.proxyState = immut(rawState, { onOperate, compareVer: true });
     }
   } else {
+    // TODO  待 toShallowCopy 抽象完毕后，统一调用 toShallowCopy
     insCtx.proxyState = createOb(rawState, {
       set: () => {
         warn('changing shared state is invalid');
@@ -83,9 +84,9 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
       get: (target: Dict, key: string) => {
         const value = target[key];
         if (isSymbol(key)) {
-          return value;
+          return handleHeluxKey(true, forAtom, sharedKey, key, value);
         }
-        const { rawVal } = callOnRead(newOpParams(key, value, false), onRead);
+        const rawVal = callOnRead(newOpParams(key, value, { isChanged: false, parentKeyPath: [] }), onRead);
         const depKey = prefixValKey(key, sharedKey);
         const parentType = isDict(target) ? DICT : OTHER;
         collectDep(insCtx, { depKey, keyPath: [key], sharedKey }, { parentType, rawVal });
@@ -206,7 +207,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
         // pure 模式下针对字典只记录最长路径依赖
         if (pure && parentType === DICT && parentKeyPath) {
           // 无 parentKeyPath 的话就是 dict 根对象自身，此时 parentDepKey 指向 sharedKey
-          const parentDepKey = parentKeyPath.length ? prefixValKey(parentKeyPath.join(KEY_SPLITER), sharedKey) : sharedKeyStr;
+          const parentDepKey = parentKeyPath.length ? getDepKeyByPath(parentKeyPath, sharedKey) : sharedKeyStr;
           // 删除父路径记录
           if (readMap[parentDepKey]) {
             delete readMap[parentDepKey];
@@ -216,6 +217,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
         }
 
         const isParentArrLike = isArrLike(parentType);
+        // 类数组记录下标规则依赖 arrIndexDep 值
         if (isParentArrLike) {
           arrIndexDep && doRecord();
           return;

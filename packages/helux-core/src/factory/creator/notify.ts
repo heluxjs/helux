@@ -6,13 +6,15 @@ import { markComputing } from '../../helpers/fnStatus';
 import { runInsUpdater } from '../../helpers/insCtx';
 import type { Dict, InsCtxMap } from '../../types/base';
 import { clearDiff, diffVal, hasChangedNode } from '../common/sharedScope';
+import { FN_DEP_KEYS } from '../creator/current';
 import type { InsCtxDef } from './buildInternal';
 import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
 
-function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
+export function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
   const insCtx = insCtxMap.get(insKey) as InsCtxDef;
   if (insCtx) {
+    // 透传变更批次编号给示例，方便标记多个实例的更新是否来自于同一批次
     insCtx.renderInfo.sn = sn;
     runInsUpdater(insCtx);
   }
@@ -26,17 +28,18 @@ export function execDepFns(opts: ICommitStateOptions) {
   const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;
 
-  internal.ver += 1;
-  // find associate ins keys
+  // these associate ins keys will be update
   let dirtyInsKeys: number[] = [];
   let dirtyGlobalInsKeys: number[] = [];
-  // find associate derived/watch fn ctxs
+  // these associate derived/watch fn will be update
   let dirtyFnKeys: string[] = [];
   let dirtyAsyncFnKeys: string[] = [];
   const runCountStats: Dict<number> = {};
 
+  // 提前结束依赖收集，防止后续的 watch 步骤里执行其他函数收集到脏依赖
   if (isFirstCall) {
-    markFnEnd();
+    const depKeys = markFnEnd();
+    FN_DEP_KEYS.set(depKeys);
   }
 
   const analyzeDepKey = (key: string) => {
@@ -103,7 +106,7 @@ export function execDepFns(opts: ICommitStateOptions) {
   // start mark async derive fn computing
   dirtyAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   // start execute derive/watch fns
-  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, { sn, from, triggerReasons, internal, desc, isFirstCall }));
+  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, { depKeys, sn, from, triggerReasons, internal, desc, isFirstCall }));
 
   // start trigger rerender
   dirtyInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));

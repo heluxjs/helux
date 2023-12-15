@@ -9,7 +9,7 @@ import type { SingalVal } from '../types/base';
 import { dynamicBlock } from './block';
 import { alwaysEqual, wrapDerivedAtomSignalComp, wrapDerivedSignalComp, wrapSignalComp } from './common/wrap';
 
-export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal)): ReactNode {
+export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal), format: (val: any) => any): ReactNode {
   const { react } = apiCtx;
   if (input && (input as any)[IS_BLOCK]) {
     return react.createElement(input as any);
@@ -30,7 +30,8 @@ export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal))
   // for $(atom)
   if (isAtom(input)) {
     const sharedKey = getSharedKey(input);
-    const options = { sharedKey, sharedState: input, depKey: prefixValKey('val', sharedKey), keyPath: ['val'], compare: alwaysEqual };
+    const depKey = prefixValKey('val', sharedKey);
+    const options = { sharedKey, sharedState: input, depKey, keyPath: ['val'], compare: alwaysEqual };
     const Comp = wrapSignalComp(apiCtx, options);
     return react.createElement(Comp);
   }
@@ -50,8 +51,8 @@ export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal))
       return react.createElement(Comp);
     }
 
-    // for $(atom.val) , $(shared.xxx)
-    const Comp = wrapSignalComp(apiCtx, { sharedKey, sharedState: stateOrResult, depKey, keyPath, compare: alwaysEqual });
+    // for $(atom.val.xxx.yy) , $(shared.xxx.yy)
+    const Comp = wrapSignalComp(apiCtx, { sharedKey, sharedState: stateOrResult, depKey, keyPath, compare: alwaysEqual, format });
     return react.createElement(Comp);
   }
 

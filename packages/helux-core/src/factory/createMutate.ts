@@ -31,8 +31,8 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
 
 function makeWitness(target: SharedState, desc: string, oriDesc: string, internal: TInternal) {
   return {
-    call: () => runMutateFnItem({ target, desc }) as [any, Error | null], // 呼叫同步函数的句柄
-    callTask: () => Promise.resolve(runMutateFnItem({ target, desc, forTask: true })), // 呼叫异步函数的句柄
+    run: () => runMutateFnItem({ target, desc }) as [any, Error | null], // 呼叫同步函数的句柄
+    runTask: () => Promise.resolve(runMutateFnItem({ target, desc, forTask: true })), // 呼叫异步函数的句柄
     desc,
     oriDesc,
     getSnap: () => internal.snap,

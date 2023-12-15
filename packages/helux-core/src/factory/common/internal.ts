@@ -26,7 +26,6 @@ export function clearInternal(moduleName: string, loc: string) {
 
   // 清除第一个即可
   if (matchedKeys.length > 1) {
-    console.trace(matchedKeys);
     const key = matchedKeys[0];
     const prev = INTERMAL_MAP.get(key);
     INTERMAL_MAP.delete(key);

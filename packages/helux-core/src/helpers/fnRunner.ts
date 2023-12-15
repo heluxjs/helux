@@ -1,9 +1,11 @@
 import { enureReturnArr, isPromise, noopVoid, tryAlert } from '@helux/utils';
-import { ASYNC_TYPE, WATCH } from '../consts';
+import { ASYNC_TYPE, WATCH, FROM } from '../consts';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
 import type { TInternal } from '../factory/creator/buildInternal';
-import { probeDeadCycle } from '../factory/creator/deadCycle';
-import type { Dict, From, IDeriveFnParams, TriggerReason } from '../types/base';
+import { probeFnDeadCycle, probeDepKeyDeadCycle } from '../factory/creator/deadCycle';
+import { REACTIVE_META } from '../factory/creator/current';
+import { fakeInternal } from '../factory/creator/fake';
+import type { Dict, From, IDeriveFnParams, TriggerReason, IFnCtx } from '../types/base';
 import { shouldShowComputing } from './fnCtx';
 import { markComputing } from './fnStatus';
 
@@ -21,12 +23,61 @@ interface IRnFnOpt {
   forceFn?: boolean;
   forceTask?: boolean;
   throwErr?: boolean;
+  depKeys?: string[];
+}
+
+/**
+ * 执行 watch 函数，内部会尝试检测死循环，防止无限调用情况产生
+ * @param fnCtx
+ * @param options
+ * @returns
+ */
+function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
+  const { isFirstCall = false, triggerReasons = [], sn = 0, from, internal = fakeInternal, desc } = options;
+  if (!fnCtx.isUsable) {
+    // 发现来自死循环的不可用标记，恢复可用，直接结束调用，避免无限调用情况产生
+    fnCtx.isUsable = true;
+    return;
+  }
+  // simpleWatch 的依赖时转移进去的，不需要判死循环，否则会照成误判
+  if (fnCtx.isSimpleWatch) {
+    return fnCtx.fn({ isFirstCall, triggerReasons, sn });
+  }
+  // 优先开始检查 mutate 多个同步函数间的死循环
+  if (FROM.MUTATE === from) {
+    // 多个fn同步串行之后后，如出现死循环错误会抛到到 mutateFn 里
+    probeFnDeadCycle(internal, sn, desc);
+  }
+  // 来自 reactive 对象或其他 setState 调用
+  if (fnCtx.isRunning && probeDepKeyDeadCycle(internal, fnCtx, options.depKeys || [])) {
+    return;
+  }
+  fnCtx.isRunning = true;
+  const ret = fnCtx.fn({ isFirstCall, triggerReasons, sn });
+  const rmeta = REACTIVE_META.current();
+  // 可能是一个异步执行的 task 任务，再次检查，注前面45行的 fnCtx.isRunning 在此种情况时会判断失效，这里需执行 fn 后做后置检查
+  // 形如 mutate({ deps:()=>[reative.a], async task(){ reative.a+=1 }, immediate: true })
+  if (ret && ret.task) {
+    if (rmeta.from === FROM.MUTATE && probeDepKeyDeadCycle(internal, fnCtx, options.depKeys || [])) {
+      // 发现异步 task 有死循环，则暂时标记函数不可用
+      fnCtx.isUsable = false;
+    }
+  } else if (rmeta.isReactive) {
+    // 来自 watch(()=>{ r.a+=1 }, ()=>[s.a]) 的死循环
+    if (probeDepKeyDeadCycle(internal, fnCtx, rmeta.writeKeys)) {
+      // 发现异步 task 有死循环，则暂时标记函数不可用
+      fnCtx.isUsable = false;
+    }
+  }
+
+  fnCtx.isRunning = false;
+  return ret;
 }
 
 /**
  * 执行 derive 设置函数
  */
-export function runFn(fnKey: string, options?: IRnFnOpt) {
+export function runFn(fnKey: string, options: IRnFnOpt = {}) {
   const {
     isFirstCall = false,
     forceFn = false,
@@ -34,19 +85,14 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
     throwErr = false,
     triggerReasons = [],
     sn = 0,
-    from,
     err,
-    internal,
-    desc,
-  } = options || {};
+  } = options;
   const fnCtx = getFnCtx(fnKey);
   if (!fnCtx) {
     return [null, new Error(`not a valid watch or derive cb for key ${fnKey}`)];
   }
   if (fnCtx.fnType === WATCH) {
-    // 来自 mutate 触发的 watch 才探测死循环
-    from === 'Mutate' && probeDeadCycle(sn, desc, internal);
-    return fnCtx.fn({ isFirstCall, triggerReasons, sn });
+    return runWatch(fnCtx, options);
   }
 
   const { isAsync, fn, task, isAsyncTransfer, forAtom, result, depKeys } = fnCtx;
@@ -127,7 +173,7 @@ export function runFn(fnKey: string, options?: IRnFnOpt) {
       const result = task(fnParams);
       // 检查 result 是否是 Promise 来反推 task 是否是 async 函数
       if (!isPromise(result)) {
-        tryAlert('ERR_NON_FN: derive task arg should be async function!', throwErr);
+        tryAlert('ERR_NON_FN: derive task arg should be async function!', { throwErr });
         return null;
       }
       return result;
@@ -164,10 +210,16 @@ export function rerunDeriveFn<T = Dict>(
   return runFn(fnCtx.fnKey, { ...(options || {}) });
 }
 
+/**
+ * 重运行全量派生函数
+ */
 export function runDerive<T = Dict>(result: T, throwErr?: boolean): [T, Error | null] {
   return rerunDeriveFn(result, { forceFn: true, throwErr });
 }
 
+/**
+ * 重运行全量派生函数异步任务
+ */
 export function runDeriveTask<T = Dict>(result: T, throwErr?: boolean): Promise<[T, Error | null]> {
   return Promise.resolve(rerunDeriveFn(result, { forceTask: true, throwErr }));
 }

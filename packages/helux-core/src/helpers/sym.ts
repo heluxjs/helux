@@ -8,5 +8,5 @@ export function createSymbol(str: string) {
   }
 
   symbolSeed += 1;
-  return `__SHARED_KEY__${symbolSeed}`;
+  return `__HELUX_SYMBOL_${symbolSeed}__`;
 }

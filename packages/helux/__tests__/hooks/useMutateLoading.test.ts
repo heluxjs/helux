@@ -27,12 +27,12 @@ describe('useMutateLoading', () => {
     });
     expect(runCount).toBe(1);
     expect(result.current).toBe(false);
-    witness.call();
+    witness.run();
     // still be 1
     expect(runCount).toBe(1);
     expect(result.current).toBe(false);
 
-    await witness.callTask();
+    await witness.runTask();
     // ATTENTION: if task pass delay ms <= 100 to delay(), here will be 3
     // the new 3 render times: loading true ---> draft.b = 100 ---> loading false
     expect(runCount).toBe(4);

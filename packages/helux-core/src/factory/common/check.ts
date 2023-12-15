@@ -1,6 +1,8 @@
 import { tryAlert } from '@helux/utils';
 import { getInternal, getInternalByKey } from '../../helpers/state';
+import { REACTIVE_META_KEY } from '../../consts';
 import type { SharedState } from '../../types/base';
+import type { IReactiveMeta } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';
 
 interface ICheckSharedOptionsBase {
@@ -16,7 +18,7 @@ interface ICheckSharedOptionsBase {
 
 interface ICheckSharedOptions extends ICheckSharedOptionsBase {
   /**
-   * default: false，是否严格检查 interna 必须存在，
+   * default: false，是否严格检查 internal 必须存在，
    * true，严格检查 internal，不存在则报错
    * false，不严格检查，不存在返回 null
    */
@@ -31,12 +33,17 @@ export function checkShared<T = SharedState | number>(sharedStateOrKey: T, optio
   } else {
     internal = getInternal(sharedStateOrKey);
   }
+  // 猜测传入的是 reactive 对象
+  if (!internal && sharedStateOrKey) {
+    const rMeta: IReactiveMeta = (sharedStateOrKey as any)[REACTIVE_META_KEY];
+    internal = getInternalByKey(rMeta?.sharedKey);
+  }
 
   let prefix = label ? `[[${label}]] err:` : 'err:';
 
   if (!internal) {
     if (strict) {
-      tryAlert(`${prefix} not a valid shared or atom`, true);
+      tryAlert(`${prefix} not a valid shared or atom`, { throwErr: true });
     } else {
       return null;
     }
@@ -45,10 +52,10 @@ export function checkShared<T = SharedState | number>(sharedStateOrKey: T, optio
   // 传递了具体的 forAtom 布尔值，才严格校验是否是 atom 或 shared
   if (forAtom !== undefined) {
     if (forAtom && !internal.forAtom) {
-      tryAlert(`${prefix} expect a shared but recived a atom`, true);
+      tryAlert(`${prefix} expect a shared but recived a atom`, { throwErr: true });
     }
     if (!forAtom && internal.forAtom) {
-      tryAlert(`${prefix} expect a atom but recived a shared`, true);
+      tryAlert(`${prefix} expect a atom but recived a shared`, { throwErr: true });
     }
   }
   return internal;

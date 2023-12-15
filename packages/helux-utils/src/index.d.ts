@@ -31,11 +31,19 @@ export declare function isSymbol(maySymbol: any): maySymbol is symbol;
 export declare function isPromise(mayObj: any): boolean;
 export declare function isProxyRevoked(proxy: Dict): boolean;
 export declare function isProxyAvailable(): boolean;
-/**
- * alert 提示错误格式为 `${customLabel}${errMsg}, see details in console.`，
- * customLabel 可定制
- */
-export declare function tryAlert(err: any, throwErr?: boolean, customLabel?: string): void;
+interface IAlertOpts {
+  /** default: false，是否抛出错误 */
+  throwErr?: boolean;
+  /** default: ''，定制的提示信息前缀 */
+  prefixLabel?: string;
+  /** default: ''，定制的提示信息后缀 */
+  suffixLabel?: string;
+  /** default: true，是否打印错误，*/
+  logErr?: boolean;
+  /** default: undefined，是否弹层显示错误，未指定时走内置规则：开发环境弹，生成环境不弹 */
+  alertErr?: boolean;
+}
+export function tryAlert(err: any, options?: IAlertOpts): void;
 /**
  *
  * @param msg - 提示信息

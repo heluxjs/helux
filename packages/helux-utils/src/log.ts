@@ -1,17 +1,33 @@
 import { GLOBAL_REF } from './cst';
 import { isDebug } from './is';
 
-export function tryAlert(err: any, throwErr = false, customLabel = '') {
+interface IAlertOpts {
+  /** default: false，是否抛出错误 */
+  throwErr?: boolean;
+  /** default: ''，定制的提示信息前缀 */
+  prefixLabel?: string;
+  /** default: ''，定制的提示信息后缀 */
+  suffixLabel?: string;
+  /** default: true，是否打印错误，*/
+  logErr?: boolean;
+  /** default: undefined，是否弹层显示错误，未指定时走内置规则：开发环境弹，生成环境不弹 */
+  alertErr?: boolean;
+}
+
+export function tryAlert(err: any, options?: IAlertOpts) {
+  const { throwErr = false, prefixLabel = '', suffixLabel = ', see details in console.', logErr = true, alertErr } = options || {};
   let errMsg = err;
   let isErr = false;
   if (err instanceof Error) {
     isErr = true;
     errMsg = err.message;
   }
-  if (isDebug()) {
-    err && GLOBAL_REF.alert?.(`${customLabel}${errMsg}, see details in console.`);
+
+  const canAlert = alertErr ?? isDebug();
+  if (canAlert) {
+    err && GLOBAL_REF.alert?.(`${prefixLabel}${errMsg}${suffixLabel}`);
   }
-  console.error(err);
+  logErr && console.error(err);
   if (throwErr) {
     throw isErr ? err : new Error(String(err));
   }

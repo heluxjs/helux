@@ -1,6 +1,6 @@
-import { canUseDeep, enureReturnArr, isFn, isJsObj, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from '@helux/utils';
+import { canUseDeep, enureReturnArr, isFn, isJsObj, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop, isDebug } from '@helux/utils';
 import { immut } from 'limu';
-import { FROM, RECORD_LOADING, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
+import { FROM, RECORD_LOADING, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH, MUTATE_FN_ITEM } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
@@ -41,11 +41,11 @@ function markSharedKeyOnState(rawState: Dict) {
   return sharedKey;
 }
 
-export function parseSetOptions<T = any>(options?: ISetStateOptions<T>) {
-  if (!options) return;
+export function pureSetOptions(options?: ISetStateOptions) {
+  if (!options) return {};
   // filter valid props
-  const { extraDeps, excludeDeps, desc, ids, globalIds } = options;
-  return { extraDeps, excludeDeps, desc, ids, globalIds };
+  const { desc, ids, globalIds } = options;
+  return { desc, ids, globalIds };
 }
 
 export function parseRawState(innerOptions: IInnerOptions) {
@@ -79,7 +79,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
   let validItem: MutateFnStdItem | null = null;
   let desc = inputDesc || '';
   if (isFn(fnItem) && fnItem !== noop) {
-    validItem = { fn: fnItem, deps: noopArr, oriDesc: desc, desc };
+    validItem = { [MUTATE_FN_ITEM]: 1, fn: fnItem, deps: noopArr, oriDesc: desc, desc, depKeys: [] };
   } else if (isObj(fnItem)) {
     const { fn, desc, deps, task, immediate } = fnItem;
     const descVar = inputDesc || desc || '';
@@ -87,7 +87,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
     const taskVar = isFn(task) ? task : undefined;
     const depsVar = isFn(deps) ? deps : noopArr;
     if (fn || task) {
-      validItem = { fn: fnVar, desc: descVar, oriDesc: descVar, deps: depsVar, task: taskVar, immediate };
+      validItem = { [MUTATE_FN_ITEM]: 1, fn: fnVar, desc: descVar, oriDesc: descVar, deps: depsVar, task: taskVar, immediate, depKeys: [] };
     }
   }
 
@@ -142,8 +142,8 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const { rawState, isPrimitive } = parseRawState(innerOptions);
   const sharedKey = markSharedKeyOnState(rawState);
   const moduleName = options.moduleName || '';
+  const alertDeadCycleErr = options.alertDeadCycleErr ?? isDebug();
   const deep = options.deep ?? true;
-  const enableDraftDep = options.enableDraftDep ?? false;
   const recordLoading = options.recordLoading || RECORD_LOADING.PRIVATE;
   const rules = options.rules || [];
   const before = options.before || noop;
@@ -158,6 +158,9 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const mutateFnDict = parseMutate(mutate);
 
   return {
+    /** TODO 未来支持 atom 对象销毁 */
+    isDestroyed: false,
+    alertDeadCycleErr,
     rawState,
     sharedKey,
     sharedKeyStr,
@@ -178,7 +181,6 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     stopArrDep,
     stopDepth,
     isPrimitive,
-    enableDraftDep,
   };
 }
 

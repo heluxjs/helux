@@ -1,21 +1,11 @@
-import { HAS_SYMBOL, IS_ATOM, IS_DERIVED_ATOM } from '../../consts';
+import { IS_ATOM, IS_DERIVED_ATOM } from '../../consts';
 import { Atom, AtomValType, DerivedAtom } from '../../types/base';
-import { getRootCtx } from '../root';
-
-export function getMarkAtomMap() {
-  const { markAtomMap } = getRootCtx();
-  return markAtomMap;
-}
 
 export function isAtom(mayAtom: any): mayAtom is Atom {
   if (!mayAtom) {
     return false;
   }
-  const markAtomMap = getMarkAtomMap();
-  if (!HAS_SYMBOL) {
-    return markAtomMap.get(mayAtom) || false;
-  }
-  return mayAtom[IS_ATOM];
+  return mayAtom[IS_ATOM] ?? false;
 }
 
 export function isDerivedAtom(mayAtomDerived: any): mayAtomDerived is DerivedAtom {

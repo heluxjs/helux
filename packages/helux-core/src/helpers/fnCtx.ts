@@ -2,6 +2,7 @@ import { includeOne, matchDictKey, nodupPush, noop, noopArr } from '@helux/utils
 import { ASYNC_TYPE, NOT_MOUNT, RENDER_START } from '../consts';
 import { getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
+import { fakeMutateFnItem } from '../factory/creator/fake';
 import type { Dict, Fn, IFnCtx, ScopeType } from '../types/base';
 import { delFnDep, delHistoryUnmoutFnCtx } from './fnDep';
 
@@ -11,6 +12,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
   const base: IFnCtx = {
     fnKey: '', // 在 feDep.mapFn 阶段会生成
     fn: noop,
+    subFnInfo: fakeMutateFnItem,
     isFirstLevel: true,
     isExpired: false,
     task: noop,
@@ -35,6 +37,9 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     shouldReplaceResult: false,
     isAsync: false,
     isAsyncTransfer: false,
+    isSimpleWatch: false,
+    isRunning: false,
+    isUsable: true,
     asyncType: MAY_TRANSFER,
     subscribe: (cb) => {
       cb();
@@ -45,6 +50,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
       base.status = { loading, err, ok };
     },
     renderInfo: {
+      insKey: 0,
       sn: 0,
       getDeps: () => base.depKeys.slice(),
     },
@@ -52,16 +58,28 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
   return Object.assign(base, specificProps || {});
 }
 
+export function getCurrentFnDepKeys() {
+  const fnScope = getFnScope();
+  const { runningFnKey } = fnScope;
+  const fnCtx = getFnCtx(runningFnKey);
+  if (fnCtx) {
+    return fnCtx.depKeys.slice();
+  }
+  return fnCtx;
+}
+
 export function markFnEnd() {
   const fnScope = getFnScope();
   const { runningFnKey } = fnScope;
-  if (!runningFnKey) return;
+  if (!runningFnKey) return [];
 
   // 针对 derive watch 函数，fnCtx.depKeys 只记录最长路径
   const fnCtx = getFnCtx(runningFnKey);
+  let targetKeys: string[] = [];
   if (fnCtx) {
     const { depKeys: afterRunDepKeys } = fnScope;
     const { depKeys } = fnCtx;
+
     const dict: Dict<number> = {};
     afterRunDepKeys.forEach((k) => (dict[k] = 1));
     afterRunDepKeys.forEach((depKey) => {
@@ -74,12 +92,14 @@ export function markFnEnd() {
     });
     const validDepKeys = Object.keys(dict);
     validDepKeys.forEach((depKey) => nodupPush(depKeys, depKey));
+    targetKeys = depKeys.slice(); // 返回收集到依赖，辅助判断死循环之用
   }
 
   fnScope.runningFnKey = '';
   fnScope.depKeys = [];
-  fnScope.isTaskRunning = false;
+  // fnScope.isTaskRunning = false;
   fnScope.runningSharedKey = 0;
+  return targetKeys;
 }
 
 export function markFnStart(fnKey: string, sharedKey: number) {
@@ -87,7 +107,7 @@ export function markFnStart(fnKey: string, sharedKey: number) {
   fnScope.runningFnKey = fnKey;
   fnScope.runningSharedKey = sharedKey;
   /** 待到 task 运行时会被标记为 true */
-  fnScope.isTaskRunning = false;
+  // fnScope.isTaskRunning = false;
   fnScope.isIgnore = false;
 }
 

@@ -35,6 +35,7 @@ function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInner
  */
 function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
   apiCtx.react.useEffect(() => {
+    insCtx.isFirstRender = false;
     INS_CTX.del(insCtx.rootVal);
     // 设定了 options.collect='first' 则首轮渲染结束后标记不能再收集依赖，阻值后续新的渲染流程里继续收集依赖的行为
     if (insCtx.collectType === 'first') {

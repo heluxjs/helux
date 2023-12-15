@@ -3,13 +3,18 @@ import * as React from 'react';
 
 const api = initHeluxContext({ heluxCtxKey: '__HELUX__', reactLib: React });
 
+/**
+ * for compatible wit v2 helux
+ * 这个接口仅为了兼容 helux v2 升级到 v3 后不报错
+ */
+export const createShared = api.share;
+
 // 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json的 types 配置）
 export const {
   atom,
+  atomx,
   share,
-  shareState,
-  shareAtom,
-  createShared,
+  sharex,
   // derive api
   derive,
   deriveDict,
@@ -28,11 +33,12 @@ export const {
   useMutable,
   useMutateLoading,
   useActionLoading,
-  useForceUpdate,
   useEffect,
   useLayoutEffect,
   useStable,
   useObject,
+  useLocalForceUpdate,
+  useAtomForceUpdate,
   // action api
   action,
   // signal api
