@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.5.5
+
+### Patch Changes
+
+- 8e9890a: build(3.5.5): refactor dead-cycle detact
+  - @helux/types@3.5.5
+
 ## 3.5.4
 
 ### Patch Changes

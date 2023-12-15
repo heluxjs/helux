@@ -1,5 +1,14 @@
 # @helux/hooks
 
+## 3.5.5
+
+### Patch Changes
+
+- Updated dependencies [8e9890a]
+  - @helux/utils@3.5.5
+  - @helux/hooks-impl@3.5.5
+  - @helux/types@3.5.5
+
 ## 3.5.4
 
 ### Patch Changes
