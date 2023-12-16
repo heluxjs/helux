@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.8
+
+### Patch Changes
+
+- 03ba7ca: build(3.5.8): pass checkDeadCycle to mutateFnItem
+  - @helux/hooks-impl@3.5.8
+  - @helux/types@3.5.8
+  - @helux/utils@3.5.8
+
 ## 3.5.7
 
 ### Patch Changes
