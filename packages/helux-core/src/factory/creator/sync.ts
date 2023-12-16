@@ -12,8 +12,14 @@ export function getEventVal(e: any) {
   // call e.persist() @see https://reactjs.org/docs/events.html#event-pooling
   if (e) {
     if (e.persist) e.persist();
-    if (e.currentTarget && e.type) {
-      val = e.currentTarget.value;
+    const { currentTarget } = e;
+    if (currentTarget && e.type) {
+      // 针对 <input type='checkbox' /> 标签不能取 value，要特殊处理下
+      if (currentTarget.tagName === 'INPUT' && currentTarget.type === 'checkbox') {
+        val = currentTarget.checked;
+      } else {
+        val = currentTarget.value;
+      }
     } else if (e.nativeEvent && e.target) {
       val = e.target.value;
     }
