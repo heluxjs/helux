@@ -79,15 +79,25 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
   let validItem: MutateFnStdItem | null = null;
   let desc = inputDesc || '';
   if (isFn(fnItem) && fnItem !== noop) {
-    validItem = { [MUTATE_FN_ITEM]: 1, fn: fnItem, deps: noopArr, oriDesc: desc, desc, depKeys: [] };
+    validItem = { [MUTATE_FN_ITEM]: 1, fn: fnItem, deps: noopArr, oriDesc: desc, desc, depKeys: [], checkDeadCycle: undefined };
   } else if (isObj(fnItem)) {
-    const { fn, desc, deps, task, immediate } = fnItem;
+    const { fn, desc, deps, task, immediate, checkDeadCycle } = fnItem;
     const descVar = inputDesc || desc || '';
     const fnVar = isFn(fn) ? fn : undefined;
     const taskVar = isFn(task) ? task : undefined;
     const depsVar = isFn(deps) ? deps : noopArr;
     if (fn || task) {
-      validItem = { [MUTATE_FN_ITEM]: 1, fn: fnVar, desc: descVar, oriDesc: descVar, deps: depsVar, task: taskVar, immediate, depKeys: [] };
+      validItem = {
+        [MUTATE_FN_ITEM]: 1,
+        checkDeadCycle,
+        fn: fnVar,
+        desc: descVar,
+        oriDesc: descVar,
+        deps: depsVar,
+        task: taskVar,
+        immediate,
+        depKeys: []
+      };
     }
   }
 
