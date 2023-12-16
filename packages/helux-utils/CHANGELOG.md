@@ -1,5 +1,11 @@
 # @helux/utils
 
+## 3.5.6
+
+### Patch Changes
+
+- @helux/types@3.5.6
+
 ## 3.5.5
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.6
+
+### Patch Changes
+
+- 2a2f43f: build(3.5.6): pass isFirstCall to mutateFnParams
+  - @helux/hooks-impl@3.5.6
+  - @helux/types@3.5.6
+  - @helux/utils@3.5.6
+
 ## 3.5.5
 
 ### Patch Changes
