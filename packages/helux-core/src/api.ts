@@ -37,6 +37,7 @@ const { shallowCompare, isDiff } = limuUtils;
 const createShared = share; // for compatible wit v2 helux
 const $ = signal; // signal api alias
 
+// user can copy this file content to build a lib that can support another react like framework
 export {
   atom,
   atomx,

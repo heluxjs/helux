@@ -293,6 +293,11 @@ export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
 export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
   /** 异步 mutate 的依赖项列表 */
   deps?: (state: StateType<T>) => P;
+  /**
+   * defalt: false
+   * 依赖全部由 deps 函数提供，fn 执行过程中不收集任何依赖
+   */
+  onlyDeps?: boolean;
   /** fn 和 deps 均可以收集依赖，对应存在 task 的场景，deps 或 fn 两者保证至少有一个 */
   fn?: MutateFn<T, P>;
   task?: MutateTask<T, P>;

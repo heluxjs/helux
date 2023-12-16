@@ -1,6 +1,5 @@
 import { getVal, matchDictKey, nodupPush } from '@helux/utils';
 import { IOperateParams } from 'limu';
-import { FROM } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import type { IMutateCtx, KeyIdsDict, NumStrSymbol } from '../../types/base';
@@ -11,8 +10,6 @@ import { getDepKeyByPath, isArrLike } from '../common/util';
 import type { TInternal } from './buildInternal';
 import { REACTIVE_META } from './current';
 import { markExpired, nextTickFlush } from './reactive';
-
-const { MUTATE } = FROM;
 
 /**
  * 如果变化命中了 rules[].ids 或 globaIds 规则，则添加到 mutateCtx.ids 或 globalIds 里

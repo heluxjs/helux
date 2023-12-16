@@ -12,7 +12,7 @@ import type { Fn, From, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, M
 import { createWatchLogic } from '../createWatch';
 import { buildReactive, flushActive, innerFlush } from './reactive';
 
-const noopAny: any = () => {};
+const noopAny: any = () => { };
 
 interface ICallMutateBase {
   /** 透传给用户 */
@@ -155,7 +155,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     finish(result, innerSetOptions);
 
     // 存档一下收集到依赖，方便后续探测异步函数里的死循环可能存在的情况
-    if (isFirstCall) {
+    if (isFirstCall && !fnItem.onlyDeps) {
       const fnCtx = getRunningFn().fnCtx;
       if (fnCtx) {
         // 异步函数强制忽略依赖收集行为
@@ -178,10 +178,10 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
       }
     }
 
-    isMutate && TRIGGERED_WATCH.del();
+    TRIGGERED_WATCH.del();
     return [internal.snap, null];
   } catch (err: any) {
-    isMutate && TRIGGERED_WATCH.del();
+    TRIGGERED_WATCH.del();
     // TODO 同步函数错误发送给插件
     if (throwErr) {
       throw err;
@@ -207,7 +207,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
     createWatchLogic(
       ({ sn, isFirstCall }) => {
         flushActive();
-        const { desc, fn, task, immediate } = item;
+        const { desc, fn, task, immediate, onlyDeps } = item;
         const fnCtx = getRunningFn().fnCtx;
         if (isFirstCall && fnCtx) {
           // 将子函数信息挂上去
@@ -216,6 +216,10 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
           fnCtx.checkDeadCycle = item.checkDeadCycle ?? internal.checkDeadCycle;
           // 双向记录一下 fnItem 和 watch 函数之间的关系
           item.watchKey = fnCtx.fnKey;
+          // 设定了依赖全部从 deps 函数获取
+          if (onlyDeps) {
+            item.depKeys = markFnEnd();
+          }
         }
 
         FN_DEP_KEYS.del();

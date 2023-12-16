@@ -24,6 +24,7 @@ export const fakeReativeMeta: IReactiveMeta = {
 // { [MUTATE_FN_ITEM]: 1, fn: fnItem, deps: noopArr, oriDesc: desc, desc, depKeys: [] }
 export const fakeMutateFnItem: MutateFnStdItem = {
   fn: noop,
+  onlyDeps: false,
   depKeys: [],
   oriDesc: '',
   desc: '',

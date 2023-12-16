@@ -130,7 +130,7 @@ function getReactiveVal(internal: TInternal, forAtom: boolean) {
   return forAtom ? draft.val : draft;
 }
 
-function marUsing(rKey: string) {
+function markUsing(rKey: string) {
   REACTIVE_META.markUsing(rKey);
   const watchFnKey = TRIGGERED_WATCH.current();
   if (watchFnKey) {
@@ -168,14 +168,14 @@ export function buildReactive(internal: TInternal, fnDepKeys: string[], options?
       [IS_ATOM]: forAtom,
     };
     const set = (forAtom: boolean, key: any, value: any) => {
-      marUsing(rKey);
+      markUsing(rKey);
       const draftVal = getReactiveVal(internal, forAtom);
       // handleOperate 里会自动触发 nextTickFlush
       draftVal[key] = value;
       return true;
     };
     const get = (forAtom: boolean, key: any, innerData: Dict) => {
-      marUsing(rKey);
+      markUsing(rKey);
       const val = innerData[key];
       if (val !== undefined) {
         return val;
