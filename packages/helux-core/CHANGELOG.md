@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.7
+
+### Patch Changes
+
+- 9bbdde6: build(3.5.7): add checkDeadCycle
+  - @helux/hooks-impl@3.5.7
+  - @helux/types@3.5.7
+  - @helux/utils@3.5.7
+
 ## 3.5.6
 
 ### Patch Changes
