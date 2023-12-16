@@ -28,10 +28,6 @@ let CURRENT_DEPS_CB: Fn = noop;
 
 let CURRENT_FN_DEPS: string[] = [];
 
-export function setAtomVal(val: any) {
-  CURRENT_DRAFT_ROOT.val = val;
-}
-
 export function currentDraftRoot() {
   return CURRENT_DRAFT_ROOT;
 }

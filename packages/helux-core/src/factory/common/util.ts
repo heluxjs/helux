@@ -140,7 +140,7 @@ export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) 
  * 区分是 atom 还是 shared 返回的部分状态，atom 返回要自动装箱为 { val: T }
  */
 export function wrapPartial(forAtom: boolean, val: any) {
-  if (val === undefined) return; // undefined 丢弃，如真需要赋值 undefined，调用 setAtomVal
+  if (val === undefined) return; // undefined 丢弃
   if (forAtom) return { val };
   if (isObj(val)) return val;
 }

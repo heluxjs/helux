@@ -63,8 +63,6 @@ export const {
   // util api
   reactiveDesc,
   flush,
-  currentDraftRoot,
-  setAtomVal,
   isAtom,
   isDerivedAtom,
   storeSrv,

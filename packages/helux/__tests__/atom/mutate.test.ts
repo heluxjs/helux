@@ -1,7 +1,7 @@
 import type { IPlugin } from '@helux/core';
 import '@testing-library/jest-dom';
 import { describe, expect, test } from 'vitest';
-import { addPlugin, atom, currentDraftRoot, runMutate, setAtomVal } from '../helux';
+import { addPlugin, atom, runMutate } from '../helux';
 
 describe('create atom mutate', () => {
   function runReturnLogic(cbLogic: any) {
@@ -29,38 +29,8 @@ describe('create atom mutate', () => {
     runReturnLogic((numAtom) => numAtom.val + 10);
   });
 
-  test('single mutate, return result ( currentDraftRoot )', async () => {
-    runReturnLogic((numAtom) => {
-      currentDraftRoot().val = numAtom.val + 10;
-    });
-  });
-
-  test('single mutate, return result ( setAtomVal )', async () => {
-    runReturnLogic((numAtom) => {
-      setAtomVal(numAtom.val + 10);
-    });
-  });
-
   test('single mutate, return result after atom( cb has no {} )', async () => {
     runReturnLogicAfterAtom((numAtom) => numAtom.val + 10);
-  });
-
-  test('single mutate, return result after atom( currentDraftRoot )', async () => {
-    runReturnLogicAfterAtom((numAtom) => {
-      currentDraftRoot().val = numAtom.val + 10;
-    });
-  });
-
-  test('single mutate, return result after atom( setAtomVal )', async () => {
-    runReturnLogicAfterAtom((numAtom) => {
-      setAtomVal(numAtom.val + 10);
-    });
-  });
-
-  test('single mutate, return result after atom( ctx.setAtomVal )', async () => {
-    runReturnLogicAfterAtom((numAtom, ctx) => {
-      ctx.setAtomVal(numAtom.val + 10);
-    });
   });
 
   test('single mutate, change draft', async () => {
@@ -222,7 +192,7 @@ describe('create atom mutate', () => {
   });
 
   test('multi mutate, watch self state with dead cycle', async () => {
-    window.alert = () => {};
+    window.alert = () => { };
     let err: any = null;
     const errPlugin: IPlugin = {
       install(pluginCtx) {
@@ -255,7 +225,7 @@ describe('create atom mutate', () => {
   });
 
   test('multi mutate, watch self draft with dead cycle', async () => {
-    window.alert = () => {};
+    window.alert = () => { };
     let err: any = null;
     const errPlugin: IPlugin = {
       install(pluginCtx) {

@@ -9,7 +9,6 @@ import { derive } from './createDerived';
 import { mutate, mutateDict, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';
 import type { TInternal } from './creator/buildInternal';
-import { setAtomVal } from './creator/current';
 import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
 import { getLoadingInfo, initGlobalLoading, initLoadingCtx } from './creator/loading';
 import type { IInnerOptions } from './creator/parse';
@@ -121,7 +120,6 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     useActionLoading: ldAction.useLoading,
     sync,
     syncer,
-    setAtomVal: forAtom ? setAtomVal : noop,
     setOnReadHook,
     sharedKey,
     sharedKeyStr,

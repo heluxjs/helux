@@ -462,17 +462,31 @@ export type SyncerFn = (mayEvent: any, ...args: any[]) => void;
 
 export type PathRecorder<T = SharedState, V = any> = (target: DraftType<T>) => V;
 
+export type SyncBeforeFnParams<T = SharedState> = {
+  draft: DraftType<T>;
+  draftRoot: DraftRootType<T>;
+  path: string[];
+  /** 如需赋新值为 undefined，需返回这个 UNDEFINED 值表示 undefined */
+  UNDEFINED: symbol;
+  /** 当前对象是否由 atom 创建 */
+  isAtom: boolean;
+};
+
 // 此处用 V 约束 before 函数的返回类型
 export type SyncFnBuilder<T = SharedState, V = any> = (
   pathOrRecorder: string[] | PathRecorder<T>,
-  /** 在提交数据之前，还可以修改其他数据或自身数据的函数 */
-  before?: (eventNewVal: V, draft: DraftType<T>) => void,
+  /**
+   * 在提交数据之前，还可以修改其他数据或自身数据的函数
+   * 此函数也支持返回 path 对应的修改新值，如需修改为 undefined
+   * 需返回 params.UNDEFEIND 才有效，如果此函数不返回任何值或返回 undefined 均不会干预赋值操作
+   */
+  before?: (eventNewVal: V, params: SyncBeforeFnParams<T>) => any,
 ) => SyncerFn;
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-    ? SyncerFn
-    : { [key in keyof T['val']]: SyncerFn }
+  ? SyncerFn
+  : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -481,16 +495,16 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? DerivedAtom<ReturnType<T['fn']>>
-    : DerivedAtom<any>
+  ? DerivedAtom<ReturnType<T['fn']>>
+  : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
 
 type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? ReturnType<T['fn']>
-    : any
+  ? ReturnType<T['fn']>
+  : any
   : T extends DeriveFn
   ? ReturnType<T>
   : any;
@@ -729,7 +743,6 @@ export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
 export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
   state: ReadOnlyAtom<T>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
-  setAtomVal: (val: T) => void;
 }
 
 export interface BeforeFnParams<T = SharedState> {

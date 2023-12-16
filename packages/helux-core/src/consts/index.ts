@@ -4,6 +4,9 @@ export { HAS_SYMBOL };
 
 export const PROTO_KEY = '__proto__';
 
+/** 提供给 sync 返回 undefined 时之用 */
+export const UNDEFINED = createSymbol('HeluxUndefined');
+
 /** 标识对象是一个 MutateFnItem */
 export const MUTATE_FN_ITEM = createSymbol('HeluxMutateFnItem');
 

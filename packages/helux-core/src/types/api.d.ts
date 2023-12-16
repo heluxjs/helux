@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.9
+| helux-core@3.5.10
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.9';
+export declare const VER: '3.5.10';
 
 export declare const LIMU_VER: string;
 
@@ -586,17 +586,6 @@ export function addPlugin(plugin: IPlugin): void;
  * @param sharedDict
  */
 export function action<T = any>(sharedState: T): <P = any>(fn: ActionFnDef<P, T>, desc?: string) => Action<P, T>;
-
-/**
- * get current draft root
- * here pass state just for get return type
- */
-export function currentDraftRoot<T = any>(state?: T): T extends Atom ? { val: T['val'] } : T;
-
-/**
- * setAtomVal('xx') 等效于 currentDraftRoot().val = 'xx';
- */
-export function setAtomVal<T = any>(val?: T): T;
 
 /**
  * test if the input arg is a result returned by atom()
