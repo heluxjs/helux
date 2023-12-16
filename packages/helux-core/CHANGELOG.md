@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.12
+
+### Patch Changes
+
+- 7a57ee5: build(3.5.13): optimize dead cycle judge logic
+  - @helux/hooks-impl@3.5.12
+  - @helux/types@3.5.12
+  - @helux/utils@3.5.12
+
 ## 3.5.11
 
 ### Patch Changes

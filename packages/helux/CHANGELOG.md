@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.12
+
+### Patch Changes
+
+- 7a57ee5: build(3.5.13): optimize dead cycle judge logic
+- Updated dependencies [7a57ee5]
+  - @helux/core@3.5.12
+
 ## 3.5.11
 
 ### Patch Changes
