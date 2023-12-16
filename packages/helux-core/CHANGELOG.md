@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.14
+
+### Patch Changes
+
+- 0580585: build(3.5.14): fix TRIGGERED_WATCH.del problem
+  - @helux/hooks-impl@3.5.14
+  - @helux/types@3.5.14
+  - @helux/utils@3.5.14
+
 ## 3.5.13
 
 ### Patch Changes
