@@ -13,14 +13,14 @@ import { createWatchLogic } from '../createWatch';
 import { buildReactive, innerFlush } from './reactive';
 
 interface ICallMutateBase {
+  /** 透传给用户 */
+  isFirstCall?: boolean;
+  /** watchAndCallMutateDict 需要自己捕获错误 */
+  throwErr?: boolean;
   desc?: string;
   sn?: number;
   deps?: Fn;
   from: From;
-  /** watchAndRunMutate 需要自己捕获错误 */
-  throwErr?: boolean;
-  /** 控制死循环探测逻辑执行时机 */
-  isFirstCall?: boolean;
 }
 
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
@@ -118,7 +118,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(
 
 /** 呼叫同步函数的逻辑封装 */
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnOpt<T>): [any, Error | null] {
-  const { desc = '', sn, fn, getArgs = noop, deps, from, throwErr, isFirstCall } = options;
+  const { desc = '', sn, fn, getArgs = noop, deps, from, throwErr, isFirstCall = false } = options;
   const internal = getInternal(targetState);
   const { forAtom, setStateFactory, sharedState } = internal;
   const innerSetOptions: IInnerSetStateOptions = { desc, sn, from, isFirstCall };

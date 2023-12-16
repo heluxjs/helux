@@ -96,7 +96,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
         deps: depsVar,
         task: taskVar,
         immediate,
-        depKeys: []
+        depKeys: [],
       };
     }
   }

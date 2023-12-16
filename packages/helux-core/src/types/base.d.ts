@@ -272,20 +272,22 @@ export type MutateWitness<T = any> = {
 // for mutate task
 export type MutateTask<T = SharedState, P = ReadOnlyArr> = (param: IMutateTaskParam<T, P>) => Promise<void>;
 
+export type MutateFnParams<T = SharedState, P = ReadOnlyArr> = {
+  /** 是否第一次调用 */
+  isFirstCall: boolean;
+  /** mutate deps 函数的返回值 */
+  input: P;
+  /** 只读状态 */
+  state: StateType<T>;
+  /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
+  draftRoot: DraftRootType<T>;
+};
+
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
 export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
   /** 草稿状态，对与 atom 对象 draft 是已拆箱的值，如需操作未拆箱值可读取下面的 params.draftRoot */
   draft: DraftType<T>,
-  params: {
-    /** 是否第一次调用 */
-    isFirstCall: boolean;
-    /** mutate deps 函数的返回值 */
-    input: P;
-    /** 只读状态 */
-    state: StateType<T>;
-    /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
-    draftRoot: DraftRootType<T>;
-  },
+  params: MutateFnParams<T, P>,
 ) => void;
 
 export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
@@ -730,7 +732,7 @@ export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
   setAtomVal: (val: T) => void;
 }
 
-export interface IMutateFnParams<T = SharedState> {
+export interface BeforeFnParams<T = SharedState> {
   from: From;
   desc?: FnDesc;
   sn?: number;
@@ -802,7 +804,7 @@ export interface ICreateOptionsFull<T = SharedState> {
    * action、mutate、setState、sync提交状态之前的函数，建议优先对 draft 操作，
    * 如需要返回则返回的部分对象是全新值才是安全的草稿，该函数执行时机是在中间件之前
    */
-  before: (params: IMutateFnParams<T>) => void | Partial<T>;
+  before: (params: BeforeFnParams<T>) => void | Partial<T>;
   /**
    * deafult: undefined
    * 不配置此项时，开发环境弹死循环提示，生产环境不弹
