@@ -1,5 +1,12 @@
 # @helux/fre
 
+## 3.5.11
+
+### Patch Changes
+
+- Updated dependencies [a47bce1]
+  - @helux/core@3.5.11
+
 ## 3.5.10
 
 ### Patch Changes

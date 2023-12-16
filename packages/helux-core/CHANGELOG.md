@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.11
+
+### Patch Changes
+
+- a47bce1: build(3.5.11): optimize getEventVal, support input type checkbox
+  - @helux/hooks-impl@3.5.11
+  - @helux/types@3.5.11
+  - @helux/utils@3.5.11
+
 ## 3.5.10
 
 ### Patch Changes
