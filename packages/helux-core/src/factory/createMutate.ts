@@ -1,9 +1,9 @@
-import { SINGLE_MUTATE } from '../consts';
+import { FROM, SINGLE_MUTATE } from '../consts';
 import { getInternal } from '../helpers/state';
 import type { Dict, IRunMutateOptions, MutateFn, MutateFnDict, MutateFnLooseItem, MutateWitness, SharedState } from '../types/base';
 import { checkShared, checkSharedStrict } from './common/check';
 import type { TInternal } from './creator/buildInternal';
-import { callMutateFn, watchAndCallMutateDict } from './creator/mutateFn';
+import { callAsyncMutateFnLogic, callMutateFnLogic, watchAndCallMutateDict } from './creator/mutateFn';
 import { parseCreateMutateOpt, parseMutate, parseMutateFn } from './creator/parse';
 
 interface ILogicOptions {
@@ -25,8 +25,12 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
   // 指定了 task 但未配置 task，返回最近一次修改结果的快照
   if (forTask && !item.task) return [snap, new Error(`mutate task ${desc} not defined`)] as [any, Error | null];
 
+  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE };
   // 调用 desc 对应的函数
-  return callMutateFn(target, { ...item, forTask });
+  if (forTask) {
+    return callAsyncMutateFnLogic(target, baseOpts);
+  }
+  return callMutateFnLogic(target, baseOpts);
 }
 
 function makeWitness(target: SharedState, desc: string, oriDesc: string, internal: TInternal) {

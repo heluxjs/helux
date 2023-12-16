@@ -1,4 +1,3 @@
-import { noop } from '@helux/utils';
 import { FROM, STATE_TYPE } from '../consts';
 import { runDerive, runDeriveTask } from '../helpers/fnRunner';
 import { useAtom, useAtomForceUpdate, useDerived, useLocalForceUpdate, useMutable, useReactive } from '../hooks';

@@ -40,7 +40,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     isAsyncTransfer: false,
     isSimpleWatch: false,
     isRunning: false,
-    isUsable: true,
+    dcErrorInfo: { err: null, tipFn: noop },
     asyncType: MAY_TRANSFER,
     subscribe: (cb) => {
       cb();
@@ -51,6 +51,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
       base.status = { loading, err, ok };
     },
     renderInfo: {
+      time: 0,
       insKey: 0,
       sn: 0,
       getDeps: () => base.depKeys.slice(),

@@ -1,9 +1,11 @@
+import { FROM } from '../consts';
 import { getStatusKey, setLoadStatus } from '../factory/creator/loading';
 import type { Fn, SharedState } from '../types/base';
 import { checkSharedStrict } from './common/check';
+import { newFakeFnItem } from './creator/fake';
 import { callAsyncMutateFnLogic } from './creator/mutateFn';
 
-const Action = 'Action';
+const { ACTION } = FROM;
 
 /**
  * 内部统一封装，shared 和 atom 走统一的入口，上层接口自己标记对应类型
@@ -16,17 +18,16 @@ function innerCreate<T = SharedState>(state: T, options: { task: Fn; desc: strin
   const action = (payload: any, throwFnErr?: boolean) => {
     // 用户调用 action 独立定义的 throwErr 优先级高于 创建 action 函数时预设的 throwErr
     const throwErrVar = throwFnErr ?? throwErr;
+    const fnItem = newFakeFnItem({ desc, task, depKeys: [] });
     return callAsyncMutateFnLogic(state, {
-      desc,
-      task,
-      from: Action,
-      depKeys: [],
+      fnItem,
+      from: ACTION,
       throwErr: throwErrVar,
       getArgs: ({ draft, draftRoot, setState, desc, flush }) => [{ draft, draftRoot, setState, desc, payload, flush }],
     });
   };
   // 提前记录一个值，方便用户使用 getLoading 时可收集到依赖
-  setLoadStatus(internal, getStatusKey(Action, desc), { loading: false, ok: true, err: null });
+  setLoadStatus(internal, getStatusKey(ACTION, desc), { loading: false, ok: true, err: null });
   action.__sharedKey = internal.sharedKey;
   action.__fnName = desc;
   return action;

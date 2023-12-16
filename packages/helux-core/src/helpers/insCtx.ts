@@ -156,6 +156,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     extra: {},
     getDeps: () => getInsDeps(insCtx, true),
     renderInfo: {
+      time: Date.now(),
       sn: 0,
       snap,
       insKey,

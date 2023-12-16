@@ -94,6 +94,10 @@ export function getFnCtx(fnKey: string) {
   return map.get(fnKey);
 }
 
+export function getSafeFnCtx(fnKey: string) {
+  return getCtxMap(fnKey).get(fnKey) as IFnCtx;
+}
+
 export function getFnCtxByObj<T = Dict>(obj: T) {
   const fnKey = getFnKey(obj);
   return getFnCtx(fnKey) || null;

@@ -313,6 +313,8 @@ export type MutateFnStdItem<T = any, P = ReadOnlyArr> = MutateFnItem<T, P> & {
   desc: string;
   /** mutate 函数收集到的依赖存档 */
   depKeys: string[];
+  /** 当前 mutate 函数所属的 watch 函数 key */
+  watchKey: string;
 };
 
 export type MutateFnLooseItem<T = SharedState, P = ReadOnlyArr> = MutateFnItem<T, P> & {
@@ -404,6 +406,8 @@ export interface ISetFactoryOpts extends ISetStateOptions {
 }
 
 export interface IInnerSetStateOptions extends ISetFactoryOpts {
+  /** 跳过不执行的 fnKey */
+  skipFnKey?: boolean;
   isFirstCall?: boolean;
   insKey?: number;
   /**
@@ -485,8 +489,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-  ? SyncerFn
-  : { [key in keyof T['val']]: SyncerFn }
+    ? SyncerFn
+    : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -495,16 +499,16 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-  ? DerivedAtom<ReturnType<T['fn']>>
-  : DerivedAtom<any>
+    ? DerivedAtom<ReturnType<T['fn']>>
+    : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
 
 type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-  ? ReturnType<T['fn']>
-  : any
+    ? ReturnType<T['fn']>
+    : any
   : T extends DeriveFn
   ? ReturnType<T>
   : any;
@@ -1118,11 +1122,13 @@ export interface IFnCtx {
    * 是否正在运行中，辅助判断死循环
    */
   isRunning: boolean;
-  /** 标记函数是否可用，异步 task 发现死循环时，会标记暂不可用，以便阻止函数继续不停下钻执行 */
-  isUsable: boolean;
+  // /** 标记函数是否可用，异步 task 发现死循环时，会标记暂不可用，以便阻止函数继续不停下钻执行 */
+  // isUsable: boolean;
+  /** 当前函数存在死循环，已不可用 */
+  dcErrorInfo: { err: Error | null; tipFn: Fn };
   asyncType: AsyncType;
   subscribe: Fn;
-  renderInfo: IRenderInfo;
+  renderInfo: IFnRenderInfo;
   /** 记录一些需复用的中间生成的数据 */
   extra;
   /** 对应的可能存在的子函数描述 */
@@ -1132,14 +1138,23 @@ export interface IFnCtx {
   setLoading: (loading: boolean, err?: any) => void;
 }
 
-export interface IRenderInfo {
+export interface IFnRenderInfo {
+  /** 渲染时间 */
+  time: number;
   insKey: number;
   /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
   sn: number;
   /**
-   * 获取派生结果对应的依赖
+   * 获取组件实例当前渲染阶段收集的依赖，如渲染过程中调用，是一个动态变化的数组
    */
   getDeps: () => string[];
+}
+
+export interface IRenderInfo extends IFnRenderInfo {
+  /**
+   * 获取组件实例上一轮渲染阶段收集的依赖
+   */
+  getPrevDeps: () => string[];
 }
 
 export interface IInsRenderInfo {
@@ -1153,6 +1168,8 @@ export interface IInsRenderInfo {
    */
   getDeps: () => string[];
   snap: any;
+  /** 渲染时间 */
+  time: number;
   /**
    * 获取组件的前一次渲染周期里收集到依赖列表（注：依赖包含了 deps 函数固定住的依赖）
    */
@@ -1241,17 +1258,6 @@ export interface IRuleConf {
     arrKeyStopDcit: KeyBoolDict;
     stopArrDep: boolean;
   };
-}
-
-interface ICallMutateFnOptions<T = SharedState> {
-  forTask: boolean;
-  depKeys: string[];
-  fn?: MutateFn<T>;
-  task?: MutateTask<T>;
-  desc?: FnDesc;
-  sn?: number;
-  deps?: Fn;
-  throwErr?: boolean;
 }
 
 export interface IUseDerivedOptions {

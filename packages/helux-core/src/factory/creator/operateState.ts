@@ -131,7 +131,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
 
   if (isReactive) {
     // 来自响应对象的变更操作，主动触发 nextTickFlush
-    nextTickFlush(sharedKey);
+    nextTickFlush(sharedKey, currReactive.desc);
   } else {
     // 发现 sharedKey 对应的对象已变化，主动标记 sharedKey 对应的响应对象已过期
     markExpired(sharedKey);

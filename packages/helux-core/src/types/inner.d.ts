@@ -28,6 +28,8 @@ export interface IReactive {
 export interface IReactiveMeta {
   isReactive: boolean;
   key: string;
+  /** 操作 reactive 时，可能存在的真正执行的 watch 函数 key */
+  fnKey: string;
   sharedKey: number;
   moduleName: string;
   /**

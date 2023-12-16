@@ -15,6 +15,7 @@ export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
   const { proxyState, internal, renderInfo, canCollect, isReactive } = insCtx;
   const { sharedKey, sharedKeyStr, setState, forAtom } = internal;
   renderInfo.snap = internal.snap;
+  renderInfo.time = Date.now();
   // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
   const rootVal = forAtom ? proxyState.val : proxyState;
   // 首次渲染时，记录一下 rootVal

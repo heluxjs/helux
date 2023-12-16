@@ -3,7 +3,7 @@
  */
 import { includeOne, nodupPush, noop, safeMapGet, tryAlert } from '@helux/utils';
 import { fmtDepKeys } from '../../helpers/debug';
-import type { IFnCtx } from '../../types/base';
+import type { Fn, IFnCtx } from '../../types/base';
 import { TInternal } from './buildInternal';
 
 type Log = { sn: number; descs: string[]; timer: any; errs: any[]; cycle: string[] };
@@ -43,13 +43,15 @@ export function depKeyDcError(internal: TInternal, fnCtx: IFnCtx, depKeys: strin
   const descStr = desc ? `(${desc})` : '';
   const dcInfo =
     `DEAD_CYCLE: found reactive object in ${tip}${descStr} cb`
-    + ` is changing module(${internal.usefulName})'s keys(${fmtDepKeys(depKeys, false, '.')}) by its self, `
-    + 'but some of these keys are also the watched dep keys, it will cause a infinity loop call!';
+    + ` is changing module(${internal.usefulName})'s some of these dep keys(${fmtDepKeys(depKeys, false, '.')}), `
+    + 'it will cause a infinity loop call!';
 
   const mutateFn = task || fn;
   const targetFn = mutateFn === noop ? fnCtx.fn : mutateFn;
-  console.error(` ${dcInfo} open the stack to find the below fn: \n`, targetFn);
-  return new Error(`[only-dev-mode alert] ${dcInfo}`);
+  return {
+    err: new Error(`[only-dev-mode alert] ${dcInfo}`),
+    tipFn: () => console.error(` ${dcInfo} open the stack to find the below fn: \n`, targetFn),
+  };
 }
 
 /**
@@ -80,13 +82,22 @@ export function probeFnDeadCycle(internal: TInternal, sn: number, desc: string) 
   }
 }
 
+export function alertDepKeyDeadCycleErr(internal: TInternal, dcErrorInfo: { err: Error | null; tipFn: Fn }) {
+  dcErrorInfo.tipFn();
+  tryAlert(dcErrorInfo.err, {
+    logErr: false,
+    throwErr: false,
+    alertErr: internal.alertDeadCycleErr,
+  });
+}
+
 /**
  * 发现类似
  * 1 watch(()=>{ reactive.a = 1 }, ()=>[reactive.a])
  * 2 matate(draft=>draft+=1)
  * 等场景的死循环
  */
-export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changedDepKeys: string[]): boolean {
+export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changedDepKeys: string[]): { err: Error | null; tipFn: Fn } {
   const { depKeys, subFnInfo } = fnCtx;
   let shortArr = fnCtx.depKeys;
   let longArr = changedDepKeys;
@@ -95,16 +106,14 @@ export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changed
     longArr = depKeys;
   }
 
-  const foundDc = includeOne(shortArr, longArr);
-  if (foundDc) {
+  let dcErrorInfo: any = { err: null, tipFn: noop };
+  // found dc error
+  if (includeOne(shortArr, longArr)) {
     const cbType: CbType = subFnInfo.desc ? cbTypes.MUTATE : cbTypes.WATCH;
-    tryAlert(depKeyDcError(internal, fnCtx, changedDepKeys, cbType), {
-      logErr: false,
-      throwErr: false,
-      alertErr: internal.alertDeadCycleErr,
-    });
+    dcErrorInfo = depKeyDcError(internal, fnCtx, changedDepKeys, cbType);
+    alertDepKeyDeadCycleErr(internal, dcErrorInfo);
   }
-  return foundDc;
+  return dcErrorInfo;
 }
 
 /**
@@ -121,7 +130,7 @@ export function inDeadCycle(usefulName: string, desc: string) {
 /**
  * 分析错误日志
  */
-export function analyzeErrLog(usefulName: string, err: any) {
+export function analyzeErrLog(usefulName: string, err: any, alertErr = true) {
   const log = logMap.get(usefulName);
   if (!log) return;
   const { timer, errs } = log;
@@ -138,7 +147,7 @@ export function analyzeErrLog(usefulName: string, err: any) {
       }
     }
     if (targetErr) {
-      tryAlert(targetErr);
+      tryAlert(targetErr, { alertErr });
     }
     errs.length = 0;
   }, 0);

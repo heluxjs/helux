@@ -28,9 +28,19 @@ let CURRENT_DEPS_CB: Fn = noop;
 
 let CURRENT_FN_DEPS: string[] = [];
 
+/** 被触发运行的 watch 函数 */
+let CURRENT_TRIGGERED_WATCH = '';
+
 export function currentDraftRoot() {
   return CURRENT_DRAFT_ROOT;
 }
+
+/** 当前正在被触发运行的 watch 函数 key */
+export const TRIGGERED_WATCH = {
+  current: () => CURRENT_TRIGGERED_WATCH,
+  set: (val: any) => (CURRENT_TRIGGERED_WATCH = val),
+  del: () => 0,
+};
 
 export const DEPS_CB = {
   current: () => CURRENT_DEPS_CB,

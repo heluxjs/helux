@@ -5,7 +5,7 @@ import type { Dict, From, OnOperate } from '../../types/base';
 import type { IReactive, IReactiveMeta } from '../../types/inner';
 import { getReactiveKey } from '../common/key';
 import type { TInternal } from './buildInternal';
-import { REACTIVE_DESC, REACTIVE_META } from './current';
+import { REACTIVE_DESC, REACTIVE_META, TRIGGERED_WATCH } from './current';
 
 /** key: sharedKey, value: reactive object */
 const reactives: Map<number, IReactive> = new Map();
@@ -17,7 +17,7 @@ function canFlush(reactive?: IReactive): reactive is IReactive {
 /**
  * flush modified data by finish handler
  */
-function flushModified(reactive: IReactive) {
+function flushModified(reactive: IReactive, skipFnKey?: string) {
   const { sharedKey } = reactive;
   // 标记过期，不能再被复用
   reactive.expired = true;
@@ -45,16 +45,27 @@ export function flush(sharedState: any, desc?: string) {
 }
 
 /**
+ * 刷新可能在活跃中的 reaactive 对象，提交后就删除
+ */
+export function flushActive() {
+  const rmeta = REACTIVE_META.current();
+  if (rmeta.isReactive) {
+    innerFlush(rmeta.sharedKey, rmeta.desc);
+    REACTIVE_META.del(rmeta.key);
+  }
+}
+
+/**
  * 供内部调用的 flush 方法
  */
-export function innerFlush(sharedKey: any, desc?: string) {
+export function innerFlush(sharedKey: any, desc?: string, skipFnKey?: string) {
   const reactive = reactives.get(sharedKey);
   if (canFlush(reactive)) {
     if (desc) {
       REACTIVE_DESC.set(sharedKey, desc);
     }
     // 提交变化数据
-    flushModified(reactive);
+    flushModified(reactive, skipFnKey);
   }
 }
 
@@ -119,6 +130,15 @@ function getReactiveVal(internal: TInternal, forAtom: boolean) {
   return forAtom ? draft.val : draft;
 }
 
+function marUsing(rKey: string) {
+  REACTIVE_META.markUsing(rKey);
+  const watchFnKey = TRIGGERED_WATCH.current();
+  if (watchFnKey) {
+    const rmeta = REACTIVE_META.current();
+    rmeta.fnKey = watchFnKey;
+  }
+}
+
 /**
  * 创建全局使用的响应式共享对象
  */
@@ -130,7 +150,17 @@ export function buildReactive(internal: TInternal, fnDepKeys: string[], options?
   const { desc, onRead, from = FROM.REACTIVE } = options || {};
 
   const rKey = getReactiveKey();
-  const meta: IReactiveMeta = { isReactive: true, moduleName, key: rKey, desc: desc || '', sharedKey, writeKeys: [], onRead, from };
+  const meta: IReactiveMeta = {
+    isReactive: true,
+    moduleName,
+    key: rKey,
+    fnKey: '',
+    desc: desc || '',
+    sharedKey,
+    writeKeys: [],
+    onRead,
+    from,
+  };
   if (canUseDeep(deep)) {
     const innerData = {
       [REACTIVE_META_KEY]: meta,
@@ -138,14 +168,14 @@ export function buildReactive(internal: TInternal, fnDepKeys: string[], options?
       [IS_ATOM]: forAtom,
     };
     const set = (forAtom: boolean, key: any, value: any) => {
-      REACTIVE_META.markUsing(rKey);
+      marUsing(rKey);
       const draftVal = getReactiveVal(internal, forAtom);
       // handleOperate 里会自动触发 nextTickFlush
       draftVal[key] = value;
       return true;
     };
     const get = (forAtom: boolean, key: any, innerData: Dict) => {
-      REACTIVE_META.markUsing(rKey);
+      marUsing(rKey);
       const val = innerData[key];
       if (val !== undefined) {
         return val;

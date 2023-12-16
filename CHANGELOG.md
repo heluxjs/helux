@@ -1,6 +1,6 @@
 # Change Log
 
-click helux-core [change log](./packages/helux-core/CHANGELOG.md) to see more details 
+click helux-core [change log](./packages/helux-core/CHANGELOG.md) to see more details
 
 [released] - 2023-11-24
 

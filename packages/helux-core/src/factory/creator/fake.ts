@@ -1,4 +1,4 @@
-import { noop } from '@helux/utils';
+import { noop, noopArr } from '@helux/utils';
 import { FROM } from '../../consts';
 import type { MutateFnStdItem } from '../../types/base';
 import type { IReactiveMeta } from '../../types/inner';
@@ -12,6 +12,7 @@ export const fakeMutateCtx = newMutateCtx({});
 export const fakeReativeMeta: IReactiveMeta = {
   isReactive: false,
   key: '',
+  fnKey: '',
   sharedKey: 0,
   moduleName: '',
   writeKeys: [],
@@ -26,6 +27,22 @@ export const fakeMutateFnItem: MutateFnStdItem = {
   depKeys: [],
   oriDesc: '',
   desc: '',
+  watchKey: '',
 };
 
 export const fakeInternal = buildInternal({ rawState: {}, forAtom: false, usefulName: '' } as any, {} as any);
+
+export const newFakeFnItem = (partial: any) => {
+  const { desc = '', fn = noop, task = noop, depKeys = [], deps = noopArr } = partial;
+  return {
+    fn,
+    task,
+    deps,
+    oriDesc: '',
+    desc,
+    depKeys,
+    checkDeadCycle: undefined,
+    watchKey: '',
+    ...partial,
+  };
+};

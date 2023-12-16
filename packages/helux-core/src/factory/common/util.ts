@@ -92,10 +92,9 @@ export function getRootValDepKeyInfo(internal: TInternal) {
 
 export function getDepKeyByPath(fullKeyPath: string[], sharedKey: number) {
   try {
-    // console.trace(fullKeyPath);
     return prefixValKey(fullKeyPath.join(KEY_SPLITER), sharedKey);
   } catch (err) {
-    console.trace('found Symbol key in your path :', fullKeyPath);
+    console.warn('found Symbol key in your path :', fullKeyPath);
     return `${sharedKey}`;
   }
 }

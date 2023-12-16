@@ -17,5 +17,6 @@ export default defineConfig({
     // include: ['./__tests__/atom/base.test.ts'],
     // include: ['./__tests__/atom/mutate.test.ts'],
     // include: ['./__tests__/share/change.test.ts'],
+    // include: ['./__tests__/hooks/useMutateLoading.test.ts'],
   },
 });

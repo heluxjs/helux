@@ -9,7 +9,7 @@ describe('useMutateLoading', () => {
     const witness = fn({
       deps,
       task: async ({ setState }) => {
-        await delay(1200);
+        await delay(1000);
         setState((draft) => {
           draft.b = 100;
         });
