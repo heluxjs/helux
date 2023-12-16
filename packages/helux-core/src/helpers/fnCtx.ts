@@ -13,6 +13,7 @@ export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
     fnKey: '', // 在 feDep.mapFn 阶段会生成
     fn: noop,
     subFnInfo: fakeMutateFnItem,
+    checkDeadCycle: true,
     isFirstLevel: true,
     isExpired: false,
     task: noop,

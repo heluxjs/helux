@@ -296,6 +296,11 @@ export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
   task?: MutateTask<T, P>;
   /** default: false, task 是否立即执行 */
   immediate?: boolean;
+  /**
+   * default: undefined，是否检测死循环，设置为 false 表示不检查
+   * 未设定时，使用 atom、share 接口设定的checkDeadCycle值
+   */
+  checkDeadCycle?: boolean;
 };
 
 /** std item 确保了 desc 一定存在 */
@@ -464,8 +469,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-  ? SyncerFn
-  : { [key in keyof T['val']]: SyncerFn }
+    ? SyncerFn
+    : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -474,16 +479,16 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-  ? DerivedAtom<ReturnType<T['fn']>>
-  : DerivedAtom<any>
+    ? DerivedAtom<ReturnType<T['fn']>>
+    : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
 
 type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-  ? ReturnType<T['fn']>
-  : any
+    ? ReturnType<T['fn']>
+    : any
   : T extends DeriveFn
   ? ReturnType<T>
   : any;
@@ -803,6 +808,10 @@ export interface ICreateOptionsFull<T = SharedState> {
    * 不配置此项时，开发环境弹死循环提示，生产环境不弹
    */
   alertDeadCycleErr: boolean;
+  /**
+   * default: true，是否检测死循环，设置为 false 表示不检查
+   */
+  checkDeadCycle?: boolean;
 }
 
 export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull<SharedState> {
@@ -1103,6 +1112,8 @@ export interface IFnCtx {
   extra;
   /** 对应的可能存在的子函数描述 */
   subFnInfo: MutateFnStdItem;
+  /** 由 createSharedOptions.checkDeadCycle 和 mutateFnItem.checkDeadCycle 共同生成 */
+  checkDeadCycle: boolean;
   setLoading: (loading: boolean, err?: any) => void;
 }
 

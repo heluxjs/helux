@@ -187,7 +187,10 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         const { desc, fn, task, deps, immediate } = item;
         const fnCtx = getRunningFn().fnCtx;
         if (isFirstCall && fnCtx) {
-          fnCtx.subFnInfo = item; // 将子函数信息挂上去
+          // 将子函数信息挂上去
+          fnCtx.subFnInfo = item;
+          // 优先读子函数配置，在读模块配置
+          fnCtx.checkDeadCycle = item.checkDeadCycle ?? internal.checkDeadCycle;
         }
 
         FN_DEP_KEYS.del();

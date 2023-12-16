@@ -144,6 +144,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const moduleName = options.moduleName || '';
   const alertDeadCycleErr = options.alertDeadCycleErr ?? isDebug();
   const deep = options.deep ?? true;
+  const checkDeadCycle = options.checkDeadCycle ?? true;
   const recordLoading = options.recordLoading || RECORD_LOADING.PRIVATE;
   const rules = options.rules || [];
   const before = options.before || noop;
@@ -161,6 +162,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     /** TODO 未来支持 atom 对象销毁 */
     isDestroyed: false,
     alertDeadCycleErr,
+    checkDeadCycle,
     rawState,
     sharedKey,
     sharedKeyStr,

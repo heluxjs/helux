@@ -40,7 +40,8 @@ function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
     return;
   }
   // simpleWatch 的依赖时转移进去的，不需要判死循环，否则会照成误判
-  if (fnCtx.isSimpleWatch) {
+  // 设定了 checkDeadCycle 为 false，不检查死循环
+  if (fnCtx.isSimpleWatch || !fnCtx.checkDeadCycle) {
     return fnCtx.fn({ isFirstCall, triggerReasons, sn });
   }
   // 优先开始检查 mutate 多个同步函数间的死循环
