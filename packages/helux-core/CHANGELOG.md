@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.10
+
+### Patch Changes
+
+- 9b5f09c: build(3.5.10): move devtool dep redux from peer to dep, optimize sync before logic, del setAtomVal, currentAtomRoot
+  - @helux/hooks-impl@3.5.10
+  - @helux/types@3.5.10
+  - @helux/utils@3.5.10
+
 ## 3.5.9
 
 ### Patch Changes
