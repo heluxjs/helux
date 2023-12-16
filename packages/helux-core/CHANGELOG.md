@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.9
+
+### Patch Changes
+
+- 7fd1a7f: build(3.5.9): add MutateFnParams, BeforeFnParams
+  - @helux/hooks-impl@3.5.9
+  - @helux/types@3.5.9
+  - @helux/utils@3.5.9
+
 ## 3.5.8
 
 ### Patch Changes
