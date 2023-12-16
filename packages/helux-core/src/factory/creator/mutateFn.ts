@@ -26,7 +26,7 @@ interface ICallMutateBase {
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
   fn: Fn;
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[] }) => any[];
+  getArgs?: (param: { isFirstCall: boolean; draft: T; draftRoot: T; setState: Fn; desc: string; input: any[] }) => any[];
 }
 
 interface ICallAsyncMutateFnOpt extends ICallMutateBase {
@@ -43,7 +43,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(
   targetState: T,
   options: ICallAsyncMutateFnOpt,
 ): [any, Error | null] | Promise<[any, Error | null]> {
-  const { desc = '', sn, task, getArgs = noop, deps, from, throwErr, depKeys } = options;
+  const { desc = '', sn, task, getArgs = noop, deps, from, throwErr, depKeys, isFirstCall } = options;
   const internal = getInternal(targetState);
   const { sharedKey } = internal;
   const customOptions: IInnerSetStateOptions = { desc, sn, from };
@@ -63,7 +63,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(
     return finish(cb);
   };
 
-  const defaultParams = { desc, setState, input: enureReturnArr(deps, targetState), draft, draftRoot, flush };
+  const defaultParams = { isFirstCall, desc, setState, input: enureReturnArr(deps, targetState), draft, draftRoot, flush };
   const args = getArgs(defaultParams) || [defaultParams];
   const isProm = fnProm.get(task);
   const isUnconfirmedFn = isProm === undefined;
@@ -138,7 +138,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     markIgnore(false); // recover dep collect
   }
   const { draftNode: draft, draftRoot, finish } = setStateFactory({ from, enableDep: true });
-  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state, draftRoot }];
+  const args = getArgs({ isFirstCall, draft, draftRoot, setState, desc, input }) || [draft, { input, state, draftRoot, isFirstCall }];
 
   try {
     const result = fn(...args);

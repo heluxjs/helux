@@ -230,6 +230,8 @@ export interface IRunMutateOptions {
 }
 
 export interface IMutateTaskParam<T = SharedState, P = any[]> {
+  /** 是否第一次调用 */
+  isFirstCall;
   /** 异步任务提供的 draft 是全局响应式对象 */
   draftRoot: DraftRootType<T>;
   draft: DraftType<T>;
@@ -272,8 +274,18 @@ export type MutateTask<T = SharedState, P = ReadOnlyArr> = (param: IMutateTaskPa
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
 export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
+  /** 草稿状态，对与 atom 对象 draft 是已拆箱的值，如需操作未拆箱值可读取下面的 params.draftRoot */
   draft: DraftType<T>,
-  params: { input: P; state: StateType<T>; draftRoot: DraftRootType<T> },
+  params: {
+    /** 是否第一次调用 */
+    isFirstCall: boolean;
+    /** mutate deps 函数的返回值 */
+    input: P;
+    /** 只读状态 */
+    state: StateType<T>;
+    /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
+    draftRoot: DraftRootType<T>;
+  },
 ) => void;
 
 export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
@@ -452,8 +464,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-    ? SyncerFn
-    : { [key in keyof T['val']]: SyncerFn }
+  ? SyncerFn
+  : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -462,16 +474,16 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? DerivedAtom<ReturnType<T['fn']>>
-    : DerivedAtom<any>
+  ? DerivedAtom<ReturnType<T['fn']>>
+  : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
 
 type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? ReturnType<T['fn']>
-    : any
+  ? ReturnType<T['fn']>
+  : any
   : T extends DeriveFn
   ? ReturnType<T>
   : any;
