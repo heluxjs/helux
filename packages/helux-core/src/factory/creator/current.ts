@@ -39,7 +39,7 @@ export function currentDraftRoot() {
 export const TRIGGERED_WATCH = {
   current: () => CURRENT_TRIGGERED_WATCH,
   set: (val: any) => (CURRENT_TRIGGERED_WATCH = val),
-  del: () => CURRENT_TRIGGERED_WATCH = '',
+  del: () => (CURRENT_TRIGGERED_WATCH = ''),
 };
 
 export const DEPS_CB = {

@@ -10,11 +10,12 @@ export const fakeDraftRoot = { val: null, isFake: true };
 export const fakeMutateCtx = newMutateCtx({});
 
 export const fakeReativeMeta: IReactiveMeta = {
-  isReactive: false,
+  isTop: true,
   key: '',
   fnKey: '',
   sharedKey: 0,
   moduleName: '',
+  depKeys: [],
   writeKeys: [],
   desc: '',
   onRead: undefined,

@@ -2,6 +2,7 @@ import { enureReturnArr, isPromise, noop, tryAlert } from '@helux/utils';
 import { EVENT_NAME, FROM, SCOPE_TYPE } from '../../consts';
 import { getRunningFn, getSafeFnCtx } from '../../factory/common/fnScope';
 import { emitPluginEvent } from '../../factory/common/plugin';
+import type { TInternal } from '../../factory/creator/buildInternal';
 import { FN_DEP_KEYS, REACTIVE_META, TRIGGERED_WATCH } from '../../factory/creator/current';
 import { alertDepKeyDeadCycleErr, analyzeErrLog, dcErr, inDeadCycle, probeDepKeyDeadCycle } from '../../factory/creator/deadCycle';
 import { getStatusKey, setLoadStatus } from '../../factory/creator/loading';
@@ -12,7 +13,7 @@ import type { Fn, From, IInnerSetStateOptions, IWatchAndCallMutateDictOptions, M
 import { createWatchLogic } from '../createWatch';
 import { buildReactive, flushActive, innerFlush } from './reactive';
 
-const noopAny: any = () => { };
+const noopAny: any = () => {};
 
 interface ICallMutateBase {
   /** 透传给用户 */
@@ -47,7 +48,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(
   const { sharedKey } = internal;
   const customOptions: IInnerSetStateOptions = { desc, sn, from };
   const statusKey = getStatusKey(from, desc);
-  const { draft, draftRoot, meta } = buildReactive(internal, depKeys, { desc, from });
+  const { draft, draftRoot, meta } = buildReactive(internal, { depKeys, desc, from });
   const flush = (desc: string) => {
     innerFlush(sharedKey, desc);
   };
@@ -153,32 +154,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
 
     const result = fn(...args);
     finish(result, innerSetOptions);
-
-    // 存档一下收集到依赖，方便后续探测异步函数里的死循环可能存在的情况
-    if (isFirstCall && !fnItem.onlyDeps) {
-      const fnCtx = getRunningFn().fnCtx;
-      if (fnCtx) {
-        // 异步函数强制忽略依赖收集行为
-        fnItem.depKeys = markFnEnd();
-      } else {
-        // 可能在 notify 里已经执行过 markFnEnd 了，这里将 FN_DEP_KEYS.current 转移出来
-        fnItem.depKeys = FN_DEP_KEYS.current();
-      }
-      FN_DEP_KEYS.del();
-    }
-
-    const rmeta = REACTIVE_META.current();
-    // 当前 reactive 对象是在 fnCtx 内部调用时操作的，需探测死循环
-    // 形如 watch(()=>{ foo() }, ()=>[s.a]) function foo(){ reactiv.a+=1 }
-    if (rmeta.isReactive && rmeta.fnKey === fnItem.watchKey) {
-      const fnCtx = getSafeFnCtx(fnItem.watchKey);
-      const dcErrorInfo = probeDepKeyDeadCycle(internal, getSafeFnCtx(fnItem.watchKey), rmeta.writeKeys);
-      if (dcErrorInfo.err) {
-        fnCtx.dcErrorInfo = dcErrorInfo;
-      }
-    }
-
-    TRIGGERED_WATCH.del();
+    afterFnRun(internal, fnItem, isFirstCall);
     return [internal.snap, null];
   } catch (err: any) {
     TRIGGERED_WATCH.del();
@@ -187,6 +163,52 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
       throw err;
     }
     return [internal.snap, err];
+  }
+}
+
+function afterFnRun(internal: TInternal, fnItem: MutateFnStdItem, isFirstCall: boolean) {
+  // 存档一下收集到依赖，方便后续探测异步函数里的死循环可能存在的情况
+  if (isFirstCall && !fnItem.onlyDeps) {
+    const fnCtx = getRunningFn().fnCtx;
+    if (fnCtx) {
+      // 异步函数强制忽略依赖收集行为
+      fnItem.depKeys = markFnEnd();
+    } else {
+      // 可能在 notify 里已经执行过 markFnEnd 了，这里将 FN_DEP_KEYS.current 转移出来
+      fnItem.depKeys = FN_DEP_KEYS.current();
+    }
+    FN_DEP_KEYS.del();
+  }
+  const rmeta = REACTIVE_META.current();
+  // 当前 reactive 对象是在 fnCtx 内部调用时操作的，需探测死循环
+  // 形如 watch(()=>{ foo() }, ()=>[s.a]) function foo(){ reactiv.a+=1 }
+  if (rmeta.isTop && rmeta.fnKey === fnItem.watchKey) {
+    // 发现死循环后，下一次执行被阻断
+    probeDepKeyDeadCycle(internal, getSafeFnCtx(fnItem.watchKey), rmeta.writeKeys);
+  }
+  // 标记 fnItem 所属 watch 运行结束
+  TRIGGERED_WATCH.del();
+}
+
+function initFnItem(internal: TInternal, fnItem: MutateFnStdItem) {
+  // clean
+  flushActive();
+  FN_DEP_KEYS.del();
+  markIgnore(false);
+
+  const fnCtx = getRunningFn().fnCtx;
+  if (fnCtx) {
+    // 将子函数信息挂上去
+    fnCtx.subFnInfo = fnItem;
+    // 优先读子函数配置，在读模块配置
+    fnCtx.checkDeadCycle = fnItem.checkDeadCycle ?? internal.checkDeadCycle;
+    // 双向记录一下 fnItem 和 watch 函数之间的关系
+    fnItem.watchKey = fnCtx.fnKey;
+  }
+
+  // 设定了依赖全部从 deps 函数获取，提前结束运行中的 fnCtx
+  if (fnItem.onlyDeps) {
+    fnItem.depKeys = markFnEnd();
   }
 }
 
@@ -206,55 +228,29 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
     // 开始映射 mutate 函数相关数据依赖关系
     createWatchLogic(
       ({ sn, isFirstCall }) => {
-        flushActive();
-        const { desc, fn, task, immediate, onlyDeps } = item;
-        const fnCtx = getRunningFn().fnCtx;
-        if (isFirstCall && fnCtx) {
-          // 将子函数信息挂上去
-          fnCtx.subFnInfo = item;
-          // 优先读子函数配置，在读模块配置
-          fnCtx.checkDeadCycle = item.checkDeadCycle ?? internal.checkDeadCycle;
-          // 双向记录一下 fnItem 和 watch 函数之间的关系
-          item.watchKey = fnCtx.fnKey;
-          // 设定了依赖全部从 deps 函数获取
-          if (onlyDeps) {
-            item.depKeys = markFnEnd();
-          }
+        if (isFirstCall) {
+          initFnItem(internal, item);
         }
 
-        FN_DEP_KEYS.del();
+        const { desc, fn, task, immediate } = item;
         const dc = inDeadCycle(usefulName, desc);
-
         try {
           // 已处于死循环中的函数，不再执行
           if (dc.isIn) {
             throw dcErr(usefulName, dc.cycle, desc);
           }
           const baseOpts = { sn, throwErr: true, isFirstCall, fnItem: item, from: FROM.MUTATE };
-          if (fn) {
-            // 包含 task 配置时，fn 只会在首次执行被调用一次
-            if (isFirstCall || !task) {
-              markIgnore(false);
-              callMutateFnLogic(target, baseOpts);
-            }
+          // 包含 task 配置时，fn 只会在首次执行被调用一次
+          if (fn && (isFirstCall || !task)) {
+            callMutateFnLogic(target, baseOpts);
           }
 
-          // // 存档一下收集到依赖，方便后续探测异步函数里的死循环可能存在的情况
-          // if (isFirstCall) {
-          //   if (fnCtx) {
-          //     // 异步函数强制忽略依赖收集行为
-          //     item.depKeys = markFnEnd();
-          //   } else {
-          //     // 可能在 notify 里已经执行过 markFnEnd 了，这里将 FN_DEP_KEYS.current 转移出来
-          //     item.depKeys = FN_DEP_KEYS.current();
-          //   }
-          //   FN_DEP_KEYS.del();
-          // }
-
           if (task) {
+            // 考虑到只有task立即执行task的情况，这里调用 markFnEnd 确保异步函数强制忽略依赖收集行为
+            isFirstCall && markFnEnd();
             // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行 task，有 fn 则不执行 task
-            const canRunForFirstCall = isFirstCall && (immediate ?? !fn);
-            if (!isFirstCall || canRunForFirstCall) {
+            const canRunAtFirstCall = isFirstCall && (immediate ?? !fn);
+            if (!isFirstCall || canRunAtFirstCall) {
               callAsyncMutateFnLogic(target, baseOpts);
             }
           }

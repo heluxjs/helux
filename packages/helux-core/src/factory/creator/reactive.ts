@@ -49,7 +49,7 @@ export function flush(sharedState: any, desc?: string) {
  */
 export function flushActive() {
   const rmeta = REACTIVE_META.current();
-  if (rmeta.isReactive) {
+  if (rmeta.isTop) {
     innerFlush(rmeta.sharedKey, rmeta.desc);
     REACTIVE_META.del(rmeta.key);
   }
@@ -140,23 +140,27 @@ function markUsing(rKey: string) {
 }
 
 /**
- * 创建全局使用的响应式共享对象
+ * 创建响应式共享对象
  */
-export function buildReactive(internal: TInternal, fnDepKeys: string[], options?: { desc?: string; onRead?: OnOperate; from?: From }) {
+export function buildReactive(
+  internal: TInternal,
+  options?: { isTop?: boolean; depKeys?: string[]; desc?: string; onRead?: OnOperate; from?: From },
+) {
   // 提供 draftRoot、draft，和 mutate、aciont 回调里对齐，方便用户使用 atom 时少一层 .val 操作
   let draftRoot: any = {};
   let draft: any = {};
   const { rawState, deep, forAtom, isPrimitive, sharedKey, moduleName } = internal;
-  const { desc, onRead, from = FROM.REACTIVE } = options || {};
+  const { desc, onRead, from = FROM.REACTIVE, depKeys = [], isTop = false } = options || {};
 
   const rKey = getReactiveKey();
   const meta: IReactiveMeta = {
-    isReactive: true,
+    isTop,
     moduleName,
     key: rKey,
     fnKey: '',
     desc: desc || '',
     sharedKey,
+    depKeys,
     writeKeys: [],
     onRead,
     from,

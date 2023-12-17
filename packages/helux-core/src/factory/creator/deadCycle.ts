@@ -97,7 +97,7 @@ export function alertDepKeyDeadCycleErr(internal: TInternal, dcErrorInfo: { err:
  * 2 matate(draft=>draft+=1)
  * 等场景的死循环
  */
-export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changedDepKeys: string[]): { err: Error | null; tipFn: Fn } {
+export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changedDepKeys: string[]): boolean {
   const { depKeys, subFnInfo } = fnCtx;
   let shortArr = fnCtx.depKeys;
   let longArr = changedDepKeys;
@@ -106,14 +106,16 @@ export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changed
     longArr = depKeys;
   }
 
-  let dcErrorInfo: any = { err: null, tipFn: noop };
+  let foundDc = false;
   // found dc error
   if (includeOne(shortArr, longArr)) {
     const cbType: CbType = subFnInfo.desc ? cbTypes.MUTATE : cbTypes.WATCH;
-    dcErrorInfo = depKeyDcError(internal, fnCtx, changedDepKeys, cbType);
+    const dcErrorInfo = depKeyDcError(internal, fnCtx, changedDepKeys, cbType);
     alertDepKeyDeadCycleErr(internal, dcErrorInfo);
+    fnCtx.dcErrorInfo = dcErrorInfo;
+    foundDc = true;
   }
-  return dcErrorInfo;
+  return foundDc;
 }
 
 /**

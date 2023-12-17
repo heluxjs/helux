@@ -68,7 +68,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
     };
 
     if (isReactive) {
-      const { draft, draftRoot } = buildReactive(internal, [], { onRead: onOperate });
+      const { draft, draftRoot } = buildReactive(internal, { onRead: onOperate });
       insCtx.proxyState = draftRoot;
       insCtx.proxyStateVal = draft;
     } else {

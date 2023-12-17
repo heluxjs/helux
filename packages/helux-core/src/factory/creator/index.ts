@@ -25,7 +25,7 @@ export function buildSharedObject<T = any>(innerOptions: IInnerOptions, createOp
   watchAndCallMutateDict({ target: sharedRoot, dict: parsedOptions.mutateFnDict });
 
   // 创建顶层使用的响应式对象
-  const { draft, draftRoot } = buildReactive(internal, []);
+  const { draft, draftRoot } = buildReactive(internal, { isTop: true });
   internal.reactive = draft;
   internal.reactiveRoot = draftRoot;
   clearInternal(parsedOptions.moduleName, internal.loc);

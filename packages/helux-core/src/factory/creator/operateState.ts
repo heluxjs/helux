@@ -83,7 +83,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
   const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
 
-  if (currReactive.isReactive) {
+  if (currReactive.isTop) {
     nodupPush(currReactive.writeKeys, writeKey);
   }
 
