@@ -1,5 +1,11 @@
 # @helux/utils
 
+## 3.5.15
+
+### Patch Changes
+
+- @helux/types@3.5.15
+
 ## 3.5.14
 
 ### Patch Changes

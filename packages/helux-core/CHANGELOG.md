@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.15
+
+### Patch Changes
+
+- c3f24a5: build(3.5.15): optimize buildReactive
+  - @helux/hooks-impl@3.5.15
+  - @helux/types@3.5.15
+  - @helux/utils@3.5.15
+
 ## 3.5.14
 
 ### Patch Changes
