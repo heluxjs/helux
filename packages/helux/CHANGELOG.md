@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.16
+
+### Patch Changes
+
+- 1204453: build(3.5.16): optimize dead-cycle check, define api
+- Updated dependencies [1204453]
+  - @helux/core@3.5.16
+
 ## 3.5.15
 
 ### Patch Changes

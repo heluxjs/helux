@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 3.5.16
+
+### Patch Changes
+
+- 1204453: build(3.5.16): optimize dead-cycle check, define api
+  - @helux/types@3.5.16
+
 ## 3.5.15
 
 ### Patch Changes

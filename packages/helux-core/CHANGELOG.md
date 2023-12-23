@@ -1,5 +1,15 @@
 # @helux/core
 
+## 3.5.16
+
+### Patch Changes
+
+- 1204453: build(3.5.16): optimize dead-cycle check, define api
+- Updated dependencies [1204453]
+  - @helux/utils@3.5.16
+  - @helux/hooks-impl@3.5.16
+  - @helux/types@3.5.16
+
 ## 3.5.15
 
 ### Patch Changes
