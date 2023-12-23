@@ -72,7 +72,7 @@ describe('change atom', () => {
     setAtom(() => {
       return [{ a: 6, b: { name: 8 } }];
     });
-    expectMatch(listAtom.val, [{ a: 6, b: { name: 8 } }]);
+    expect(listAtom.val).toMatchObject([{ a: 6, b: { name: 8 } }]);
   });
 
   test('change dict list by draft cb', async () => {

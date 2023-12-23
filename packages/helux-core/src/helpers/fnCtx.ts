@@ -1,62 +1,12 @@
-import { includeOne, matchDictKey, nodupPush, noop, noopArr } from '@helux/utils';
-import { ASYNC_TYPE, NOT_MOUNT, RENDER_START } from '../consts';
+import { includeOne, matchDictKey, nodupPush } from '@helux/utils';
+import { newFnCtx } from '../factory/common/ctor';
 import { getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
-import { fakeMutateFnItem } from '../factory/creator/fake';
 import type { Dict, Fn, IFnCtx, ScopeType } from '../types/base';
 import { delFnDep, delHistoryUnmoutFnCtx } from './fnDep';
 
-const { MAY_TRANSFER } = ASYNC_TYPE;
-
 export function buildFnCtx(specificProps?: Partial<IFnCtx>): IFnCtx {
-  const base: IFnCtx = {
-    fnKey: '', // 在 feDep.mapFn 阶段会生成
-    fn: noop,
-    subFnInfo: fakeMutateFnItem,
-    checkDeadCycle: true,
-    isFirstLevel: true,
-    isExpired: false,
-    task: noop,
-    deps: noopArr,
-    status: { loading: false, err: null, ok: true },
-    forAtom: false,
-    remainRunCount: 0,
-    showLoading: false,
-    nextLevelFnKeys: [],
-    prevLevelFnKeys: [],
-    mountStatus: NOT_MOUNT,
-    depKeys: [],
-    depSharedKeys: [],
-    result: {},
-    fnType: 'watch',
-    returnUpstreamResult: false,
-    scopeType: 'static',
-    renderStatus: RENDER_START,
-    proxyResult: {},
-    updater: noop,
-    createTime: Date.now(),
-    shouldReplaceResult: false,
-    isAsync: false,
-    isAsyncTransfer: false,
-    isSimpleWatch: false,
-    isRunning: false,
-    dcErrorInfo: { err: null, tipFn: noop },
-    asyncType: MAY_TRANSFER,
-    subscribe: (cb) => {
-      cb();
-    },
-    extra: {},
-    setLoading: (loading: boolean, err = null) => {
-      const ok = !loading && !err;
-      base.status = { loading, err, ok };
-    },
-    renderInfo: {
-      time: 0,
-      insKey: 0,
-      sn: 0,
-      getDeps: () => base.depKeys.slice(),
-    },
-  };
+  const base: IFnCtx = newFnCtx();
   return Object.assign(base, specificProps || {});
 }
 
@@ -99,7 +49,6 @@ export function markFnEnd() {
 
   fnScope.runningFnKey = '';
   fnScope.depKeys = [];
-  // fnScope.isTaskRunning = false;
   fnScope.runningSharedKey = 0;
   return targetKeys;
 }
@@ -108,8 +57,6 @@ export function markFnStart(fnKey: string, sharedKey: number) {
   const fnScope = getFnScope();
   fnScope.runningFnKey = fnKey;
   fnScope.runningSharedKey = sharedKey;
-  /** 待到 task 运行时会被标记为 true */
-  // fnScope.isTaskRunning = false;
   fnScope.isIgnore = false;
 }
 

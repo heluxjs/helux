@@ -17,7 +17,7 @@ function canFlush(reactive?: IReactive): reactive is IReactive {
 /**
  * flush modified data by finish handler
  */
-function flushModified(reactive: IReactive, skipFnKey?: string) {
+function flushModified(reactive: IReactive) {
   const { sharedKey } = reactive;
   // 标记过期，不能再被复用
   reactive.expired = true;
@@ -58,14 +58,14 @@ export function flushActive() {
 /**
  * 供内部调用的 flush 方法
  */
-export function innerFlush(sharedKey: any, desc?: string, skipFnKey?: string) {
+export function innerFlush(sharedKey: any, desc?: string) {
   const reactive = reactives.get(sharedKey);
   if (canFlush(reactive)) {
     if (desc) {
       REACTIVE_DESC.set(sharedKey, desc);
     }
     // 提交变化数据
-    flushModified(reactive, skipFnKey);
+    flushModified(reactive);
   }
 }
 

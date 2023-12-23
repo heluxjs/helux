@@ -1,14 +1,15 @@
-import { canUseDeep, warn } from '@helux/utils';
+import { warn } from '@helux/utils';
 import type { IOperateParams } from 'limu';
 import { immut } from 'limu';
-import { IS_ATOM, OP_KEYS, SHARED_KEY } from '../../consts';
+import { HAS_PROXY, IS_ATOM, OP_KEYS, SHARED_KEY } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
-import { createOb } from '../../helpers/obj';
+import { createDpOb, createOb } from '../../helpers/obj';
 import { mapSharedState } from '../../helpers/state';
 import type { Dict } from '../../types/base';
 import { recordLastest } from '../common/blockScope';
-import { callOnRead, getDepKeyByPath, isDict, newOpParams } from '../common/util';
+import { newOpParams } from '../common/ctor';
+import { callOnRead, getDepKeyByPath, isDict } from '../common/util';
 import type { ParsedOptions } from './parse';
 
 function cannotSet() {
@@ -37,7 +38,7 @@ export function handleCustomKey(opParams: IOperateParams, forAtom: boolean, shar
  */
 export function buildSharedState(options: ParsedOptions) {
   let sharedRoot: any = {};
-  const { rawState, sharedKey, deep, forAtom, onRead, isPrimitive, stopDepth } = options;
+  const { rawState, sharedKey, forAtom, onRead, isPrimitive, stopDepth } = options;
   const collectDep = (keyPath: string[], val: any) => {
     const depKey = getDepKeyByPath(keyPath, sharedKey);
     // using shared state in derived/watch callback
@@ -46,7 +47,8 @@ export function buildSharedState(options: ParsedOptions) {
     recordLastest(sharedKey, val, sharedRoot, depKey, keyPath);
   };
 
-  if (canUseDeep(deep)) {
+  if (HAS_PROXY) {
+    // Proxy 环境使用 limu.immut 接口创建能自动同步最新数据得到只可读对象
     sharedRoot = immut(rawState, {
       customKeys: OP_KEYS,
       onOperate: (params: IOperateParams) => {
@@ -64,8 +66,9 @@ export function buildSharedState(options: ParsedOptions) {
     });
   } else {
     // TODO 这段逻辑迁移到 helux-mini
+    // 非 Proxy 环境功能受限，可能这些代码可能会删除
     const toShallowProxy = (obj: any, keyLevel: number, parentKeyPath: string[]): any =>
-      createOb(obj, {
+      createDpOb(obj, {
         set: cannotSet,
         get: (target: Dict, key: any) => {
           const value = target[key];
@@ -89,17 +92,16 @@ export function buildSharedState(options: ParsedOptions) {
 
   let sharedState = sharedRoot;
   if (forAtom) {
-    sharedState = isPrimitive
-      ? rawState.val
-      : new Proxy(rawState, {
-          set: cannotSet,
-          get: (t: any, k: any) => {
-            // TODO FIXME 修复 k 传递 val 的问题
-            // 从 sharedRoot 去获取
-            const v = sharedRoot.val[k];
-            return v;
-          },
-        });
+    if (isPrimitive) {
+      sharedState = rawState.val;
+    } else {
+      // TODO 非 Proxy 环境功能受限，如何对齐 Proxy 用法还有很多工作要做，可能这些代码可能会删除
+      // 1 当前只支持 val 为字典，如果 Map List，写法要调整
+      sharedState = createOb(rawState, {
+        set: cannotSet,
+        get: (t: any, k: any) => sharedRoot.val[k],
+      });
+    }
   }
 
   mapSharedState(sharedKey, sharedRoot);

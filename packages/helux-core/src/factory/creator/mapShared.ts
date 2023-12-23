@@ -43,7 +43,7 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   const innerSetState: InnerSetState = (partialState, options = {}) => {
     return setStateImpl().finish(partialState, options);
   };
-  // 提供给 useAtom() atom() 返回的 setState 使用
+  // 提供给 useAtom() useShared atom() share 返回的 setState 使用
   const setState: SetState = (partialState, options) => {
     // ATTENTION LABEL( flush )
     // 调用 setState 主动把响应式对象可能存在的变更先提交

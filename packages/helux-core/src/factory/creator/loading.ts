@@ -67,7 +67,11 @@ export function initGlobalLoading(apiCtx: CoreApiCtx, createFn: Fn) {
 }
 
 export function getStatusKey(from: string, desc: string) {
-  const descStr = isSymbol(desc) ? '' : desc;
+  let descStr = desc;
+  if (isSymbol(desc)) {
+    // @ts-ignore
+    descStr = desc.toString();
+  }
   // 基于 > 分割 ，否则 getDepKeyInfo 还原 key 错误，导致 block 里无法正确补上相关 loading 的依赖
   return `${from}>${descStr}`;
 }

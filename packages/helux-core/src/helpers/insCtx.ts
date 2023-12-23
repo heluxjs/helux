@@ -1,14 +1,15 @@
 import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
 import { immut } from 'limu';
 import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
+import { newOpParams } from '../factory/common/ctor';
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
 import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
-import { callOnRead, getDepKeyByPath, isArrLike, isArrLikeVal, isDict, newOpParams } from '../factory/common/util';
+import { callOnRead, getDepKeyByPath, isArrLike, isArrLikeVal, isDict } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
 import { handleCustomKey, handleHeluxKey } from '../factory/creator/buildShared';
 import { mapGlobalId } from '../factory/creator/globalId';
-import { buildReactive, nextTickFlush } from '../factory/creator/reactive';
+import { buildReactive } from '../factory/creator/reactive';
 import type { Dict, Ext, IFnCtx, IInnerUseSharedOptions, OnOperate } from '../types/base';
 import type { DepKeyInfo } from '../types/inner';
 import * as fnDep from './fnDep';
@@ -16,6 +17,9 @@ import { clearDep } from './insDep';
 import { createOb } from './obj';
 import { getInternal } from './state';
 
+/**
+ * 开始收集依赖
+ */
 function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { parentType: string; rawVal: any }) {
   if (!insCtx.canCollect) {
     // 无需收集依赖
@@ -29,6 +33,9 @@ function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { parentType: 
   insCtx.recordDep(info, parentType, isValArrLike);
 }
 
+/**
+ * 获取当前实例收集到依赖项（包含固定住的依赖）
+ */
 function getInsDeps(insCtx: InsCtxDef, isCurrent: boolean) {
   const { depKeys, currentDepKeys, fixedDepKeys } = insCtx;
   const dynamic = isCurrent ? currentDepKeys : depKeys;
@@ -44,6 +51,9 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined) {
   updater();
 }
 
+/**
+ * 为实例创建代理对象并追加到 insCtx 上
+ */
 export function attachInsProxyState(insCtx: InsCtxDef) {
   const { internal, isReactive } = insCtx;
   const { rawState, isDeep, sharedKey, onRead, forAtom } = internal;
@@ -60,22 +70,23 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
       const depKey = getDepKeyByPath(fullKeyPath, sharedKey);
       const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
       collectDep(insCtx, depKeyInfo, { parentType, rawVal });
-
-      // 响应式对象会触发到变化行为
-      if (isReactive && opParams.isChanged) {
-        nextTickFlush(sharedKey);
-      }
     };
 
     if (isReactive) {
+      // 组件实例使用 useReactive(state) 返回的 reactive 对象时，会在 creator/operateState 里操作实例自己的 onOperate 句柄
       const { draft, draftRoot } = buildReactive(internal, { onRead: onOperate });
       insCtx.proxyState = draftRoot;
       insCtx.proxyStateVal = draft;
     } else {
+      // 非 reactive 对象，外部 prepareTuple 里会自动拆箱，这里只需创建根代理对象即可
+      // 对于 immut 对象来说，只会触发读操作
       insCtx.proxyState = immut(rawState, { onOperate, compareVer: true });
     }
   } else {
-    // TODO  待 toShallowCopy 抽象完毕后，统一调用 toShallowCopy
+    // TODO
+    // 如支持非 Proxy 环境，还有以下两点要做，但很可能这些代码会删掉，考虑让用户去使用 @helux/mini
+    // 1 待 toShallowCopy 抽象完毕后，统一调用 toShallowCopy
+    // 2 非 Proxy环境，对于数组 push pop 等操作，提供 markChanged 接口让 helux 感知到变化
     insCtx.proxyState = createOb(rawState, {
       set: () => {
         warn('changing shared state is invalid');
@@ -96,6 +107,9 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
   }
 }
 
+/**
+ * 为组件构建 insCtx
+ */
 export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
   const {
     updater,
@@ -255,6 +269,9 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
   return insCtx;
 }
 
+/**
+ * 为组件创建全量导出结果代理对象
+ */
 export function attachInsDerivedResult(fnCtx: IFnCtx) {
   const { result, forAtom } = fnCtx;
 

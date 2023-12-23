@@ -1,14 +1,13 @@
-import { getVal, isDebug, isFn, isMap, isObj, isProxyAvailable, noop, prefixValKey } from '@helux/utils';
+import { getVal, isDebug, isFn, isJsObj, isMap, isObj, isProxyAvailable, prefixValKey } from '@helux/utils';
 import { immut, IOperateParams, limuUtils } from 'limu';
-import { ARR, FROM, KEY_SPLITER, MAP, STATE_TYPE } from '../../consts';
+import { ARR, KEY_SPLITER, MAP, STATE_TYPE } from '../../consts';
 import { createOb } from '../../helpers/obj';
-import type { Dict, IInnerSetStateOptions, IMutateCtx } from '../../types/base';
+import type { Dict } from '../../types/base';
 import { DepKeyInfo } from '../../types/inner';
 import type { TInternal } from '../creator/buildInternal';
+import { newOpParams } from './ctor';
 
 const { USER_STATE } = STATE_TYPE;
-const { SET_STATE } = FROM;
-const fakeGetReplaced = () => ({ isReplaced: false, replacedValue: null as any });
 
 // for hot reload of buildShared
 /**
@@ -28,51 +27,6 @@ export function tryGetLoc(moduleName: string, endCutIdx = 8) {
     }
   }
   return loc;
-}
-
-export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
-  const { ids = [], globalIds = [], isReactive = false, from = SET_STATE, enableDep = false } = options; // 用户 setState 可能设定了 ids globalIds
-  return {
-    depKeys: [],
-    forcedDepKeys: [],
-    triggerReasons: [],
-    ids,
-    globalIds,
-    readKeys: {},
-    writeKeys: {},
-    arrKeyDict: {}, // 记录读取过程中遇到的数组 key
-    writeKeyPathInfo: {},
-    handleAtomCbReturn: true,
-    draftVal: null,
-    from,
-    isReactive,
-    enableDep,
-  };
-}
-
-export function newOpParams(
-  key: string,
-  value: any,
-  options: { isChanged?: boolean; parentKeyPath: string[]; op?: any; parentType?: any },
-): IOperateParams {
-  const { isChanged = true, parentKeyPath = [], op = 'set', parentType = 'Object' } = options;
-  const fullKeyPath = parentKeyPath.slice();
-  fullKeyPath.push(key);
-  return {
-    isChanged,
-    isCustom: false,
-    op,
-    immutBase: false,
-    key,
-    value,
-    proxyValue: value,
-    parentType,
-    keyPath: parentKeyPath,
-    fullKeyPath,
-    isBuiltInFnKey: false,
-    replaceValue: noop,
-    getReplaced: fakeGetReplaced,
-  };
 }
 
 export function getDepKeyInfo(depKey: string): DepKeyInfo {
@@ -175,3 +129,8 @@ export function isArrLikeVal(val: any) {
 }
 
 export const { isObject: isDict, getDataType } = limuUtils;
+
+/** 是否是原始值 */
+export function isPrim(val: any) {
+  return !isJsObj(val);
+}

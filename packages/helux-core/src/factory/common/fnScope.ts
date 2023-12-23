@@ -2,6 +2,7 @@ import { delListItem, isDebug, isFn, isObj, nodupPush, safeMapGet } from '@helux
 import { FN_KEY } from '../../consts';
 import { injectHeluxProto } from '../../helpers/obj';
 import type { Dict, IFnCtx, ScopeType } from '../../types/base';
+import { fakeFnCtx } from '../common/fake';
 import { genFnKey } from '../common/key';
 import { getFnScope } from './speedup';
 
@@ -95,7 +96,7 @@ export function getFnCtx(fnKey: string) {
 }
 
 export function getSafeFnCtx(fnKey: string) {
-  return getCtxMap(fnKey).get(fnKey) as IFnCtx;
+  return getCtxMap(fnKey).get(fnKey) || fakeFnCtx;
 }
 
 export function getFnCtxByObj<T = Dict>(obj: T) {

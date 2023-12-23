@@ -4,7 +4,7 @@ import { Dict, Fn, IInnerSetStateOptions, IPlugin, PluginCtx } from '../../types
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 
-const { ON_DATA_CHANGED, ON_SHARE_CREATED } = EVENT_NAME;
+const { ON_DATA_CHANGED, ON_SHARE_CREATED, ON_ERROR_OCCURED } = EVENT_NAME;
 const loadingTypes: string[] = [STATE_TYPE.GLOGAL_LOADING, STATE_TYPE.PRIVATE_LOADING];
 
 export function addPlugin(plugin: IPlugin) {
@@ -54,5 +54,12 @@ export function emitPluginEvent(internal: TInternal, evName: string, data: Dict)
   if (bus.canEmit(evName)) {
     const { sharedKey, moduleName } = internal;
     bus.emit(evName, { moduleName, sharedKey, data });
+    return;
+  }
+
+  // 未安装错误捕捉插件时，提示作者出现错误的位置
+  if (evName === ON_ERROR_OCCURED) {
+    console.warn('found uncaught internal error, sugguest write a plugin to handle this error');
+    console.error(data.err);
   }
 }

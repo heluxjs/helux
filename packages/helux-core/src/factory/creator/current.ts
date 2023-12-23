@@ -2,7 +2,7 @@ import { noop } from '@helux/utils';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import type { Fn } from '../../types/base';
 import type { IReactiveMeta } from '../../types/inner';
-import { fakeDraftRoot, fakeMutateCtx, fakeReativeMeta } from './fake';
+import { fakeDraftRoot, fakeMutateCtx, fakeReativeMeta } from '../common/fake';
 
 /** 正在执行中的 rootDrft */
 let CURRENT_DRAFT_ROOT = fakeDraftRoot;

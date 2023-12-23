@@ -11,3 +11,5 @@ export function noopArgs<T extends any[] = any[]>(...args: T): T {
 export function noopArr(...args: any[]): any[] {
   return [];
 }
+
+export function noopAny(...args: any[]): any {}

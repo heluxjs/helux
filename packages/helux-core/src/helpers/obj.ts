@@ -56,7 +56,10 @@ function dget(target: any, key: any) {
   return target[key];
 }
 
-export function createOneLevelOb(rawObj: any, options?: { obj?: any; set?: Fn; get?: Fn }) {
+/**
+ * create observable object with defineProperty
+ */
+export function createDpOb(rawObj: any, options?: { obj?: any; set?: Fn; get?: Fn }) {
   const { set = dset, get = dget, obj = {} } = options || {};
   Object.keys(rawObj).forEach((key) => {
     Object.defineProperty(obj, key, {
@@ -91,6 +94,6 @@ export function createOb(rawObj: any, options?: { set?: Fn; get?: Fn }) {
   }
 
   const downgradeObj = createHeluxObj();
-  const oneLevelOb = createOneLevelOb(downgradeObj, { obj: downgradeObj, set, get });
+  const oneLevelOb = createDpOb(downgradeObj, { obj: downgradeObj, set, get });
   return oneLevelOb;
 }

@@ -1,4 +1,4 @@
-import { nodupPush, noop, safeMapGet } from '@helux/utils';
+import { nodupPush, safeMapGet } from '@helux/utils';
 import { EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
 import { delFnDepData, getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
 import { hasChangedNode } from '../factory/common/sharedScope';
@@ -7,13 +7,6 @@ import type { TInternal } from '../factory/creator/buildInternal';
 import { DEPS_CB } from '../factory/creator/current';
 import type { Dict, IFnCtx } from '../types/base';
 import { getInternalByKey } from './state';
-
-// TODO DEL
-export function markTaskRunning() {
-  const fnScope = getFnScope();
-  // fnScope.isTaskRunning = true;
-  noop(fnScope);
-}
 
 export function markIgnore(isIgnore = true) {
   const fnScope = getFnScope();
@@ -24,10 +17,10 @@ export function markIgnore(isIgnore = true) {
  * 自动记录当前正在运行的函数对 depKey 的依赖，以及 depKey 对应的函数记录
  */
 export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx }) {
-  const { fnCtx: runningFnCtx, depKeys, isIgnore, runningSharedKey } = getRunningFn();
+  const { fnCtx: runningFnCtx, depKeys, isIgnore } = getRunningFn();
   const fnCtx: IFnCtx | null | undefined = options.specificCtx || runningFnCtx;
   if (!fnCtx) {
-    // 来自 useAtomForceUpdate 的 deps 收集
+    // 来自 useGlobalForceUpdate 的 deps 收集
     DEPS_CB.current()(inputDepKeys);
     return;
   }
@@ -50,18 +43,16 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
   }
 
   const { fnKey } = fnCtx;
-  // 一些异步 task 里的 depKey 需丢弃
-  const canRecordDepKey = runningSharedKey ? runningFnCtx && !isIgnore : runningFnCtx;
-
   inputDepKeys.forEach((depKey: string) => {
-    if (PROTO_KEY === depKey) {
+    if (PROTO_KEY === depKey || isIgnore) {
       return;
     }
     // 注意此处暂不记录到 fnCtx.depKeys 里，而是记录到 fnScope.depKeys 里
     // 等到 markFnEnd 时再按最长路径提取出所有 depKeys 转移到 fnCtx.depKeys 里
-    if (canRecordDepKey) {
+    if (runningFnCtx) {
       nodupPush(depKeys, depKey); // here depKeys is come from fnScope
     }
+
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
   });
@@ -73,7 +64,7 @@ export function ensureFnDepData(fnCtx?: IFnCtx) {
   }
 }
 
-/** TODO 有了内置的 useEffect 后，这个后续可考虑移除 */
+/** TODO 后续接入内置 useEffect 后，这里可考虑移除 */
 export function recoverDep(fnCtx: IFnCtx) {
   const { FNKEY_HOOK_CTX_MAP, UNMOUNT_INFO_MAP } = getFnScope();
   const { fnKey } = fnCtx;

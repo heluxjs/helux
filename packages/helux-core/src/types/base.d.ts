@@ -2,6 +2,24 @@ import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } fr
 import type { IOperateParams as OpParams } from 'limu';
 import type { DepKeyInfo } from './inner';
 
+export type NumStr = number | string;
+
+export type NumStrSymbol = number | string | symbol;
+
+export type Dict<T = any> = Record<NumStrSymbol, T>;
+
+export type PlainObject = Record<string, {}>;
+
+export type DictN<T = any> = Record<number, T>;
+
+export type DictS<T = any> = Record<string, T>;
+
+export type Fn<T = any> = (...args: any) => T;
+
+export type FnA<P extends ReadOnlyArr = ReadOnlyArr> = (...args: P) => void;
+
+export type Off = Fn;
+
 export interface ILocalStateApi<T> {
   setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
   /** 返回最新的状态，可能会变化，适用于透传给子组件 */
@@ -11,6 +29,20 @@ export interface ILocalStateApi<T> {
 export type IOperateParams = OpParams;
 
 export type Primitive = boolean | number | string | null | undefined | BigInt;
+
+export type ValidArg = Primitive | symbol | Map<any, any> | Set<any> | Array<any> | Fn | Dict;
+
+export type UnconfirmedArg = ValidArg | void;
+
+/** 调用时如未指定具体 payload 类型，收窄为 UnconfirmedArg，让用户不传递也能类型校验通过 */
+export type PayloadType<P extends Dict | undefined = undefined, K = any> = P extends Dict
+  ? K extends keyof P
+    ? P[K]
+    : UnconfirmedArg
+  : UnconfirmedArg;
+
+// use Awaited instead
+// export type PromiseValType<P = any> = P extends Promise<infer V> ? V : any;
 
 /**
  * 函数描述
@@ -109,24 +141,6 @@ export type BlockComponent<P = object> = FunctionComponent<P & { ref?: any }>;
 
 export type Srv<S = Dict, P = Dict, E = Dict> = S & { inner: { getProps: () => P; getExtra: () => E } };
 
-export type NumStr = number | string;
-
-export type NumStrSymbol = number | string | symbol;
-
-export type Dict<T = any> = Record<NumStrSymbol, T>;
-
-export type PlainObject = Record<string, {}>;
-
-export type DictN<T = any> = Record<number, T>;
-
-export type DictS<T = any> = Record<string, T>;
-
-export type Fn<T = any> = (...args: any[]) => T;
-
-export type FnA<P extends ReadOnlyArr = ReadOnlyArr> = (...args: P) => void;
-
-export type Off = Fn;
-
 export type SharedDict<T = PlainObject> = T;
 
 /** returned by share */
@@ -143,7 +157,11 @@ export type NextAtom<T = any> = { val: T };
 export type Atom<T = any> = { val: T };
 
 /** returned by derive */
-export type DerivedAtom<R = any> = { val: R; __helux_ts_type_helper_attr__: any };
+export type DerivedAtom<R = any> = {
+  val: R;
+  /** 这个值用于辅助类型推导，如果是 atom 返回结果，此值为 true */
+  z__is_atom_result__: true;
+};
 
 /** derive fn definition  */
 export type DeriveFn<R = any, I = readonly any[]> = (params: IDeriveFnParams<R, I>) => R;
@@ -154,7 +172,7 @@ export type NextState<T> = T;
 
 export type ReadOnlyAtom<T = any> = { readonly val: T };
 
-export type ReadOnlyAtomVal<T> = T;
+export type ReadOnlyAtomVal<T extends Atom | ReadOnlyAtom = Atom> = T['val'];
 
 export type Ext<T = Dict, V = any> = T & { [key: string]: V };
 
@@ -192,30 +210,82 @@ export type LoadingState<T = Dict> = {
   [key in keyof T]: LoadingStatus;
 };
 
-/**
- * 注：这里的 draftRoot 是全局响应式对象
- */
-export type ActionFnParam<P = any, T = any> = {
+export interface IActionTaskParams<T = any, P = UnconfirmedArg> {
+  /**
+   * 可直接操作修改的局部响应式根对象值，
+   * 如来自 atom 则 draft 为 draftRoot.val，
+   * 如来自 share 则 draft 和 draftRoot 是同一个值
+   */
   draft: T extends Atom | ReadOnlyAtom ? T['val'] : T;
+  /**
+   * 可直接操作修改的局部响应式根对象
+   */
   draftRoot: T extends Atom | ReadOnlyAtom ? Atom<AtomValType<T>> : T;
-  /** 主动提交草稿变更（默认是进入下一次事件循环时提交） */
+  /** 第一层 key 多个值浅合并时，可使用 merge({x,y}) 替代多次 draft.x=, draft.y= 写法 */
+  merge: (partial: T extends Atom ? (T['val'] extends Primitive ? T : Partial<T['val']>) : Partial<T>) => void;
+  /**
+   * 支持直接调用 task 函数和 action 函数（注：此时action本身也是可直接调用的）
+   *
+   * - 场景1，调用单个文件类其他 actionTask
+   * ```ts
+   * // 以下函数暴露出去作为参数传给 defineActions
+   * export function changeA({ draftRoot }) { ... }
+   *
+   * export function changeB({ draftRoot }) { ... }
+   *
+   * export function foo({ dispatch }){
+   *   const a = dispatch(changeA, [1, 1]);
+   *   const b = await dispatch(changeB, [1, 1]);
+   * }
+   * ```
+   *
+   * - 场景二，调 actions 对象下某个函数（ 此时 dispatch 调用显得冗余，很推荐 actions.xx 自身发起调用 ）
+   * ```ts
+   * const { actions, useLoading } = ctx.defineActions<Payloads>()({
+   *   changeA({ draftRoot }) { ... },
+   *   async changeB({ draftRoot }) { ... },
+   *   async foo({ draftRoot, payload, dispatch }) {
+   *     const a = dispatch(actions.changeA, [1, 1]);
+   *     const b = await dispatch(actions.changeB, [1, 1]);
+   *
+   *     // 推荐自身发起调用
+   *     const a = actions.changeA([1, 1]);
+   *     const b = await actions.changeB([1, 1]);
+   *   },
+   * });
+   * ```
+   */
+  dispatch: <D extends Fn = ActionTask>(actionOrTask: D, paylaod: Parameters<D>[0]) => ReturnType<D>;
+  /** 主动提交草稿变更（默认是进入下一次事件循环微任务时提交） */
   flush: (desc: string) => void;
+  /**
+   * 调用 setState 修改状态并触发渲染，同时也会触发 draft 变更提交
+   */
   setState: SetState<T extends Atom ? T['val'] : T>;
   desc: string;
   payload: P;
-};
+}
 
-export type Action<P = any, T = SharedDict> = (payload: P) => [NextSharedDict<T>, Error | null];
+export type ActionReturn<R = any, T = any> = { result: R; err: Error | null; snap: NextSharedDict<T> };
 
-export type ActionFnReturnType<T> = T extends Primitive
+export type ActionAsyncReturn<R = any, T = any> = Promise<{ result: R; err: Error | null; snap: NextSharedDict<T> }>;
+
+export type Action<F extends Fn = Fn, P = any, T = SharedDict> = (payload: P, throwErr?: boolean) => ActionReturn<ReturnType<F>, T>;
+
+export type ActionAsync<F extends Fn = Fn, P = any, T = SharedDict> = (
+  payload: P,
+  throwErr?: boolean,
+) => ActionAsyncReturn<Awaited<ReturnType<F>>, T>;
+
+export type ActionTaskReturnType<T> = T extends Primitive
   ? Promise<void | T> | void | T
   : T extends PlainObject
   ? Promise<void | Partial<T>> | void | Partial<T>
   : Promise<void | T> | void | T;
 
-export type ActionFnDef<P = any, T = any> = (
-  param: ActionFnParam<P, T>,
-) => T extends Atom | ReadOnlyAtom ? ActionFnReturnType<AtomValType<T>> : ActionFnReturnType<T>;
+export type ActionTask<T = any, P = UnconfirmedArg> = (
+  param: IActionTaskParams<T, P>,
+) => T extends Atom | ReadOnlyAtom ? ActionTaskReturnType<AtomValType<T>> : ActionTaskReturnType<T>;
 
 export type ReadOnlyArr = readonly any[];
 
@@ -251,7 +321,7 @@ export type MutateCall<T = any> = () => [T, Error | null];
 
 export type MutateTaskCall<T = any> = () => Promise<[T, Error | null]>;
 
-export type MutateWitness<T = any> = {
+export interface IMutateWitness<T = any> {
   /** 人工调用 mutate 配置里的同步函数 */
   run: MutateCall<T>;
   /** 人工调用 mutate 配置里的异步函数 */
@@ -267,12 +337,12 @@ export type MutateWitness<T = any> = {
   getSnap: () => T;
   /** snap 只代表生成 witness 那一刻对应的共享状态的快照 */
   snap: T;
-};
+}
 
 // for mutate task
 export type MutateTask<T = SharedState, P = ReadOnlyArr> = (param: IMutateTaskParam<T, P>) => Promise<void>;
 
-export type MutateFnParams<T = SharedState, P = ReadOnlyArr> = {
+export interface IMutateFnParams<T = SharedState, P = ReadOnlyArr> {
   /** 是否第一次调用 */
   isFirstCall: boolean;
   /** mutate deps 函数的返回值 */
@@ -281,16 +351,16 @@ export type MutateFnParams<T = SharedState, P = ReadOnlyArr> = {
   state: StateType<T>;
   /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
   draftRoot: DraftRootType<T>;
-};
+}
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
 export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
-  /** 草稿状态，对与 atom 对象 draft 是已拆箱的值，如需操作未拆箱值可读取下面的 params.draftRoot */
+  /** 草稿状态，对于 atom 对象 draft 是已拆箱的值，如需操作未拆箱值可读取下面的 params.draftRoot */
   draft: DraftType<T>,
-  params: MutateFnParams<T, P>,
+  params: IMutateFnParams<T, P>,
 ) => void;
 
-export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
+export interface IMutateFnItem<T = SharedState, P = ReadOnlyArr> {
   /** 异步 mutate 的依赖项列表 */
   deps?: (state: StateType<T>) => P;
   /**
@@ -308,33 +378,35 @@ export type MutateFnItem<T = SharedState, P = ReadOnlyArr> = {
    * 未设定时，使用 atom、share 接口设定的checkDeadCycle值
    */
   checkDeadCycle?: boolean;
-};
+}
 
 /** std item 确保了 desc 一定存在 */
-export type MutateFnStdItem<T = any, P = ReadOnlyArr> = MutateFnItem<T, P> & {
+export interface IMutateFnStdItem<T = any, P = ReadOnlyArr> extends IMutateFnItem<T, P> {
   /** 用户透传的原始 desc */
   oriDesc: string;
   /** 可能是内部生成的 desc */
   desc: string;
   /** mutate 函数收集到的依赖存档 */
   depKeys: string[];
+  /** 记录 fn 或 task 执行过程中写入的 key，用于辅助判断死循环存在 */
+  writeKeys: string[];
   /** 当前 mutate 函数所属的 watch 函数 key */
   watchKey: string;
-};
+}
 
-export type MutateFnLooseItem<T = SharedState, P = ReadOnlyArr> = MutateFnItem<T, P> & {
+export interface IMutateFnLooseItem<T = SharedState, P = ReadOnlyArr> extends IMutateFnItem<T, P> {
   /** 建议用户指定，无指定时内部会自动生成唯一 desc */
   desc?: FnDesc;
-};
+}
 
-export type MutateFnDict<T = SharedDict> = Dict<MutateFn<T> | MutateFnItem<T>>;
+export type MutateFnDict<T = SharedState> = Dict<MutateFn<T> | IMutateFnItem<T>>;
 
-export type MutateFnItemDict<T = SharedDict> = Dict<MutateFnItem<T>>;
+export type MutateFnItemDict<T = SharedState> = Dict<IMutateFnItem<T>>;
 
 /** 内部用 */
-export type MutateFnStdDict<T = SharedDict> = Dict<MutateFnStdItem<T>>;
+export type MutateFnStdDict<T = SharedState> = Dict<IMutateFnStdItem<T>>;
 
-export type MutateFnList<T = SharedDict> = Array<MutateFn<T> | MutateFnLooseItem<T>>;
+export type MutateFnList<T = SharedState> = Array<MutateFn<T> | IMutateFnLooseItem<T>>;
 
 export type PartialStateCb<T = Dict> = (prev: T) => Partial<T> | void;
 
@@ -378,12 +450,12 @@ export interface IMutateCtx {
   writeKeyPathInfo: Dict<TriggerReason>;
   /**
    * default: true
-   * 是否处理 atom setState((draft)=>xxx) 返回结果xxx，
-   * 目前规则是修改了 draft 则 handleAtomCbReturn 被会置为 false，
-   * 避免无括号写法 draft=>draft.xx = 1 隐式返回的结果 1 被写入到草稿，
+   * 是否处理 setState((draft)=>xxx) 返回结果xxx，
+   * 目前规则是修改了 draft 则 handleCbReturn 被会置为 false，
+   * 避免无括号写法 draft=>draft.xx = 1 隐式返回的结果 1 被写入到草稿（例如 atom 的 setState调用），
    * 备注：安全写法应该是draft=>{draft.xx = 1}
    */
-  handleAtomCbReturn: boolean;
+  handleCbReturn: boolean;
   /** 为 atom 记录的 draft.val 引用 */
   draftVal: any;
   from: From;
@@ -427,6 +499,12 @@ export type SetState<T = any> = (
   options?: ISetStateOptions,
 ) => NextSharedDict<T>;
 
+/**
+ * 区别于 setState, setDraft 不处理返回值
+ * TODO 待实现
+ */
+// export type SetDraft<T = any> = ...
+
 export type InnerSetState<T = any> = (
   partialStateOrRecipeCb: T extends Atom | ReadOnlyAtom ? PartialArgType<AtomValType<T>> : PartialArgType<T>,
   options?: IInnerSetStateOptions,
@@ -460,7 +538,10 @@ export type Call<T = SharedState> = <P = any>(
 /** share 返回的共享对象， draftRoot 和 draft 相等，atom 返回的共享对象， draftRoot = { val: draft } */
 export type DraftRootType<T = SharedState> = T extends Atom | ReadOnlyAtom ? AtomDraft<AtomValType<T>> : T;
 
-/** share 返回的共享对象， draftRoot 和 draft 相等，atom 返回的共享对象， draftRoot = { val: draft } */
+/**
+ * atom 返回的共享对象，会对结果自动拆箱，此时 draft 类型等于 atom 入参类型， draftRoot 类型为 { val: draft }，
+ * share 返回的共享对象， draftRoot 和 draft 相等，类型都是入参类型
+ */
 export type DraftType<T = SharedState> = T extends Atom | ReadOnlyAtom ? AtomDraftVal<T> : T;
 
 export type StateRootType<T = SharedState> = T extends Atom | ReadOnlyAtom ? ReadOnlyAtom<T> : ReadOnlyDict<T>;
@@ -518,6 +599,36 @@ type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? ReturnType<T>
   : any;
 
+/**
+ * defineActions 调用返回 actionCtx 上下文对象，包括 actions、eActions、getLoading、useLoading
+ */
+type ActionCtx<T = any, P extends Dict | undefined = undefined, D extends Dict<Fn> = Dict<ActionTask<T, UnconfirmedArg>>> = {
+  /** 调用 actions.xxMethod，返回结果为函数内部执行完毕返回的结果，会抛出函数执行过程出现的错误 */
+  actions: {
+    [K in keyof D]: (
+      /** 支持用户单独使用 ActionTaskParam 标记类型并推导给 action 函数 */
+      payload: K extends keyof P ? PayloadType<P, K> : Parameters<D[K]>[0]['payload'],
+    ) => ReturnType<D[K]>;
+  };
+  /** 调用 eActions.xxMethod，返回结果为对象 { result , err, snap }，会通过 throwErr 参数决定错误是抛出还是返回到对象 err 里 */
+  eActions: {
+    [K in keyof D]: (
+      payload: K extends keyof P ? PayloadType<P, K> : Parameters<D[K]>[0]['payload'],
+      /**
+       * default: undefined
+       * 未设定时，走 defineActions(actionFnDefs, throwErr) 的设定或默认值
+       */
+      throwErr?: boolean,
+    ) => ReturnType<D[K]> extends Promise<any>
+      ? // ? Promise<[Awaited<ReturnType<D[K]>>, Error | null]>
+        Promise<{ result: Awaited<ReturnType<D[K]>>; err: Error | null; snap: T }>
+      : { result: ReturnType<D[K]>; err: Error | null; snap: T };
+  };
+  getLoading: () => Ext<LoadingState<D>>;
+  useLoading: () => Ext<LoadingState<D>>;
+  useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
+};
+
 export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICreateOptions<T>> {
   /**
    * 标识当前对象是否是 atom 对象
@@ -527,17 +638,6 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    * ```
    */
   isAtom: boolean;
-  /**
-   * 定义一个action方法，action 方法的异常默认被拦截掉不再继续抛出，只是并发送给插件和伴生loading状态
-   * ```ts
-   * const fn = action(()=>{}, 'someAction');
-   * // 调用方法，错误会传递到 err 位置
-   * const [ snap, err ] = fn(1);
-   * // 调用方法并抛出错误，此时错误既发给插件和伴生loading状态，也向上抛出，用户需自己 catch
-   * const [ snap ] = fn(1, true);
-   * ```
-   */
-  action: <P = any>(fn: ActionFnDef<P, T>, desc?: FnDesc) => Action<P, T>;
   /**
    * 定义action方法并立即调用
    * ```ts
@@ -550,7 +650,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   sync: SyncFnBuilder<T>;
   syncer: Syncer<T>;
   setState: SetState<T>;
-  mutate: <P extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, P> | MutateFn<T, P>) => MutateWitness<T>;
+  mutate: <P extends ReadOnlyArr = ReadOnlyArr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
   /**
@@ -647,90 +747,223 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    */
   reactiveRoot: T;
   /**
-   * 立即提交当前共享状态的响应式对象的变更数据,
+   * 立即提交当前共享状态的响应式对象的变更数据，
    * 建议传递 desc 描述，方便 devtool 追踪数据变更来源
    */
   flush: (desc?: string) => void;
   /**
-   * 为方便提供各函数 payload 类型约束，这里采用柯里化方式
+   * 定义一个action方法，action 方法的异常默认被拦截掉不再继续抛出，而是发送给插件和伴生loading状态
+   *
+   * ```ts
+   * // 注意是柯里化调用方式
+   * const fn = action()(()=>{}, 'someAction');
+   * // ts代码里给 payload 约束类似
+   * const fn = action<number>()(({ payload })=>{}, 'someAction');
+   * fn(1); // 调用处也约束类型
+   *
+   * // 调用方法，错误会传递到 err 位置
+   * const [ result, err, snap ] = fn(1);
+   * // 调用方法并抛出错误，此时错误既发给插件和伴生loading状态，也向上抛出，用户需自己 catch
+   * try{
+   *   const [ result ] = fn(1, true);
+   * }catch( err ){
+   *   // handle err
+   * }
+   * const [ result, err, snap ] = fn(1, true);
+   * ```
+   *
+   * 也可以用于辅助给 defineTpActions 里的函数独立提供 payload 类型的场景
+   * ```ts
+   * const { actions, useLoading, getLoading } = ctxp.defineTpActions({
+   *   changeA: ctxp.action<number>()(({ draft, payload }) => { // 此处 payload 获得类型提示
+   *     draft.a.b.c = 200;
+   *   }),
+   *   changeB: ctxp.action<boolean>()(async ({ draft, payload }) => {
+   *     draft.a.b.c = 200;
+   *   }),
+   * });
+   *
+   * actions.changeA();
+   * actions.changeB();
+   * ```
+   *
+   * 为了能够自动推导函数返回类型，采用柯里化方式替代以下写法
+   * ```text
+   * action: <P = any, F = ActionFnDef<P, T>>(fn: F, desc?: FnDesc) => Action<F, P, T>
+   * ```
+   */
+  action: <P = any>() => <F extends Fn = ActionTask<T, P>>(
+    fn: F,
+    desc?: string,
+  ) => ReturnType<F> extends Promise<any> ? ActionAsync<F, P, T> : Action<F, P, T>;
+  /**
+   * 定义状态对应的修改函数 actions，返回 { actions, getLoading, useLoading }，
+   * 组件中可通过 useLoading 读取异步函数的执行中状态 loading、是否正常执行结束 ok、以及执行出现的错误 err，
+   * 其他地方可通过 getLoading 获取
    * ```ts
    * // 【可选】约束各个函数入参 payload 类型
    * type Payloads = {
    *   changeA: [number, number];
    *   foo: boolean | undefined;
+   *   // 其他可以需要时在补充，不强制要求为每一个action key 都定义 payload 类型约束，但为了可维护性建议都补上
    * };
    *
+   * // 不约束 payloads 类型时写为 ctxp.defineActions()({ ... });
    * const { actions, useLoading, getLoading } = ctxp.defineActions<Payloads>()({
    *   // 同步 action，直接修改草稿
    *   changeA1({ draft, payload }) {
    *     draft.a.b.c = 200;
    *   },
-   *   // 同步 action，返回部分状态
+   *   // 同步 action，返回结果
    *   changeA2({ draft, payload }) {
-   *     return { c: 'new desc' };
+   *     draft.a.b.c = 200;
+   *     return true;
    *   },
-   *   // 同步 action，直接修改草稿和返回部分状态同时使用
+   *   // 同步 action，直接修改草稿深节点数据，使用 merge 修改浅节点数据
    *   changeA3({ draft, payload }) {
    *     draft.a.b.c = 200;
-   *     return { c: 'new desc' };
+   *     merge({ c: 'new desc' }); // 等效于 draft.c = 'new desc';
+   *     return true
    *   },
    *  // 异步 action，直接修改草稿
    *   async foo1({ draft, payload }) {
    *     await delay(3000);
    *     draft.a.b.c += 1000;
    *   },
-   *  // 异步 action，多次直接修改草稿，返回部分状态
-   *   async foo2({ draft, payload }) {
+   *  // 异步 action，多次直接修改草稿，合并修改多个状态，同时返回一个结果
+   *   async foo2({ draft, payload, merge }) {
    *     draft.a.b.c += 1000;
    *     await delay(3000); // 进入下一次事件循环触发草稿提交
    *     draft.a.b.c += 1000;
    *     await delay(3000); // 再次进入下一次事件循环触发草稿提交
-   *     const list = await fetchList();
-   *     return { list }; // 等价于 draft.list = list
+   *     const { list, total } = await fetchList();
+   *     merge({ list, total }); // 等价于 draft.list = list, draft.tatal = total
+   *     return true;
    *   },
    * });
    *
-   * // action 方法的异常默认被拦截掉不再继续抛出，只是并发送给插件和伴生loading状态
-   * const [snap, err] = actions.changeA([1,1]);
-   * //  调用方法并抛出错误，此时错误既发给插件和伴生loading状态，也向上抛出，用户需自己 catch
-   * const [snap, err] = actions.changeA([1,1], true);
+   * // actions 方法调用只返回结果，如出现异常则抛出，同时也会发送给插件和伴生loading状态
+   * const result = actions.changeA([1,1]);
+   *
+   * // eActions 方法调用返回格式如 {result, snap, err}，
+   * // 它的异常默认被拦截掉不再继续抛出，只是并发送给插件和伴生loading状态
+   * const {result, snap, err} = eActions.changeA([1,1]);
+   * // eAction 支持调用方法并抛出错误，此时错误既发给插件和伴生loading状态，也也向上抛出，用户需自己 catch
+   * const {result, snap, err} = eActions.changeA([1,1], true);
    * ```
    */
-  defineActions: <P = Dict>(
+  defineActions: <P extends Dict | undefined = undefined>(
+    /**
+     * default: false，
+     * false 表示 ActionCtx.eActions 调用时，错误不抛出，传递给返回元组的第二位参数 [ result, err ]，
+     * true 则表示抛出，此时用户外部的逻辑要自己 try catch 捕获错误
+     */
     throwErr?: boolean,
-  ) => <D extends { [K in keyof P]: ActionFnDef<P[K], T> }>(
-    actionsDef: D,
+  ) => <
+    D extends Dict<Fn> = P extends Dict
+      ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
+      : { [K in string]: ActionTask<T, UnconfirmedArg> },
+  >(
+    /** action 函数定义字典集合 */
+    actionFnDefs: D,
+  ) => ActionCtx<T, P, D>;
+
+  /**
+   * 优先考虑 defineActions 来定义 action 集合，
+   * 仅当需要由原始 action 工厂函数生成的 action 函数打包时才需考虑使用 defineTpActions，
+   * 因 defineTpActions 对应的各个子函数的 payload 都是通过 action 工厂函数柯里化调用时绑定在泛型上的，阅读性不友好
+   * ```ts
+   * const ctx = sharex(dictFactory, { moduleName: 'DefineApi' });
+   *
+   * const { actions, useLoading, getLoading } = ctx.defineTpActions()({
+   *   // 注里这里的  ctx.action 调用方式是柯里化调用 ctx.action()(fnDef)
+   *   changeA: ctx.action<number>()(({ draft, payload }) => { // 此处 payload 获得类型提示
+   *     draft.a.b.c = 200;
+   *   }),
+   *   changeB: ctx.action<boolean>()(async ({ draft, payload }) => {
+   *     draft.a.b.c = 200;
+   *   }),
+   * });
+   *
+   * actions.changeB(true); // 此处入参 payload 获得类型校验
+   * ```
+   */
+  defineTpActions: (throwErr?: boolean) => <D extends Dict<Fn> = Dict<Action | ActionAsync>>(
+    actions: D,
   ) => {
     actions: {
-      [K in keyof P]: (
-        payload: P[K],
-        throwErr?: boolean,
-      ) => ReturnType<D[K]> extends Promise<any> ? Promise<[NextState<T>, Error | null]> : [NextState<T>, Error | null];
+      [K in keyof D]: (
+        payload: Parameters<D[K]>[0],
+      ) => D[K] extends Action ? ReturnType<D[K]>['result'] : Promise<Awaited<ReturnType<D[K]>>['result']>;
     };
-    getLoading: () => Ext<LoadingState<P>>;
-    useLoading: () => [Ext<LoadingState<P>>, SetState<LoadingState>, IInsRenderInfo];
+    eActions: D;
+    getLoading: () => Ext<LoadingState<D>>;
+    useLoading: () => Ext<LoadingState<D>>;
+    useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
   };
-  defineMutateSelf: <D = MutateFnDict<T>>(
+  /**
+   * 对自身状态节点定义派生函数，为统一 define api 调用风格，此处采用柯里化方式
+   */
+  defineMutateSelf: () => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
     mutateDef: D,
   ) => {
-    witnessDict: { [K in keyof D]: MutateWitness<T> };
+    witnessDict: { [K in keyof D]: IMutateWitness<T> };
     getLoading: () => Ext<LoadingState<D>>;
-    useLoading: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
+    useLoading: () => Ext<LoadingState<D>>;
+    useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
   };
-  defineMutateDerive: <T = SharedDict, D = MutateFnDict<T>>(
+  /**
+   * 全新定义一个状态对象并对其定义派生函数，这些函数可依赖其他 atom 或 share 对象来计算当前对象的各个节点值
+   */
+  defineMutateDerive: <T = SharedDict>(
     inital: T | (() => T),
+  ) => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
     mutateDef: D,
   ) => {
     derivedState: T;
     useDerivedState: (options?: IUseSharedStateOptions) => [T, IInsRenderInfo];
-    witnessDict: { [K in keyof D]: MutateWitness<T> };
+    witnessDict: { [K in keyof D]: IMutateWitness<T> };
     getLoading: () => Ext<LoadingState<D>>;
-    useLoading: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
+    useLoading: () => Ext<LoadingState<D>>;
+    useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
   };
-  /** 为方便提供各函数 deps 和 result 类型约束，这里采用柯里化方式 */
-  defineFullDerive: <DR extends DepsResultDict>(
+  /**
+   * 定义全量派生结果
+   * ```ts
+   * //【可选】约束各个结果的 deps 函数返回类型（可选），result 返回结果类型（必须）
+   * type DR = {
+   *  a: { result: number };
+   *  b: { result: number };
+   *  c: { deps: [number, string], result: number };
+   *  // 其他可以需要时在补充，不强制要求为每一个结果 key 都定义类型约束，但为了可维护性建议都补上
+   * };
+   *
+   * // 不约束 payloads 类型时写为 ctxp.defineFullDerive()({ ... });
+   * const fd = ctxp.defineFullDerive<DR>()({
+   *   a() {
+   *     return priceState.a.b.c + 10000;
+   *   },
+   *   b() {
+   *    return priceState.a.b.c + 20000;
+   *   },
+   *   c: {
+   *     deps: () => [priceState.a.b1.c1, priceState.info.name],
+   *     fn: () => 1,
+   *     async task(params) {
+   *       const [c1, name] = params.input;
+   *       await delay(2000);
+   *       return 1 + c1;
+   *     },
+   *   }
+   * });
+   *
+   * fd.a.val; // 派生结果a
+   * fd.c.val; // 派生结果c
+   * ```
+   */
+  defineFullDerive: <DR = any>(
     throwErr?: boolean,
-  ) => <D extends MultiDeriveFn<DR>>(
+  ) => <D extends MultiDeriveFn<any> = DR extends DepsResultDict ? MultiDeriveFn<DR & { [K in string]: any }> : MultiDeriveFn<any>>(
     deriveFnDict: D,
   ) => {
     derivedResult: { [K in keyof D]: FnResultType<D[K]> };
@@ -738,7 +971,8 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
       [K in keyof D]: {
         runDeriveFn: () => FnResultType<D[K]>;
         runDeriveTask: () => Promise<FnResultType<D[K]>>;
-        useDerived: () => [FnResultValType<D[K]>, LoadingStatus, IRenderInfo];
+        useDerived: () => FnResultValType<D[K]>;
+        useDerivedInfo: () => [FnResultValType<D[K]>, LoadingStatus, IRenderInfo];
       };
     };
   };
@@ -816,7 +1050,7 @@ export interface ICreateOptionsFull<T = SharedState> {
   /**
    * 配置状态变更联动视图更新规则
    */
-  rules: IDataRule<T>[];
+  rules: IDataRule<StateType<T>>[];
   /**
    * 定义当前状态对其他状态有依赖的 mutate 函数集合或函数，它们将被自动执行，并收集到每个函数各自对应的上游数据依赖
    * 推荐走 defineMutateSelf 或 mutateDict 在外部定义 mutate 函数，以便获得更好的类型推导
@@ -843,7 +1077,7 @@ export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull
   forGlobal: boolean;
   stateType: string;
   loc: string;
-  mutateFns: Array<MutateFnLooseItem<T>>;
+  mutateFns: Array<IMutateFnLooseItem<T>>;
 }
 
 export interface IUseSharedStateOptions<T = any> {
@@ -1137,7 +1371,7 @@ export interface IFnCtx {
   /** 记录一些需复用的中间生成的数据 */
   extra;
   /** 对应的可能存在的子函数描述 */
-  subFnInfo: MutateFnStdItem;
+  subFnInfo: IMutateFnStdItem;
   /** 由 createSharedOptions.checkDeadCycle 和 mutateFnItem.checkDeadCycle 共同生成 */
   checkDeadCycle: boolean;
   setLoading: (loading: boolean, err?: any) => void;

@@ -1,8 +1,9 @@
 import { getVal, setVal } from '@helux/utils';
 import { OP_KEYS } from '../../consts';
-import { createOneLevelOb } from '../../helpers/obj';
+import { createDpOb } from '../../helpers/obj';
 import type { Dict, IInnerSetStateOptions } from '../../types/base';
-import { getDataType, isDict, newMutateCtx, newOpParams } from '../common/util';
+import { newMutateCtx, newOpParams } from '../common/ctor';
+import { getDataType, isDict } from '../common/util';
 import type { TInternal } from './buildInternal';
 import { handleHeluxKey } from './buildShared';
 import { DRAFT_ROOT, MUTATE_CTX } from './current';
@@ -15,6 +16,7 @@ interface IPrepareDowngradeMutateOpts extends IInnerSetStateOptions {
 }
 
 /**
+ * 还处于测试阶段，此降级方案可能后续移除
  * 非deep模式下，只是用Proxy或defineProperty生成一个仅代理一层的超过对象
  * 此时如果修改2层路径以上的值会修改原对象
  */
@@ -33,9 +35,10 @@ export function prepareDowngradeMutate(opts: IPrepareDowngradeMutateOpts) {
 
   // ATTENTION LABEL ( non-deep )
   // 非 deep 存在的意义主要是为了支持无 Proxy 的运行环境
-  // 很多行为都会有缺失，考虑如何和 deep 完全对齐还是一个正在进行中的工作，欢迎测试，现阶段暂不推荐使用
+  // 很多行为都会有缺失，例如监听数组 push，pop 等，
+  // 考虑如何和proxy环境完全对齐是一个正在进行中且比较艰难的工作，现阶段不推荐在非proxy环境使用
   const toShallowProxy = (obj: any, keyLevel: number, parentKeyPath: string[]): any =>
-    createOneLevelOb(obj, {
+    createDpOb(obj, {
       set: (target: Dict, key: any, value: any) => {
         handleValueChange(target, key, value, parentKeyPath);
         return true;

@@ -1,10 +1,10 @@
 import { enureReturnArr, isPromise, noopVoid, tryAlert } from '@helux/utils';
 import { ASYNC_TYPE, FROM, WATCH } from '../consts';
+import { fakeInternal } from '../factory/common/fake';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
 import type { TInternal } from '../factory/creator/buildInternal';
 import { REACTIVE_META, TRIGGERED_WATCH } from '../factory/creator/current';
 import { alertDepKeyDeadCycleErr, probeDepKeyDeadCycle, probeFnDeadCycle } from '../factory/creator/deadCycle';
-import { fakeInternal } from '../factory/creator/fake';
 import { innerFlush } from '../factory/creator/reactive';
 import type { Dict, From, IDeriveFnParams, IFnCtx, TriggerReason } from '../types/base';
 import { shouldShowComputing } from './fnCtx';
@@ -55,7 +55,7 @@ function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
     return;
   }
 
-  let rmeta = REACTIVE_META.current();
+  const rmeta = REACTIVE_META.current();
   // 当前 reactive 对象是在 fnCtx 内部调用时操作的，需探测死循环
   if (rmeta.fnKey === fnCtx.fnKey && probeDepKeyDeadCycle(internal, fnCtx, rmeta.writeKeys)) {
     return;
@@ -77,12 +77,12 @@ function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
   const ret = fnCtx.fn({ isFirstCall, triggerReasons, sn });
   TRIGGERED_WATCH.del();
   //  重新获取函数中可能存在的 reactive 修改
-  rmeta = REACTIVE_META.current();
+  const afterRunRmeta = REACTIVE_META.current();
 
   // 来自以下类似示例的死循环
   // 1 watch 对调用调用 watch(()=>{ r.a+=1 }, ()=>[s.a])
   // 2 watch或mutate 中调用其他函数修改自身依赖 watch(()=>{ foo() }, ()=>[s.a]) function foo(){ reactiv.a+=1 }
-  if (rmeta.isTop && rmeta.fnKey === fnCtx.fnKey && probeDepKeyDeadCycle(internal, fnCtx, rmeta.writeKeys)) {
+  if (afterRunRmeta.isTop && afterRunRmeta.fnKey === fnCtx.fnKey && probeDepKeyDeadCycle(internal, fnCtx, afterRunRmeta.writeKeys)) {
     return;
   }
 
@@ -90,7 +90,7 @@ function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
   // 形如 mutate({ deps:()=>[reative.a], async task(){ reative.a+=1 }, immediate: true })
   if (ret && ret.task) {
     // 发现异步 task 有死循环，则标记函数不可用
-    if (rmeta.from === FROM.MUTATE && probeDepKeyDeadCycle(internal, fnCtx, options.depKeys || [])) {
+    if (afterRunRmeta.from === FROM.MUTATE && probeDepKeyDeadCycle(internal, fnCtx, fnCtx.subFnInfo.writeKeys)) {
       return;
     }
   }

@@ -1,6 +1,6 @@
 import { isJsObj, setVal } from '@helux/utils';
 import { FROM, UNDEFINED } from '../../consts';
-import { createOneLevelOb } from '../../helpers/obj';
+import { createDpOb } from '../../helpers/obj';
 import type { Dict, Fn, InnerSetState } from '../../types/base';
 import { createImmut, getDepKeyByPath } from '../common/util';
 import type { TInternal } from './buildInternal';
@@ -82,12 +82,12 @@ export function createSyncerBuilder(internal: TInternal) {
     }
 
     // 对象结果自动拆箱，对 rawState.val 的各个 key 做 syncer 函数集合
-    return createOneLevelOb(rawState.val, {
+    return createDpOb(rawState.val, {
       get: (target, key) => syncerFn(['val', key], internal),
     });
   }
 
-  return createOneLevelOb(rawState, {
+  return createDpOb(rawState, {
     get: (target, key) => syncerFn([key], internal),
   });
 }

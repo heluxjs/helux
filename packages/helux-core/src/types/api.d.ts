@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.15
+| helux-core@3.5.16
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -9,7 +9,8 @@ import type { MutableRefObject, ReactNode } from '@helux/types';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,
-  ActionFnDef,
+  ActionAsync,
+  ActionTask,
   Atom,
   AtomValType,
   BlockComponent,
@@ -28,6 +29,8 @@ import type {
   IBlockOptions,
   ICreateOptions,
   IInsRenderInfo,
+  IMutateFnLooseItem,
+  IMutateWitness,
   IPlugin,
   IRenderInfo,
   IRunMutateOptions,
@@ -40,8 +43,6 @@ import type {
   Middleware,
   MutateFn,
   MutateFnDict,
-  MutateFnLooseItem,
-  MutateWitness,
   NoRecord,
   NumStrSymbol,
   Off,
@@ -59,7 +60,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.15';
+export declare const VER: '3.5.16';
 
 export declare const LIMU_VER: string;
 
@@ -75,17 +76,16 @@ export declare const RECORD_LOADING: {
 };
 
 /**
- * 创建浅依赖收集的共享对象
+ * 创建字典型共享对象
  *
  * ```
  *  const [ state, setState, ctx ] = share({ a: 100, b: 2 });
  *  // state 可透传给 useSharedObject
  *  // setState 可以直接修改状态
- *  // ctx.call 可以调用服务函数，并透传上下文
+ *  // 推荐使用 ctx.defineActions 或  ctx.defineTpActions 创建修改函数
  *
- *  // share({ a: 100, b: 2 }, true); // 创建响应式状态
- *  // share({ a: 100, b: 2 }, 'demo'); // 指定模块名
- *  // share({ a: 100, b: 2 }, { moduleName: 'demo', enableReactive: true }); // 既指定模块名，也设定响应式为true
+ *  // 指定模块名后，可接入devtool工具查看数据变更
+ *  share({ a: 100, b: 2 }, { moduleName: 'demo' });
  *
  * ```
  *  以下将举例两种具体的调用方式
@@ -95,23 +95,8 @@ export declare const RECORD_LOADING: {
  *    ctx.setState({ a, b });
  * }
  *
- * // 第二种方式，使用 ret.call(srvFn, ...args) 调用定义在call函数参数第一位的服务函数
- * function changeA(a: number, b: number) {
- *    ctx.call(async function (fnCtx) { // ctx 即是透传的调用上下文，
- *      // args：使用 call 调用函数时透传的参数列表，state：状态，setState：更新状态句柄
- *      // 此处可全部感知到具体的类型
- *      // const { args, state, setState, draft } = fnCtx;
- *
- *      // 直接返回变化的部分数据
- *      return { a, b };
- *      // or 修改 draft
- *      draft.a = a;
- *      drqft.b = b;
- *      // or 混合使用（既修改draft，也返回变化数据）
- *      draft.a = a;
- *      return { b };
- *    }, a, b);
- *  }
+ * // 第二种方式，推荐使用 ctx.defineActions 或  ctx.defineTpActions 创建修改函数
+ * @see TODO add link
  * ```
  * 如需感知组件上下文，则需要`useService`接口去定义服务函数，可查看 useService 相关说明
  */
@@ -121,9 +106,9 @@ export function share<T extends PlainObject, O extends ICreateOptions<T> = ICrea
 ): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T>];
 
 /**
- * 支持共享 primitive 类型值的接口
+ * 支持共享所有类型值的接口，会自动装箱为 {val:T} 结构的数据
  */
-export function atom<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function atom<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions<Atom<T>>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): readonly [ReadOnlyAtom<T>, SetState<T>, IAtomCtx<T>];
@@ -139,7 +124,10 @@ export function sharex<T = PlainObject, O extends ICreateOptions<T> = ICreateOpt
 /**
  * 效果完全等同 atom，唯一的区别是 share 返回元组 [state,setState,call] atom 返回 ctx 自身
  */
-export function atomx<T = any, O extends ICreateOptions<T> = ICreateOptions<T>>(rawState: T | (() => T), createOptions?: O): IAtomCtx<T>;
+export function atomx<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions<Atom<T>>>(
+  rawState: T | (() => T),
+  createOptions?: O,
+): IAtomCtx<T>;
 
 /**
  * 定义全量派生结果，支持同步和异步，支持返回 pritimive 类型，如果确定返回 dict 数据，可优先考虑使用 deriveDict 接口，
@@ -241,12 +229,12 @@ export function useReactive<T = any>(
  * 更新当前共享状态的所有实例组件，谨慎使用此功能，会触发大面积的更新，
  * 推荐设定 presetDeps、overWriteDeps 函数减少更新范围
  * ```ts
- * const updateAllAtomIns = useAtomForceUpdate(someShared);
+ * const updateAllAtomIns = useGlobalForceUpdate(someShared);
  * // 和从 ctx 上获取的 useForceUpdate 效果一样，useForceUpdate 自动绑定了对应的共享状态
  * const updateAllAtomIns = ctx.useForceUpdate();
  *
  * // 支持预设更新范围，以下两种写法等效
- * const updateSomeAtomIns = useAtomForceUpdate(someShared, state=>[state.a, state.b]);
+ * const updateSomeAtomIns = useGlobalForceUpdate(someShared, state=>[state.a, state.b]);
  * const updateSomeAtomIns = ctx.useForceUpdate(state=>[state.a, state.b]);
  *
  * // 支持调用时重写更新范围
@@ -266,7 +254,7 @@ export function useReactive<T = any>(
  * <button onClick={updateSomeAtomIns}>updateSomeAtomIns</button>
  * ```
  */
-export function useAtomForceUpdate<T = any>(
+export function useGlobalForceUpdate<T = any>(
   sharedState: T,
   presetDeps?: (sharedState: T) => any[],
 ): (overWriteDeps?: ((sharedState: T) => any[]) | Dict | null) => void;
@@ -462,11 +450,11 @@ export function runMutateTask<T extends SharedState>(target: T, descOrOptions?: 
  */
 export function mutate<T extends SharedState>(
   target: T,
-): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: MutateFnLooseItem<T, A> | MutateFn<T, A>) => MutateWitness<T>;
+): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: IMutateFnLooseItem<T, A> | MutateFn<T, A>) => IMutateWitness<T>;
 
 export function mutateDict<T extends SharedState>(
   target: T,
-): <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: MutateWitness<T> };
+): <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: IMutateWitness<T> };
 
 export function runDerive<T = SharedState>(result: T, throwErr?: boolean): [T, Error | null];
 
@@ -574,18 +562,23 @@ export function addPlugin(plugin: IPlugin): void;
 /**
  * ```ts
  * // 不约束args类型，fnDef 函数定义的参数args将是 any[]
- * const someAction = action(shared)(fnDef, desc);
+ * const someAction = action(shared)()(fnDef, desc);
  * someAction(); // 无约束
  *
  * // 约束args类型
- * const someAction = action(shared)<[number, string]>((param)=>{
- *   const args = param.args; // 提示类型 [number, string]
+ * const someAction = action(shared)<[number, string]>()((param)=>{
+ *   const payload = param.payload; // 提示类型 [number, string]
  * }, 'someAction');
- * someAction(1,1); // 这里第二位参数将提示类型错误
+ * someAction([1,1]); // 这里第二位参数将提示类型错误
  * ```
- * @param sharedDict
+ * 注意此处采用了柯里化调用方式是为了能自动推导出返回函数的返回值类型
  */
-export function action<T = any>(sharedState: T): <P = any>(fn: ActionFnDef<P, T>, desc?: string) => Action<P, T>;
+export function action<T = any>(
+  sharedState: T,
+): <P = any>() => <F extends Fn = ActionTask<T, P>>(
+  fn: F,
+  desc?: string,
+) => ReturnType<F> extends Promise<any> ? ActionAsync<F, P, T> : Action<F, P, T>;
 
 /**
  * test if the input arg is a result returned by atom()

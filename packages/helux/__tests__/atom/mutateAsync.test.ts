@@ -7,21 +7,28 @@ describe('create atom mutate', () => {
   test('single mutate, pass (fn,deps)', async () => {
     const [numAtom, setAtom] = atom(1);
     // 有fn，未指定 immediate 时，task 首次不执行
-    const [bAtom] = atom(0, {
+    const [bAtom, , ctx] = atom(0, {
       mutate: [
         {
           deps: () => [numAtom.val],
-          fn: (draft, { input: [num] }) => draft + num,
+          fn: (draft, { input: [num] }) => {
+            return draft + num;
+          },
           task: async ({ setState, input: [num] }) => {
             await delay(100);
             setState((draft) => draft + num);
           },
+          desc: 'm1',
         },
       ],
     });
     expect(bAtom.val).toBe(1);
     await delay(120);
     expect(bAtom.val).toBe(1);
+    ctx.runMutate('m1');
+    expect(bAtom.val).toBe(2);
+    await ctx.runMutateTask('m1');
+    expect(bAtom.val).toBe(3);
   });
 
   test('single mutate, pass(fn,deps), set immediate=true', async () => {

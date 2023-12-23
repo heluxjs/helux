@@ -32,7 +32,7 @@ function getDepKeyDict<T = any>(internal: TInternal, deps?: (sharedState: T) => 
 /**
  * 慎用此功能，会造成使用了某个共享状态的所以实例被强制更新
  */
-export function useAtomForceUpdate<T = any>(apiCtx: CoreApiCtx, sharedState: T, presetDeps?: (sharedState: T) => any[]) {
+export function useGlobalForceUpdate<T = any>(apiCtx: CoreApiCtx, sharedState: T, presetDeps?: (sharedState: T) => any[]) {
   const internal = checkSharedStrict(sharedState);
   const [presetDepKeyDict] = apiCtx.react.useState(() => {
     return getDepKeyDict(internal, presetDeps, null);
@@ -42,7 +42,7 @@ export function useAtomForceUpdate<T = any>(apiCtx: CoreApiCtx, sharedState: T, 
   return (overWriteDeps?: (sharedState: T) => any[]) => {
     const { insCtxMap, key2InsKeys } = internal;
     // 未设定 deps 时，更新所有依赖 key 对应的实例
-    // 支持 forceUpdate = useAtomForceUpdate( deps ) 预设，也支持 forceUpdate( deps ) 时重写
+    // 支持 forceUpdate = useGlobalForceUpdate( deps ) 预设，也支持 forceUpdate( deps ) 时重写
     // overWriteDeps 为 null 的话表示强制覆盖掉 overWriteDeps 设置的依赖，并更新所有实例
     const depKeyDict = getDepKeyDict(internal, overWriteDeps, key2InsKeys) || presetDepKeyDict || key2InsKeys;
 

@@ -5,7 +5,7 @@ import { action, actionAsync, atom, atomActionAsync, isAtom, share, useActionLoa
 import { delay, noop } from '../util';
 
 async function testLoading(state, asyncAction, useActionLoading) {
-  const action1 = asyncAction(async ({ setState }) => {
+  const action1 = asyncAction()(async ({ setState }) => {
     await delay(100);
     if (isAtom(state)) {
       setState(() => 100);
@@ -32,7 +32,7 @@ async function testLoading(state, asyncAction, useActionLoading) {
 
 async function testLoadingWithUseStateHook(state, asyncAction, useActionLoading, useStateFn?: any) {
   const useState = useStateFn || useAtom;
-  const action1 = asyncAction(async ({ setState }) => {
+  const action1 = asyncAction()(async ({ setState }) => {
     await delay(100);
     if (isAtom(state)) {
       setState(() => 100);

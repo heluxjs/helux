@@ -1,5 +1,4 @@
 import { dedupList, enureReturnArr, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '@helux/utils';
-import { limuUtils } from 'limu';
 import { ASYNC_TYPE, DERIVE, IS_DERIVED_ATOM, SCOPE_TYPE } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { markFnEnd, markFnStart, registerFn, shouldShowComputing } from '../../helpers/fnCtx';
@@ -13,8 +12,6 @@ import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
 const { TASK } = ASYNC_TYPE;
 const { STATIC, HOOK } = SCOPE_TYPE;
-// @ts-ignore
-const { getDataType } = limuUtils;
 
 function checkResult(fnCtx: IFnCtx, result: Dict, forAtom?: boolean) {
   if (!forAtom) {
@@ -122,8 +119,9 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
 
   const upstreamFnCtx = getFnCtxByObj(result);
   if (forAtom && !upstreamFnCtx) {
-    // 非结果中转
-    result = { val: result }; // wrap as atom shape
+    // 非结果中转，z__is_atom_result__ 经用于辅助类型判断
+    // 实际是否是atom结果需要调用函数 isDerivedAtom 来判断
+    result = { val: result, z__is_atom_result__: true }; // wrap as atom shape
   }
   const curFnKey = fnCtx.fnKey;
   checkResult(fnCtx, result);

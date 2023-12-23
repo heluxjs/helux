@@ -38,7 +38,7 @@ export const {
   useStable,
   useObject,
   useLocalForceUpdate,
-  useAtomForceUpdate,
+  useGlobalForceUpdate,
   // action api
   action,
   // signal api

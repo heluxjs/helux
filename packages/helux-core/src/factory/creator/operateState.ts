@@ -1,15 +1,18 @@
 import { getVal, matchDictKey, nodupPush } from '@helux/utils';
 import { IOperateParams } from 'limu';
+import { FROM } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import type { IMutateCtx, KeyIdsDict, NumStrSymbol } from '../../types/base';
 import { recordLastest } from '../common/blockScope';
-import { getRunningFn } from '../common/fnScope';
+import { getRunningFn, getSafeFnCtx } from '../common/fnScope';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, isArrLike } from '../common/util';
 import type { TInternal } from './buildInternal';
 import { REACTIVE_META } from './current';
 import { markExpired, nextTickFlush } from './reactive';
+
+const { MUTATE } = FROM;
 
 /**
  * 如果变化命中了 rules[].ids 或 globaIds 规则，则添加到 mutateCtx.ids 或 globalIds 里
@@ -55,20 +58,16 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     // 1 减轻运行负担，
     // 2 降低死循环可能性，例如在 watch 回调里调用顶层的 setState
     if (mutateCtx.enableDep || isReactive) {
-      // 支持对draft操作时可以收集到依赖： draft.a = draft.b + 1
-      // atom 判断一下长度，避免记录根值依赖导致死循环
-      const canRecord = internal.forAtom ? fullKeyPath.length > 1 : true;
-      if (canRecord) {
-        // 来自实例的定制读行为，目前主要是响应式对象会有此操作，
-        // 因为多个实例共享了一个响应式对象，但需要有自己的读行为操作来为实例本身收集依赖
-        // 注：全局响应式对象的读行为已将 currentOnRead 置空
-        if (currReactive.onRead) {
-          currReactive.onRead(opParams);
-        } else {
-          getRunningFn().fnCtx && recordFnDepKeys([depKey], { sharedKey });
-          recordBlockDepKey([depKey]);
-          recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
-        }
+      // 支持对 draft 操作时可以收集到依赖： draft.a = draft.b + 1
+      // 来自实例的定制读行为，目前主要是响应式对象会有此操作，
+      // 因为多个实例共享了一个响应式对象，但需要有自己的读行为操作来为实例本身收集依赖
+      // 注：全局响应式对象的读行为已将 currentOnRead 置空
+      if (currReactive.onRead) {
+        currReactive.onRead(opParams);
+      } else {
+        getRunningFn().fnCtx && recordFnDepKeys([depKey], { sharedKey });
+        recordBlockDepKey([depKey]);
+        recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
       }
     }
     return;
@@ -83,11 +82,15 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
   const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
 
-  if (currReactive.isTop) {
-    nodupPush(currReactive.writeKeys, writeKey);
+  // 是一个顶层有效的 reactive
+  if (currReactive.key) {
+    if (currReactive.isTop) {
+      nodupPush(currReactive.writeKeys, writeKey);
+    } else if (currReactive.from === MUTATE) {
+      nodupPush(getSafeFnCtx(currReactive.fnKey).subFnInfo.writeKeys || [], writeKey);
+    }
   }
 
-  mutateCtx.handleAtomCbReturn = false;
   // 主动把数组自身节点 key 也记录一下
   if (arrLike) {
     const arrKey = getDepKeyByPath(keyPath, sharedKey);
@@ -126,11 +129,13 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     putId(ruleConf.globalIdsDict, { ids: globalIds, writeKey, internal, opParams });
   }
 
+  // 是响应式对象在操作对象变更
   if (isReactive) {
     // 来自响应对象的变更操作，主动触发 nextTickFlush
     nextTickFlush(sharedKey, currReactive.desc);
   } else {
     // 发现 sharedKey 对应的对象已变化，主动标记 sharedKey 对应的响应对象已过期
+    // 用户其他地方再次使用 reactive 对象时，内部会自动创建一个新的返回给用户
     markExpired(sharedKey);
   }
 }

@@ -6,7 +6,7 @@ describe('create object atom multi mutate', () => {
   function runMultiMutateLogic(changeC, changeD) {
     const [numAtom, setAtom] = atom({ a: 1, b: 2 });
     const [bAtom] = atom(
-      { c: 0, d: 0 },
+      { c: 0, d: 0, e: 0 },
       {
         mutate: {
           changeC: (draft) => changeC(draft, numAtom),

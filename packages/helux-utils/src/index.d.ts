@@ -14,6 +14,7 @@ export declare function noop(...args: any[]): undefined;
 export declare function noopVoid(...args: any[]): void;
 export declare function noopArgs<T extends any[] = any[]>(...args: T): T;
 export declare function noopArr(...args: any[]): any[];
+export declare function noopAny(...args: any[]): any;
 export declare function isMap(mayMap: any): boolean;
 export declare function isMax(input: number): boolean;
 export declare function isDebug(): boolean;
@@ -40,7 +41,7 @@ interface IAlertOpts {
   suffixLabel?: string;
   /** default: true，是否打印错误，*/
   logErr?: boolean;
-  /** default: undefined，是否弹层显示错误，未指定时走内置规则：开发环境弹，生成环境不弹 */
+  /** default: undefined，是否弹层显示错误，未指定时走内置规则：开发环境弹，生产环境不弹 */
   alertErr?: boolean;
 }
 export function tryAlert(err: any, options?: IAlertOpts): void;

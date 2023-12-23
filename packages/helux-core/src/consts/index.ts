@@ -1,8 +1,11 @@
+import { isProxyAvailable } from '@helux/utils';
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 export { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './user';
 export { HAS_SYMBOL };
 
 export const PROTO_KEY = '__proto__';
+
+export const HAS_PROXY = isProxyAvailable();
 
 /** 提供给 sync 返回 undefined 时之用 */
 export const UNDEFINED = createSymbol('HeluxUndefined');
@@ -26,8 +29,7 @@ export const IS_ATOM = createSymbol('HeluxIsAtom');
 /** see if the target is returned by deriveAtom api */
 export const IS_DERIVED_ATOM = createSymbol('HeluxIsDerivedAtom');
 
-export const OP_KEYS = [SHARED_KEY, IS_ATOM, IS_DERIVED_ATOM];
-// export const OP_KEYS = [IS_ATOM, SHARED_KEY];
+export const OP_KEYS = [SHARED_KEY, IS_ATOM, IS_DERIVED_ATOM, IS_BLOCK];
 
 /**
  * mark fn a single change fn
