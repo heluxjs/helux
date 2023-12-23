@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.17
+
+### Patch Changes
+
+- 3209665: build(3.5.17): optimize tryGetLoc
+  - @helux/hooks-impl@3.5.17
+  - @helux/types@3.5.17
+  - @helux/utils@3.5.17
+
 ## 3.5.16
 
 ### Patch Changes
