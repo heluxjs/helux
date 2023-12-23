@@ -10,7 +10,7 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     treeshake: false,
-    minify: 'terser',
+    // minify: 'terser',
     // external: ['limu', '@helux/hooks-impl', '@helux/types', '@helux/utils'],
     // external: ['limu'],
     globalName: 'HeluxCore',

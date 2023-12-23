@@ -19,11 +19,15 @@ export function tryGetLoc(moduleName: string, endCutIdx = 8) {
     try {
       throw new Error('loc');
     } catch (err: any) {
-      const arr = err.stack.split('\n');
-      const pureArr = arr.map((codeLoc: string) => {
-        return codeLoc.substring(0, codeLoc.indexOf('(')).trim();
-      });
-      loc = pureArr.slice(4, endCutIdx).join(' -> ');
+      const arr = err.stack.split("\n");
+      if (arr[1].includes('webpack-internal')) {
+        loc = arr.join(" -> ");
+      } else {
+        const pureArr = arr.map((codeLoc) => {
+          return codeLoc.substring(0, codeLoc.indexOf("(")).trim();
+        });
+        loc = pureArr.slice(4, endCutIdx).join(" -> ");
+      }
     }
   }
   return loc;
