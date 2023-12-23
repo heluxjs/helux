@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.18
+
+### Patch Changes
+
+- 27c3415: build(3.5.18): optimize tryGetLoc for codesandbox
+  - @helux/hooks-impl@3.5.18
+  - @helux/types@3.5.18
+  - @helux/utils@3.5.18
+
 ## 3.5.17
 
 ### Patch Changes
