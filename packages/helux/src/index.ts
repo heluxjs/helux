@@ -18,6 +18,8 @@ export const {
   // derive api
   derive,
   deriveDict,
+  defineDeriveTask,
+  defineDeriveFnItem,
   runDerive,
   runDeriveTask,
   // watch api

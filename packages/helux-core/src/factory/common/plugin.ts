@@ -51,15 +51,18 @@ export function emitShareCreated(internal: TInternal) {
 
 export function emitPluginEvent(internal: TInternal, evName: string, data: Dict) {
   const { bus } = getRootCtx();
-  if (bus.canEmit(evName)) {
-    const { sharedKey, moduleName } = internal;
-    bus.emit(evName, { moduleName, sharedKey, data });
-    return;
+  if (!bus.canEmit(evName)) {
+    return false;
   }
+  const { sharedKey, moduleName } = internal;
+  bus.emit(evName, { moduleName, sharedKey, data });
+  return true;
+}
 
+export function emitErr(internal: TInternal, err: Error) {
   // 未安装错误捕捉插件时，提示作者出现错误的位置
-  if (evName === ON_ERROR_OCCURED) {
-    console.warn('found uncaught internal error, sugguest write a plugin to handle this error');
-    console.error(data.err);
+  if (!emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err })) {
+    console.warn('found uncaught error, sugguest add a plugin to handle this error');
+    console.error(err);
   }
 }

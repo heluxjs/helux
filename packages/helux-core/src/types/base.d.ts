@@ -164,7 +164,7 @@ export type DerivedAtom<R = any> = {
 };
 
 /** derive fn definition  */
-export type DeriveFn<R = any, I = readonly any[]> = (params: IDeriveFnParams<R, I>) => R;
+export type DeriveFn<R = any, I extends ReadOnlyArr = any> = (params: IDeriveFnParams<R, I>) => R;
 
 export type NextAtomVal<T> = T;
 
@@ -412,20 +412,25 @@ export type PartialStateCb<T = Dict> = (prev: T) => Partial<T> | void;
 
 export type ChangeDraftCb<T = Dict> = (mutableDraft: T) => Partial<T> | void;
 
-export type DeriveFnItem<T = any, I = readonly any[]> = {
-  fn?: (params: IDeriveFnParams<T, I>) => T;
-  // task?: (params: IDeriveFnParams<T, I>) => Promise<T>;
-  task?: (params: IDeriveFnParams<T, I>) => Promise<T>;
-  deps?: () => I;
+/**
+ * 供 defineDeriveTask 使用的类型
+ */
+export interface IDeriveTaskOptions<T = any, I extends ReadOnlyArr = any> {
+  fn: (params: IDeriveFnParams<T, I>) => T;
+  task?: (params: IDeriveFnTaskParams<T, I>) => Promise<T>;
   immediate?: boolean;
-};
+}
+
+export interface IDeriveFnItem<T = any, I extends ReadOnlyArr = any> extends IDeriveTaskOptions<T, I> {
+  deps?: () => I;
+}
 
 export type DepsResult = { deps?: any[]; result: any };
 
 export type DepsResultDict = Dict<DepsResult>;
 
-export type MultiDeriveFn<DR extends DepsResultDict> = {
-  [K in keyof DR]: DeriveFn<DR[K]['result']> | DeriveFnItem<DR[K]['result'], DR[K]['deps']>;
+export type MultiDeriveFn<DR extends DepsResultDict = DepsResultDict> = {
+  [K in keyof DR]: DeriveFn<DR[K]['result']> | IDeriveFnItem<DR[K]['result'], DR[K]['deps']>;
 };
 
 /** partial state or cb */
@@ -591,11 +596,9 @@ type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
 
-type FnResultValType<T extends PlainObject | DeriveFn> = T extends PlainObject
-  ? T['fn'] extends Fn
-    ? ReturnType<T['fn']>
-    : any
-  : T extends DeriveFn
+type FnResultValType<T extends IDeriveFnItem | DeriveFn> = T extends IDeriveFnItem
+  ? ReturnType<T['fn']>
+  : T extends Fn
   ? ReturnType<T>
   : any;
 
@@ -620,8 +623,7 @@ type ActionCtx<T = any, P extends Dict | undefined = undefined, D extends Dict<F
        */
       throwErr?: boolean,
     ) => ReturnType<D[K]> extends Promise<any>
-      ? // ? Promise<[Awaited<ReturnType<D[K]>>, Error | null]>
-        Promise<{ result: Awaited<ReturnType<D[K]>>; err: Error | null; snap: T }>
+      ? Promise<{ result: Awaited<ReturnType<D[K]>>; err: Error | null; snap: T }>
       : { result: ReturnType<D[K]>; err: Error | null; snap: T };
   };
   getLoading: () => Ext<LoadingState<D>>;
@@ -939,7 +941,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    * };
    *
    * // 不约束 payloads 类型时写为 ctxp.defineFullDerive()({ ... });
-   * const fd = ctxp.defineFullDerive<DR>()({
+   * const df = ctxp.defineFullDerive<DR>()({
    *   a() {
    *     return priceState.a.b.c + 10000;
    *   },
@@ -957,21 +959,45 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    *   }
    * });
    *
-   * fd.a.val; // 派生结果a
-   * fd.c.val; // 派生结果c
+   * df.result.a; // 派生结果a
+   * df.result.b; // 派生结果c
    * ```
    */
-  defineFullDerive: <DR = any>(
+  defineFullDerive: <DR extends DepsResultDict | undefined = undefined>(
     throwErr?: boolean,
-  ) => <D extends MultiDeriveFn<any> = DR extends DepsResultDict ? MultiDeriveFn<DR & { [K in string]: any }> : MultiDeriveFn<any>>(
+  ) => <
+    D extends /**
+     * 如果透传了 DR 约束返回结果类型和 deps 返回类型，则使用 DR 来约束
+     * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
+     */
+    DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
+  >(
     deriveFnDict: D,
   ) => {
-    derivedResult: { [K in keyof D]: FnResultType<D[K]> };
+    /**
+     * 全量派生的返回结果集合
+     */
+    result: { [K in keyof D]: FnResultValType<D[K]> };
+    /**
+     * 全量派生的返回结果助手对象
+     */
     helper: {
       [K in keyof D]: {
-        runDeriveFn: () => FnResultType<D[K]>;
-        runDeriveTask: () => Promise<FnResultType<D[K]>>;
+        /**
+         * 手动运行派生函数
+         */
+        runDeriveFn: (throwErr?: boolean) => [FnResultValType<D[K]>, null | Error];
+        /**
+         * 手动运行派生函数异步任务
+         */
+        runDeriveTask: (throwErr?: boolean) => Promise<[FnResultValType<D[K]>, null | Error]>;
+        /**
+         * 组件中使用 useDerived 拿到结果（注：结果已拆箱）
+         */
         useDerived: () => FnResultValType<D[K]>;
+        /**
+         * 异步结果可使用 useDerivedInfo 获得结果、执行状态
+         */
         useDerivedInfo: () => [FnResultValType<D[K]>, LoadingStatus, IRenderInfo];
       };
     };
@@ -1245,13 +1271,21 @@ export interface IWatchOptions {
 
 export type WatchOptionsType = WatchDepFn | IWatchOptions;
 
-export interface IDeriveFnParams<T = any, I = readonly any[]> {
+export interface IDeriveFnParamsBase<T = any, I = readonly any[]> {
   /** 函数的运行编号，每次自增1 */
   sn: number;
   isFirstCall: boolean;
   triggerReasons: TriggerReason[];
   input: I;
+}
+
+export interface IDeriveFnParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<T, I> {
   prevResult: T | null;
+}
+
+export interface IDeriveFnTaskParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<T, I> {
+  /** 区别于 IDeriveFnParams，执行 task 时，prevResult 一定有值 */
+  prevResult: T;
 }
 
 export interface IUnmountInfo {

@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.18
+| helux-core@3.5.19
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -20,7 +20,6 @@ import type {
   DerivedDict,
   DerivedResultType,
   DeriveFn,
-  DeriveFnItem,
   Dict,
   EffectCb,
   EnableStatus,
@@ -28,6 +27,8 @@ import type {
   IAtomCtx,
   IBlockOptions,
   ICreateOptions,
+  IDeriveFnItem,
+  IDeriveTaskOptions,
   IInsRenderInfo,
   IMutateFnLooseItem,
   IMutateWitness,
@@ -60,7 +61,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.18';
+export declare const VER: '3.5.19';
 
 export declare const LIMU_VER: string;
 
@@ -167,7 +168,7 @@ export function atomx<T = any, O extends ICreateOptions<Atom<T>> = ICreateOption
  *  });
  * ```
  */
-export function derive<T = any, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T> | DeriveFnItem<T, I>): DerivedAtom<T>;
+export function derive<T = any, I extends ReadOnlyArr = ReadOnlyArr>(deriveFnOrFnItem: DeriveFn<T> | IDeriveFnItem<T, I>): DerivedAtom<T>;
 
 /**
  * 创建一个派生atom新结果的任务，支持返回 pritimive 类型
@@ -176,7 +177,26 @@ export function derive<T = any, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T
  * const doubleResult = deriveAtom(()=>numAtom.val*2);
  * ```
  */
-export function deriveDict<T = PlainObject, I = readonly any[]>(deriveFnOrFnItem: DeriveFn<T> | DeriveFnItem<T, I>): DerivedDict<T>;
+export function deriveDict<T = PlainObject, I extends ReadOnlyArr = ReadOnlyArr>(
+  deriveFnOrFnItem: DeriveFn<T> | IDeriveFnItem<T, I>,
+): DerivedDict<T>;
+
+export function defineDeriveTask<I extends ReadOnlyArr = any>(
+  deps?: () => I,
+): <T = any>(fnItem: IDeriveTaskOptions<T, I>) => IDeriveFnItem<T, I>;
+
+/**
+ * 辅助给直接透传给 defineFullDerive 的某个 fnItem 标记类型
+ * ```
+ * defineFullDerive()({
+ *   someKey: defineDeriveFnItem<IDeriveFnItem<number, [number]>>({ ... }),
+ * });
+ *
+ * // 等效于直接使用 IDeriveFnItem 标记类型
+ * const someItem: IDeriveFnItem<number, [number]> = { ... };
+ * ```
+ */
+export function defineDeriveFnItem<F extends IDeriveFnItem>(fnItem: F): F;
 
 /**
  * 观察共享状态变化，默认 watchFn 立即执行

@@ -1,5 +1,5 @@
 import { FROM, STATE_TYPE } from '../consts';
-import { runDerive, runDeriveTask } from '../helpers/fnRunner';
+import { innerRunDerive, innerRunDeriveTask } from '../helpers/fnRunner';
 import { useAtom, useDerived, useGlobalForceUpdate, useLocalForceUpdate, useMutable, useReactive } from '../hooks';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type { Action, ActionTask, Dict, Fn, IAtomCtx, ICreateOptions, IRunMutateOptions, ISharedCtx } from '../types/base';
@@ -66,6 +66,7 @@ function defineActions(
     actionFn.__fnName = key;
     actions[key] = actionFn;
   });
+
   return {
     actions,
     eActions,
@@ -78,6 +79,7 @@ function defineActions(
 function defineMutate(options: { state: any; ldMutate: Dict; mutateFnDict: Dict }) {
   const { state, ldMutate, mutateFnDict } = options;
   const witnessDict = mutateDict(state)(mutateFnDict);
+
   return {
     witnessDict,
     getLoading: () => ldMutate.getLoading(witnessDict),
@@ -94,6 +96,7 @@ function defineMutateDerive(options: { apiCtx: CoreApiCtx; ldMutate: Dict; inita
     const [state, , info] = ctx.useState(options);
     return [state, info];
   };
+
   return { derivedState: state, useDerivedState, ...result };
 }
 
@@ -105,16 +108,18 @@ function defineFullDerive(options: { apiCtx: CoreApiCtx; deriveFnDict: Dict; thr
     const result = derive(deriveFnDict[key]);
     derivedResult[key] = result;
     helper[key] = {
-      runDerive: (te?: boolean) => runDerive(result, te ?? throwErr),
-      runDeriveTask: (te?: boolean) => runDeriveTask(result, te ?? throwErr),
+      runDerive: (te?: boolean) => innerRunDerive(result, te ?? throwErr),
+      runDeriveTask: (te?: boolean) => innerRunDeriveTask(result, te ?? throwErr),
       useDerived: (options: any) => useDerived(apiCtx, result, options)[0],
       useDerivedInfo: (options: any) => useDerived(apiCtx, result, options),
     };
   });
-  return {
-    derivedResult,
-    helper,
-  };
+  /** 对提供给用户使用的结果集做自动拆箱 */
+  const result = new Proxy(derivedResult, {
+    get: (t: any, k: any) => derivedResult[k].val,
+  });
+
+  return { result, helper };
 }
 
 export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: any): any {

@@ -1,7 +1,8 @@
 import { enureReturnArr, isPromise, noopVoid, tryAlert } from '@helux/utils';
 import { ASYNC_TYPE, FROM, WATCH } from '../consts';
-import { fakeInternal } from '../factory/common/fake';
+import { fakeFnCtx, fakeInternal } from '../factory/common/fake';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
+import { emitErr } from '../factory/common/plugin';
 import type { TInternal } from '../factory/creator/buildInternal';
 import { REACTIVE_META, TRIGGERED_WATCH } from '../factory/creator/current';
 import { alertDepKeyDeadCycleErr, probeDepKeyDeadCycle, probeFnDeadCycle } from '../factory/creator/deadCycle';
@@ -12,7 +13,7 @@ import { markComputing } from './fnStatus';
 
 const { MAY_TRANSFER } = ASYNC_TYPE;
 
-interface IRnFnOpt {
+interface IRunFnOpt {
   sn?: number;
   from?: From;
   force?: boolean;
@@ -25,13 +26,18 @@ interface IRnFnOpt {
   forceTask?: boolean;
   throwErr?: boolean;
   depKeys?: string[];
+  /**
+   * default: false
+   * 是否对atom型全量派生结果拆箱
+   */
+  unbox?: boolean;
 }
 
 /**
  * 执行 watch 函数，内部会尝试检测死循环，防止无限调用情况产生
  * TODO  后续优化拦截逻辑，提高可读性
  */
-function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
+function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
   const { isFirstCall = false, triggerReasons = [], sn = 0, from, internal = fakeInternal, desc } = options;
   if (fnCtx.dcErrorInfo.err) {
     alertDepKeyDeadCycleErr(internal, fnCtx.dcErrorInfo);
@@ -102,11 +108,26 @@ function runWatch(fnCtx: IFnCtx, options: IRnFnOpt) {
 /**
  * 执行 derive 设置函数
  */
-export function runFn(fnKey: string, options: IRnFnOpt = {}) {
-  const { isFirstCall = false, forceFn = false, forceTask = false, throwErr = false, triggerReasons = [], sn = 0, err } = options;
+export function runFn(fnKey: string, options: IRunFnOpt = {}) {
+  const {
+    isFirstCall = false,
+    forceFn = false,
+    forceTask = false,
+    throwErr = false,
+    triggerReasons = [],
+    sn = 0,
+    err,
+    unbox = false,
+    internal = fakeInternal,
+  } = options;
   const fnCtx = getFnCtx(fnKey);
+  const resultTuple = (err: any = null) => {
+    if (err && throwErr) throw err;
+    const ctx = fnCtx || fakeFnCtx;
+    return unbox ? [ctx.result.val, err] : [ctx.result, err];
+  };
   if (!fnCtx) {
-    return [null, new Error(`not a valid watch or derive cb for key ${fnKey}`)];
+    return resultTuple(new Error(`not a valid watch or derive cb for key ${fnKey}`));
   }
   if (fnCtx.fnType === WATCH) {
     return runWatch(fnCtx, options);
@@ -159,7 +180,7 @@ export function runFn(fnKey: string, options: IRnFnOpt = {}) {
   if (shouldRunFn) {
     const result = fn(fnParams);
     updateAndDrillDown({ data: result });
-    return [fnCtx.result, null];
+    return resultTuple();
   }
 
   // mark computing for first async task run
@@ -169,12 +190,12 @@ export function runFn(fnKey: string, options: IRnFnOpt = {}) {
   // only works for useDerived
   if (isAsyncTransfer) {
     updateAndDrillDown({ err });
-    return [fnCtx.result, null];
+    return resultTuple();
   }
   if (fnCtx.asyncType === MAY_TRANSFER) {
     const result = fn(fnParams);
     updateAndDrillDown({ data: result });
-    return [fnCtx.result, null];
+    return resultTuple();
   }
   if (task) {
     let del = noopVoid;
@@ -199,18 +220,19 @@ export function runFn(fnKey: string, options: IRnFnOpt = {}) {
       .then((data: any) => {
         del();
         updateAndDrillDown({ data });
-        return [fnCtx.result, null];
+        return resultTuple();
       })
       .catch((err: any) => {
         // TODO: emit ON_DERIVE_ERROR_OCCURED to plugin
         del();
         updateAndDrillDown({ err }); // 向下传递错误
         if (throwErr) throw err;
-        return [fnCtx.result, err];
+        emitErr(internal, err);
+        return resultTuple(err);
       });
   }
 
-  return [fnCtx.result, null];
+  return resultTuple(err);
 }
 
 /**
@@ -218,7 +240,7 @@ export function runFn(fnKey: string, options: IRnFnOpt = {}) {
  */
 export function rerunDeriveFn<T = Dict>(
   result: T,
-  options?: { forceFn?: boolean; forceTask?: boolean; throwErr?: boolean },
+  options?: { forceFn?: boolean; forceTask?: boolean; throwErr?: boolean; unbox?: boolean },
 ): [T, Error | null] {
   const fnCtx = getFnCtxByObj(result);
   if (!fnCtx) {
@@ -239,6 +261,20 @@ export function runDerive<T = Dict>(result: T, throwErr?: boolean): [T, Error | 
  */
 export function runDeriveTask<T = Dict>(result: T, throwErr?: boolean): Promise<[T, Error | null]> {
   return Promise.resolve(rerunDeriveFn(result, { forceTask: true, throwErr }));
+}
+
+/**
+ * 内部使用的重运行全量派生函数接口，目前提供给 createShared
+ */
+export function innerRunDerive<T = any>(result: T, throwErr?: boolean): [T, Error | null] {
+  return rerunDeriveFn(result, { forceFn: true, throwErr, unbox: true });
+}
+
+/**
+ * 内部使用的重运行全量派生函数异步任务，目前提供给 createShared
+ */
+export function innerRunDeriveTask<T = Dict>(result: T, throwErr?: boolean): Promise<[T, Error | null]> {
+  return Promise.resolve(rerunDeriveFn(result, { forceTask: true, throwErr, unbox: true }));
 }
 
 export function getDeriveLoading<T = Dict>(result: T) {

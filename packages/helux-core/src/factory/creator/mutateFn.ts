@@ -1,7 +1,7 @@
 import { enureReturnArr, isPromise, noop, tryAlert } from '@helux/utils';
-import { EVENT_NAME, FROM, SCOPE_TYPE } from '../../consts';
+import { FROM, SCOPE_TYPE } from '../../consts';
 import { getRunningFn, getSafeFnCtx } from '../../factory/common/fnScope';
-import { emitPluginEvent } from '../../factory/common/plugin';
+import { emitErr } from '../../factory/common/plugin';
 import type { TInternal } from '../../factory/creator/buildInternal';
 import { FN_DEP_KEYS, REACTIVE_META, TRIGGERED_WATCH } from '../../factory/creator/current';
 import { alertDepKeyDeadCycleErr, analyzeErrLog, dcErr, inDeadCycle, probeDepKeyDeadCycle } from '../../factory/creator/deadCycle';
@@ -249,7 +249,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   if (!keys.length) return;
   const internal = getInternal(target);
   const { mutateFnDict, usefulName, forAtom, sharedState } = internal;
-  const emitErrToPlugin = (err: Error) => emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err });
+  const emitErrToPlugin = (err: Error) => emitErr(internal, err);
 
   keys.forEach((descKey) => {
     const item = mutateFnDict[descKey];
