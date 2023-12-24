@@ -1,6 +1,6 @@
 {
   "name": "@helux/preact",
-  "version": "3.5.18",
+  "version": "3.5.19",
   "description": "State library for preact that integrates atom, signal, collection dep, derive and watch.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"

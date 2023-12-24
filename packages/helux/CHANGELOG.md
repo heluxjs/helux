@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.19
+
+### Patch Changes
+
+- ba0416e: build(3.5.19): optimise defineFullDerive type, unbox fullDeriveResult automatically
+- Updated dependencies [ba0416e]
+  - @helux/core@3.5.19
+
 ## 3.5.18
 
 ### Patch Changes
