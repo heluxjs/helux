@@ -20,8 +20,9 @@ export function tryGetLoc(moduleName: string, endCutIdx = 8) {
       throw new Error('loc');
     } catch (err: any) {
       const arr = err.stack.split("\n");
-      if (arr[1].includes('webpack-internal')) {
-        loc = arr.join(" -> ");
+      const item1 = arr[1] || '';
+      if (item1.includes('webpack-internal') || item1.includes('/node_modules/')) {
+        loc = arr.slice(0, 16).join(" -> ");
       } else {
         const pureArr = arr.map((codeLoc) => {
           return codeLoc.substring(0, codeLoc.indexOf("(")).trim();
