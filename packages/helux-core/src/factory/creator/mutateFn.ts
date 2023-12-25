@@ -23,7 +23,7 @@ import type {
 import { createWatchLogic } from '../createWatch';
 import { buildReactive, flushActive, innerFlush } from './reactive';
 
-const noopAny: any = () => {};
+const noopAny: any = () => { };
 
 interface ICallMutateBase {
   /** 透传给用户 */
@@ -289,8 +289,6 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         } catch (err: any) {
           if (err.cause === 'DeadCycle') {
             analyzeErrLog(usefulName, err, internal.alertDeadCycleErr);
-          } else {
-            tryAlert(err);
           }
           emitErrToPlugin(err);
         }
