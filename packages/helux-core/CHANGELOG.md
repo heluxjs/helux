@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.20
+
+### Patch Changes
+
+- b7b9c4e: del redandunt alert
+  - @helux/hooks-impl@3.5.20
+  - @helux/types@3.5.20
+  - @helux/utils@3.5.20
+
 ## 3.5.19
 
 ### Patch Changes
