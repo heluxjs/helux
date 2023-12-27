@@ -1,7 +1,5 @@
 import { $, share } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay } from "./logic/util";
+import { Entry, MarkUpdate } from './comps';
 
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: '_ForCopy' });
 
@@ -12,11 +10,7 @@ function changeA() {
 }
 
 function Comp() {
-  return (
-    <MarkUpdate>
-      shared.xxx {$(sharedState.a)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.xxx {$(sharedState.a)}</MarkUpdate>;
 }
 
 const Demo = () => (

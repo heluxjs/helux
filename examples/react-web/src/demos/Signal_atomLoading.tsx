@@ -1,7 +1,7 @@
-import { $, share, atom, derive, deriveDict, block } from 'helux';
+import { $, atom, block, derive, deriveDict, share } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay } from "./logic/util";
+import { Entry } from './comps';
+import { delay, random } from './logic/util';
 
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 }, b12: 100 }, name: Date.now() }, { moduleName: 'SignalL1' });
 const [numAtom, setAtom] = atom(100);
@@ -27,7 +27,9 @@ const doubleNum = derive(() => {
 });
 
 function changeA() {
-  setState(draft => { draft.a += 1 });
+  setState((draft) => {
+    draft.a += 1;
+  });
 }
 
 function changeAtom() {
@@ -35,7 +37,9 @@ function changeAtom() {
 }
 
 function change_b_b1_b2() {
-  setState(draft => { draft.b.b1.b2 = Date.now() });
+  setState((draft) => {
+    draft.b.b1.b2 = Date.now();
+  });
 }
 
 const AsyncBlock = block<{ a: number }, { sayHello: any }>((props, params) => {
@@ -82,7 +86,7 @@ const Demo = () => {
       {$(sharedState.a)}
       <AsyncBlock ref={ref} a={1} />
     </Entry>
-  )
+  );
 };
 
 export default Demo;

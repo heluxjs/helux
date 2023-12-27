@@ -1,17 +1,17 @@
-import { share, atom, useReactive } from 'helux';
+import { atom, share, useReactive } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { dictFactory, delay } from "../logic/util";
+import { Entry, MarkUpdate } from '../comps';
+import { delay, dictFactory } from '../logic/util';
 
 const [shared, , sctx] = share(dictFactory, { moduleName: 'ReactiveAndLoding' });
 const [atomDict, , ctx] = atom(dictFactory);
 const { reactive } = sctx;
 
 const { actions, useLoading } = ctx.defineActions()({
-  async asyncAdd({draft}){
+  async asyncAdd({ draft }) {
     await delay(3000);
     draft.a.b.c++;
-  }
+  },
 });
 
 async function updateC1() {
@@ -23,7 +23,7 @@ async function updateC1() {
   reactive.loading = false;
 }
 function Info1() {
-  const [reactiveShared ] = useReactive(shared);
+  const [reactiveShared] = useReactive(shared);
   React.useEffect(() => {
     // setInterval(() => reactiveShared.a.b.c++, 1000);
   }, []);
@@ -31,14 +31,16 @@ function Info1() {
   const asyncAdd = async () => {
     await delay(1000);
     reactiveShared.a.b.c++;
-  }
+  };
 
-  return <MarkUpdate>
-    <button onClick={add}>add</button>
-    {/* <button onClick={actions.}>asyncAdd</button> */}
-    <h3>{reactiveShared.loading ? '....' : 'done'}</h3>
-    <h2>reactiveShared.a.b.c {reactiveShared.a.b.c}</h2>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate>
+      <button onClick={add}>add</button>
+      {/* <button onClick={actions.}>asyncAdd</button> */}
+      <h3>{reactiveShared.loading ? '....' : 'done'}</h3>
+      <h2>reactiveShared.a.b.c {reactiveShared.a.b.c}</h2>
+    </MarkUpdate>
+  );
 }
 
 function updateC2() {
@@ -56,13 +58,15 @@ function Info2() {
   const asyncAdd = async () => {
     await delay(1000);
     reactiveShared.a.b.c++;
-  }
+  };
 
-  return <MarkUpdate>
-    <button onClick={add}>add</button>
-    <button onClick={asyncAdd}>asyncAdd</button>
-    <h2>atomDict.a.b.c {reactiveShared.a.b.c}</h2>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate>
+      <button onClick={add}>add</button>
+      <button onClick={asyncAdd}>asyncAdd</button>
+      <h2>atomDict.a.b.c {reactiveShared.a.b.c}</h2>
+    </MarkUpdate>
+  );
 }
 
 function InfoRead() {
@@ -71,14 +75,15 @@ function InfoRead() {
   const asyncAdd = async () => {
     await delay(1000);
     reactiveShared.a.b.c++;
-  }
-  return <MarkUpdate>
-    <button onClick={add}>add</button>
-    <button onClick={asyncAdd}>asyncAdd</button>
-    <h2>atomDict.a.b.c {reactiveShared.a.b.c}</h2>
-  </MarkUpdate>;
+  };
+  return (
+    <MarkUpdate>
+      <button onClick={add}>add</button>
+      <button onClick={asyncAdd}>asyncAdd</button>
+      <h2>atomDict.a.b.c {reactiveShared.a.b.c}</h2>
+    </MarkUpdate>
+  );
 }
-
 
 const Demo = () => (
   <Entry fns={[updateC1, updateC2]}>
@@ -91,4 +96,3 @@ const Demo = () => (
 );
 
 export default Demo;
-

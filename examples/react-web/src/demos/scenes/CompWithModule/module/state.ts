@@ -1,5 +1,5 @@
+import type { DraftType, IActionTaskParams, IMutateFnItem, IMutateFnParams, IMutateTaskParam, UnconfirmedArg } from 'helux';
 import { atomx } from 'helux';
-import type { IActionTaskParams, DraftType, UnconfirmedArg, IMutateTaskParam, IMutateFnItem, IMutateFnParams } from 'helux';
 
 export function getInitial() {
   return {
@@ -38,6 +38,4 @@ export type MutateTaskParam<P = UnconfirmedArg> = IMutateTaskParam<State, P>;
 export type MutateFnItem<P = any[]> = IMutateFnItem<State, P>;
 export type MutateFnParams<P = any[]> = IMutateFnParams<State, P>;
 
-export const {
-  state,
-} = ctx;
+export const { state } = ctx;

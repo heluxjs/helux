@@ -1,6 +1,5 @@
-import { block, share, getAtom, atom } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
+import { atom, block, getAtom, share } from 'helux';
+import { Entry } from './comps';
 
 const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
 
@@ -18,11 +17,8 @@ function changeB2() {
 }
 
 const DemoBlock = block(() => {
-  return <div>
-    state.b.b1.b2 {sharedState.b.b1.b2}
-  </div>
+  return <div>state.b.b1.b2 {sharedState.b.b1.b2}</div>;
 });
-
 
 const Demo = () => (
   <Entry fns={[changeB2]}>

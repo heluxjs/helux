@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { IRenderInfo, IFnRenderInfo } from "helux";
-import { nodupPush, getLocaleTime } from "../logic/util";
+import { IFnRenderInfo, IRenderInfo } from 'helux';
+import { getLocaleTime, nodupPush } from '../logic/util';
 
 type Info = IFnRenderInfo | IRenderInfo;
 
@@ -12,7 +11,7 @@ interface IProps {
   forceColor?: boolean;
 }
 
-const colors = ["#0944d0", "#fc774b", "#1da187", "#fdc536", "#1789f5"];
+const colors = ['#0944d0', '#fc774b', '#1da187', '#fdc536', '#1789f5'];
 let curIdx = 0;
 
 function getColor(sn: number, forceColor = false) {
@@ -40,21 +39,19 @@ function ensureInfos(info: Info | Array<Info>) {
   return infos;
 }
 
-function getInfoData(
-  info: Info | Array<Info>,
-) {
+function getInfoData(info: Info | Array<Info>) {
   const infos = ensureInfos(info);
   let sn = 0;
-  let depStr = "";
-  const insKeyStr = infos.map(item => item.insKey).join(',');
+  let depStr = '';
+  const insKeyStr = infos.map((item) => item.insKey).join(',');
   const deps: string[] = [];
   infos.forEach((item) => {
     sn += item.sn;
     const currDeps = item.getDeps();
     currDeps.forEach((dep) => nodupPush(deps, dep));
   });
-  depStr = deps.join(" , ");
-  const snStr = infos.length > 1 ? `(sn sum ${sn})` : `(sn ${sn})`
+  depStr = deps.join(' , ');
+  const snStr = infos.length > 1 ? `(sn sum ${sn})` : `(sn ${sn})`;
 
   return {
     sn,
@@ -65,18 +62,15 @@ function getInfoData(
 }
 
 function Ui(props: IProps) {
-  const { name = "MarkUpdate", info = fakeInfo, forceColor } = props;
+  const { name = 'MarkUpdate', info = fakeInfo, forceColor } = props;
   const { sn, insKeyStr, depStr, snStr } = getInfoData(info);
   return (
     <div className="box">
       {props.children}
-      <div
-        className="info"
-        style={{ backgroundColor: getColor(sn, forceColor) }}
-      >
+      <div className="info" style={{ backgroundColor: getColor(sn, forceColor) }}>
         [{name}] update at {getLocaleTime()} {snStr} (insKey {insKeyStr})
       </div>
-      {depStr && <div style={{ color: "green" }}> deps is [ {depStr} ]</div>}
+      {depStr && <div style={{ color: 'green' }}> deps is [ {depStr} ]</div>}
     </div>
   );
 }

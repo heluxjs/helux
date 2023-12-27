@@ -24,7 +24,7 @@ function flushModified(reactive: IReactive) {
   // 来自于 flush 记录的 desc 值，使用过一次就清除
   const desc = REACTIVE_DESC.current(sharedKey);
   REACTIVE_DESC.del(sharedKey);
-  return reactive.finish(null, { from: FROM.REACTIVE, desc });
+  return reactive.finish(null, { from: FROM.REACTIVE, desc, handleCbReturn: false });
 }
 
 /**
@@ -201,9 +201,9 @@ export function buildReactive(
       draft = isPrimitive
         ? rawState.val
         : new Proxy(rawState.val, {
-            set: (t: any, key: any, value: any) => set(true, key, value),
-            get: (t: any, key: any) => get(true, key, subInnerData),
-          });
+          set: (t: any, key: any, value: any) => set(true, key, value),
+          get: (t: any, key: any) => get(true, key, subInnerData),
+        });
     }
   } else {
     // 非 Proxy 环境暂不支持 reactive

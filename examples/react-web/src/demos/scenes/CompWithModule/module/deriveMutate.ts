@@ -18,4 +18,4 @@ export const changeDTask: MutateFnItem<[number]> = {
   task: async ({ draft, input }) => {
     draft.d = input[0] + 1;
   },
-}
+};

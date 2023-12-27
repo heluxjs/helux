@@ -1,7 +1,6 @@
-import React from 'react';
-import { mutate, sharex, useService, $ } from 'helux';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay, getAtionFns, dictFactory } from './logic/util';
+import { $, sharex, useService } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { delay, dictFactory, getAtionFns } from './logic/util';
 
 const ctx = sharex(dictFactory, {
   moduleName: 'Api_defineActions',
@@ -47,18 +46,18 @@ function Comp() {
     },
   });
 
-  return <MarkUpdate name="Comp" info={info}>
-    {foo.loading && 'loading'}
-    {foo.err && foo.err.message}
-    {foo.ok && <>finalPrice.retA: {state.a.b.c}</>}
-    <div style={{ textAlign: 'center' }}>
-      <button onClick={srv.foo}>call foo</button>
-      <button onClick={srv.seeDeps}>seeDeps</button>
-    </div>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Comp" info={info}>
+      {foo.loading && 'loading'}
+      {foo.err && foo.err.message}
+      {foo.ok && <>finalPrice.retA: {state.a.b.c}</>}
+      <div style={{ textAlign: 'center' }}>
+        <button onClick={srv.foo}>call foo</button>
+        <button onClick={srv.seeDeps}>seeDeps</button>
+      </div>
+    </MarkUpdate>
+  );
 }
-
-
 
 const Demo = () => (
   <Entry fns={getAtionFns(actions)}>
@@ -71,4 +70,3 @@ const Demo = () => (
 );
 
 export default Demo;
-

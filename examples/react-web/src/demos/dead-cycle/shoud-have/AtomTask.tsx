@@ -1,4 +1,3 @@
-import React from 'react';
 import { atom } from 'helux';
 import { Entry } from '../../comps';
 import { dictFactory } from '../../logic/util';
@@ -21,15 +20,16 @@ const Demo = createDcDemo(() => {
     alertDeadCycleErr: false,
   });
   const changeF = () => {
-    setAtom(draft => { draft.f = Date.now() });
+    setAtom((draft) => {
+      draft.f = Date.now();
+    });
   };
 
   return function Demo(props: any) {
     const fns = [changeF];
     // const fns:any[] = [];
-    return <Entry fns={fns}>
-    </Entry>
-  }
+    return <Entry fns={fns}></Entry>;
+  };
 });
 
 export default Demo;

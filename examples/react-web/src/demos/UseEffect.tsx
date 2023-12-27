@@ -1,6 +1,6 @@
 import { useEffect } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from './comps';
+import { Entry, MarkUpdate } from './comps';
 import { log, logRed } from './logic/util';
 
 function Comp() {
@@ -12,11 +12,7 @@ function Comp() {
     logRed('React.useEffect', 'print 2 times at strict mode');
     return () => logRed('React.useEffect', 'cleanup');
   }, []);
-  return (
-    <MarkUpdate>
-      test useEffect
-    </MarkUpdate>
-  );
+  return <MarkUpdate>test useEffect</MarkUpdate>;
 }
 
 const Demo = () => (

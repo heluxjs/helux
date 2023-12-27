@@ -1,11 +1,7 @@
-import React from "react";
-import { atom, share, watch, useAtom, getSnap } from "helux";
-import { MarkUpdate, Entry } from "./comps";
+import { atom, getSnap, share, useAtom, watch } from 'helux';
+import { Entry, MarkUpdate } from './comps';
 
-const [priceState, setPrice] = share(
-  { a: 1, books: [] as any[] },
-  { moduleName: "Watch" }
-);
+const [priceState, setPrice] = share({ a: 1, books: [] as any[] }, { moduleName: 'Watch' });
 const [numAtom, setNum] = atom(3000);
 
 function changePrice() {
@@ -13,7 +9,7 @@ function changePrice() {
     (draft) => {
       draft.a += 100;
     },
-    { desc: "changeA" }
+    { desc: 'changeA' },
   );
 }
 
@@ -23,14 +19,16 @@ function changePriceAndNum() {
 }
 
 function addBooks() {
-  setPrice((draft) => { draft.books.push(1) });
+  setPrice((draft) => {
+    draft.books.push(1);
+  });
 }
 
 const w1 = watch(
   () => {
-    console.log("books changed ", priceState.books);
+    console.log('books changed ', priceState.books);
   },
-  () => [priceState.books]
+  () => [priceState.books],
 );
 
 setTimeout(() => {
@@ -43,32 +41,30 @@ setTimeout(() => {
 
 watch(
   () => {
-    console.log(
-      `price change from ${getSnap(priceState).a} to ${priceState.a}`
-    );
+    console.log(`price change from ${getSnap(priceState).a} to ${priceState.a}`);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
   () => {
     console.log(`found price changed: () => [priceState.a]`);
   },
-  () => [priceState.a]
+  () => [priceState.a],
 );
 
 watch(
   () => {
     console.log(`found price changed: [ priceState ]`);
   },
-  () => [priceState]
+  () => [priceState],
 );
 
 watch(
   () => {
     console.log(`found price or numAtom changed: ()=>[ priceState, numAtom ]`);
   },
-  () => [priceState, numAtom]
+  () => [priceState, numAtom],
 );
 
 function Price() {

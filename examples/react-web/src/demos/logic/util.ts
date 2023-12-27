@@ -1,4 +1,3 @@
-
 let seed = 0;
 
 /**
@@ -17,11 +16,11 @@ export function getLocaleTime(date?: Date) {
 }
 
 export function getAtionFns(actions: any, otherActions?: any[]) {
-  const fns = Object.keys(actions).map(key => actions[key]);
+  const fns = Object.keys(actions).map((key) => actions[key]);
   return fns.concat(otherActions || []);
 }
 
-export function noop(...args: any[]) { }
+export function noop(...args: any[]) {}
 
 export function random(seed = 100) {
   return Math.ceil(Math.random() * seed);
@@ -36,14 +35,14 @@ export function randomStr(length = 8) {
   return str;
 }
 
-export const delay = (ms = 2000) => new Promise(r => setTimeout(r, ms));
+export const delay = (ms = 2000) => new Promise((r) => setTimeout(r, ms));
 
 export function log(label: string, ...args: any[]) {
   logColor(label, 'blue', ...args);
 }
 
 export function logColor(label: string, color: string, ...args: any[]) {
-  console.log(`%c ${label}`, `color:${color}`, ...args)
+  console.log(`%c ${label}`, `color:${color}`, ...args);
 }
 
 export function logRed(label: string, ...args: any[]) {

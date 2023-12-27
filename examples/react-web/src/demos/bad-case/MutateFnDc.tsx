@@ -1,21 +1,24 @@
-import React from 'react';
-import { mutate, share, useAtom, atom, flush, $ } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay, noop, dictFactory } from '../logic/util';
+import { mutate, share } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
 
-const [priceState, setPrice, ctx1] = share({ a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } }, {
-  moduleName: 'Api_mutate',
-  enableDraftDep: true,
-  recordLoading: 'no',
-  alertDeadCycleErr: false,
-});
-const [finalPriceState, setP2, ctx2] = share({ retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } }, {
-  moduleName: 'Api_mutate_finalPriceState',
-  enableDraftDep: true,
-  recordLoading: 'no',
-  alertDeadCycleErr: false,
-});
-
+const [priceState, setPrice, ctx1] = share(
+  { a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } },
+  {
+    moduleName: 'Api_mutate',
+    enableDraftDep: true,
+    recordLoading: 'no',
+    alertDeadCycleErr: false,
+  },
+);
+const [finalPriceState, setP2, ctx2] = share(
+  { retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } },
+  {
+    moduleName: 'Api_mutate_finalPriceState',
+    enableDraftDep: true,
+    recordLoading: 'no',
+    alertDeadCycleErr: false,
+  },
+);
 
 // 外部定义 mutate 函数
 const witness = mutate(finalPriceState)({
@@ -34,17 +37,14 @@ const witness = mutate(finalPriceState)({
   immediate: true, // 控制 task 立即执行
 });
 
-
 function changeRetA() {
-  setP2(draft => { draft.retA += 1 });
+  setP2((draft) => {
+    draft.retA += 1;
+  });
 }
 
 function SharedAtom() {
-  return (
-    <MarkUpdate>
-      de demo
-    </MarkUpdate>
-  );
+  return <MarkUpdate>de demo</MarkUpdate>;
 }
 
 const Demo = () => (

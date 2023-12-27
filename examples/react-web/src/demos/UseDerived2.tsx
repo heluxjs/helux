@@ -1,6 +1,6 @@
-import { share, deriveDict, useAtom, useDerived, runDerive } from "helux";
-import { random } from "./logic/util";
-import { MarkUpdate, Entry } from "./comps";
+import { deriveDict, share, useDerived } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { random } from './logic/util';
 
 const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
 
@@ -63,7 +63,9 @@ function ReadTrans1() {
 
   return (
     <MarkUpdate info={[info]}>
-      <div>{status.loading ? 'computing' : ''} aPlusB2.val: {aPlusB2.val}</div>
+      <div>
+        {status.loading ? 'computing' : ''} aPlusB2.val: {aPlusB2.val}
+      </div>
     </MarkUpdate>
   );
 }
@@ -73,7 +75,9 @@ function ReadTrans2() {
 
   return (
     <MarkUpdate info={[info]}>
-      <div>{status.loading ? 'computing' : ''} transResult2.val: {result.val}</div>
+      <div>
+        {status.loading ? 'computing' : ''} transResult2.val: {result.val}
+      </div>
     </MarkUpdate>
   );
 }
@@ -83,7 +87,9 @@ function ReadTrans3() {
 
   return (
     <MarkUpdate info={[info]}>
-      <div>{status.loading ? 'computing' : ''} transResult3.val: {result.val}</div>
+      <div>
+        {status.loading ? 'computing' : ''} transResult3.val: {result.val}
+      </div>
     </MarkUpdate>
   );
 }

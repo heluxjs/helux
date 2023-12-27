@@ -27,7 +27,8 @@ export function newReactiveMeta(): IReactiveMeta {
 }
 
 export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
-  const { ids = [], globalIds = [], isReactive = false, from = SET_STATE, enableDep = false } = options; // 用户 setState 可能设定了 ids globalIds
+  // 用户 setState 可能设定了 ids globalIds
+  const { ids = [], globalIds = [], isReactive = false, from = SET_STATE, enableDep = false, handleCbReturn = true } = options;
   return {
     depKeys: [],
     forcedDepKeys: [],
@@ -38,7 +39,7 @@ export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
     writeKeys: {},
     arrKeyDict: {}, // 记录读取过程中遇到的数组 key
     writeKeyPathInfo: {},
-    handleCbReturn: true,
+    handleCbReturn,
     draftVal: null,
     from,
     isReactive,

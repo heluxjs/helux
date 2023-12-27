@@ -1,4 +1,4 @@
-import { mutate, share, action, atom, flush, $ } from 'helux';
+import { action, atom } from 'helux';
 
 const [numAtom] = atom(1);
 const addAtom = action(numAtom)<[toAdd: number]>()(({ draft, payload }) => {
@@ -12,9 +12,6 @@ const addAtom = action(numAtom)<[toAdd: number]>()(({ draft, payload }) => {
 const ret = addAtom([10]);
 console.log(ret.snap);
 
-
-const Demo = () => (
-  <h1>see add</h1>
-);
+const Demo = () => <h1>see add</h1>;
 
 export default Demo;

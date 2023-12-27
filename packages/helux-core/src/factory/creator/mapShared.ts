@@ -1,6 +1,6 @@
 import { canUseDeep } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
-import type { IInnerSetStateOptions, InnerSetState, SetState, SetStateFactory, SharedState } from '../../types/base';
+import type { IInnerSetStateOptions, InnerSetState, SetDraft, SetState, SetStateFactory, SharedState } from '../../types/base';
 import { runPartialCb } from '../common/util';
 import { buildInternal } from './buildInternal';
 import { REACTIVE_DESC } from './current';
@@ -53,10 +53,16 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
     const ret = setStateImpl();
     return ret.finish(partialState, pureSetOptions(options));
   };
+  const setDraft: SetDraft = (partialState, options) => {
+    flush(sharedState, REACTIVE_DESC.current(sharedKey));
+    const ret = setStateImpl({ handleCbReturn: false });
+    return ret.finish(partialState, pureSetOptions(options));
+  };
 
   const internal = buildInternal(options, {
     sharedState,
     setState,
+    setDraft,
     setStateFactory,
     innerSetState,
     ruleConf,

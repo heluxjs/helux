@@ -1,6 +1,6 @@
-import { IDeriveFnParams, IDeriveFnItem, defineDeriveFnItem, defineDeriveTask } from 'helux';
-import { state } from './state';
+import { defineDeriveFnItem, defineDeriveTask, IDeriveFnItem, IDeriveFnParams } from 'helux';
 import { delay } from '../../../logic/util';
+import { state } from './state';
 
 export function go(params: IDeriveFnParams) {
   return state.val.f + 100;
@@ -8,7 +8,7 @@ export function go(params: IDeriveFnParams) {
 
 export function test() {
   const map: Record<number, any> = {};
-  state.val.list.forEach(item => map[item.id] = item);
+  state.val.list.forEach((item) => (map[item.id] = item));
   return map;
 }
 
@@ -21,10 +21,10 @@ export const fTask: IDeriveFnItem<number, [number]> = {
     return params.input[0];
   },
   task: async (params) => {
-    delay(1000)
+    delay(1000);
     return params.prevResult + 100;
   },
-}
+};
 
 export const fTask2 = defineDeriveFnItem<IDeriveFnItem<number, [number]>>({
   deps: () => [state.val.f],
@@ -40,14 +40,12 @@ export const fTask2 = defineDeriveFnItem<IDeriveFnItem<number, [number]>>({
 /**
  * 通过 defineDeriveTask 约束结果返回类型，自动推导出 deps 返回类型并透传给 params.input
  */
-export const f2 = defineDeriveTask(
-  () => [state.val.f] as const,
-)<number>({
+export const f2 = defineDeriveTask(() => [state.val.f] as const)<number>({
   fn: (params) => {
     return params.input[0];
   },
   task: async (params) => {
-    delay(1000)
+    delay(1000);
     return params.prevResult + 100;
   },
 });

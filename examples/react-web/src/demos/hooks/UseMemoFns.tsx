@@ -1,7 +1,7 @@
-import { useObject, Fn } from 'helux';
+import { Fn, useObject } from 'helux';
 import React from 'react';
 import { MarkUpdate } from '../comps';
-import { random } from "../logic/util";
+import { random } from '../logic/util';
 
 export function useMemoFns<T extends Record<string, Fn>>(fns: T): T {
   const srvRef = React.useRef(fns);
@@ -13,16 +13,14 @@ export function useMemoFns<T extends Record<string, Fn>>(fns: T): T {
       // @ts-ignore
       srvWrap[key] = (...args: any[]) => srvRef.current[key](...args);
     });
-    return srvWrap
+    return srvWrap;
   });
   return srvWrap;
 }
 
 const Child = React.memo((props: any) => {
   console.log('Render Child');
-  return <MarkUpdate forceColor={true}>
-    {props.name} Child
-  </MarkUpdate>
+  return <MarkUpdate forceColor={true}>{props.name} Child</MarkUpdate>;
 });
 
 // SDN
@@ -46,25 +44,40 @@ function Comp(props: any) {
     },
   });
 
-  const srv2 = React.useMemo(() => ({
-    readState() {
-      console.log(`%c read state num ${obj.num}`, `color:red`);
-    },
-    readProps() {
-      console.log(`%c read props num ${props.num}`, `color:red`);
-    },
-  // }), [obj.num, props.num]);
-  }), []);
-
+  const srv2 = React.useMemo(
+    () => ({
+      readState() {
+        console.log(`%c read state num ${obj.num}`, `color:red`);
+      },
+      readProps() {
+        console.log(`%c read props num ${props.num}`, `color:red`);
+      },
+      // }), [obj.num, props.num]);
+    }),
+    [],
+  );
 
   return (
     <MarkUpdate>
-      <button onClick={() => setObj({ num: random() })}>change local num</button><br />
-      <button style={{ color: 'green' }} onClick={() => srv.readState()}>call readState</button>
-      <button style={{ color: 'green' }} onClick={() => srv.readProps()}>call readProps</button><br />
-      <button style={{ color: 'green' }} onClick={() => srv.changeNum()}>call changeNum</button><br />
-      <button style={{ color: 'red' }} onClick={() => srv2.readState()}>call readState</button>
-      <button style={{ color: 'red' }} onClick={() => srv2.readProps()}>call readProps</button>
+      <button onClick={() => setObj({ num: random() })}>change local num</button>
+      <br />
+      <button style={{ color: 'green' }} onClick={() => srv.readState()}>
+        call readState
+      </button>
+      <button style={{ color: 'green' }} onClick={() => srv.readProps()}>
+        call readProps
+      </button>
+      <br />
+      <button style={{ color: 'green' }} onClick={() => srv.changeNum()}>
+        call changeNum
+      </button>
+      <br />
+      <button style={{ color: 'red' }} onClick={() => srv2.readState()}>
+        call readState
+      </button>
+      <button style={{ color: 'red' }} onClick={() => srv2.readProps()}>
+        call readProps
+      </button>
       <h3>state num {obj.num}</h3>
       <h3>props num {props.num}</h3>
       <Child srv={srv} name="Statble" />
@@ -76,10 +89,12 @@ function Comp(props: any) {
 function Demo() {
   const [obj, setObj] = useObject({ num: 1 });
 
-  return <div>
-    <button onClick={() => setObj({ num: random() })}>change num</button>
-    <Comp num={obj.num} />
-  </div>
+  return (
+    <div>
+      <button onClick={() => setObj({ num: random() })}>change num</button>
+      <Comp num={obj.num} />
+    </div>
+  );
 }
 
 export default Demo;

@@ -1,7 +1,6 @@
 import { useObject } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { log, logRed } from './logic/util';
+import { Entry, MarkUpdate } from './comps';
 
 function Comp() {
   const [state, setState, api] = useObject({ a: 1, b: 2 });

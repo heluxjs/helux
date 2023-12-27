@@ -1,6 +1,5 @@
 import { atom } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { dictFactory, delay } from '../logic/util';
+import { Entry } from '../comps';
 
 const [state] = atom(
   { a: 1, b: 0, c: 0 },

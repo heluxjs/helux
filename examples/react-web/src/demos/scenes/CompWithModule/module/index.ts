@@ -1,10 +1,10 @@
-import { ctx } from './state';
-import { mutateStateFn } from './mutateState';
+import { delay } from '../../../logic/util';
 import * as actions from './actions'; // 定义action 函数
 import * as deriveFull from './deriveFull'; // 定义全量派生结果
-import * as deriveSelf from './deriveSelf'; // 定义自身可变派生结果
 import * as deriveMutate from './deriveMutate'; // 使用一个新对象来定义可变派生结果
-import { delay } from '../../../logic/util';
+import * as deriveSelf from './deriveSelf'; // 定义自身可变派生结果
+import { mutateStateFn } from './mutateState';
+import { ctx } from './state';
 
 export { ctx } from './state';
 // action 对象
@@ -28,7 +28,7 @@ action.actions.changeF(1);
 
 console.log('go', deriveF.result.go);
 
-async function test(){
+async function test() {
   action.actions.changeF(1);
   await delay(2000);
   console.log('fTask', deriveF.result.fTask);

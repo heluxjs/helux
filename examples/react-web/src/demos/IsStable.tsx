@@ -1,11 +1,8 @@
 // @ts-nocheck
-import React from 'react';
-import {
-  useAtom, share, watch,
-  getRawState, shallowCompare, useLocalForceUpdate,
-} from 'helux';
-import * as util from './logic/util';
+import { shallowCompare, share, useAtom, useLocalForceUpdate, watch } from 'helux';
 import * as limu from 'limu';
+import React from 'react';
+import * as util from './logic/util';
 
 const draft = limu.createDraft({ key: 1 }, { readOnly: true });
 draft.key = 2;
@@ -28,11 +25,7 @@ function COMP_C() {
   const [state, , info] = useAtom(ret);
   console.log('info', info.sharedKey);
   const c = state.c;
-  return (
-    <pre>
-      state.c: {c['xx']}
-    </pre>
-  );
+  return <pre>state.c: {c['xx']}</pre>;
 }
 
 const COMP_C_C1 = React.memo(function () {
@@ -57,25 +50,25 @@ const COMP_C_C2 = React.memo(function () {
 });
 
 function change_a() {
-  setState(draft => {
+  setState((draft) => {
     draft.a = util.random();
   });
 }
 
 function change_c_c1() {
-  setState(draft => {
+  setState((draft) => {
     draft.c.c1 += 100;
   });
 }
 
 function change_c_c2() {
-  setState(draft => {
+  setState((draft) => {
     draft.c.c2 += 200;
   });
 }
 
 function changeItemName(idx: number) {
-  setState(draft => {
+  setState((draft) => {
     const item = draft.list[idx];
     console.log(`changeItemName ${idx}`);
     if (item) {
@@ -87,13 +80,13 @@ function changeItemName(idx: number) {
 }
 
 function addListItem() {
-  setState(draft => {
+  setState((draft) => {
     draft.list.push({ name: `new_${util.getSeed()}`, age: 100 });
   });
 }
 
 function spliceList() {
-  setState(draft => {
+  setState((draft) => {
     draft.list.splice(0, 1);
     console.log(draft.list);
   });
@@ -111,28 +104,23 @@ const ListItem = React.memo(function (props: any) {
 }, shallowCompare);
 // }); // 不使用 shallowCompare 的话，会造成所有 list item 全部更新
 
-
 function List() {
   console.log('Render List');
   const [state] = useAtom(ret, { id: 'list' });
   return (
     <div>
-      {state.list.map((item, idx) => <ListItem key={idx} item={item} idx={idx} />)}
+      {state.list.map((item, idx) => (
+        <ListItem key={idx} item={item} idx={idx} />
+      ))}
     </div>
   );
 }
-
 
 function ListLen() {
   console.log('Render ListLen');
   const [state] = useAtom(ret, { id: 'list' });
-  return (
-    <div>
-      {state.list.length}
-    </div>
-  );
+  return <div>{state.list.length}</div>;
 }
-
 
 function Entry(props: any) {
   console.log('Render Entry');
@@ -141,23 +129,26 @@ function Entry(props: any) {
   const forceUpdate = useLocalForceUpdate();
   showRef.current = show;
 
-  return <div>
-    <button onClick={() => setShow(!show)}>switch show</button>
-    <button onClick={forceUpdate}>force update</button>
-    <button onClick={change_a}>change_a</button>
-    <button onClick={change_c_c1}>change_c_c1</button>
-    <button onClick={change_c_c2}>change_c_c2</button>
-    <button onClick={addListItem}>add_list_item</button>
-    <button onClick={spliceList}>splice_list</button>
-    {show && <>
-      <COMP_C />
-      <COMP_C_C1 />
-      <COMP_C_C2 />
-      <List />
-      <ListLen />
-    </>}
-  </div>
+  return (
+    <div>
+      <button onClick={() => setShow(!show)}>switch show</button>
+      <button onClick={forceUpdate}>force update</button>
+      <button onClick={change_a}>change_a</button>
+      <button onClick={change_c_c1}>change_c_c1</button>
+      <button onClick={change_c_c2}>change_c_c2</button>
+      <button onClick={addListItem}>add_list_item</button>
+      <button onClick={spliceList}>splice_list</button>
+      {show && (
+        <>
+          <COMP_C />
+          <COMP_C_C1 />
+          <COMP_C_C2 />
+          <List />
+          <ListLen />
+        </>
+      )}
+    </div>
+  );
 }
-
 
 export default Entry;

@@ -1,7 +1,7 @@
-import React from 'react';
 import { $, share, useLocalForceUpdate } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { dictFactory, delay } from '../logic/util';
+import React from 'react';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, dictFactory } from '../logic/util';
 
 const [priceState, , ctxp] = share(dictFactory, { moduleName: 'DefineApi3', alertDeadCycleErr: false });
 
@@ -10,7 +10,7 @@ const ms = ctxp.defineMutateSelf()({
     console.error('trigger toBeDrive');
     draft.extra.toBeDrive = params.state.a.b.c + 1000;
   },
-  prefixedMark: (draft) => draft.extra.prefixedMark = draft.desc + 'xx',
+  prefixedMark: (draft) => (draft.extra.prefixedMark = draft.desc + 'xx'),
   changeB: {
     deps: () => [priceState.info.name],
     async task(params) {
@@ -18,7 +18,7 @@ const ms = ctxp.defineMutateSelf()({
       await delay(1000);
       params.draft.extra.newName = params.input[0] + Date.now();
     },
-  }
+  },
 });
 
 // 这个改动应该触发 changeB task，修改 newName
@@ -32,7 +32,9 @@ function changeNameByTopSetState() {
 }
 
 function changeC() {
-  ctxp.setState(draft => { draft.a.b.c += 100 });
+  ctxp.setState((draft) => {
+    draft.a.b.c += 100;
+  });
 }
 
 function Price() {
@@ -54,16 +56,20 @@ function Price() {
     reactive.info.name = `${Date.now()}_`;
   };
 
-  return <MarkUpdate name="Price">
-    <h3>extra.prefixedMark: {state.extra.prefixedMark}</h3>
-    <h3>extra.toBeDrive: {state.extra.toBeDrive}</h3>
-    <h3>extra.newName: {state.extra.newName} {ld.changeB.loading ? 'loading...' : ''}</h3>
-    <button onClick={changeNameByInsSetState}>changeNameByInsSetState</button>
-    <button onClick={changeNameByInsReactive}>changeNameByInsReactive</button>
-    <button onClick={update}>forceUpdate</button>
-    <button onClick={update2}>forceUpdate2</button>
-    <h4>{s}</h4>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price">
+      <h3>extra.prefixedMark: {state.extra.prefixedMark}</h3>
+      <h3>extra.toBeDrive: {state.extra.toBeDrive}</h3>
+      <h3>
+        extra.newName: {state.extra.newName} {ld.changeB.loading ? 'loading...' : ''}
+      </h3>
+      <button onClick={changeNameByInsSetState}>changeNameByInsSetState</button>
+      <button onClick={changeNameByInsReactive}>changeNameByInsReactive</button>
+      <button onClick={update}>forceUpdate</button>
+      <button onClick={update2}>forceUpdate2</button>
+      <h4>{s}</h4>
+    </MarkUpdate>
+  );
 }
 
 const Demo = () => (

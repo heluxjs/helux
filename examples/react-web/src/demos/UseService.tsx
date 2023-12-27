@@ -1,6 +1,6 @@
-import { share, useService, useAtom, storeSrv } from 'helux';
+import { share, storeSrv, useAtom, useService } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from './comps';
+import { Entry, MarkUpdate } from './comps';
 
 const [priceState, setPrice, ctx] = share({ a: 1, b: 100 });
 
@@ -8,42 +8,54 @@ const changeA = ctx.action<number>()((params) => {
   params.draft.a += params.payload;
 }, 'changeA');
 
-
 function useSomeLogic(props: { a: number }) {
   const [state, setState] = useAtom(priceState);
-  const srv = useService({
-    someCall() {
-      console.log('props.a', props.a);
-      // ...
-      changeA(props.a);
+  const srv = useService(
+    {
+      someCall() {
+        console.log('props.a', props.a);
+        // ...
+        changeA(props.a);
+      },
+      sayHello(tip: string) {
+        console.log(tip);
+      },
+      state,
+      setState,
     },
-    sayHello(tip: string) {
-      console.log(tip);
-    },
-    state,
-    setState,
-  }, props);
+    props,
+  );
   return srv;
 }
 
 function GrandFather(props: any) {
   const srvRef = React.useRef<any>(null);
 
-  return <div>
-    <button onClick={() => { srvRef.current?.sayHello('from GrandFather') }}>call child fn</button>
-    {/* <Father a={1} srvRef={(srv: any) => srvRef.current = srv} /> */}
-    <Father a={1} srvRef={storeSrv(srvRef)} />
-  </div>
+  return (
+    <div>
+      <button
+        onClick={() => {
+          srvRef.current?.sayHello('from GrandFather');
+        }}
+      >
+        call child fn
+      </button>
+      {/* <Father a={1} srvRef={(srv: any) => srvRef.current = srv} /> */}
+      <Father a={1} srvRef={storeSrv(srvRef)} />
+    </div>
+  );
 }
 
 function Father(props: any) {
-  return <div>
-    Father comp:
-    <Comp a={1} srvRef={props.srvRef} />
-  </div>
+  return (
+    <div>
+      Father comp:
+      <Comp a={1} srvRef={props.srvRef} />
+    </div>
+  );
 }
 
-function Comp(props: { a: number, srvRef?: any }) {
+function Comp(props: { a: number; srvRef?: any }) {
   const { state, someCall } = useSomeLogic(props);
   return (
     <MarkUpdate>

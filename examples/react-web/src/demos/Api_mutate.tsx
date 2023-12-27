@@ -1,16 +1,21 @@
-import React from 'react';
-import { mutate, share, useAtom, reactiveDesc, flush, $ } from 'helux';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay, noop } from './logic/util';
+import { $, mutate, share, useAtom } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { delay, noop, random } from './logic/util';
 
-const [priceState, setPrice, ctx1] = share({ a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } }, {
-  moduleName: 'Api_mutate',
-  // recordLoading: 'no',
-});
-const [finalPriceState, setP2, ctx2] = share({ retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } }, {
-  moduleName: 'Api_mutate_finalPriceState',
-  // recordLoading: 'no',
-});
+const [priceState, setPrice, ctx1] = share(
+  { a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } },
+  {
+    moduleName: 'Api_mutate',
+    // recordLoading: 'no',
+  },
+);
+const [finalPriceState, setP2, ctx2] = share(
+  { retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } },
+  {
+    moduleName: 'Api_mutate_finalPriceState',
+    // recordLoading: 'no',
+  },
+);
 
 // 约束各个函数入参类型
 type Payloads = {
@@ -36,7 +41,6 @@ const { actions, useLoading } = ctx1.defineActions<Payloads>()({
 //   console.log('222 s is ', s);
 // }, 3000);
 
-
 // const witness2 = mutate(finalPriceState)({
 //   fn: (draft) => draft.time = draft.time2 + 1,
 // });
@@ -57,7 +61,7 @@ const witness = mutate(finalPriceState)({
   deps: () => [priceState.a, finalPriceState.retA, finalPriceState.retB] as const,
   task: async ({ input: [a], setState, draft }) => {
     // reactiveDesc(draft, 'change1');
-    const result = draft.retA + a
+    const result = draft.retA + a;
     // console.error('trigger task draft.retA += a', result);
     // ctx1.reactive.ccc += 1000;
     // console.log('ctxp.reactive.ccc ', ctx1.reactive.ccc);
@@ -94,7 +98,9 @@ const witness = mutate(finalPriceState)({
     // flush(draft, 'flush3');
 
     draft.retA += a;
-    setState(draft => { draft.retB += a });
+    setState((draft) => {
+      draft.retB += a;
+    });
     console.error('after ----------------------------------------------------------------');
   },
   desc: 'dangerousMutate',
@@ -109,16 +115,20 @@ const witness = mutate(finalPriceState)({
 // }, 2000);
 
 function changePriceA() {
-  setPrice(draft => { draft.a = random() });
+  setPrice((draft) => {
+    draft.a = random();
+  });
   // ctxp.reactive.a = random();
 }
 
 function changeRetA() {
-  setP2(draft => { draft.retA += 1 });
+  setP2((draft) => {
+    draft.retA += 1;
+  });
 }
 
 function changePrev() {
-  setPrice(draft => {
+  setPrice((draft) => {
     const { a } = draft;
     draft.a = a;
   });
@@ -130,19 +140,21 @@ function seeCCC() {
 
 function forceRunMutate() {
   witness.run();
-};
+}
 function forceRunMutateTask() {
   witness.runTask();
-};
+}
 
 function Price() {
   const [price, , info] = useAtom(priceState);
   const ld = useLoading();
 
-  return <MarkUpdate name="Price" info={info}>
-    {price.a}
-    <h3>{ld.foo.loading ? 'foo is running' : 'foo is done'}</h3>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      {price.a}
+      <h3>{ld.foo.loading ? 'foo is running' : 'foo is done'}</h3>
+    </MarkUpdate>
+  );
 }
 
 function FinalPrice() {
@@ -150,19 +162,23 @@ function FinalPrice() {
   const [loading] = ctx2.useMutateLoading();
   const status = loading[witness.desc];
 
-  return <MarkUpdate name="FinalPrice" info={info}>
-    {status.loading && 'loading'}
-    {status.err && status.err.message}
-    {status.ok && <>finalPrice.retA: {finalPrice.retA}</>}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="FinalPrice" info={info}>
+      {status.loading && 'loading'}
+      {status.err && status.err.message}
+      {status.ok && <>finalPrice.retA: {finalPrice.retA}</>}
+    </MarkUpdate>
+  );
 }
 
 function CCC() {
   const [r, , info] = ctx1.useReactive();
   const [loading] = ctx2.useMutateLoading();
-  return <MarkUpdate name="FinalPrice" info={info}>
-    {r.ccc}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="FinalPrice" info={info}>
+      {r.ccc}
+    </MarkUpdate>
+  );
 }
 
 const Demo = () => (

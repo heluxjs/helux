@@ -1,25 +1,27 @@
-import { $, share, action, mutate, atom } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay } from "../logic/util";
+import { $, action, atom, share } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { delay } from '../logic/util';
 
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'ActionLoading' });
 const [sharedState2, setState2, ctx2] = atom({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'ActionLoadingAtom' });
 
-
 action(sharedState2)()((params) => {
   const { draft, draftRoot, setState } = params;
-  setState(draft => { draft.a = 2 });
-})
+  setState((draft) => {
+    draft.a = 2;
+  });
+});
 
 const myAction = action(sharedState)()(({ draft }) => {
   draft.a += 100;
-}, 'action')
+}, 'action');
 
 const myAsyncAction = action(sharedState)()(async ({ setState }) => {
   await delay(2000);
-  setState(draft => { draft.a += 100 });
-}, 'myAsyncAction')
+  setState((draft) => {
+    draft.a += 100;
+  });
+}, 'myAsyncAction');
 
 function Comp() {
   const [loading] = ctx.useActionLoading();

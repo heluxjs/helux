@@ -1,15 +1,13 @@
-import { $, share, addPlugin } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { log } from "./logic/util";
+import { $, addPlugin, share } from 'helux';
+import { Entry, MarkUpdate } from './comps';
 
 addPlugin({
   install(pluginCtx) {
-    pluginCtx.onStateChanged(info => {
+    pluginCtx.onStateChanged((info) => {
       // log('Plugin', info);
     });
-  }
-})
+  },
+});
 
 const [sharedState, setState, call] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'Plugin' });
 
@@ -20,11 +18,7 @@ function changeA() {
 }
 
 function SharedDict() {
-  return (
-    <MarkUpdate>
-      shared.xxx {$(sharedState.a)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.xxx {$(sharedState.a)}</MarkUpdate>;
 }
 
 const Demo = () => (

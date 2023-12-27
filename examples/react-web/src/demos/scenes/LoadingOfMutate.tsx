@@ -1,7 +1,6 @@
-import { $, share, mutate } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay } from "../logic/util";
+import { mutate, share } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, random } from '../logic/util';
 
 const [base] = share({ a: 1 });
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'LoadingOfMutate' });
@@ -13,7 +12,9 @@ const witness = mutate(sharedState)({
     if (a < 80) {
       throw new Error(`a ${a} < 80 at ${Date.now()}`);
     }
-    setState(draft => { draft.a += (a + random()) });
+    setState((draft) => {
+      draft.a += a + random();
+    });
   },
   desc: 'mutateFn',
 });

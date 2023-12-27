@@ -1,13 +1,11 @@
+import { deriveDict, shallowCompare, share, useAtom, useDerived } from 'helux';
 import React from 'react';
-import {
-  useAtom, share, shallowCompare, deriveDict, useDerived,
-} from 'helux';
+import { Entry } from './comps';
 import * as util from './logic/util';
-import { MarkUpdate, Entry } from './comps';
 
 const stateFn = {
-  list: [{ name: "one", age: 1 }],
-  nestedList: [{ name: "n-one", age: 1, list: [{ subName: "subOne" }] }]
+  list: [{ name: 'one', age: 1 }],
+  nestedList: [{ name: 'n-one', age: 1, list: [{ subName: 'subOne' }] }],
 };
 const [ret, setState] = share(stateFn, {
   moduleName: 'dlist',
@@ -20,13 +18,13 @@ const [ret, setState] = share(stateFn, {
 
 const lenMarkRet = deriveDict(() => {
   const { list } = ret;
-  const idx = list.findIndex(item => item.name === 'xxx');
+  const idx = list.findIndex((item) => item.name === 'xxx');
   // return { val: `len is ${list.length} (${util.timemark()})` };
   return { val: `see ${idx} (${util.timemark()})` };
 });
 
 function changeItemName(idx: number) {
-  setState(draft => {
+  setState((draft) => {
     const item = draft.list[idx];
     if (item) {
       const arr = item.name.split('_');
@@ -37,20 +35,20 @@ function changeItemName(idx: number) {
 }
 
 function addListItem() {
-  setState(draft => {
+  setState((draft) => {
     draft.list.push({ name: `new_${util.getSeed()}`, age: 100 });
   });
 }
 
 function spliceList() {
-  setState(draft => {
+  setState((draft) => {
     draft.list.splice(0, 1);
     console.log(draft.list);
   });
 }
 
 function changeNestedItemName(idx: number) {
-  setState(draft => {
+  setState((draft) => {
     const item = draft.nestedList[idx];
     if (item) {
       const arr = item.name.split('_');
@@ -61,7 +59,7 @@ function changeNestedItemName(idx: number) {
 }
 
 function addNestedItemSubItem(idx: number) {
-  setState(draft => {
+  setState((draft) => {
     const item = draft.nestedList[idx];
     if (item) {
       item.list.push({ subName: `sub for ${idx} - ${Date.now()}` });
@@ -70,17 +68,16 @@ function addNestedItemSubItem(idx: number) {
 }
 
 function changeNestedItemSubItemName(idx: number, subIdx: number) {
-  setState(draft => {
+  setState((draft) => {
     const item = draft.nestedList[idx];
     if (item) {
       const subItem = item.list[subIdx];
       if (subItem) {
-        subItem.subName = `new name - ${Date.now()}`
+        subItem.subName = `new name - ${Date.now()}`;
       }
     }
   });
 }
-
 
 const ListItem = React.memo(function (props: any) {
   console.log(`Render ListItem ${props.item.name}`);
@@ -93,13 +90,14 @@ const ListItem = React.memo(function (props: any) {
   );
 }, shallowCompare);
 
-
 function List() {
   console.log('Render List');
   const [state] = useAtom(ret, { id: 'list' });
   return (
     <div>
-      {state.list.map((item, idx) => <ListItem key={idx} item={item} idx={idx} />)}
+      {state.list.map((item, idx) => (
+        <ListItem key={idx} item={item} idx={idx} />
+      ))}
     </div>
   );
 }
@@ -107,11 +105,7 @@ function List() {
 function ListLen() {
   console.log('Render ListLen');
   const [lenMark] = useDerived(lenMarkRet);
-  return (
-    <div>
-      {lenMark.val}
-    </div>
-  );
+  return <div>{lenMark.val}</div>;
 }
 
 function NestedList() {
@@ -120,7 +114,9 @@ function NestedList() {
 
   return (
     <div>
-      {state.nestedList.map((item, idx) => <NestedListItem key={idx} item={item} idx={idx} />)}
+      {state.nestedList.map((item, idx) => (
+        <NestedListItem key={idx} item={item} idx={idx} />
+      ))}
     </div>
   );
 }
@@ -145,7 +141,6 @@ const NestedListItem = React.memo(function (props: any) {
   );
 }, shallowCompare);
 
-
 const NestedListSubItem = React.memo(function (props: any) {
   console.log(`Render NestedListSubItem ${props.subIdx}`);
   return (
@@ -156,14 +151,14 @@ const NestedListSubItem = React.memo(function (props: any) {
   );
 }, shallowCompare);
 
-
 function Demo(props: any) {
-  return <Entry fns={[addListItem, spliceList]}>
-    <List />
-    <ListLen />
-    <NestedList />
-  </Entry>
+  return (
+    <Entry fns={[addListItem, spliceList]}>
+      <List />
+      <ListLen />
+      <NestedList />
+    </Entry>
+  );
 }
-
 
 export default Demo;

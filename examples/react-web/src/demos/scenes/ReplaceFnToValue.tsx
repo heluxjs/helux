@@ -1,26 +1,27 @@
-import { share, useAtom } from 'helux';
 import { getVal } from '@helux/utils';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
+import { share, useAtom } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
 
-
-const [shared, setShared, ctx] = share({
-  a: {
-    b: { c: 1 },
-    b1: { c1: 1 },
-  },
-  info: { name: 'helux', age: 1 },
-  desc: 'awesome lib',
-  extra: {
-    mark: 'extra',
-    c: (draft: any) => {
-      draft.extra.c = draft.a.b.c + 103;
+const [shared, setShared, ctx] = share(
+  {
+    a: {
+      b: { c: 1 },
+      b1: { c1: 1 },
     },
-  }
-}, {
-  stopArrDep: true,
-  enableDraftDep: true,
-});
+    info: { name: 'helux', age: 1 },
+    desc: 'awesome lib',
+    extra: {
+      mark: 'extra',
+      c: (draft: any) => {
+        draft.extra.c = draft.a.b.c + 103;
+      },
+    },
+  },
+  {
+    stopArrDep: true,
+    enableDraftDep: true,
+  },
+);
 
 // 记录是否已替换
 const replacedMap: any = {};
@@ -48,11 +49,12 @@ function Info() {
   const [state, , info] = useAtom(shared, { pure: true, arrIndexDep: false });
   console.log('typeof state.extra.c', typeof state.extra.c);
 
-  return <MarkUpdate info={info}>
-    <h2>state.extra.c {state.extra.c}</h2>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate info={info}>
+      <h2>state.extra.c {state.extra.c}</h2>
+    </MarkUpdate>
+  );
 }
-
 
 const Demo = () => (
   <Entry fns={[changeABC]}>
@@ -61,4 +63,3 @@ const Demo = () => (
 );
 
 export default Demo;
-

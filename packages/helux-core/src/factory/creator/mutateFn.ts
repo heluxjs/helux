@@ -1,4 +1,4 @@
-import { enureReturnArr, isPromise, noop, tryAlert } from '@helux/utils';
+import { enureReturnArr, isPromise, noop } from '@helux/utils';
 import { FROM, SCOPE_TYPE } from '../../consts';
 import { getRunningFn, getSafeFnCtx } from '../../factory/common/fnScope';
 import { emitErr } from '../../factory/common/plugin';
@@ -23,7 +23,7 @@ import type {
 import { createWatchLogic } from '../createWatch';
 import { buildReactive, flushActive, innerFlush } from './reactive';
 
-const noopAny: any = () => { };
+const noopAny: any = () => {};
 
 interface ICallMutateBase {
   /** 透传给用户 */

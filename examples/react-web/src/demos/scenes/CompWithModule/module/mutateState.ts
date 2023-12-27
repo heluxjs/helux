@@ -1,4 +1,4 @@
-import { UnconfirmedArg, IMutateTaskParam, IMutateFnItem, DraftType } from 'helux';
+import { DraftType, IMutateFnItem, IMutateTaskParam, UnconfirmedArg } from 'helux';
 
 /** get initial mutate state */
 export function mutateStateFn() {

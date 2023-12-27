@@ -1,6 +1,5 @@
-import React from 'react';
-import { share, atom, watch, useDerived, useAtom, derive, useGlobalId, useLocalForceUpdate } from 'helux';
-import { MarkUpdate, Entry } from './comps';
+import { atom, derive, share, useAtom, useDerived, useGlobalId, useLocalForceUpdate, watch } from 'helux';
+import { Entry, MarkUpdate } from './comps';
 
 const keySym = Symbol('keySym');
 const keyNum = 2;
@@ -9,13 +8,16 @@ const [sharedState, setState] = share({ a: { a1: 1 }, b: { b1: 1 } });
 
 const [numAtom, setAtom] = atom(1, {
   moduleName: 'GlobalId',
-  rules: [
-    { when: (state) => [state], globalIds: ['JustUpdateMe', keySym, keyNum] }
-  ]
+  rules: [{ when: (state) => [state], globalIds: ['JustUpdateMe', keySym, keyNum] }],
 });
 
 function changeA() {
-  setState(draft => { draft.a.a1 += 1 }, { globalIds: ['test'] })
+  setState(
+    (draft) => {
+      draft.a.a1 += 1;
+    },
+    { globalIds: ['test'] },
+  );
 }
 
 const numPlusAtom = derive(() => {
@@ -30,7 +32,7 @@ watch((params) => {
 function NumAtom() {
   const [num, setNum, info] = useAtom(numAtom);
   const changeNum = () => setNum(num + 1);
-  const changeNumByDraft = () => setNum(val => val + 2);
+  const changeNumByDraft = () => setNum((val) => val + 2);
 
   return (
     <MarkUpdate info={info}>
@@ -51,7 +53,6 @@ function NumPlusAtom() {
   );
 }
 
-
 function NumPlusAtom2(props: any) {
   const forceUpdate = useLocalForceUpdate();
   const [state, , info] = useAtom(sharedState);
@@ -62,7 +63,6 @@ function NumPlusAtom2(props: any) {
     </MarkUpdate>
   );
 }
-
 
 function UpdateForStrId() {
   const info = useGlobalId(keySym);
@@ -98,7 +98,7 @@ function UpdateForNumId() {
 }
 
 function addNumByDraft() {
-  setAtom(val => val += 1);
+  setAtom((val) => (val += 1));
 }
 
 function addNum() {
@@ -118,9 +118,7 @@ const Demo = () => (
     <UpdateForSymbolId />
     <UpdateForNumId />
     <UpdateForNumId />
-  </Entry >
+  </Entry>
 );
-
-
 
 export default Demo;

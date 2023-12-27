@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
-import ReactDOMLegacy from "react-dom";
-import ReactDOM from "react-dom/client";
+import ReactDOMLegacy from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import './addPluginAndMid';
 import App from './App';
 
@@ -18,16 +18,14 @@ function renderBy16() {
 }
 
 function renderBy18() {
-  ReactDOM.createRoot(rootNode).render(
-    <App />
-  );
+  ReactDOM.createRoot(rootNode).render(<App />);
 }
 
 function renderBy18Strict() {
   ReactDOM.createRoot(rootNode).render(
     <React.StrictMode>
       <App />
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 }
 

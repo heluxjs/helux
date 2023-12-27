@@ -1,8 +1,7 @@
-import { atom, derive, useAtom, watch, shallowCompare, $, useWatch } from 'helux';
+import { atom, useAtom, useWatch } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay, noop } from "../logic/util";
-
+import { Entry, MarkUpdate } from '../comps';
+import { noop } from '../logic/util';
 
 const [shared, setShared] = atom({
   info: { name: 'helux', age: 1 },
@@ -13,11 +12,17 @@ const [shared, setShared] = atom({
       { id: 1, name: 'helux1' },
       { id: 2, name: 'helux2' },
     ],
-  }
+  },
 });
 
-const plusAge = () => setShared(draft => { draft.info.age += 1 });
-const minusAge = () => setShared(draft => { draft.info.age -= 1 });
+const plusAge = () =>
+  setShared((draft) => {
+    draft.info.age += 1;
+  });
+const minusAge = () =>
+  setShared((draft) => {
+    draft.info.age -= 1;
+  });
 const changeShared = () => {
   setShared((draft) => {
     draft.info = { ...draft.info };
@@ -51,21 +56,28 @@ function Info() {
   React.useEffect(() => {
     console.log('state changed');
   }, [state]);
-  useWatch(() => {
-    console.log('state changed 2');
-  }, () => [state]);
+  useWatch(
+    () => {
+      console.log('state changed 2');
+    },
+    () => [state],
+  );
 
-  return <MarkUpdate info={info}>info</MarkUpdate>
+  return <MarkUpdate info={info}>info</MarkUpdate>;
 
   noop(state.info);
 
   if (state.info.age === 2) {
-    return <MarkUpdate info={info}>only info.age {state.info.age}</MarkUpdate>
+    return <MarkUpdate info={info}>only info.age {state.info.age}</MarkUpdate>;
   }
   noop(state.extra.list[0]);
   // noop(state.extra.list[1]);
 
-  return <MarkUpdate info={info}><h2>arrDep=true,arrIndexDep=true {state.info.age} </h2></MarkUpdate>;
+  return (
+    <MarkUpdate info={info}>
+      <h2>arrDep=true,arrIndexDep=true {state.info.age} </h2>
+    </MarkUpdate>
+  );
 }
 
 function Info1() {
@@ -73,12 +85,20 @@ function Info1() {
   noop(state.info);
 
   if (state.info.age === 2) {
-    return <MarkUpdate info={info}>only info.age {state.info.age} {state.desc}</MarkUpdate>
+    return (
+      <MarkUpdate info={info}>
+        only info.age {state.info.age} {state.desc}
+      </MarkUpdate>
+    );
   }
   noop(state.extra.list[0]);
   noop(state.extra.list[1]);
 
-  return <MarkUpdate info={info}><h2>arrDep=false {state.info.age}</h2></MarkUpdate>;
+  return (
+    <MarkUpdate info={info}>
+      <h2>arrDep=false {state.info.age}</h2>
+    </MarkUpdate>
+  );
 }
 
 function Info2() {
@@ -86,15 +106,20 @@ function Info2() {
   noop(state.info);
 
   if (state.info.age === 2) {
-    return <MarkUpdate info={info}>only info.age {state.info.age} </MarkUpdate>
+    return <MarkUpdate info={info}>only info.age {state.info.age} </MarkUpdate>;
   }
   noop(state.extra.list[0]);
   console.log(info.getDeps());
   noop(state.extra.list[1]);
 
-  return <MarkUpdate info={info}><h2>arrIndexDep=false  {info.insKey} {state.info.age}</h2></MarkUpdate>;
+  return (
+    <MarkUpdate info={info}>
+      <h2>
+        arrIndexDep=false {info.insKey} {state.info.age}
+      </h2>
+    </MarkUpdate>
+  );
 }
-
 
 const Demo = () => (
   <Entry fns={[plusAge, minusAge, changeDesc, changeShared, changeList0, changeExtra, resetList]}>

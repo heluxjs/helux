@@ -1,7 +1,6 @@
-import { $, share, deriveDict, useDerived } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay } from "../logic/util";
+import { deriveDict, share, useDerived } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, random } from '../logic/util';
 
 const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } });
 const result = deriveDict({
@@ -24,7 +23,6 @@ const result2 = deriveDict({
   immediate: true,
 });
 
-
 function changeA() {
   setState((draft) => {
     draft.a += 1;
@@ -34,21 +32,13 @@ function changeA() {
 function SharedDict() {
   const [ret, isComputing] = useDerived(result);
   console.log('isComputing ', isComputing);
-  return (
-    <MarkUpdate>
-      {!isComputing ? <>result1.val {result.val}</> : 'computing'}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>{!isComputing ? <>result1.val {result.val}</> : 'computing'}</MarkUpdate>;
 }
 
 function SharedDict2() {
   const [ret, isComputing] = useDerived(result2);
   console.log('isComputing ', isComputing);
-  return (
-    <MarkUpdate>
-      {!isComputing ? <>result2.val {result.val}</> : 'computing'}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>{!isComputing ? <>result2.val {result.val}</> : 'computing'}</MarkUpdate>;
 }
 
 const Demo = () => (

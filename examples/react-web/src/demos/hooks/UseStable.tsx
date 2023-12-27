@@ -1,13 +1,11 @@
-import { useStable, useObject } from 'helux';
+import { useObject, useStable } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay } from "../logic/util";
+import { MarkUpdate } from '../comps';
+import { random } from '../logic/util';
 
 const Child = React.memo((props: any) => {
   console.log('Render Child');
-  return <MarkUpdate forceColor={true}>
-    {props.name} Child
-  </MarkUpdate>
+  return <MarkUpdate forceColor={true}>{props.name} Child</MarkUpdate>;
 });
 
 function Comp(props: any) {
@@ -34,26 +32,40 @@ function Comp(props: any) {
     console.log(`%c read state num ${obj.num}`, `color:green`);
   });
 
-  const srv2 = React.useMemo(() => ({
-    readState() {
-      console.log(`%c read state num ${obj.num}`, `color:red`);
-    },
-    readProps() {
-      console.log(`%c read props num ${props.num}`, `color:red`);
-    },
-    // }), [obj.num, props.num]);
-  }), []);
-
+  const srv2 = React.useMemo(
+    () => ({
+      readState() {
+        console.log(`%c read state num ${obj.num}`, `color:red`);
+      },
+      readProps() {
+        console.log(`%c read props num ${props.num}`, `color:red`);
+      },
+      // }), [obj.num, props.num]);
+    }),
+    [],
+  );
 
   return (
     <MarkUpdate>
       <button onClick={() => setObj({ num: random() })}>change state num</button>
-      <button onClick={srv.changeState}>change state num by srv.changeState</button><br />
-      <button style={{ color: 'green' }} onClick={srv.readState}>call readState</button>
-      <button style={{ color: 'green' }} onClick={srv.readProps}>call readProps</button>
-      <button style={{ color: 'green' }} onClick={fn}>call readState of fn</button><br />
-      <button style={{ color: 'red' }} onClick={srv2.readState}>call readState</button>
-      <button style={{ color: 'red' }} onClick={srv2.readProps}>call readProps</button>
+      <button onClick={srv.changeState}>change state num by srv.changeState</button>
+      <br />
+      <button style={{ color: 'green' }} onClick={srv.readState}>
+        call readState
+      </button>
+      <button style={{ color: 'green' }} onClick={srv.readProps}>
+        call readProps
+      </button>
+      <button style={{ color: 'green' }} onClick={fn}>
+        call readState of fn
+      </button>
+      <br />
+      <button style={{ color: 'red' }} onClick={srv2.readState}>
+        call readState
+      </button>
+      <button style={{ color: 'red' }} onClick={srv2.readProps}>
+        call readProps
+      </button>
       <h3>state num {obj.num}</h3>
       <h3>props num {props.num}</h3>
       <h3>numTwo {numTwo}</h3>
@@ -67,10 +79,12 @@ function Comp(props: any) {
 function Demo() {
   const [obj, setObj] = useObject({ num: 1 });
 
-  return <div>
-    <button onClick={() => setObj({ num: random() })}>change props num</button>
-    <Comp num={obj.num} />
-  </div>
+  return (
+    <div>
+      <button onClick={() => setObj({ num: random() })}>change props num</button>
+      <Comp num={obj.num} />
+    </div>
+  );
 }
 
 export default Demo;

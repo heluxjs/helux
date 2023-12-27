@@ -1,7 +1,6 @@
-import React from 'react';
-import { share, useAtom, $ } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { dictFactory, delay } from '../logic/util';
+import { share, useAtom } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, dictFactory } from '../logic/util';
 
 const [priceState, , ctxp] = share(dictFactory, { moduleName: 'DefineApi' });
 function changeC() {
@@ -27,7 +26,7 @@ const fd = ctxp.defineFullDerive<DR>()({
       await delay(2000);
       return 1 + c1;
     },
-  }
+  },
 });
 
 function Price() {
@@ -35,19 +34,25 @@ function Price() {
   const [a, status] = fd.helper.a.useDerivedInfo();
   const [c, status2] = fd.helper.c.useDerivedInfo();
 
-  return <MarkUpdate name="Price" info={info}>
-    {price.a.b.c}
-    <h3>derived a: {a} {status.loading ? 'loading...' : ''}</h3>
-    {/* <h3>derived c ( dep a.b1.c1 ): {c} {status2.loading ? 'loading...' : ''}</h3> */}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      {price.a.b.c}
+      <h3>
+        derived a: {a} {status.loading ? 'loading...' : ''}
+      </h3>
+      {/* <h3>derived c ( dep a.b1.c1 ): {c} {status2.loading ? 'loading...' : ''}</h3> */}
+    </MarkUpdate>
+  );
 }
 
 function C1() {
   const [state, , info] = ctxp.useState();
 
-  return <MarkUpdate name="Price" info={info}>
-    state.a.b1.c1: {state.a.b1.c1}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      state.a.b1.c1: {state.a.b1.c1}
+    </MarkUpdate>
+  );
 }
 
 const Demo = () => (

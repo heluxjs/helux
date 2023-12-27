@@ -1,11 +1,9 @@
-import { $, share, atom, derive, deriveDict, block } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay } from "./logic/util";
+import { $, atom, block, derive, deriveDict, share } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { delay, random } from './logic/util';
 
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 }, b12: 100 }, name: Date.now() }, { moduleName: 'Signal' });
 const [numAtom, setAtom] = atom(100);
-
 
 const doubleNum = derive(() => {
   console.log('derive doubleNum', numAtom.val * 2 + sharedState.a);
@@ -27,7 +25,6 @@ const aPlusB2Result = deriveDict({
   },
 });
 
-
 // mutate state out of react component
 function changeB2() {
   setState((draft) => {
@@ -46,47 +43,27 @@ function changeAtom() {
 }
 
 function SharedDict() {
-  return (
-    <MarkUpdate>
-      shared.xxx {$(sharedState.a)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.xxx {$(sharedState.a)}</MarkUpdate>;
 }
 
 function SharedAtom() {
   console.log('Render CompAtom');
-  return (
-    <MarkUpdate>
-      numAtom {$(numAtom)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>numAtom {$(numAtom)}</MarkUpdate>;
 }
 
 function SharedAtomVal() {
   console.log('Render CompAtom');
-  return (
-    <MarkUpdate>
-      numAtom.val {$(numAtom.val)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>numAtom.val {$(numAtom.val)}</MarkUpdate>;
 }
 
 function DerivedAtomVal() {
   console.log('Render CompDerivedAtom');
-  return (
-    <MarkUpdate>
-      doubleNum.vall {$(doubleNum.val)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>doubleNum.vall {$(doubleNum.val)}</MarkUpdate>;
 }
 
 function DerivedAtom() {
   console.log('Render CompDerivedAtom');
-  return (
-    <MarkUpdate>
-      doubleNum {$(doubleNum)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>doubleNum {$(doubleNum)}</MarkUpdate>;
 }
 
 function CbDerivedAtom() {
@@ -109,14 +86,19 @@ function CbView() {
   console.log('Render CompDerivedAtom');
   return (
     <MarkUpdate>
-      doubleNum signal {$(() => <>
-        <h1>{doubleNum.val}</h1>
-        <h1>{numAtom.val}</h1>
-        <h1>{sharedState.a}</h1>
-        <div>
-          {$(() => <h1>see nested: {sharedState.b.b1.b2}</h1>)}
-        </div>
-      </>)}
+      doubleNum signal{' '}
+      {$(() => (
+        <>
+          <h1>{doubleNum.val}</h1>
+          <h1>{numAtom.val}</h1>
+          <h1>{sharedState.a}</h1>
+          <div>
+            {$(() => (
+              <h1>see nested: {sharedState.b.b1.b2}</h1>
+            ))}
+          </div>
+        </>
+      ))}
     </MarkUpdate>
   );
 }
@@ -134,7 +116,9 @@ const AsyncBlock = block((props, params) => {
       <h3>sharedState.a: {val3}</h3>
       <h3>aPlusB2Result.val: {val4}</h3>
       <div>
-        {$(() => <h3>nested(b.b1.b2): {sharedState.b.b1.b2}</h3>)}
+        {$(() => (
+          <h3>nested(b.b1.b2): {sharedState.b.b1.b2}</h3>
+        ))}
       </div>
     </div>
   );
@@ -150,50 +134,66 @@ function BlockView() {
   );
 }
 
-const UserBlock = block(() => <>
-  <h3>ruikun name {sharedState.name}</h3>
-  <h3>{doubleNum.val}</h3>
-  <h3>{numAtom.val}</h3>
-  <h3>{sharedState.a}</h3>
-  <div>
-    {$(() => <h3>(b.b1.b2): {sharedState.b.b1.b2}</h3>)}
-  </div>
-</>);
+const UserBlock = block(() => (
+  <>
+    <h3>ruikun name {sharedState.name}</h3>
+    <h3>{doubleNum.val}</h3>
+    <h3>{numAtom.val}</h3>
+    <h3>{sharedState.a}</h3>
+    <div>
+      {$(() => (
+        <h3>(b.b1.b2): {sharedState.b.b1.b2}</h3>
+      ))}
+    </div>
+  </>
+));
 
 function RuiKun() {
   console.error('Render RuiKun');
-  return <div>
-    <h4>RuiKun long content</h4>
-    <h3>{$(sharedState.name)}</h3>
-  </div>
+  return (
+    <div>
+      <h4>RuiKun long content</h4>
+      <h3>{$(sharedState.name)}</h3>
+    </div>
+  );
 }
 
 function RuiKun2() {
   console.error('Render RuiKun2');
-  return <div>
-    <h4>RuiKun2 long content</h4>
-    <h3>{$(sharedState.b.b1.b2)}</h3>
-  </div>
+  return (
+    <div>
+      <h4>RuiKun2 long content</h4>
+      <h3>{$(sharedState.b.b1.b2)}</h3>
+    </div>
+  );
 }
 
 function RuiKun3() {
   console.error('Render RuiKun3');
-  return <div>
-    <h4>RuiKun3 long content</h4>
-    <h3>{$(sharedState.b.b12)}</h3>
-  </div>
+  return (
+    <div>
+      <h4>RuiKun3 long content</h4>
+      <h3>{$(sharedState.b.b12)}</h3>
+    </div>
+  );
 }
 
 function changeName() {
-  setState(draft => { draft.name = Date.now() });
+  setState((draft) => {
+    draft.name = Date.now();
+  });
 }
 
 function change_b_b1_b2() {
-  setState(draft => { draft.b.b1.b2 = Date.now() });
+  setState((draft) => {
+    draft.b.b1.b2 = Date.now();
+  });
 }
 
 function change_b_b12() {
-  setState(draft => { draft.b.b12 = Date.now() });
+  setState((draft) => {
+    draft.b.b12 = Date.now();
+  });
 }
 
 const Demo = () => (

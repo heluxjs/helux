@@ -1,4 +1,3 @@
-import React from 'react';
 import { atom } from 'helux';
 import { Entry } from '../../comps';
 import { createDcDemo } from '../util';
@@ -17,19 +16,14 @@ const Demo = createDcDemo(() => {
     alertDeadCycleErr: false,
   });
   const changeDoubleAtom = () => {
-    setDouble(prev => prev + 100);
+    setDouble((prev) => prev + 100);
   };
-
 
   return function Demo(props: any) {
     const fns = [changeDoubleAtom];
     // const fns:any[] = [];
-    return <Entry fns={fns}>
-    </Entry>
-  }
-
+    return <Entry fns={fns}></Entry>;
+  };
 });
-
-
 
 export default Demo;

@@ -1,9 +1,8 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
 // import { addPlugin, addMiddleware } from 'helux';
 // import { HeluxPluginDevtool } from '@helux/plugin-devtool';
-import './index.css';
 import App from './App';
+import './index.css';
 
 // addPlugin(HeluxPluginDevtool);
 

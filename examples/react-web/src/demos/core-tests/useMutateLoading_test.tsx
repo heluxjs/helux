@@ -1,12 +1,14 @@
-import React from 'react';
-import { atom, sharex, useAtom, useMutateLoading } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { log, delay, random } from '../logic/util';
+import { atom, useMutateLoading } from 'helux';
+import { Entry } from '../comps';
+import { delay } from '../logic/util';
 
-const [state, , ctx] = atom({ a: 1, b: 2, c: 1, d: 1, e: 1 }, {
-  moduleName: 'baseAtom',
-  alertDeadCycleErr: false,
-});
+const [state, , ctx] = atom(
+  { a: 1, b: 2, c: 1, d: 1, e: 1 },
+  {
+    moduleName: 'baseAtom',
+    alertDeadCycleErr: false,
+  },
+);
 const witness = ctx.mutate({
   deps: () => [state.val.a],
   onlyDeps: true,
@@ -31,15 +33,17 @@ function TestComp() {
   console.log('runCount', runCount);
   const [ld] = useMutateLoading(state);
 
-  return <div>{`${ld['mutate1'].loading}`}</div>
+  return <div>{`${ld['mutate1'].loading}`}</div>;
 }
 
 function Demo(props: any) {
   const fns = [witness.runTask];
   // const fns:any[] = [];
-  return <Entry fns={fns}>
-    <TestComp />
-  </Entry>
+  return (
+    <Entry fns={fns}>
+      <TestComp />
+    </Entry>
+  );
 }
 
 export default Demo;

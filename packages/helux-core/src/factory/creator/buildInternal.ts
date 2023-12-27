@@ -7,6 +7,7 @@ import type {
   IRuleConf,
   KeyInsKeysDict,
   NumStrSymbol,
+  SetDraft,
   SetState,
   SetStateFactory,
   SharedState,
@@ -21,6 +22,7 @@ export function buildInternal(
   parsedOptions: ParsedOptions,
   innerOptions: {
     setState: SetState;
+    setDraft: SetDraft;
     setStateFactory: SetStateFactory;
     innerSetState: InnerSetState;
     sharedState: Ext<SharedState>;

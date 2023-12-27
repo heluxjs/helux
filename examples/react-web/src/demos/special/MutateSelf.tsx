@@ -1,16 +1,18 @@
-import { $, share, mutateDict, runMutate } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay } from "../logic/util";
+import { $, mutateDict, share } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { random } from '../logic/util';
 
-const [sharedState, setState, ctx] = share({
-  a: 1,
-  b: 2,
-  c: 2,
-  d: 10,
-  e: 1,
-  f: { b1: { b2: 200 } },
-}, { moduleName: 'MutateSelf' });
+const [sharedState, setState, ctx] = share(
+  {
+    a: 1,
+    b: 2,
+    c: 2,
+    d: 10,
+    e: 1,
+    f: { b1: { b2: 200 } },
+  },
+  { moduleName: 'MutateSelf' },
+);
 
 // const witness1 = ctx.mutate({
 //   deps: (state) => [state.a],
@@ -38,7 +40,7 @@ const witnessDict = mutateDict(sharedState)({
     deps: (state) => [state.b],
     fn: (draft, { input: [b] }) => {
       console.log('trigger key2');
-      draft.c = b + 1 + random()
+      draft.c = b + 1 + random();
     },
   },
   key3: {
@@ -53,7 +55,6 @@ const witnessDict = mutateDict(sharedState)({
   //   deps: (state) => [state.d],
   //   fn: (draft, { input: [d] }) => { draft.a = d + 1 + random() },
   // },
-
 
   // depA: {
   //   deps: (state) => [state.a],
@@ -95,27 +96,15 @@ function changeC() {
 }
 
 function Comp() {
-  return (
-    <MarkUpdate>
-      shared.a:  {$(sharedState.a)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.a: {$(sharedState.a)}</MarkUpdate>;
 }
 
 function Comp2() {
-  return (
-    <MarkUpdate>
-      shared.c {$(sharedState.c)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.c {$(sharedState.c)}</MarkUpdate>;
 }
 
 function Comp3() {
-  return (
-    <MarkUpdate>
-      shared.d {$(sharedState.d)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.d {$(sharedState.d)}</MarkUpdate>;
 }
 
 const Demo = () => (

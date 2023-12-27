@@ -1,17 +1,22 @@
-import React from 'react';
-import { mutate, share, useAtom, reactiveDesc, flush, $ } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay, noop } from '../logic/util';
+import { mutate, share } from 'helux';
+import { Entry } from '../comps';
+import { delay, random } from '../logic/util';
 
-const [priceState, setPrice, ctx1] = share({ a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } }, {
-  moduleName: 'Api_mutate',
-  // 切换这个配置时，会引起死循环
-  recordLoading: 'no',
-});
-const [finalPriceState, setP2, ctx2] = share({ retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } }, {
-  moduleName: 'Api_mutate_finalPriceState',
-  recordLoading: 'no',
-});
+const [priceState, setPrice, ctx1] = share(
+  { a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } },
+  {
+    moduleName: 'Api_mutate',
+    // 切换这个配置时，会引起死循环
+    recordLoading: 'no',
+  },
+);
+const [finalPriceState, setP2, ctx2] = share(
+  { retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } },
+  {
+    moduleName: 'Api_mutate_finalPriceState',
+    recordLoading: 'no',
+  },
+);
 
 // 约束各个函数入参类型
 type Payloads = {
@@ -42,21 +47,22 @@ const witness = mutate(finalPriceState)({
   task: async ({ input: [a], setState, draft }) => {
     // const result = draft.retA + a
     // draft.retA += a;
-    setState(draft => { draft.retB += a });
+    setState((draft) => {
+      draft.retB += a;
+    });
     console.error('after ----------------------------------------------------------------');
   },
   desc: 'dangerousMutate',
-  // immediate: true, 
+  // immediate: true,
 });
 
 function changePriceA() {
-  setPrice(draft => { draft.a = random() });
+  setPrice((draft) => {
+    draft.a = random();
+  });
   // ctxp.reactive.a = random();
 }
 
-const Demo = () => (
-  <Entry fns={[changePriceA]}>
-  </Entry>
-);
+const Demo = () => <Entry fns={[changePriceA]}></Entry>;
 
 export default Demo;

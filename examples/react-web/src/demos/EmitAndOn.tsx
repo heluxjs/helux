@@ -1,6 +1,5 @@
-import { $, share, emit, useOnEvent, on } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
+import { $, emit, share, useOnEvent } from 'helux';
+import { Entry, MarkUpdate } from './comps';
 
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'DeriveTask' });
 
@@ -20,11 +19,7 @@ function Comp() {
   useOnEvent('test_event', (...args) => {
     console.log('receive args ', ...args);
   });
-  return (
-    <MarkUpdate>
-      shared.xxx {$(sharedState.a)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>shared.xxx {$(sharedState.a)}</MarkUpdate>;
 }
 
 const Demo = () => (

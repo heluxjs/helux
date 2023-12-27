@@ -1,6 +1,6 @@
-import { share, deriveDict, derive, useAtom, useDerived, runDerive, atom } from "helux";
-import { random } from "./logic/util";
-import { MarkUpdate } from "./comps";
+import { atom, derive, deriveDict, runDerive, share, useAtom, useDerived } from 'helux';
+import { MarkUpdate } from './comps';
+import { random } from './logic/util';
 
 const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
 
@@ -9,18 +9,22 @@ const [sharedState, setState, ctx] = share(
   { a: 1, b: { b1: { b2: 200 } } },
   {
     mutate: {
-      cool: draft => { draft.a = draft.b.b1.b2 + 1 },
-    }
-  }
+      cool: (draft) => {
+        draft.a = draft.b.b1.b2 + 1;
+      },
+    },
+  },
 );
 
 const [a2, seAtom, atomCtx] = atom(
   { a: 1, b: { b1: { b2: 200 } } },
   {
     mutate: {
-      xx: (draft) => { draft.a = draft.b.b1.b2 + 1 },
-    }
-  }
+      xx: (draft) => {
+        draft.a = draft.b.b1.b2 + 1;
+      },
+    },
+  },
 );
 
 // create sync deriveDict result with one shared state
@@ -53,9 +57,13 @@ function changeA() {
 }
 
 function changeAWithCall(num?: number) {
-  ctx.call(function ({ draft, payload }) { // call ctx { draft, state, setState, args }
-    draft.a += payload[0] || 100
-  }, [num]); // 透传参数给 callCtx
+  ctx.call(
+    function ({ draft, payload }) {
+      // call ctx { draft, state, setState, args }
+      draft.a += payload[0] || 100;
+    },
+    [num],
+  ); // 透传参数给 callCtx
 }
 
 function DemoReadShareState() {
@@ -90,7 +98,7 @@ function DemoReadRerivedResult() {
   return (
     <MarkUpdate info={[info, info2, info3]}>
       <div>doubleA: {doubleA.val}</div>
-      <div>aPlusB2: {status.loading ? "computing" : aPlusB2.val}</div>
+      <div>aPlusB2: {status.loading ? 'computing' : aPlusB2.val}</div>
       <div>cu2: {cu2.val}</div>
     </MarkUpdate>
   );

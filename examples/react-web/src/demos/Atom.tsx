@@ -1,25 +1,23 @@
-import React from "react";
-import {
-  AtomValType,
-  share,
-  atom,
-  watch,
-  useDerived,
-  useAtom,
-  derive,
-  action,
-} from "helux";
-import { MarkUpdate, Entry } from './comps';
+import { action, atom, derive, share, useAtom, useDerived, watch } from 'helux';
+import { Entry, MarkUpdate } from './comps';
 import { random } from './logic/util';
 
 const [numAtom, setAtom, ctx] = atom(1, { moduleName: 'Atom' });
 const [numAtom2, setAtom2, ctx2] = atom({ a: 2, b: 2 }, { moduleName: 'Atom2' });
 const [numAtom3, setAtom3, ctx3] = share({ a: 2, b: 2 }, { moduleName: 'Atom3' });
 
-const n3 = ctx2.setState(draft => { draft.a = 1 })
-const n1 = setAtom2(draft => { draft.a = 1 })
-const n2 = setAtom3(draft => { draft.a = 2 })
-const n4 = ctx3.setState(draft => { draft.a = 2 })
+const n3 = ctx2.setState((draft) => {
+  draft.a = 1;
+});
+const n1 = setAtom2((draft) => {
+  draft.a = 1;
+});
+const n2 = setAtom3((draft) => {
+  draft.a = 2;
+});
+const n4 = ctx3.setState((draft) => {
+  draft.a = 2;
+});
 
 const numPlusAtom = derive(() => {
   return numAtom.val + 100;
@@ -38,8 +36,8 @@ function changeNumOutOfCompWithCb() {
 }
 
 function changeNumByDraftOutOfComp() {
-  setAtom((val) => (val + 2));
-  ctx.setState(val => val + 2)
+  setAtom((val) => val + 2);
+  ctx.setState((val) => val + 2);
 }
 
 const hiAction = action(numAtom)<[number, string]>()(({ draftRoot, payload }) => {
@@ -52,21 +50,21 @@ const hiAction = action(numAtom)<[number, string]>()(({ draftRoot, payload }) =>
 // console.log('aciton ', aciton);
 
 const someAction = ctx.action<number>()(({ draftRoot, payload, draft }) => {
-  draftRoot.val = (payload && Number.isInteger(payload)) ? payload : random();
+  draftRoot.val = payload && Number.isInteger(payload) ? payload : random();
 }, 'someAction');
 const someActionTop = action(numAtom)<number>()(({ draftRoot, payload }) => {
-  draftRoot.val = (payload && Number.isInteger(payload)) ? payload : random();
+  draftRoot.val = payload && Number.isInteger(payload) ? payload : random();
 }, 'someActionTop');
 
 watch((params) => {
   const { val } = numAtom;
-  console.log("val changed -->", val);
+  console.log('val changed -->', val);
 });
 
 function NumAtom() {
   const [num, setNum, info] = useAtom(numAtom, { collectType: 'first' });
   const changeNum = () => setNum(num + 1);
-  const changeNumByDraft = () => setNum((val) => (val + 2));
+  const changeNumByDraft = () => setNum((val) => val + 2);
 
   return (
     <MarkUpdate info={info}>
@@ -111,4 +109,3 @@ function Demo(props: any) {
 }
 
 export default Demo;
-

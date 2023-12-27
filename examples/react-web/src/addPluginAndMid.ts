@@ -1,5 +1,5 @@
 import { HeluxPluginDevtool } from '@helux/plugin-devtool';
-import { addPlugin, addMiddleware } from 'helux';
+import { addMiddleware, addPlugin } from 'helux';
 
 addPlugin(HeluxPluginDevtool);
 addMiddleware((mid) => {

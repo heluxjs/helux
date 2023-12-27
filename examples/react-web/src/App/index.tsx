@@ -1,9 +1,9 @@
 import React from 'react';
-import './App.css';
 import * as demos from '../demos';
+import './App.css';
 
 const stLabel: React.CSSProperties = { padding: '0 12px' };
-const compKeys = Object.keys(demos).filter(key => key !== 'INITIAL_KEY');
+const compKeys = Object.keys(demos).filter((key) => key !== 'INITIAL_KEY');
 let initialKey = demos.INITIAL_KEY;
 if (!compKeys.includes(initialKey)) {
   initialKey = compKeys[0];
@@ -33,7 +33,7 @@ function App() {
   return (
     <div style={{ padding: '12px' }}>
       <div style={{ padding: '12px' }}>
-        {compKeys.map(key => (
+        {compKeys.map((key) => (
           <label key={key} style={stLabel}>
             <input name="demo" type="radio" checked={key === viewKey} value={key} onChange={changeView} />
             {key}
@@ -44,6 +44,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;

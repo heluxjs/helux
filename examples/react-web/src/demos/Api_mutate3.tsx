@@ -1,14 +1,19 @@
-import React from 'react';
-import { mutate, share, useAtom, useGlobalForceUpdate, $ } from 'helux';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay, noop } from './logic/util';
+import { $, mutate, share, useAtom, useGlobalForceUpdate } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { delay, noop, random } from './logic/util';
 
-const [priceState, setPrice, ctx1] = share({ a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } }, {
-  moduleName: 'Api_mutate3',
-});
-const [finalPriceState, setP2, ctx2] = share({ retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } }, {
-  moduleName: 'Api_mutate_finalPriceState3',
-});
+const [priceState, setPrice, ctx1] = share(
+  { a: 1, b: 100, ccc: 1000, d: { d1: { d2: 1 } } },
+  {
+    moduleName: 'Api_mutate3',
+  },
+);
+const [finalPriceState, setP2, ctx2] = share(
+  { retA: 0, retB: 0, time: 0, time2: 0, f: { f1: 1 } },
+  {
+    moduleName: 'Api_mutate_finalPriceState3',
+  },
+);
 
 // 约束各个函数入参类型
 type Payloads = {
@@ -37,8 +42,6 @@ const { actions: ac2 } = ctx1.defineActions()({
 });
 // ac2.
 
-
-
 // const s = actions.changeA([1, 2]);
 // console.log('111 is ', s);
 // console.log('foo is ', actions.foo(true));
@@ -46,7 +49,6 @@ const { actions: ac2 } = ctx1.defineActions()({
 //   // const s = actions.changeA(1, 2);
 //   console.log('222 s is ', s);
 // }, 3000);
-
 
 // const witness2 = mutate(finalPriceState)({
 //   fn: (draft) => draft.time = draft.time2 + 1,
@@ -98,16 +100,20 @@ const witness2 = mutate(finalPriceState)({
 // }, 2000);
 
 function changePriceA() {
-  setPrice(draft => { draft.a = random() });
+  setPrice((draft) => {
+    draft.a = random();
+  });
   // ctxp.reactive.a = random();
 }
 
 function changeRetA() {
-  setP2(draft => { draft.retA += 1 });
+  setP2((draft) => {
+    draft.retA += 1;
+  });
 }
 
 function changePrev() {
-  setPrice(draft => {
+  setPrice((draft) => {
     const { a } = draft;
     draft.a = a;
   });
@@ -119,26 +125,30 @@ function seeCCC() {
 
 function forceRunMutate() {
   witness.run();
-};
+}
 function forceRunMutateTask() {
   witness.runTask();
-};
+}
 
 function Price() {
   const [price, , info] = useAtom(priceState);
   const ld = useLoading();
 
-  return <MarkUpdate name="Price" info={info}>
-    {price.a}
-    <h3>{ld.foo.loading ? 'foo is running' : 'foo is done'}</h3>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      {price.a}
+      <h3>{ld.foo.loading ? 'foo is running' : 'foo is done'}</h3>
+    </MarkUpdate>
+  );
 }
 
 function PriceB() {
   const [price, , info] = useAtom(priceState);
-  return <MarkUpdate name="Price" info={info}>
-    price.b: {price.b}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      price.b: {price.b}
+    </MarkUpdate>
+  );
 }
 
 function FinalPrice() {
@@ -146,28 +156,32 @@ function FinalPrice() {
   const [loading] = ctx2.useMutateLoading();
   const status = loading[witness.desc];
 
-  return <MarkUpdate name="FinalPrice" info={info}>
-    {status.loading && 'loading'}
-    {status.err && status.err.message}
-    {status.ok && <>finalPrice.retA: {finalPrice.retA}</>}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="FinalPrice" info={info}>
+      {status.loading && 'loading'}
+      {status.err && status.err.message}
+      {status.ok && <>finalPrice.retA: {finalPrice.retA}</>}
+    </MarkUpdate>
+  );
 }
 
 function CCC() {
   const [r, , info] = ctx1.useReactive();
   const [loading] = ctx2.useMutateLoading();
   const atomForceUpdate = useGlobalForceUpdate(r);
-  const onlyUpdateB = ctx1.useForceUpdate(state => [state.b]);
+  const onlyUpdateB = ctx1.useForceUpdate((state) => [state.b]);
 
-  return <MarkUpdate name="FinalPrice" info={info}>
-    {r.ccc}
-    <button onClick={() => atomForceUpdate()}>atomForceUpdate</button>
-    <button onClick={() => onlyUpdateB()}>onlyUpdateB</button>
-    <button onClick={() => onlyUpdateB(state => state.a)}>onlyUpdateA</button>
-    <button onClick={onlyUpdateB}>onlyUpdateB_2</button>
-    <button onClick={() => onlyUpdateB(state => [])}>onlyUpdateB_nothing</button>
-    <button onClick={() => onlyUpdateB(null)}>onlyUpdateB_all</button>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="FinalPrice" info={info}>
+      {r.ccc}
+      <button onClick={() => atomForceUpdate()}>atomForceUpdate</button>
+      <button onClick={() => onlyUpdateB()}>onlyUpdateB</button>
+      <button onClick={() => onlyUpdateB((state) => state.a)}>onlyUpdateA</button>
+      <button onClick={onlyUpdateB}>onlyUpdateB_2</button>
+      <button onClick={() => onlyUpdateB((state) => [])}>onlyUpdateB_nothing</button>
+      <button onClick={() => onlyUpdateB(null)}>onlyUpdateB_all</button>
+    </MarkUpdate>
+  );
 }
 
 const Demo = () => (
@@ -180,8 +194,8 @@ const Demo = () => (
     <CCC />
     <h3>ctxp.reactive.a: {$(ctx1.reactive.a)}</h3>
     <h3>ctxp.reactive.ccc: {$(ctx1.reactive.ccc)}</h3>
-    <h3>getLoading().foo.loading: {$(getLoading().foo.loading, v => `${v}`)}</h3>
-    <h3>getLoading().foo.loading: {$(getLoading().foo.loading, v => `${v}<------`)}</h3>
+    <h3>getLoading().foo.loading: {$(getLoading().foo.loading, (v) => `${v}`)}</h3>
+    <h3>getLoading().foo.loading: {$(getLoading().foo.loading, (v) => `${v}<------`)}</h3>
   </Entry>
 );
 

@@ -1,7 +1,6 @@
-import { $, share, useWatch, useObject } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { random, delay } from "./logic/util";
+import { $, share, useObject, useWatch } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { random } from './logic/util';
 
 const [sharedState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'UseWatch' });
 
@@ -13,9 +12,12 @@ function changeA() {
 
 function Comp(props: any) {
   const [obj, setObj] = useObject({ num: 1 });
-  useWatch(() => {
-    console.log('sharedState.a changed, here can read latest num', obj.num);
-  }, () => [sharedState.a]);
+  useWatch(
+    () => {
+      console.log('sharedState.a changed, here can read latest num', obj.num);
+    },
+    () => [sharedState.a],
+  );
 
   return (
     <MarkUpdate>
@@ -28,9 +30,12 @@ function Comp(props: any) {
 
 function Comp2(props: any) {
   const [obj, setObj] = useObject({ num: 1 });
-  useWatch(() => {
-    console.log('sharedState.a changed, here can read latest num', obj.num);
-  }, { deps: () => [sharedState.a], immediate: true });
+  useWatch(
+    () => {
+      console.log('sharedState.a changed, here can read latest num', obj.num);
+    },
+    { deps: () => [sharedState.a], immediate: true },
+  );
 
   return (
     <MarkUpdate>

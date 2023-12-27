@@ -23,4 +23,4 @@ export const jTask: MutateFnItem<[number]> = {
     console.error('trigger jTask task', input);
     draft.j = input[0] + 2;
   },
-}
+};

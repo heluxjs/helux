@@ -1,13 +1,10 @@
 // @ts-nocheck
-import React from 'react';
-import {
-  useAtom, share, watch, useForceUpdate, useDerived
-} from 'helux';
-import * as util from './logic/util';
-import { MarkUpdate, Entry } from './comps';
+import { share, useAtom, watch } from 'helux';
 import { createDraft } from 'limu';
+import { Entry, MarkUpdate } from './comps';
+import * as util from './logic/util';
 
-const node = { a: 1 }
+const node = { a: 1 };
 const base = { node, wrap: { node } };
 const draft = createDraft(base, { onOperate: console.log });
 draft.node.a = 100;
@@ -15,7 +12,6 @@ console.log('draft.node.a', draft.node.a);
 console.log('draft.wrap.node.a', draft.wrap.node.a);
 console.log('1', draft.node);
 console.log('2', draft.wrap.node);
-
 
 const ori = {
   a: 50,
@@ -33,10 +29,9 @@ const ori = {
   },
 };
 const [ret, setState, call] = share(ori, {
-  moduleName: 'd2s', exact: true,
-  rules: [
-    { when: (state) => [state.list, state.c.c1, state.c.c2], ids: ['list'] },
-  ],
+  moduleName: 'd2s',
+  exact: true,
+  rules: [{ when: (state) => [state.list, state.c.c1, state.c.c2], ids: ['list'] }],
   // compute: {
   //   initial: ()=>({double:0});
   //   fns: {
@@ -46,28 +41,31 @@ const [ret, setState, call] = share(ori, {
   // }
 });
 
-watch(() => {
-  console.log('read a');
-  const { a } = ret;
-  console.log('read a 2');
+watch(
+  () => {
+    console.log('read a');
+    const { a } = ret;
+    console.log('read a 2');
 
-  // TODO  原生watch draft 禁止收集
-  setState(draft => {
-    console.log('watch and change a');
-    draft.doubleA = a * 2;
-    const c = draft.c;
-    const newNode = { c };
-    draft.f.f1.newNode = newNode;
-    draft.g.newNode2 = newNode;
+    // TODO  原生watch draft 禁止收集
+    setState((draft) => {
+      console.log('watch and change a');
+      draft.doubleA = a * 2;
+      const c = draft.c;
+      const newNode = { c };
+      draft.f.f1.newNode = newNode;
+      draft.g.newNode2 = newNode;
 
-    draft.f.f1.newNode.c.c1 = 3000 + util.random(100);
-  });
-}, { immediate: true });
+      draft.f.f1.newNode.c.c1 = 3000 + util.random(100);
+    });
+  },
+  { immediate: true },
+);
 
 util.bindToWindow({ ret, ori });
 
 function change_a() {
-  setState(draft => {
+  setState((draft) => {
     draft.a = util.random();
   });
   console.log('ret.a', ret.a);
@@ -75,7 +73,7 @@ function change_a() {
 }
 
 function changeNewNode() {
-  setState(draft => {
+  setState((draft) => {
     draft.f.f1.newNode.c.c1 = util.random(100);
   });
 }
@@ -83,21 +81,13 @@ function changeNewNode() {
 function A() {
   console.log('Render A');
   const [state] = useAtom(ret);
-  return (
-    <div>
-      {state.a}
-    </div>
-  );
+  return <div>{state.a}</div>;
 }
 
 function C() {
   console.log('Render DoubleA');
   const [state] = useAtom(ret);
-  return (
-    <div>
-      state.c.c1：{state.c.c1}
-    </div>
-  );
+  return <div>state.c.c1：{state.c.c1}</div>;
 }
 
 function AnotherC() {
@@ -114,12 +104,14 @@ function AnotherC() {
 }
 
 function Demo(props: any) {
-  return <Entry fns={[change_a, changeNewNode]}>
-    <h3>caution: 多引用存在问题的示例</h3>
-    <A />
-    <C />
-    <AnotherC />
-  </Entry>
+  return (
+    <Entry fns={[change_a, changeNewNode]}>
+      <h3>caution: 多引用存在问题的示例</h3>
+      <A />
+      <C />
+      <AnotherC />
+    </Entry>
+  );
 }
 
 export default Demo;

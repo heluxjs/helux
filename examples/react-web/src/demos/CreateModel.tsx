@@ -1,6 +1,5 @@
-import React from 'react';
 import { $, model, modelFactory } from 'helux';
-import { MarkUpdate, Entry } from './comps';
+import { Entry, MarkUpdate } from './comps';
 
 const myModel = model((api) => {
   const userCtx = api.sharex({ a: 1, b: 2 });
@@ -18,11 +17,11 @@ const myModel = model((api) => {
     state,
     someResult,
     setState,
-  }
+  };
 });
 
 const factory = modelFactory((api, extra) => {
-  console.log('received build extra param ', extra)
+  console.log('received build extra param ', extra);
   const userCtx = api.sharex({ a: 1, b: 2 }, { moduleName: extra });
   const { state, setState } = userCtx;
   const someResult = api.derive(() => state.a + 100);
@@ -38,7 +37,7 @@ const factory = modelFactory((api, extra) => {
     state,
     someResult,
     setState,
-  }
+  };
 });
 const model1 = factory.build('Model1');
 const model2 = factory.build('Model2');

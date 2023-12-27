@@ -1,12 +1,11 @@
 /**
- * 
+ *
  * 这个实例曾被误判
- * 
+ *
  */
-import React from 'react';
 import { $, share } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { dictFactory, delay } from '../logic/util';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, dictFactory } from '../logic/util';
 
 const [priceState, , ctxp] = share(dictFactory, { moduleName: 'DefineApi3', alertDeadCycleErr: false });
 
@@ -15,7 +14,7 @@ const ms = ctxp.defineMutateSelf()({
     console.error('trigger toBeDrive');
     draft.extra.toBeDrive = params.state.a.b.c + 1000;
   },
-  prefixedMark: (draft) => draft.extra.prefixedMark = draft.desc + 'xx',
+  prefixedMark: (draft) => (draft.extra.prefixedMark = draft.desc + 'xx'),
   changeB: {
     deps: () => [priceState.info.name],
     async task(params) {
@@ -23,7 +22,7 @@ const ms = ctxp.defineMutateSelf()({
       await delay(1000);
       params.draft.extra.newName = params.input[0] + Date.now();
     },
-  }
+  },
 });
 
 function changeName() {
@@ -31,18 +30,24 @@ function changeName() {
 }
 
 function changeC() {
-  ctxp.setState(draft => { draft.a.b.c += 100 });
+  ctxp.setState((draft) => {
+    draft.a.b.c += 100;
+  });
 }
 
 function Price() {
   const [state] = ctxp.useState();
   const ld = ms.useLoading();
 
-  return <MarkUpdate name="Price">
-    <h3>extra.prefixedMark: {state.extra.prefixedMark}</h3>
-    <h3>extra.toBeDrive: {state.extra.toBeDrive}</h3>
-    <h3>extra.newName: {state.extra.newName} {ld.changeB.loading ? 'loading...' : ''}</h3>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price">
+      <h3>extra.prefixedMark: {state.extra.prefixedMark}</h3>
+      <h3>extra.toBeDrive: {state.extra.toBeDrive}</h3>
+      <h3>
+        extra.newName: {state.extra.newName} {ld.changeB.loading ? 'loading...' : ''}
+      </h3>
+    </MarkUpdate>
+  );
 }
 
 const Demo = () => (

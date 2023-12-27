@@ -1,8 +1,7 @@
-import { $, share } from 'helux';
-import React from 'react';
-import { ctx, action, deriveS, deriveM } from './module';
-import { random, delay, getAtionFns } from "../../logic/util";
-import { MarkUpdate, Entry } from "../../comps";
+import { $ } from 'helux';
+import { Entry, MarkUpdate } from '../../comps';
+import { getAtionFns } from '../../logic/util';
+import { action, ctx, deriveM } from './module';
 
 function test() {
   const a = action.actions.changeA(2);
@@ -11,7 +10,7 @@ function test() {
 
 function testF() {
   const a = action.actions.changeF(2);
-  let c: undefined
+  let c: undefined;
   const b = action.eActions.changeF(2);
   // c = b.result;
   console.log(a);
@@ -19,29 +18,16 @@ function testF() {
 
 function Comp() {
   const [state] = ctx.useState();
-  return (
-    <MarkUpdate>
-      state.f {state.f}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>state.f {state.f}</MarkUpdate>;
 }
 
-
 function Comp2() {
-  return (
-    <MarkUpdate>
-      ctx.state.val.f {$(ctx.state.val.f)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>ctx.state.val.f {$(ctx.state.val.f)}</MarkUpdate>;
 }
 
 function Comp3() {
   const [state] = deriveM.useDerivedState();
-  return (
-    <MarkUpdate>
-      state.c {state.c}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>state.c {state.c}</MarkUpdate>;
 }
 
 const Demo = () => (

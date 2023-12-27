@@ -1,4 +1,4 @@
-import { share, atom } from 'helux';
+import { atom } from 'helux';
 
 function runMultiMutateLogic(changeC: any, changeD: any) {
   const [numAtom, setAtom] = atom({ a: 1, b: 2 });
@@ -12,7 +12,7 @@ function runMultiMutateLogic(changeC: any, changeD: any) {
         },
         changeD: (draft) => {
           // console.log('2 draft is ', draft);
-          return changeD(draft, numAtom)
+          return changeD(draft, numAtom);
         },
       },
     },

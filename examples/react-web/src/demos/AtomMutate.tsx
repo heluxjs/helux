@@ -1,8 +1,6 @@
-import React from 'react';
-import { atom, sharex, useAtom, atomx, $ } from 'helux';
-import type { IPlugin } from 'helux';
-import { MarkUpdate, Entry } from './comps';
-import { log, delay, random } from './logic/util';
+import { $, atom, atomx, sharex, useAtom } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { random } from './logic/util';
 
 const [baseAtom, setAtom] = atom(3000, { moduleName: 'baseAtom' });
 
@@ -22,7 +20,7 @@ const [doubleAtom, setDouble] = atom(2, {
   alertDeadCycleErr: false,
 });
 const changeDoubleAtom = () => {
-  setDouble(prev => prev + 100);
+  setDouble((prev) => prev + 100);
 };
 
 const [minus10Atom] = atom(0, {
@@ -68,17 +66,29 @@ console.log(x.state.val.b);
 
 function Price() {
   const [base, , info] = useAtom(baseAtom);
-  return <MarkUpdate name="Price" info={info}>{base}</MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      {base}
+    </MarkUpdate>
+  );
 }
 
 function IdealPrice() {
   const [double, , info] = useAtom(doubleAtom);
-  return <MarkUpdate name="Price" info={info}>{double}</MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      {double}
+    </MarkUpdate>
+  );
 }
 
 function FinalPrice() {
   const [minus10, , info] = useAtom(minus10Atom);
-  return <MarkUpdate name="Price" info={info}>{minus10}</MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      {minus10}
+    </MarkUpdate>
+  );
 }
 
 function changeBase() {
@@ -86,7 +96,9 @@ function changeBase() {
 }
 
 function changeB1() {
-  x.setState(draft => { draft.b = 100 });
+  x.setState((draft) => {
+    draft.b = 100;
+  });
 }
 
 function changeB2() {
@@ -106,18 +118,23 @@ function changeA() {
 function Demo(props: any) {
   const fns = [changeBase, changeB1, changeB2, changeB3, changeA, changeDoubleAtom];
   // const fns:any[] = [];
-  return <Entry fns={fns}>
-    <Price />
-    <IdealPrice />
-    <IdealPrice />
-    <FinalPrice />
-    <FinalPrice />
-    {$(x.reactive.a)}
-    <br />
-    {$(x.reactive.b)}
-    {$(() => <h3>x.reactive.b: {x.reactive.b} a:{x.reactive.a}</h3>)}
-  </Entry>
+  return (
+    <Entry fns={fns}>
+      <Price />
+      <IdealPrice />
+      <IdealPrice />
+      <FinalPrice />
+      <FinalPrice />
+      {$(x.reactive.a)}
+      <br />
+      {$(x.reactive.b)}
+      {$(() => (
+        <h3>
+          x.reactive.b: {x.reactive.b} a:{x.reactive.a}
+        </h3>
+      ))}
+    </Entry>
+  );
 }
-
 
 export default Demo;

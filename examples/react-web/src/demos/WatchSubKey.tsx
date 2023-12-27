@@ -1,18 +1,17 @@
-import React from "react";
-import { atom, share, watch, useAtom, getSnap, deriveDict } from "helux";
-import { MarkUpdate, Entry } from "./comps";
-import { noop, random } from "./logic/util";
+import { share, useAtom, watch } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { noop, random } from './logic/util';
 
 const [priceState, setPrice] = share(
   {
     a: {
       a1: { a2: 1 },
-      a11: { a22: 1 }
+      a11: { a22: 1 },
     },
     b: 1,
-    c: { c1: { c2: { c3: 100 } } }
+    c: { c1: { c2: { c3: 100 } } },
   },
-  { moduleName: "WatchSubKey" }
+  { moduleName: 'WatchSubKey' },
 );
 
 function changeA() {
@@ -20,7 +19,7 @@ function changeA() {
     (draft) => {
       draft.a = { a1: { a2: 1 }, a11: { a22: 1 } };
     },
-    { desc: "changeA" }
+    { desc: 'changeA' },
   );
 }
 function changeAReally() {
@@ -28,7 +27,7 @@ function changeAReally() {
     (draft) => {
       draft.a = { a1: { a2: random() }, a11: { a22: 1 } };
     },
-    { desc: "changeA" }
+    { desc: 'changeA' },
   );
 }
 
@@ -37,7 +36,7 @@ function changeA1() {
     (draft) => {
       draft.a.a1 = { a2: 100 };
     },
-    { desc: "changeA" }
+    { desc: 'changeA' },
   );
 }
 
@@ -46,16 +45,14 @@ function changeA11() {
     (draft) => {
       draft.a.a11 = { a22: 100 };
     },
-    { desc: "changeA" }
+    { desc: 'changeA' },
   );
 }
 
 function changeB() {
-  setPrice(
-    (draft) => {
-      draft.b = random();
-    },
-  );
+  setPrice((draft) => {
+    draft.b = random();
+  });
 }
 
 // const result = deriveDict(() => {
@@ -79,9 +76,9 @@ function changeB() {
 
 watch(
   () => {
-    console.log("watch a.a1.a2 changed ", priceState.a.a1.a2);
+    console.log('watch a.a1.a2 changed ', priceState.a.a1.a2);
   },
-  () => [priceState.a.a1.a2]
+  () => [priceState.a.a1.a2],
 );
 
 watch(
@@ -91,9 +88,9 @@ watch(
     const c2 = c.c1.c2;
     noop(a.a11.a22);
     noop(c2.c3);
-    console.log("complex scene", priceState.a.a1.a2);
+    console.log('complex scene', priceState.a.a1.a2);
   },
-  { deps: () => [priceState.a.a1.a2], immediate: true }
+  { deps: () => [priceState.a.a1.a2], immediate: true },
 );
 
 function Price() {

@@ -1,10 +1,12 @@
-import { share, deriveDict, useDerived } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay } from "../logic/util";
+import { deriveDict, share, useDerived } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, random } from '../logic/util';
 
 const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } }, { moduleName: 'LoadingOfDerive' });
-const changeA = () => setState(draft => { draft.a = random() });
+const changeA = () =>
+  setState((draft) => {
+    draft.a = random();
+  });
 
 const result = deriveDict({
   deps: () => [sharedState.a, sharedState.b.b1.b2] as const,
@@ -12,11 +14,11 @@ const result = deriveDict({
   task: async ({ input: [a, b2] }) => {
     await delay(1000);
     if (a < 80) {
-      throw new Error(`a ${a} < 80`)
+      throw new Error(`a ${a} < 80`);
     }
     return { a: a + 100, b2: b2 + 200 };
   },
-})
+});
 
 function Comp() {
   const [data, status] = useDerived(result);

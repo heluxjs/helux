@@ -1,4 +1,4 @@
-import { share, atom } from 'helux';
+import { atom } from 'helux';
 import { delay } from '../demos/logic/util';
 
 async function test() {

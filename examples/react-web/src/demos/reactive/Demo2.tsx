@@ -1,26 +1,31 @@
-import { $, atom, atomx, share, block, useAtom } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
+import { $, atom, atomx, block } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
 
-const [a3, setAtom3, ctx3] = atom(new Map([
-  [1, { info: { age: 1, age2: 2, age3: { k1: { k2: { k3: { k4: { k5: 1 } } } } } } }],
-  [2, { info: { age: 2, age2: 2, age3: { k1: { k2: { k3: { k4: { k5: 1 } } } } } } }]
-]), { moduleName: 'ruikun' });
-const { reactive, defineActions } = atomx({
-  a: 1,
-  b: {
-    b1: 1,
-    b2: 1,
-    b3: 1,
+const [a3, setAtom3, ctx3] = atom(
+  new Map([
+    [1, { info: { age: 1, age2: 2, age3: { k1: { k2: { k3: { k4: { k5: 1 } } } } } } }],
+    [2, { info: { age: 2, age2: 2, age3: { k1: { k2: { k3: { k4: { k5: 1 } } } } } } }],
+  ]),
+  { moduleName: 'ruikun' },
+);
+const { reactive, defineActions } = atomx(
+  {
+    a: 1,
+    b: {
+      b1: 1,
+      b2: 1,
+      b3: 1,
+    },
+    c: 100,
   },
-  c: 100,
-}, { moduleName: 'ruikun2' })
+  { moduleName: 'ruikun2' },
+);
 function changeItem() {
   // const prevItem0 = listAtom.val[0];
   // const prevItem1 = listAtom.val[1];
   // setAtom(draft => { draft[0].b.name = Date.now() });
   // setAtom2(draft => { draft.b.b1.b2 += 100 });
-  setAtom3(draft => {
+  setAtom3((draft) => {
     // @ts-ignore
     draft.get(1).info.age = Date.now();
   });
@@ -31,14 +36,14 @@ function changeItem() {
 }
 
 function changeItem2() {
-  setAtom3(draft => {
+  setAtom3((draft) => {
     // @ts-ignore
     draft.get(1).info.age2 = Date.now();
   });
 }
 
 function changeItem3() {
-  setAtom3(draft => {
+  setAtom3((draft) => {
     if (draft.get(2)) {
       // @ts-ignore
       draft.get(2).info.age3.k1.k2.k3.k4.k5 = Date.now();
@@ -60,13 +65,9 @@ function changeByReactive() {
 //   }
 // }, 100)
 
-
 const A = block((props, params) => {
-  <MarkUpdate>
-    MarkUpdate: {reactive.b.b1}
-  </MarkUpdate>
+  <MarkUpdate>MarkUpdate: {reactive.b.b1}</MarkUpdate>;
 });
-
 
 function Comp() {
   return (
@@ -75,18 +76,17 @@ function Comp() {
       <br />
       a3.val.get(1).info.age2 {$(a3.val.get(1)?.info.age2)}
       <br />
-      a3.val.get(1).info.age2 {$(a3.val.get(1)?.info.age2, val => `${val} <-- at ${Date.now()}`)}
+      a3.val.get(1).info.age2 {$(a3.val.get(1)?.info.age2, (val) => `${val} <-- at ${Date.now()}`)}
       <br />
       {/* a3.val.get(1).info.age2 {$(() => {
         <MarkUpdate>{a3.val.get(1)?.info.age2}</MarkUpdate>
       })} */}
       <br />
-      a3.val.get(2).info.age {$(a3.val.get(2)?.info.age, val => `${val}`)}
+      a3.val.get(2).info.age {$(a3.val.get(2)?.info.age, (val) => `${val}`)}
       <br />
       <h3>最多直接6层依赖路径</h3>
-      a3.val.get(2).info.age3.k1.k2.k3.k4.k5 {$(a3.val.get(2)?.info.age3.k1.k2.k3.k4.k5, val => `${val}`)}
-      <br />
-      a {$(reactive.a)}
+      a3.val.get(2).info.age3.k1.k2.k3.k4.k5 {$(a3.val.get(2)?.info.age3.k1.k2.k3.k4.k5, (val) => `${val}`)}
+      <br />a {$(reactive.a)}
       <br />
       reactive.b.b1 {$(reactive.b.b1)}
       <A />

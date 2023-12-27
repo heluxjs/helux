@@ -1,11 +1,8 @@
-
-
 import { useLocalForceUpdate } from 'helux';
 import React from 'react';
 import { Entry } from '../comps';
 
 export function createDcDemo(dcLogic: any) {
-
   let DcDemo: any = null;
   function callDcLogic() {
     if (!DcDemo) {
@@ -24,10 +21,12 @@ export function createDcDemo(dcLogic: any) {
     const triggerDc = () => {
       demoRef.current = callDcLogic();
       forceUpdate();
-    }
+    };
 
-    return <Entry fns={[triggerDc]}>
-      <demoRef.current />
-    </Entry>
-  }
+    return (
+      <Entry fns={[triggerDc]}>
+        <demoRef.current />
+      </Entry>
+    );
+  };
 }

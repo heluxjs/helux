@@ -1,4 +1,4 @@
-import { share, atom } from 'helux';
+import { share } from 'helux';
 
 const [state, setState] = share({ a: 1, b: 2 });
 setState((draft) => {

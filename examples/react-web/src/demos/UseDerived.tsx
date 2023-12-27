@@ -1,6 +1,6 @@
-import { share, deriveDict, useDerived } from "helux";
-import { random } from "./logic/util";
-import { MarkUpdate, Entry } from "./comps";
+import { deriveDict, share, useDerived } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { random } from './logic/util';
 
 const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
 
@@ -36,7 +36,9 @@ function ReadAsyncRerived() {
 
   return (
     <MarkUpdate info={[info]}>
-      <div>{isComputing ? 'computing' : ''} aPlusB2.val 11 22: {aPlusB2.val}</div>
+      <div>
+        {isComputing ? 'computing' : ''} aPlusB2.val 11 22: {aPlusB2.val}
+      </div>
     </MarkUpdate>
   );
 }

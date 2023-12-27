@@ -1,20 +1,18 @@
-import { $, share, deriveDict, useDerived, block } from 'helux';
-import React from 'react';
-import { MarkUpdate, Entry } from './comps';
-import { delay } from "./logic/util";
+import { $, block, deriveDict, share, useDerived } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { delay } from './logic/util';
 
 const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } });
 
 const result = deriveDict({
   deps: () => [sharedState.a, sharedState.b.b1.b2] as const, // 定义依赖项
-  fn: ({ input: [a, b2] }) => ({ val: a + b2 }),// 定义初始值
+  fn: ({ input: [a, b2] }) => ({ val: a + b2 }), // 定义初始值
   task: async ({ input: [a, b2] }) => {
     await delay(1000);
     return { val: a + b2 + 1 };
   },
   immediate: true,
 });
-
 
 function changeA() {
   setState((draft) => {
@@ -24,19 +22,11 @@ function changeA() {
 
 const RetBlock = block((props, params) => {
   const [val] = params.read(result.val);
-  return (
-    <MarkUpdate>
-      {params.status.loading ? 'loading' : <>ret.val {val}</>}
-    </MarkUpdate>
-  )
+  return <MarkUpdate>{params.status.loading ? 'loading' : <>ret.val {val}</>}</MarkUpdate>;
 });
 
 function SharedDict() {
-  return (
-    <MarkUpdate>
-      signal result.val {$(result.val)}
-    </MarkUpdate>
-  );
+  return <MarkUpdate>signal result.val {$(result.val)}</MarkUpdate>;
 }
 
 function UseDerived() {

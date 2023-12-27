@@ -1,12 +1,11 @@
-import React from 'react';
-import { mutate, share, useAtom, $, action, IActionTaskParams } from 'helux';
-import { MarkUpdate, Entry } from '../comps';
-import { dictFactory, delay } from '../logic/util';
+import { $, action, IActionTaskParams, share } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
+import { delay, dictFactory } from '../logic/util';
 
 const [priceState, setPrice, ctxp] = share(dictFactory, { moduleName: 'DefineApi' });
 type S = typeof dictFactory;
 
-export type DepsResult = { deps: any[], result: any };
+export type DepsResult = { deps: any[]; result: any };
 
 // 约束各个函数入参类型
 type Payloads = {
@@ -17,7 +16,7 @@ type Payloads = {
 const fn = action(priceState)<number>()(async (params) => {
   const p = params.payload;
   params.draft.f += 1;
-})
+});
 
 fn(1);
 
@@ -37,17 +36,17 @@ const { actions, eActions, useLoading, getLoading } = ctxp.defineActions<Payload
   },
   cc({ draft, payload }) {
     // return 1;
-    return { f2: 1 }
+    return { f2: 1 };
   },
   dd({ draft, payload }: IActionTaskParams<S, number>) {
     // return 1;
-    return { f2: 1 }
+    return { f2: 1 };
   },
 });
 
 async function test() {
-  const a = actions.changeA([1, 2])
-  const b = await actions.foo(true)
+  const a = actions.changeA([1, 2]);
+  const b = await actions.foo(true);
   const ee = actions.cc();
   const xx = actions.dd(1);
   const ret = await eActions.foo(true);
@@ -55,8 +54,14 @@ async function test() {
 }
 test();
 
-const { actions: a2, eActions: ea2, useLoading: u2, getLoading: g2 } = ctxp.defineTpActions()({
-  changeA: ctxp.action<number>()(({ draft, payload }) => { // 此处 payload 获得类型提示
+const {
+  actions: a2,
+  eActions: ea2,
+  useLoading: u2,
+  getLoading: g2,
+} = ctxp.defineTpActions()({
+  changeA: ctxp.action<number>()(({ draft, payload }) => {
+    // 此处 payload 获得类型提示
     draft.a.b.c = 200;
     return { a: 1 };
   }),
@@ -65,7 +70,6 @@ const { actions: a2, eActions: ea2, useLoading: u2, getLoading: g2 } = ctxp.defi
     return 2;
   }),
 });
-
 
 async function test2() {
   const a1 = ea2.changeA(1);
@@ -82,9 +86,9 @@ const actions2 = {
   changeB: ctxp.action<number>()(({ draft, payload }) => {
     draft.a.b.c = 200;
   }),
-}
+};
 
-actions2.changeB(1)
+actions2.changeB(1);
 
 // actions.
 
@@ -92,7 +96,7 @@ actions2.changeB(1)
 type DR = {
   a: { result: number };
   b: { result: string };
-  c: { deps: [number, string], result: number };
+  c: { deps: [number, string]; result: number };
 };
 
 const fd = ctxp.defineFullDerive()({
@@ -110,7 +114,7 @@ const fd = ctxp.defineFullDerive()({
       await delay(2000);
       return 1 + c1;
     },
-  }
+  },
 });
 
 const a = fd.result.a;
@@ -139,17 +143,21 @@ const b = fd.result.b;
 ctxp.mutate({
   async task({ setState }) {
     console.error('---->>> mutate task');
-    setState(draft => { draft.a.b.c = 1 });
+    setState((draft) => {
+      draft.a.b.c = 1;
+    });
   },
   // immediate: false,
-})
+});
 
 function changeC() {
   ctxp.reactive.a.b.c++;
 }
 
 function changeC1() {
-  ctxp.setState(draft => { draft.a.b1.c1++ });
+  ctxp.setState((draft) => {
+    draft.a.b1.c1++;
+  });
   // ctxp.reactive.a.b1.c1++;
 }
 
@@ -170,9 +178,11 @@ function changeC1() {
 function C1() {
   const [state, , info] = ctxp.useState();
 
-  return <MarkUpdate name="Price" info={info}>
-    state.a.b1.c1: {state.a.b1.c1}
-  </MarkUpdate>;
+  return (
+    <MarkUpdate name="Price" info={info}>
+      state.a.b1.c1: {state.a.b1.c1}
+    </MarkUpdate>
+  );
 }
 
 console.log(actions.foo);
@@ -188,10 +198,15 @@ const Demo = () => (
     <h3>ctxp.reactive.a.b1.c1: {$(ctxp.reactive.a.b1.c1)}</h3>
     <h3>ctxp.state.a.b1.c1: {$(ctxp.state.a.b1.c1)}</h3> */}
     <h3>getLoading().foo.loading: {$(getLoading().foo.loading)}</h3>
-    <h3>getLoading().foo.loading: {$(() => <h1>foo.loading:{`${getLoading().foo.loading}`}</h1>)}</h3>
+    <h3>
+      getLoading().foo.loading:{' '}
+      {$(() => (
+        <h1>foo.loading:{`${getLoading().foo.loading}`}</h1>
+      ))}
+    </h3>
     <h3>true:{true}</h3>
   </Entry>
 );
 
 export default Demo;
-// 
+//

@@ -109,12 +109,13 @@ export function execFinish(
   innerSetOptions: IInnerSetStateOptions = {},
 ) {
   const { mutateCtx, internal } = commitOpts;
-  const { writeKeys, writeKeyPathInfo } = mutateCtx;
+  const { writeKeys, writeKeyPathInfo, handleCbReturn } = mutateCtx;
   const { forAtom } = internal;
 
-  // TODO: 新增 setDraft 对接 handleCbReturn 参数，默认忽略 cb 返回值
-  // setDraft 对应类型文件也会做相应优化
-  handlePartial({ partial, forAtom, draftRoot, draftNode });
+  // setState 不忽略cb 返回值， setDraft 忽略
+  if (handleCbReturn) {
+    handlePartial({ partial, forAtom, draftRoot, draftNode });
+  }
   const opts = beforeCommit(commitOpts, innerSetOptions, draftRoot);
   mutateCtx.depKeys = Object.keys(writeKeys);
   DRAFT_ROOT.del();

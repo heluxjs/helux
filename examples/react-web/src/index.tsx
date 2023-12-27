@@ -16,7 +16,7 @@ async function main() {
       },
       toMatchObject: log,
     };
-  }
+  };
   console.log('start main');
   // await import('./pure-tests');
   await import('./loadApp18');

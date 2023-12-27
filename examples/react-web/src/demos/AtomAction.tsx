@@ -1,58 +1,50 @@
-import React from "react";
-import {
-  atom,
-  share,
-  useAtom,
-  action,
-} from "helux";
-import { MarkUpdate, Entry } from './comps';
-import { random, delay } from './logic/util';
+import { action, atom, share, useAtom } from 'helux';
+import { Entry, MarkUpdate } from './comps';
+import { delay, random } from './logic/util';
 
 const [numAtom, , ctx] = atom(1, { moduleName: 'AtomAction' });
 const [shared, , ctx2] = share({ a: 1, b: 2 }, { moduleName: 'AtomAction2' });
 
 const someAction = ctx.action()(({ draftRoot, payload }) => {
-  draftRoot.val = (payload && Number.isInteger(payload)) ? payload : random();
+  draftRoot.val = payload && Number.isInteger(payload) ? payload : random();
 }, 'someAction');
 
 const someAsyncAction = ctx.action<number>()(async ({ setState, payload }) => {
   await delay(2000);
-  const val = (payload && Number.isInteger(payload)) ? payload : random();
+  const val = payload && Number.isInteger(payload) ? payload : random();
   // setState((_, draftRoot) => draftRoot.val = val);
   setState(val);
 }, 'someAsyncAction');
 setTimeout(() => {
   someAsyncAction(6000);
-}, 6000)
+}, 6000);
 
 // someAction()
 // createAction3(numAtom, fnDef, desc)
 // createAction3(numAtom)(fnDef, desc) --> actionFn
 // createAction3(numAtom)<[...]>(fnDef, desc) --> actionFn
 
-const normalAction = action(numAtom)<[number, string]>()(
-  ({ setState, payload: args }) => {
-    const val = (args[0] && Number.isInteger(args[0])) ? args[0] : random();
-    // return val;
-    setState(val);
-  },
-  'normalAction'
-);
+const normalAction = action(numAtom)<[number, string]>()(({ setState, payload: args }) => {
+  const val = args[0] && Number.isInteger(args[0]) ? args[0] : random();
+  // return val;
+  setState(val);
+}, 'normalAction');
 
-const asyncAction = action(numAtom)<[number, string]>()(
-  async ({ setState, payload: args }) => {
-    await delay(2000);
-    const val = (args[0] && Number.isInteger(args[0])) ? args[0] : random();
-    setState(val);
-  }, 'asyncAction'
-);
+const asyncAction = action(numAtom)<[number, string]>()(async ({ setState, payload: args }) => {
+  await delay(2000);
+  const val = args[0] && Number.isInteger(args[0]) ? args[0] : random();
+  setState(val);
+}, 'asyncAction');
 
 function NumAtom() {
   const [num, setNum, info] = useAtom(numAtom);
   const [shared2, setNum2, info2] = useAtom(shared);
   const changeNum = () => setNum(num + 1);
-  const changeNumByDraft = () => setNum((val) => (val + 2));
-  const changeNumByDraft2 = () => setNum2((draft) => { draft.a += 1 });
+  const changeNumByDraft = () => setNum((val) => val + 2);
+  const changeNumByDraft2 = () =>
+    setNum2((draft) => {
+      draft.a += 1;
+    });
 
   return (
     <MarkUpdate info={[info, info2]}>

@@ -1,6 +1,6 @@
-import { useMutable, produce } from 'helux';
+import { useMutable } from 'helux';
 import React from 'react';
-import { MarkUpdate, Entry } from './comps';
+import { Entry, MarkUpdate } from './comps';
 import { log } from './logic/util';
 
 function Comp() {
@@ -9,7 +9,9 @@ function Comp() {
     setState({ a: Date.now() }); // change by partial
   };
   const updateB = () => {
-    setState(draft => { draft.b.b1 = Date.now() }); // change by draft
+    setState((draft) => {
+      draft.b.b1 = Date.now();
+    }); // change by draft
   };
   React.useEffect(() => {
     log('setState is a stable ref'); // print only one time

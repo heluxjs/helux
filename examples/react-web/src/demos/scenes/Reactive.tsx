@@ -1,8 +1,5 @@
-import { share, useAtom, $ } from 'helux';
-import { getVal } from '@helux/utils';
-import React from 'react';
-import { MarkUpdate, Entry } from '../comps';
-import { random, delay, noop } from "../logic/util";
+import { $, share } from 'helux';
+import { Entry, MarkUpdate } from '../comps';
 
 const [shared, setShared, { reactive }] = share({
   a: {
@@ -13,7 +10,7 @@ const [shared, setShared, { reactive }] = share({
   desc: 'awesome lib',
   extra: {
     mark: 'extra',
-  }
+  },
 });
 
 const changeABC = () => {
@@ -24,9 +21,11 @@ const changeABC = () => {
 // setInterval(() => reactive.a.b.c++, 1000);
 
 function Info() {
-  return <MarkUpdate>
-    <h2>reactive.a.b.c {$(reactive.a.b.c)}</h2>
-  </MarkUpdate>;
+  return (
+    <MarkUpdate>
+      <h2>reactive.a.b.c {$(reactive.a.b.c)}</h2>
+    </MarkUpdate>
+  );
 }
 
 const Demo = () => (
@@ -36,4 +35,3 @@ const Demo = () => (
 );
 
 export default Demo;
-

@@ -436,6 +436,9 @@ export type MultiDeriveFn<DR extends DepsResultDict = DepsResultDict> = {
 /** partial state or cb */
 export type PartialArgType<T> = T extends PlainObject ? Partial<T> | ((draft: T) => void | Partial<T>) : T | ((draft: T) => void | T);
 
+/** partial state or cb for setDraft */
+export type PartialDraftArgType<T> = T extends PlainObject ? Partial<T> | ((draft: T) => void) : T | ((draft: T) => void);
+
 export interface IMutateCtx {
   /** 当次变更的依赖 key 列表，在 finishMutate 阶段会将 writeKeys 字典keys 转入 depKeys 里 */
   depKeys: string[];
@@ -497,10 +500,28 @@ export interface IInnerSetStateOptions extends ISetFactoryOpts {
    * 避免 watch 回调首次执行时，回调里调用 setState(draft=>{ ... }) 收集到会造成死循环的依赖
    */
   disableDraftDep?: boolean;
+  /**
+   * default: true，
+   * 是否忽略cb返回值，setDraft 接口会设置为 false
+   */
+  handleCbReturn?: boolean;
 }
 
 export type SetState<T = any> = (
   partialStateOrRecipeCb: T extends Atom | ReadOnlyAtom ? PartialArgType<AtomValType<T>> : PartialArgType<T>,
+  options?: ISetStateOptions,
+) => NextSharedDict<T>;
+
+/**
+ * 区别于 setState, setDraft 不处理返回值
+ * ```ts
+ * const ctx = atomx({a:1, b:2});
+ * // 这样写ts编译能通过，同时内部忽略了 draft.a=100 的隐式返回值 100
+ * ctx.setDraft(draft=>draft.a=100);
+ * ```
+ */
+export type SetDraft<T = any> = (
+  partialStateOrRecipeCb: T extends Atom | ReadOnlyAtom ? PartialDraftArgType<AtomValType<T>> : PartialDraftArgType<T>,
   options?: ISetStateOptions,
 ) => NextSharedDict<T>;
 
@@ -652,6 +673,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   sync: SyncFnBuilder<T>;
   syncer: Syncer<T>;
   setState: SetState<T>;
+  setDraft: SetDraft<T>;
   mutate: <P extends ReadOnlyArr = ReadOnlyArr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
@@ -966,11 +988,11 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   defineFullDerive: <DR extends DepsResultDict | undefined = undefined>(
     throwErr?: boolean,
   ) => <
-    D extends /**
+    D
+    /**
      * 如果透传了 DR 约束返回结果类型和 deps 返回类型，则使用 DR 来约束
      * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
-     */
-    DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
+     */ extends DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
   >(
     deriveFnDict: D,
   ) => {
