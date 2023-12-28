@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://concentjs.github.io/concent-doc">
-    <img width="480" src="https://tnfe.gtimg.com/image/j7sd1hed3p_1703767372873.png">
+    <img width="680px" src="https://tnfe.gtimg.com/image/e9e223ilw8_1703768152237.jpeg">
   </a>
 </p>
 
