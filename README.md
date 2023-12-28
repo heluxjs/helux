@@ -6,9 +6,10 @@
 
 <p align="center">
   <a href="https://concentjs.github.io/concent-doc">
-    <img width="680px" src="https://tnfe.gtimg.com/image/e9e223ilw8_1703768152237.jpeg">
+    <img width="680px" src="https://tnfe.gtimg.com/image/wgf9lcdy0l_1703770385145.png">
   </a>
 </p>
+
 
 特性简介：
 

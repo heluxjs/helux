@@ -4,6 +4,13 @@
 
 [helux](https://github.com/heluxjs/helux) is a react state library that integrates `atom`, `signal`, and `dependency collection`. It has the following features:
 
+<p align="center">
+  <a href="https://concentjs.github.io/concent-doc">
+    <img width="680px" src="https://tnfe.gtimg.com/image/fp78ya1et7_1703769973306.png">
+  </a>
+</p>
+
+
 - Developed based on the fastest immutable js library [limu](https://github.com/tnfe/limu), with super performance
 - Atom supports dependency collection, which means that atom does not need to be split into details. Atom can be equivalent to model, which is naturally friendly to `DDD` domain-driven design.
 - Built-in signal response mechanism, which can achieve 0 hook encoding + DOM granular update
