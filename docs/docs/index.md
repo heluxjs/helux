@@ -26,9 +26,6 @@ features:
   - title: 渐进式
     emoji: 🚀
     description: 除setState之外，还支持dispatch、invoke提交数据变更，同时让ui视图与业务逻辑彻底解耦。
-
-
-
 ---
 
 helux-docs

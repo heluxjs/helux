@@ -1,35 +1,63 @@
 import { noop, noopArr } from '@helux/utils';
 import { IOperateParams } from 'limu';
 import { ASYNC_TYPE, FROM, NOT_MOUNT, RENDER_START } from '../../consts';
-import type { IFnCtx, IInnerSetStateOptions, IMutateCtx, IMutateFnStdItem } from '../../types/base';
+import type { From, IFnCtx, IMutateCtx, IMutateFnStdItem, ISetFactoryOpts, OnOperate } from '../../types/base';
 import type { IReactiveMeta } from '../../types/inner';
+import { genRenderSN } from './key';
 
 const { MAY_TRANSFER } = ASYNC_TYPE;
-const { SET_STATE } = FROM;
+const { SET_STATE, REACTIVE } = FROM;
 const fakeGetReplaced = () => ({ isReplaced: false, replacedValue: null as any });
 const noopAny: (...args: any[]) => any = () => {};
 
-const fnItem = newMutateFnItem();
+const fnItem = newMutateFnItem({ isFake: true });
 
-export function newReactiveMeta(): IReactiveMeta {
+export interface IBuildReactiveOpts {
+  isTop?: boolean;
+  depKeys?: string[];
+  desc?: string;
+  onRead?: OnOperate;
+  from?: From;
+  expired?: boolean;
+}
+
+export function newReactiveMeta(draft: any, buildOptions: IBuildReactiveOpts, finish: any = noop): IReactiveMeta {
+  const { desc = '', onRead, from = REACTIVE, depKeys = [], isTop = false, expired = false } = buildOptions;
   return {
-    isTop: true,
-    key: '',
-    fnKey: '',
+    draft,
+    finish,
+    modified: false,
+    expired,
     sharedKey: 0,
     moduleName: '',
-    depKeys: [],
+    hasFlushTask: false,
+    nextTickFlush: noop,
+    data: [],
+    isTop,
+    key: '',
+    fnKey: '',
+    depKeys,
     writeKeys: [],
-    desc: '',
-    onRead: undefined,
-    from: SET_STATE,
+    desc,
+    onRead,
+    from,
   };
 }
 
-export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
-  // 用户 setState 可能设定了 ids globalIds
-  const { ids = [], globalIds = [], isReactive = false, from = SET_STATE, enableDep = false, handleCbReturn = true } = options;
+export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
+  const {
+    ids = [],
+    globalIds = [],
+    isReactive = false,
+    from = SET_STATE,
+    enableDep = false,
+    handleCbReturn = true,
+    sn = genRenderSN(),
+    isFirstCall = false,
+    desc = '',
+  } = options;
   return {
+    fnKey: '',
     depKeys: [],
     forcedDepKeys: [],
     triggerReasons: [],
@@ -44,6 +72,9 @@ export function newMutateCtx(options: IInnerSetStateOptions): IMutateCtx {
     from,
     isReactive,
     enableDep,
+    sn,
+    isFirstCall,
+    desc,
   };
 }
 
@@ -72,20 +103,18 @@ export function newOpParams(
   };
 }
 
-// export function newMutateFnItem(): MutateFnStdItem {
-//   return {
-//     fn: noop,
-//     onlyDeps: false,
-//     depKeys: [],
-//     writeKeys: [],
-//     oriDesc: '',
-//     desc: '',
-//     watchKey: '',
-//   };
-// }
-
 export function newMutateFnItem(partial?: Partial<IMutateFnStdItem>): IMutateFnStdItem {
-  const { desc = '', fn = noop, task = noopAny, depKeys = [], writeKeys = [], deps = noopArr, onlyDeps = false, ...rest } = partial || {};
+  const {
+    desc = '',
+    fn = noop,
+    task = noopAny,
+    depKeys = [],
+    writeKeys = [],
+    deps = noopArr,
+    isFake = false,
+    onlyDeps = false,
+    ...rest
+  } = partial || {};
   const base: IMutateFnStdItem = {
     fn,
     task,
@@ -97,6 +126,7 @@ export function newMutateFnItem(partial?: Partial<IMutateFnStdItem>): IMutateFnS
     writeKeys,
     checkDeadCycle: undefined,
     watchKey: '',
+    isFake,
     ...rest,
   };
   return base;

@@ -23,6 +23,8 @@ export function buildInternal(
   innerOptions: {
     setState: SetState;
     setDraft: SetDraft;
+    insSetState: SetState;
+    insSetDraft: SetDraft;
     setStateFactory: SetStateFactory;
     innerSetState: InnerSetState;
     sharedState: Ext<SharedState>;

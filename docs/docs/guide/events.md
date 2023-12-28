@@ -2,11 +2,10 @@
 group:
   title: 基础
   order: 1
-order: 1 
+order: 1
 ---
 
 # 事件
-
 
 内部提供事件总线让用户可以全局使用
 

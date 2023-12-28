@@ -52,12 +52,11 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     const depKey = getDepKeyByPath(fullKeyPath, sharedKey);
     readKeys[depKey] = 1;
 
-    // isMutateReactive=true 表示 mutate fn reactive draft, mutate task reactive draft,
-    // isReactive=true 表示 top reactive, ins reactive
+    // isReactive=true 表示 top reactive, ins reactive, top setState, top setDraft
     // 仅这四种类型的对象收集读依赖，其他任何场景的读操作无任何依赖收集行为产生，可以
     // 1 减轻运行负担，
     // 2 降低死循环可能性，例如在 watch 回调里调用顶层的 setState
-    if (mutateCtx.enableDep || isReactive) {
+    if (mutateCtx.enableDep) {
       // 支持对 draft 操作时可以收集到依赖： draft.a = draft.b + 1
       // 来自实例的定制读行为，目前主要是响应式对象会有此操作，
       // 因为多个实例共享了一个响应式对象，但需要有自己的读行为操作来为实例本身收集依赖
@@ -66,8 +65,11 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
         currReactive.onRead(opParams);
       } else {
         getRunningFn().fnCtx && recordFnDepKeys([depKey], { sharedKey });
-        recordBlockDepKey([depKey]);
-        recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
+        // 仅 top reactive 触发以下逻辑，为 block 收集依赖
+        if (isReactive) {
+          recordBlockDepKey([depKey]);
+          recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
+        }
       }
     }
     return;
@@ -82,7 +84,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
   const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
 
-  // 是一个顶层有效的 reactive
+  // 是一个有效的 reactive
   if (currReactive.key) {
     if (currReactive.isTop) {
       nodupPush(currReactive.writeKeys, writeKey);
@@ -135,7 +137,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     nextTickFlush(sharedKey, currReactive.desc);
   } else {
     // 发现 sharedKey 对应的对象已变化，主动标记 sharedKey 对应的响应对象已过期
-    // 用户其他地方再次使用 reactive 对象时，内部会自动创建一个新的返回给用户
+    // 用户在其他地方再次使用 reactive 对象时，内部会自动创建一个新的返回给用户
     markExpired(sharedKey);
   }
 }

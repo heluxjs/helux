@@ -17,7 +17,7 @@ const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
 const { PRIVATE, GLOBAL } = RECORD_LOADING;
 const fakeExtra: Dict = {};
 const fakeLoading: Dict = {};
-const fakeRenderInfo: IRenderInfo = { time: 0, sn: 0, getDeps: noopArr, getPrevDeps: noopArr, insKey: 0 };
+const fakeRenderInfo: IRenderInfo = { time: 0, sn: 0, getDeps: noopArr, getPrevDeps: noopArr, insKey: 0, setDraft: noop };
 const fakeTuple = [createSafeLoading(fakeExtra, fakeLoading, MUTATE), noop, fakeRenderInfo];
 
 interface IInitLoadingCtxOpt {

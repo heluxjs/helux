@@ -1,18 +1,8 @@
-import type { Dict, IInnerSetStateOptions, IMutateCtx } from '../../types/base';
-import type { TInternal } from './buildInternal';
+import type { ICommitOpts } from './mutateDeep';
 import { execDepFns } from './notify';
 
-export interface ICommitStateOptions extends IInnerSetStateOptions {
-  state: Dict;
-  internal: TInternal;
-  mutateCtx: IMutateCtx;
-  forAtom: boolean;
-  sn: number;
-  desc?: any;
-}
-
-export function commitState(opts: ICommitStateOptions) {
-  const { state, internal } = opts;
+export function commitState(opts: ICommitOpts) {
+  const { state, internal, mutateCtx } = opts;
   const { rawState, isDeep, ver, snap } = internal;
 
   if (isDeep) {
@@ -25,6 +15,6 @@ export function commitState(opts: ICommitStateOptions) {
   }
 
   internal.ver += 1;
-  internal.sn = opts.sn;
+  internal.sn = mutateCtx.sn;
   execDepFns(opts);
 }

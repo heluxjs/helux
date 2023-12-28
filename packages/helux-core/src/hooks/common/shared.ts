@@ -1,4 +1,4 @@
-import { DICT } from '../../consts';
+import { DICT, MOUNTED, UNMOUNT } from '../../consts';
 import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { INS_CTX } from '../../factory/creator/current';
@@ -13,7 +13,7 @@ import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
  */
 export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
   const { proxyState, internal, renderInfo, canCollect, isReactive } = insCtx;
-  const { sharedKey, sharedKeyStr, setState, forAtom } = internal;
+  const { sharedKey, sharedKeyStr, insSetState, forAtom } = internal;
   renderInfo.snap = internal.snap;
   renderInfo.time = Date.now();
   // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
@@ -34,7 +34,7 @@ export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
 
   // 提供给 useReactive 的拆箱行为在 useDrived 里单独处理
   const finalRoot = isReactive ? proxyState : rootVal;
-  return [finalRoot, setState, renderInfo];
+  return [finalRoot, insSetState, renderInfo];
 }
 
 export function checkAtom(mayAtom: any, forAtom?: boolean) {
@@ -58,6 +58,7 @@ export function checkStateVer(insCtx: InsCtxDef) {
 
 // recover ins ctx (dep,updater etc...) for double mount behavior under react 18 strict mode
 export function recoverInsCtx(insCtx: InsCtxDef) {
+  insCtx.mountStatus = MOUNTED;
   const { id, globalId, insKey } = insCtx;
   insCtx.internal.recordId(id, insKey);
   mapGlobalId(globalId, insKey);
@@ -65,6 +66,7 @@ export function recoverInsCtx(insCtx: InsCtxDef) {
 }
 
 export function delInsCtx(insCtx: InsCtxDef) {
+  insCtx.mountStatus = UNMOUNT;
   const { id, globalId, insKey } = insCtx;
   insCtx.internal.delId(id, insKey);
   delGlobalId(globalId, insKey);

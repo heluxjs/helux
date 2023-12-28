@@ -45,7 +45,7 @@ export const STOP_DEPTH = 6;
 /** 默认数组停止收集 */
 export const STOP_ARR_DEP = true;
 
-/** 卸载数据的过期时间（单位：ms） */
+/** 判定为不会被加载的组件的过期时间（单位：ms），通常由开发模式双调用导致 */
 export const EXPIRE_MS = 2000;
 
 export const SIZE_LIMIT = 20;
@@ -54,10 +54,19 @@ export const RENDER_START = '1';
 
 export const RENDER_END = '2';
 
+/**
+ * 组件初次渲染开始，还未挂载好
+ */
 export const NOT_MOUNT = 1;
 
+/**
+ * 组件初次渲染结束，已挂载好
+ */
 export const MOUNTED = 2;
 
+/**
+ * 组件已卸载
+ */
 export const UNMOUNT = 3;
 
 export const KEY_SPLITER = '|';

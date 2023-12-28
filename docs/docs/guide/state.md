@@ -2,7 +2,7 @@
 group:
   title: 基础
   order: 0
-order: 0 
+order: 0
 ---
 
 # 状态
@@ -12,15 +12,18 @@ order: 0
 通过 `share` 接口创建全局共享状态，share 必须传入 普通 json 对象，返回一个只可读的代理对象，是一个全局可使用的稳定引用，可总是读取到最新值。
 
 ```tsx
-import { share,$ } from 'helux';
+import { $, share } from 'helux';
 const [state, setState] = share({ a: 1, b: { b1: 1, b2: 2 } });
-export default ()=>{
-  return <div>
-    <div>state.a={$(state.a)}</div>
-    <button  type="button" onClick={() => setState(draft=>draft.a+=1)}>使用setState更新</button>
-  </div>
-}
-
+export default () => {
+  return (
+    <div>
+      <div>state.a={$(state.a)}</div>
+      <button type="button" onClick={() => setState((draft) => (draft.a += 1))}>
+        使用setState更新
+      </button>
+    </div>
+  );
+};
 ```
 
 ## Atom

@@ -2,11 +2,10 @@
 group:
   title: 基础
   order: 0
-order: 1 
+order: 1
 ---
 
 # 模型 - model
-
 
 提供 `model` 函数，帮助用户按业务功能聚合管理相关状态与操作
 

@@ -1,30 +1,35 @@
 import { canUseDeep } from '@helux/utils';
 import { FROM, IS_ATOM, REACTIVE_META_KEY, SHARED_KEY } from '../../consts';
 import { getSharedKey } from '../../helpers/state';
-import type { Dict, From, OnOperate } from '../../types/base';
-import type { IReactive, IReactiveMeta } from '../../types/inner';
+import type { Dict } from '../../types/base';
+import type { IReactiveMeta } from '../../types/inner';
+import { IBuildReactiveOpts, newReactiveMeta } from '../common/ctor';
+import { fakeReativeMeta } from '../common/fake';
 import { getReactiveKey } from '../common/key';
 import type { TInternal } from './buildInternal';
 import { REACTIVE_DESC, REACTIVE_META, TRIGGERED_WATCH } from './current';
 
-/** key: sharedKey, value: reactive object */
-const reactives: Map<number, IReactive> = new Map();
+const { REACTIVE } = FROM;
 
-function canFlush(reactive?: IReactive): reactive is IReactive {
-  return !!(reactive && !reactive.expired && reactive.modified);
+/** key: sharedKey, value: reactive meta object */
+const metas: Map<number, IReactiveMeta> = new Map();
+
+function canFlush(meta?: IReactiveMeta): meta is IReactiveMeta {
+  return !!(meta && !meta.expired && meta.modified);
 }
 
 /**
  * flush modified data by finish handler
  */
-function flushModified(reactive: IReactive) {
-  const { sharedKey } = reactive;
+function flushModified(meta: IReactiveMeta) {
+  const { sharedKey } = meta;
   // 标记过期，不能再被复用
-  reactive.expired = true;
+  meta.expired = true;
+  REACTIVE_META.del(meta.key);
   // 来自于 flush 记录的 desc 值，使用过一次就清除
   const desc = REACTIVE_DESC.current(sharedKey);
   REACTIVE_DESC.del(sharedKey);
-  return reactive.finish(null, { from: FROM.REACTIVE, desc, handleCbReturn: false });
+  return meta.finish(null, { desc });
 }
 
 /**
@@ -45,13 +50,12 @@ export function flush(sharedState: any, desc?: string) {
 }
 
 /**
- * 刷新可能在活跃中的 reaactive 对象，提交后就删除
+ * 刷新可能在活跃中的 reaactive 对象，提交后自动标记过期
  */
 export function flushActive() {
-  const rmeta = REACTIVE_META.current();
-  if (rmeta.isTop) {
-    innerFlush(rmeta.sharedKey, rmeta.desc);
-    REACTIVE_META.del(rmeta.key);
+  const meta = REACTIVE_META.current();
+  if (meta.isTop) {
+    innerFlush(meta.sharedKey, meta.desc);
   }
 }
 
@@ -59,13 +63,13 @@ export function flushActive() {
  * 供内部调用的 flush 方法
  */
 export function innerFlush(sharedKey: any, desc?: string) {
-  const reactive = reactives.get(sharedKey);
-  if (canFlush(reactive)) {
+  const meta = metas.get(sharedKey);
+  if (canFlush(meta)) {
     if (desc) {
       REACTIVE_DESC.set(sharedKey, desc);
     }
     // 提交变化数据
-    flushModified(reactive);
+    flushModified(meta);
   }
 }
 
@@ -73,10 +77,8 @@ export function innerFlush(sharedKey: any, desc?: string) {
  * 标记响应对象已过期，再次获取时会自动刷新
  */
 export function markExpired(sharedKey: number) {
-  const reactive = reactives.get(sharedKey);
-  if (reactive) {
-    reactive.expired = true;
-  }
+  const meta = metas.get(sharedKey) || fakeReativeMeta;
+  meta.expired = true;
 }
 
 /**
@@ -84,109 +86,82 @@ export function markExpired(sharedKey: number) {
  * 故调用此方法就会标记 reactive.modified = true
  */
 export function nextTickFlush(sharedKey: number, desc?: string) {
-  const reactive = reactives.get(sharedKey);
-  if (reactive) {
-    reactive.modified = true;
-    reactive.nextTickFlush(desc);
-  }
+  const meta = metas.get(sharedKey) || fakeReativeMeta;
+  meta.modified = true;
+  meta.nextTickFlush(desc);
 }
 
 /**
  * 全局独立使用或实例使用都共享同一个响应对象
  */
-function getReactiveVal(internal: TInternal, forAtom: boolean) {
+function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAtom: boolean) {
   const { sharedKey } = internal;
-  let reactive = reactives.get(sharedKey);
+  let meta = metas.get(sharedKey);
   // 无响应对象、或响应对象已过期
-  if (!reactive || reactive.expired) {
-    const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from: FROM.REACTIVE });
-    const latestReactive: IReactive = {
-      finish,
-      draft: draftRoot,
-      expired: false,
-      modified: false,
-      sharedKey,
-      data: [null],
-      hasFlushTask: false,
-      nextTickFlush: (desc?: string) => {
-        const { expired, hasFlushTask } = latestReactive;
-        if (!expired) {
-          latestReactive.data = [desc];
-        }
-        if (!hasFlushTask) {
-          latestReactive.hasFlushTask = true;
-          // push flush cb to micro task
-          Promise.resolve().then(() => {
-            const [desc] = latestReactive.data;
-            innerFlush(sharedKey, desc);
-          });
-        }
-      },
+  if (!meta || meta.expired) {
+    const { from = REACTIVE } = options;
+    const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true });
+    const latestMeta = newReactiveMeta(draftRoot, options, finish);
+    latestMeta.key = getReactiveKey();
+    latestMeta.nextTickFlush = (desc?: string) => {
+      const { expired, hasFlushTask } = latestMeta;
+      if (!expired) {
+        latestMeta.data = [desc];
+      }
+      if (!hasFlushTask) {
+        latestMeta.hasFlushTask = true;
+        // push flush cb to micro task
+        Promise.resolve().then(() => {
+          const [desc] = latestMeta.data;
+          innerFlush(sharedKey, desc);
+        });
+      }
     };
-    reactive = latestReactive;
-    reactives.set(sharedKey, latestReactive);
+    meta = latestMeta;
+    metas.set(sharedKey, meta);
+    // 动态生成的映射关系会在 flushModified 里被删除
+    REACTIVE_META.set(meta.key, meta);
   }
-  const { draft } = reactive;
-  return forAtom ? draft.val : draft;
-}
 
-function markUsing(rKey: string) {
-  REACTIVE_META.markUsing(rKey);
-  const watchFnKey = TRIGGERED_WATCH.current();
-  if (watchFnKey) {
-    const rmeta = REACTIVE_META.current();
-    rmeta.fnKey = watchFnKey;
-  }
+  // mark using
+  REACTIVE_META.markUsing(meta.key);
+  meta.fnKey = TRIGGERED_WATCH.current();
+
+  const { draft } = meta;
+  return { val: forAtom ? draft.val : draft, meta };
 }
 
 /**
  * 创建响应式共享对象
  */
-export function buildReactive(
-  internal: TInternal,
-  options?: { isTop?: boolean; depKeys?: string[]; desc?: string; onRead?: OnOperate; from?: From },
-) {
+export function buildReactive(internal: TInternal, options: IBuildReactiveOpts) {
   // 提供 draftRoot、draft，和 mutate、aciont 回调里对齐，方便用户使用 atom 时少一层 .val 操作
   let draftRoot: any = {};
   let draft: any = {};
-  const { rawState, deep, forAtom, isPrimitive, sharedKey, moduleName } = internal;
-  const { desc, onRead, from = FROM.REACTIVE, depKeys = [], isTop = false } = options || {};
+  const { rawState, deep, forAtom, isPrimitive, sharedKey } = internal;
 
-  const rKey = getReactiveKey();
-  const meta: IReactiveMeta = {
-    isTop,
-    moduleName,
-    key: rKey,
-    fnKey: '',
-    desc: desc || '',
-    sharedKey,
-    depKeys,
-    writeKeys: [],
-    onRead,
-    from,
-  };
   if (canUseDeep(deep)) {
     const innerData = {
-      [REACTIVE_META_KEY]: meta,
       [SHARED_KEY]: sharedKey,
       [IS_ATOM]: forAtom,
     };
     const set = (forAtom: boolean, key: any, value: any) => {
-      markUsing(rKey);
-      const draftVal = getReactiveVal(internal, forAtom);
+      const { val } = getReactiveInfo(internal, options, forAtom);
       // handleOperate 里会自动触发 nextTickFlush
-      draftVal[key] = value;
+      val[key] = value;
       return true;
     };
     const get = (forAtom: boolean, key: any, innerData: Dict) => {
-      markUsing(rKey);
-      const val = innerData[key];
-      if (val !== undefined) {
-        return val;
+      const innerVal = innerData[key];
+      if (innerVal !== undefined) {
+        return innerVal;
+      }
+      const { val, meta } = getReactiveInfo(internal, options, forAtom);
+      if (REACTIVE_META_KEY === key) {
+        return meta;
       }
 
-      const draftVal = getReactiveVal(internal, forAtom);
-      return draftVal[key];
+      return val[key];
     };
 
     draftRoot = new Proxy(rawState, {
@@ -201,17 +176,15 @@ export function buildReactive(
       draft = isPrimitive
         ? rawState.val
         : new Proxy(rawState.val, {
-          set: (t: any, key: any, value: any) => set(true, key, value),
-          get: (t: any, key: any) => get(true, key, subInnerData),
-        });
+            set: (t: any, key: any, value: any) => set(true, key, value),
+            get: (t: any, key: any) => get(true, key, subInnerData),
+          });
     }
   } else {
-    // 非 Proxy 环境暂不支持 reactive
+    // TODO 非 Proxy 环境暂不支持 reactive
     draftRoot = rawState;
     draft = rawState.val;
   }
-  // 提供给回调使用的 reactive 对象，动态生成的映射关系会在回调结束时被删除
-  REACTIVE_META.set(meta.key, meta);
 
-  return { draftRoot, draft, meta };
+  return { draftRoot, draft };
 }

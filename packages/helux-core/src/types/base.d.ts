@@ -375,7 +375,7 @@ export interface IMutateFnItem<T = SharedState, P = ReadOnlyArr> {
   immediate?: boolean;
   /**
    * default: undefined，是否检测死循环，设置为 false 表示不检查
-   * 未设定时，使用 atom、share 接口设定的checkDeadCycle值
+   * 未设定时，使用 atom、share 接口设定的 checkDeadCycle 值
    */
   checkDeadCycle?: boolean;
 }
@@ -392,6 +392,8 @@ export interface IMutateFnStdItem<T = any, P = ReadOnlyArr> extends IMutateFnIte
   writeKeys: string[];
   /** 当前 mutate 函数所属的 watch 函数 key */
   watchKey: string;
+  /** default: false，是否内部使用的假对象 */
+  isFake: boolean;
 }
 
 export interface IMutateFnLooseItem<T = SharedState, P = ReadOnlyArr> extends IMutateFnItem<T, P> {
@@ -440,6 +442,10 @@ export type PartialArgType<T> = T extends PlainObject ? Partial<T> | ((draft: T)
 export type PartialDraftArgType<T> = T extends PlainObject ? Partial<T> | ((draft: T) => void) : T | ((draft: T) => void);
 
 export interface IMutateCtx {
+  /**
+   * 触发变更的函数 key，由 innerSetOptions 透给 mutateCtx
+   */
+  fnKey: string;
   /** 当次变更的依赖 key 列表，在 finishMutate 阶段会将 writeKeys 字典keys 转入 depKeys 里 */
   depKeys: string[];
   /**
@@ -468,15 +474,38 @@ export interface IMutateCtx {
   draftVal: any;
   from: From;
   isReactive: boolean;
-  enableDep: IInnerSetStateOptions['enableDep'];
+  enableDep: ISetFactoryOpts['enableDep'];
+  /**
+   * 调用序列号，sn 序号相同表示同一批次触发重渲染
+   * 注意 sn 和 internal.ver 不能画等号，sn 对应的将要执行函数的会有很多（包括异步函数）
+   * ver 只代表提交后的最新状态版本号
+   */
+  sn: number;
+  /**
+   * 是否第一次调用，服务于 mutate 函数
+   */
+  isFirstCall: boolean;
+  /**
+   * 修改描述
+   */
+  desc: string;
 }
 
-export interface ISetFactoryOpts extends ISetStateOptions {
-  sn?: number;
+export interface IInnerSetStateOptions extends ISetStateOptions {
   from?: From;
+  isFirstCall?: boolean;
+  /** 触发 finish 的函数 key，用于辅助发现死循环 */
+  fnKey?: string;
+  /**
+   * default: true，
+   * 是否忽略cb返回值，setDraft 接口会设置为 false
+   */
+  handleCbReturn?: boolean;
+}
+
+export interface ISetFactoryOpts extends IInnerSetStateOptions {
+  sn?: number;
   isReactive?: boolean;
-  /** inner sync */
-  calledBy?: string;
   /**
    * 目前通用 operateState 里支持依赖收集的场景：
    * 1 mutate( draft=> draft.xx );
@@ -488,23 +517,6 @@ export interface ISetFactoryOpts extends ISetStateOptions {
    * 同时也减少不必要的运行时分析性能损耗
    */
   enableDep?: boolean;
-}
-
-export interface IInnerSetStateOptions extends ISetFactoryOpts {
-  /** 跳过不执行的 fnKey */
-  skipFnKey?: boolean;
-  isFirstCall?: boolean;
-  insKey?: number;
-  /**
-   * 顶层 setState 回调里的 draft 是禁止依赖收集功能的，
-   * 避免 watch 回调首次执行时，回调里调用 setState(draft=>{ ... }) 收集到会造成死循环的依赖
-   */
-  disableDraftDep?: boolean;
-  /**
-   * default: true，
-   * 是否忽略cb返回值，setDraft 接口会设置为 false
-   */
-  handleCbReturn?: boolean;
 }
 
 export type SetState<T = any> = (
@@ -1445,14 +1457,20 @@ export interface IFnRenderInfo {
   getDeps: () => string[];
 }
 
-export interface IRenderInfo extends IFnRenderInfo {
+export interface IRenderInfo<T = any> extends IFnRenderInfo {
+  setDraft: SetDraft<T>;
   /**
    * 获取组件实例上一轮渲染阶段收集的依赖
    */
   getPrevDeps: () => string[];
 }
 
-export interface IInsRenderInfo {
+export interface ICompAtomCtx<T = any> extends IRenderInfo<T> {
+  state: T;
+  setState: SetState<T>;
+}
+
+export interface IInsRenderInfo<T = any> {
   /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
   sn: number;
   /** 实例 key */
@@ -1469,6 +1487,7 @@ export interface IInsRenderInfo {
    * 获取组件的前一次渲染周期里收集到依赖列表（注：依赖包含了 deps 函数固定住的依赖）
    */
   getPrevDeps: () => string[];
+  setDraft: SetDraft<T>;
 }
 
 export interface IInsCtx<T = Dict> {
@@ -1486,7 +1505,7 @@ export interface IInsCtx<T = Dict> {
   isDeep: boolean;
   /** 是否是第一次渲染 */
   isFirstRender: boolean;
-  /** 是否响应式 */
+  /** 是否响应式，使用 useReactive 生成 inCtx 时会标记为 true */
   isReactive: boolean;
   insKey: number;
   /** 记录一些需复用的中间生成的数据 */
@@ -1521,9 +1540,14 @@ export interface IInsCtx<T = Dict> {
    */
   canCollect: boolean;
   getDeps: IInsRenderInfo['getDeps'];
-  renderInfo: IInsRenderInfo;
+  renderInfo: IInsRenderInfo<T>;
   /** inner high frequency call func, for perf, no options */
   recordDep: (depKeyInfo: DepKeyInfo, parentType?: string, isValArrLike?: boolean) => void;
+  /**
+   * 未标记为 mounted 的组件需要触发更新时，将更新时机推入到 useEffect 里触发，避免以下问题
+   *  https://github.com/facebook/react/issues/18178
+   */
+  needEFUpdate: boolean;
 }
 
 export type InsCtxMap = Map<number, IInsCtx>;

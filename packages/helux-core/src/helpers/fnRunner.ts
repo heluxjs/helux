@@ -14,6 +14,7 @@ import { markComputing } from './fnStatus';
 const { MAY_TRANSFER } = ASYNC_TYPE;
 
 interface IRunFnOpt {
+  fromFnKey?: string;
   sn?: number;
   from?: From;
   force?: boolean;
@@ -38,11 +39,18 @@ interface IRunFnOpt {
  * TODO  后续优化拦截逻辑，提高可读性
  */
 function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
-  const { isFirstCall = false, triggerReasons = [], sn = 0, from, internal = fakeInternal, desc } = options;
+  const { isFirstCall = false, triggerReasons = [], sn = 0, from, internal = fakeInternal, desc, fromFnKey } = options;
   if (fnCtx.dcErrorInfo.err) {
     alertDepKeyDeadCycleErr(internal, fnCtx.dcErrorInfo);
     return;
   }
+
+  // 自己触发调用自己，已经触发了死循环
+  if (fnCtx.fnKey === fromFnKey) {
+    probeDepKeyDeadCycle(internal, fnCtx, fnCtx.depKeys);
+    return;
+  }
+
   // simpleWatch 的依赖时转移进去的，不需要判死循环，否则会照成误判
   // 设定了 checkDeadCycle 为 false，不检查死循环
   if (fnCtx.isSimpleWatch || !fnCtx.checkDeadCycle) {
@@ -70,7 +78,6 @@ function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
   // 提前 flush 可能已经存在的 reactive 对象，避免死循环误判
   // 此操作会自动找到对应的函数执行，下面逻辑无需再执行
   innerFlush(rmeta.sharedKey, rmeta.desc);
-  REACTIVE_META.del(rmeta.key);
 
   const isReactiveInCb = fnCtx.isRunning === true && rmeta.isTop;
   // 来自 watch(()=>{ r.a+=1 }, ()=>[s.a]) 的死循环
@@ -87,7 +94,7 @@ function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
 
   // 来自以下类似示例的死循环
   // 1 watch 对调用调用 watch(()=>{ r.a+=1 }, ()=>[s.a])
-  // 2 watch或mutate 中调用其他函数修改自身依赖 watch(()=>{ foo() }, ()=>[s.a]) function foo(){ reactiv.a+=1 }
+  // 2 watch或mutate 中调用其他函数修改自身依赖 watch(()=>{ foo() }, ()=>[s.a]) function foo(){ reactive.a+=1 }
   if (afterRunRmeta.isTop && afterRunRmeta.fnKey === fnCtx.fnKey && probeDepKeyDeadCycle(internal, fnCtx, afterRunRmeta.writeKeys)) {
     return;
   }

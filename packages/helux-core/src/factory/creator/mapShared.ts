@@ -1,6 +1,15 @@
 import { canUseDeep } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
-import type { IInnerSetStateOptions, InnerSetState, SetDraft, SetState, SetStateFactory, SharedState } from '../../types/base';
+import type {
+  IInnerSetStateOptions,
+  InnerSetState,
+  ISetFactoryOpts,
+  ISetStateOptions,
+  SetDraft,
+  SetState,
+  SetStateFactory,
+  SharedState,
+} from '../../types/base';
 import { runPartialCb } from '../common/util';
 import { buildInternal } from './buildInternal';
 import { REACTIVE_DESC } from './current';
@@ -15,8 +24,8 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   const ruleConf = parseRules(options);
   const isDeep = canUseDeep(deep);
 
-  const setStateImpl = (options: IInnerSetStateOptions = {}) => {
-    const mutateOptions = { ...options, forAtom, internal, sharedState };
+  const setStateImpl = (setFactoryOpts: ISetFactoryOpts = {}) => {
+    const mutateOptions = { internal, setFactoryOpts };
     // deep 模式修改： setState(draft=>{draft.x.y=1})
     const { finishMutate, draftRoot, draftNode } = isDeep ? prepareDeepMutate(mutateOptions) : prepareDowngradeMutate(mutateOptions);
     // 后续流程会使用到 getPartial 的返回结果，注意非 deep 模式的 setState只支持一层依赖收集
@@ -35,7 +44,7 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
       draftNode,
     };
   };
-  // 内部专用，支持预埋一些参数，返回对象里的 finish 句柄支持扩展其他参数，支持在 finish之前做一些其他操作
+  // 内部专用，支持预埋一些参数，返回对象里的 finish 句柄支持扩展其他参数，支持在 finish 之前做一些其他操作
   const setStateFactory: SetStateFactory = (options = {}) => {
     return setStateImpl(options);
   };
@@ -43,26 +52,31 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   const innerSetState: InnerSetState = (partialState, options = {}) => {
     return setStateImpl().finish(partialState, options);
   };
-  // 提供给 useAtom() useShared atom() share 返回的 setState 使用
-  const setState: SetState = (partialState, options) => {
+  const callSetState = (partialState: any, optArr: [boolean, boolean, ISetStateOptions | undefined]) => {
+    const [handleCbReturn, enableDep, setOptions] = optArr;
     // ATTENTION LABEL( flush )
     // 调用 setState 主动把响应式对象可能存在的变更先提交
     // reactive.a = 66;
     // setState(draft=>draft.a+100); // flush后回调里可拿到draft.a最新值为66
     flush(sharedState, REACTIVE_DESC.current(sharedKey));
-    const ret = setStateImpl();
-    return ret.finish(partialState, pureSetOptions(options));
+    const ret = setStateImpl({ handleCbReturn, enableDep });
+    return ret.finish(partialState, pureSetOptions(setOptions));
   };
-  const setDraft: SetDraft = (partialState, options) => {
-    flush(sharedState, REACTIVE_DESC.current(sharedKey));
-    const ret = setStateImpl({ handleCbReturn: false });
-    return ret.finish(partialState, pureSetOptions(options));
-  };
+  // 提供给 atom share sharex atomx 返回的 setState 使用
+  const setState: SetState = (partialState, options) => callSetState(partialState, [true, true, options]);
+  // 提供给 atom share sharex atomx 返回的 setDrart 使用
+  const setDraft: SetDraft = (partialState, options) => callSetState(partialState, [false, true, options]);
+  // 提供给 useAtom useAtomX 返回的 setState 使用
+  const insSetState: SetState = (partialState, options) => callSetState(partialState, [true, false, options]);
+  // 提供给 useAtom 返回的 renderInfo.setDrart 和 useAtomX 返回的 setDrart 使用
+  const insSetDraft: SetDraft = (partialState, options) => callSetState(partialState, [false, false, options]);
 
   const internal = buildInternal(options, {
     sharedState,
     setState,
     setDraft,
+    insSetState,
+    insSetDraft,
     setStateFactory,
     innerSetState,
     ruleConf,

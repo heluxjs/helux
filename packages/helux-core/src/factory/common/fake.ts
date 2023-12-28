@@ -5,7 +5,7 @@ export const fakeDraftRoot = { val: null, isFake: true };
 
 export const fakeMutateCtx = newMutateCtx({});
 
-export const fakeReativeMeta = newReactiveMeta();
+export const fakeReativeMeta = newReactiveMeta(true, { expired: true });
 
 // { [MUTATE_FN_ITEM]: 1, fn: fnItem, deps: noopArr, oriDesc: desc, desc, depKeys: [] }
 export const fakeMutateFnItem = newMutateFnItem();

@@ -156,16 +156,16 @@ setAtom((draft) => (draft[0].name = 'new'));
 ```
 
 ### 回调里修改、返回部分状态
+
 `setState`接口支持回调里修改既修改部分状态，同时也返回部分状态
 
 ```ts
 const [state1, setAtom] = atom({ a: 100, b: { b1: 1, b2: 2 }, c: { c1: 1, c2: 2 } });
 
-setAtom(draft=>{
+setAtom((draft) => {
   draft.b.b1 = 100;
   return { a: 1 }; // 👈 等效于写为：draft.a = 1
 });
-
 ```
 
 ## reactive
@@ -176,7 +176,7 @@ helux 提供全局响应式对象做修改，修改值会在下一次微任务�
 // 此处使用 atomx 替代 atom，方便一次解构即可获取 reactive 对象
 const { state, reactive } = atomx({ a: 100, b: { b1: 1, b2: 2 }, c: { c1: 1, c2: 2 } });
 
-async function modStateByReactive(){
+async function modStateByReactive() {
   reactive.b.b1 = 100;
   reactive.c.c1 = 100;
   console.log(reactive.b.b1); // 100
@@ -187,8 +187,6 @@ async function modStateByReactive(){
   console.log(state.b.b1); // 100
   console.log(state.c.c1); // 100
 }
-
 ```
-
 
 其余文档正在拼命建设中，有疑问可联系 [fantasticsoul](https://github.com/fantasticsoul) 或提 [issue](https://github.com/heluxjs/helux/issues) ....

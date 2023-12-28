@@ -8,8 +8,8 @@ import type { Dict, InsCtxMap } from '../../types/base';
 import { clearDiff, diffVal, hasChangedNode } from '../common/sharedScope';
 import { FN_DEP_KEYS } from '../creator/current';
 import type { InsCtxDef } from './buildInternal';
-import type { ICommitStateOptions } from './commitState';
 import { getGlobalEmptyInternal, getGlobalIdInsKeys } from './globalId';
+import type { ICommitOpts } from './mutateDeep';
 
 export function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
   const insCtx = insCtxMap.get(insKey) as InsCtxDef;
@@ -23,9 +23,9 @@ export function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
 /**
  * 相关依赖函数执行（render渲染函数，derive派生函数，watch观察函数）
  */
-export function execDepFns(opts: ICommitStateOptions) {
-  const { mutateCtx, internal, desc, isFirstCall, from, sn } = opts;
-  const { ids, globalIds, depKeys, triggerReasons } = mutateCtx;
+export function execDepFns(opts: ICommitOpts) {
+  const { mutateCtx, internal } = opts;
+  const { ids, globalIds, depKeys, triggerReasons, isFirstCall, from, sn, desc, fnKey: fromFnKey } = mutateCtx;
   const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;
 
   // these associate ins keys will be update
@@ -106,7 +106,7 @@ export function execDepFns(opts: ICommitStateOptions) {
   // start mark async derive fn computing
   dirtyAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   // start execute derive/watch fns
-  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, { depKeys, sn, from, triggerReasons, internal, desc, isFirstCall }));
+  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, { depKeys, sn, from, triggerReasons, internal, desc, isFirstCall, fromFnKey }));
 
   // start trigger rerender
   dirtyInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));

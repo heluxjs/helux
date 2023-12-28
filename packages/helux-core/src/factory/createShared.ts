@@ -126,7 +126,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const { stateType, apiCtx } = innerOptions;
   ensureGlobal(apiCtx, stateType);
   const { sharedRoot: state, sharedState: stateVal, internal } = buildSharedObject(innerOptions, createOptions);
-  const { syncer, sync, forAtom, setState, sharedKey, sharedKeyStr, rootValKey, reactive, reactiveRoot } = internal;
+  const { syncer, sync, forAtom, setState, setDraft, sharedKey, sharedKeyStr, rootValKey, reactive, reactiveRoot } = internal;
   const actionCreator = action(state);
   const actionTaskCreator = actionCreator(); // 注意此处是柯里化调用后才是目标 actionCreator
   const opt = { internal, from: MUTATE, apiCtx };
@@ -141,6 +141,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     state, // 指向 root
     stateVal, // atom 的话 stateVal 是拆箱后的值，share 对象的话，stateVal 指向 root 自身
     setState,
+    setDraft,
     defineActions: (throwErr?: boolean) => (actionDict: Dict<ActionTask>) => defineActions({ ...acCommon, actionDict }, throwErr),
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>
       defineActions({ ...acCommon, actionDict, forTp: true }, throwErr),

@@ -26,6 +26,7 @@ export const {
   watch,
   // hooks api
   useAtom,
+  useAtomX,
   useReactive,
   useDerived,
   useWatch,

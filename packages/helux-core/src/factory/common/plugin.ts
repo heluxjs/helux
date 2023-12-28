@@ -1,6 +1,6 @@
 import { STATE_TYPE } from '../../consts';
 import { EVENT_NAME } from '../../consts/user';
-import { Dict, Fn, IInnerSetStateOptions, IPlugin, PluginCtx } from '../../types/base';
+import { Dict, Fn, IMutateCtx, IPlugin, PluginCtx } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 
@@ -20,11 +20,10 @@ export function addPlugin(plugin: IPlugin) {
 /**
  * 发射数据已变更事件到已安装插件
  */
-export function emitDataChanged(internal: TInternal, options: IInnerSetStateOptions, inputDesc?: string) {
+export function emitDataChanged(internal: TInternal, mutateCtx: IMutateCtx) {
   const { bus } = getRootCtx();
   if (bus.canEmit(ON_DATA_CHANGED)) {
-    const { from = 'Api' } = options;
-    const desc = options.desc || inputDesc || 'setState';
+    const { from, desc } = mutateCtx;
     const { sharedKey, moduleName, snap, usefulName, stateType } = internal;
     let type;
     if (loadingTypes.includes(stateType)) {
@@ -61,7 +60,7 @@ export function emitPluginEvent(internal: TInternal, evName: string, data: Dict)
 
 export function emitErr(internal: TInternal, err: Error) {
   // 未安装错误捕捉插件时，提示作者出现错误的位置
-  if (!emitPluginEvent(internal, EVENT_NAME.ON_ERROR_OCCURED, { err })) {
+  if (!emitPluginEvent(internal, ON_ERROR_OCCURED, { err })) {
     console.warn('found uncaught error, sugguest add a plugin to handle this error');
     console.error(err);
   }

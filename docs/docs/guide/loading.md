@@ -2,11 +2,10 @@
 group:
   title: 基础
   order: 0
-order: 1 
+order: 1
 ---
 
 # 加载状态
-
 
 可使用 `getMutateLoading` 、 `getActionLoading` 、`getDeriveLoading` 获取相对于的 loading 状态
 

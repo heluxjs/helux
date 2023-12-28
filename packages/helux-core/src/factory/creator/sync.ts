@@ -49,7 +49,7 @@ function createSyncFn(innerSetState: InnerSetState, path: string[], before?: Fn)
         const newVal = before?.(val, params);
         setVal(draftRoot, path, newVal !== undefined ? newVal : val);
       },
-      { from: FROM.SYNC, calledBy: 'sync' },
+      { from: FROM.SYNC },
     );
   };
   return syncFn;

@@ -45,9 +45,15 @@ function getInsDeps(insCtx: InsCtxDef, isCurrent: boolean) {
 export function runInsUpdater(insCtx: InsCtxDef | undefined) {
   if (!insCtx) return;
   const { updater, mountStatus, createTime } = insCtx;
-  if (mountStatus === NOT_MOUNT && Date.now() - createTime > EXPIRE_MS) {
-    return clearDep(insCtx);
+  if (mountStatus === NOT_MOUNT) {
+    if (Date.now() - createTime > EXPIRE_MS) {
+      clearDep(insCtx);
+    } else {
+      insCtx.needEFUpdate = true;
+    }
+    return;
   }
+
   updater();
 }
 
@@ -123,10 +129,6 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     isReactive = false,
   } = options;
   const arrIndexDep = !arrDep ? true : options.arrIndexDep ?? true;
-  if (!getInternal(sharedState)) {
-    debugger;
-  }
-
   const internal = getInternal(sharedState);
   if (!internal) {
     throw new Error('ERR_OBJ_NOT_SHARED: input object is not a result returned by share api');
@@ -153,6 +155,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     updater,
     mountStatus: NOT_MOUNT,
     renderStatus: RENDER_START,
+    needEFUpdate: false,
     createTime: Date.now(),
     rootVal: null,
     ver,
@@ -170,6 +173,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     extra: {},
     getDeps: () => getInsDeps(insCtx, true),
     renderInfo: {
+      setDraft: internal.insSetDraft,
       time: Date.now(),
       sn: 0,
       snap,

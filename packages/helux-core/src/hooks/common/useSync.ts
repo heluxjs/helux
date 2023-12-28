@@ -9,7 +9,7 @@ export function useSync(api: CoreApiCtx, ...args: any[]) {
   try {
     api.react.useSyncExternalStore(...args);
   } catch (err) {
-    // ReactDevTooll sometimes throw this strange bug:
+    // ReactDevTool sometimes throw this strange bug:
     // dispatcher.useSyncExternalStore is not a function
     console.error(err);
   }

@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.20
+| helux-core@3.5.21
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -26,6 +26,7 @@ import type {
   Fn,
   IAtomCtx,
   IBlockOptions,
+  ICompAtomCtx,
   ICreateOptions,
   IDeriveFnItem,
   IDeriveTaskOptions,
@@ -61,7 +62,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.20';
+export declare const VER: '3.5.21';
 
 export declare const LIMU_VER: string;
 
@@ -237,7 +238,15 @@ export function watch(
 export function useAtom<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
-): [T extends ReadOnlyAtom ? AtomValType<T> : T, SetState<T>, IInsRenderInfo];
+): [T extends ReadOnlyAtom ? AtomValType<T> : T, SetState<T>, IInsRenderInfo<T>];
+
+/**
+ * 区别于 useAtom，useAtomX 返回对象
+ */
+export function useAtomX<T = any>(
+  sharedState: T,
+  options?: IUseSharedStateOptions<T>,
+): T extends ReadOnlyAtom ? ICompAtomCtx<AtomValType<T>> : ICompAtomCtx<T>;
 
 export function useReactive<T = any>(
   sharedState: T,

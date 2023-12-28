@@ -1,4 +1,4 @@
-export { useAtom } from './useAtom';
+export { useAtom, useAtomX } from './useAtom';
 export { useDerived } from './useDerived';
 export { useGlobalForceUpdate } from './useGlobalForceUpdate';
 export { useGlobalId } from './useGlobalId';

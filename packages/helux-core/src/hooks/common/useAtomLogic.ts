@@ -1,5 +1,5 @@
 import { Fn } from 'helux';
-import { MOUNTED, RENDER_END, RENDER_START } from '../../consts';
+import { RENDER_END, RENDER_START } from '../../consts';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { INS_CTX } from '../../factory/creator/current';
 import { buildInsCtx } from '../../helpers/insCtx';
@@ -41,8 +41,11 @@ function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
     if (insCtx.collectType === 'first') {
       insCtx.canCollect = false;
     }
+    if (insCtx.needEFUpdate) {
+      insCtx.needEFUpdate = false;
+      insCtx.updater();
+    }
 
-    insCtx.mountStatus = MOUNTED;
     recoverInsCtx(insCtx);
     return () => {
       delInsCtx(insCtx);

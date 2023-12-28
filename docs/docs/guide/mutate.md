@@ -2,11 +2,10 @@
 group:
   title: 基础
   order: 1
-order: 1 
+order: 1
 ---
 
 # 派生 - Mutate
-
 
 由于 `atom` 和 `share` 返回的对象天生自带依赖追踪特性，当共享对象 a 的发生变化后需要自动引起共享状态 b 的某些节点变化时，可定义 `mutate` 函数来完成这种变化的连锁反应关系，对数据做最小粒度的更新
 
@@ -31,7 +30,10 @@ const [finalPriceState] = share(
 需要响应多个不同上游状态的值变化，计算多个节点新值时，定义 `mutate` 为对象即可
 
 ```tsx
-const [priceState] = share({ base1: 1, base2: { forStudent: 1, forTeacher: 2 } });
+const [priceState] = share({
+  base1: 1,
+  base2: { forStudent: 1, forTeacher: 2 },
+});
 const [finalPriceState] = share(
   // 这里仅负责定义初始值，变化规则见 options.mutate 定义
   { final1: 0, final2: { student: 0, teacher: 0 } },
@@ -41,7 +43,8 @@ const [finalPriceState] = share(
       // 仅当 priceState 的 base1 变化时，计算 finalAtom 的 final1 值
       changeFinal1: (draft) => (draft.final1 = priceState.base1 + 20),
       // 仅当 priceState 的 base2.forStudent 变化时，计算 finalAtom 的 final2.student 值
-      changeFinal2: (draft) => (draft.final2.student = priceState.base2.forStudent + 100),
+      changeFinal2: (draft) =>
+        (draft.final2.student = priceState.base2.forStudent + 100),
     },
   },
 );
@@ -58,8 +61,14 @@ function Demo() {
 ```ts
 {
   mutate: [
-    { desc: 'changeFinal1', fn: (draft) => (draft.final1 = priceState.base1 + 20) },
-    { desc: 'changeFinal2', fn: (draft) => (draft.final2.student = priceState.base2.forStudent + 100) },
+    {
+      desc: 'changeFinal1',
+      fn: (draft) => (draft.final1 = priceState.base1 + 20),
+    },
+    {
+      desc: 'changeFinal2',
+      fn: (draft) => (draft.final2.student = priceState.base2.forStudent + 100),
+    },
   ];
 }
 ```
@@ -221,7 +230,11 @@ witness.callTask();
 import { atom, share, derive, driveAtom } from 'helux';
 
 const [numAtom] = atom(5);
-const [info] = share({ a: 50, c: { c1: 100, c2: 1000 }, list: [{ name: 'one', age: 1 }] });
+const [info] = share({
+  a: 50,
+  c: { c1: 100, c2: 1000 },
+  list: [{ name: 'one', age: 1 }],
+});
 
 // 派生返回对象，派生函数首次运行后，仅在 numAtom.va 或 info.c.c1 发生变化后才会重运行计算出新的 result
 const result = derive(() => {
@@ -260,8 +273,8 @@ const result = deriveAsync({
 
 派生结果是支持复用，形成派生链
 
-
 // 以下为伪代码
+
 <!-- const result1 = derive(...);
 const result2 = driveAtom(...);
 const result3 = deriveAsync(...);
@@ -269,7 +282,6 @@ const result3 = deriveAsync(...);
 const result4 = derive(()=>{
   return { num: result.a + 1, plus: result2.val + 100, final: result3.num + 100 };
 }); -->
-
 
 ### 组件使用全量派生结果
 

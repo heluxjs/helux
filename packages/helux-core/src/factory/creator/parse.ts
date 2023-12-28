@@ -91,6 +91,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
       writeKeys: [],
       checkDeadCycle: undefined,
       watchKey: '',
+      isFake: false,
     };
   } else if (isObj(fnItem)) {
     const { fn, desc, deps, task, immediate, checkDeadCycle, onlyDeps = false } = fnItem;
@@ -112,6 +113,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
         immediate,
         depKeys: [],
         writeKeys: [],
+        isFake: false,
       };
     }
   }
@@ -184,7 +186,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const mutateFnDict = parseMutate(mutate);
 
   return {
-    /** TODO 未来支持 atom 对象销毁 */
+    /** TODO 未来可能支持 atom 对象销毁 */
     isDestroyed: false,
     alertDeadCycleErr,
     checkDeadCycle,
