@@ -1,5 +1,13 @@
 # helux
 
+## 3.5.21
+
+### Patch Changes
+
+- 6c07215: add setDraft, optimize reactiveMeta, add needEFUpdate
+- Updated dependencies [6c07215]
+  - @helux/core@3.5.21
+
 ## 3.5.20
 
 ### Patch Changes

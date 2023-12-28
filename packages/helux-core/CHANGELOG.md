@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.21
+
+### Patch Changes
+
+- 6c07215: add setDraft, optimize reactiveMeta, add needEFUpdate
+  - @helux/hooks-impl@3.5.21
+  - @helux/types@3.5.21
+  - @helux/utils@3.5.21
+
 ## 3.5.20
 
 ### Patch Changes
