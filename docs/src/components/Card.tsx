@@ -15,7 +15,7 @@ export type CardProps = React.PropsWithChildren<{
   footer?: ReactNode;
 }>;
 
-const Card: ReactFC<CardProps> = (props) => {
+export const Card: ReactFC<CardProps> = (props) => {
   const { title, enable = true, visible = true, buttons = [] } = props;
 
   return (
@@ -46,5 +46,3 @@ const Card: ReactFC<CardProps> = (props) => {
     </div>
   );
 };
-
-export default Card;
