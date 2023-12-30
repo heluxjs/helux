@@ -2,4 +2,4 @@ prefer-workspace-packages: true
 packages:
   - 'packages/*'
   - 'examples/*'
-  - 'docs'
+  - 'docs-src'

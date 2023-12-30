@@ -19,7 +19,7 @@
     "cpdoc": "rm -rf ../helux-gh-pages/* && cp -r ./doc/build/* ../helux-gh-pages",
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
     "cpdoc2": "rm -rf ../helux-gh-pages/* && cp -r ./docs/docs-dist/* ../helux-gh-pages",
-    "doc2": "pnpm --filter=helux-docs run docs:build && npm run cpdoc2",
+    "doc2": "pnpm --filter=helux-docs run docs:build",
     "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' --ignore-path .gitignore --ignore-unknown",
     "limu": "pnpm i limu@latest --filter @helux/core",
     "prepare": "husky install",
