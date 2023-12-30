@@ -15,7 +15,7 @@ export type CardProps = React.PropsWithChildren<{
   footer?: ReactNode;
 }>;
 
-export const Card: ReactFC<CardProps> = (props) => {
+export const Card: ReactFC<CardProps> = (props: any) => {
   const { title, enable = true, visible = true, buttons = [] } = props;
 
   return (
@@ -38,8 +38,8 @@ export const Card: ReactFC<CardProps> = (props) => {
         }}
       >
         <span style={{ color: enable ? '#222' : 'gray' }}>{title}</span>
-        {buttons.map((Btn) => (
-          <Btn />
+        {buttons.map((Btn: any, idx: number) => (
+          <Btn key={idx} />
         ))}
       </div>
       <div style={{ padding: '12px' }}>{props.children}</div>

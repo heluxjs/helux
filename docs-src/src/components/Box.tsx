@@ -13,7 +13,7 @@ export type BoxProps = React.PropsWithChildren<{
   enable?: boolean;
 }>;
 
-export const Box: ReactFC<BoxProps> = (props) => {
+export const Box: ReactFC<BoxProps> = (props: any) => {
   const { title, enable = true, visible = true } = props;
   return (
     <div

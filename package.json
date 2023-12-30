@@ -16,8 +16,10 @@
     "build_helux": "pnpm --filter=helux run build",
     "changeset": "changeset",
     "commitlint": "commitlint -e $HUSKY_GIT_PARAMS",
-    "cpdoc": "rm -rf ../my-opensource/helux-gh-pages/* && cp -r ./doc/build/* ../my-opensource/helux-gh-pages",
+    "cpdoc": "rm -rf ../helux-gh-pages/* && cp -r ./doc/build/* ../helux-gh-pages",
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
+    "cpdoc2": "rm -rf ../helux-gh-pages/* && cp -r ./docs/docs-dist/* ../helux-gh-pages",
+    "doc2": "pnpm --filter=helux-docs run docs:build && npm run cpdoc2",
     "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' --ignore-path .gitignore --ignore-unknown",
     "limu": "pnpm i limu@latest --filter @helux/core",
     "prepare": "husky install",
@@ -71,7 +73,7 @@
     "tslib": "^1.14.1",
     "tsup": "^8.0.0",
     "turbo": "^1.10.16",
-    "typescript": "4.8.3"
+    "typescript": "4.9.5"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
