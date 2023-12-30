@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useRouteMeta, useSidebarData } from 'dumi';
+import { type FC } from 'react';
 import Toc from '../Toc';
-import React, { type FC } from 'react';
 import './index.less';
 
 const Sidebar: FC = () => {

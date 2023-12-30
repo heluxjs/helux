@@ -3,8 +3,8 @@
 import { ReactComponent as IconDown } from '@ant-design/icons-svg/inline-svg/outlined/down.svg';
 import { ReactComponent as GitHub } from '@ant-design/icons-svg/inline-svg/outlined/github.svg';
 import { Link, useLocation, useNavData } from 'dumi';
+import { useState, type FC } from 'react';
 import NavbarExtra from '../NavbarExtra';
-import React, { useState, type FC } from 'react';
 import './index.less';
 
 const NavbarItem: FC<{ data: ReturnType<typeof useNavData>[0] }> = ({
@@ -45,7 +45,6 @@ const NavbarItem: FC<{ data: ReturnType<typeof useNavData>[0] }> = ({
       ? { className: 'active' }
       : {};
 
-
   console.log('--->', data);
   return data.link ? (
     <>
@@ -79,7 +78,11 @@ function getLinkTitle(item: ReturnType<typeof useNavData>[number]) {
     //   <GitHub style={{ width: '18px', verticalAlign: 'middle' }} />
     // </div>
 
-    return <span>{item.title} <GitHub style={{ width: '18px', verticalAlign: 'top' }} /></span>
+    return (
+      <span>
+        {item.title} <GitHub style={{ width: '18px', verticalAlign: 'top' }} />
+      </span>
+    );
   }
   return item.title;
 }

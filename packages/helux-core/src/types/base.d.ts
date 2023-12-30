@@ -519,6 +519,21 @@ export interface ISetFactoryOpts extends IInnerSetStateOptions {
   enableDep?: boolean;
 }
 
+/**
+ * 注意箭头函数里draft赋值的隐含返回值问题
+ * ```ts
+ * const ctx = atomx({a:1, b:2});
+ * ctx.setState(draft => draft.a = 1) // ❌ ts 校验失败
+ *
+ * // ✅ 以下3种方式 ts 校验通过
+ * // 1 使用void包裹，消除隐式返回值
+ * ctx.setState(draft => void(draft.a = 1))
+ * // 2 使用 {} 包裹箭头函数体
+ * ctx.setState(draft => {draft.a = 1})
+ * // 或使用 setDraft
+ * ctx.setDraft(draft => draft.a = 1)
+ * ```
+ */
 export type SetState<T = any> = (
   partialStateOrRecipeCb: T extends Atom | ReadOnlyAtom ? PartialArgType<AtomValType<T>> : PartialArgType<T>,
   options?: ISetStateOptions,
@@ -536,12 +551,6 @@ export type SetDraft<T = any> = (
   partialStateOrRecipeCb: T extends Atom | ReadOnlyAtom ? PartialDraftArgType<AtomValType<T>> : PartialDraftArgType<T>,
   options?: ISetStateOptions,
 ) => NextSharedDict<T>;
-
-/**
- * 区别于 setState, setDraft 不处理返回值
- * TODO 待实现
- */
-// export type SetDraft<T = any> = ...
 
 export type InnerSetState<T = any> = (
   partialStateOrRecipeCb: T extends Atom | ReadOnlyAtom ? PartialArgType<AtomValType<T>> : PartialArgType<T>,
@@ -693,6 +702,18 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    * 配置 onRead 钩子函数
    */
   setOnReadHook: (onRead: OnRead) => void;
+  /**
+   * 是否禁止 mutate 再次执行（ 首次一定执行，此函数只能禁止是否再次执行 ）
+   * ```ts
+   *  setEnableMutate(false); // 禁止
+   *  setEnableMutate(true); // 恢复
+   * ```
+   */
+  setEnableMutate: (enabled: boolean) => void;
+  /**
+   * 获取 enableMutate 值
+   */
+  getEnableMutate: () => boolean;
   /** 共享状态唯一 key */
   sharedKey: number;
   sharedKeyStr: string;
@@ -1000,11 +1021,10 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   defineFullDerive: <DR extends DepsResultDict | undefined = undefined>(
     throwErr?: boolean,
   ) => <
-    D
-    /**
+    D extends /**
      * 如果透传了 DR 约束返回结果类型和 deps 返回类型，则使用 DR 来约束
      * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
-     */ extends DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
+     */ DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
   >(
     deriveFnDict: D,
   ) => {

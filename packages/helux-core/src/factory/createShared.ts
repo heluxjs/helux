@@ -133,7 +133,6 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const createFn = createSharedLogic;
   const ldAction = initLoadingCtx(createFn, { ...opt, from: ACTION });
   const ldMutate = initLoadingCtx(createFn, opt);
-  const setOnReadHook = (onRead: Fn) => (internal.onRead = onRead);
   const common = { createFn, internal, apiCtx };
   const acCommon = { ...common, ldAction, actionCreator };
 
@@ -142,6 +141,9 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     stateVal, // atom 的话 stateVal 是拆箱后的值，share 对象的话，stateVal 指向 root 自身
     setState,
     setDraft,
+    setEnableMutate: (enabled: boolean) => (internal.enableMutate = enabled),
+    getEnableMutate: () => internal.enableMutate,
+    setOnReadHook: (onRead: Fn) => (internal.onRead = onRead),
     defineActions: (throwErr?: boolean) => (actionDict: Dict<ActionTask>) => defineActions({ ...acCommon, actionDict }, throwErr),
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>
       defineActions({ ...acCommon, actionDict, forTp: true }, throwErr),
@@ -163,7 +165,6 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     useActionLoading: ldAction.useLoading,
     sync,
     syncer,
-    setOnReadHook,
     sharedKey,
     sharedKeyStr,
     rootValKey,

@@ -52,7 +52,7 @@ export function prepareDowngradeMutate(opts: IPrepareMutateOpts) {
     });
   const downgradeDraft = toShallowProxy(copied, 1, []);
   // 记录正在执行中的 draftRoot mutateCtx
-  DRAFT_ROOT.set(downgradeDraft);
+  DRAFT_ROOT.set(downgradeDraft, forAtom);
   MUTATE_CTX.set(mutateCtx);
   const draftNode = forAtom ? downgradeDraft.val : downgradeDraft;
 

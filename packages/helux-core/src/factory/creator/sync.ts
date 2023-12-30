@@ -41,9 +41,8 @@ function createSyncFn(innerSetState: InnerSetState, path: string[], before?: Fn)
     let val = getEventVal(evOrVal);
     innerSetState(
       (draft: any) => {
-        // 使用 draftRoot 做赋值，透传拆箱后的 draft 给用户（ 如果是 atom ）
-        const draftRoot = DRAFT_ROOT.current();
-        const isAtom = draft !== draftRoot;
+        // 透传 draftRoot 给用户，方便对 primitive atom 做赋值操作
+        const { isAtom, draftRoot } = DRAFT_ROOT.current();
         const params = { draft, draftRoot, path, isAtom, UNDEFINED };
         // before函数里用户还可以修改其他数据或返回 path 对应的数据新值
         const newVal = before?.(val, params);

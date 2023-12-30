@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.21
+| helux-core@3.5.22
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.21';
+export declare const VER: '3.5.22';
 
 export declare const LIMU_VER: string;
 
@@ -105,6 +105,7 @@ export declare const RECORD_LOADING: {
 export function share<T extends PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
+  // ): readonly [ReadOnlyDict<T>, SetDraft<T>, ISharedCtx<T>];
 ): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T>];
 
 /**
@@ -114,6 +115,7 @@ export function atom<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions
   rawState: T | (() => T),
   createOptions?: O,
 ): readonly [ReadOnlyAtom<T>, SetState<T>, IAtomCtx<T>];
+// ): readonly [ReadOnlyAtom<T>, AtomTupleSetState<Atom<T>>, IAtomCtx<T>];
 
 /**
  * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] sharex 返回 ctx 自身
@@ -238,7 +240,12 @@ export function watch(
 export function useAtom<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
-): [T extends ReadOnlyAtom ? AtomValType<T> : T, SetState<T>, IInsRenderInfo<T>];
+): [
+  T extends ReadOnlyAtom ? AtomValType<T> : T,
+  // AtomTupleSetState<T>,
+  SetState<T>,
+  IInsRenderInfo<T>,
+];
 
 /**
  * 区别于 useAtom，useAtomX 返回对象

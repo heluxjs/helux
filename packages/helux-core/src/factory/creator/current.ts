@@ -2,10 +2,10 @@ import { noop } from '@helux/utils';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import type { Fn } from '../../types/base';
 import type { IReactiveMeta } from '../../types/inner';
-import { fakeDraftRoot, fakeMutateCtx, fakeReativeMeta } from '../common/fake';
+import { fakeDraftRootMeta, fakeMutateCtx, fakeReativeMeta } from '../common/fake';
 
-/** 正在执行中的 rootDrft */
-let CURRENT_DRAFT_ROOT = fakeDraftRoot;
+/** 正在执行中的 rootDrft meta 数据 */
+let CURRENT_DRAFT_ROOT_META = fakeDraftRootMeta;
 /** 正在执行中的 mutateCtx */
 let CURRENT_MUTATE_CTX = fakeMutateCtx;
 /** 正在执行中的回调里的 reactive 对象 */
@@ -32,7 +32,7 @@ let CURRENT_FN_DEPS: string[] = [];
 let CURRENT_TRIGGERED_WATCH = '';
 
 export function currentDraftRoot() {
-  return CURRENT_DRAFT_ROOT;
+  return CURRENT_DRAFT_ROOT_META;
 }
 
 /** 当前正在被触发运行的 watch 函数 key */
@@ -77,9 +77,11 @@ export const INS_CTX = {
 
 export const DRAFT_ROOT = {
   /** may use ' get current(){}...' in the future */
-  current: () => CURRENT_DRAFT_ROOT,
-  set: (draftRoot: any) => (CURRENT_DRAFT_ROOT = draftRoot),
-  del: () => (CURRENT_DRAFT_ROOT = fakeDraftRoot),
+  current: () => CURRENT_DRAFT_ROOT_META,
+  set: (draftRoot: any, isAtom: boolean) => {
+    Object.assign(CURRENT_DRAFT_ROOT_META, { draftRoot, isAtom, isFake: false });
+  },
+  del: () => (CURRENT_DRAFT_ROOT_META = fakeDraftRootMeta),
 };
 
 export const MUTATE_CTX = {

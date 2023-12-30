@@ -153,7 +153,7 @@ export function prepareDeepMutate(opts: IPrepareMutateOpts) {
   });
 
   // 记录正在执行中的 draftRoot mutateCtx
-  DRAFT_ROOT.set(draftRoot);
+  DRAFT_ROOT.set(draftRoot, forAtom);
   MUTATE_CTX.set(mutateCtx);
   const draftNode = getStateNode(draftRoot, forAtom);
   // atom draft 自动拆箱

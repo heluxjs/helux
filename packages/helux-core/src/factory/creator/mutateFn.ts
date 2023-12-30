@@ -258,6 +258,11 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         if (isFirstCall) {
           initFnItem(internal, item);
         }
+        // 调用了 ctx.setEnableMutate 设置 enableMutate 为 false
+        // https://github.com/heluxjs/helux/issues/102
+        if (!isFirstCall && !internal.enableMutate) {
+          return;
+        }
 
         const { desc, fn, task, immediate } = item;
         const dc = inDeadCycle(usefulName, desc);

@@ -1,7 +1,7 @@
 import { buildInternal } from '../creator/buildInternal';
 import { newFnCtx, newMutateCtx, newMutateFnItem, newReactiveMeta } from './ctor';
 
-export const fakeDraftRoot = { val: null, isFake: true };
+export const fakeDraftRootMeta = { draftRoot: { val: null }, isFake: true, isAtom: true };
 
 export const fakeMutateCtx = newMutateCtx({});
 

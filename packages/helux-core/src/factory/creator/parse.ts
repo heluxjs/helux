@@ -205,6 +205,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     mutate,
     mutateFnDict,
     onRead: null as any, // 等待 setOnReadHook 写入
+    enableMutate: true,
     stateType,
     recordLoading,
     stopArrDep,

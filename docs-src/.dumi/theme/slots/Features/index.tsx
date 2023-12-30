@@ -46,7 +46,7 @@ const Features: FC = () => {
           padding: '24px 24px',
           boxSizing: 'border-box',
           height: '270px',
-        }
+        };
         return (
           <div
             key={title}
@@ -54,12 +54,20 @@ const Features: FC = () => {
             style={stWrap}
           >
             <div style={{ textAlign: 'center' }}>
-              <img src={getImg(idx)} style={{ width: '88px', height: '88px' }}></img>
+              <img
+                src={getImg(idx)}
+                style={{ width: '88px', height: '88px' }}
+              ></img>
             </div>
-            <span style={{color:'#443082'}}>{title && <h2>{titleWithLink || title}</h2>}</span>
-            <span style={{color:'#ad4e00'}}> {description && (
-              <p dangerouslySetInnerHTML={{ __html: description }} />
-            )}</span>
+            <span style={{ color: '#443082' }}>
+              {title && <h2>{titleWithLink || title}</h2>}
+            </span>
+            <span style={{ color: '#ad4e00' }}>
+              {' '}
+              {description && (
+                <p dangerouslySetInnerHTML={{ __html: description }} />
+              )}
+            </span>
           </div>
         );
       })}
