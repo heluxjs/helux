@@ -29,7 +29,7 @@ const [finalPriceState] = share(
 
 需要响应多个不同上游状态的值变化，计算多个节点新值时，定义 `mutate` 为对象即可
 
-```tsx
+```ts
 const [priceState] = share({
   base1: 1,
   base2: { forStudent: 1, forTeacher: 2 },
