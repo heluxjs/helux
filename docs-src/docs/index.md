@@ -21,5 +21,3 @@ features:
   - title: middle&plugin
     description: 内置中间件和插件系统，无缝衔接redux生态优秀组件
 ---
-
-helux-docs
