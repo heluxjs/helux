@@ -1,7 +1,7 @@
 {
-  "private": true,
   "name": "helux-docs",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "private": true,
   "description": "A state library that integrates atom, signal, derive, watch and collection dep",
   "license": "MIT",
   "module": "dist/index.js",
@@ -12,8 +12,8 @@
   "scripts": {
     "build": "father build",
     "build:watch": "father dev",
-    "dev": "dumi dev",
     "d": "dumi build",
+    "dev": "dumi dev",
     "docs:build": "dumi build",
     "doctor": "father doctor",
     "lint": "npm run lint:es && npm run lint:css",
@@ -50,7 +50,7 @@
     "@makotot/ghostui": "^2.0.0",
     "animated-scroll-to": "^2.3.0",
     "classnames": "^2.5.0",
-    "helux": "workspace:^3.5.21",
+    "helux": "workspace:^3.5.22",
     "lodash": "^4.17.21",
     "rc-motion": "^2.9.0",
     "rc-tree": "^5.8.2",

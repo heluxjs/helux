@@ -1,5 +1,12 @@
 # @helux/preact
 
+## 3.5.22
+
+### Patch Changes
+
+- Updated dependencies [f7f12ade]
+  - @helux/core@3.5.22
+
 ## 3.5.21
 
 ### Patch Changes

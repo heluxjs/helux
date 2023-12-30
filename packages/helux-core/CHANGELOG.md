@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.5.22
+
+### Patch Changes
+
+- f7f12ade: add setEnableMutate getEnableMutate
+  - @helux/hooks-impl@3.5.22
+  - @helux/types@3.5.22
+  - @helux/utils@3.5.22
+
 ## 3.5.21
 
 ### Patch Changes
