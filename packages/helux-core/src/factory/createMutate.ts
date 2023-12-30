@@ -87,8 +87,11 @@ function configureMutateFn(options: IConfigureMutateFnOpt) {
     throw new Error('not a fn or fnItem { fn }');
   }
   internal.mutateFnDict[stdFnItem.desc] = stdFnItem;
+  stdFnItem.enabled = internal.enableMutate;
   const dict = { [stdFnItem.desc]: stdFnItem };
-  watchAndCallMutateDict({ target, dict });
+  if (internal.enableMutate) {
+    watchAndCallMutateDict({ target, dict });
+  }
   return makeWitness(target, stdFnItem.desc, stdFnItem.oriDesc, internal);
 }
 
@@ -98,8 +101,10 @@ function configureMutateFn(options: IConfigureMutateFnOpt) {
 function configureMutateDict(options: IConfigureMutateDictOpt): any {
   const { target, fnDict, label } = options;
   const internal = checkSharedStrict(target, { label });
-  const dict = parseMutate(fnDict, internal.mutateFnDict); // trust dict here
-  watchAndCallMutateDict({ target, dict });
+  const dict = parseMutate(fnDict, internal.mutateFnDict, internal.enableMutate); // trust dict here
+  if (internal.enableMutate) {
+    watchAndCallMutateDict({ target, dict });
+  }
   const witnessDict: Dict<IMutateWitness> = {}; // 具体类型定义见 types-api multiDict
   Object.keys(dict).forEach((desc) => {
     witnessDict[desc] = makeWitness(target, desc, desc, internal);

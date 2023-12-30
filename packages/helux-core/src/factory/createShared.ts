@@ -2,7 +2,18 @@ import { FROM, STATE_TYPE } from '../consts';
 import { innerRunDerive, innerRunDeriveTask } from '../helpers/fnRunner';
 import { useAtom, useDerived, useGlobalForceUpdate, useLocalForceUpdate, useMutable, useReactive } from '../hooks';
 import type { CoreApiCtx } from '../types/api-ctx';
-import type { Action, ActionTask, Dict, Fn, IAtomCtx, ICreateOptions, IRunMutateOptions, ISharedCtx } from '../types/base';
+import type {
+  Action,
+  ActionTask,
+  CtxConfOptions,
+  Dict,
+  Fn,
+  IAtomCtx,
+  ICreateOptions,
+  IRunMutateOptions,
+  ISharedCtx,
+  MutateFnStdDict,
+} from '../types/base';
 import { action } from './createAction';
 import { derive } from './createDerived';
 import { mutate, mutateDict, runMutate, runMutateTask } from './createMutate';
@@ -122,6 +133,28 @@ function defineFullDerive(options: { apiCtx: CoreApiCtx; deriveFnDict: Dict; thr
   return { result, helper };
 }
 
+function setEnableMutate(enabled: boolean, internal: TInternal) {
+  internal.enableMutate = enabled;
+  if (enabled) {
+    const { mutateFnDict } = internal;
+    const teBeRunFns: MutateFnStdDict = {};
+    Object.keys(mutateFnDict).forEach((key) => {
+      const fnItem = mutateFnDict[key];
+      if (!fnItem.enabled) {
+        // 标记已启用，下次不会被查出来
+        fnItem.enabled = true;
+        teBeRunFns[key] = fnItem;
+      }
+    });
+    mutateDict(internal.sharedState)(teBeRunFns);
+  }
+}
+
+function getConfOptions(internal: TInternal): CtxConfOptions {
+  const { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate } = internal;
+  return { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate };
+}
+
 export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: any): any {
   const { stateType, apiCtx } = innerOptions;
   ensureGlobal(apiCtx, stateType);
@@ -141,8 +174,8 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     stateVal, // atom 的话 stateVal 是拆箱后的值，share 对象的话，stateVal 指向 root 自身
     setState,
     setDraft,
-    setEnableMutate: (enabled: boolean) => (internal.enableMutate = enabled),
-    getEnableMutate: () => internal.enableMutate,
+    setEnableMutate: (enabled: boolean) => setEnableMutate(enabled, internal),
+    getConfOptions: () => getConfOptions(internal),
     setOnReadHook: (onRead: Fn) => (internal.onRead = onRead),
     defineActions: (throwErr?: boolean) => (actionDict: Dict<ActionTask>) => defineActions({ ...acCommon, actionDict }, throwErr),
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>

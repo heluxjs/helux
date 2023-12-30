@@ -127,6 +127,7 @@ export function newMutateFnItem(partial?: Partial<IMutateFnStdItem>): IMutateFnS
     checkDeadCycle: undefined,
     watchKey: '',
     isFake,
+    enabled: true,
     ...rest,
   };
   return base;

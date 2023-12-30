@@ -260,7 +260,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
         }
         // 调用了 ctx.setEnableMutate 设置 enableMutate 为 false
         // https://github.com/heluxjs/helux/issues/102
-        if (!isFirstCall && !internal.enableMutate) {
+        if (!internal.enableMutate) {
           return;
         }
 

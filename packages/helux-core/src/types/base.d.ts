@@ -394,6 +394,8 @@ export interface IMutateFnStdItem<T = any, P = ReadOnlyArr> extends IMutateFnIte
   watchKey: string;
   /** default: false，是否内部使用的假对象 */
   isFake: boolean;
+  /** default: true，是否启用中 */
+  enabled: boolean;
 }
 
 export interface IMutateFnLooseItem<T = SharedState, P = ReadOnlyArr> extends IMutateFnItem<T, P> {
@@ -710,10 +712,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    * ```
    */
   setEnableMutate: (enabled: boolean) => void;
-  /**
-   * 获取 enableMutate 值
-   */
-  getEnableMutate: () => boolean;
+  getConfOptions: () => CtxConfOptions;
   /** 共享状态唯一 key */
   sharedKey: number;
   sharedKeyStr: string;
@@ -1149,8 +1148,17 @@ export interface ICreateOptionsFull<T = SharedState> {
   /**
    * default: true，是否检测死循环，设置为 false 表示不检查
    */
-  checkDeadCycle?: boolean;
+  checkDeadCycle: boolean;
+  /**
+   * default: true，是否禁止 mutate 执行，可以创建 atom 时设置，也可以中途通过 setEnableMutate 设置
+   */
+  enableMutate: boolean;
 }
+
+/**
+ * 目前仅暴露这些配置参数供用户查看
+ */
+export type CtxConfOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'before'>;
 
 export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull<SharedState> {
   forAtom: boolean;
