@@ -5,7 +5,7 @@
 [helux](https://github.com/heluxjs/helux) is a react state library that integrates `atom`, `signal`, and `dependency collection`. It has the following features:
 
 <p align="center">
-  <a href="https://concentjs.github.io/concent-doc">
+  <a href="https://heluxjs.github.io/helux">
     <img width="680px" src="https://tnfe.gtimg.com/image/fp78ya1et7_1703769973306.png">
   </a>
 </p>

@@ -5,7 +5,7 @@
 [helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`、`派生`、`观察`为一体，支持细粒度响应式更新的 react 状态库，支持所有类 react 框架（包括 react 18）
 
 <p align="center">
-  <a href="https://concentjs.github.io/concent-doc">
+  <a href="https://heluxjs.github.io/helux">
     <img width="680px" src="https://tnfe.gtimg.com/image/wgf9lcdy0l_1703770385145.png">
   </a>
 </p>
