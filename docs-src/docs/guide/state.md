@@ -19,7 +19,7 @@ export default () => {
     <div>
       <div>state.a={$(state.a)}</div>
       <button type="button" onClick={() => setState((draft) => (draft.a += 1))}>
-        使用setState更新
+        使用setState更新 xxx
       </button>
     </div>
   );

@@ -42,7 +42,8 @@ const Features: FC = () => {
         const stWrap: React.CSSProperties = {
           boxShadow: '1px 2px 2px 1px rgba(0, 0, 255, .2)',
           backgroundColor: '#fff',
-          padding: '12px 24px',
+          borderRadius: '6px',
+          padding: '24px 24px',
           boxSizing: 'border-box',
           height: '270px',
         }

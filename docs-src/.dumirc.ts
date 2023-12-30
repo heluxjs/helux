@@ -17,9 +17,9 @@ export default defineConfig({
       { title: 'GitHub', link: 'https://github.com/heluxjs/helux' },
     ]
   },
+  // #443082 #e8ae56
   theme: {
     '@c-primary': '#443082',
-    // 'primary-color': '#443082 #e8ae56',
     'primary-color': '#443082',
   },
   logo: 'https://tnfe.gtimg.com/image/dlykfuw8ai_1703851692543.png',
