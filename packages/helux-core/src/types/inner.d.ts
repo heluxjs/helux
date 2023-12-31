@@ -55,4 +55,8 @@ export interface IReactiveMeta {
   from: From;
   desc: string;
   onRead?: Fn;
+  /**
+   * 当前 reactive 对像可能来自于实例
+   */
+  insKey: number;
 }

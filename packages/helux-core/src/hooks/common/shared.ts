@@ -3,6 +3,7 @@ import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { INS_CTX } from '../../factory/creator/current';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
+import { clearInsMeta } from '../../factory/creator/reactive';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
@@ -13,7 +14,7 @@ import type { Dict, Fn, IInsRenderInfo } from '../../types/base';
  */
 export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
   const { proxyState, internal, renderInfo, canCollect, isReactive } = insCtx;
-  const { sharedKey, sharedKeyStr, insSetState, forAtom, isPrimitive } = internal;
+  const { sharedKey, sharedKeyStr, insSetState, forAtom } = internal;
   renderInfo.snap = internal.snap;
   renderInfo.time = Date.now();
   // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
@@ -67,10 +68,11 @@ export function recoverInsCtx(insCtx: InsCtxDef) {
 
 export function delInsCtx(insCtx: InsCtxDef) {
   insCtx.mountStatus = UNMOUNT;
-  const { id, globalId, insKey } = insCtx;
+  const { id, globalId, insKey, sharedKey } = insCtx;
   insCtx.internal.delId(id, insKey);
   delGlobalId(globalId, insKey);
   clearDep(insCtx);
+  clearInsMeta(sharedKey, insKey);
 }
 
 /**

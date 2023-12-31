@@ -18,7 +18,7 @@ import { delay } from '@helux/demo-utils';
 // reactive 已自动拆箱
 const { state, reactive } = atomx({ a: 1, b: { b1: { b2: 1, ok: true } } });
 
-async function change(){
+async function change() {
   reactive.a = 100;
   console.log(state.val.a); // 1
   await delay(1);
@@ -37,7 +37,7 @@ const [state, , { reactive }] = share({ a: 1, b: { b1: { b2: 1, ok: true } } });
 const { state, reactive } = sharex({ a: 1, b: { b1: { b2: 1, ok: true } } });
 
 // 相比 atom.state，少了主动拆箱的过程
-async function change(){
+async function change() {
   reactive.a = 100;
   console.log(state.a); // 1
   await delay(1);
@@ -52,70 +52,79 @@ async function change(){
 ```tsx | pure
 import { sharex } from 'helux';
 
-const { reactive, useReactive } = sharex({ a: 1, b: { b1: { b2: 1, ok: true } } });
+const { reactive, useReactive } = sharex({
+  a: 1,
+  b: { b1: { b2: 1, ok: true } },
+});
 
 // 定时修改 a b2
-setTimeout(()=>{
+setTimeout(() => {
   reactive.a += 1;
   reactive.b.b1.b2 += 1;
 }, 2000);
 
 // 组件外部切换 ok
-function toogleOkOut(){
+function toogleOkOut() {
   reactive.b.b1.ok = !reactive.b.b1.ok;
 }
 
-function Demo(){
+function Demo() {
   const [reactive] = useReactive();
-  return <h1>{reactive.a}</h1>
+  return <h1>{reactive.a}</h1>;
 }
-function Demo2(){
+function Demo2() {
   const [reactive] = useReactive();
-  return <h1>{reactive.b.b1.b2}</h1>
+  return <h1>{reactive.b.b1.b2}</h1>;
 }
-function Demo3(){
+function Demo3() {
   const [reactive] = useReactive();
   // 组件内部切换 ok
-  const toogle = ()=> reactive.b.b1.ok = !reactive.b.b1.ok;
-  return <h1>{`${reactive.b.b1.ok}`}</h1>
+  const toogle = () => (reactive.b.b1.ok = !reactive.b.b1.ok);
+  return <h1>{`${reactive.b.b1.ok}`}</h1>;
 }
 ```
 
 ```tsx
-import { sharex } from 'helux';
 import { Entry, MarkUpdate } from '@helux/demo-utils';
+import { sharex } from 'helux';
 
-const { reactive, useReactive } = sharex({ a: 1, b: { b1: { b2: 1, ok: true } } });
+const { reactive, useReactive } = sharex({
+  a: 1,
+  b: { b1: { b2: 1, ok: true } },
+});
 
-setInterval(()=>{
+setInterval(() => {
   reactive.a += 1;
   // reactive.b.b1.b2 += 1;
 }, 2000);
 
-function toogleOkOut(){
+function toogleOkOut() {
   reactive.b.b1.ok = !reactive.b.b1.ok;
 }
 
-function Demo(){
-  const [reactive,, info] = useReactive();
-  return <MarkUpdate info={info}>{reactive.a}</MarkUpdate>
+function Demo() {
+  const [reactive, , info] = useReactive();
+  return <MarkUpdate info={info}>{reactive.a}</MarkUpdate>;
 }
-function Demo2(){
-  const [reactive, ,info] = useReactive();
-  return <MarkUpdate info={info}>{reactive.b.b1.b2}</MarkUpdate>
+function Demo2() {
+  const [reactive, , info] = useReactive();
+  return <MarkUpdate info={info}>{reactive.b.b1.b2}</MarkUpdate>;
 }
-function Demo3(){
-  const [reactive, ,info] = useReactive();
-  const toogle = ()=> reactive.b.b1.ok = !reactive.b.b1.ok;
-  return <MarkUpdate info={info}><div onClick={toogle}>{`${reactive.b.b1.ok}`}</div></MarkUpdate>
+function Demo3() {
+  const [reactive, , info] = useReactive();
+  const toogle = () => (reactive.b.b1.ok = !reactive.b.b1.ok);
+  return (
+    <MarkUpdate info={info}>
+      <div onClick={toogle}>{`${reactive.b.b1.ok}`}</div>
+    </MarkUpdate>
+  );
 }
 
-export default ()=> (
+export default () => (
   <Entry fns={[toogleOkOut]}>
     <Demo />
     <Demo2 />
     <Demo3 />
   </Entry>
-)
+);
 ```
-

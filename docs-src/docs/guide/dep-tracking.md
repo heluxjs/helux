@@ -14,11 +14,10 @@ order: 4
 组件时读取数据节点值时就产生了依赖，这些依赖被收集到`helux`内部为每个组件创建的实例上下文里暂存着，作为更新凭据来使用。
 
 ```tsx | pure
-import { useAtom } from 'helux';
 const { state, setDraft, useState } = atomx({ a: 1, b: { b1: 1 } });
 
 // 修改草稿，生成具有数据结构共享的新状态，当前修改只会触发 Demo1 组件渲染
-const changeObj = ()=> setDraft((draft) => draft.a = Math.random());
+const changeObj = () => setDraft((draft) => (draft.a = Math.random()));
 
 function Demo1() {
   const [obj] = useState();
@@ -34,11 +33,11 @@ function Demo2() {
 ```
 
 ```tsx
+import { Entry, MarkUpdate } from '@helux/demo-utils';
 import { atomx } from 'helux';
-import { MarkUpdate, Entry } from '@helux/demo-utils';
 
 const { state, setDraft, useState } = atomx({ a: 1, b: { b1: 1 } });
-const changeObj = ()=> setDraft((draft) => draft.a = Math.random());
+const changeObj = () => setDraft((draft) => (draft.a = Math.random()));
 
 function Demo1() {
   const [obj, , info] = useState();
@@ -50,7 +49,7 @@ function Demo2() {
   return <MarkUpdate info={info}>{obj.b.b1}</MarkUpdate>;
 }
 
-export default ()=>(
+export default () => (
   <Entry fns={[changeObj]}>
     <Demo1 />
     <Demo1 />
@@ -66,17 +65,20 @@ export default ()=>(
 
 ```tsx | pure
 import { atomx } from 'helux';
-import { MarkUpdate, Entry } from '@helux/demo-utils';
 
 const { state, setDraft, useState } = atomx({ a: 1, b: { b1: 1 } });
-const changeA = ()=> setDraft((draft) => draft.a += 1);
-const changeB = ()=> setDraft((draft) => draft.a.b1 += 1);
+const changeA = () => setDraft((draft) => (draft.a += 1));
+const changeB = () => setDraft((draft) => (draft.a.b1 += 1));
 
 function Demo1() {
   const [obj] = useState();
   // 大于 3 时，依赖为 a, b.b1
-  if(obj.a>3){
-    return <h1>{obj.a} - {obj.b.b1}</h1>; 
+  if (obj.a > 3) {
+    return (
+      <h1>
+        {obj.a} - {obj.b.b1}
+      </h1>
+    );
   }
 
   return <h1>{obj.a}</h1>;
@@ -84,29 +86,32 @@ function Demo1() {
 ```
 
 :::tip
-先点击下述示例`changeB1`按钮，发现并不会触发重渲染，然后再点击`plusA`按钮，待到`a`值大于3时，点击`changeB1`按钮，此时组件将被重渲染，点击`minusA`按钮，待到`a`值小于3时，点击`changeB1`按钮，此时组件将被不被重渲染
+先点击下述示例`changeB1`按钮，发现并不会触发重渲染，然后再点击`plusA`按钮，待到`a`值大于 3 时，点击`changeB1`按钮，此时组件将被重渲染，点击`minusA`按钮，待到`a`值小于 3 时，点击`changeB1`按钮，此时组件将被不被重渲染
 :::
 
-
 ```tsx
+import { Entry, MarkUpdate } from '@helux/demo-utils';
 import { atomx } from 'helux';
-import { MarkUpdate, Entry } from '@helux/demo-utils';
 
 const { state, setDraft, useState } = atomx({ a: 1, b: { b1: 1 } });
-const plusA = ()=> setDraft((draft) => draft.a += 1);
-const minusA = ()=> setDraft((draft) => draft.a -= 1);
-const changeB1 = ()=> setDraft((draft) => draft.b.b1 = Date.now());
+const plusA = () => setDraft((draft) => (draft.a += 1));
+const minusA = () => setDraft((draft) => (draft.a -= 1));
+const changeB1 = () => setDraft((draft) => (draft.b.b1 = Date.now()));
 
 function Demo1() {
-  const [obj,,info] = useState();
-  if(obj.a>3){
-    return <MarkUpdate info={info}>{obj.a} - {obj.b.b1}</MarkUpdate>; 
+  const [obj, , info] = useState();
+  if (obj.a > 3) {
+    return (
+      <MarkUpdate info={info}>
+        {obj.a} - {obj.b.b1}
+      </MarkUpdate>
+    );
   }
 
   return <MarkUpdate info={info}>{obj.a}</MarkUpdate>;
 }
 
-export default ()=>(
+export default () => (
   <Entry fns={[plusA, minusA, changeB1]}>
     <Demo1 />
     <Demo1 />
@@ -120,12 +125,16 @@ export default ()=>(
 
 ```tsx | pure
 import { atomx } from 'helux';
-import { MarkUpdate, Entry, noop } from '@helux/demo-utils';
 
-const { state, setDraft, useState } = atomx({ a: 1, b: { b1: { b2: 1, ok: true } } });
-const changeB1 = ()=> setDraft((draft) => draft.b.b1 = {...draft.b.b1} );
-const changeB1_Ok_oldValue = ()=> setDraft((draft) => draft.b.b1.ok =  draft.b.b1.ok );
-const changeB1_Ok_newValue = ()=> setDraft((draft) => draft.b.b1.ok =  !draft.b.b1.ok );
+const { state, setDraft, useState } = atomx({
+  a: 1,
+  b: { b1: { b2: 1, ok: true } },
+});
+const changeB1 = () => setDraft((draft) => (draft.b.b1 = { ...draft.b.b1 }));
+const changeB1_Ok_oldValue = () =>
+  setDraft((draft) => (draft.b.b1.ok = draft.b.b1.ok));
+const changeB1_Ok_newValue = () =>
+  setDraft((draft) => (draft.b.b1.ok = !draft.b.b1.ok));
 
 // 调用 changeB1_Ok_oldValue changeB1 Demo1 不会被重渲染
 // 调用 changeB1_Ok_newValue ，Demo1 被重渲染
@@ -136,20 +145,25 @@ function Demo1() {
 ```
 
 ```tsx
+import { Entry, MarkUpdate } from '@helux/demo-utils';
 import { atomx } from 'helux';
-import { MarkUpdate, Entry, noop } from '@helux/demo-utils';
 
-const { state, setDraft, useState } = atomx({ a: 1, b: { b1: { b2: 1, ok: true } } });
-const changeB1 = ()=> setDraft((draft) => draft.b.b1 = {...draft.b.b1} );
-const changeB1_Ok_oldValue = ()=> setDraft((draft) => draft.b.b1.ok =  draft.b.b1.ok );
-const changeB1_Ok_newValue = ()=> setDraft((draft) => draft.b.b1.ok =  !draft.b.b1.ok );
+const { state, setDraft, useState } = atomx({
+  a: 1,
+  b: { b1: { b2: 1, ok: true } },
+});
+const changeB1 = () => setDraft((draft) => (draft.b.b1 = { ...draft.b.b1 }));
+const changeB1_Ok_oldValue = () =>
+  setDraft((draft) => (draft.b.b1.ok = draft.b.b1.ok));
+const changeB1_Ok_newValue = () =>
+  setDraft((draft) => (draft.b.b1.ok = !draft.b.b1.ok));
 
 function Demo1() {
-  const [obj,,info] = useState();
+  const [obj, , info] = useState();
   return <MarkUpdate info={info}>obj.b.b1.ok {`${obj.b.b1.ok}`}</MarkUpdate>;
 }
 
-export default ()=>(
+export default () => (
   <Entry fns={[changeB1, changeB1_Ok_oldValue, changeB1_Ok_newValue]}>
     <Demo1 />
     <Demo1 />

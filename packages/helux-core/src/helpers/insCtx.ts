@@ -61,7 +61,7 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined) {
  * 为实例创建代理对象并追加到 insCtx 上
  */
 export function attachInsProxyState(insCtx: InsCtxDef) {
-  const { internal, isReactive } = insCtx;
+  const { internal, isReactive, insKey } = insCtx;
   const { rawState, isDeep, sharedKey, onRead, forAtom } = internal;
   if (isDeep) {
     const onOperate: OnOperate = (opParams) => {
@@ -80,7 +80,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
 
     if (isReactive) {
       // 组件实例使用 useReactive(state) 返回的 reactive 对象时，会在 creator/operateState 里操作实例自己的 onOperate 句柄
-      const { draft, draftRoot } = buildReactive(internal, { onRead: onOperate });
+      const { draft, draftRoot } = buildReactive(internal, { onRead: onOperate, insKey });
       insCtx.proxyState = draftRoot;
       insCtx.proxyStateVal = draft;
     } else {
@@ -150,6 +150,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     internal,
     rawState,
     sharedState,
+    sharedKey,
     proxyState: {},
     proxyStateVal: {},
     updater,

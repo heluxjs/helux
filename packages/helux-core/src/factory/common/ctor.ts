@@ -19,10 +19,11 @@ export interface IBuildReactiveOpts {
   onRead?: OnOperate;
   from?: From;
   expired?: boolean;
+  insKey?: number;
 }
 
 export function newReactiveMeta(draft: any, buildOptions: IBuildReactiveOpts, finish: any = noop): IReactiveMeta {
-  const { desc = '', onRead, from = REACTIVE, depKeys = [], isTop = false, expired = false } = buildOptions;
+  const { desc = '', onRead, from = REACTIVE, depKeys = [], isTop = false, expired = false, insKey = 0 } = buildOptions;
   return {
     draft,
     finish,
@@ -41,6 +42,7 @@ export function newReactiveMeta(draft: any, buildOptions: IBuildReactiveOpts, fi
     desc,
     onRead,
     from,
+    insKey,
   };
 }
 
@@ -55,6 +57,7 @@ export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
     sn = genRenderSN(),
     isFirstCall = false,
     desc = '',
+    onRead,
   } = options;
   return {
     fnKey: '',
@@ -75,6 +78,7 @@ export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
     sn,
     isFirstCall,
     desc,
+    onRead,
   };
 }
 

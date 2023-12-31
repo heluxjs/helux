@@ -7,7 +7,7 @@ order: 2
 
 # atom
 
-阅读此章节可快速了解`atom`接口简单用法，更多使用方式请查阅[atom接口文档](xx)。
+阅读此章节可快速了解`atom`接口简单用法，更多使用方式请查阅[atom 接口文档](xx)。
 
 ## 定义共享状态
 
@@ -31,13 +31,12 @@ console.log(sharedObj); // sharedObj: {info: { born: 2023 }}
 优先考虑 share 共享字典对象，由于`share`接口没有装箱`{val: T}` 的操作，当共享对象为 `object` 时，可优先使用`share`来共享对象，避免一些无自动拆箱的场景多做一次`.val`取值操作
 :::
 
-
 ## 修改共享状态
 
 钩子 `useAtom` 返回一个元组，使用方式完全对齐 `react.useState` 接口，react 用户可 0 成本上手此方式，在组件内使用`useAtom`接口来获得组件内使用的共享对象，数据变更后自动通知组件重渲染
 
 ```tsx | pure
-import { atom, useAtom } from 'helux';
+import { useAtom } from 'helux';
 const [numAtom] = atomx(1);
 
 function Demo() {
@@ -60,7 +59,7 @@ export default function Demo() {
 
 ```tsx | pure
 import { atom, useAtom } from 'helux';
-const [numAtom, setAtom] = atom(1); 
+const [numAtom, setAtom] = atom(1);
 
 function Demo() {
   const [num] = useAtom(numAtom);
@@ -70,7 +69,7 @@ function Demo() {
 
 ```tsx
 import { atom, useAtom } from 'helux';
-const [numAtom, setAtom] = atom(1); 
+const [numAtom, setAtom] = atom(1);
 
 export default function Demo() {
   const [num] = useAtom(numAtom);
@@ -81,7 +80,7 @@ export default function Demo() {
 可使用`ctx.useState`来简化`useAtom(xxxState)`写法，`ctx`来自于`atom`返回的元组第三位参数、或`atomx`接口返回结果
 
 ```tsx | pure
-import { atom, useAtom } from 'helux';
+import { atom } from 'helux';
 const [numAtom, setAtom, ctx] = atom(1);
 // or
 const ctx = atomx(1);
@@ -92,7 +91,7 @@ function Demo() {
 ```
 
 ```tsx
-import { atomx, useAtom } from 'helux';
+import { atomx } from 'helux';
 const ctx = atomx(1);
 
 function Demo() {

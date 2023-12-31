@@ -17,9 +17,9 @@ order: 1
 import { atom } from 'helux';
 
 // 原始类型 atom
-const  [ numAtom ] = atom(1);
+const [numAtom] = atom(1);
 // 字典对象类型 atom
-const  [ objAtom ] = atom({a:1,b:{b1:1}});
+const [objAtom] = atom({ a: 1, b: { b1: 1 } });
 ```
 
 ## 修改 atom
@@ -27,19 +27,19 @@ const  [ objAtom ] = atom({a:1,b:{b1:1}});
 原始值修改
 
 ```ts
-const  [ numAtom, setAtom ] = atom(1);
+const [numAtom, setAtom] = atom(1);
 setAtom(100);
 ```
 
 字典对象修改，基于回调的草稿对象直接修改即可
 
 ```ts
-const  [ numAtom, setAtom ] = atom({a:1,b:{b1:1}});
-setAtom(draft=> { // draft 已拆箱 { val: T } 为 T
+const [numAtom, setAtom] = atom({ a: 1, b: { b1: 1 } });
+setAtom((draft) => {
+  // draft 已拆箱 { val: T } 为 T
   draft.b.b1 += 1;
 });
 ```
-
 
 ## 观察 atom
 
@@ -48,13 +48,21 @@ setAtom(draft=> { // draft 已拆箱 { val: T } 为 T
 ```ts
 import { atom, watch, getSnap } from 'helux';
 
-watch(()=>{
-  console.log(`change from ${getSnap(numAtom).val} to ${numAtom.val}`);
-}, ()=>[atom]);
+watch(
+  () => {
+    console.log(`change from ${getSnap(numAtom).val} to ${numAtom.val}`);
+  },
+  () => [atom],
+);
 
-watch(()=>{
-  console.log(`change from ${getSnap(numAtom).val.b.b1} to ${numAtom.val.b.b1}`);
-}, ()=>[objAtom.val.b.b1]);
+watch(
+  () => {
+    console.log(
+      `change from ${getSnap(numAtom).val.b.b1} to ${numAtom.val.b.b1}`,
+    );
+  },
+  () => [objAtom.val.b.b1],
+);
 ```
 
 ## 派生 atom
@@ -66,8 +74,8 @@ watch(()=>{
 ```ts
 import { atom, derive } from 'helux';
 
-const  [ numAtom, setAtom ] = atom(1);
-const plus100 = derive(()=> atom.val + 100);
+const [numAtom, setAtom] = atom(1);
+const plus100 = derive(() => atom.val + 100);
 
 setAtom(100);
 console.log(plus100); // { val: 200 }
@@ -101,7 +109,7 @@ console.log(objAtom2.val.plusA100); // 200
 react 组件通过`useAtom` 钩子可使用 atom 共享对象，该钩子返回一个元组，使用方式完全对齐 `react.useState` 接口，react 用户可 0 成本上手此方式
 
 ```tsx | pure
-import { atom, useAtom } from 'helux';
+import { useAtom } from 'helux';
 const [numAtom] = atomx(1);
 
 function Demo() {

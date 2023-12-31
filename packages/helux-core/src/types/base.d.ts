@@ -491,6 +491,10 @@ export interface IMutateCtx {
    * 修改描述
    */
   desc: string;
+  /**
+   * useReactive 透传的 onRead，方便为每个实例单独收集依赖
+   */
+  onRead?: OnOperate;
 }
 
 export interface IInnerSetStateOptions extends ISetStateOptions {
@@ -519,6 +523,7 @@ export interface ISetFactoryOpts extends IInnerSetStateOptions {
    * 同时也减少不必要的运行时分析性能损耗
    */
   enableDep?: boolean;
+  onRead?: OnOperate;
 }
 
 /**
@@ -1547,6 +1552,7 @@ export interface IInsCtx<T = Dict> {
   sharedState: Dict;
   proxyState: Dict;
   proxyStateVal: Dict;
+  sharedKey: number;
   rootVal: any;
   updater: Fn;
   /** 未挂载 已挂载 已卸载 */
