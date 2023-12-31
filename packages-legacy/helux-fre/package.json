@@ -1,7 +1,7 @@
 {
-  "name": "@helux/hooks-impl",
-  "version": "3.6.0",
-  "description": "helux hooks implement lib",
+  "name": "@helux/fre",
+  "version": "3.5.24",
+  "description": "State library for fre that integrates atom, signal, collection dep, derive and watch.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
@@ -18,7 +18,6 @@
   },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "src/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -31,14 +30,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@helux/types": "workspace:^",
-    "@helux/utils": "workspace:^"
+    "@helux/core": "workspace:^"
   },
-  "peerDependencies": {},
-  "bundleDependencies": false,
+  "peerDependencies": {
+    "fre": ">=2.6.5"
+  },
+  "bundleDependencies": [],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "deprecated": false
+  "deprecated": false,
+  "src": "dist/index.d.ts"
 }

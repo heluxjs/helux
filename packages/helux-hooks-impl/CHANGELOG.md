@@ -1,5 +1,17 @@
 # @helux/hooks-impl
 
+## 3.6.0
+
+### Minor Changes
+
+- 222ff26e: optimize for nextjs
+
+### Patch Changes
+
+- Updated dependencies [222ff26e]
+  - @helux/utils@3.6.0
+  - @helux/types@3.6.0
+
 ## 3.5.23
 
 ### Patch Changes

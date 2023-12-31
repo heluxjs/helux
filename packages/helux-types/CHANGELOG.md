@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.6.0
+
+### Minor Changes
+
+- 222ff26e: optimize for nextjs
+
 ## 3.5.23
 
 ## 3.5.22
