@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.6.2
+| helux-core@3.6.3
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.6.2';
+export declare const VER: '3.6.3';
 
 export declare const LIMU_VER: string;
 

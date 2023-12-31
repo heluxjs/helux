@@ -115,6 +115,7 @@ function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
   const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true, onRead });
   const latestMeta = newReactiveMeta(draftRoot, options, finish);
   latestMeta.key = getReactiveKey();
+  latestMeta.sharedKey = internal.sharedKey;
   latestMeta.nextTickFlush = (desc?: string) => {
     const { expired, hasFlushTask } = latestMeta;
     if (!expired) {
