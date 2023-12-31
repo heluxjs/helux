@@ -242,11 +242,11 @@ export function useAtom<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  T extends ReadOnlyAtom ? AtomValType<T> : T,
-  // AtomTupleSetState<T>,
-  SetState<T>,
-  IInsRenderInfo<T>,
-];
+    T extends ReadOnlyAtom ? AtomValType<T> : T,
+    // AtomTupleSetState<T>,
+    SetState<T>,
+    IInsRenderInfo<T>,
+  ];
 
 /**
  * 区别于 useAtom，useAtomX 返回对象
@@ -259,8 +259,13 @@ export function useAtomX<T = any>(
 export function useReactive<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
-  // 针对 atom，第一位 reactive 参数自动拆箱
-): [T extends Atom ? T['val'] : T, T, IInsRenderInfo];
+): [
+    // 针对 atom，第一位 reactive 参数自动拆箱
+    T extends Atom ? T['val'] : T,
+    // 代表 reactiveRoot
+    T,
+    IInsRenderInfo
+  ];
 
 /**
  * 更新当前共享状态的所有实例组件，谨慎使用此功能，会触发大面积的更新，

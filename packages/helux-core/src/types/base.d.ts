@@ -37,8 +37,8 @@ export type UnconfirmedArg = ValidArg | void;
 /** 调用时如未指定具体 payload 类型，收窄为 UnconfirmedArg，让用户不传递也能类型校验通过 */
 export type PayloadType<P extends Dict | undefined = undefined, K = any> = P extends Dict
   ? K extends keyof P
-  ? P[K]
-  : UnconfirmedArg
+    ? P[K]
+    : UnconfirmedArg
   : UnconfirmedArg;
 
 // use Awaited instead
@@ -624,8 +624,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-  ? SyncerFn
-  : { [key in keyof T['val']]: SyncerFn }
+    ? SyncerFn
+    : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -634,8 +634,8 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-  ? DerivedAtom<ReturnType<T['fn']>>
-  : DerivedAtom<any>
+    ? DerivedAtom<ReturnType<T['fn']>>
+    : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
@@ -917,8 +917,8 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     throwErr?: boolean,
   ) => <
     D extends Dict<Fn> = P extends Dict
-    ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
-    : { [K in string]: ActionTask<T, UnconfirmedArg> },
+      ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
+      : { [K in string]: ActionTask<T, UnconfirmedArg> },
   >(
     /** action 函数定义字典集合 */
     actionFnDefs: D,
@@ -1061,7 +1061,7 @@ export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
   state: ReadOnlyDict<T>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
-  useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>
+  useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
 }
 
 export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
