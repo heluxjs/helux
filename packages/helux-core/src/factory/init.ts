@@ -15,8 +15,8 @@ export function initHeluxContext(options: {
 
   const { heluxCtxKey, standalone, transfer, reactLib, act } = options;
   const existedRoot: HeluxRoot = GLOBAL_REF[heluxCtxKey];
-  const done = (key: string | symbol) => {
-    const ROOT = createRoot();
+  const done = (key: string | symbol, root?: any) => {
+    const ROOT = root || createRoot();
     const api = buildHeluxApi(reactLib, act);
     setRootData({ ROOT, inited: true, api });
     GLOBAL_REF[key] = ROOT;
@@ -32,7 +32,7 @@ export function initHeluxContext(options: {
     return done(`${String(heluxCtxKey)}_${Date.now()}`);
   }
 
-  // now current helux will reuse existed helux context,
+  // currently helux will reuse existed helux context,
   // multi helux lib will share one hulex context,
   // no matter the helux in app1 and app2 is the same module or not,
   // it is ok that app1 can use a shared state exported from app2 by useAtom directly,
@@ -43,5 +43,7 @@ export function initHeluxContext(options: {
     setRootData({ ROOT, inited: true });
     transfer(existedRoot, ROOT);
   }
-  return buildHeluxApi(reactLib);
+
+  // rebind for ssr scenes( nextjs... )
+  return done(heluxCtxKey, existedRoot);
 }

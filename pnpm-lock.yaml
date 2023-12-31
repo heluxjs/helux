@@ -93,7 +93,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: workspace:^3.5.21
+      helux: workspace:^3.5.22
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21
@@ -166,6 +166,22 @@ importers:
       typescript: 4.9.5
       web-vitals: 2.1.4
 
+  packages-legacy/helux-fre:
+    specifiers:
+      '@helux/core': workspace:^
+      fre: '>=2.6.5'
+    dependencies:
+      '@helux/core': link:../../packages/helux-core
+      fre: 2.6.5
+
+  packages-legacy/helux-preact:
+    specifiers:
+      '@helux/core': workspace:^
+      preact: ^10.19.2
+    dependencies:
+      '@helux/core': link:../../packages/helux-core
+      preact: 10.19.2
+
   packages/helux:
     specifiers:
       '@helux/core': workspace:^
@@ -206,14 +222,6 @@ importers:
     devDependencies:
       esbuild-copy-static-files: 0.1.0
 
-  packages/helux-fre:
-    specifiers:
-      '@helux/core': workspace:^
-      fre: '>=2.6.5'
-    dependencies:
-      '@helux/core': link:../helux-core
-      fre: 2.6.5
-
   packages/helux-hooks:
     specifiers:
       '@helux/hooks-impl': workspace:^
@@ -244,14 +252,6 @@ importers:
     dependencies:
       helux: link:../helux
       redux: 4.2.1
-
-  packages/helux-preact:
-    specifiers:
-      '@helux/core': workspace:^
-      preact: ^10.19.2
-    dependencies:
-      '@helux/core': link:../helux-core
-      preact: 10.19.2
 
   packages/helux-types:
     specifiers: {}

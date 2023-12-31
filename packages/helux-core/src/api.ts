@@ -12,6 +12,7 @@ import { sync, syncer } from './factory/createSync';
 import { watch } from './factory/createWatch';
 import { currentDraftRoot } from './factory/creator/current';
 import { flush, reactiveDesc } from './factory/creator/reactive';
+import { init } from './factory/root';
 import { getDeriveLoading, runDerive, runDeriveTask } from './helpers/fnRunner';
 import { getRawState, getSnap } from './helpers/state';
 import {
@@ -86,6 +87,8 @@ export {
   // emit api
   emit,
   on,
+  // init api
+  init,
   // util api
   reactiveDesc,
   flush,

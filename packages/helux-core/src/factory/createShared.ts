@@ -5,7 +5,7 @@ import type { CoreApiCtx } from '../types/api-ctx';
 import type {
   Action,
   ActionTask,
-  CtxConfOptions,
+  CtxCreateOptions,
   Dict,
   Fn,
   IAtomCtx,
@@ -150,7 +150,7 @@ function setEnableMutate(enabled: boolean, internal: TInternal) {
   }
 }
 
-function getConfOptions(internal: TInternal): CtxConfOptions {
+function getOptions(internal: TInternal): CtxCreateOptions {
   const { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate } = internal;
   return { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate };
 }
@@ -175,7 +175,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     setState,
     setDraft,
     setEnableMutate: (enabled: boolean) => setEnableMutate(enabled, internal),
-    getConfOptions: () => getConfOptions(internal),
+    getOptions: () => getOptions(internal),
     setOnReadHook: (onRead: Fn) => (internal.onRead = onRead),
     defineActions: (throwErr?: boolean) => (actionDict: Dict<ActionTask>) => defineActions({ ...acCommon, actionDict }, throwErr),
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>

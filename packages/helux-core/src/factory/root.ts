@@ -1,7 +1,18 @@
 import { asType, safeObjGet } from '@helux/utils';
 import { VER as LIMU_VER } from 'limu';
 import { VER } from '../consts';
-import type { Dict, Fn, IBlockCtx, IFnCtx, IPlugin, IUnmountInfo, LoadingState, Middleware, NumStrSymbol } from '../types/base';
+import type {
+  Dict,
+  Fn,
+  IBlockCtx,
+  IFnCtx,
+  IInitOptions,
+  IPlugin,
+  IUnmountInfo,
+  LoadingState,
+  Middleware,
+  NumStrSymbol,
+} from '../types/base';
 import type { TInternal } from './creator/buildInternal';
 
 function buildFnScope() {
@@ -123,11 +134,12 @@ export function createRoot() {
       insScope: buildInsScope(),
       blockScope: buildBlockScope(),
       markAtomMap: new Map<any, boolean>(), // 不支持 symbol 的环境才会记录此map
-      renderSN: 0, // 渲染批次序列号种子数
+      renderSN: 0, // 触发setState批次序列号的种子数
       globalLoading: asType<LoadingState>(null), // works for top api useLoading
       globalLoadingInternal: asType<TInternal>(null), // works for top api useLoading
       globalEmpty: asType<Dict>(null), // works for top api useGlobalId
       globalEmptyInternal: asType<TInternal>(null), // works for top api useGlobalId
+      isRootRender: true,
     },
     legacyRoot: {},
   };
@@ -140,6 +152,7 @@ export type RootCtx = HeluxRoot['ctx'];
 let ROOT = asType<HeluxRoot>({});
 let inited = false;
 let API = asType<any>(null);
+let optionsInited = false;
 
 export function getRootCtx() {
   return ROOT.ctx || asType<HeluxRoot['ctx']>({});
@@ -157,4 +170,14 @@ export function setRootData(options: Dict) {
 
 export function getRootData() {
   return { ROOT, inited, API };
+}
+
+export function init(options: IInitOptions) {
+  if (optionsInited) {
+    return false;
+  }
+  optionsInited = true;
+  const { isRootRender = true } = options;
+  getRootCtx().isRootRender = isRootRender;
+  return true;
 }

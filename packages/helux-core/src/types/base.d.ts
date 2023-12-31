@@ -712,7 +712,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    * ```
    */
   setEnableMutate: (enabled: boolean) => void;
-  getConfOptions: () => CtxConfOptions;
+  getOptions: () => CtxCreateOptions;
   /** 共享状态唯一 key */
   sharedKey: number;
   sharedKeyStr: string;
@@ -1156,9 +1156,9 @@ export interface ICreateOptionsFull<T = SharedState> {
 }
 
 /**
- * 目前仅暴露这些配置参数供用户查看
+ * 目前api层面只暴露部分配置参数供用户查看
  */
-export type CtxConfOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'before'>;
+export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'before'>;
 
 export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull<SharedState> {
   forAtom: boolean;
@@ -1671,4 +1671,16 @@ export interface IPlugin {
   install: PluginInstall;
   name?: string;
   desc?: FnDesc;
+}
+
+export interface IInitOptions {
+  /**
+   * defaut: true，
+   * 如果使用 react 18，默认相信用户采用的是 createRoot(dom).render(comp) 方式渲染根组件，
+   * 内部的 useSync 会走到真实的 useSyncExternalStore 调用逻辑（ 非 18 提供的是假的 useSyncExternalStore 实现 ），
+   * 而如果用户实际上并未在 18 使用 createRoot 方式渲染时，真实的 useSyncExternalStore 内部会抛出一个错误：
+   * dispatcher.useSyncExternalStore is not a function
+   * 此时用户可以调用 init({ isRootRender: false }) 消除此错误提示。
+   */
+  isRootRender?: boolean;
 }

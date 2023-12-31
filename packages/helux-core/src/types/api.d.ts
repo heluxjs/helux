@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.5.23
+| helux-core@3.6.0
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -30,6 +30,7 @@ import type {
   ICreateOptions,
   IDeriveFnItem,
   IDeriveTaskOptions,
+  IInitOptions,
   IInsRenderInfo,
   IMutateFnLooseItem,
   IMutateWitness,
@@ -62,7 +63,7 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.5.23';
+export declare const VER: '3.6.0';
 
 export declare const LIMU_VER: string;
 
@@ -637,6 +638,8 @@ export function reactiveDesc(stateOrDraftRoot: any, desc: string): number;
  * 主动触发响应式变更数据提交
  */
 export function flush(state: SharedState, desc?: string): void;
+
+export declare function init(options: IInitOptions): boolean;
 
 // ----------- shallowCompare isDiff produce 二次重导出会报错，这里手动声明一下 --------------
 // err: 如果没有引用 "../../helux-core/node_modules/limu/lib"，则无法命名 "produce" 的推断类型。这很可能不可移植。需要类型注释
