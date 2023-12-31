@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.6.1
+
+### Patch Changes
+
+- 44f4daba: add useStateX to sharedCtx
+  - @helux/hooks-impl@3.6.1
+  - @helux/types@3.6.1
+  - @helux/utils@3.6.1
+
 ## 3.6.0
 
 ### Minor Changes

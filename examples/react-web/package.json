@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "@helux/plugin-devtool": "workspace:^3.5.19",
+    "@helux/plugin-devtool": "workspace:^3.6.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -35,7 +35,7 @@
     "@types/node": "^16.18.68",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
-    "helux": "workspace:^3.5.19",
+    "helux": "workspace:^3.6.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",

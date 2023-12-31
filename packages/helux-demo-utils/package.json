@@ -1,6 +1,6 @@
 {
   "name": "@helux/demo-utils",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "helux demo utils",
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@types/react": ">=16.0.0",
     "@types/react-dom": ">=16.0.0",
-    "helux": "^3.6.0",
+    "helux": "^3.6.1",
     "react": ">=16.10.2",
     "react-dom": ">=16.10.2"
   },

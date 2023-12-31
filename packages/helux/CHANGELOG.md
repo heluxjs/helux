@@ -1,5 +1,13 @@
 # helux
 
+## 3.6.1
+
+### Patch Changes
+
+- 44f4daba: add useStateX to sharedCtx
+- Updated dependencies [44f4daba]
+  - @helux/core@3.6.1
+
 ## 3.6.0
 
 ### Minor Changes

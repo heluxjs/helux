@@ -47,10 +47,11 @@
   },
   "dependencies": {
     "@ant-design/icons-svg": "^4.3.1",
+    "@helux/demo-utils": "workspace:0.0.2",
     "@makotot/ghostui": "^2.0.0",
     "animated-scroll-to": "^2.3.0",
     "classnames": "^2.5.0",
-    "helux": "workspace:^3.5.22",
+    "helux": "workspace:^3.6.1",
     "lodash": "^4.17.21",
     "rc-motion": "^2.9.0",
     "rc-tree": "^5.8.2",
