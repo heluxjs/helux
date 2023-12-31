@@ -51,7 +51,7 @@
     "@makotot/ghostui": "^2.0.0",
     "animated-scroll-to": "^2.3.0",
     "classnames": "^2.5.0",
-    "helux": "workspace:^3.6.1",
+    "helux": "workspace:^3.6.2",
     "lodash": "^4.17.21",
     "rc-motion": "^2.9.0",
     "rc-tree": "^5.8.2",

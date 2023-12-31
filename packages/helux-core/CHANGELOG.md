@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.6.2
+
+### Patch Changes
+
+- 0e2f2ea7: optimize ins reactive mete rebuild logic
+  - @helux/hooks-impl@3.6.2
+  - @helux/types@3.6.2
+  - @helux/utils@3.6.2
+
 ## 3.6.1
 
 ### Patch Changes
