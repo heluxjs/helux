@@ -2,7 +2,16 @@
   "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": true,
-  "fixed": [["helux", "@helux/core"]],
+  "fixed": [
+    [
+      "helux",
+      "@helux/core",
+      "@helux/hooks",
+      "@helux/hooks-impl",
+      "@helux/types",
+      "@helux/utils"
+    ]
+  ],
   "linked": [],
   "access": "restricted",
   "baseBranch": "master",
@@ -11,10 +20,8 @@
     "@helux/fre",
     "@helux/preact",
     "@helux/demo-utils",
-    "@helux/hooks",
-    "@helux/hooks-impl",
     "@helux/plugin-devtool",
-    "@helux/types",
-    "@helux/utils"
+    "react-web",
+    "helux-docs"
   ]
 }

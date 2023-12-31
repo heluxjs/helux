@@ -32,7 +32,7 @@ off(); // 取消监听
 
 组件内使用 `useOnEvent` 钩子函数监听，再组件销毁后会自动取消监听
 
-```tsx
+```ts
 import { useOnEvent } from 'helux';
 
 function Demo() {

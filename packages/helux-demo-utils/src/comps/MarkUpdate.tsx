@@ -4,6 +4,21 @@ import { getLocaleTime, nodupPush } from '../utils';
 
 type Info = IFnRenderInfo | IRenderInfo;
 
+const stBox = {
+  border: '1px solid green',
+  padding: '6px',
+  margin: '6px',
+};
+const stInfo = {
+  fontSize: '12px',
+  color: '#fff',
+  padding: '3px',
+};
+const stH3 = {
+  margin: '3px',
+  backgroundColor: '#e0e0e0',
+};
+
 interface IProps {
   info?: IRenderInfo | Array<IRenderInfo>;
   name?: string;
@@ -66,9 +81,9 @@ function Ui(props: IProps) {
   const { name = 'MarkUpdate', info = fakeInfo, forceColor } = props;
   const { sn, insKeyStr, depStr, snStr } = getInfoData(info);
   return (
-    <div className="box">
+    <div style={stBox}>
       {props.children}
-      <div className="info" style={{ backgroundColor: getColor(sn, forceColor) }}>
+      <div style={{ ...stInfo, backgroundColor: getColor(sn, forceColor) }}>
         [{name}] update at {getLocaleTime()} {snStr} (insKey {insKeyStr})
       </div>
       {depStr && <div style={{ color: 'green' }}> deps is [ {depStr} ]</div>}
@@ -99,7 +114,7 @@ export function MarkUpdateH2(props: IProps) {
 export function MarkUpdateH3(props: IProps) {
   return (
     <Ui {...props}>
-      <h3>{props.children}</h3>
+      <h3 style={stH3}>{props.children}</h3>
     </Ui>
   );
 }

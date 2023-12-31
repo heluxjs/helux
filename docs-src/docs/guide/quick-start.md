@@ -56,17 +56,31 @@ function Demo() {
 
 ```tsx
 import { share, useAtom } from 'helux';
-const [sharedState] = share({ a: 1, b: 2, info: { born: '2023-12-31' } });
+import { MarkUpdate } from '@helux/demo-utils';
 
-function Hello() {
-  const [state, setState] = useAtom(sharedState);
+const [sharedState] = share({ a: 1, b: 2, info: { born: '2023-12-31', age: 2 } });
+
+function HelloBorn() {
+  const [state, setState, info] = useAtom(sharedState);
   const change = () =>
     setState((draft) => void (draft.info.born = `${Date.now()}`));
   return (
-    <div>
-      <h1>hello helux shared {state.info.born}</h1>
-      <button onClick={change}>call ins setState to change state</button>
-    </div>
+    <MarkUpdate info={info}>
+      <h1>hello helux {state.info.born}</h1>
+      <button onClick={change}>changeBorn</button>
+    </MarkUpdate>
+  );
+}
+
+function HelloAge() {
+  const [state, setState, info] = useAtom(sharedState);
+  const change = () =>
+    setState((draft) => void (draft.info.born = `${Date.now()}`));
+  return (
+    <MarkUpdate info={info}>
+      <h1>hello helux {state.info.born}</h1>
+      <button onClick={change}>changeBorn</button>
+    </MarkUpdate>
   );
 }
 
@@ -74,8 +88,8 @@ export default function Demo() {
   const [state] = useAtom(sharedState);
   return (
     <div>
-      <Hello />
-      <Hello />
+      <HelloBorn />
+      <HelloBorn />
     </div>
   );
 }

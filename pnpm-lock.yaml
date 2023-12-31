@@ -84,6 +84,7 @@ importers:
       '@ant-design/icons-svg': ^4.3.1
       '@commitlint/cli': ^17.1.2
       '@commitlint/config-conventional': ^17.1.0
+      '@helux/demo-utils': workspace:0.0.2
       '@makotot/ghostui': ^2.0.0
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
@@ -93,7 +94,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: workspace:^3.5.22
+      helux: workspace:^3.6.0
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21
@@ -108,6 +109,7 @@ importers:
       stylelint: ^14.9.1
     dependencies:
       '@ant-design/icons-svg': 4.3.1
+      '@helux/demo-utils': link:../packages/helux-demo-utils
       '@makotot/ghostui': 2.0.0_react@18.2.0
       animated-scroll-to: 2.3.0
       classnames: 2.5.0

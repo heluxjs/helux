@@ -5,12 +5,8 @@ export function useForceUpdate() {
   return () => setState({});
 }
 
-// import React from "react";
-// import { useForceUpdate } from "helux";
-
 export function Entry(props: React.PropsWithChildren<{ buttonArea?: React.ReactNode; fns?: Array<any> }>) {
   const { buttonArea = '', fns = [], children } = props;
-  console.log('Render Entry');
   const [show, setShow] = React.useState(true);
   const forceUpdate = useForceUpdate();
 

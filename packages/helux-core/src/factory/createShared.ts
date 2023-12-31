@@ -1,6 +1,6 @@
 import { FROM, STATE_TYPE } from '../consts';
 import { innerRunDerive, innerRunDeriveTask } from '../helpers/fnRunner';
-import { useAtom, useDerived, useGlobalForceUpdate, useLocalForceUpdate, useMutable, useReactive } from '../hooks';
+import { useAtom, useAtomX, useDerived, useGlobalForceUpdate, useLocalForceUpdate, useMutable, useReactive } from '../hooks';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type {
   Action,
@@ -189,6 +189,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     action: actionCreator,
     call: (fn: Fn, payload: any, desc: string, throwErr: boolean) => actionTaskCreator(fn, desc, throwErr)(payload),
     useState: (options?: any) => useAtom(apiCtx, state, options),
+    useStateX: (options?: any) => useAtomX(apiCtx, state, options),
     useForceUpdate: (presetDeps?: (sharedState: any) => any[]) => useGlobalForceUpdate(apiCtx, state, presetDeps),
     useLocalState: (initialState: any) => useMutable(apiCtx, initialState),
     useLocalForceUpdate: () => useLocalForceUpdate(apiCtx),
