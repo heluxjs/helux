@@ -99,7 +99,7 @@ const Block2 = block(() => {
 });
 
 export default () => (
-  <Entry fns={[changeName]}>
+  <Entry fns={{changeName}}>
     <Block1 />
     <Block2 />
   </Entry>

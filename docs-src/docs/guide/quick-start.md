@@ -79,7 +79,18 @@ const plus100 = derive(() => atom.val + 100);
 
 setAtom(100);
 console.log(plus100); // { val: 200 }
+
+setAtom(100); // 设置相同结果，派生函数不会再次执行
 ```
+
+使用已派生结果继续派生新的结果
+
+```ts
+const plus100 = derive(() => atom.val + 100);
+const plus200 = derive(() => plus100.val + 200);
+```
+
+更多高级功能可阅读[开始/派生](/guide/derive)了解。
 
 ### 可变派生
 

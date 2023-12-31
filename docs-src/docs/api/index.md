@@ -1,7 +1,7 @@
 ---
 nav:
-  title: 教程
+  title: API
   order: 2
 ---
 
-# 教程
+# API

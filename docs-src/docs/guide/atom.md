@@ -168,7 +168,7 @@ function HelloAge() {
 
 export default function Demo() {
   return (
-    <Entry fns={[changeBorn]}>
+    <Entry fns={{changeBorn}}>
       <HelloBorn />
       <HelloBorn />
     </Entry>

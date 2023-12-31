@@ -1,15 +1,185 @@
 ---
 group:
-  title: 进阶
-  order: 1
-order: 2
+  title: 开始
+  order: 0
+order: 7
 ---
 
-# 派生 - Mutate
+# 派生
+
+## 全量派生
+
+`derive` 接口该接受一个派生函数实现，返回一个全新的派生值对象，该对象是一个只可读的稳定引用，全局使用可总是读取到最新值。
+
+### 同步全量派生
+
+`derive`接受任意数据类型的返回结果，自动装箱为`{val:T}`结构，派生函数首次运行后会收集到相关数据依赖，后续仅在这些依赖发生变化后才会重运行并计算出新结果
+
+```ts
+import { atom, derive } from 'helux';
+
+const [numAtom] = atom(5);
+const [info] = share({
+  a: 50,
+  c: { c1: 100, c2: 1000 },
+  list: [{ name: 'one', age: 1 }],
+});
+
+// 仅在 numAtom.val 或 info.c.c1 发生变化后才会重运行计算出新的 result
+const result = derive(() => {
+  return numAtom.val + info.c.c1;
+});
+```
+
+组件中可使用`useDerived`获取到派生结果，传入的是`derive`返回结果则会自动拆箱
+
+```tsx
+import { Entry } from '@helux/demo-utils';
+import { atom, share, derive, useDerived } from 'helux';
+
+const [numAtom, setAtom] = atom(5);
+const [info, setInfo] = share({
+  a: 50,
+  c: { c1: 100, c2: 1000 },
+  list: [{ name: 'one', age: 1 }],
+});
+
+const result = derive(() => {
+  return numAtom.val + info.c.c1;
+});
+
+const changeNum = ()=>setAtom(prev=>prev+10);
+const changeC1 = ()=>setInfo(draft=>void(draft.c.c1+=20));
+
+function Demo(){
+  const [ num ] = useDerived(result); // 自动拆箱
+  return <h1>{num}</h1>
+}
+
+export default ()=><Entry fns={{changeNum,changeC1}}><Demo/></Entry>
+```
+
+返回结果为字典对象类型时，可使用`driveDict`来免去自动装箱过程
+
+```ts
+import { driveDict } from 'helux';
+
+const result = driveDict(() => {
+  return { plusValue: numAtom.val + info.c.c1 };
+});
+```
+
+### 异步全量派生
+
+支持配置 `task` 异步计算任务来实现异步派生结果
+
+```ts
+const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } });
+
+const result = derive({
+  // 定义依赖项
+  deps: () => [sharedState.a, sharedState.b.b1.b2] as const,
+  // 定义初始值计算函数
+  fn: ({ input: [a, b2] }) => ({ val: a + b2 }),
+  // 定义异步计算任务，默认首次不执行，可设置 immediate 触发首次执行
+  task: async ({ input: [a, b2] }) => {
+    await delay(1000);
+    return { val: a + b2 + 1 };
+  },
+  // immediate: true,
+});
+```
+
+组件中可使用`useDerived`获取到异步派生结果和派生函数执行状态
+
+```tsx | pure
+function Demo(){
+  const [num, status] = useDerived(result);
+  if(status.loading) return <h1>loading...</h1>;
+  if(!status.ok) return <h1>{status.err.message}</h1>;
+  return <h1>num</h1>;
+}
+```
+
+:::info
+点击`changeA`3次后，将触发task抛出异常到组件中
+:::
+
+```tsx
+import { Entry, demoUtils } from '@helux/demo-utils';
+import { atom, share, derive, useDerived } from 'helux';
+
+const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } });
+const changeA = ()=>setState(draft=>void(draft.a+=100));
+
+const result = derive({
+  deps: () => [sharedState.a, sharedState.b.b1.b2] as const,
+  fn: ({ input: [a, b2] }) =>  a + b2 ,
+  task: async ({ input: [a, b2] }) => {
+    await demoUtils.delay(1000);
+    const ret = a + b2 + 1;
+    if(ret > 500) throw new Error('>500');
+    return ret;
+  },
+});
+
+function Demo(){
+  const [num, status] = useDerived(result);
+  if(status.loading) return <h1>loading...</h1>;
+  if(!status.ok) return <h1 style={{color:'red'}}>{status.err.message}</h1>;
+  return <h1>{num}</h1>;
+}
+
+export default ()=><Entry fns={{changeA}}><Demo/></Entry>;
+```
+
+### 人工触发重运行
+
+派生函数除了观察到数据依赖变化后被触发执行的方式，还可使用 `runDerive` 接口人工触发对应的派生函数
+
+```ts
+import { runDerive } from 'helux'
+const result = derive(() => {
+  return numAtom.val + info.c.c1;
+});
+
+runDerive(result);
+```
+
+```tsx
+import { Entry, demoUtils } from '@helux/demo-utils';
+import { share, derive, useDerived, runDerive } from 'helux';
+
+const [sharedState, setState] = share({ a: 1 });
+const result = derive(() => {
+  return sharedState.a + demoUtils.random();
+});
+function rerun(){
+  runDerive(result);
+}
+
+function Demo(){
+  const [num, status] = useDerived(result);
+  return <h1>{num}</h1>;
+}
+
+export default ()=><Entry fns={{rerun}}><Demo/></Entry>;
+```
+
+异步任务可使用`runDeriveTask`触发重执行
+
+```ts
+import { runDeriveTask } from 'helux'
+const result = derive({ task: ... });
+
+runDeriveTask(result);
+```
+
+## 可变派生
 
 由于 `atom` 和 `share` 返回的对象天生自带依赖追踪特性，当共享对象 a 的发生变化后需要自动引起共享状态 b 的某些节点变化时，可定义 `mutate` 函数来完成这种变化的连锁反应关系，对数据做最小粒度的更新
 
-## 单变化函数
+### 单变化函数
 
 只修改共享状态的单个值时，定义一个 `mutate` 函数即可
 
@@ -25,7 +195,7 @@ const [finalPriceState] = share(
 );
 ```
 
-## 多变化函数
+### 多变化函数
 
 需要响应多个不同上游状态的值变化，计算多个节点新值时，定义 `mutate` 为对象即可
 
@@ -73,7 +243,7 @@ function Demo() {
 }
 ```
 
-## 异步派生函数
+### 异步派生函数
 
 如存在异步的计算场景，对 `mutate` 函数新增 `task` 异步计算函数配置即可。
 
@@ -181,7 +351,7 @@ ctx.mutate({ ... });
 objCtx.mutate({ ... });
 ```
 
-## 人工触发重运行
+### 人工触发重运行
 
 `mutate`函数默认运行时机是基于监听的数据变更后被触发运行的，也支持人工调用的方式主动触发重运行
 
@@ -215,97 +385,7 @@ runMutateTask(someState, 'retA');
 const witness = mutate(idealPriceState)(fnItem);
 
 // 呼叫 fnItem 配置的同步函数
-witness.call();
+witness.run();
 // 呼叫 fnItem 配置的异步函数
-witness.callTask();
+witness.runTask();
 ```
-
-## 全量派生
-
-不需要细粒度更新派生数据的场景，使用 `derive` 系列接口即可，该接口接受一个派生函数实现，返回一个全新的派生值对象，该对象是一个只可读的稳定引用，全局使用可总是读取到最新值。
-
-### 同步全量派生
-
-```ts
-import { atom, share, derive, driveAtom } from 'helux';
-
-const [numAtom] = atom(5);
-const [info] = share({
-  a: 50,
-  c: { c1: 100, c2: 1000 },
-  list: [{ name: 'one', age: 1 }],
-});
-
-// 派生返回对象，派生函数首次运行后，仅在 numAtom.va 或 info.c.c1 发生变化后才会重运行计算出新的 result
-const result = derive(() => {
-  return { val: numAtom.val + info.c.c1 };
-});
-
-// driveAtom 返回原始值，result 会自动装箱为 { val: T }
-const result = driveAtom(() => {
-  return numAtom.val + info.c.c1;
-});
-```
-
-### 异步全量派生
-
-支持配置 `task` 异步计算任务来实现异步派生结果
-
-```ts
-const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } });
-
-const result = deriveAsync({
-  // 定义依赖项
-  deps: () => [sharedState.a, sharedState.b.b1.b2] as const,
-  // 定义初始值计算函数
-  fn: ({ input: [a, b2] }) => ({ val: a + b2 }),
-  // 定义异步计算任务，默认首次不执行，可设置 immediate 触发首次执行
-  task: async ({ input: [a, b2] }) => {
-    await delay(1000);
-    return { val: a + b2 + 1 };
-  },
-  // immediate: true,
-});
-
-// 可使用 deriveAtomAsync 定义异步计算任务并返回原始值
-// const resultAtom = deriveAtomAsync();
-```
-
-派生结果是支持复用，形成派生链
-
-// 以下为伪代码
-
-<!-- const result1 = derive(...);
-const result2 = driveAtom(...);
-const result3 = deriveAsync(...);
-
-const result4 = derive(()=>{
-  return { num: result.a + 1, plus: result2.val + 100, final: result3.num + 100 };
-}); -->
-
-### 组件使用全量派生结果
-
-组件内部使用`useDerived`钩子函数使用`derive`派生结果
-
-<!-- ```tsx
-const result1 = derive(...);
-
-function Demo(){
-  const [ result ] = useDerived(result1);
-}
-``` -->
-
-使用`useDerivedAtom`钩子函数使用`driveAtom`派生结果
-
-```ts
-const resultAtom = driveAtom(...);
-
-function Demo(){
-  // reulst 会被自动从 { val: T } 拆箱为 T
-  const [ result ] = useDerivedAtom(resultAtom);
-}
-```
-
-### 人工触发重运行
-
-派生函数除了观察到数据依赖变化后被触发执行的方式，还可使用 `runDerive` 接口人工触发对应的派生函数

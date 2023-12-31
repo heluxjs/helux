@@ -5,12 +5,16 @@ group:
 order: 3
 ---
 
-# 模型 - model
+# 模型
+
+## model
 
 提供 `model` 函数，帮助用户按业务功能聚合管理相关状态与操作
 
 ```ts
-const model = createModel((api) => {
+import 'model' from 'helux';
+
+const userModel = model((api) => {
   // api对象 有详细的类型提示
   const userCtx = api.shareState({ a: 1, b: 2 });
   const { state, setState } = userCtx;
@@ -36,6 +40,8 @@ const model = createModel((api) => {
 提供更高阶的 `modelFactory` 函数，帮助用户创建可克隆使用的 model 工厂函数，做到逻辑复用但状态隔离的效果
 
 ```ts
+import 'modelFactory' from 'helux';
+
 const factory = modelFactory((api, extra) => {
   const userCtx = api.shareState({ a: 1, b: 2 }, { moduleName: extra });
   const { state, setState } = userCtx;

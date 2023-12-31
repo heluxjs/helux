@@ -14,8 +14,8 @@ export default defineConfig({
     name: 'Helux',
     nav: [
       { title: '指南', link: '/guide' },
+      { title: 'API', link: '/api' },
       { title: '参考', link: '/reference' },
-      { title: '教程', link: '/examples' },
       { title: '生态', link: '/ecosystem' },
       { title: 'GitHub', link: 'https://github.com/heluxjs/helux' },
     ],

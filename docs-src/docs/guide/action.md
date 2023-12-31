@@ -1,8 +1,8 @@
 ---
 group:
-  title: 进阶
-  order: 1
-order: 1
+  title: 开始
+  order: 0
+order: 8
 ---
 
 # Action
@@ -52,7 +52,7 @@ function Demo1() {
 }
 
 export default () => (
-  <Entry fns={[hiAction]}>
+  <Entry fns={{hiAction}}>
     <Demo1 />
     <Demo1/>
   </Entry>
@@ -120,7 +120,7 @@ function Demo1() {
 }
 
 export default () => (
-  <Entry fns={[hiAsyncAction]}>
+  <Entry fns={{hiAsyncAction}}>
     <Demo1 />
     <Demo1/>
   </Entry>

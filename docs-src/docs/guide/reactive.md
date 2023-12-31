@@ -121,7 +121,7 @@ function Demo3() {
 }
 
 export default () => (
-  <Entry fns={[toogleOkOut]}>
+  <Entry fns={{toogleOkOut}}>
     <Demo />
     <Demo />
     <Demo2 />
@@ -184,7 +184,7 @@ const InBlockZone = block(()=>{
 });
 
 export default () => (
-  <Entry fns={[change]}>
+  <Entry fns={{change}}>
     <InSignalZone />
     <InBlockZone />
   </Entry>

@@ -17,16 +17,16 @@ npm i helux
 
 ### cdn 引用
 
-来自 unpkg，改变版本号查看[其他产物](https://unpkg.com/browse/helux@3.6.0/dist/)
+来自 unpkg，改变版本号查看[其他产物](https://unpkg.com/browse/helux@3.6.3/dist/)
 
 ```html
-<script src="https://unpkg.com/helux@3.6.0/dist/index.global.js"></script>
+<script src="https://unpkg.com/helux@3.6.3/dist/index.global.js"></script>
 ```
 
-来自 jsdelivr，改变版本号查看[其他产物](https://cdn.jsdelivr.net/npm/helux@3.6.0/dist/)
+来自 jsdelivr，改变版本号查看[其他产物](https://cdn.jsdelivr.net/npm/helux@3.6.3/dist/)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/helux@3.6.0/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/helux@3.6.3/dist/index.global.js"></script>
 ```
 
 :::warning{title=自己托管}

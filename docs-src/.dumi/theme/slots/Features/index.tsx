@@ -62,7 +62,7 @@ const Features: FC = () => {
             <span style={{ color: '#645ab7' }}>
               {title && <h2>{titleWithLink || title}</h2>}
             </span>
-            <span style={{ color: '#ad4e00' }}>
+            <span style={{ color: 'gray' }}>
               {' '}
               {description && (
                 <p dangerouslySetInnerHTML={{ __html: description }} />
