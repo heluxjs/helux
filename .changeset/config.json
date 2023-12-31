@@ -2,10 +2,19 @@
   "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": true,
-  "fixed": [["helux", "@helux/core", "@helux/hooks", "@helux/hooks-impl", "@helux/plugin-devtool", "@helux/types", "@helux/utils"]],
+  "fixed": [["helux", "@helux/core"]],
   "linked": [],
   "access": "restricted",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": ["@helux/fre", "@helux/preact"]
+  "ignore": [
+    "@helux/fre",
+    "@helux/preact",
+    "@helux/demo-utils",
+    "@helux/hooks",
+    "@helux/hooks-impl",
+    "@helux/plugin-devtool",
+    "@helux/types",
+    "@helux/utils"
+  ]
 }

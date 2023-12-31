@@ -45,7 +45,6 @@ const NavbarItem: FC<{ data: ReturnType<typeof useNavData>[0] }> = ({
       ? { className: 'active' }
       : {};
 
-  console.log('--->', data);
   return data.link ? (
     <>
       <Link to={data.link} {...extraProps}>

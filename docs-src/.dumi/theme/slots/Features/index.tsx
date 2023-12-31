@@ -59,7 +59,7 @@ const Features: FC = () => {
                 style={{ width: '88px', height: '88px' }}
               ></img>
             </div>
-            <span style={{ color: '#443082' }}>
+            <span style={{ color: '#645ab7' }}>
               {title && <h2>{titleWithLink || title}</h2>}
             </span>
             <span style={{ color: '#ad4e00' }}>

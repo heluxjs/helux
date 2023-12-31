@@ -1,0 +1,66 @@
+{
+  "name": "@helux/demo-utils",
+  "version": "0.0.1",
+  "description": "helux demo utils",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heluxjs/helux",
+    "directory": "packages/demo-utils"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "fantasticsoul"
+  },
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "types": "src/index.ts",
+  "files": [
+    "dist",
+    "lib",
+    "es",
+    "src",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc && npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
+    "build:commonjs": "rollup -c --environment BUILD_ENV:commonjs",
+    "build:es": "rollup -c --environment BUILD_ENV:es",
+    "build:umd": "rollup -c --environment BUILD_ENV:development",
+    "build:umd:min": "rollup -c --environment BUILD_ENV:production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@types/react": ">=16.0.0",
+    "@types/react-dom": ">=16.0.0",
+    "helux": "^3.6.0",
+    "react": ">=16.10.2",
+    "react-dom": ">=16.10.2"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-react": "^7.12.10",
+    "babel-cli": "^6.26.0",
+    "rollup": "^2.23.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-uglify": "^6.0.4"
+  },
+  "peerDependencies": {
+    "@types/react": ">=16.0.0",
+    "@types/react-dom": ">=16.0.0",
+    "hel-micro": "^4.8.11",
+    "hel-micro-core": "^4.8.7",
+    "hel-types": "^4.3.3",
+    "react": ">=16.10.2",
+    "react-dom": ">=16.10.2"
+  },
+  "bundleDependencies": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "deprecated": false
+}

@@ -22,8 +22,9 @@ export default defineConfig({
   },
   // #443082 #e8ae56
   theme: {
-    '@c-primary': '#443082',
-    'primary-color': '#443082',
+    // '@c-primary': '#e8ae56',
+    '@c-primary': '#645ab7',
+    'primary-color': '#e8ae56',
   },
   logo: 'https://tnfe.gtimg.com/image/dlykfuw8ai_1703851692543.png',
 });
