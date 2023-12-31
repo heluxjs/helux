@@ -1,8 +1,8 @@
 ---
 group:
-  title: 基础
+  title: 进阶
   order: 0
-order: 1
+order: 5
 ---
 
 # 插件

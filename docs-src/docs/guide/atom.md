@@ -5,7 +5,7 @@ group:
 order: 2
 ---
 
-# atom
+# Atom
 
 阅读此章节可快速了解`atom`接口简单用法，更多使用方式请查阅[atom 接口文档](xx)。
 
@@ -125,5 +125,53 @@ function changName(name) {
   setShared((draft) => {
     draft.info.name = name;
   });
+}
+```
+
+```tsx
+import { MarkUpdate, Entry } from '@helux/demo-utils';
+import { share, useAtom } from 'helux';
+
+const [sharedState, setState] = share({
+  a: 1,
+  b: 2,
+  info: { born: '2023-12-31', age: 2 },
+});
+
+function changeBorn(){
+  setState((draft) => void (draft.info.born = `${Date.now()}`));
+}
+
+function HelloBorn() {
+  const [state, setState, info] = useAtom(sharedState);
+  const change = () =>
+    setState((draft) => void (draft.info.born = `${Date.now()}`));
+  return (
+    <MarkUpdate info={info}>
+      <h1>hello helux {state.info.born}</h1>
+      <button onClick={change}>changeBorn</button>
+    </MarkUpdate>
+  );
+}
+
+function HelloAge() {
+  const [state, setState, info] = useAtom(sharedState);
+  const change = () =>
+    setState((draft) => void (draft.info.born = `${Date.now()}`));
+  return (
+    <MarkUpdate info={info}>
+      <h1>hello helux {state.info.born}</h1>
+      <button onClick={change}>changeBorn</button>
+    </MarkUpdate>
+  );
+}
+
+export default function Demo() {
+  return (
+    <Entry fns={[changeBorn]}>
+      <HelloBorn />
+      <HelloBorn />
+    </Entry>
+  );
 }
 ```

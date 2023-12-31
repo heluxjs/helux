@@ -5,7 +5,7 @@ group:
 order: 3
 ---
 
-# signal
+# Signal
 
 `signal`响应机制允许用户跳过`useAtom`直接将数据绑定到视图，实现 **0 hook**编码、**dom 粒度**或**块粒度**更新。
 
