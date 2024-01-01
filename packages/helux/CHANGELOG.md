@@ -1,5 +1,12 @@
 # helux
 
+## 3.6.4
+
+### Patch Changes
+
+- Updated dependencies [272a1293]
+  - @helux/core@3.6.4
+
 ## 3.6.3
 
 ### Patch Changes

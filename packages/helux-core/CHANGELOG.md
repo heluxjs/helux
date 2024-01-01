@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.6.4
+
+### Patch Changes
+
+- 272a1293: add from when buildMeta for topReactive
+  - @helux/hooks-impl@3.6.4
+  - @helux/types@3.6.4
+  - @helux/utils@3.6.4
+
 ## 3.6.3
 
 ### Patch Changes
