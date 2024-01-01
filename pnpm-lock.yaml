@@ -94,7 +94,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: workspace:^3.6.3
+      helux: workspace:^3.6.4
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21
@@ -138,7 +138,7 @@ importers:
 
   examples/react-web:
     specifiers:
-      '@helux/plugin-devtool': workspace:^3.5.19
+      '@helux/plugin-devtool': workspace:^3.6.0
       '@testing-library/jest-dom': ^5.17.0
       '@testing-library/react': ^13.4.0
       '@testing-library/user-event': ^13.5.0
@@ -146,7 +146,7 @@ importers:
       '@types/node': ^16.18.68
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
-      helux: workspace:^3.5.19
+      helux: workspace:^3.6.4
       react: ^18.2.0
       react-dom: ^18.2.0
       react-scripts: 5.0.1
@@ -235,7 +235,7 @@ importers:
       hel-micro: ^4.8.11
       hel-micro-core: ^4.8.7
       hel-types: ^4.3.3
-      helux: ^3.6.0
+      helux: ^3.6.4
       react: '>=16.10.2'
       react-dom: '>=16.10.2'
       rollup: ^2.23.0
@@ -11797,6 +11797,7 @@ packages:
       hel-micro-core: 4.8.12_hel-types@4.3.3
       hel-types: 4.3.3
     dev: false
+    bundledDependencies: []
 
   /hel-types/4.3.3:
     resolution: {integrity: sha512-Oluh82FIi0XvM1kfXYpYqZ9j70hHVrLEDEeWc3Hf9yl1eYDKBlomTXppXN7cQN9yn82+3Mk7BYrJx8D/Y63CjA==}
