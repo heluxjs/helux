@@ -93,7 +93,7 @@ export default () => (
 ```tsx
 import { sharex } from 'helux';
 
-const { sync, useState } = sharex({ b: { b1: 1 } });
+const { sync, useState } = sharex({ b: { b1: '1' } });
 
 function Demo1() {
   const [state] = useState();
@@ -117,7 +117,7 @@ export default () => (
 ```tsx
 import { sharex } from 'helux';
 
-const { sync, useState } = sharex({ b: { b1: 1 } });
+const { sync, useState } = sharex({ b: { b1: '1' } });
 
 function Demo1() {
   const [state] = useState();
@@ -148,14 +148,14 @@ export default () => (
 />
 ```
 
-:::info{title=before 拦截}
+:::info{title=before拦截}
 输入 `888` 将触发篡改数据逻辑
 :::
 
 ```tsx
 import { sharex } from 'helux';
 
-const { sync, useState } = sharex({ b: { b1: 1 } });
+const { sync, useState } = sharex({ b: { b1: '1' } });
 
 function Demo1() {
   const [state] = useState();
@@ -176,6 +176,59 @@ export default () => (
   <div>
     <Demo1 />
     <Demo1 />
+  </div>
+);
+```
+
+支持`before`回调里修改其他值
+
+```tsx | pure
+<input
+  value={num}
+  onChange={sync(
+    (to) => to.b.b1,
+    (val, params) => {
+      if(val === '888'){
+        params.draft.b2 = 'b2 changed';
+        return 'boom';
+      }
+    },
+  )}
+/>
+```
+
+:::info{title=before拦截}
+输入 `888` 将触发多个数据被篡改
+:::
+
+```tsx
+import { sharex, $ } from 'helux';
+
+const { sync, useState, state } = sharex({ b: { b1: '', b2: '' } });
+
+function Demo1() {
+  const [state] = useState();
+  return (
+    <input
+      value={state.b.b1}
+      onChange={sync(
+        (to) => to.b.b1,
+        (val, params) => {
+          if(val === '888'){
+            params.draft.b.b2 = `b2 changed at ${Date.now()}`;
+            return 'boom';
+          }
+        },
+      )}
+    />
+  );
+}
+
+export default () => (
+  <div>
+    <Demo1 />
+    <Demo1 />
+    <h2>state.b.b2: {$(state.b.b2)}</h2>
   </div>
 );
 ```
