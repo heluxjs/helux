@@ -138,13 +138,13 @@ function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
  */
 function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAtom: boolean) {
   const { sharedKey } = internal;
-  const { insKey = 0 } = options;
+  const { insKey = 0, from } = options;
   let topMeta = metas.get(sharedKey) || fakeReativeMeta;
   let targetMeta = topMeta;
 
   // 无顶层响应对象、或顶层响应对象已过期，则重建顶层 top reactive
   if (topMeta.expired) {
-    topMeta = buildMeta(internal, { isTop: true });
+    topMeta = buildMeta(internal, { isTop: true, from });
     metas.set(sharedKey, topMeta);
     REACTIVE_META.set(topMeta.key, topMeta);
     // mark using

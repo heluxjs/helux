@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "3.6.3",
+  "version": "3.6.4",
   "description": "A state engine that integrates atom, signal, derive, watch and dep tracking, supports fine-grained responsive updates, it is compatible with all react like libs (including React 18).",
   "keywords": [],
   "author": {
@@ -20,7 +20,7 @@
     "cpdoc2": "rm -rf ../helux-gh-pages/* && cp -r ./docs/docs-dist/* ../helux-gh-pages",
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
     "doc2": "pnpm --filter=helux-docs run docs:build",
-    "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' --ignore-path .gitignore --ignore-unknown",
+    "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' '!./docs' --ignore-path .gitignore --ignore-unknown",
     "limu": "pnpm i limu@latest --filter @helux/core",
     "prepare": "husky install",
     "release:all": "changeset publish",

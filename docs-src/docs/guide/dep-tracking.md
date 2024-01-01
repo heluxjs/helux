@@ -50,7 +50,7 @@ function Demo2() {
 }
 
 export default () => (
-  <Entry fns={{changeObj}}>
+  <Entry fns={{ changeObj }}>
     <Demo1 />
     <Demo1 />
     <Demo2 />
@@ -112,7 +112,7 @@ function Demo1() {
 }
 
 export default () => (
-  <Entry fns={{plusA, minusA, changeB1}}>
+  <Entry fns={{ plusA, minusA, changeB1 }}>
     <Demo1 />
     <Demo1 />
   </Entry>
@@ -164,7 +164,7 @@ function Demo1() {
 }
 
 export default () => (
-  <Entry fns={{changeB1, changeB1_Ok_oldValue, changeB1_Ok_newValue}}>
+  <Entry fns={{ changeB1, changeB1_Ok_oldValue, changeB1_Ok_newValue }}>
     <Demo1 />
     <Demo1 />
   </Entry>

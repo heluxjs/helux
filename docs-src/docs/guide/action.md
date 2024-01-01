@@ -48,13 +48,13 @@ const hiAction = action<[number, string]>()(({ draft, payload }) => {
 
 function Demo1() {
   const [state] = useState();
-  return <h1>{state.a}</h1>
+  return <h1>{state.a}</h1>;
 }
 
 export default () => (
-  <Entry fns={{hiAction}}>
+  <Entry fns={{ hiAction }}>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </Entry>
 );
 ```
@@ -65,7 +65,7 @@ export default () => (
 
 ```ts
 const hiAsyncAction = action<[number, string]>()(async ({ draft, payload }) => {
-  draft.a += 100; 
+  draft.a += 100;
   await delay(); // 进入下一次事件循环微任务执行前，触发提交 draft 变更数据
   draft.a += 100;
   return true;
@@ -83,22 +83,27 @@ const { loading, ok, err } = ld.hiAsyncAction;
 ```
 
 :::info{title=错误捕获}
-多次点击 `hiAsyncAction` 见触发组件渲染捕获到action抛出的错误
+多次点击 `hiAsyncAction` 见触发组件渲染捕获到 action 抛出的错误
 :::
-
 
 ```tsx
 import { Entry, demoUtils } from '@helux/demo-utils';
 import { sharex } from 'helux';
 
-const { useState, action, useActionLoading } = sharex({ a: 1, b: { b1: 1 }, c: true, desc: '' });
+const { useState, action, useActionLoading } = sharex({
+  a: 1,
+  b: { b1: 1 },
+  c: true,
+  desc: '',
+});
 
 const hiAsyncAction = action<[number, string]>()(async ({ draft, payload }) => {
-  draft.a += 100; 
+  draft.a += 100;
   await demoUtils.delay(); // 进入下一次事件循环微任务执行前，触发提交 draft 变更数据
   draft.a += 100;
 
-  if(draft.a > 300){ // 抛出错误让 useActionLoading 处理
+  if (draft.a > 300) {
+    // 抛出错误让 useActionLoading 处理
     throw new Error('300!');
   }
   return true;
@@ -106,23 +111,23 @@ const hiAsyncAction = action<[number, string]>()(async ({ draft, payload }) => {
 
 function Demo1() {
   const [state] = useState();
-  const [{ hiAsyncAction: ld } ] = useActionLoading(); // 获得 hiAsyncAction 的执行状态
+  const [{ hiAsyncAction: ld }] = useActionLoading(); // 获得 hiAsyncAction 的执行状态
 
-  if(ld.loading){
-    return <h1>loading...</h1>
+  if (ld.loading) {
+    return <h1>loading...</h1>;
   }
 
-  if(!ld.ok){
-    return <h1 style={{color:'red'}}>{ld.err.message}</h1>
+  if (!ld.ok) {
+    return <h1 style={{ color: 'red' }}>{ld.err.message}</h1>;
   }
 
-  return <h1>{state.a}</h1>
+  return <h1>{state.a}</h1>;
 }
 
 export default () => (
-  <Entry fns={{hiAsyncAction}}>
+  <Entry fns={{ hiAsyncAction }}>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </Entry>
 );
 ```

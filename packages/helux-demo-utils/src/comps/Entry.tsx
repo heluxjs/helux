@@ -14,11 +14,11 @@ function eusuerFns(props: IProps) {
   const { fns = [] } = props;
   let newFns = [];
   if (!Array.isArray(fns)) {
-    Object.keys(fns).forEach(key => {
+    Object.keys(fns).forEach((key) => {
       const fn = fns[key];
       fn.__fnName = key;
       newFns.push(fn);
-    })
+    });
   } else {
     newFns = fns;
   }

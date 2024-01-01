@@ -131,12 +131,12 @@ export default () => (
 );
 ```
 
-## signal中使用
+## signal 中使用
 
 可直接将 `reactive` 值传给 `$`原始值响应或`block`块响应
 
 ```tsx | pure
-import { sharex, $, block } from 'helux';
+import { $, block, sharex } from 'helux';
 
 const { reactive } = sharex({
   a: 1,
@@ -147,7 +147,7 @@ function InSignalZone() {
   return <h1>{$(reactive.a)}</h1>;
 }
 
-const InBlockZone = block(()=>{
+const InBlockZone = block(() => {
   return (
     <div>
       <h3>{reactive.a}</h3>
@@ -159,13 +159,13 @@ const InBlockZone = block(()=>{
 
 ```tsx
 import { Entry, MarkUpdate } from '@helux/demo-utils';
-import { sharex, $, block } from 'helux';
+import { $, block, sharex } from 'helux';
 
 const { reactive } = sharex({
   a: 1,
   b: { b1: { b2: 1, ok: true } },
 });
-function change(){
+function change() {
   reactive.a += 1;
   reactive.b.b1.b2 += 5;
 }
@@ -174,7 +174,7 @@ function InSignalZone() {
   return <MarkUpdate>{$(reactive.a)}</MarkUpdate>;
 }
 
-const InBlockZone = block(()=>{
+const InBlockZone = block(() => {
   return (
     <MarkUpdate>
       <h3>{reactive.a}</h3>

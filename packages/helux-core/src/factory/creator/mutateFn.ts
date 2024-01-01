@@ -126,6 +126,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
     setStatus(false, null, true);
     // 这里需要主动 flush 一次，让返回的 snap 是最新值（ flush 内部会主动判断 reactive 是否已过期，不会有冗余的刷新动作产生 ）
     // const nextState = actions.xxxMethod(); //  nextState 为最新值
+    // 同时多个 action 组合使用时，下一个 action 可自动获取到最新的 draft
     flush(desc);
 
     return { snap: internal.snap, err: null, result: partial };

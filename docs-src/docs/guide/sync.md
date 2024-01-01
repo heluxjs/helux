@@ -25,7 +25,7 @@ const { syncer, state } = sharex({ a: 1, b: { b1: 1 }, c: true });
 ```tsx | pure
 import { Select } from 'antd';
 
-<Select value={state.a} onChange={syncer.a} />
+<Select value={state.a} onChange={syncer.a} />;
 ```
 
 ```tsx
@@ -46,12 +46,12 @@ function Demo1() {
 export default () => (
   <div>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </div>
 );
 ```
 
-原始值atom绑定时，传递`syncer`自身即可
+原始值 atom 绑定时，传递`syncer`自身即可
 
 ```tsx | pure
 import { atomx } from 'helux';
@@ -76,11 +76,10 @@ function Demo1() {
 export default () => (
   <div>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </div>
 );
 ```
-
 
 ## 深层数据绑定
 
@@ -88,7 +87,7 @@ export default () => (
 
 ```tsx | pure
 // 数据自动同步到 to.b.b1 下
-<input value={state.b.b1} onChange={sync(to=> to.b.b1)} />
+<input value={state.b.b1} onChange={sync((to) => to.b.b1)} />
 ```
 
 ```tsx
@@ -98,13 +97,13 @@ const { sync, useState } = sharex({ b: { b1: 1 } });
 
 function Demo1() {
   const [state] = useState();
-  return  <input value={state.b.b1} onChange={sync(to=> to.b.b1)} />;
+  return <input value={state.b.b1} onChange={sync((to) => to.b.b1)} />;
 }
 
 export default () => (
   <div>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </div>
 );
 ```
@@ -112,7 +111,7 @@ export default () => (
 可传递路径字符串数组定义绑定目标节点
 
 ```tsx | pure
-<input value={state.b.b1} onChange={sync(['b','b1'])} />
+<input value={state.b.b1} onChange={sync(['b', 'b1'])} />
 ```
 
 ```tsx
@@ -122,29 +121,34 @@ const { sync, useState } = sharex({ b: { b1: 1 } });
 
 function Demo1() {
   const [state] = useState();
-  return <input value={state.b.b1} onChange={sync(['b','b1'])} />;
+  return <input value={state.b.b1} onChange={sync(['b', 'b1'])} />;
 }
 
 export default () => (
   <div>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </div>
 );
 ```
-
 
 ## 拦截修改
 
 `sync` 函数提供 `before` 回调给用户，支持数据提交前做二次修改
 
 ```tsx | pure
-<input value={num} onChange={sync(to => to.b.b1, (val) => {
-  return val === '888' ? 'boom' : val;
-})}/>
+<input
+  value={num}
+  onChange={sync(
+    (to) => to.b.b1,
+    (val) => {
+      return val === '888' ? 'boom' : val;
+    },
+  )}
+/>
 ```
 
-:::info{title=before拦截}
+:::info{title=before 拦截}
 输入 `888` 将触发篡改数据逻辑
 :::
 
@@ -156,16 +160,22 @@ const { sync, useState } = sharex({ b: { b1: 1 } });
 function Demo1() {
   const [state] = useState();
   return (
-    <input value={state.b.b1} onChange={sync(to => to.b.b1, (val) => {
-      return val === '888' ? 'boom' : val;
-    })}/>
+    <input
+      value={state.b.b1}
+      onChange={sync(
+        (to) => to.b.b1,
+        (val) => {
+          return val === '888' ? 'boom' : val;
+        },
+      )}
+    />
   );
 }
 
 export default () => (
   <div>
     <Demo1 />
-    <Demo1/>
+    <Demo1 />
   </div>
 );
 ```

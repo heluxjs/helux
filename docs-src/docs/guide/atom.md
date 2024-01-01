@@ -129,7 +129,7 @@ function changName(name) {
 ```
 
 ```tsx
-import { MarkUpdate, Entry } from '@helux/demo-utils';
+import { Entry, MarkUpdate } from '@helux/demo-utils';
 import { share, useAtom } from 'helux';
 
 const [sharedState, setState] = share({
@@ -138,7 +138,7 @@ const [sharedState, setState] = share({
   info: { born: '2023-12-31', age: 2 },
 });
 
-function changeBorn(){
+function changeBorn() {
   setState((draft) => void (draft.info.born = `${Date.now()}`));
 }
 
@@ -168,7 +168,7 @@ function HelloAge() {
 
 export default function Demo() {
   return (
-    <Entry fns={{changeBorn}}>
+    <Entry fns={{ changeBorn }}>
       <HelloBorn />
       <HelloBorn />
     </Entry>

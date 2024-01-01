@@ -35,7 +35,7 @@ const result = derive(() => {
 
 ```tsx
 import { Entry } from '@helux/demo-utils';
-import { atom, share, derive, useDerived } from 'helux';
+import { atom, derive, share, useDerived } from 'helux';
 
 const [numAtom, setAtom] = atom(5);
 const [info, setInfo] = share({
@@ -48,15 +48,19 @@ const result = derive(() => {
   return numAtom.val + info.c.c1;
 });
 
-const changeNum = ()=>setAtom(prev=>prev+10);
-const changeC1 = ()=>setInfo(draft=>void(draft.c.c1+=20));
+const changeNum = () => setAtom((prev) => prev + 10);
+const changeC1 = () => setInfo((draft) => void (draft.c.c1 += 20));
 
-function Demo(){
-  const [ num ] = useDerived(result); // 自动拆箱
-  return <h1>{num}</h1>
+function Demo() {
+  const [num] = useDerived(result); // 自动拆箱
+  return <h1>{num}</h1>;
 }
 
-export default ()=><Entry fns={{changeNum,changeC1}}><Demo/></Entry>
+export default () => (
+  <Entry fns={{ changeNum, changeC1 }}>
+    <Demo />
+  </Entry>
+);
 ```
 
 返回结果为字典对象类型时，可使用`driveDict`来免去自动装箱过程
@@ -93,44 +97,48 @@ const result = derive({
 组件中可使用`useDerived`获取到异步派生结果和派生函数执行状态
 
 ```tsx | pure
-function Demo(){
+function Demo() {
   const [num, status] = useDerived(result);
-  if(status.loading) return <h1>loading...</h1>;
-  if(!status.ok) return <h1>{status.err.message}</h1>;
+  if (status.loading) return <h1>loading...</h1>;
+  if (!status.ok) return <h1>{status.err.message}</h1>;
   return <h1>num</h1>;
 }
 ```
 
 :::info
-点击`changeA`3次后，将触发task抛出异常到组件中
+点击`changeA`3 次后，将触发 task 抛出异常到组件中
 :::
 
 ```tsx
 import { Entry, demoUtils } from '@helux/demo-utils';
-import { atom, share, derive, useDerived } from 'helux';
+import { derive, share, useDerived } from 'helux';
 
 const [sharedState, setState] = share({ a: 1, b: { b1: { b2: 200 } } });
-const changeA = ()=>setState(draft=>void(draft.a+=100));
+const changeA = () => setState((draft) => void (draft.a += 100));
 
 const result = derive({
   deps: () => [sharedState.a, sharedState.b.b1.b2] as const,
-  fn: ({ input: [a, b2] }) =>  a + b2 ,
+  fn: ({ input: [a, b2] }) => a + b2,
   task: async ({ input: [a, b2] }) => {
     await demoUtils.delay(1000);
     const ret = a + b2 + 1;
-    if(ret > 500) throw new Error('>500');
+    if (ret > 500) throw new Error('>500');
     return ret;
   },
 });
 
-function Demo(){
+function Demo() {
   const [num, status] = useDerived(result);
-  if(status.loading) return <h1>loading...</h1>;
-  if(!status.ok) return <h1 style={{color:'red'}}>{status.err.message}</h1>;
+  if (status.loading) return <h1>loading...</h1>;
+  if (!status.ok) return <h1 style={{ color: 'red' }}>{status.err.message}</h1>;
   return <h1>{num}</h1>;
 }
 
-export default ()=><Entry fns={{changeA}}><Demo/></Entry>;
+export default () => (
+  <Entry fns={{ changeA }}>
+    <Demo />
+  </Entry>
+);
 ```
 
 ### 人工触发重运行
@@ -138,7 +146,7 @@ export default ()=><Entry fns={{changeA}}><Demo/></Entry>;
 派生函数除了观察到数据依赖变化后被触发执行的方式，还可使用 `runDerive` 接口人工触发对应的派生函数
 
 ```ts
-import { runDerive } from 'helux'
+import { runDerive } from 'helux';
 const result = derive(() => {
   return numAtom.val + info.c.c1;
 });
@@ -148,22 +156,26 @@ runDerive(result);
 
 ```tsx
 import { Entry, demoUtils } from '@helux/demo-utils';
-import { share, derive, useDerived, runDerive } from 'helux';
+import { derive, runDerive, share, useDerived } from 'helux';
 
 const [sharedState, setState] = share({ a: 1 });
 const result = derive(() => {
   return sharedState.a + demoUtils.random();
 });
-function rerun(){
+function rerun() {
   runDerive(result);
 }
 
-function Demo(){
+function Demo() {
   const [num, status] = useDerived(result);
   return <h1>{num}</h1>;
 }
 
-export default ()=><Entry fns={{rerun}}><Demo/></Entry>;
+export default () => (
+  <Entry fns={{ rerun }}>
+    <Demo />
+  </Entry>
+);
 ```
 
 异步任务可使用`runDeriveTask`触发重执行
