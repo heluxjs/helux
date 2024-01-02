@@ -94,7 +94,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: workspace:^3.6.4
+      helux: workspace:^3.6.6
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21
@@ -235,7 +235,7 @@ importers:
       hel-micro: ^4.8.11
       hel-micro-core: ^4.8.7
       hel-types: ^4.3.3
-      helux: ^3.6.4
+      helux: ^3.6.6
       react: '>=16.10.2'
       react-dom: '>=16.10.2'
       rollup: ^2.23.0

@@ -92,4 +92,46 @@ setDict((draft) => {
 });
 ```
 
-注意单值修改
+注意箭头函数里一行代码给 draft 赋值时，箭头函数存在隐含返回值导致ts编译不通过的问题
+
+:::warning
+元组第二位 setter 是会处理返回值的，箭头函数的隐含返回值类型和 atom 对象类型不匹配，此时导致编译报错
+:::
+
+```ts
+const [ , setState, ctx ] = atom({ a: 1, b: 2 });
+// ❌ ts 校验失败，这里返回了 1，和 atom 类型 Partial<T> 不匹配
+setState((draft) => draft.a = 1);
+
+// ✅ 以下3种方式 ts 校验通过
+// 1 使用void包裹，消除隐式返回值
+setState((draft) => void (draft.a = 1));
+// 2 使用 {} 包裹箭头函数体
+setState((draft) => {
+  draft.a = 1;
+});
+// 或使用共享上下文的 setDraft 接口
+ctx.setDraft((draft) => (draft.a = 1));
+```
+
+## 可选参数
+
+创建`atom`对象支持传入`ICreateOptions`可选参数，包含以下属性可以设置
+
+### moduleName
+
+**模块名称**，方便用户可以查看到语义化的状态树，`@helux/dev-tool`插件也仅接受设置了模块名的状态来做可视化呈现，推荐按业务名设置。
+
+:::success{title=设置以否不影响helux运行}
+不设置的话内部会以生成的自增序号作为 key，如果设置重复了，目前仅控制台做个警告，helux 内部始终以生成的自增序号作为模块命名空间控制其他逻辑
+:::
+
+
+```ts
+ atom({ a: 1, b: 2 }, {moduleName:'user'});
+```
+
+### recordLoading
+
+default: 'private' ，表示 loading 对象记录的位置
+

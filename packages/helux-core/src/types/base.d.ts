@@ -1107,7 +1107,7 @@ export interface IDataRule<T = any> {
 
 export interface ICreateOptionsFull<T = SharedState> {
   /**
-   * 模块名称，方便用户可以查看到语义化的状态树，不传递的话内部会以生成的自增序号 作为 key
+   * 模块名称，方便用户可以查看到语义化的状态树，不传递的话内部会以生成的自增序号作为 key
    * 传递的话如果重复了，目前的策略仅仅是做个警告，helux 内部始终以生成的自增序号作为模块命名空间控制其他逻辑
    */
   moduleName: string;
@@ -1120,7 +1120,7 @@ export interface ICreateOptionsFull<T = SharedState> {
    */
   deep: boolean;
   /**
-   * default: 'private' ，表示loading 对象记录的位置，具体含义见 recordLoading，
+   * default: 'private' ，表示 loading 对象记录的位置，具体含义见 recordLoading，
    * 注：loading 对象用于辅助查询 mutate 或者 action 异步函数的执行状态
    */
   recordLoading: RecordLoading;
