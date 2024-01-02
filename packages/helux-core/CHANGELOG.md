@@ -1,5 +1,14 @@
 # @helux/core
 
+## 3.6.7
+
+### Patch Changes
+
+- 37382dce: optimize signal format
+  - @helux/hooks-impl@3.6.7
+  - @helux/types@3.6.7
+  - @helux/utils@3.6.7
+
 ## 3.6.6
 
 ### Patch Changes
