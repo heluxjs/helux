@@ -1,6 +1,7 @@
-import { EVENT_NAME, Fn, IDataChangedInfo, IPlugin } from 'helux';
+import { cst, Fn, IDataChangedInfo, IPlugin } from 'helux';
 import { combineReducers, createStore } from 'redux';
 
+const { EVENT_NAME } = cst
 let reduxStore: any = null;
 const pluginName = 'HeluxPluginDevtool';
 const moduleInfoMap: Record<string, { name: string; state: any }> = {

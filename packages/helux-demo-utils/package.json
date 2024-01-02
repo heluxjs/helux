@@ -33,7 +33,7 @@
   "dependencies": {
     "@types/react": ">=16.0.0",
     "@types/react-dom": ">=16.0.0",
-    "helux": "^3.6.4",
+    "helux": "^3.6.6",
     "react": ">=16.10.2",
     "react-dom": ">=16.10.2"
   },

@@ -39,6 +39,13 @@ const { shallowCompare, isDiff } = limuUtils;
 const createShared = share; // for compatible wit v2 helux
 const $ = signal; // signal api alias
 
+const cst = {
+  EVENT_NAME,
+  RECORD_LOADING,
+  VER,
+  LIMU_VER,
+};
+
 // user can copy this file content to build a lib that can support another react like framework
 export {
   atom,
@@ -58,7 +65,6 @@ export {
   // hooks api
   useAtom,
   useAtomX,
-  useGlobalForceUpdate,
   useReactive,
   useDerived,
   useWatch,
@@ -69,6 +75,7 @@ export {
   useMutateLoading,
   useActionLoading,
   useLocalForceUpdate,
+  useGlobalForceUpdate,
   // action api
   action,
   // signal api
@@ -95,10 +102,10 @@ export {
   currentDraftRoot,
   isAtom,
   isDerivedAtom,
+  isDiff,
+  shallowCompare,
   storeSrv,
   produce,
-  shallowCompare,
-  isDiff,
   getMutateLoading,
   getActionLoading,
   getDeriveLoading,
@@ -107,8 +114,5 @@ export {
   getAtom,
   addMiddleware,
   addPlugin,
-  EVENT_NAME,
-  RECORD_LOADING,
-  VER,
-  LIMU_VER,
+  cst,
 };
