@@ -12,10 +12,10 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 import './index.less';
 
 const {Highlight, Prism, themes } = prism;
-console.log(themes);
 const defaultProps = {
   Prism,
-  theme: themes.github,
+  theme: themes.oneLight,
+  // theme: themes.vsLight,
 };
 
 /**
@@ -38,6 +38,7 @@ const SourceCode: FC<SourceCodeProps> = (props) => {
   const [isCopied, setIsCopied] = useState(false);
   const [text, setText] = useState(children);
   const { themeConfig } = useSiteData();
+  console.log('themeConfig', themeConfig);
 
   useEffect(() => {
     const isShell = /shellscript|shell|bash|sh|zsh/.test(lang);
@@ -66,10 +67,10 @@ const SourceCode: FC<SourceCodeProps> = (props) => {
         </button>
       </CopyToClipboard>
       <Highlight
-        {...defaultProps}
         code={children.trim()}
         language={SIMILAR_DSL[lang] || lang}
         theme={undefined}
+        {...defaultProps}
       >
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre className={className} style={style}>

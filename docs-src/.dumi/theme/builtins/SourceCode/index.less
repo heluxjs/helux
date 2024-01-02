@@ -1,7 +1,12 @@
 @import (reference) '../../styles/variables.less';
 
+@c-primary: #645ab7;
+@primary-color: #e8ae56;
+@dark-selector: ~'[data-prefers-color="dark"]';
+
 // override prism theme for dark mode
 @{dark-selector} {
+
   .token.doctype,
   .token.punctuation,
   .token.entity,
@@ -10,10 +15,57 @@
     color: @c-text-secondary-dark;
   }
 
+  // added by zzk
+  pre[class*='language-tsx'] {
+    background-color: rgb(30, 30, 30) !important;
+  }
+
+  // added by zzk
+  .markdown pre {
+    background-color: rgb(30, 30, 30) !important;
+  }
+
   .token.comment,
   .token.prolog,
   .token.cdata {
     color: @c-text-note-dark;
+  }
+  
+  // added by zzk
+  .token.class-name,
+  .token.tag {
+    color: rgb(78, 201, 176) !important;
+  }
+  .token.function {
+    color: rgb(220, 220, 170) !important;
+  }
+  .token.tag.attr-name,
+  .token.maybe-class-name,
+  .token.imports,
+  .token.plain-text,
+  .token.property-access,
+  .token.template-string.interpolation,
+  .token.plain {
+    color: rgb(156, 220, 254) !important;
+  }
+  .token.operator,
+  .token.arrow.operator,
+  .token.punctuation,
+  .token.tag.punctuation,
+  .token.tag.script.language-javascript.punctuation {
+    color: rgb(212, 212, 212) !important;
+  }
+  .token.string {
+    color: rgb(206, 145, 120) !important;
+  }
+  .token.keyword {
+    color: rgb(86, 156, 214) !important;
+  }
+  .token.number {
+    color: rgb(181, 206, 168) !important;
+  }
+  .token.comment {
+    color: rgb(106, 153, 85) !important;
   }
 }
 
@@ -25,14 +77,19 @@
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 
-  > pre.prism-code {
+  >pre.prism-code {
     margin: 0;
     padding: 18px 24px;
     font-size: 14px;
     line-height: 1.58;
     direction: ltr;
     background: transparent;
-    border: 1px solid rgb(228, 233, 236);
+    // border: 1px solid rgb(228, 233, 236);
+    border: 1px solid #d4cef6;
+    // border: 1px solid #e8ae54;
+    // background-color: #fdfcfd !important;
+    // background-color: #f8f9fb !important;
+    // background-color: #1E1E1E !important;
 
     // remove shadow from coy theme
     &::before,
@@ -41,7 +98,7 @@
     }
 
     // highlight line
-    & > .highlighted {
+    &>.highlighted {
       position: relative;
       width: calc(100% + 24px);
       background-color: shade(@bg-color, 5%);
@@ -71,10 +128,10 @@
       }
     }
 
-    & > .wrap {
+    &>.wrap {
       display: table-row;
 
-      & > .token-line-num {
+      &>.token-line-num {
         display: table-cell;
         text-align: right;
         padding-right: 1em;
@@ -82,7 +139,7 @@
         opacity: 0.5;
       }
 
-      & > .line-cell {
+      &>.line-cell {
         display: table-cell;
         width: 100%;
       }
@@ -101,7 +158,7 @@
     cursor: pointer;
     transition: all 0.2s;
 
-    > svg {
+    >svg {
       width: 16px;
       fill: darken(@c-border, 20%);
       transition: fill 0.2s;
@@ -111,7 +168,7 @@
       }
     }
 
-    &:hover > svg {
+    &:hover>svg {
       fill: darken(@c-border, 30%);
 
       @{dark-selector} & {
@@ -119,7 +176,7 @@
       }
     }
 
-    &[data-copied] > svg {
+    &[data-copied]>svg {
       fill: @c-success;
 
       @{dark-selector} & {
@@ -142,8 +199,9 @@
       background-color: fadeout(@bg-color, 80%);
     }
 
-    & > pre.prism-code > .highlighted {
-      background-color: tint(@bg-color, 10%);
+    &>pre.prism-code>.highlighted {
+      // background-color: tint(@bg-color, 10%);
+      background-color: red;
 
       &::after {
         background-color: tint(@bg-color, 10%);
@@ -157,7 +215,3 @@
     }
   }
 }
-
-@c-primary: #645ab7;
-@primary-color: #e8ae56;
-@dark-selector: ~'[data-prefers-color="dark"]';
