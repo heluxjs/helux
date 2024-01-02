@@ -2,7 +2,7 @@
 group:
   title: 开始
   order: 0
-order: 8
+order: 9
 ---
 
 # Action
@@ -24,6 +24,10 @@ function methodA(input: number) {
 
 ![cool loading](https://tnfe.gtimg.com/image/iu3p7105vx_1699699924785.gif)
 
+:::success{title=defineActions}
+此接口偏向底层，在大型项目里批量定义和管理 action 函数，推荐阅读[模块化](/guide/modular)了解`defineActions`，拥有更好的开发体验和可维护性
+:::
+
 ## 同步 Action
 
 定义有业务含义的同步 action 并约束入参类型
@@ -44,7 +48,7 @@ const { useState, action } = sharex({ a: 1, b: { b1: 1 }, c: true, desc: '' });
 
 const hiAction = action<[number, string]>()(({ draft, payload }) => {
   draft.a += 100;
-}, 'hi action');
+}, 'hiAction');
 
 function Demo1() {
   const [state] = useState();

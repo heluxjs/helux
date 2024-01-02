@@ -7,7 +7,11 @@ order: 1
 
 # 快速上手
 
-阅读此章节可快速了解`helux`的常用接口，并教会你快速学会使用它们。
+阅读此章节可简单了解`helux`常用接口并快速学会使用它们。
+
+:::info
+🌟 `helux`的基础使用方式完全对齐`React.useState`，看完本章节你就可以很丝滑地在项目里实践`helux`了，更多高级使用方式，可向后继续阅读[Atom](/guide/atom)、[Signal](/guide/signal)、[依赖追踪](/guide/dep-tracking)、[响应式](/guide/reactive)、[双向绑定](/guide/sync)、[派生](/guide/derive)、[观察](/guide/watch)、[Action](/guide/action)、[模块化](/guide/modular) 等章节做深入了解
+:::
 
 ## 定义 atom
 
@@ -117,24 +121,52 @@ console.log(objAtom2.val.plusA100); // 200
 
 ## 使用 atom
 
-react 组件通过`useAtom` 钩子可使用 atom 共享对象，该钩子返回一个元组，使用方式完全对齐 `react.useState` 接口，react 用户可 0 成本上手此方式
-
-```tsx | pure
-import { useAtom } from 'helux';
-const [numAtom] = atomx(1);
-
-function Demo() {
-  const [num, setAtom] = useAtom(numAtom); // 返回结果自动拆箱
-  return <h1 onClick={() => setAtom(Math.random())}>{num}</h1>;
-}
-```
+react 组件通过`useAtom` 钩子可使用 atom 共享对象，该钩子返回一个元组，使用方式和 `react.useState` 类似，区别在于对于非原始对象，回调提供草稿供用户直接修改，内部会生成结构化共享的新状态
 
 ```tsx
+/**
+ * title: 点击数字触发修改
+ * defaultShowCode: true
+ */
 import { atom, useAtom } from 'helux';
 const [numAtom] = atom(1);
 
 export default function Demo() {
+  // 返回结果自动拆箱
   const [num, setAtom] = useAtom(numAtom);
   return <h1 onClick={() => setAtom(Math.random())}>{num}</h1>;
 }
+```
+
+atom 对象天然是全局共享的，可将 atom 对象提供给多个组件实例使用
+
+```tsx
+/**
+ * title: 多实例共享atom
+ * defaultShowCode: true
+ */
+import { atom, useAtom } from 'helux';
+const [objAtom, setAtom] = atom({ name: 'hello helux', info: { age: 1 } });
+
+function Demo() {
+  const [obj, setAtom] = useAtom(objAtom);
+  const changeName = () =>
+    setAtom((draft) => {
+      draft.info.age += 1;
+    });
+
+  return (
+    <h1 onClick={() => setAtom(Math.random())}>
+      {obj.name} {obj.info.age}
+      <button onClick={changeName}>changeName</button>
+    </h1>
+  );
+}
+
+export default () => (
+  <>
+    <Demo />
+    <Demo />
+  </>
+);
 ```
