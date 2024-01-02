@@ -11,7 +11,7 @@ order: 3
 
 ## model
 
-`model` 函数回调提供一个`api`对象，包含了大部分`helux`顶层api接口，可以使用此对象来生成业务模型对象
+`model` 函数回调提供一个`api`对象，包含了大部分`helux`顶层 api 接口，可以使用此对象来生成业务模型对象
 
 ```ts
 import 'model' from 'helux';

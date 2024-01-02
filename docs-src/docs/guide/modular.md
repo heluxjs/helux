@@ -574,7 +574,14 @@ export const deriveM = ctx.defineMutateDerive(mutateStateFn)(deriveMutate);
 
 ```ts
 import { sharex } from 'helux';
-import type { IActionTaskParams, DraftType, UnconfirmedArg, IMutateTaskParam, IMutateFnItem, IMutateFnParams } from 'helux';
+import type {
+  IActionTaskParams,
+  DraftType,
+  UnconfirmedArg,
+  IMutateTaskParam,
+  IMutateFnItem,
+  IMutateFnParams,
+} from 'helux';
 
 export function getInitial() {
   return {
@@ -604,7 +611,12 @@ export type MutateTaskParam<P = UnconfirmedArg> = IMutateTaskParam<State, P>; //
 `mutateState`是可变派生对应的状态定义，文件内如如下
 
 ```ts
-import { UnconfirmedArg, IMutateTaskParam, IMutateFnItem, DraftType } from 'helux';
+import {
+  UnconfirmedArg,
+  IMutateTaskParam,
+  IMutateFnItem,
+  DraftType,
+} from 'helux';
 
 /** get initial mutate state */
 export function mutateStateFn() {
@@ -643,7 +655,12 @@ export function changeF(params: ActionTaskParams<number>) {
 `deriveFull`文件定义多个全量派生函数，内容如下
 
 ```ts
-import { IDeriveFnParams, IDeriveFnItem, defineDeriveFnItem, defineDeriveTask } from 'helux';
+import {
+  IDeriveFnParams,
+  IDeriveFnItem,
+  defineDeriveFnItem,
+  defineDeriveTask,
+} from 'helux';
 import { state } from './state';
 import { delay } from '../../../logic/util';
 
@@ -653,7 +670,7 @@ export function go(params: IDeriveFnParams) {
 
 export function test() {
   const map: Record<number, any> = {};
-  state.list.forEach(item => map[item.id] = item);
+  state.list.forEach((item) => (map[item.id] = item));
   return map;
 }
 
@@ -666,10 +683,10 @@ export const fTask: IDeriveFnItem<number, [number]> = {
     return params.input[0];
   },
   task: async (params) => {
-    delay(1000)
+    delay(1000);
     return params.prevResult + 100;
   },
-}
+};
 
 /**
  * 通过 IDeriveFnItem 类型同时约束 fn 和 task 的返回类型，约束 deps 的返回类型
@@ -688,14 +705,12 @@ export const fTask2 = defineDeriveFnItem<IDeriveFnItem<number, [number]>>({
 /**
  * 通过 defineDeriveTask 仅约束结果返回类型，同时自动推导出 deps 返回类型并透传给 params.input
  */
-export const f2 = defineDeriveTask(
-  () => [state.f] as const,
-)<number>({
+export const f2 = defineDeriveTask(() => [state.f] as const)<number>({
   fn: (params) => {
     return params.input[0];
   },
   task: async (params) => {
-    delay(1000)
+    delay(1000);
     return params.prevResult + 100;
   },
 });
@@ -733,17 +748,16 @@ export const changeDTask: MutateFnItem<[number]> = {
   task: async ({ draft, input }) => {
     draft.d = input[0] + 1;
   },
-}
+};
 
 export const changeDTask2: MutateFnItem<[number]> = {
   deps: () => [ctx.state.j],
   // 主动定义 fn 函数，task 不会立即执行
-  fn: ( draft )=> draft.d = 0,
+  fn: (draft) => (draft.d = 0),
   task: async ({ draft, input }) => {
     draft.d = input[0] + 1;
   },
-}
-
+};
 ```
 
 ### deriveSelf
@@ -774,5 +788,5 @@ export const jTask: MutateFnItem<[number]> = {
   task: async ({ draft, input }) => {
     draft.j = input[0] + 2;
   },
-}
+};
 ```

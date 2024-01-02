@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.6.4
+| helux-core@3.6.5
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -64,18 +64,18 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '3.6.4',
-  LIMU_VER: string,
+  VER: '3.6.5';
+  LIMU_VER: string;
   EVENT_NAME: {
-    ON_DATA_CHANGED: 'ON_DATA_CHANGED',
-    ON_SHARE_CREATED: 'ON_SHARE_CREATED',
-  },
+    ON_DATA_CHANGED: 'ON_DATA_CHANGED';
+    ON_SHARE_CREATED: 'ON_SHARE_CREATED';
+  };
   RECORD_LOADING: {
-    NONE: NoRecord,
-    PRIVATE: 'private',
-    GLOBAL: 'global',
-  },
-}
+    NONE: NoRecord;
+    PRIVATE: 'private';
+    GLOBAL: 'global';
+  };
+};
 
 /**
  * 创建字典型共享对象

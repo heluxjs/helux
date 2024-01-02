@@ -148,7 +148,7 @@ export default () => (
 />
 ```
 
-:::info{title=before拦截}
+:::info{title=before 拦截}
 输入 `888` 将触发篡改数据逻辑
 :::
 
@@ -188,7 +188,7 @@ export default () => (
   onChange={sync(
     (to) => to.b.b1,
     (val, params) => {
-      if(val === '888'){
+      if (val === '888') {
         params.draft.b2 = 'b2 changed';
         return 'boom';
       }
@@ -197,12 +197,12 @@ export default () => (
 />
 ```
 
-:::info{title=before拦截}
+:::info{title=before 拦截}
 输入 `888` 将触发多个数据被篡改
 :::
 
 ```tsx
-import { sharex, $ } from 'helux';
+import { $, sharex } from 'helux';
 
 const { sync, useState, state } = sharex({ b: { b1: '', b2: '' } });
 
@@ -214,7 +214,7 @@ function Demo1() {
       onChange={sync(
         (to) => to.b.b1,
         (val, params) => {
-          if(val === '888'){
+          if (val === '888') {
             params.draft.b.b2 = `b2 changed at ${Date.now()}`;
             return 'boom';
           }

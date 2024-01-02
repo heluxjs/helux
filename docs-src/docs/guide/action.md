@@ -25,7 +25,7 @@ function methodA(input: number) {
 ![cool loading](https://tnfe.gtimg.com/image/iu3p7105vx_1699699924785.gif)
 
 :::success{title=defineActions}
-此接口偏向底层，在大型项目里批量定义和管理action函数，推荐阅读[模块化](/guide/modular)了解`defineActions`，拥有更好的开发体验和可维护性
+此接口偏向底层，在大型项目里批量定义和管理 action 函数，推荐阅读[模块化](/guide/modular)了解`defineActions`，拥有更好的开发体验和可维护性
 :::
 
 ## 同步 Action
