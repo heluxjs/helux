@@ -2,7 +2,7 @@
 
 # helux 简介
 
-[helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`、`派生`、`观察`为一体，支持细粒度响应式更新的 react 状态库，支持所有类 react 框架（包括 react 18）
+[helux](https://github.com/heluxjs/helux) 是一个集`atom`、`signal`、`依赖收集`、`派生`、`观察`为一体，支持细粒度响应式更新的状态引擎，支持所有类 react 框架（包括 react 18）
 
 <p align="center">
   <a href="https://heluxjs.github.io/helux" target="__blink">
@@ -12,17 +12,20 @@
 
 特性简介：
 
-- 基于最快的不可变 js 库[limu](https://github.com/tnfe/limu)开发，拥有超强性能
-- atom 支持依赖收集，意味着 atom 不用拆分的很细，atom 就可以等同于 model，天然对 `DDD` 领域驱动设计友好
-- 内置 signal 响应机制，可实现 0 hook 编码 + dom 粒度的更新
-- 内置 loading 模块，可对所有异步任务做运行状态、错误捕捉做管理
-- 支持可变派生，对数据做最小粒度的更新
-- 支持全量派生，不需要对数据做细粒度更新时使用全量派生更合适
-- 全量派生、可变派生均支持异步任务
-- 全量派生、可变派生处数据变更驱动执行外，还支持人工重新触发运行
+- 内置依赖追踪特性，基于最快的不可变 js 库[limu](https://github.com/tnfe/limu)开发，拥有超强性能
+- `atom` 支持任意数据结构且自带依赖收集功能， 无需拆分很细，天然对 DDD 领域驱动设计友好
+- 内置 `signal` 响应机制，实现 0 hook 编码 dom 粒度或块粒度的更新
+- 内置 `loading` 模块，可管理所有异步任务的运行状态、并捕捉错误抛给组件、插件
+- 内置 `sync` 系列 api，支持**双向绑定**，轻松应对表单处理
+- 内置 `reactive` 响应式对象，支持数据变更直接驱动关联ui渲染
+- 内置 `define` 系列 api，方便对状态模块化抽象，轻松驾驭大型前端应用架构
 - 内置事件系统
+- 支持可变派生，适用于当共享对象 a 部分节点变化需引起其他节点自动变化的场景，数据更新粒度更小
+- 支持全量派生，适用于不需要对数据做细粒度更新的场景
+- 全量派生、可变派生均支持异步任务
+- 全量派生、可变派生除数据变更驱动执行外，还支持人工重新触发运行
 - 支持中间件、插件系统，可无缝对接 redux 生态相关工具库
-- 100% ts 编码，类型提示优化
+- 100% ts 编码，类型安全
 
 > 为了方便用户理解`helux`核心逻辑，我们提供了[how-helux-was-born](https://github.com/fantasticsoul/how-helux-was-born)项目用于辅助用户做 helux 源码调试。
 
