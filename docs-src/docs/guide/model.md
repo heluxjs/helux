@@ -7,9 +7,11 @@ order: 3
 
 # 模型
 
+模型对象相对[模块化](/guide/modular)要轻量一些，适合处理较小功能单时聚合管理相关状态与操作，提供`model`和`modelFactory`来快速完成此操作
+
 ## model
 
-提供 `model` 函数，帮助用户按业务功能聚合管理相关状态与操作
+`model` 函数回调提供一个`api`对象，包含了大部分`helux`顶层 api 接口，可以使用此对象来生成业务模型对象
 
 ```ts
 import 'model' from 'helux';

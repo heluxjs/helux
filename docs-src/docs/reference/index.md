@@ -1,7 +1,7 @@
 ---
 nav:
   title: 参考
-  order: 1
+  order: 2
 ---
 
 # 参考

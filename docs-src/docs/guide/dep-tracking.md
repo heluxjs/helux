@@ -170,3 +170,70 @@ export default () => (
   </Entry>
 );
 ```
+
+### isDiff
+
+需要人工做比较的场景，对象型节点可借助`isDiff`函数比较是否相等
+
+:::info
+点击 triggerCompre，观察 compare tip 结果
+:::
+
+```tsx
+/**
+ * defaultShowCode: true
+ */
+import { $, isDiff, share } from 'helux';
+
+const [state, setState] = share({ b: { b1: 1 }, c: { c1: 1 } });
+
+function testIsDiff() {
+  const { b, c } = state;
+  setState((draft) => void (draft.b.b1 += 100));
+  const { b: newB, c: newC } = state;
+
+  // 👉 此时 b，c 节点是代理对象，直接比较的话，它们始终是不相等的，
+  // 而 isDiff 函数内部会比较数据版本号并给出正确的结果
+  const ret1 = isDiff(b, newB); // true
+  const ret2 = isDiff(c, newC); // false，c 节点未发生过变化
+  return { ret1, ret2 };
+}
+
+function Comp(props: any) {
+  const [tip, setTip] = React.useState('');
+  const triggerCompre = () => {
+    const { ret1, ret2 } = testIsDiff();
+    setTip(`isDiff(b, newB)===${ret1}, isDiff(c, newC)===${ret2}`);
+  };
+
+  return (
+    <div>
+      <h1>compare tip: {tip}</h1>
+      <button onClick={triggerCompre}>triggerCompre</button>
+    </div>
+  );
+}
+
+export default () => (
+  <>
+    <Comp />
+    {$(state.b.b1)}
+  </>
+);
+```
+
+### getSnap
+
+也可以借助`getSnap`函数获取快照对象来直接比较
+
+```ts
+import { getSnap } from 'helux';
+
+const snap1 = getSnap(state1); // 修改前的快照
+setAtom((draft) => (draft.b.b1 = 100));
+const snap2 = getSnap(state1); // 修改后的快照
+const { b: newB, c: newC } = state1.val;
+
+console.log(snap1.val.b !== snap2.val.b); // true
+console.log(snap1.val.c !== snap2.val.c); // false，c 节点未发生过变化
+```

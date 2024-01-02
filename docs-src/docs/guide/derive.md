@@ -370,24 +370,12 @@ objCtx.mutate({ ... });
 - 触发`options.mutate`里的可变派生函数重运行
 
 ```ts
-import { runInnerMutate, runInnerMutateTask } from 'helux';
+import { runMutate, runMutateTask } from 'helux';
 
-// 触发 someState 的 retA mutate 配置的同步函数
-runInnerMutate(someState, 'retA');
-
-// 触发 someState 的 retA mutate 配置的异步函数
-runInnerMutateTask(someState, 'retA');
-```
-
-- 触发外部定义的可变派生函数重运行
-
-```ts
-import { runMutate, runInnerMutateTask } from 'helux';
-
-// 触发 someState 的外部 mutate 配置的 retA 同步函数，如存在才会执行
+// 触发 someState 的 retA mutate 配置的同步函数，如存在才会执行
 runMutate(someState, 'retA');
 
-// 触发 someState 的外部 mutate 配置的 retA 异步函数，如存在才会执行
+// 触发 someState 的 retA mutate 配置的异步函数，如存在才会执行
 runMutateTask(someState, 'retA');
 ```
 

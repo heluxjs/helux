@@ -5,25 +5,26 @@ import * as Fre from 'fre';
 const reactLib = { ...Fre } as unknown as React18Like;
 const api = initHeluxContext({ heluxCtxKey: '__HELUX_FRE__', reactLib });
 
-// 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json的 types 配置）
+// 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json 的 types 配置）
 export const {
   atom,
+  atomx,
   share,
-  shareState,
-  shareAtom,
-  createShared,
+  sharex,
   // derive api
   derive,
-  deriveAtom,
+  deriveDict,
+  defineDeriveTask,
+  defineDeriveFnItem,
   runDerive,
-  runDeriveAsync,
+  runDeriveTask,
   // watch api
   watch,
   // hooks api
   useAtom,
-  useShared,
+  useAtomX,
+  useReactive,
   useDerived,
-  useDerivedAtom,
   useWatch,
   useGlobalId,
   useService,
@@ -31,36 +32,40 @@ export const {
   useMutable,
   useMutateLoading,
   useActionLoading,
-  useForceUpdate,
   useEffect,
   useLayoutEffect,
   useStable,
   useObject,
+  useLocalForceUpdate,
+  useGlobalForceUpdate,
   // action api
   action,
-  actionAsync,
-  atomAction,
-  atomActionAsync,
   // signal api
   signal,
   block,
-  blockStatus,
   dynamicBlock,
-  dynamicBlockStatus,
   $,
   // mutate api
   mutate,
   mutateDict,
-  atomMutate,
   runMutate,
   runMutateTask,
+  // sync api
+  sync,
+  syncer,
   // model api
   model,
   modelFactory,
   // emit api
   emit,
   on,
+  // init api
+  init,
   // util api
+  reactiveDesc,
+  flush,
+  isAtom,
+  isDerivedAtom,
   storeSrv,
   shallowCompare,
   isDiff,
@@ -73,6 +78,5 @@ export const {
   getAtom,
   addMiddleware,
   addPlugin,
-  EVENT_NAME,
-  LOADING_MODE,
+  cst,
 } = api;

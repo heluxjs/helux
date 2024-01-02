@@ -16,8 +16,8 @@ features:
     description: 基于最快的不可变 js 库 limu 做到运行时对视图渲染实时收集数据依赖，提供超强渲染性能
   - title: reactive
     description: 提供全局响应式对象，数据变更直接驱动关联ui渲染（默认在下一个事件循环微任务开始前提交，支持人工提交变更数据）
-  - title: module
-    description: 支持对状态模块化建模，并内置 actions、derive、watch、loading等特性，轻松驾驭大型前端应用架构
+  - title: modular
+    description: 支持对状态模块化抽象，并内置 actions、derive、watch、loading 等特性，轻松驾驭大型前端应用架构
   - title: middleware&plugin
     description: 内置中间件和插件系统，无缝衔接redux生态优秀组件
 ---
