@@ -1,5 +1,15 @@
 # @helux/hooks
 
+## 3.6.8
+
+### Patch Changes
+
+- 6129c376: collect atom dep in derive deps result
+- Updated dependencies [6129c376]
+  - @helux/hooks-impl@3.6.8
+  - @helux/types@3.6.8
+  - @helux/utils@3.6.8
+
 ## 3.6.7
 
 ### Patch Changes
