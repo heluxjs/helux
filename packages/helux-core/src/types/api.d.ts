@@ -63,20 +63,19 @@ import type {
   WatchOptionsType,
 } from './base';
 
-export declare const VER: '3.6.4';
-
-export declare const LIMU_VER: string;
-
-export declare const EVENT_NAME: {
-  ON_DATA_CHANGED: 'ON_DATA_CHANGED';
-  ON_SHARE_CREATED: 'ON_SHARE_CREATED';
-};
-
-export declare const RECORD_LOADING: {
-  NONE: NoRecord;
-  PRIVATE: 'private';
-  GLOBAL: 'global';
-};
+export declare const cst: {
+  VER: '3.6.4',
+  LIMU_VER: string,
+  EVENT_NAME: {
+    ON_DATA_CHANGED: 'ON_DATA_CHANGED',
+    ON_SHARE_CREATED: 'ON_SHARE_CREATED',
+  },
+  RECORD_LOADING: {
+    NONE: NoRecord,
+    PRIVATE: 'private',
+    GLOBAL: 'global',
+  },
+}
 
 /**
  * 创建字典型共享对象

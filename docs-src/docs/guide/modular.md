@@ -189,7 +189,7 @@ type DR = {
   // 不强制要求为每一个 result key 都定义 deps 返回类型约束和 result 类型约束，但为了可维护性建议都补上
 };
 
-const fd = ctx.defineFullDerive<DR>()({
+const df = ctx.defineFullDerive<DR>()({
   a: () => priceState.a.b.c + 10000,
   b: () => priceState.a.b.c + 20000,
   c: {
@@ -208,13 +208,13 @@ const fd = ctx.defineFullDerive<DR>()({
 重新运行同步派生函数
 
 ```ts
-fd.helper.a.runDeriveFn();
+df.helper.a.runDeriveFn();
 ```
 
 重新运行异步派生函数
 
 ```ts
-fd.helper.a.runDeriveTask();
+df.helper.a.runDeriveTask();
 ```
 
 组件外读取全量派生结果
@@ -224,9 +224,9 @@ fd.helper.a.runDeriveTask();
 :::
 
 ```ts
-console.log(fd.result.a); // number
-console.log(fd.result.b); // number
-console.log(fd.result.c); // number
+console.log(df.result.a); // number
+console.log(df.result.b); // number
+console.log(df.result.c); // number
 ```
 
 组件中读取全量派生结果，并读取异步派生任务的执行状态
@@ -234,8 +234,8 @@ console.log(fd.result.c); // number
 ```tsx | pure
 function Price() {
   const [price, , info] = ctx.useState();
-  const a = fd.helper.a.useDerived();
-  const [c, status] = fd.helper.c.useDerivedInfo();
+  const a = df.helper.a.useDerived();
+  const [c, status] = df.helper.c.useDerivedInfo();
 
   return (
     <div>
@@ -419,7 +419,7 @@ const ctx = sharex(
 );
 const { state } = ctx;
 
-const md = ctx.defineMutateDerive({
+const dm = ctx.defineMutateDerive({
   a: 1,
   b: '2',
   c: 3,
