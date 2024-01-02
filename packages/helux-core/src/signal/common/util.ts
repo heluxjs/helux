@@ -40,7 +40,7 @@ export function renderResult(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, result: an
 
   if (isDerivedAtomResult) {
     blockCtx.renderAtomOnce = true;
-    const Comp = wrapDerivedAtomSignalComp(apiCtx, result);
+    const Comp = wrapDerivedAtomSignalComp(apiCtx, { result });
     return apiCtx.react.createElement(Comp, { status: { loading: false, err: null, ok: true } });
   }
   // 内部自动尝试拆箱 atom

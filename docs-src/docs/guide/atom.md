@@ -38,17 +38,17 @@ const [numAtom] = atom(() => 1);
 const [objAtom] = atom(() => ({ a: 1, b: { b1: 1 } }));
 ```
 
-`atom` 返回元组完整结构为`[ state, setter, ctx ]`，也可使用 `atomx` 直接返回共享上下文 `ctx`，两种写法区别仅在于，`atom` 直接将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处，对齐了`react.useState`接口风格，让 react 用户可 0 成本上手。
+`atom` 返回元组完整结构为`[ state, setState, ctx ]`，也可使用 `atomx` 直接返回共享上下文 `ctx`，两种写法区别仅在于，`atom` 直接将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处，对齐了`react.useState`接口风格，让 react 用户可 0 成本上手。
 
 ```ts
 import { atom, atomx } from 'helux';
 
-// 返回元组，元组的第一位和第二次参数即是 state setter
+// 返回元组，元组的第一位和第二次参数即是 state setState
 const [numAtom, setAtom, atomCtx] = atom(1);
 
-// 返回字典对象，对象里可解构出 state setter
+// 返回字典对象，对象里可解构出 state setState
 const atomCtx = atomx(1);
-const { numAtom, setAtom } = atomCtx;
+const { state: numAtom, setState: setAtom } = atomCtx;
 ```
 
 :::info{title=共享上下文}

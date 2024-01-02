@@ -1,12 +1,22 @@
+// @ts-nocheck
 import { ReactComponent as IconCheck } from '@ant-design/icons-svg/inline-svg/outlined/check.svg';
 import { ReactComponent as IconCopy } from '@ant-design/icons-svg/inline-svg/outlined/copy.svg';
 import classNames from 'classnames';
 import { useSiteData } from 'dumi';
-import Highlight, { defaultProps, type Language } from 'prism-react-renderer';
+// import Highlight, { defaultProps, type Language } from 'prism-react-renderer';
+import type { Language } from 'prism-react-renderer';
+import * as prism from 'prism-react-renderer';
 import 'prism-themes/themes/prism-one-light.css';
 import React, { useRef, useState, useEffect, type FC } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import './index.less';
+
+const {Highlight, Prism, themes } = prism;
+console.log(themes);
+const defaultProps = {
+  Prism,
+  theme: themes.github,
+};
 
 /**
  * define DSL which can be highlighted as similar language

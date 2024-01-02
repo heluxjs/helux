@@ -1140,15 +1140,15 @@ export interface ICreateOptionsFull<T = SharedState> {
    */
   rules: IDataRule<StateType<T>>[];
   /**
-   * 定义当前状态对其他状态有依赖的 mutate 函数集合或函数，它们将被自动执行，并收集到每个函数各自对应的上游数据依赖
+   * 定义当前状态对自身状态或其他状态某些数据节点有依赖的 `mutate` 函数集合或函数，它们将在依赖项变化时被自动执行，
+   * 首次执行时会收集到每个函数各自对应的外部数据依赖并记录下来
    * 推荐走 defineMutateSelf 或 mutateDict 在外部定义 mutate 函数，以便获得更好的类型推导
    */
   mutate: MutateFn<T> | MutateFnDict<T> | MutateFnList<T>;
   /**
-   * action、mutate、setState、sync提交状态之前的函数，建议优先对 draft 操作，
-   * 如需要返回则返回的部分对象是全新值才是安全的草稿，该函数执行时机是在中间件之前
+   * action、mutate、setState、sync 提交状态之前会触发执行的函数，可在此函数里再次修改 draft，该函数执行时机是在中间件之前
    */
-  before: (params: BeforeFnParams<T>) => void | Partial<T>;
+  before: (params: BeforeFnParams<T>) => void;
   /**
    * deafult: undefined
    * 不配置此项时，开发环境弹死循环提示，生产环境不弹
@@ -1159,7 +1159,7 @@ export interface ICreateOptionsFull<T = SharedState> {
    */
   checkDeadCycle: boolean;
   /**
-   * default: true，是否禁止 mutate 执行，可以创建 atom 时设置，也可以中途通过 setEnableMutate 设置
+   * default: true，是否允许 mutate 执行，可以创建 atom 时设置，也可以中途通过 setEnableMutate 反复设置
    */
   enableMutate: boolean;
 }
