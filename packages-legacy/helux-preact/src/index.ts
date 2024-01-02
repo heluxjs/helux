@@ -76,8 +76,5 @@ export const {
   getAtom,
   addMiddleware,
   addPlugin,
-  EVENT_NAME,
-  RECORD_LOADING,
-  VER,
-  LIMU_VER,
+  cst,
 } = api;
