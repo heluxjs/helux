@@ -1,8 +1,8 @@
 ---
 group:
-  title: 同步
+  title: 帮助
   order: 4
-order: 0
+order: 1
 ---
 
 # syncer

@@ -1,8 +1,8 @@
 ---
 group:
   title: 帮助
-  order: 6
-order: 1
+  order: 4
+order: 0
 ---
 
 # watch

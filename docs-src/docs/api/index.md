@@ -7,6 +7,6 @@ nav:
 # API
 
 - [基础](/api/base/atom)
-- [共享上下文](/api/atom-ctx)
-- [Hooks](/api/hooks)
-- [工具](/api/utils)
+- [共享上下文](/api/atom-ctx/)
+- [Hooks](/api/hooks/)
+- [工具](/api/utils/)
