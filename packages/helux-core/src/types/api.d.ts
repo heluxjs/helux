@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.6.7
+| helux-core@3.6.9
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '3.6.7';
+  VER: '3.6.9';
   LIMU_VER: string;
   EVENT_NAME: {
     ON_DATA_CHANGED: 'ON_DATA_CHANGED';
@@ -497,6 +497,10 @@ export function mutateDict<T extends SharedState>(
   target: T,
 ): <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: IMutateWitness<T> };
 
+/**
+ * @param result - 传入派生结果，会自动触发结果对应的派生函数重计算
+ * @param throwErr - 默认 `false`，错误传地给元组第二位参数
+ */
 export function runDerive<T = SharedState>(result: T, throwErr?: boolean): [T, Error | null];
 
 export function runDeriveTask<T = SharedState>(result: T, throwErr?: boolean): Promise<[T, Error | null]>;

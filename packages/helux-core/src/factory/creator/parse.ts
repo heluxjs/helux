@@ -310,11 +310,11 @@ export function parseRules(options: ParsedOptions): IRuleConf {
 
 export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions) {
   // 不设定 desc 的话，默认指向可能存在的单函数
-  const { out = true, desc = SINGLE_MUTATE, strict = false } = {};
+  const { desc = SINGLE_MUTATE, strict = false, throwErr = false } = {} as IRunMutateOptions;
   if (typeof descOrOptions === 'string') {
-    return { out, desc: descOrOptions, strict };
+    return { desc: descOrOptions, strict, throwErr };
   }
-  return { out, desc, strict, ...descOrOptions };
+  return { desc, strict, ...descOrOptions, throwErr };
 }
 
 export function parseWatchOptions(options?: WatchOptionsType) {

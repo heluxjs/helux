@@ -6,7 +6,6 @@
 
 // override prism theme for dark mode
 @{dark-selector} {
-
   .token.doctype,
   .token.punctuation,
   .token.entity,
@@ -30,7 +29,7 @@
   .token.cdata {
     color: @c-text-note-dark;
   }
-  
+
   // added by zzk
   .token.class-name,
   .token.tag {
@@ -77,7 +76,7 @@
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 
-  >pre.prism-code {
+  > pre.prism-code {
     margin: 0;
     padding: 18px 24px;
     font-size: 14px;
@@ -98,7 +97,7 @@
     }
 
     // highlight line
-    &>.highlighted {
+    & > .highlighted {
       position: relative;
       width: calc(100% + 24px);
       background-color: shade(@bg-color, 5%);
@@ -128,10 +127,10 @@
       }
     }
 
-    &>.wrap {
+    & > .wrap {
       display: table-row;
 
-      &>.token-line-num {
+      & > .token-line-num {
         display: table-cell;
         text-align: right;
         padding-right: 1em;
@@ -139,7 +138,7 @@
         opacity: 0.5;
       }
 
-      &>.line-cell {
+      & > .line-cell {
         display: table-cell;
         width: 100%;
       }
@@ -158,7 +157,7 @@
     cursor: pointer;
     transition: all 0.2s;
 
-    >svg {
+    > svg {
       width: 16px;
       fill: darken(@c-border, 20%);
       transition: fill 0.2s;
@@ -168,7 +167,7 @@
       }
     }
 
-    &:hover>svg {
+    &:hover > svg {
       fill: darken(@c-border, 30%);
 
       @{dark-selector} & {
@@ -176,7 +175,7 @@
       }
     }
 
-    &[data-copied]>svg {
+    &[data-copied] > svg {
       fill: @c-success;
 
       @{dark-selector} & {
@@ -199,7 +198,7 @@
       background-color: fadeout(@bg-color, 80%);
     }
 
-    &>pre.prism-code>.highlighted {
+    & > pre.prism-code > .highlighted {
       // background-color: tint(@bg-color, 10%);
       background-color: red;
 

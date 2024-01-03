@@ -115,8 +115,8 @@ const getCurrentHeight: MotionEventHandler = (node) => ({
   height: node ? node.offsetHeight : 0,
 });
 const skipOpacityTransition: MotionEndEventHandler = (_, event: MotionEvent) =>
-  event?.deadline === true ||
-  (event as TransitionEvent).propertyName === 'height';
+  event?.deadline === true
+  || (event as TransitionEvent).propertyName === 'height';
 
 const initCollapseMotion: CSSMotionProps = {
   motionName: 'ant-motion-collapse',

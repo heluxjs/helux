@@ -92,16 +92,16 @@ setDict((draft) => {
 });
 ```
 
-注意箭头函数里一行代码给 draft 赋值时，箭头函数存在隐含返回值导致ts编译不通过的问题
+注意箭头函数里一行代码给 draft 赋值时，箭头函数存在隐含返回值导致 ts 编译不通过的问题
 
 :::warning
 元组第二位 setter 是会处理返回值的，箭头函数的隐含返回值类型和 atom 对象类型不匹配，此时导致编译报错
 :::
 
 ```ts
-const [ , setState, ctx ] = atom({ a: 1, b: 2 });
+const [, setState, ctx] = atom({ a: 1, b: 2 });
 // ❌ ts 校验失败，这里返回了 1，和 atom 类型 Partial<T> 不匹配
-setState((draft) => draft.a = 1);
+setState((draft) => (draft.a = 1));
 
 // ✅ 以下3种方式 ts 校验通过
 // 1 使用void包裹，消除隐式返回值
@@ -122,13 +122,12 @@ ctx.setDraft((draft) => (draft.a = 1));
 
 **模块名称**，方便用户可以查看到语义化的状态树，`@helux/dev-tool`插件也仅接受设置了模块名的状态来做可视化呈现，推荐按业务名设置。
 
-:::success{title=设置以否不影响helux运行}
+:::success{title=设置以否不影响 helux 运行}
 不设置的话内部会以生成的自增序号作为 key，如果设置重复了，目前仅控制台做个警告，helux 内部始终以生成的自增序号作为模块命名空间控制其他逻辑
 :::
 
-
 ```ts
- atom({ a: 1, b: 2 }, {moduleName:'user'});
+atom({ a: 1, b: 2 }, { moduleName: 'user' });
 ```
 
 ### recordLoading
@@ -136,21 +135,23 @@ ctx.setDraft((draft) => (draft.a = 1));
 默认值 `private` ，表示 loading 对象记录的位置
 
 不记录`loading`状态
+
 ```ts
 import { cst } from 'helux';
 atom({ a: 1, b: 2 }, { recordLoading: cst.RECORD_LOADING.NO });
 ```
 
-记录`loading`状态到共享状态对应的伴生loading状态上
+记录`loading`状态到共享状态对应的伴生 loading 状态上
+
 ```ts
 import { cst } from 'helux';
 atom({ a: 1, b: 2 }, { recordLoading: cst.RECORD_LOADING.PRIVATE });
 ```
 
-记录`loading`状态到共享状态对应的全局loading状态上
+记录`loading`状态到共享状态对应的全局 loading 状态上
 
 :::warning
-此模式需要小心规划`action`、`mutate`各个函数的名称，多个状态对应`action`、`mutate`各个函数名称重复时，会相互覆盖各自的loading状态
+此模式需要小心规划`action`、`mutate`各个函数的名称，多个状态对应`action`、`mutate`各个函数名称重复时，会相互覆盖各自的 loading 状态
 :::
 
 ```ts
@@ -187,7 +188,9 @@ const [state, setState, ctx] = share(
 
 ```ts
 const [state, setState, ctx] = share(
-  { /** ... */ },
+  {
+    /** ... */
+  },
   {
     stopArrDep: false, // 对象里的所有数组都继续向下收集（即关闭只收集到下标位置规则）
   },
@@ -203,15 +206,19 @@ const [state, setState, ctx] = share(
 **`stopDep`**：针对状态某些节点设置收集规则，值为`true`依赖收集到这一层后就停止，可干预`stopDepth`的结果，例如共享状态的`stopDepth`是`6`，但某个深度为`4`的节点设置`stopDep`为`true`，就达成了针对这个数据节点独立干预的效果。
 
 ```ts
-const [state, setState, ctx] = atom({ /** ... */ }, {
-  rules: [
-    // 当读取或写入 a.b.list 数据时，停止依赖收集，即依赖只记录到下标，此设定优先级高于顶层的 stopArrDep
-    { when: state => state.a.b.list, stopDep: true },
-  ],
-  stopArrDep: false, // 这个配置针对 state.a.b.list 将无效
-});
+const [state, setState, ctx] = atom(
+  {
+    /** ... */
+  },
+  {
+    rules: [
+      // 当读取或写入 a.b.list 数据时，停止依赖收集，即依赖只记录到下标，此设定优先级高于顶层的 stopArrDep
+      { when: (state) => state.a.b.list, stopDep: true },
+    ],
+    stopArrDep: false, // 这个配置针对 state.a.b.list 将无效
+  },
+);
 ```
-
 
 **`ids`**：当 a.b.list 变化时，通知设定了 id 为 `up1`，`up2` 的组件重渲染，尽管`up1`，`up2`对应组件可能对 state.a.b.list 无依赖，也会被重渲染。
 
@@ -232,10 +239,19 @@ function Demo(){
 
 默认 `true`，是否来自`mutate`或`watch`的死循环，设置为 `false` 表示不检查
 
+:::info
+`helux`会在运行时探测出死循环存在的情况，并提前阻断无限调用产生，同时给弹窗警告和控制台警告，防止应用崩溃，控制台会输出引起死循环的起源函数，方便用户定位问题
+:::
+
 ```ts
-const [state, setState, ctx] = atom({ /** ... */ }, {
-  checkDeadCycle: false, // 不检查死循环
-});
+const [state, setState, ctx] = atom(
+  {
+    /** ... */
+  },
+  {
+    checkDeadCycle: false, // 不检查死循环
+  },
+);
 ```
 
 ### alertDeadCycleErr
@@ -243,14 +259,19 @@ const [state, setState, ctx] = atom({ /** ... */ }, {
 是否调用`window.alert`强弹来自`mutate`或`watch`的死循环提示，默认`undefined`，不配置此项时，开发环境弹死循环提示，生产环境不弹
 
 ```ts
-const [state, setState, ctx] = atom({ /** ... */ }, {
-  alertDeadCycleErr: false, // 不弹死循环提示，只通过控制台打印
-});
+const [state, setState, ctx] = atom(
+  {
+    /** ... */
+  },
+  {
+    alertDeadCycleErr: false, // 不弹死循环提示，只通过控制台打印
+  },
+);
 ```
 
 ### enableMutate
 
-default: `true`，是否允许 `mutate` 执行，可以创建 atom 时设置，也可以中途通过 `setEnableMutate` 反复设置      
+default: `true`，是否允许 `mutate` 执行，可以创建 atom 时设置，也可以中途通过 `setEnableMutate` 反复设置
 
 :::info
 此参数偏向于提供给开发者使用，业务层面大多数用不到此特性
@@ -340,21 +361,31 @@ const [state, setState, ctx] = atom({ a: 1, b: 0 }, {
 定义一个异步可变派生函数，设置`immediate`为 true，首次运行触发异步任务执行
 
 ```ts
-const [state, setState, ctx] = atom({ a: 1, b: 0 }, {
-  mutate: {
-    fn:  draft => draft.b = draft.a + 1,
-    task: async ()=>{ /** */ },
-    immediate: true,
-  }
-});
+const [state, setState, ctx] = atom(
+  { a: 1, b: 0 },
+  {
+    mutate: {
+      fn: (draft) => (draft.b = draft.a + 1),
+      task: async () => {
+        /** */
+      },
+      immediate: true,
+    },
+  },
+);
 
-const [state, setState, ctx] = atom({ a: 1, b: 0 }, {
-  mutate: {
-    deps: ()=>[state.a],
-    task: async ()=>{ /** */ },
-    immediate: true,
-  }
-});
+const [state, setState, ctx] = atom(
+  { a: 1, b: 0 },
+  {
+    mutate: {
+      deps: () => [state.a],
+      task: async () => {
+        /** */
+      },
+      immediate: true,
+    },
+  },
+);
 ```
 
 ### before
@@ -362,9 +393,12 @@ const [state, setState, ctx] = atom({ a: 1, b: 0 }, {
 `action`、`mutate`、`setState`、`sync` 提交状态之前会触发执行的函数，可在此函数里再次修改 draft，该函数执行时机是在中间件之前
 
 ```ts
-const [state, setState, ctx] = atom({ a: 1, b: 0, time: 0 }, {
-  before({ draft }){
-    draft.time = Date.now();
+const [state, setState, ctx] = atom(
+  { a: 1, b: 0, time: 0 },
+  {
+    before({ draft }) {
+      draft.time = Date.now();
+    },
   },
-});
+);
 ```

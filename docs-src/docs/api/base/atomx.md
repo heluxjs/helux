@@ -7,7 +7,7 @@ order: 1
 
 # atomx
 
- `atomx` 返回共享上下文 `ctx`，`atom` 返回元组结构 `[ state, setState, ctx ]`， 将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处。
+`atomx` 返回共享上下文 `ctx`，`atom` 返回元组结构 `[ state, setState, ctx ]`， 将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处。
 
 ```ts
 import { atom, atomx } from 'helux';

@@ -1,6 +1,6 @@
 import { useAtomAssets, useIntl, useRouteMeta } from 'dumi';
 import type { AtomComponentAsset } from 'dumi-assets-types';
-import React, { useEffect, useState, type FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 import Table from '../Table';
 
 type PropertySchema = NonNullable<
@@ -103,9 +103,9 @@ const HANDLERS = {
 
   // utils
   getValidClassName(prop: PropertySchema) {
-    return 'className' in prop &&
-      typeof prop.className === 'string' &&
-      prop.className !== '__type'
+    return 'className' in prop
+      && typeof prop.className === 'string'
+      && prop.className !== '__type'
       ? prop.className
       : null;
   },

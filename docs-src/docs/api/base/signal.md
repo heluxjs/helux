@@ -17,12 +17,12 @@ order: 0
 /**
  * defaultShowCode: true
  */
-import { signal, atom } from 'helux';
+import { atom, signal } from 'helux';
 
-const [ numAtom, setAtom ] = atom(1);
-const changeNum = ()=> setAtom(prev=> prev+1);
+const [numAtom, setAtom] = atom(1);
+const changeNum = () => setAtom((prev) => prev + 1);
 
-export default function Demo(){
+export default function Demo() {
   return (
     <div>
       <h3>updated at {new Date().toLocaleString()}</h3>
@@ -32,7 +32,6 @@ export default function Demo(){
   );
 }
 ```
-
 
 ## 使用$别名
 
@@ -44,10 +43,10 @@ export default function Demo(){
  */
 import { $, atom } from 'helux';
 
-const [ numAtom, setAtom ] = atom(1);
-const changeNum = ()=> setAtom(prev=> prev+1);
+const [numAtom, setAtom] = atom(1);
+const changeNum = () => setAtom((prev) => prev + 1);
 
-export default function Demo(){
+export default function Demo() {
   return (
     <div>
       <h3>updated at {new Date().toLocaleString()}</h3>
@@ -66,17 +65,17 @@ export default function Demo(){
 /**
  * defaultShowCode: true
  */
-import { $, atom, share } from 'helux';
+import { $, atom } from 'helux';
 
-const [ numAtom, setAtom ] = atom(1);
-const changeNum = ()=> setAtom(prev=> prev+1);
+const [numAtom, setAtom] = atom(1);
+const changeNum = () => setAtom((prev) => prev + 1);
 
-export default function Demo(){
+export default function Demo() {
   return (
     <div>
       <h3>updated at {new Date().toLocaleString()}</h3>
       <div>{$(numAtom)}</div>
-      <div>{$(numAtom, (val)=>`hello signal: ${val}`)}</div>
+      <div>{$(numAtom, (val) => `hello signal: ${val}`)}</div>
       <button onClick={changeNum}>changeNum</button>
     </div>
   );
@@ -85,7 +84,7 @@ export default function Demo(){
 
 ## 绑定多个值
 
-一次signal调用绑定`atom`、`share`多个值，传入一个回调函数，返回一个jsx片段即可，如需抽象为组件可使用[block](api/base/block)。
+一次 signal 调用绑定`atom`、`share`多个值，传入一个回调函数，返回一个 jsx 片段即可，如需抽象为组件可使用[block](api/base/block)。
 
 ```tsx
 /**
@@ -93,24 +92,26 @@ export default function Demo(){
  */
 import { $, atom, share } from 'helux';
 
-const [ obj1, setObj1 ] = atom({ a: { a1: 1 }, b: 1 });
-const [ obj2, setObj2 ] = share({ a: { a1: 1 }, b: 1 });
+const [obj1, setObj1] = atom({ a: { a1: 1 }, b: 1 });
+const [obj2, setObj2] = share({ a: { a1: 1 }, b: 1 });
 
-const changeAtomA1 = ()=> setObj1(draft=>void(draft.a.a1+=100));
-const changeShareA1 = ()=> setObj2(draft=>void(draft.a.a1+=100));
+const changeAtomA1 = () => setObj1((draft) => void (draft.a.a1 += 100));
+const changeShareA1 = () => setObj2((draft) => void (draft.a.a1 += 100));
 
-export default function Demo(){
+export default function Demo() {
   return (
     <div>
       <h3>updated at {new Date().toLocaleString()}</h3>
-      <div>{$(()=>(
-       <div>
-          {/* 注意此次 atom 对象需要自己 .val 拆箱 */}
-          <div>obj1.a.a1 {obj1.val.a.a1}</div>
-          <div>obj1.b {obj1.val.b}</div>
-          <div>obj2.a.a1 {obj2.a.a1}</div>
-        </div> 
-       ))}</div>
+      <div>
+        {$(() => (
+          <div>
+            {/* 注意此次 atom 对象需要自己 .val 拆箱 */}
+            <div>obj1.a.a1 {obj1.val.a.a1}</div>
+            <div>obj1.b {obj1.val.b}</div>
+            <div>obj2.a.a1 {obj2.a.a1}</div>
+          </div>
+        ))}
+      </div>
       <button onClick={changeAtomA1}>changeAtomA1</button>
       <button onClick={changeShareA1}>changeShareA1</button>
     </div>

@@ -297,6 +297,11 @@ export interface IRunMutateOptions {
    * false，非严格检查，如果检查失败，则原样返回传入对象
    */
   strict?: boolean;
+  /**
+   * default: false，
+   * 是否抛出错误
+   */
+  throwErr?: boolean;
 }
 
 export interface IMutateTaskParam<T = SharedState, P = any[]> {
@@ -316,10 +321,17 @@ export interface IMutateTaskParam<T = SharedState, P = any[]> {
   input: P;
 }
 
-/** 呼叫 mutate 的句柄，由顶层api mutate 和 atomMutate 返回，可直接无理由重运行 mutate 函数 */
-export type MutateCall<T = any> = () => [T, Error | null];
+/**
+ * 呼叫 mutate fn 的句柄，由顶层 api mutate 和共享上下文 mutate 返回，可直接无理由重运行 mutate fn 函数
+ * @param throwErr - default: false
+ */
+export type MutateCall<T = any> = (throwErr?: boolean) => [T, Error | null];
 
-export type MutateTaskCall<T = any> = () => Promise<[T, Error | null]>;
+/**
+ * 呼叫 mutate task 的句柄，由顶层 api mutate 和共享上下文 mutate 返回，可直接无理由重运行 mutate task 函数
+ * @param throwErr - default: false
+ */
+export type MutateTaskCall<T = any> = (throwErr?: boolean) => Promise<[T, Error | null]>;
 
 export interface IMutateWitness<T = any> {
   /** 人工调用 mutate 配置里的同步函数 */
@@ -361,11 +373,11 @@ export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
 ) => void;
 
 export interface IMutateFnItem<T = SharedState, P = ReadOnlyArr> {
-  /** 异步 mutate 的依赖项列表 */
+  /** 依赖项列表，有 task 无 fn 时，可作为 task 的依赖收集函数 */
   deps?: (state: StateType<T>) => P;
   /**
    * defalt: false
-   * 依赖全部由 deps 函数提供，fn 执行过程中不收集任何依赖
+   * 为 true 时表示依赖全部由 deps 函数提供，fn 执行过程中不收集任何依赖
    */
   onlyDeps?: boolean;
   /** fn 和 deps 均可以收集依赖，对应存在 task 的场景，deps 或 fn 两者保证至少有一个 */
@@ -1342,7 +1354,7 @@ export interface IWatchOptions {
 
 export type WatchOptionsType = WatchDepFn | IWatchOptions;
 
-export interface IDeriveFnParamsBase<T = any, I = readonly any[]> {
+export interface IDeriveFnParamsBase<I = readonly any[]> {
   /** 函数的运行编号，每次自增1 */
   sn: number;
   isFirstCall: boolean;
@@ -1350,11 +1362,11 @@ export interface IDeriveFnParamsBase<T = any, I = readonly any[]> {
   input: I;
 }
 
-export interface IDeriveFnParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<T, I> {
+export interface IDeriveFnParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<I> {
   prevResult: T | null;
 }
 
-export interface IDeriveFnTaskParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<T, I> {
+export interface IDeriveFnTaskParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<I> {
   /** 区别于 IDeriveFnParams，执行 task 时，prevResult 一定有值 */
   prevResult: T;
 }

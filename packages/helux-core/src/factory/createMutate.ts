@@ -26,8 +26,8 @@ const toMutateRet = (ret: ActionReturn) => [ret.snap, ret.err] as [any, Error | 
 /**
  * 查找到配置到 mutate 函数并执行
  */
-function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; forTask?: boolean }) {
-  const { target, desc: inputDesc = '', forTask = false } = options;
+function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; forTask?: boolean; throwErr?: boolean }) {
+  const { target, desc: inputDesc = '', forTask = false, throwErr } = options;
   const { mutateFnDict, snap } = getInternal(target);
   const desc = inputDesc || SINGLE_MUTATE; // 未传递任何描述，尝试调用可能存在的单函数
 
@@ -36,7 +36,7 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
   // 指定了 task 但未配置 task，返回最近一次修改结果的快照
   if (forTask && !item.task) return { snap, err: new Error(`mutate task ${desc} not defined`), result: null };
 
-  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE };
+  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE, throwErr };
   // 调用 desc 对应的函数
   if (forTask) {
     return callAsyncMutateFnLogic(target, baseOpts);
@@ -46,13 +46,13 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
 
 function makeWitness(target: SharedState, desc: string, oriDesc: string, internal: TInternal) {
   return {
-    run: () => {
+    run: (throwErr?: boolean) => {
       // 呼叫同步函数的句柄
-      const ret = runMutateFnItem({ target, desc }) as ActionReturn;
+      const ret = runMutateFnItem({ target, desc, throwErr }) as ActionReturn;
       return toMutateRet(ret);
     },
     // 呼叫异步函数的句柄
-    runTask: () => Promise.resolve(runMutateFnItem({ target, desc, forTask: true })).then(toMutateRet),
+    runTask: (throwErr?: boolean) => Promise.resolve(runMutateFnItem({ target, desc, forTask: true, throwErr })).then(toMutateRet),
     desc,
     oriDesc,
     getSnap: () => internal.snap,
@@ -117,26 +117,29 @@ function configureMutateDict(options: IConfigureMutateDictOpt): any {
  */
 function prepareParms<T extends SharedState>(target: T, options: ILogicOptions) {
   const { label, descOrOptions, forTask = false } = options;
-  const { desc, strict } = parseCreateMutateOpt(descOrOptions);
+  const { desc, strict, throwErr } = parseCreateMutateOpt(descOrOptions);
   if (!desc) {
-    return { ok: false, desc, forTask, err: new Error('miss desc') };
+    return { ok: false, desc, forTask, throwErr, err: new Error('miss desc') };
   }
   const internal = checkShared(target, { label, strict });
   if (!internal) {
-    return { ok: false, desc, forTask, err: new Error('not a valid atom or shared result') };
+    return { ok: false, desc, forTask, throwErr, err: new Error('not a valid atom or shared result') };
   }
-  return { ok: true, desc, forTask, err: null };
+  return { ok: true, desc, forTask, throwErr, err: null };
 }
 
 /**
  * 执行匹配 desc 的 mutate 函数
  */
 export function runMutateLogic<T extends SharedState>(target: T, options: ILogicOptions): [T, Error | null] | Promise<[T, Error | null]> {
-  const { ok, desc, forTask, err } = prepareParms(target, options);
+  const { ok, desc, forTask, err, throwErr } = prepareParms(target, options);
   if (!ok) {
+    if (throwErr) {
+      throw err;
+    }
     return forTask ? Promise.resolve([target, err]) : [target, err];
   }
-  const result = runMutateFnItem({ target, desc, forTask });
+  const result = runMutateFnItem({ target, desc, forTask, throwErr });
   return forTask ? Promise.resolve(result).then(toMutateRet) : toMutateRet(result as ActionReturn);
 }
 

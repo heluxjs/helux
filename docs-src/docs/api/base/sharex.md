@@ -7,7 +7,7 @@ order: 1
 
 # sharex
 
- `sharex` 返回共享上下文 `ctx`，`share` 返回元组结构 `[ state, setState, ctx ]`， 将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处。
+`sharex` 返回共享上下文 `ctx`，`share` 返回元组结构 `[ state, setState, ctx ]`， 将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处。
 
 ```ts
 import { share, sharex } from 'helux';
