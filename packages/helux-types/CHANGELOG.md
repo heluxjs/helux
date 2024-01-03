@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.6.9
+
+### Patch Changes
+
+- 8ed5c93a: add throwErr to mutate.run
+
 ## 3.6.8
 
 ### Patch Changes

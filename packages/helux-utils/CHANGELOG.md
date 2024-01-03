@@ -1,5 +1,13 @@
 # @helux/utils
 
+## 3.6.9
+
+### Patch Changes
+
+- 8ed5c93a: add throwErr to mutate.run
+- Updated dependencies [8ed5c93a]
+  - @helux/types@3.6.9
+
 ## 3.6.8
 
 ### Patch Changes
