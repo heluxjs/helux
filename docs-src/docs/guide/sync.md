@@ -148,7 +148,7 @@ export default () => (
 />
 ```
 
-:::info{title=before 拦截}
+:::info{title=拦截}
 输入 `888` 将触发篡改数据逻辑
 :::
 
@@ -197,7 +197,7 @@ export default () => (
 />
 ```
 
-:::info{title=before 拦截}
+:::info{title=拦截}
 输入 `888` 将触发多个数据被篡改
 :::
 

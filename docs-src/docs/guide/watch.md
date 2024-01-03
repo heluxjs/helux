@@ -47,7 +47,7 @@ const changePrice = () =>
 const [priceState, setPrice] = share({ a: 1 });
 const [numAtom, setNum] = atom(3000);
 
-//
+// 观察 priceState.a 的变化
 watch(
   () => {
     console.log(`found price.a changed: () => [priceState.a]`);

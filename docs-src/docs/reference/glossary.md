@@ -1,7 +1,7 @@
 ---
 nav:
   title: 参考
-  order: 3
+  order: 0
 ---
 
 # 词汇

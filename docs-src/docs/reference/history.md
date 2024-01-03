@@ -1,8 +1,7 @@
 ---
-group:
-  title: 开始
-  order: 0
-order: 2
+nav:
+  title: 参考
+  order: 2
 ---
 
 # 更新历史

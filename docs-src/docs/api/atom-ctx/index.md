@@ -23,11 +23,7 @@ const atomCtx = atomx(1);
 const sharedCtx = sharex({ name: 'helux' });
 ```
 
-共享上下文里包含的`api`分为两类
-
-## 类顶层 api
-
-这些 api 和顶层 api 名称一致，用法接近，只是少去了绑定目标共享状态的过程（内部完成了绑定）
+共享上下文对象主要包含以下属性、方法
 
 ```ts
 // 这些函数在顶层 api 均有实现，用法也和顶层 api 一样，只是少去了绑定目标共享状态的过程（内部完成了绑定）
@@ -50,7 +46,3 @@ defineFullDerive    <-- 创建多个全量派生函数
 defineMutateSelf    <-- 创建多个监听自己变化，修改自己其他数据节点的可变派生函数
 defineMutateDerive  <-- 创建多个监听自己变化，修改新状态其他数据节点的可变派生函数
 ```
-
-### setState
-
-xxx
