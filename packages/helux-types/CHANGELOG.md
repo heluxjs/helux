@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.6.13
+
+### Patch Changes
+
+- 7957ac03: optimize initLoadingCtx
+
 ## 3.6.12
 
 ### Patch Changes

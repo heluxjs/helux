@@ -1,5 +1,13 @@
 # helux
 
+## 3.6.13
+
+### Patch Changes
+
+- 7957ac03: optimize initLoadingCtx
+- Updated dependencies [7957ac03]
+  - @helux/core@3.6.13
+
 ## 3.6.12
 
 ### Patch Changes

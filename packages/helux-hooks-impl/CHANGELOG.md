@@ -1,5 +1,14 @@
 # @helux/hooks-impl
 
+## 3.6.13
+
+### Patch Changes
+
+- 7957ac03: optimize initLoadingCtx
+- Updated dependencies [7957ac03]
+  - @helux/types@3.6.13
+  - @helux/utils@3.6.13
+
 ## 3.6.12
 
 ### Patch Changes
