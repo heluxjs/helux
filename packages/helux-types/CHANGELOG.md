@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.6.12
+
+### Patch Changes
+
+- d6c30035: add ctx.getSnap
+
 ## 3.6.11
 
 ### Patch Changes

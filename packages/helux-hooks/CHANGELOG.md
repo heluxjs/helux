@@ -1,5 +1,15 @@
 # @helux/hooks
 
+## 3.6.12
+
+### Patch Changes
+
+- d6c30035: add ctx.getSnap
+- Updated dependencies [d6c30035]
+  - @helux/hooks-impl@3.6.12
+  - @helux/types@3.6.12
+  - @helux/utils@3.6.12
+
 ## 3.6.11
 
 ### Patch Changes
