@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.6.10
+
+### Patch Changes
+
+- aec08711: simplfy reactive logic
+
 ## 3.6.9
 
 ### Patch Changes

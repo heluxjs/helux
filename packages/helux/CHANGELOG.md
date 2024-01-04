@@ -1,5 +1,13 @@
 # helux
 
+## 3.6.10
+
+### Patch Changes
+
+- aec08711: simplfy reactive logic
+- Updated dependencies [aec08711]
+  - @helux/core@3.6.10
+
 ## 3.6.9
 
 ### Patch Changes

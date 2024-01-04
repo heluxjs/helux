@@ -1,5 +1,14 @@
 # @helux/hooks-impl
 
+## 3.6.10
+
+### Patch Changes
+
+- aec08711: simplfy reactive logic
+- Updated dependencies [aec08711]
+  - @helux/types@3.6.10
+  - @helux/utils@3.6.10
+
 ## 3.6.9
 
 ### Patch Changes
