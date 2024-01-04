@@ -17,12 +17,12 @@ order: 3
 /**
  * defaultShowCode: true
  */
-import { flush, atomx, $ } from 'helux';
+import { $, atomx, flush } from 'helux';
 
-const ctx = atomx({a:1, b:2});
+const ctx = atomx({ a: 1, b: 2 });
 const { reactive } = ctx;
 
-async function changeA(){
+async function changeA() {
   reactive.a += 100;
   // or ctx.flush('changeA');
   flush(reactive, 'changeA');
@@ -30,12 +30,14 @@ async function changeA(){
   flush(reactive, 'changeA');
 }
 
-export default function Demo(){
+export default function Demo() {
   return (
     <div>
       <h3>update at {Date.now()}</h3>
       {$(reactive.a)}
-      <div><button onClick={changeA}>changeA</button></div>
+      <div>
+        <button onClick={changeA}>changeA</button>
+      </div>
     </div>
   );
 }
@@ -47,13 +49,13 @@ export default function Demo(){
 /**
  * defaultShowCode: true
  */
-import { flush, atomx, $ } from 'helux';
+import { $, atomx, flush } from 'helux';
 
-const ctx = atomx({a:1, b:2});
+const ctx = atomx({ a: 1, b: 2 });
 const { reactive } = ctx;
 
 const ac = ctx.defineActions()({
-  changeA: async function ({draft}){
+  changeA: async function ({ draft }) {
     draft.a += 100;
     // or ctx.flush('changeA');
     flush(draft, 'changeA');
@@ -62,12 +64,14 @@ const ac = ctx.defineActions()({
   },
 });
 
-export default function Demo(){
+export default function Demo() {
   return (
     <div>
       <h3>update at {Date.now()}</h3>
       {$(reactive.a)}
-      <div><button onClick={ac.actions.changeA}>changeA</button></div>
+      <div>
+        <button onClick={ac.actions.changeA}>changeA</button>
+      </div>
     </div>
   );
 }

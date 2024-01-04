@@ -14,7 +14,7 @@ order: 2
 ```ts
 import { share, action, getActionLoading } from 'helux';
 
-const { state } = sharex({a:1, b:2});
+const { state } = sharex({ a: 1, b: 2 });
 
 const hiAction = action(state)()(({ draft, payload }) => {
   draft.a += 100;

@@ -45,18 +45,22 @@ export default () => (
 /**
  * defaultShowCode: true
  */
-import React from 'react';
 import { emit, useOnEvent } from 'helux';
+import React from 'react';
 
 const emitEvent = () => emit('someEv2', 1, 2);
 
 function Demo() {
   const [num, setNum] = React.useState(1);
-  const change = () => setNum(prev => prev + 1);
+  const change = () => setNum((prev) => prev + 1);
   useOnEvent('someEv2', (...args) => {
-      alert(`receive ${args.join(',')}, num is ${num}`);
+    alert(`receive ${args.join(',')}, num is ${num}`);
   });
-  return <h1><button onClick={change}>change {num}</button></h1>;
+  return (
+    <h1>
+      <button onClick={change}>change {num}</button>
+    </h1>
+  );
 }
 
 export default () => (
@@ -66,4 +70,3 @@ export default () => (
   </>
 );
 ```
-

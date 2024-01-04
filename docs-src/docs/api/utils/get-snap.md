@@ -7,7 +7,7 @@ order: 1
 
 # getSnap
 
-获取atom对象的快照
+获取 atom 对象的快照
 
 ```ts
 /**
@@ -23,12 +23,12 @@ function getSnap<T = Dict>(state: T, isPrevSnap?: boolean): T;
 ```ts
 import { getSnap, share } from 'helux';
 
-const { state, setDraft } = share({a:1, b:2});
+const { state, setDraft } = share({ a: 1, b: 2 });
 
 console.log(getSnap(state)); // {a:1, b:2}
 console.log(state); // {a:1, b:2}
 
-setDraft(draft=>draft.a=100);
+setDraft((draft) => (draft.a = 100));
 
 console.log(getSnap(state)); // {a:1, b:2}
 console.log(state); // {a:100, b:2}
@@ -39,12 +39,12 @@ console.log(state); // {a:100, b:2}
 ```ts
 import { getSnap, share } from 'helux';
 
-const { state, setDraft } = share({a:1, b:2});
+const { state, setDraft } = share({ a: 1, b: 2 });
 
 console.log(getSnap(state)); // {a:1, b:2}
 console.log(state); // {a:1, b:2}
 
-setDraft(draft=>draft.a=100);
+setDraft((draft) => (draft.a = 100));
 
 console.log(getSnap(state, false)); // {a:100, b:2}
 ```

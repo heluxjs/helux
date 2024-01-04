@@ -12,17 +12,20 @@ order: 6
 /**
  * defaultShowCode: true
  */
-import React from 'react';
 import { useMutable } from 'helux';
 
 export default function Demo() {
-  const [obj, setObj] = useMutable({ a:1, b: {b1:1} });
-  const change = ()=>{
-    setObj(draft=>{
-      draft.b.b1+=100;
+  const [obj, setObj] = useMutable({ a: 1, b: { b1: 1 } });
+  const change = () => {
+    setObj((draft) => {
+      draft.b.b1 += 100;
     });
   };
 
-  return <h1><button onClick={change}>obj.b.b1 {obj.b.b1}</button></h1>;
+  return (
+    <h1>
+      <button onClick={change}>obj.b.b1 {obj.b.b1}</button>
+    </h1>
+  );
 }
 ```

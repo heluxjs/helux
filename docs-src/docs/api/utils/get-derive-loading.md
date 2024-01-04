@@ -28,5 +28,4 @@ const plus100Result = derive({
 });
 
 getDeriveLoading(plus100Result); // { loading, ok, err };
-
 ```

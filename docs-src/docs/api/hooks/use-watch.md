@@ -7,8 +7,12 @@ order: 4
 组件中观察共享状态变化。
 
 类型描述
+
 ```ts
-function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType);
+function useWatch(
+  watchFn: (fnParams: IWatchFnParams) => void,
+  options: WatchOptionsType,
+);
 
 type WatchOptionsType = WatchFnDeps | IWatchOptions;
 
@@ -32,7 +36,7 @@ type WatchFnDeps = () => any[] | undefined;
 
 ## 基础用法
 
-### 观察原始类型atom
+### 观察原始类型 atom
 
 ```tsx
 /**
@@ -46,10 +50,17 @@ const change = () => {
 };
 
 function Demo() {
-  useWatch(()=>{
-    alert(`change from ${getSnap().val} to ${state.val}`);
-  }, ()=>[state]);
-  return <h1><pre>watch state</pre></h1>;
+  useWatch(
+    () => {
+      alert(`change from ${getSnap().val} to ${state.val}`);
+    },
+    () => [state],
+  );
+  return (
+    <h1>
+      <pre>watch state</pre>
+    </h1>
+  );
 }
 
 export default () => (
@@ -60,7 +71,7 @@ export default () => (
 );
 ```
 
-### 观察字典类型atom
+### 观察字典类型 atom
 
 观察根对象变化
 
@@ -70,16 +81,27 @@ export default () => (
  */
 import { atomx, useWatch } from 'helux';
 
-const { reactive, getSnap } = atomx({a:1,b:2});
+const { reactive, getSnap } = atomx({ a: 1, b: 2 });
 const change = () => {
   reactive.a += 10;
 };
 
 function Demo() {
-  useWatch(()=>{
-    alert(`change from ${JSON.stringify(getSnap().val)} to ${JSON.stringify(reactive)}`);
-  }, ()=>[reactive]);
-  return <h1><pre>watch reactive</pre></h1>;
+  useWatch(
+    () => {
+      alert(
+        `change from ${JSON.stringify(getSnap().val)} to ${JSON.stringify(
+          reactive,
+        )}`,
+      );
+    },
+    () => [reactive],
+  );
+  return (
+    <h1>
+      <pre>watch reactive</pre>
+    </h1>
+  );
 }
 
 export default () => (
@@ -102,7 +124,7 @@ export default () => (
  */
 import { atomx, useWatch } from 'helux';
 
-const { reactive, getSnap } = atomx({a:1,b:2});
+const { reactive, getSnap } = atomx({ a: 1, b: 2 });
 const changeA = () => {
   reactive.a += 10;
 };
@@ -111,10 +133,21 @@ const changeB = () => {
 };
 
 function Demo() {
-  useWatch(()=>{
-    alert(`change from ${JSON.stringify(getSnap().val)} to ${JSON.stringify(reactive)}`);
-  }, ()=>[reactive.a]);
-  return <h1><pre>watch reactive.a</pre></h1>;
+  useWatch(
+    () => {
+      alert(
+        `change from ${JSON.stringify(getSnap().val)} to ${JSON.stringify(
+          reactive,
+        )}`,
+      );
+    },
+    () => [reactive.a],
+  );
+  return (
+    <h1>
+      <pre>watch reactive.a</pre>
+    </h1>
+  );
 }
 
 export default () => (
@@ -138,8 +171,8 @@ export default () => (
 /**
  * defaultShowCode: true
  */
-import React from 'react';
 import { atomx, useWatch } from 'helux';
+import React from 'react';
 
 const { state, reactiveRoot, getSnap } = atomx(1);
 const change = () => {
@@ -148,11 +181,18 @@ const change = () => {
 
 function Demo() {
   const [num, setNum] = React.useState(1);
-  const changeNum = () => setNum(prev => prev + 1);
-  useWatch(()=>{
-    alert(`change from ${getSnap().val} to ${state.val}, num is ${num}`);
-  }, ()=>[state]);
-  return <h1><button onClick={changeNum}>changeNum {num}</button></h1>;
+  const changeNum = () => setNum((prev) => prev + 1);
+  useWatch(
+    () => {
+      alert(`change from ${getSnap().val} to ${state.val}, num is ${num}`);
+    },
+    () => [state],
+  );
+  return (
+    <h1>
+      <button onClick={changeNum}>changeNum {num}</button>
+    </h1>
+  );
 }
 
 export default () => (
@@ -162,5 +202,3 @@ export default () => (
   </>
 );
 ```
-
-

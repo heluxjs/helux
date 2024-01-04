@@ -19,9 +19,7 @@ interface IInitOptions {
    */
   isRootRender?: boolean;
 }
-
 ```
-
 
 ## 基础使用
 
@@ -35,5 +33,5 @@ interface IInitOptions {
 此时用户可以设置 `isRootRender` 为 false 消除此错误提示。
 
 ```ts
-init({ isRootRender: false })
+init({ isRootRender: false });
 ```

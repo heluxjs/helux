@@ -9,7 +9,8 @@ order: 3
 
 使用本地状态
 
-___
+---
+
 :::info
-和顶层api[Hooks/useMutable](/api/hooks/use-mutable) 保持一致
+和顶层 api[Hooks/useMutable](/api/hooks/use-mutable) 保持一致
 :::

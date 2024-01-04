@@ -8,7 +8,7 @@ order: 7
 
 1 可替代`useCallback`，返回稳定的单个函数或多个函数集合，同时函数内部始终可以读取到外部的最新值，无闭包陷阱。
 
-2 可替代`forwardRef`，无需`forwardRef`层层ref也能实现祖先组件调孩子组件方法。
+2 可替代`forwardRef`，无需`forwardRef`层层 ref 也能实现祖先组件调孩子组件方法。
 
 ## 基础用法
 
@@ -22,27 +22,31 @@ order: 7
 /**
  * defaultShowCode: true
  */
-import React from 'react';
 import { useService } from 'helux';
+import React from 'react';
 
-const Child = React.memo((props)=>{
-  return <h3>
-    <span>update at {Date.now()}</span>
-    <button onClick={props.change}>call change</button>
-  </h3>;
+const Child = React.memo((props) => {
+  return (
+    <h3>
+      <span>update at {Date.now()}</span>
+      <button onClick={props.change}>call change</button>
+    </h3>
+  );
 });
 
 export default function Father() {
   const [num, setNum] = React.useState(1);
   const srv = useService({
-    change: () => setNum(prev => prev + 1),
+    change: () => setNum((prev) => prev + 1),
     seeNum: () => alert(num),
   });
-  return <h1>
-    <span>num {num}</span>
-    <button onClick={srv.seeNum}>seeNum</button>
-    <Child change={srv.change} />
-  </h1>;
+  return (
+    <h1>
+      <span>num {num}</span>
+      <button onClick={srv.seeNum}>seeNum</button>
+      <Child change={srv.change} />
+    </h1>
+  );
 }
 ```
 
@@ -52,23 +56,27 @@ export default function Father() {
 /**
  * defaultShowCode: true
  */
-import React from 'react';
 import { useService } from 'helux';
+import React from 'react';
 
-const Child = React.memo((props)=>{
-  return <h3>
-    <span>update at {Date.now()}</span>
-    <button onClick={props.change}>call change</button>
-  </h3>;
+const Child = React.memo((props) => {
+  return (
+    <h3>
+      <span>update at {Date.now()}</span>
+      <button onClick={props.change}>call change</button>
+    </h3>
+  );
 });
 
 export default function Father() {
   const [num, setNum] = React.useState(1);
-  const change = useService(() => setNum(prev => prev + 1));
-  return <h1>
-    <span>num {num}</span>
-    <Child change={change} />
-  </h1>;
+  const change = useService(() => setNum((prev) => prev + 1));
+  return (
+    <h1>
+      <span>num {num}</span>
+      <Child change={change} />
+    </h1>
+  );
 }
 ```
 
@@ -86,33 +94,48 @@ export default function Father() {
 /**
  * defaultShowCode: true
  */
-import { share, useService, useAtom, storeSrv } from 'helux';
+import { storeSrv, useService } from 'helux';
 import React from 'react';
 
 function GrandFather(props: any) {
   const srvRef = React.useRef<any>(null);
 
-  return <div style={{border:'1px solid blue', padding: '12px'}}>
-    <h3>GrandFather</h3>
-    <button onClick={() => { srvRef.current?.change() }}>call child change</button>
-    <Father a={1} srvRef={storeSrv(srvRef)} />
-  </div>
+  return (
+    <div style={{ border: '1px solid blue', padding: '12px' }}>
+      <h3>GrandFather</h3>
+      <button
+        onClick={() => {
+          srvRef.current?.change();
+        }}
+      >
+        call child change
+      </button>
+      <Father a={1} srvRef={storeSrv(srvRef)} />
+    </div>
+  );
 }
 
 function Father(props: any) {
-  return <div style={{border:'1px solid red', padding: '12px'}}>
-    Father comp:
-    <Comp a={1} srvRef={props.srvRef} />
-  </div>
+  return (
+    <div style={{ border: '1px solid red', padding: '12px' }}>
+      Father comp:
+      <Comp a={1} srvRef={props.srvRef} />
+    </div>
+  );
 }
 
 function Comp(props) {
   const [num, setNum] = React.useState(1);
-  const srv = useService({
-    change: () => setNum(prev => prev + 1),
-    seeNum: () => alert(num),
-  }, props);
-  return <div style={{border:'1px solid purple', padding: '12px'}}>num {num}</div>;
+  const srv = useService(
+    {
+      change: () => setNum((prev) => prev + 1),
+      seeNum: () => alert(num),
+    },
+    props,
+  );
+  return (
+    <div style={{ border: '1px solid purple', padding: '12px' }}>num {num}</div>
+  );
 }
 
 const Demo = () => <GrandFather />;

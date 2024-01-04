@@ -7,7 +7,7 @@ order: 15
 
 # cst
 
-helux提供个用户的使用常量对象通过`cst`导出
+helux 提供个用户的使用常量对象通过`cst`导出
 
 ```ts
 type Cst = {

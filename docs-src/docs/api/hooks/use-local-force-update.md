@@ -12,9 +12,7 @@ order: 9
 /**
  * defaultShowCode: true
  */
-import React from 'react';
 import { useLocalForceUpdate } from 'helux';
-
 
 export default function () {
   const forceUpdate = useLocalForceUpdate();

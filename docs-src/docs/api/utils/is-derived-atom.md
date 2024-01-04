@@ -14,10 +14,10 @@ order: 1
 ```ts
 import { atom, derive, deriveDict, isDerivedAtom } from 'helux';
 
-const [ state1 ] = atom(1);
+const [state1] = atom(1);
 
-const result1 = derive(()=> state1.val + 1); // { val: 2 }
-const result2 = deriveDict(()=> ({num: state1.val + 1})); // { num: 2 }
+const result1 = derive(() => state1.val + 1); // { val: 2 }
+const result2 = deriveDict(() => ({ num: state1.val + 1 })); // { num: 2 }
 
 isDerivedAtom(result1); // true
 isDerivedAtom(result2); // false
@@ -29,6 +29,5 @@ isDerivedAtom(result2); // false
 isDerivedAtom(1); // false
 isDerivedAtom(); // false
 isDerivedAtom([]); // false
-isDerivedAtom({a:1}); // false
+isDerivedAtom({ a: 1 }); // false
 ```
-

@@ -14,8 +14,8 @@ order: 0
 ```ts
 import { atom, share } from 'helux';
 
-const [ state1 ] = atom(1);
-const [ state2 ] = share({a:1, b:2});
+const [state1] = atom(1);
+const [state2] = share({ a: 1, b: 2 });
 
 isAtom(state1); // true
 isAtom(state2); // false
@@ -27,5 +27,5 @@ isAtom(state2); // false
 isAtom(1); // false
 isAtom(); // false
 isAtom([]); // false
-isAtom({a:1}); // false
+isAtom({ a: 1 }); // false
 ```

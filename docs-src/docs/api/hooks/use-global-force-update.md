@@ -50,13 +50,18 @@ function Demo() {
   );
 }
 
-export default ()=> <><Demo /><Demo /></>;
+export default () => (
+  <>
+    <Demo />
+    <Demo />
+  </>
+);
 ```
 
 ### 指定更新范围
 
 :::info
-由于指定了更新范围`state.a`，下述例子中Demo2因未使用到`state.a`将不被更新
+由于指定了更新范围`state.a`，下述例子中 Demo2 因未使用到`state.a`将不被更新
 :::
 
 ```tsx
@@ -69,7 +74,7 @@ const [dictAtom, , ctx] = share({ a: 1, b: { b1: 2 } });
 function Demo1() {
   // 或写为
   // or const updateSomeIns = ctx.useForceUpdate(state=>[state.a]);
-  const updateSomeIns = useGlobalForceUpdate(dictAtom, state=>[state.a]);
+  const updateSomeIns = useGlobalForceUpdate(dictAtom, (state) => [state.a]);
   const [dict] = useAtom(dictAtom);
   return (
     <div>
@@ -81,7 +86,7 @@ function Demo1() {
 }
 
 function Demo2() {
-  const updateSomeIns = useGlobalForceUpdate(dictAtom, state=>[state.a]);
+  const updateSomeIns = useGlobalForceUpdate(dictAtom, (state) => [state.a]);
   const [dict] = useAtom(dictAtom);
   return (
     <div>
@@ -92,7 +97,12 @@ function Demo2() {
   );
 }
 
-export default ()=> <><Demo1 /><Demo2 /></>;
+export default () => (
+  <>
+    <Demo1 />
+    <Demo2 />
+  </>
+);
 ```
 
 ### 重写更新范围
@@ -100,14 +110,14 @@ export default ()=> <><Demo1 /><Demo2 /></>;
 支持调用时重写更新范围
 
 ```ts
-updateSomeAtomIns(state=>[state.c]); // 本次更新只更新 c 相关的实例
+updateSomeAtomIns((state) => [state.c]); // 本次更新只更新 c 相关的实例
 
 // 重写为 null，表示更新所有实例，强制覆盖可能存在的 presetDeps
-updateSomeAtomIns(null)
+updateSomeAtomIns(null);
 
 // 返回空数组不会做任何更新
-updateSomeAtomIns(state=>[]);
+updateSomeAtomIns((state) => []);
 
 // 返回里包含了自身也会触发更新所有实例
-updateSomeAtomIns(state=>[state]);
+updateSomeAtomIns((state) => [state]);
 ```

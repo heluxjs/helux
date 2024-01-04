@@ -17,12 +17,12 @@ order: 0
 
 ## 基础用法
 
-### 创建同步action
+### 创建同步 action
 
 ```ts
 import { share, action } from 'helux';
 
-const { state } = sharex({a:1, b:2});
+const { state } = sharex({ a: 1, b: 2 });
 
 const hiAction = action(state)()(({ draft, payload }) => {
   draft.a += 100;
@@ -37,9 +37,9 @@ const hiAction = action(state)<[number, string]>()(({ draft, payload }) => {
 }, 'hiAction');
 ```
 
-### 创建异步action
+### 创建异步 action
 
-和创建同步action方式一样，只需将函数声明为异步函数即可，草稿变更后，会在下一次事件循环的微任务开始前提交变更数据
+和创建同步 action 方式一样，只需将函数声明为异步函数即可，草稿变更后，会在下一次事件循环的微任务开始前提交变更数据
 
 ```ts
 const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
@@ -50,5 +50,3 @@ const hiAsyncAction = action(state)()(async ({ draft, payload }) => {
   draft.a += 100;
 }, 'hiAsyncAction');
 ```
-
-
