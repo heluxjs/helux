@@ -69,7 +69,9 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
         // 来自顶层 reactive 透传的 onRead
         currReactive.onRead(opParams);
       } else {
-        getRunningFn().fnCtx && recordFnDepKeys([depKey], { sharedKey });
+        if (getRunningFn().fnCtx) {
+          recordFnDepKeys([depKey], { sharedKey });
+        }
         // 仅 top reactive 触发以下逻辑，为 block 收集依赖
         if (isReactive) {
           recordBlockDepKey([depKey]);

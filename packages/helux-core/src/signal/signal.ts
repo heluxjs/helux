@@ -15,15 +15,16 @@ export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal),
     return react.createElement(input as any);
   }
 
+  const compare = alwaysEqual;
   // for $(()=>atom), $(()=>derivdedAtom), $(()=>ReactNode)
   if (isFn(input)) {
-    const Comp = dynamicBlock(apiCtx, input, { compare: alwaysEqual });
+    const Comp = dynamicBlock(apiCtx, input, { compare });
     return react.createElement(Comp);
   }
 
   // for $(derivdedAtom)
   if (isDerivedAtom(input)) {
-    const Comp = wrapDerivedAtomSignalComp(apiCtx, input, alwaysEqual);
+    const Comp = wrapDerivedAtomSignalComp(apiCtx, { result: input, compare, format });
     return react.createElement(Comp);
   }
 
@@ -31,7 +32,7 @@ export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal),
   if (isAtom(input)) {
     const sharedKey = getSharedKey(input);
     const depKey = prefixValKey('val', sharedKey);
-    const options = { sharedKey, sharedState: input, depKey, keyPath: ['val'], compare: alwaysEqual };
+    const options = { sharedKey, sharedState: input, depKey, keyPath: ['val'], compare, format };
     const Comp = wrapSignalComp(apiCtx, options);
     return react.createElement(Comp);
   }
@@ -41,18 +42,18 @@ export function signal(apiCtx: CoreApiCtx, input: SingalVal | (() => SingalVal),
   if (input === val && stateOrResult) {
     // for $(atomDerived.val), user unbox atomDerived manually
     if (readedInfo.isDerivedAtom) {
-      const Comp = wrapDerivedAtomSignalComp(apiCtx, stateOrResult, alwaysEqual);
+      const Comp = wrapDerivedAtomSignalComp(apiCtx, { result: stateOrResult, compare, format });
       return react.createElement(Comp);
     }
 
     // for $(derived.xxx)
     if (isDerivedResult) {
-      const Comp = wrapDerivedSignalComp(apiCtx, stateOrResult, keyPath, alwaysEqual);
+      const Comp = wrapDerivedSignalComp(apiCtx, { result: stateOrResult, keyPath, compare, format });
       return react.createElement(Comp);
     }
 
     // for $(atom.val.xxx.yy) , $(shared.xxx.yy)
-    const Comp = wrapSignalComp(apiCtx, { sharedKey, sharedState: stateOrResult, depKey, keyPath, compare: alwaysEqual, format });
+    const Comp = wrapSignalComp(apiCtx, { sharedKey, sharedState: stateOrResult, depKey, keyPath, compare, format });
     return react.createElement(Comp);
   }
 

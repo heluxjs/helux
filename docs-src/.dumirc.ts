@@ -1,4 +1,5 @@
 import { defineConfig } from 'dumi';
+import { resolve } from 'path';
 
 export default defineConfig({
   favicons: ['https://tnfe.gtimg.com/image/dlykfuw8ai_1703851692543.png'],
@@ -27,4 +28,8 @@ export default defineConfig({
     'primary-color': '#e8ae56',
   },
   logo: 'https://tnfe.gtimg.com/image/dlykfuw8ai_1703851692543.png',
+  alias: {
+    'src/demos': resolve(__dirname, 'src/demos'),
+    '@/demos': resolve(__dirname, 'docs/demos'),
+  },
 });

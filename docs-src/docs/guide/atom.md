@@ -38,17 +38,17 @@ const [numAtom] = atom(() => 1);
 const [objAtom] = atom(() => ({ a: 1, b: { b1: 1 } }));
 ```
 
-`atom` 返回元组完整结构为`[ state, setter, ctx ]`，也可使用 `atomx` 直接返回共享上下文 `ctx`，两种写法区别仅在于，`atom` 直接将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处，对齐了`react.useState`接口风格，让 react 用户可 0 成本上手。
+`atom` 返回元组完整结构为`[ state, setState, ctx ]`，也可使用 `atomx` 直接返回共享上下文 `ctx`，两种写法区别仅在于，`atom` 直接将 `ctx.state` 和 `ctx.setState` 放置到元组的第一位和第二次参数处，对齐了`react.useState`接口风格，让 react 用户可 0 成本上手。
 
 ```ts
 import { atom, atomx } from 'helux';
 
-// 返回元组，元组的第一位和第二次参数即是 state setter
+// 返回元组，元组的第一位和第二次参数即是 state setState
 const [numAtom, setAtom, atomCtx] = atom(1);
 
-// 返回字典对象，对象里可解构出 state setter
+// 返回字典对象，对象里可解构出 state setState
 const atomCtx = atomx(1);
-const { numAtom, setAtom } = atomCtx;
+const { state: numAtom, setState: setAtom } = atomCtx;
 ```
 
 :::info{title=共享上下文}
@@ -58,6 +58,10 @@ const { numAtom, setAtom } = atomCtx;
 ## 修改共享状态
 
 钩子 `useAtom` 返回一个元组，使用方式大体对齐 `react.useState` 接口，唯一的区别是`setter`提供的回调参数是一个草稿对象，可基于草稿对象直接修改，这个差异点下面会再次提到。
+
+:::info{title=推荐通过 actions 修改}
+推荐了解和使用[模块化/defineAtcions](/guide/modular#defineactions)定义修改方法，有利于维护或扩展
+:::
 
 在组件内使用`useAtom`接口来获得组件内使用的共享对象，数据变更后自动通知组件重渲染
 

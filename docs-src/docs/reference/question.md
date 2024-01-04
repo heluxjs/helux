@@ -1,8 +1,7 @@
 ---
-order: 3
-group:
-  title: 开始
-  order: 0
+nav:
+  title: 参考
+  order: 1
 ---
 
 # 常见问题

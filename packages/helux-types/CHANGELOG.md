@@ -1,5 +1,50 @@
 # @helux/types
 
+## 3.6.14
+
+### Patch Changes
+
+- ea640d21: add useReactiveX
+
+## 3.6.13
+
+### Patch Changes
+
+- 7957ac03: optimize initLoadingCtx
+
+## 3.6.12
+
+### Patch Changes
+
+- d6c30035: add ctx.getSnap
+
+## 3.6.11
+
+### Patch Changes
+
+- 8fab5633: optimize useEvent
+- 0af797f2: optimize useEvent
+
+## 3.6.10
+
+### Patch Changes
+
+- aec08711: simplfy reactive logic
+
+## 3.6.9
+
+### Patch Changes
+
+- 8ed5c93a: add throwErr to mutate.run
+
+## 3.6.8
+
+### Patch Changes
+
+- 6129c376: collect atom dep in derive deps result
+
+## 3.6.7
+
 ## 3.6.6
 
 ### Patch Changes

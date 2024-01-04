@@ -30,6 +30,7 @@ import {
   useMutateLoading,
   useOnEvent,
   useReactive,
+  useReactiveX,
   useService,
   useWatch,
 } from './hooks';
@@ -66,6 +67,7 @@ export {
   useAtom,
   useAtomX,
   useReactive,
+  useReactiveX,
   useDerived,
   useWatch,
   useGlobalId,

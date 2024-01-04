@@ -297,6 +297,11 @@ export interface IRunMutateOptions {
    * false，非严格检查，如果检查失败，则原样返回传入对象
    */
   strict?: boolean;
+  /**
+   * default: false，
+   * 是否抛出错误
+   */
+  throwErr?: boolean;
 }
 
 export interface IMutateTaskParam<T = SharedState, P = any[]> {
@@ -316,10 +321,17 @@ export interface IMutateTaskParam<T = SharedState, P = any[]> {
   input: P;
 }
 
-/** 呼叫 mutate 的句柄，由顶层api mutate 和 atomMutate 返回，可直接无理由重运行 mutate 函数 */
-export type MutateCall<T = any> = () => [T, Error | null];
+/**
+ * 呼叫 mutate fn 的句柄，由顶层 api mutate 和共享上下文 mutate 返回，可直接无理由重运行 mutate fn 函数
+ * @param throwErr - default: false
+ */
+export type MutateCall<T = any> = (throwErr?: boolean) => [T, Error | null];
 
-export type MutateTaskCall<T = any> = () => Promise<[T, Error | null]>;
+/**
+ * 呼叫 mutate task 的句柄，由顶层 api mutate 和共享上下文 mutate 返回，可直接无理由重运行 mutate task 函数
+ * @param throwErr - default: false
+ */
+export type MutateTaskCall<T = any> = (throwErr?: boolean) => Promise<[T, Error | null]>;
 
 export interface IMutateWitness<T = any> {
   /** 人工调用 mutate 配置里的同步函数 */
@@ -361,11 +373,11 @@ export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
 ) => void;
 
 export interface IMutateFnItem<T = SharedState, P = ReadOnlyArr> {
-  /** 异步 mutate 的依赖项列表 */
+  /** 依赖项列表，有 task 无 fn 时，可作为 task 的依赖收集函数 */
   deps?: (state: StateType<T>) => P;
   /**
    * defalt: false
-   * 依赖全部由 deps 函数提供，fn 执行过程中不收集任何依赖
+   * 为 true 时表示依赖全部由 deps 函数提供，fn 执行过程中不收集任何依赖
    */
   onlyDeps?: boolean;
   /** fn 和 deps 均可以收集依赖，对应存在 task 的场景，deps 或 fn 两者保证至少有一个 */
@@ -718,6 +730,10 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    */
   setEnableMutate: (enabled: boolean) => void;
   getOptions: () => CtxCreateOptions;
+  /**
+   * isPrevSnap 默认值为 true，表示返回前一刻的快照，设为 false 表示返回最新快照
+   */
+  getSnap: (isPrevSnap?: boolean) => T;
   /** 共享状态唯一 key */
   sharedKey: number;
   sharedKeyStr: string;
@@ -753,6 +769,10 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     T,
     IInsRenderInfo,
   ];
+  /**
+   * 和 useReactive 使用方式一样，区别在于 useReactiveX 返回字典， useReactive 返回元组
+   */
+  useReactiveX: (options?: IUseSharedStateOptions<T>) => ICompReactiveCtx<T>;
   /**
    * 更新当前共享状态的所有实例组件，谨慎使用此功能，会触发大面积的更新，
    * 推荐设定 presetDeps、overWriteDeps 函数减少更新范围
@@ -1064,13 +1084,28 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
 
 export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
   state: ReadOnlyDict<T>;
+  stateRoot: ReadOnlyDict<T>;
+  stateVal: ReadOnlyDict<T>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
 }
 
 export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
+  /**
+   * state 指向 stateRoot ，保留 state 命名是为了用户从 atom 切换 atomx 时，
+   * 保留 state 语义不变，即以下两种写法均 ok
+   * ```
+   * const [ state ] = atom(1) -> const { state } = atomx(1)
+   * const [ stateRoot ] = atom(1) -> const { stateRoot } = atomx(1)
+   * ```
+   */
   state: ReadOnlyAtom<T>;
+  stateRoot: ReadOnlyAtom<T>;
+  /**
+   * 指向拆箱后的值引用
+   */
+  stateVal: ReadOnlyAtomVal<Atom<T>>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
@@ -1107,7 +1142,7 @@ export interface IDataRule<T = any> {
 
 export interface ICreateOptionsFull<T = SharedState> {
   /**
-   * 模块名称，方便用户可以查看到语义化的状态树，不传递的话内部会以生成的自增序号 作为 key
+   * 模块名称，方便用户可以查看到语义化的状态树，不传递的话内部会以生成的自增序号作为 key
    * 传递的话如果重复了，目前的策略仅仅是做个警告，helux 内部始终以生成的自增序号作为模块命名空间控制其他逻辑
    */
   moduleName: string;
@@ -1120,7 +1155,7 @@ export interface ICreateOptionsFull<T = SharedState> {
    */
   deep: boolean;
   /**
-   * default: 'private' ，表示loading 对象记录的位置，具体含义见 recordLoading，
+   * default: 'private' ，表示 loading 对象记录的位置，具体含义见 recordLoading，
    * 注：loading 对象用于辅助查询 mutate 或者 action 异步函数的执行状态
    */
   recordLoading: RecordLoading;
@@ -1140,15 +1175,15 @@ export interface ICreateOptionsFull<T = SharedState> {
    */
   rules: IDataRule<StateType<T>>[];
   /**
-   * 定义当前状态对其他状态有依赖的 mutate 函数集合或函数，它们将被自动执行，并收集到每个函数各自对应的上游数据依赖
+   * 定义当前状态对自身状态或其他状态某些数据节点有依赖的 `mutate` 函数集合或函数，它们将在依赖项变化时被自动执行，
+   * 首次执行时会收集到每个函数各自对应的外部数据依赖并记录下来
    * 推荐走 defineMutateSelf 或 mutateDict 在外部定义 mutate 函数，以便获得更好的类型推导
    */
   mutate: MutateFn<T> | MutateFnDict<T> | MutateFnList<T>;
   /**
-   * action、mutate、setState、sync提交状态之前的函数，建议优先对 draft 操作，
-   * 如需要返回则返回的部分对象是全新值才是安全的草稿，该函数执行时机是在中间件之前
+   * action、mutate、setState、sync 提交状态之前会触发执行的函数，可在此函数里再次修改 draft，该函数执行时机是在中间件之前
    */
-  before: (params: BeforeFnParams<T>) => void | Partial<T>;
+  before: (params: BeforeFnParams<T>) => void;
   /**
    * deafult: undefined
    * 不配置此项时，开发环境弹死循环提示，生产环境不弹
@@ -1159,7 +1194,7 @@ export interface ICreateOptionsFull<T = SharedState> {
    */
   checkDeadCycle: boolean;
   /**
-   * default: true，是否禁止 mutate 执行，可以创建 atom 时设置，也可以中途通过 setEnableMutate 设置
+   * default: true，是否允许 mutate 执行，可以创建 atom 时设置，也可以中途通过 setEnableMutate 反复设置
    */
   enableMutate: boolean;
 }
@@ -1322,10 +1357,10 @@ export interface IWatchFnParams {
   sn?: number;
 }
 
-export type WatchDepFn = () => any[] | undefined;
+export type WatchFnDeps = () => any[] | undefined;
 
 export interface IWatchOptions {
-  deps?: WatchDepFn;
+  deps?: WatchFnDeps;
   /**
    * default: false，
    * 如没有定义 deps 依赖，需设置 immediate，这样可以让 watch 首次执行后收集到相关依赖，
@@ -1340,9 +1375,9 @@ export interface IWatchOptions {
   throwErr?: boolean;
 }
 
-export type WatchOptionsType = WatchDepFn | IWatchOptions;
+export type WatchOptionsType = WatchFnDeps | IWatchOptions;
 
-export interface IDeriveFnParamsBase<T = any, I = readonly any[]> {
+export interface IDeriveFnParamsBase<I = readonly any[]> {
   /** 函数的运行编号，每次自增1 */
   sn: number;
   isFirstCall: boolean;
@@ -1350,11 +1385,11 @@ export interface IDeriveFnParamsBase<T = any, I = readonly any[]> {
   input: I;
 }
 
-export interface IDeriveFnParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<T, I> {
+export interface IDeriveFnParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<I> {
   prevResult: T | null;
 }
 
-export interface IDeriveFnTaskParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<T, I> {
+export interface IDeriveFnTaskParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<I> {
   /** 区别于 IDeriveFnParams，执行 task 时，prevResult 一定有值 */
   prevResult: T;
 }
@@ -1500,6 +1535,11 @@ export interface IRenderInfo<T = any> extends IFnRenderInfo {
    * 获取组件实例上一轮渲染阶段收集的依赖
    */
   getPrevDeps: () => string[];
+}
+
+export interface ICompReactiveCtx<T = any> extends IRenderInfo {
+  state: StateType<T>;
+  stateRoot: StateRootType<T>;
 }
 
 export interface ICompAtomCtx<T = any> extends IRenderInfo<T> {

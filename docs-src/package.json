@@ -51,8 +51,11 @@
     "@makotot/ghostui": "^2.0.0",
     "animated-scroll-to": "^2.3.0",
     "classnames": "^2.5.0",
-    "helux": "workspace:^3.6.6",
+    "helux": "workspace:^3.6.14",
     "lodash": "^4.17.21",
+    "lodash.throttle": "^4.1.1",
+    "prism-react-renderer": "^2.3.1",
+    "prism-themes": "^1.9.0",
     "rc-motion": "^2.9.0",
     "rc-tree": "^5.8.2",
     "react-copy-to-clipboard": "^5.1.0"

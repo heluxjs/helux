@@ -6,6 +6,6 @@ export { getActionLoading, getMutateLoading, useActionLoading, useMutateLoading 
 export { useLocalForceUpdate } from './useLocalForceUpdate';
 export { useMutable } from './useMutable';
 export { useOnEvent } from './useOnEvent';
-export { useReactive } from './useReactive';
+export { useReactive, useReactiveX } from './useReactive';
 export { storeSrv, useService } from './useService';
 export { useWatch } from './useWatch';

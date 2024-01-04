@@ -65,7 +65,8 @@ interface IInitDeriveFnOptions extends ICreateDeriveLogicOptions {
 }
 
 function transferDep(fnCtx: IFnCtx, options: any) {
-  const upstreamFnCtx = getFnCtxByObj(options.result);
+  const { result, isUpstream } = options;
+  const upstreamFnCtx = getFnCtxByObj(result);
   // 特殊处理计算结果中转行为
   // const cu1 = derive(...);
   // const cu2 = derive(()=>cu1); // 此处产生结果中转
@@ -75,8 +76,13 @@ function transferDep(fnCtx: IFnCtx, options: any) {
     nodupPush(upstreamFnCtx.nextLevelFnKeys, fnCtx.fnKey);
     nodupPush(fnCtx.prevLevelFnKeys, upstreamFnCtx.fnKey);
     fnCtx.isFirstLevel = false;
-    options.isUpstream?.();
+    isUpstream?.();
   }
+  // TODO: 支持 deps 返回里包含 atom 对象本身，这里帮助用户自动拆箱，以便 derive 函数可收集到 atom 依赖
+  // 存在一个 IDeriveFnParamsBase.input 类型如何自动推导的问题，故此功能暂时不打开
+  // if (isAtom(result)) {
+  //   noop(result.val);
+  // }
 }
 
 /**

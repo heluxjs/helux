@@ -1,5 +1,70 @@
 # helux
 
+## 3.6.14
+
+### Patch Changes
+
+- ea640d21: add useReactiveX
+- Updated dependencies [ea640d21]
+  - @helux/core@3.6.14
+
+## 3.6.13
+
+### Patch Changes
+
+- 7957ac03: optimize initLoadingCtx
+- Updated dependencies [7957ac03]
+  - @helux/core@3.6.13
+
+## 3.6.12
+
+### Patch Changes
+
+- d6c30035: add ctx.getSnap
+- Updated dependencies [d6c30035]
+  - @helux/core@3.6.12
+
+## 3.6.11
+
+### Patch Changes
+
+- 8fab5633: optimize useEvent
+- 0af797f2: optimize useEvent
+- Updated dependencies [8fab5633]
+- Updated dependencies [0af797f2]
+  - @helux/core@3.6.11
+
+## 3.6.10
+
+### Patch Changes
+
+- aec08711: simplfy reactive logic
+- Updated dependencies [aec08711]
+  - @helux/core@3.6.10
+
+## 3.6.9
+
+### Patch Changes
+
+- 8ed5c93a: add throwErr to mutate.run
+- Updated dependencies [8ed5c93a]
+  - @helux/core@3.6.9
+
+## 3.6.8
+
+### Patch Changes
+
+- 6129c376: collect atom dep in derive deps result
+- Updated dependencies [6129c376]
+  - @helux/core@3.6.8
+
+## 3.6.7
+
+### Patch Changes
+
+- Updated dependencies [37382dce]
+  - @helux/core@3.6.7
+
 ## 3.6.6
 
 ### Patch Changes

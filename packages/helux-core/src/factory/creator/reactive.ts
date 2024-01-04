@@ -1,4 +1,4 @@
-import { canUseDeep, delListItem, nodupPush, safeMapGet } from '@helux/utils';
+import { canUseDeep } from '@helux/utils';
 import { FROM, IS_ATOM, REACTIVE_META_KEY, SHARED_KEY } from '../../consts';
 import { getSharedKey } from '../../helpers/state';
 import type { Dict } from '../../types/base';
@@ -13,10 +13,6 @@ const { REACTIVE } = FROM;
 
 /** key: sharedKey, value: top reactive meta */
 const metas: Map<number, IReactiveMeta> = new Map();
-/** key: insKey, value: ins reactive meta */
-const insMetas: Map<number, IReactiveMeta> = new Map();
-/** key: sharedKey, value: ins metaKeys */
-const skey2insKeys: Map<number, number[]> = new Map();
 
 function canFlush(meta?: IReactiveMeta): meta is IReactiveMeta {
   return !!(meta && !meta.expired && meta.modified);
@@ -33,22 +29,7 @@ function flushModified(meta: IReactiveMeta) {
   // 来自于 flush 记录的 desc 值，使用过一次就清除
   const desc = REACTIVE_DESC.current(sharedKey);
   REACTIVE_DESC.del(sharedKey);
-
-  // 所有 ins meta 均移除，再次获取时会重建
-  const insKeys = skey2insKeys.get(sharedKey);
-  if (insKeys) {
-    insKeys.forEach((insKey) => insMetas.delete(insKey));
-    insKeys.length = 0;
-  }
   return meta.finish(null, { desc });
-}
-
-export function clearInsMeta(sharedKey: number, insKey: number) {
-  const insKeys = skey2insKeys.get(sharedKey);
-  if (insKeys) {
-    delListItem(insKeys, insKey);
-    insMetas.delete(insKey);
-  }
 }
 
 /**
@@ -139,35 +120,22 @@ function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
 function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAtom: boolean) {
   const { sharedKey } = internal;
   const { insKey = 0, from } = options;
-  let topMeta = metas.get(sharedKey) || fakeReativeMeta;
-  let targetMeta = topMeta;
+  let meta = metas.get(sharedKey) || fakeReativeMeta;
 
   // 无顶层响应对象、或顶层响应对象已过期，则重建顶层 top reactive
-  if (topMeta.expired) {
-    topMeta = buildMeta(internal, { isTop: true, from });
-    metas.set(sharedKey, topMeta);
-    REACTIVE_META.set(topMeta.key, topMeta);
+  if (meta.expired) {
+    meta = buildMeta(internal, { isTop: true, from });
+    metas.set(sharedKey, meta);
+    REACTIVE_META.set(meta.key, meta);
     // mark using
-    REACTIVE_META.markUsing(topMeta.key);
-    topMeta.fnKey = TRIGGERED_WATCH.current();
-    targetMeta = topMeta;
+    REACTIVE_META.markUsing(meta.key);
+    meta.fnKey = TRIGGERED_WATCH.current();
   }
 
-  // 当前reactive操作来自于实例
-  if (insKey) {
-    targetMeta = insMetas.get(insKey) || fakeReativeMeta;
-    if (targetMeta.expired) {
-      targetMeta = buildMeta(internal, options);
-      // 动态生成的映射关系会在 flushModified 里被删除
-      // 或组件卸载时主动删除
-      insMetas.set(insKey, targetMeta);
-      const insKeys = safeMapGet(skey2insKeys, sharedKey, []);
-      nodupPush(insKeys, insKey);
-    }
-  }
-
-  const { draft } = targetMeta;
-  return { val: forAtom ? draft.val : draft, meta: targetMeta };
+  // 当前 reactive 操作来自于实例则替换为实例的 onRead，反之则置空 onRead
+  meta.onRead = insKey ? options.onRead : undefined;
+  const { draft } = meta;
+  return { val: forAtom ? draft.val : draft, meta };
 }
 
 /**
