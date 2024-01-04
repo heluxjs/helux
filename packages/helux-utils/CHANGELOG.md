@@ -1,5 +1,15 @@
 # @helux/utils
 
+## 3.6.11
+
+### Patch Changes
+
+- 8fab5633: optimize useEvent
+- 0af797f2: optimize useEvent
+- Updated dependencies [8fab5633]
+- Updated dependencies [0af797f2]
+  - @helux/types@3.6.11
+
 ## 3.6.10
 
 ### Patch Changes
