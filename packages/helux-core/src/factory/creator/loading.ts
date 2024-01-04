@@ -57,10 +57,10 @@ export function initGlobalLoading(apiCtx: CoreApiCtx, createFn: Fn) {
   const ctx = getRootCtx();
   let shared = ctx.globalLoading;
   if (!shared) {
-    const { state } = createFn({ apiCtx, rawState: {}, stateType: GLOGAL_LOADING }, { moduleName: HELUX_GLOBAL_LOADING });
-    const internal = getInternal(state);
+    const { stateRoot } = createFn({ apiCtx, rawState: {}, stateType: GLOGAL_LOADING }, { moduleName: HELUX_GLOBAL_LOADING });
+    const internal = getInternal(stateRoot);
     ctx.globalLoadingInternal = internal;
-    ctx.globalLoading = state;
+    ctx.globalLoading = stateRoot;
   }
   GLOBAL_LOADING = shared;
   return shared;
@@ -181,6 +181,8 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
   const { internal: leaderInternal, from, apiCtx } = options;
   const { stateType } = leaderInternal;
   const isUserState = STATE_TYPE.USER_STATE === stateType;
+  // 提前为共享状态自身生成 loadingInternal
+  getLoadingInfo(createFn, options);
 
   let useLoading = () => fakeTuple;
   // 当前状态是用户状态

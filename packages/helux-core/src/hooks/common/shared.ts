@@ -3,7 +3,6 @@ import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { INS_CTX } from '../../factory/creator/current';
 import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
-import { clearInsMeta } from '../../factory/creator/reactive';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
@@ -68,11 +67,10 @@ export function recoverInsCtx(insCtx: InsCtxDef) {
 
 export function delInsCtx(insCtx: InsCtxDef) {
   insCtx.mountStatus = UNMOUNT;
-  const { id, globalId, insKey, sharedKey } = insCtx;
+  const { id, globalId, insKey } = insCtx;
   insCtx.internal.delId(id, insKey);
   delGlobalId(globalId, insKey);
   clearDep(insCtx);
-  clearInsMeta(sharedKey, insKey);
 }
 
 /**

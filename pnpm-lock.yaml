@@ -94,7 +94,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: workspace:^3.6.8
+      helux: workspace:^3.6.13
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21

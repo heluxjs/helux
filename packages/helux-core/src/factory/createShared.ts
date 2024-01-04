@@ -1,6 +1,7 @@
 import { FROM, STATE_TYPE } from '../consts';
 import { innerRunDerive, innerRunDeriveTask } from '../helpers/fnRunner';
-import { useAtom, useAtomX, useDerived, useGlobalForceUpdate, useLocalForceUpdate, useMutable, useReactive } from '../hooks';
+import { getSnap } from '../helpers/state';
+import { useAtom, useAtomX, useDerived, useGlobalForceUpdate, useLocalForceUpdate, useMutable, useReactive, useReactiveX } from '../hooks';
 import type { CoreApiCtx } from '../types/api-ctx';
 import type {
   Action,
@@ -158,9 +159,9 @@ function getOptions(internal: TInternal): CtxCreateOptions {
 export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: any): any {
   const { stateType, apiCtx } = innerOptions;
   ensureGlobal(apiCtx, stateType);
-  const { sharedRoot: state, sharedState: stateVal, internal } = buildSharedObject(innerOptions, createOptions);
+  const { sharedRoot: stateRoot, sharedState: state, internal } = buildSharedObject(innerOptions, createOptions);
   const { syncer, sync, forAtom, setState, setDraft, sharedKey, sharedKeyStr, rootValKey, reactive, reactiveRoot } = internal;
-  const actionCreator = action(state);
+  const actionCreator = action(stateRoot);
   const actionTaskCreator = actionCreator(); // 注意此处是柯里化调用后才是目标 actionCreator
   const opt = { internal, from: MUTATE, apiCtx };
   const createFn = createSharedLogic;
@@ -170,8 +171,11 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const acCommon = { ...common, ldAction, actionCreator };
 
   return {
-    state, // 指向 root
-    stateVal, // atom 的话 stateVal 是拆箱后的值，share 对象的话，stateVal 指向 root 自身
+    // state 指向 stateRoot，保留 state 命名是为了用户从 atom 切换 atomx 时，
+    // 保留 state 语义不变，[ state ] -> { state }
+    state: stateRoot,
+    stateRoot, // 指向 root
+    stateVal: state, // atom 的话 stateVal 是拆箱后的值，share 对象的话，state 指向 root 自身
     setState,
     setDraft,
     setEnableMutate: (enabled: boolean) => setEnableMutate(enabled, internal),
@@ -181,22 +185,23 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>
       defineActions({ ...acCommon, actionDict, forTp: true }, throwErr),
     defineMutateDerive: (inital: Dict) => (mutateFnDict: Dict) => defineMutateDerive({ ...common, ldMutate, inital, mutateFnDict }),
-    defineMutateSelf: () => (mutateFnDict: Dict) => defineMutate({ ldMutate, state, mutateFnDict }),
+    defineMutateSelf: () => (mutateFnDict: Dict) => defineMutate({ ldMutate, state: stateRoot, mutateFnDict }),
     defineFullDerive: (throwErr?: boolean) => (deriveFnDict: Dict) => defineFullDerive({ apiCtx, deriveFnDict, throwErr }),
-    mutate: mutate(state),
-    runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(state, descOrOptions),
-    runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(state, descOrOptions),
+    mutate: mutate(stateRoot),
+    runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(stateRoot, descOrOptions),
+    runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(stateRoot, descOrOptions),
     action: actionCreator,
     call: (fn: Fn, payload: any, desc: string, throwErr: boolean) => actionTaskCreator(fn, desc, throwErr)(payload),
-    useState: (options?: any) => useAtom(apiCtx, state, options),
-    useStateX: (options?: any) => useAtomX(apiCtx, state, options),
-    useForceUpdate: (presetDeps?: (sharedState: any) => any[]) => useGlobalForceUpdate(apiCtx, state, presetDeps),
+    useState: (options?: any) => useAtom(apiCtx, stateRoot, options),
+    useStateX: (options?: any) => useAtomX(apiCtx, stateRoot, options),
+    useForceUpdate: (presetDeps?: (sharedState: any) => any[]) => useGlobalForceUpdate(apiCtx, stateRoot, presetDeps),
     useLocalState: (initialState: any) => useMutable(apiCtx, initialState),
     useLocalForceUpdate: () => useLocalForceUpdate(apiCtx),
     getMutateLoading: ldMutate.getLoading,
     useMutateLoading: ldMutate.useLoading,
     getActionLoading: ldAction.getLoading,
     useActionLoading: ldAction.useLoading,
+    getSnap: (isPrev?: boolean) => getSnap(stateRoot, isPrev),
     sync,
     syncer,
     sharedKey,
@@ -204,9 +209,10 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     rootValKey,
     reactive,
     reactiveRoot,
-    reactiveDesc: (desc: string) => reactiveDesc(state, desc),
-    useReactive: (options?: any) => useReactive(apiCtx, state, options),
-    flush: (desc?: string) => flush(state, desc),
+    reactiveDesc: (desc: string) => reactiveDesc(stateRoot, desc),
+    useReactive: (options?: any) => useReactive(apiCtx, stateRoot, options),
+    useReactiveX: (options?: any) => useReactiveX(apiCtx, stateRoot, options),
+    flush: (desc?: string) => flush(stateRoot, desc),
     isAtom: forAtom,
   };
 }

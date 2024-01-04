@@ -37,8 +37,8 @@ export type UnconfirmedArg = ValidArg | void;
 /** 调用时如未指定具体 payload 类型，收窄为 UnconfirmedArg，让用户不传递也能类型校验通过 */
 export type PayloadType<P extends Dict | undefined = undefined, K = any> = P extends Dict
   ? K extends keyof P
-    ? P[K]
-    : UnconfirmedArg
+  ? P[K]
+  : UnconfirmedArg
   : UnconfirmedArg;
 
 // use Awaited instead
@@ -641,8 +641,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-    ? SyncerFn
-    : { [key in keyof T['val']]: SyncerFn }
+  ? SyncerFn
+  : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -651,8 +651,8 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? DerivedAtom<ReturnType<T['fn']>>
-    : DerivedAtom<any>
+  ? DerivedAtom<ReturnType<T['fn']>>
+  : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
@@ -730,6 +730,10 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    */
   setEnableMutate: (enabled: boolean) => void;
   getOptions: () => CtxCreateOptions;
+  /**
+   * isPrevSnap 默认值为 true，表示返回前一刻的快照，设为 false 表示返回最新快照
+   */
+  getSnap: (isPrevSnap?: boolean) => T;
   /** 共享状态唯一 key */
   sharedKey: number;
   sharedKeyStr: string;
@@ -765,6 +769,10 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     T,
     IInsRenderInfo,
   ];
+  /**
+   * 和 useReactive 使用方式一样，区别在于 useReactiveX 返回字典， useReactive 返回元组
+   */
+  useReactiveX: (options?: IUseSharedStateOptions<T>) => ICompReactiveCtx<T>;
   /**
    * 更新当前共享状态的所有实例组件，谨慎使用此功能，会触发大面积的更新，
    * 推荐设定 presetDeps、overWriteDeps 函数减少更新范围
@@ -934,8 +942,8 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     throwErr?: boolean,
   ) => <
     D extends Dict<Fn> = P extends Dict
-      ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
-      : { [K in string]: ActionTask<T, UnconfirmedArg> },
+    ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
+    : { [K in string]: ActionTask<T, UnconfirmedArg> },
   >(
     /** action 函数定义字典集合 */
     actionFnDefs: D,
@@ -1076,13 +1084,28 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
 
 export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
   state: ReadOnlyDict<T>;
+  stateRoot: ReadOnlyDict<T>;
+  stateVal: ReadOnlyDict<T>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
 }
 
 export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
+  /**
+   * state 指向 stateRoot ，保留 state 命名是为了用户从 atom 切换 atomx 时，
+   * 保留 state 语义不变，即以下两种写法均 ok
+   * ```
+   * const [ state ] = atom(1) -> const { state } = atomx(1)
+   * const [ stateRoot ] = atom(1) -> const { stateRoot } = atomx(1)
+   * ```
+   */
   state: ReadOnlyAtom<T>;
+  stateRoot: ReadOnlyAtom<T>;
+  /**
+   * 指向拆箱后的值引用
+   */
+  stateVal: ReadOnlyAtomVal<Atom<T>>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
@@ -1334,10 +1357,10 @@ export interface IWatchFnParams {
   sn?: number;
 }
 
-export type WatchDepFn = () => any[] | undefined;
+export type WatchFnDeps = () => any[] | undefined;
 
 export interface IWatchOptions {
-  deps?: WatchDepFn;
+  deps?: WatchFnDeps;
   /**
    * default: false，
    * 如没有定义 deps 依赖，需设置 immediate，这样可以让 watch 首次执行后收集到相关依赖，
@@ -1352,7 +1375,7 @@ export interface IWatchOptions {
   throwErr?: boolean;
 }
 
-export type WatchOptionsType = WatchDepFn | IWatchOptions;
+export type WatchOptionsType = WatchFnDeps | IWatchOptions;
 
 export interface IDeriveFnParamsBase<I = readonly any[]> {
   /** 函数的运行编号，每次自增1 */
@@ -1512,6 +1535,11 @@ export interface IRenderInfo<T = any> extends IFnRenderInfo {
    * 获取组件实例上一轮渲染阶段收集的依赖
    */
   getPrevDeps: () => string[];
+}
+
+export interface ICompReactiveCtx<T = any> extends IRenderInfo {
+  state: StateType<T>;
+  stateRoot: StateRootType<T>;
 }
 
 export interface ICompAtomCtx<T = any> extends IRenderInfo<T> {

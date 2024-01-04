@@ -38,7 +38,6 @@ const SourceCode: FC<SourceCodeProps> = (props) => {
   const [isCopied, setIsCopied] = useState(false);
   const [text, setText] = useState(children);
   const { themeConfig } = useSiteData();
-  console.log('themeConfig', themeConfig);
 
   useEffect(() => {
     const isShell = /shellscript|shell|bash|sh|zsh/.test(lang);

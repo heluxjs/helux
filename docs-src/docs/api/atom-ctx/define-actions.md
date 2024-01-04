@@ -13,7 +13,6 @@ order: 0
 本章节展示基础用法，更多用法查阅[模块化/defineActions](/guide/modular#defineactions)
 :::
 
-
 ```ts
 // 【可选】约束各个函数入参 payload 类型
 type Payloads = {

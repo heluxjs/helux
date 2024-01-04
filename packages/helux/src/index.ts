@@ -28,6 +28,7 @@ export const {
   useAtom,
   useAtomX,
   useReactive,
+  useReactiveX,
   useDerived,
   useWatch,
   useGlobalId,

@@ -20,7 +20,7 @@ import type {
   MutateFn,
   MutateFnStdDict,
   NumStrSymbol,
-  WatchDepFn,
+  WatchFnDeps,
   WatchOptionsType,
 } from '../../types/base';
 import { genFnKey } from '../common/key';
@@ -318,7 +318,7 @@ export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions)
 }
 
 export function parseWatchOptions(options?: WatchOptionsType) {
-  let deps: WatchDepFn = noop;
+  let deps: WatchFnDeps = noop;
   let immediate: boolean = false;
 
   if (isFn(options)) {

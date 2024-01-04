@@ -59,7 +59,7 @@ const { state: numAtom, setState: setAtom } = atomCtx;
 
 钩子 `useAtom` 返回一个元组，使用方式大体对齐 `react.useState` 接口，唯一的区别是`setter`提供的回调参数是一个草稿对象，可基于草稿对象直接修改，这个差异点下面会再次提到。
 
-:::info{title=推荐通过actions修改}
+:::info{title=推荐通过 actions 修改}
 推荐了解和使用[模块化/defineAtcions](/guide/modular#defineactions)定义修改方法，有利于维护或扩展
 :::
 

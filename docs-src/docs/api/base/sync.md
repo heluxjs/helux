@@ -23,19 +23,19 @@ order: 2
 /**
  * defaultShowCode: true
  */
-import { sync, atom } from 'helux';
+import { atom, sync } from 'helux';
 
-const [ objAtom,,ctx ] = atom({a:'1', b: { b1: { b2: '1'}}});
+const [objAtom, , ctx] = atom({ a: '1', b: { b1: { b2: '1' } } });
 
-export default ()=> {
-  const [ obj ] = ctx.useState();
+export default () => {
+  const [obj] = ctx.useState();
   return (
     <div>
-      <input value={obj.a} onChange={sync(objAtom)(to=>to.a)} />
-      <input value={obj.b.b1.b2} onChange={sync(objAtom)(to=>to.b.b1.b2)} />
+      <input value={obj.a} onChange={sync(objAtom)((to) => to.a)} />
+      <input value={obj.b.b1.b2} onChange={sync(objAtom)((to) => to.b.b1.b2)} />
     </div>
   );
-}
+};
 ```
 
 使用`ctx.sync`，写法更简便，无绑定目标共享状态步骤。
@@ -44,17 +44,17 @@ export default ()=> {
 /**
  * defaultShowCode: true
  */
-import { sync, atom } from 'helux';
+import { atom } from 'helux';
 
-const [ objAtom,,ctx ] = atom({a:'1', b: { b1: { b2: '1'}}});
+const [objAtom, , ctx] = atom({ a: '1', b: { b1: { b2: '1' } } });
 
-export default ()=> {
-  const [ obj ] = ctx.useState();
+export default () => {
+  const [obj] = ctx.useState();
   return (
     <div>
-      <input value={obj.a} onChange={ctx.sync(to=>to.a)} />
-      <input value={obj.b.b1.b2} onChange={ctx.sync(to=>to.b.b1.b2)} />
+      <input value={obj.a} onChange={ctx.sync((to) => to.a)} />
+      <input value={obj.b.b1.b2} onChange={ctx.sync((to) => to.b.b1.b2)} />
     </div>
   );
-}
+};
 ```

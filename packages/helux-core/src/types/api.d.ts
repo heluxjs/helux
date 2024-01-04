@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.6.9
+| helux-core@3.6.13
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -27,6 +27,7 @@ import type {
   IAtomCtx,
   IBlockOptions,
   ICompAtomCtx,
+  ICompReactiveCtx,
   ICreateOptions,
   IDeriveFnItem,
   IDeriveTaskOptions,
@@ -64,7 +65,7 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '3.6.9';
+  VER: '3.6.13';
   LIMU_VER: string;
   EVENT_NAME: {
     ON_DATA_CHANGED: 'ON_DATA_CHANGED';
@@ -105,8 +106,8 @@ export declare const cst: {
 export function share<T extends PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-  // ): readonly [ReadOnlyDict<T>, SetDraft<T>, ISharedCtx<T>];
 ): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T>];
+// ): readonly [ReadOnlyDict<T>, SetDraft<T>, ISharedCtx<T>];
 
 /**
  * 支持共享所有类型值的接口，会自动装箱为 {val:T} 结构的数据
@@ -266,6 +267,8 @@ export function useReactive<T = any>(
   IInsRenderInfo,
 ];
 
+export function useReactiveX<T = any>(sharedState: T, options?: IUseSharedStateOptions<T>): ICompReactiveCtx<T>;
+
 /**
  * 更新当前共享状态的所有实例组件，谨慎使用此功能，会触发大面积的更新，
  * 推荐设定 presetDeps、overWriteDeps 函数减少更新范围
@@ -392,7 +395,9 @@ export interface IObjApi<T> {
  * ```ts
  * const [state, setState] = useMutable({ a: { a1: 1 }, b: 1 });
  * setState({ b: Date.now() }); // 浅层次修改，直接返回即可，内部自动合并
- * setState(draft => draft.a.a1 = Date.now()); // 使用回调方式修改draft
+ * setState(draft => {
+ *   draft.a.a1 = Date.now()
+ * }); // 使用回调方式修改draft
  * ```
  */
 export function useMutable<T extends PlainObject>(
