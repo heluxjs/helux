@@ -1,5 +1,13 @@
 # helux
 
+## 3.6.14
+
+### Patch Changes
+
+- ea640d21: add useReactiveX
+- Updated dependencies [ea640d21]
+  - @helux/core@3.6.14
+
 ## 3.6.13
 
 ### Patch Changes

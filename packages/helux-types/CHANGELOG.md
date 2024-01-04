@@ -1,5 +1,11 @@
 # @helux/types
 
+## 3.6.14
+
+### Patch Changes
+
+- ea640d21: add useReactiveX
+
 ## 3.6.13
 
 ### Patch Changes
