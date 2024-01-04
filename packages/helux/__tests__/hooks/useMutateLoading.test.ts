@@ -26,11 +26,11 @@ describe('useMutateLoading', () => {
       return ld['mutate1'].loading;
     });
     expect(runCount).toBe(1);
-    expect(result.current).toBe(false);
+    expect(result.current).toBe(true);
     witness.run();
     // still be 1
     expect(runCount).toBe(1);
-    expect(result.current).toBe(false);
+    expect(result.current).toBe(true);
 
     await witness.runTask();
     // ATTENTION: if task pass delay ms <= 100 to delay(), here will be 3
