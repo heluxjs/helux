@@ -6,7 +6,7 @@ on:
       - master # default branch
 defaults:
   run:
-    working-directory: ./docs
+    working-directory: ./
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,8 +20,10 @@ jobs:
         run: npm install -g pnpm@7.9.5
       - name: Install dependencies
         run: pnpm install
-      - name: Install docs dependencies
-        run: pnpm install
+      - name: Build helux libs
+        run: pnpm run build
+      - name: Cd docs
+        run: cd docs
       - name: Build with dumi
         # 文档编译命令，如果是 react 模板需要修改为 npm run docs:build
         run: pnpm run docs:build
