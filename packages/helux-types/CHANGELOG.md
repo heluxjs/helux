@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.0.1
+
+### Patch Changes
+
+- 0cf2e62a: bump to v4
+
 ## 4.0.0
 
 ### Major Changes

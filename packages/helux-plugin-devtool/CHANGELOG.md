@@ -1,5 +1,13 @@
 # @helux/plugin-devtool
 
+## 4.0.1
+
+### Patch Changes
+
+- 0cf2e62a: bump to v4
+- Updated dependencies [0cf2e62a]
+  - helux@4.0.1
+
 ## 4.0.0
 
 ### Major Changes
