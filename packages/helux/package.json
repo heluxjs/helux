@@ -1,7 +1,7 @@
 {
   "name": "helux",
-  "version": "3.6.14",
-  "description": "A react state library that integrates atom, signal, collection dep, derive and watch, compatible with react 18.",
+  "version": "4.0.0",
+  "description": "Official React bindings for helux-core",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },

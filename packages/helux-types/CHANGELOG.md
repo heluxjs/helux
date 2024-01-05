@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.0.0
+
+### Major Changes
+
+- 130de8be: add markRaw
+
 ## 3.6.14
 
 ### Patch Changes
