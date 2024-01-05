@@ -32,16 +32,16 @@
 
 ## 30s 上手
 
-使用 npm 命令`npm i helux`安装`helux`，然后调用`createShared`创建共享状态，调用`useShared`使用共享状态，that's all，你已接入`helux`来提升局部状态为共享状态. ✨
+使用 npm 命令`npm i helux`安装`helux`，然后调用`atom`创建共享状态，调用`useAtom`使用共享状态，that's all，你已接入`helux`来提升局部状态为共享状态. ✨
 
 ```diff
 import React from 'react';
-+ import { createShared, useShared } from 'helux';
-+ const { state: sharedObj } = createShared({a:100, b:2});
++ import { atom, useAtom } from 'helux';
++ const [ sharedState ] = atom({a:100, b:2});
 
 function HelloHelux(props: any) {
 -  const [state, setState] = React.useState({ a: 100, b: 2 });
-+  const [state, setState] = useShared(sharedObj);
++  const [state, setState] = useAtom(sharedState);
    return <div>{state.a}</div>; // 当前组件仅依赖a变更才触发重渲染
 }
 ```
