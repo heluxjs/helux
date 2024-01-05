@@ -20,8 +20,6 @@ jobs:
         run: npm install -g pnpm@7.9.5
       - name: Install dependencies
         run: pnpm install
-      - name: cd docs
-        run: cd docs
       - name: Install docs dependencies
         run: pnpm install
       - name: Build with dumi
