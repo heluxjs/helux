@@ -3,4 +3,3 @@ packages:
   - 'packages/*'
   - 'packages-legacy/*'
   - 'examples/*'
-  - 'docs'
