@@ -9,6 +9,7 @@ order: 3
 
 发射事件
 
+___
 :::info
 用法查阅[指南/事件](/guide/events)
 :::

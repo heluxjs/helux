@@ -5,7 +5,7 @@ nav:
 
 # 共享上下文
 
-共享上下文对象指的是 `atom`、`share` 返回元组里的第三位值，上下文对象本身也包含了元组前两位参数`state`、`setStae`
+共享上下文对象指的是 `atom`、`share` 返回元组里的第三位值，上下文对象本身也包含了元组前两位参数`state`、`setState`
 
 ```ts
 const [numAtom, setAtom, atomCtx] = atom(1);

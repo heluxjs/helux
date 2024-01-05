@@ -1,5 +1,26 @@
 # @helux/hooks-impl
 
+## 4.0.1
+
+### Patch Changes
+
+- 0cf2e62a: bump to v4
+- Updated dependencies [0cf2e62a]
+  - @helux/types@4.0.1
+  - @helux/utils@4.0.1
+
+## 4.0.0
+
+### Major Changes
+
+- 130de8be: add markRaw
+
+### Patch Changes
+
+- Updated dependencies [130de8be]
+  - @helux/types@4.0.0
+  - @helux/utils@4.0.0
+
 ## 3.6.14
 
 ### Patch Changes

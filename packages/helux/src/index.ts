@@ -73,6 +73,7 @@ export const {
   isDerivedAtom,
   storeSrv,
   shallowCompare,
+  markRaw,
   isDiff,
   produce,
   getMutateLoading,
