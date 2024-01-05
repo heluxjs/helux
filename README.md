@@ -29,7 +29,6 @@
 
 > 为了方便用户理解`helux`核心逻辑，我们提供了[how-helux-was-born](https://github.com/fantasticsoul/how-helux-was-born)项目用于辅助用户做 helux 源码调试。
 
-
 ## 30s 上手
 
 使用 npm 命令`npm i helux`安装`helux`，然后调用`atom`创建共享状态，调用`useAtom`使用共享状态，that's all，你已接入`helux`来提升局部状态为共享状态. ✨
@@ -37,13 +36,30 @@
 ```diff
 import React from 'react';
 + import { atom, useAtom } from 'helux';
-+ const [ sharedState ] = atom({a:100, b:2});
++ const [ sharedState ] = atom({a:100, b: { b1: 1 }});
 
 function HelloHelux(props: any) {
--  const [state, setState] = React.useState({ a: 100, b: 2 });
+-  const [state, setState] = React.useState({a:100, b: { b1: 1, b2: 2 }});
 +  const [state, setState] = useAtom(sharedState);
-   return <div>{state.a}</div>; // 当前组件仅依赖a变更才触发重渲染
+
+-  const change = setState(prev=>({...prev, b: { ...prev.b, b1: 100 } }));
+
+// 基于草稿修改，生成结构共享的新数据,
+// setState 接受返回值做浅合并，故加 void 是为了消除箭头函数隐式返回值，避免 ts  环境报编译错误
++  const change = setState(draft=>void(draft.b.b1=100));
+
+// 或写为
++ const change = setState(draft=>{
++   draft.b.b1=100;
++ });
+
+  // 收集到当前组件依赖为 a，仅当 a 变更时才触发重渲染
+  return <div>{state.a}</div>;
 }
+```
+
+```ts
+const [state, setState] = useAtom(sharedState);
 ```
 
 ## 部分特性简介
