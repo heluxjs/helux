@@ -17,7 +17,7 @@ jobs:
           # 如果配置 themeConfig.lastUpdated 为 false，则不需要添加该参数以加快检出速度
           fetch-depth: 0
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: npm install -g pnpm@7.9.5
       - name: Install dependencies
         run: pnpm install
       - name: Build with dumi
