@@ -1,4 +1,4 @@
-import { limuUtils, produce } from 'limu';
+import { limuUtils, produce, markRaw } from 'limu';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
 import { getAtom, isAtom, isDerivedAtom } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
@@ -106,6 +106,7 @@ export {
   isDerivedAtom,
   isDiff,
   shallowCompare,
+  markRaw,
   storeSrv,
   produce,
   getMutateLoading,

@@ -15,7 +15,7 @@ const Footer: FC = () => {
           >
             fantasticsoul
           </a>
-          , Welcome to follow my open source project:
+          , Welcome to follow these open source project:
           <a
             style={{ paddingLeft: '6px' }}
             href="https://github.com/heluxjs/helux"

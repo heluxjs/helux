@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@3.6.14
+| helux-core@4.0.1
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '3.6.14';
+  VER: '4.0.1';
   LIMU_VER: string;
   EVENT_NAME: {
     ON_DATA_CHANGED: 'ON_DATA_CHANGED';
@@ -242,11 +242,11 @@ export function useAtom<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  T extends ReadOnlyAtom ? AtomValType<T> : T,
-  // AtomTupleSetState<T>,
-  SetState<T>,
-  IInsRenderInfo<T>,
-];
+    T extends ReadOnlyAtom ? AtomValType<T> : T,
+    // AtomTupleSetState<T>,
+    SetState<T>,
+    IInsRenderInfo<T>,
+  ];
 
 /**
  * 区别于 useAtom，useAtomX 返回对象
@@ -260,12 +260,12 @@ export function useReactive<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  // 针对 atom，第一位 reactive 参数自动拆箱
-  T extends Atom ? T['val'] : T,
-  // 代表 reactiveRoot
-  T,
-  IInsRenderInfo,
-];
+    // 针对 atom，第一位 reactive 参数自动拆箱
+    T extends Atom ? T['val'] : T,
+    // 代表 reactiveRoot
+    T,
+    IInsRenderInfo,
+  ];
 
 export function useReactiveX<T = any>(sharedState: T, options?: IUseSharedStateOptions<T>): ICompReactiveCtx<T>;
 
@@ -654,7 +654,7 @@ export function flush(state: SharedState, desc?: string): void;
 
 export declare function init(options: IInitOptions): boolean;
 
-// ----------- shallowCompare isDiff produce 二次重导出会报错，这里手动声明一下 --------------
+// ----------- 以下 limu 接口二次重导出会报错，这里手动声明一下 --------------
 // err: 如果没有引用 "../../helux-core/node_modules/limu/lib"，则无法命名 "produce" 的推断类型。这很可能不可移植。需要类型注释
 
 /**
@@ -690,3 +690,9 @@ interface IProduce {
 export declare function isDiff(val1: any, val2: any): boolean;
 
 export declare const produce: IProduce;
+
+/**
+ * 标记对象为 raw，此对象始终不会被代理，需注意标被标记后此对象会失去结构共享特性
+ * see test: https://github.com/tnfe/limu/blob/main/test/api/markRaw.ts
+ */
+export declare function markRaw<T extends any = any>(rawVal: T): T;

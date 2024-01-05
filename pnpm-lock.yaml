@@ -94,7 +94,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: workspace:^3.6.13
+      helux: workspace:^4.0.1
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21
@@ -221,12 +221,12 @@ importers:
       '@helux/types': workspace:^
       '@helux/utils': workspace:^
       esbuild-copy-static-files: ^0.1.0
-      limu: ^3.11.10
+      limu: ^3.12.0
     dependencies:
       '@helux/hooks-impl': link:../helux-hooks-impl
       '@helux/types': link:../helux-types
       '@helux/utils': link:../helux-utils
-      limu: 3.11.10
+      limu: 3.12.0
     devDependencies:
       esbuild-copy-static-files: 0.1.0
 
@@ -14262,6 +14262,10 @@ packages:
     resolution: {integrity: sha512-iBFcY6eUtwNXVTHWlcKI1vkr63xhRQV1OBpKIdIKvYa0iMZM09pt0LiR8t881L96YmaO0IBSgnj5IRVvnNZSAA==}
     dev: false
     bundledDependencies: []
+
+  /limu/3.12.0:
+    resolution: {integrity: sha512-yPNRVg6WZQ8qOIzkxIYbrMPjimfVg1YeJrcQdg1x+YUrHlkh2uE1mOuCWFqNSMhwuQ8JmQ2KodZ4r1g1kQsXhA==}
+    dev: false
 
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}

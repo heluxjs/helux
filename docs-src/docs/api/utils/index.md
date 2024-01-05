@@ -22,3 +22,4 @@ nav:
 - [isDerivedAtom](/api/utils/is-derived-atom) 判断是否是`derive`接口返回的结果
 - [isDiff](/api/utils/is-diff) 比较两个值是否一样
 - [shallowCompare](/api/utils/shallow-compare) 浅比较两个对象
+- [markRaw](/api/utils/mark-raw) 标记对象不会转变为代理对象
