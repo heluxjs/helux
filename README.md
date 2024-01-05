@@ -29,7 +29,26 @@
 
 > 为了方便用户理解`helux`核心逻辑，我们提供了[how-helux-was-born](https://github.com/fantasticsoul/how-helux-was-born)项目用于辅助用户做 helux 源码调试。
 
-## 快速开始
+
+## 30s 上手
+
+使用 npm 命令`npm i helux`安装`helux`，然后调用`createShared`创建共享状态，调用`useShared`使用共享状态，that's all，你已接入`helux`来提升局部状态为共享状态. ✨
+
+```diff
+import React from 'react';
++ import { createShared, useShared } from 'helux';
++ const { state: sharedObj } = createShared({a:100, b:2});
+
+function HelloHelux(props: any) {
+-  const [state, setState] = React.useState({ a: 100, b: 2 });
++  const [state, setState] = useShared(sharedObj);
+   return <div>{state.a}</div>; // 当前组件仅依赖a变更才触发重渲染
+}
+```
+
+## 部分特性简介
+
+以下是一些常见特性，更多特性可查阅文档里的[Atom](https://heluxjs.github.io/helux/guide/atom)、[Signal](https://heluxjs.github.io/helux/guide/signal)、[依赖追踪](https://heluxjs.github.io/helux/guide/dep-tracking)、[响应式](https://heluxjs.github.io/helux/guide/reactive)、[双向绑定](https://heluxjs.github.io/helux/guide/sync)、[派生](https://heluxjs.github.io/helux/guide/derive)、[观察](https://heluxjs.github.io/helux/guide/watch)、[Action](https://heluxjs.github.io/helux/guide/action)、[模块化](https://heluxjs.github.io/helux/guide/modular) 等章节做深入了解
 
 ### atom
 
