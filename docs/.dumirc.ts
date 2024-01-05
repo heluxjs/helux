@@ -7,8 +7,8 @@ export default defineConfig({
     { id: 'zh-CN', name: '中文' },
     { id: 'en-US', name: 'English' },
   ],
-  outputPath: '../docs', // 输出到 <root>/docs 配合 github-pages 的 /docs 配置
-  base: '/helux',
+  outputPath: 'dist', // 输出到 <root>/docs 配合 github-pages 的 /docs 配置
+  base: '/helux/',
   publicPath: '/helux/',
   // exportStatic: {},
   themeConfig: {

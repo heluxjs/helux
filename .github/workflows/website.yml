@@ -6,7 +6,7 @@ on:
       - master # default branch
 defaults:
   run:
-    working-directory: ./docs-src
+    working-directory: ./docs
 jobs:
   deploy:
     runs-on: ubuntu-latest
