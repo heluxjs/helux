@@ -19,7 +19,7 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm@7.9.5
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
       - name: Build helux libs
         run: pnpm run build
       - name: Cd docs
