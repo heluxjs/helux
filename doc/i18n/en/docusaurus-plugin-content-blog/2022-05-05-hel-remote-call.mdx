@@ -1,0 +1,69 @@
+---
+slug: hel-remote-call
+title: show hel remote call
+authors: [fantasticsoul]
+tags: [hel]
+---
+
+show hel
+
+:::tip
+
+Use the power of React to create interactive blog posts.
+
+```js
+<button onClick={async function(){
+  const helMicro = await import('hel-micro');
+  const lib = await helMicro.preFetchLib('hel-tpl-remote-lib');
+  alert(lib.num.random(22));
+}}>call remote method!(latest version)</button>
+
+<button onClick={async function(){
+  const helMicro = await import('hel-micro');
+  const lib = await helMicro.preFetchLib(
+    'hel-tpl-remote-lib', '2.0.0',
+  );
+  alert(lib.num.random(22));
+}}>选择版本 2.0.0</button>
+
+<button onClick={async function(){
+  const helMicro = await import('hel-micro');
+  const lib = await helMicro.preFetchLib(
+    'hel-tpl-remote-lib', '2.0.1',
+  );
+  alert(lib.num.random(22));
+}}>选择版本 2.0.1</button>
+
+```
+
+<button
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib');
+    alert(lib.num.random(22));
+  }}
+>
+  call remote method!(latest version)
+</button>
+
+<button
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib', '2.0.0');
+    alert(lib.num.random(22));
+  }}
+>
+  调用版本 2.0.0
+</button>
+
+<button
+  onClick={async function () {
+    const helMicro = await import('hel-micro');
+    const lib = await helMicro.preFetchLib('hel-tpl-remote-lib', '2.0.1');
+    alert(lib.num.random(22));
+  }}
+>
+  选择版本 2.0.1
+</button>
+
+:::
