@@ -1,5 +1,14 @@
 # @helux/core
 
+## 4.0.3
+
+### Patch Changes
+
+- 6be67ec: feat: add watchEffect, useWatchEffect
+  - @helux/hooks-impl@4.0.3
+  - @helux/types@4.0.3
+  - @helux/utils@4.0.3
+
 ## 4.0.2
 
 ### Patch Changes
