@@ -3,7 +3,7 @@ name: github pages
 on:
   push:
     branches:
-      - master # default branch
+      - doc # default branch
 defaults:
   run:
     working-directory: ./
