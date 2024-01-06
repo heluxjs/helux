@@ -1,5 +1,13 @@
 # helux
 
+## 4.0.3
+
+### Patch Changes
+
+- 6be67ec: feat: add watchEffect, useWatchEffect
+- Updated dependencies [6be67ec]
+  - @helux/core@4.0.3
+
 ## 4.0.2
 
 ### Patch Changes

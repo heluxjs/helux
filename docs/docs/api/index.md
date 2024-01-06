@@ -27,6 +27,7 @@ nav:
 > - [runMutateTask](/api/base/run-mutate-task) 人工触发可变派生函数异步任务
 > - [action](/api/base/action) 创建修改状态的 action 同步或异步函数
 > - [watch](/api/base/watch) 创建观察数据变化的监听函数
+> - [watchEffect](/api/base/watch-effect) 创建观察数据变化的监听函数，立即运行并在首次运行时收集到依赖
 > - [syncer](/api/base/syncer) 浅层次对象的同步函数生成器，辅助双向绑定
 > - [sync](/api/base/sync) 深层次对象的同步函数生成器，辅助双向绑定
 > - [emit](/api/base/emit) 发射事件
@@ -56,6 +57,7 @@ ctx.aciton()(/** action 函数定义 */)
 > - [useDerived](/api/hooks/use-derived) 使用全量派生结果
 > - [useOnEvent](/api/hooks/use-on-event) 使用事件监听
 > - [useWatch](/api/hooks/use-watch) 使用观察
+> - [useWatchEffect](/api/hooks/use-watch-effect) 使用观察，立即运行并在首次运行时收集到依赖
 > - [useGlobalId](/api/hooks/use-global-id) 使用`globalId`
 > - [useMutate](/api/hooks/use-mutate) 使用可变本地状态
 > - [useService](/api/hooks/use-service) 使用服务

@@ -190,3 +190,32 @@ export default () => (
   </Entry>
 );
 ```
+
+## 修改 input 组件
+
+`input`组件实时输入过程中，需主动调用`flush`接口刷新状态，避免中文输入法出现中文无法提示的问题。
+
+```tsx
+/**
+ * defaultShowCode: true
+ */
+import { sharex } from 'helux';
+const { reactive, useState, flush } = sharex({ str: '' });
+function change(e) {
+  reactive.str = e.target.value;
+  // 去掉 flush 调用，中文输入法无法录入汉字
+  flush();
+}
+
+function Demo(){
+  const [ state ] = useState();
+  return <input value={state.str} onChange={change} />;
+}
+
+export default () => (
+  <>
+    <Demo />
+    <Demo />
+  </>
+);
+```

@@ -24,6 +24,7 @@ export const {
   runDeriveTask,
   // watch api
   watch,
+  watchEffect,
   // hooks api
   useAtom,
   useAtomX,
@@ -31,6 +32,7 @@ export const {
   useReactiveX,
   useDerived,
   useWatch,
+  useWatchEffect,
   useGlobalId,
   useService,
   useOnEvent,

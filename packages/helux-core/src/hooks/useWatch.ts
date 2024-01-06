@@ -1,1 +1,1 @@
-export { useWatch } from './common/useWatchLogic';
+export { useWatch, useWatchEffect } from './common/useWatchLogic';

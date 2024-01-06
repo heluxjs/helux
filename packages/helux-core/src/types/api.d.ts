@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@4.0.1
+| helux-core@4.0.3
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -61,11 +61,12 @@ import type {
   SingalVal,
   Syncer,
   SyncFnBuilder,
+  WatchEffectOptionsType,
   WatchOptionsType,
 } from './base';
 
 export declare const cst: {
-  VER: '4.0.1';
+  VER: '4.0.3';
   LIMU_VER: string;
   EVENT_NAME: {
     ON_DATA_CHANGED: 'ON_DATA_CHANGED';
@@ -203,11 +204,12 @@ export function defineDeriveTask<I extends ReadOnlyArr = any>(
 export function defineDeriveFnItem<F extends IDeriveFnItem>(fnItem: F): F;
 
 /**
- * 观察共享状态变化，默认 watchFn 立即执行
+ * 观察共享状态变化，watch 回调默认不立即执行，需要设置 immediate=true 才立即执行，
+ * 因回调默认不立即执行，options 类型设计为必填，提示用户使用 watch 需要显式指定依赖
  * ```ts
- * // 函数内解构完成监听
+ * // 立即运行，自动对首次运行时函数内读取到的值完成变化监听
  * watch(()=>{ console.log(shared.val) }, { immediate: true });
- * // 第二个参数传递依赖收集回调，收集到监听key，不需要立即执行的话可设定 immediate 为 false
+ * // 第二个参数传递依赖收集回调，收集到监听key，不需要立即执行的话可设定 immediate 为 false 或不设置
  * watch(()=>{ console.log('shared.val changed')}, ()=>[shared.val]);
  * // 第二个参数传递依赖收集回调，收集到监听对象，表示shared发生变化就执行watch回调
  * watch(()=>{ console.log('shared changed')}, ()=>[shared]);
@@ -217,7 +219,17 @@ export function defineDeriveFnItem<F extends IDeriveFnItem>(fnItem: F): F;
  */
 export function watch(
   watchFn: (fnParams: IWatchFnParams) => void,
-  options?: WatchOptionsType,
+  options: WatchOptionsType,
+): { run: (throwErr?: boolean) => void; unwatch: Fn };
+
+/**
+ * watchEffect 和 watch 用法一样，
+ * 区别于 watch 的点是：watchEffect 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听，
+ * 因回调会立即执行，options 类型设计为选填
+ */
+export function watchEffect(
+  watchFn: (fnParams: IWatchFnParams) => void,
+  options?: WatchEffectOptionsType,
 ): { run: (throwErr?: boolean) => void; unwatch: Fn };
 
 /**
@@ -325,7 +337,16 @@ export function useObject<T = Dict>(
   initialState: T | (() => T),
 ): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];
 
+/**
+ * 功能同 watch，在组件中使用 useWatch 来完成状态变化监听，会在组件销毁时自动取消监听
+ */
 export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType);
+
+/**
+ * 功能同 watchEffect 一样，区别在于 useWatchEffect 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听
+ * 在组件中使用 useWatchEffect 来完成状态变化监听，会在组件销毁时自动取消监听
+ */
+export function useWatchEffect(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchEffectOptionsType);
 
 /**
  * 使用全局id，配合 rules[].globalIds 做定向通知更新

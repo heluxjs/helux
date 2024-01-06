@@ -27,7 +27,11 @@ watch 可观察共享状态跟对象的变化，第二位参数可写为`()=>[]`
 
 ## 死循环
 
-设置`immediate`为 true 时，watch 回调首次执行会自动收集依赖，此时如果存在读取自己修改自己的新闻，则会造成死循环
+设置`immediate`为 true 时，watch 回调首次执行会自动收集依赖，此时如果存在读取自己修改自己的行为，会造成死循环。
+
+:::tip
+死循环产生后，框架会定位到具体的函数位置并告知原因，用户可打开控制台查看
+:::
 
 ```ts
 import { watch, atom } from 'helux';
@@ -36,7 +40,7 @@ const [state, setAtom] = atom({ a: 1 });
 
 watch(
   () => {
-    // ❌ 单独 a 修改 a，触发死循环
+    // ❌ 读取 a 修改 a，触发死循环
     setAtom((draft) => {
       draft.a += 1;
     });

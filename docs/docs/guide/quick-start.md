@@ -35,7 +35,7 @@ const [numAtom, setAtom] = atom(1);
 setAtom(100);
 ```
 
-字典对象修改，基于回调的草稿对象直接修改即可
+字典对象修改，基于`setAtom`接口回调里的草稿对象直接修改即可
 
 ```ts
 const [numAtom, setAtom] = atom({ a: 1, b: { b1: 1 } });
@@ -43,6 +43,35 @@ setAtom((draft) => {
   // draft 已拆箱 { val: T } 为 T
   draft.b.b1 += 1;
 });
+```
+
+或基于`reactive`响应式对象修改，数据变更在下一次事件循环微任务开始前被提交。
+
+```ts
+const [numAtom, setAtom, {reactive}] = atom({ a: 1, b: { b1: 1 } });
+function change(){
+  reactive.b.b1 += 1;
+}
+```
+
+或定义`action`修改
+
+```ts
+const [numAtom, setAtom, { action, defineActions }] = atom({ a: 1, b: { b1: 1 } });
+// 方式1：裸写 action
+const change = action()(({draft})=>{
+ draft.b.b1 += 1;
+}, 'change');
+change(); // 触发变更
+
+// 方式2：调用可读性更友好的 defineActions
+const { actions } = defineActions()({
+  change({draft}){
+    draft.b.b1 += 1;
+  },
+  // 可以继续定义其他 action
+});
+actions.change(); // 触发变更
 ```
 
 ## 观察 atom
