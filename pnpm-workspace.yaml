@@ -2,5 +2,4 @@ prefer-workspace-packages: true
 packages:
   - 'packages/*'
   - 'packages-legacy/*'
-  - 'examples/*'
   - 'docs'

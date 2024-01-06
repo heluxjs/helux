@@ -7,5 +7,5 @@
   "access": "restricted",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": ["@helux/fre", "@helux/preact", "@helux/demo-utils", "@helux/plugin-devtool", "react-web", "helux-docs"]
+  "ignore": ["@helux/fre", "@helux/preact", "@helux/demo-utils", "@helux/plugin-devtool", "helux-docs"]
 }
