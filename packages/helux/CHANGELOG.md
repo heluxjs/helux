@@ -1,5 +1,13 @@
 # helux
 
+## 4.0.2
+
+### Patch Changes
+
+- bbe5056: optimize publishConfig
+- Updated dependencies [bbe5056]
+  - @helux/core@4.0.2
+
 ## 4.0.1
 
 ### Patch Changes

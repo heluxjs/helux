@@ -1,5 +1,13 @@
 # @helux/utils
 
+## 4.0.2
+
+### Patch Changes
+
+- bbe5056: optimize publishConfig
+- Updated dependencies [bbe5056]
+  - @helux/types@4.0.2
+
 ## 4.0.1
 
 ### Patch Changes

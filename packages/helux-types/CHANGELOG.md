@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.0.2
+
+### Patch Changes
+
+- bbe5056: optimize publishConfig
+
 ## 4.0.1
 
 ### Patch Changes
