@@ -1214,9 +1214,9 @@ export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull
 
 export interface IUseSharedStateOptions<T = any> {
   /**
-   * default: every ，设置为 first 或 no 可以进一步提高组件渲染性能，但需要注意
-   * first 时如果组件的依赖是变化的，会造成依赖丢失的情况产生，触发组件不会重渲染的bug，
-   * no 时不会从ui渲染力收集到依赖，需 deps 函数补充依赖
+   * default: every ，设置为 first 或 no 可以进一步提高组件渲染性能，
+   * 但需要注意设为 first 时如果组件的依赖是变化的，会造成依赖丢失的情况产生，触发组件不会重渲染的 bug ，
+   * 设为 no 时不会从ui渲染里收集到依赖，需 deps 函数补充依赖
    * ```txt
    * no ，此时依赖仅靠 deps 提供
    * first ，仅首轮渲染收集依赖，后续渲染流程不收集
@@ -1305,13 +1305,13 @@ export interface IUseSharedStateOptions<T = any> {
    *
    * ```ts
    * arrDep=true arrIndexDep = true
-   * deps: list list[0] list[...]
+   * // deps: list list[0] list[...]
    *
    * arrDep=true arrIndexDep = false
-   * deps: list
+   * // deps: list
    *
    * arrDep=false
-   * deps: list[0] list[...]
+   * // deps: list[0] list[...]
    * ```
    */
   arrIndexDep?: boolean;
