@@ -1,0 +1,41 @@
+{
+  "name": "helux-doc",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "docusaurus build",
+    "clear": "docusaurus clear",
+    "deploy": "docusaurus deploy",
+    "docusaurus": "docusaurus",
+    "serve": "docusaurus serve",
+    "start": "IS_LOCAL=true docusaurus start",
+    "swizzle": "docusaurus swizzle",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "write-translations": "docusaurus write-translations"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@docusaurus/core": "2.4.1",
+    "@docusaurus/preset-classic": "2.4.1",
+    "@mdx-js/react": "^1.6.22",
+    "@uiw/react-markdown-preview": "^4.0.9",
+    "clsx": "^1.1.1",
+    "monaco-editor": "0.30.1",
+    "prism-react-renderer": "^1.3.3",
+    "react": "18",
+    "react-dom": "18",
+    "react-monaco-editor": "0.47.0",
+    "styled-components": "^5.3.5"
+  }
+}
