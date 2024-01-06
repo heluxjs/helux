@@ -1,6 +1,6 @@
 ## desc
 
-```
+```bash
 npm run test
 ```
 
