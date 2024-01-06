@@ -12,7 +12,6 @@
     "name": "fantasticsoul"
   },
   "main": "src/index.ts",
-  "module": "es/index.js",
   "types": "src/index.ts",
   "files": [
     "dist",

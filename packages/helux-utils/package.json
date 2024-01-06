@@ -21,7 +21,6 @@
     "url": "https://github.com/fantasticsoul"
   },
   "main": "src/index.ts",
-  "module": "dist/index.mjs",
   "types": "src/index.d.ts",
   "files": [
     "dist",

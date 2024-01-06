@@ -31,5 +31,6 @@ export default defineConfig({
   alias: {
     'src/demos': resolve(__dirname, 'src/demos'),
     '@/demos': resolve(__dirname, 'docs/demos'),
+    "@helux/hooks-impl": resolve(__dirname, "../packages/helux-hooks-impl/src"),
   },
 });
