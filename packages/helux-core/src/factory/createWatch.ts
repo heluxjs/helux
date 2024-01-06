@@ -5,7 +5,7 @@ import { markFnEnd, markFnStart, registerFn } from '../helpers/fnCtx';
 import { delFnDep, recordFnDepKeys } from '../helpers/fnDep';
 import { runFn } from '../helpers/fnRunner';
 import { getInternal, getSharedKey } from '../helpers/state';
-import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchOptionsType } from '../types/base';
+import type { Fn, IFnCtx, IWatchFnParams, ScopeType, SharedState, WatchEffectOptionsType, WatchOptionsType } from '../types/base';
 import { INS_CTX } from './creator/current';
 import { parseWatchOptions } from './creator/parse';
 interface ICreateWatchLogicOpts<T = SharedState> {
@@ -38,6 +38,15 @@ function putSharedToDep(list: any[]) {
   }
 }
 
+function innerWatch(forEffect: boolean, watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType) {
+  const { deps, immediate } = parseWatchOptions(forEffect, options);
+  const fnCtx = createWatchLogic(watchFn, { scopeType: SCOPE_TYPE.STATIC, deps, immediate });
+  return {
+    run: (throwErr?: boolean) => runFn(fnCtx.fnKey, { throwErr }),
+    unwatch: () => delFnDep(fnCtx),
+  };
+}
+
 export function createWatchLogic<T = SharedState>(watchFn: (fnParams: IWatchFnParams) => any, options: ICreateWatchLogicOpts<T>) {
   const { scopeType, fnCtxBase, immediate, deps = noop, label = 'watch', sharedState, isSimpleWatch } = options;
   if (!isFn(watchFn)) {
@@ -61,11 +70,16 @@ export function createWatchLogic<T = SharedState>(watchFn: (fnParams: IWatchFnPa
   return fnCtx;
 }
 
+/**
+ * watch 回调默认不立即执行，需要设置 immediate=true 才立即执行
+ */
 export function watch(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchOptionsType) {
-  const { deps, immediate } = parseWatchOptions(options);
-  const fnCtx = createWatchLogic(watchFn, { scopeType: SCOPE_TYPE.STATIC, deps, immediate });
-  return {
-    run: (throwErr?: boolean) => runFn(fnCtx.fnKey, { throwErr }),
-    unwatch: () => delFnDep(fnCtx),
-  };
+  return innerWatch(false, watchFn, options);
+}
+
+/**
+ * watch 回调立即执行
+ */
+export function watchEffect(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchEffectOptionsType) {
+  return innerWatch(true, watchFn, options);
 }

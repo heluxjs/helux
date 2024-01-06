@@ -11,6 +11,8 @@ order: 8
 
 ## 组件外观察变化
 
+### watch
+
 使用`watch`可观察 atom 对象自身变化或任意多个子节点的变化。
 
 观察函数立即执行，首次执行时收集到相关依赖
@@ -86,7 +88,23 @@ watch(
 );
 ```
 
+### watchEffect
+
+`watchEffect`回调会立即执行，自动对首次运行时函数内读取到的值完成变化监听
+
+```ts
+import { watchEffect, getSnap } from ' helux ';
+const [priceState, setPrice] = share({ a: 1 });
+
+// 观察 priceState.a 的变化
+watchEffect(() => {
+  console.log(`found price.a changed from ${getSnap(priceState).a} to ${priceState.a}`);
+});
+```
+
 ## 组件内观察变化
+
+### useWatch
 
 提供`useWatch`让客户在组件内部观察变化
 
@@ -175,4 +193,41 @@ export default () => (
     <h3>shared.a {$(priceState.a)}</h3>
   </div>
 );
+```
+
+### useWatchEffect
+
+在组件中使用 `useWatchEffect` 来完成状态变化监听，会在组件销毁时自动取消监听。
+
+`useWatchEffect` 功能同 `watchEffect``一样，区别在于 `useWatchEffect` 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听。
+
+```tsx
+/**
+ * defaultShowCode: true
+ */
+import { share, useMutable, useWatchEffect, getSnap } from 'helux';
+
+const [priceState, setState, ctx] = share({ a: 1, b: { b1: { b2: 200 } } });
+
+function changeA() {
+  setState((draft) => {
+    draft.a += 1;
+  });
+}
+
+export default function Comp(props: any) {
+  const [ state, setState] = useMutable({tip:'1'})
+  useWatchEffect(() => {
+    setState(draft=>{
+      draft.tip = `priceState.a changed from ${getSnap(priceState).a} to ${priceState.a}`;
+    });
+  });
+
+  return (
+    <div>
+      <button onClick={changeA}>changeA</button>
+      <h1>tip: {state.tip}</h1>
+    </div>
+  );
+}
 ```

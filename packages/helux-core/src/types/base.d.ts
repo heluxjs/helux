@@ -1359,15 +1359,11 @@ export interface IWatchFnParams {
 
 export type WatchFnDeps = () => any[] | undefined;
 
-export interface IWatchOptions {
-  deps?: WatchFnDeps;
+export interface IWatchEffectOptions {
   /**
-   * default: false，
-   * 如没有定义 deps 依赖，需设置 immediate，这样可以让 watch 首次执行后收集到相关依赖，
-   * 当然也可以定义了 deps 依赖的情况下设置 immediate 为 true，这样整个 watch 函数的依赖是
-   * deps 定义的和 watch 首次执行后收集到的两者合并的结果
+   * 如果是立即执行的 watch 回调，会自动将 deps 返回的依赖于回调里收集到的依赖合并
    */
-  immediate?: boolean;
+  deps?: WatchFnDeps;
   /**
    * default: false
    * 是否抛出错误，默认不抛出（重执行函数可独立设定抛出），错误会发送给插件
@@ -1375,7 +1371,19 @@ export interface IWatchOptions {
   throwErr?: boolean;
 }
 
+export interface IWatchOptions extends IWatchEffectOptions {
+  /**
+   * default: false，
+   * 如没有定义 deps 依赖，需设置 immediate，这样可以让 watch 首次执行后收集到相关依赖，
+   * 当然也可以定义了 deps 依赖的情况下设置 immediate 为 true，这样整个 watch 函数的依赖是
+   * deps 定义的和 watch 首次执行后收集到的两者合并的结果
+   */
+  immediate?: boolean;
+}
+
 export type WatchOptionsType = WatchFnDeps | IWatchOptions;
+
+export type WatchEffectOptionsType = WatchFnDeps | IWatchEffectOptions;
 
 export interface IDeriveFnParamsBase<I = readonly any[]> {
   /** 函数的运行编号，每次自增1 */

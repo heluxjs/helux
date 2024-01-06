@@ -34,6 +34,10 @@ interface IWatchOptions {
 type WatchFnDeps = () => any[] | undefined;
 ```
 
+:::info
+`useWatch`回调的首次运行的执行时机是在组件挂载完毕后才执行
+:::
+
 ## 基础用法
 
 ### 观察原始类型 atom

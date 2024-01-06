@@ -8,4 +8,4 @@ export { useMutable } from './useMutable';
 export { useOnEvent } from './useOnEvent';
 export { useReactive, useReactiveX } from './useReactive';
 export { storeSrv, useService } from './useService';
-export { useWatch } from './useWatch';
+export { useWatch, useWatchEffect } from './useWatch';

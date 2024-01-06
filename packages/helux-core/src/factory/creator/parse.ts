@@ -317,7 +317,7 @@ export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions)
   return { desc, strict, ...descOrOptions, throwErr };
 }
 
-export function parseWatchOptions(options?: WatchOptionsType) {
+export function parseWatchOptions(forEffect: boolean, options?: WatchOptionsType) {
   let deps: WatchFnDeps = noop;
   let immediate: boolean = false;
 
@@ -327,6 +327,9 @@ export function parseWatchOptions(options?: WatchOptionsType) {
     deps = options.deps || noop;
     immediate = options.immediate ?? false;
   }
+  // 如果是为 watchEffect 准备参数，则 immediate 一定为 true
+  immediate = forEffect ? true : immediate;
+
   return { immediate, deps };
 }
 

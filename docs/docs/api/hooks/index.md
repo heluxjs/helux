@@ -13,6 +13,7 @@ order: 0
 - [useDerived](/api/hooks/use-derived) 使用全量派生结果
 - [useOnEvent](/api/hooks/use-on-event) 使用事件监听
 - [useWatch](/api/hooks/use-watch) 使用观察
+- [useWatchEffect](/api/hooks/use-watch-effect) 使用观察，立即运行并在首次运行时收集到依赖
 - [useGlobalId](/api/hooks/use-global-id) 使用`globalId`
 - [useMutate](/api/hooks/use-mutate) 使用可变本地状态
 - [useService](/api/hooks/use-service) 使用服务

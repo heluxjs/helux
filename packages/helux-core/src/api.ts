@@ -9,7 +9,7 @@ import { defineDeriveFnItem, defineDeriveTask, derive, deriveDict } from './fact
 import { mutate, mutateDict, runMutate, runMutateTask } from './factory/createMutate';
 import { atom, atomx, share, sharex } from './factory/createShared';
 import { sync, syncer } from './factory/createSync';
-import { watch } from './factory/createWatch';
+import { watch, watchEffect } from './factory/createWatch';
 import { currentDraftRoot } from './factory/creator/current';
 import { flush, reactiveDesc } from './factory/creator/reactive';
 import { init } from './factory/root';
@@ -33,6 +33,7 @@ import {
   useReactiveX,
   useService,
   useWatch,
+  useWatchEffect,
 } from './hooks';
 import { block, dynamicBlock, signal } from './signal';
 
@@ -63,6 +64,7 @@ export {
   runDeriveTask,
   // watch api
   watch,
+  watchEffect,
   // hooks api
   useAtom,
   useAtomX,
@@ -70,6 +72,7 @@ export {
   useReactiveX,
   useDerived,
   useWatch,
+  useWatchEffect,
   useGlobalId,
   useService,
   useOnEvent,

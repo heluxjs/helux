@@ -26,6 +26,7 @@ nav:
 - [runMutateTask](/api/base/run-mutate-task) 人工触发可变派生函数异步任务
 - [action](/api/base/action) 创建修改状态的 action 同步或异步函数
 - [watch](/api/base/watch) 创建观察数据变化的监听函数
+- [watchEffect](/api/base/watch-effect) 创建观察数据变化的监听函数，立即运行并在首次运行时收集到依赖
 - [syncer](/api/base/syncer) 浅层次对象的同步函数生成器，辅助双向绑定
 - [sync](/api/base/sync) 深层次对象的同步函数生成器，辅助双向绑定
 - [emit](/api/base/emit) 发射事件
