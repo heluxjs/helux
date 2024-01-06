@@ -1,3 +1,0 @@
-## menu order
-
-- quick-start
