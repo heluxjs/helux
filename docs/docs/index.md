@@ -3,8 +3,8 @@ hero:
   title: Helux
   description: 集原子，信号、依赖追踪为一体，支持细粒度响应式更新的状态引擎（兼容所有类react库，包括react18）
   actions:
-    - text: 快速上手
-      link: /guide
+    - text: 快速开始
+      link: /guide/quick-start
     - text: Github
       link: https://github.com/heluxjs/helux
 features:
