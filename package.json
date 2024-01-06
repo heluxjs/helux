@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "A state engine integrates atom, signal, derive, watch and dep tracking, supports fine-grained responsive updates, it is compatible with all react like libs (including React 18).",
   "keywords": [],
   "author": {

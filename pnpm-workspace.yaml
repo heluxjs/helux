@@ -1,6 +1,6 @@
 prefer-workspace-packages: true
 packages:
   - 'packages/*'
-  # - 'packages-legacy/*'
-  # - 'examples/*'
+  - 'packages-legacy/*'
+  - 'examples/*'
   - 'docs'
