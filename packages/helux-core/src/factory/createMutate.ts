@@ -73,7 +73,7 @@ interface IConfigureMutateFnOpt extends IConfigureMutateFnOptBase {
 }
 
 interface IConfigureMutateDictOpt extends IConfigureMutateFnOptBase {
-  fnDict: any; // 刻意擦除类型，适配 atomMutateDict 逻辑
+  fnDict: any; // 刻意擦除类型，适配 mutateDict 逻辑
 }
 
 /**
