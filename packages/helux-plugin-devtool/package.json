@@ -16,7 +16,7 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "module": "dist/index.mjs",
   "types": "src/index.d.ts",
   "files": [
@@ -38,6 +38,7 @@
   "bundleDependencies": false,
   "publishConfig": {
     "access": "public",
+    "main": "dist/index.js",
     "registry": "https://registry.npmjs.org/"
   },
   "deprecated": false
