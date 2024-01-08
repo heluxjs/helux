@@ -24,7 +24,7 @@ const plus100Result = derive(() => numAtom.val + 100); // { val: 101 }
 
 派生生成字典对象
 
-:::info{title=deriveDict 免拆箱}
+:::info{title='deriveDict 免拆箱'}
 因`derive`始终会装箱结果为`{val: T}` 结构，如生成字典对象结果推荐使用[deriveDict](/api/base/derive-dict)接口，免去直接使用结果时需要拆箱的过程
 :::
 
