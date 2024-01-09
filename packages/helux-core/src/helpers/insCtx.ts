@@ -174,6 +174,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     extra: {},
     getDeps: () => getInsDeps(insCtx, true),
     renderInfo: {
+      isAtom: forAtom,
       setDraft: internal.insSetDraft,
       time: Date.now(),
       sn: 0,

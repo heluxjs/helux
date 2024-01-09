@@ -7,7 +7,7 @@ import type { TInternal } from '../factory/creator/buildInternal';
 import { REACTIVE_META, TRIGGERED_WATCH } from '../factory/creator/current';
 import { alertDepKeyDeadCycleErr, probeDepKeyDeadCycle, probeFnDeadCycle } from '../factory/creator/deadCycle';
 import { innerFlush } from '../factory/creator/reactive';
-import type { Dict, From, IDeriveFnParams, IFnCtx, TriggerReason } from '../types/base';
+import type { Dict, Fn, From, IDeriveFnParams, IFnCtx, TriggerReason } from '../types/base';
 import { shouldShowComputing } from './fnCtx';
 import { markComputing } from './fnStatus';
 
@@ -112,8 +112,17 @@ function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
   return ret;
 }
 
+export function runDeps(deps: Fn, stateRoot: any, forAtom: boolean) {
+  let state = stateRoot.val;
+  if (!forAtom) {
+    state = stateRoot;
+  }
+  const input = enureReturnArr(deps, { state, stateRoot, isAtom: forAtom });
+  return { input, state, stateRoot };
+}
+
 /**
- * 执行 derive 设置函数
+ * 执行 derive 函数
  */
 export function runFn(fnKey: string, options: IRunFnOpt = {}) {
   const {
@@ -180,9 +189,10 @@ export function runFn(fnKey: string, options: IRunFnOpt = {}) {
     });
   };
 
-  const prevResult = forAtom ? result.val : result;
-  const input = enureReturnArr(fnCtx.deps);
-  const fnParams: IDeriveFnParams = { isFirstCall, prevResult, triggerReasons, input, sn };
+  const prevResult = forAtom ? result : result.val;
+  const { deps, isStateAtom } = fnCtx;
+  const { input, state, stateRoot } = runDeps(deps, fnCtx.stateRoot, isStateAtom);
+  const fnParams: IDeriveFnParams = { isAtom: fnCtx.isStateAtom, state, stateRoot, isFirstCall, prevResult, triggerReasons, input, sn };
   const shouldRunFn = !isAsync || forceFn || (isAsync && !task);
   if (shouldRunFn) {
     const result = fn(fnParams);

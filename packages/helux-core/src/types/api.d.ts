@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@4.0.3
+| helux-core@4.1.0
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -26,6 +26,7 @@ import type {
   Fn,
   IAtomCtx,
   IBlockOptions,
+  IBoundStateInfo,
   ICompAtomCtx,
   ICompReactiveCtx,
   ICreateOptions,
@@ -33,6 +34,7 @@ import type {
   IDeriveTaskOptions,
   IInitOptions,
   IInsRenderInfo,
+  IMutateFnItem,
   IMutateFnLooseItem,
   IMutateWitness,
   IPlugin,
@@ -66,7 +68,7 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '4.0.3';
+  VER: '4.1.0';
   LIMU_VER: string;
   EVENT_NAME: {
     ON_DATA_CHANGED: 'ON_DATA_CHANGED';
@@ -122,7 +124,7 @@ export function atom<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions
 /**
  * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] sharex 返回 ctx 自身
  */
-export function sharex<T = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function sharex<T extends PlainObject = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): ISharedCtx<T>;
@@ -173,7 +175,10 @@ export function atomx<T = any, O extends ICreateOptions<Atom<T>> = ICreateOption
  *  });
  * ```
  */
-export function derive<T = any, I extends ReadOnlyArr = ReadOnlyArr>(deriveFnOrFnItem: DeriveFn<T> | IDeriveFnItem<T, I>): DerivedAtom<T>;
+export function derive<T = any, I extends ReadOnlyArr = ReadOnlyArr, S = SharedState>(
+  deriveFnOrFnItem: DeriveFn<T, I, S> | IDeriveFnItem<T, I, S>,
+  boundState?: S,
+): DerivedAtom<T>;
 
 /**
  * 创建一个派生atom新结果的任务，支持返回 pritimive 类型
@@ -182,12 +187,13 @@ export function derive<T = any, I extends ReadOnlyArr = ReadOnlyArr>(deriveFnOrF
  * const doubleResult = deriveAtom(()=>numAtom.val*2);
  * ```
  */
-export function deriveDict<T = PlainObject, I extends ReadOnlyArr = ReadOnlyArr>(
-  deriveFnOrFnItem: DeriveFn<T> | IDeriveFnItem<T, I>,
-): DerivedDict<T>;
+export function deriveDict<R = PlainObject, I extends ReadOnlyArr = ReadOnlyArr, S = SharedState>(
+  deriveFnOrFnItem: DeriveFn<R, I, S> | IDeriveFnItem<R, I, S>,
+  boundState?: S,
+): DerivedDict<R>;
 
 export function defineDeriveTask<I extends ReadOnlyArr = any>(
-  deps?: () => I,
+  deps?: (info: IBoundStateInfo) => I,
 ): <T = any>(fnItem: IDeriveTaskOptions<T, I>) => IDeriveFnItem<T, I>;
 
 /**
@@ -202,6 +208,11 @@ export function defineDeriveTask<I extends ReadOnlyArr = any>(
  * ```
  */
 export function defineDeriveFnItem<F extends IDeriveFnItem>(fnItem: F): F;
+
+/**
+ * 辅助给直接透传给 defineMutateDerive 的某个 fnItem 标记类型
+ */
+export function defineMutateFnItem<F extends IMutateFnItem>(fnItem: F): F;
 
 /**
  * 观察共享状态变化，watch 回调默认不立即执行，需要设置 immediate=true 才立即执行，
@@ -514,14 +525,28 @@ export function runMutateTask<T extends SharedState>(target: T, descOrOptions?: 
 /**
  * 外部为 atom 或 share 创建一个 mutate 函数，不定义在(atom,share)接口的 options 参数里，生成共享对象后再对其定义 mutate 函数
  * 此处采用柯里化风格api，可拥有更好的类型编码提示，会自动把 deps 类型映射到 task 函数的回调函数的 input 参数上
+ * ```ts
+ * mutate(someAtom)(draf=>draft.a = draft.b+1);
+ * mutate(someAtom)({
+ *   fn: draf=>draft.a = draft.b+1
+ * });
+ *
+ * // 支持绑定一个额外的共享对象
+ * mutate(someAtom, anotherAtom)((draft, params)=>{
+ *   console.log(params.extraBound.stateRoot); // ---> anotherAtom
+ *   draft.a = draft.b+1;
+ * });
+ * ```
  */
-export function mutate<T extends SharedState>(
+export function mutate<T extends SharedState, E extends SharedState>(
   target: T,
-): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: IMutateFnLooseItem<T, A> | MutateFn<T, A>) => IMutateWitness<T>;
+  extraTarget?: E,
+): <A extends ReadOnlyArr = ReadOnlyArr>(fnItem: IMutateFnLooseItem<T, A, E> | MutateFn<T, A, E>) => IMutateWitness<T>;
 
-export function mutateDict<T extends SharedState>(
+export function mutateDict<T extends SharedState, E extends SharedState>(
   target: T,
-): <D extends MutateFnDict<T> = MutateFnDict<T>>(fnDict: D) => { [K in keyof D]: IMutateWitness<T> };
+  extraTarget?: E,
+): <D extends MutateFnDict<T, E> = MutateFnDict<T, E>>(fnDict: D) => { [K in keyof D]: IMutateWitness<T> };
 
 /**
  * @param result - 传入派生结果，会自动触发结果对应的派生函数重计算
@@ -657,9 +682,19 @@ export function action<T = any>(
 export function isAtom(mayAtom: any): boolean;
 
 /**
- * test if the input arg is a result returned by driveAtom()
+ * test if the input arg is a result returned by atom() or share()
+ */
+export function isSharedState(mayShared: any): boolean;
+
+/**
+ * test if the input arg is a result returned by drive()
  */
 export function isDerivedAtom(mayDerivedAtom: any): boolean;
+
+/**
+ * test if the input arg is a result returned by drive() or deriveDict()
+ */
+export function isDerivedResult(mayDerived: any): boolean;
 
 /**
  * set one-time used reactive modification desc

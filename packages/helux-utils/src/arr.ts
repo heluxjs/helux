@@ -40,8 +40,8 @@ export function matchListItem(list: string[], fullStr: string) {
   return matchKey;
 }
 
-export function enureReturnArr(fn?: Fn, arg?: any) {
+export function enureReturnArr(fn?: Fn, arg1?: any, arg2?: any) {
   if (!fn) return [];
-  const result = fn(arg);
+  const result = fn(arg1, arg2);
   return Array.isArray(result) ? result : [result];
 }

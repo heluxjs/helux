@@ -1,12 +1,13 @@
-import { dedupList, enureReturnArr, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '@helux/utils';
+import { dedupList, isFn, isObj, isPromise, nodupPush, noop, tryAlert, warn } from '@helux/utils';
 import { ASYNC_TYPE, DERIVE, IS_DERIVED_ATOM, SCOPE_TYPE } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { markFnEnd, markFnStart, registerFn, shouldShowComputing } from '../../helpers/fnCtx';
 import { ensureFnDepData, recordFnDepKeys } from '../../helpers/fnDep';
-import { runFn } from '../../helpers/fnRunner';
+import { runDeps, runFn } from '../../helpers/fnRunner';
 import { createOb } from '../../helpers/obj';
 import { getSharedKey } from '../../helpers/state';
-import type { Dict, Fn, ICreateDeriveLogicOptions, IFnCtx } from '../../types/base';
+import type { Dict, Fn, ICreateDeriveLogicOptions, IDeriveFnParams, IFnCtx } from '../../types/base';
+import { isAtom } from './atom';
 import { recordLastest } from './blockScope';
 import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
@@ -103,24 +104,42 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
   if (!isFn(options.fn)) {
     throw new Error('ERR_NON_FN: derive need fn arg!');
   }
-  const { fn = noop, deps = noop, task } = options;
-  const deriveFn = (params: Dict) => {
-    const list = enureReturnArr(deps);
-    if (params.isFirstCall) {
-      list.forEach((result: any) => transferDep(fnCtx, { result }));
-    }
-    return fn({ ...params, input: list });
-  };
+  const { fn = noop, deps = noop, task, stateRoot = {} } = options;
+  const isStateAtom = isAtom(stateRoot);
   const isAsync = options.isAsync ?? isFn(task); // task 是不是异步函数后续执行会做检查
   const showLoading = options.showLoading ?? isAsync;
 
-  const fnCtx = registerFn(deriveFn, {
-    specificProps: { forAtom, scopeType, fnType: DERIVE, task, deps, isAsync, asyncType, isAsyncTransfer, showLoading },
+  const fnCtx = registerFn(fn, {
+    specificProps: {
+      forAtom,
+      scopeType,
+      stateRoot,
+      isStateAtom,
+      fnType: DERIVE,
+      task,
+      deps,
+      isAsync,
+      asyncType,
+      isAsyncTransfer,
+      showLoading,
+    },
     fnCtxBase,
   });
 
   markFnStart(fnCtx.fnKey, 0);
-  let result = deriveFn({ isFirstCall: true, prevResult: null, triggerReasons: [] });
+  const { input, state } = runDeps(deps, stateRoot, isStateAtom);
+  input.forEach((result: any) => transferDep(fnCtx, { result }));
+  const fnParams: IDeriveFnParams = {
+    isFirstCall: true,
+    prevResult: null,
+    triggerReasons: [],
+    input,
+    sn: 0,
+    state,
+    stateRoot,
+    isAtom: isStateAtom,
+  };
+  let result = fn(fnParams);
   markFnEnd();
 
   const upstreamFnCtx = getFnCtxByObj(result);

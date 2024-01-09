@@ -37,7 +37,7 @@ interface ICallMutateBase {
 
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { isFirstCall: boolean; draft: T; draftRoot: T; setState: Fn; desc: string; input: any[] }) => any[];
+  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[] }) => any[];
 }
 
 interface ICallAsyncMutateFnOpt extends ICallMutateBase {
@@ -54,10 +54,11 @@ const taskProm = new Map<any, boolean>();
  */
 function getInput(internal: TInternal, fnItem: IMutateFnStdItem) {
   const { forAtom, rawState } = internal;
+  const { deps, extraBound: boundStateInfo } = fnItem;
   if (forAtom) {
-    return enureReturnArr(fnItem.deps, rawState.val);
+    return enureReturnArr(deps, rawState.val, boundStateInfo);
   }
-  return enureReturnArr(fnItem.deps, rawState);
+  return enureReturnArr(deps, rawState, boundStateInfo);
 }
 
 /**
@@ -70,7 +71,7 @@ export function isTaskProm(task: any) {
 /** 呼叫异步函数的逻辑封装，mutate task 执行或 action 定义的函数（同步或异步）执行都会走到此逻辑 */
 export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options: ICallAsyncMutateFnOpt): ActionReturn | ActionAsyncReturn {
   const { sn, getArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn } = options;
-  const { desc = '', depKeys, task = noopAny } = fnItem;
+  const { desc = '', depKeys, task = noopAny, extraBound } = fnItem;
   const internal = getInternal(targetState);
   const { sharedKey } = internal;
   const customOptions: ISetFactoryOpts = { desc, sn, from };
@@ -91,7 +92,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   };
 
   const input = FROM.MUTATE === from ? getInput(internal, fnItem) : [];
-  const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush };
+  const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound };
   const args = getArgs(defaultParams) || [defaultParams];
   const isProm = taskProm.get(task);
   const isUnconfirmedFn = isProm === undefined;
@@ -150,12 +151,12 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
 /** 呼叫同步函数的逻辑封装 */
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnOpt<T>): ActionReturn {
   const { sn, getArgs = noop, from, throwErr, isFirstCall = false, fnItem } = options;
-  const { desc = '', watchKey, fn = noopAny } = fnItem;
+  const { desc = '', watchKey, fn = noopAny, extraBound } = fnItem;
   const isMutate = FROM.MUTATE === from;
   isMutate && TRIGGERED_WATCH.set(watchKey);
 
   const internal = getInternal(targetState);
-  const { setStateFactory, forAtom, sharedState } = internal;
+  const { setStateFactory, forAtom, sharedRoot } = internal;
   // 第一次执行时开启依赖收集
   const enableDep = isMutate && isFirstCall;
   const setFactoryOpts: ISetFactoryOpts = { desc, sn, from, isFirstCall, enableDep };
@@ -166,10 +167,11 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
     return finish(cb);
   };
 
-  const state = getStateNode(sharedState, forAtom);
+  const state = getStateNode(sharedRoot, forAtom);
   const input = isMutate ? getInput(internal, fnItem) : [];
   const { draftNode: draft, draftRoot, finish } = setStateFactory(setFactoryOpts);
-  const args = getArgs({ isFirstCall, draft, draftRoot, setState, desc, input }) || [draft, { input, state, draftRoot, isFirstCall }];
+  // getArgs 由 createAtion 提供
+  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state, draftRoot, isFirstCall, extraBound }];
 
   try {
     const fnCtx = getSafeFnCtx(fnItem.watchKey);
@@ -248,7 +250,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   const keys = Object.keys(dict);
   if (!keys.length) return;
   const internal = getInternal(target);
-  const { mutateFnDict, usefulName, forAtom, sharedState } = internal;
+  const { mutateFnDict, usefulName, forAtom, sharedRoot } = internal;
   const emitErrToPlugin = (err: Error) => emitErr(internal, err);
 
   keys.forEach((descKey) => {
@@ -301,7 +303,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
       {
         deps: () => {
           if (!item.deps) return [];
-          return item.deps(getStateNode(sharedState, forAtom)) || [];
+          return item.deps(getStateNode(sharedRoot, forAtom), item.extraBound) || [];
         },
         sharedState: target,
         scopeType: SCOPE_TYPE.STATIC,

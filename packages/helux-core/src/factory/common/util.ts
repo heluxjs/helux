@@ -139,3 +139,7 @@ export const { isObject: isDict, getDataType } = limuUtils;
 export function isPrim(val: any) {
   return !isJsObj(val);
 }
+
+export function ensureBool(mayBool: any, defaultBool: boolean) {
+  return typeof mayBool === 'boolean' ? mayBool : defaultBool;
+}

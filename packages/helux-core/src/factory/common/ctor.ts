@@ -132,6 +132,7 @@ export function newMutateFnItem(partial?: Partial<IMutateFnStdItem>): IMutateFnS
     watchKey: '',
     isFake,
     enabled: true,
+    extraBound: { state: {}, stateRoot: {}, isAtom: false },
     ...rest,
   };
   return base;
@@ -148,6 +149,8 @@ export function newFnCtx() {
     task: noop,
     deps: noopArr,
     status: { loading: false, err: null, ok: true },
+    stateRoot: {},
+    isStateAtom: false,
     forAtom: false,
     remainRunCount: 0,
     showLoading: false,

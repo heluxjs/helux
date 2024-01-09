@@ -18,7 +18,7 @@ export { prepareDowngradeMutate as prepareNormalMutate } from './mutateDowngrade
 export function buildSharedObject<T = any>(innerOptions: IInnerOptions, createOptions?: ICreateOptions<T>) {
   const parsedOptions = parseOptions(innerOptions, createOptions);
   const { sharedRoot, sharedState } = buildSharedState(parsedOptions);
-  const internal = mapSharedToInternal(sharedRoot, parsedOptions);
+  const internal = mapSharedToInternal(sharedRoot, sharedState, parsedOptions);
 
   recordMod(sharedRoot, parsedOptions);
   markFnExpired();

@@ -1,12 +1,12 @@
 import { limuUtils, markRaw, produce } from 'limu';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
-import { getAtom, isAtom, isDerivedAtom } from './factory/common/atom';
+import { getAtom, isAtom, isDerivedAtom, isDerivedResult, isSharedState } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
 import { emit, on } from './factory/common/userBus';
 import { action } from './factory/createAction';
 import { defineDeriveFnItem, defineDeriveTask, derive, deriveDict } from './factory/createDerived';
-import { mutate, mutateDict, runMutate, runMutateTask } from './factory/createMutate';
+import { defineMutateFnItem, mutate, mutateDict, runMutate, runMutateTask } from './factory/createMutate';
 import { atom, atomx, share, sharex } from './factory/createShared';
 import { sync, syncer } from './factory/createSync';
 import { watch, watchEffect } from './factory/createWatch';
@@ -93,6 +93,7 @@ export {
   mutateDict,
   runMutate,
   runMutateTask,
+  defineMutateFnItem,
   // sync api
   sync,
   syncer,
@@ -107,7 +108,9 @@ export {
   currentDraftRoot,
   isAtom,
   isDerivedAtom,
+  isDerivedResult,
   isDiff,
+  isSharedState,
   shallowCompare,
   markRaw,
   storeSrv,
