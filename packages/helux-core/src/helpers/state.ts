@@ -5,7 +5,7 @@ import { getSharedScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
 import { ParsedOptions } from '../factory/creator/parse';
 import { getRoot } from '../factory/root';
-import { Dict, SharedState } from '../types/base';
+import { Dict, IBoundStateInfo, SharedState } from '../types/base';
 
 export function getInternalByKey(sharedKey: number): TInternal {
   const internalMap = getInternalMap();
@@ -42,6 +42,19 @@ export function isSharedState(maySharedState: any) {
   return !!getSharedScope().STATE_SHARED_KEY_MAP.get(maySharedState);
 }
 
+export function getBoundStateInfo(extraState?: SharedState) {
+  let boundInfo: IBoundStateInfo = { state: {}, stateRoot: {}, isAtom: false };
+  if (!extraState) {
+    return boundInfo;
+  }
+  const extraInternal = getInternal(extraState);
+  if (extraInternal) {
+    const { sharedState: state, sharedRoot: stateRoot } = extraInternal;
+    boundInfo = { state, stateRoot, isAtom: extraInternal.forAtom };
+  }
+  return boundInfo;
+}
+
 export function markSharedKey(state: Dict) {
   const scope = getSharedScope();
   const { STATE_SHARED_KEY_MAP } = scope;
@@ -51,11 +64,11 @@ export function markSharedKey(state: Dict) {
   return keySeed;
 }
 
-export function mapSharedState(sharedKey: number, sharedState: Dict) {
+export function mapSharedState(sharedKey: number, sharedRoot: Dict) {
   const { SHARED_KEY_STATE_MAP, STATE_SHARED_KEY_MAP } = getSharedScope();
-  SHARED_KEY_STATE_MAP.set(sharedKey, sharedState);
+  SHARED_KEY_STATE_MAP.set(sharedKey, sharedRoot);
   // 代理后的 sharedState 也记录下对应的 sharedKey
-  STATE_SHARED_KEY_MAP.set(sharedState, sharedKey);
+  STATE_SHARED_KEY_MAP.set(sharedRoot, sharedKey);
 }
 
 export function getSharedState(sharedKey: number) {

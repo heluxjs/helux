@@ -1,8 +1,9 @@
 import { FROM, SINGLE_MUTATE } from '../consts';
-import { getInternal } from '../helpers/state';
+import { getBoundStateInfo, getInternal } from '../helpers/state';
 import type {
   ActionReturn,
   Dict,
+  IMutateFnItem,
   IMutateFnLooseItem,
   IMutateWitness,
   IRunMutateOptions,
@@ -11,6 +12,7 @@ import type {
   SharedState,
 } from '../types/base';
 import { checkShared, checkSharedStrict } from './common/check';
+import { ensureBool } from './common/util';
 import type { TInternal } from './creator/buildInternal';
 import { callAsyncMutateFnLogic, callMutateFnLogic, watchAndCallMutateDict } from './creator/mutateFn';
 import { parseCreateMutateOpt, parseMutate, parseMutateFn } from './creator/parse';
@@ -36,7 +38,9 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
   // 指定了 task 但未配置 task，返回最近一次修改结果的快照
   if (forTask && !item.task) return { snap, err: new Error(`mutate task ${desc} not defined`), result: null };
 
-  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE, throwErr };
+  // throwErr 谨慎处理，只严格接受布尔值
+  const throwErrVar = ensureBool(throwErr, false);
+  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE, throwErr: throwErrVar };
   // 调用 desc 对应的函数
   if (forTask) {
     return callAsyncMutateFnLogic(target, baseOpts);
@@ -64,8 +68,9 @@ function makeWitness(target: SharedState, desc: string, oriDesc: string, interna
 
 interface IConfigureMutateFnOptBase {
   target: SharedState;
-  forAtom?: boolean;
   label: string;
+  forAtom?: boolean;
+  extraTarget?: SharedState;
 }
 
 interface IConfigureMutateFnOpt extends IConfigureMutateFnOptBase {
@@ -73,19 +78,23 @@ interface IConfigureMutateFnOpt extends IConfigureMutateFnOptBase {
 }
 
 interface IConfigureMutateDictOpt extends IConfigureMutateFnOptBase {
-  fnDict: any; // 刻意擦除类型，适配 atomMutateDict 逻辑
+  fnDict: any; // 刻意擦除类型，适配 mutateDict 逻辑
 }
 
 /**
  * 创建一个外部执行的 mutate 函数（ 即不定义在生成 share 或 atom 时的 options 参数里，生成后再定义 mutate 函数 ）
  */
 function configureMutateFn(options: IConfigureMutateFnOpt) {
-  const { target, fnItem, label } = options;
+  const { target, fnItem, label, extraTarget } = options;
   const internal = checkSharedStrict(target, { label });
   const stdFnItem = parseMutateFn(fnItem, '', internal.mutateFnDict);
   if (!stdFnItem) {
     throw new Error('not a fn or fnItem { fn }');
   }
+  if (extraTarget) {
+    stdFnItem.extraBound = getBoundStateInfo(extraTarget);
+  }
+
   internal.mutateFnDict[stdFnItem.desc] = stdFnItem;
   stdFnItem.enabled = internal.enableMutate;
   const dict = { [stdFnItem.desc]: stdFnItem };
@@ -102,6 +111,10 @@ function configureMutateDict(options: IConfigureMutateDictOpt): any {
   const { target, fnDict, label } = options;
   const internal = checkSharedStrict(target, { label });
   const dict = parseMutate(fnDict, internal.mutateFnDict, internal.enableMutate); // trust dict here
+  if (options.extraTarget) {
+    const extraBound = getBoundStateInfo(options.extraTarget);
+    Object.keys(dict).forEach((key) => (dict[key].extraBound = extraBound));
+  }
   if (internal.enableMutate) {
     watchAndCallMutateDict({ target, dict });
   }
@@ -161,13 +174,21 @@ export function runMutateTask<T extends SharedState>(target: T, descOrOptions?: 
  * 为 atom 或 share 创建一个 mutate 函数，如需创建异步计算结果，配置 task 即可
  * 更详细的泛型定义见 types-api.d.ts
  */
-export function mutate(target: SharedState) {
-  return (fnItem: IMutateFnLooseItem<any, any> | MutateFn<any, any>) => configureMutateFn({ target, fnItem, label: 'mutate' });
+export function mutate(target: SharedState, extraTarget?: SharedState) {
+  return (fnItem: IMutateFnLooseItem<any, any, any> | MutateFn<any, any>) =>
+    configureMutateFn({ target, extraTarget, fnItem, label: 'mutate' });
 }
 
 /**
  * 为 atom 或 share 创建多个 mutate 函数，接收一个字典配置来完成多函数配置，更详细的泛型定义见 types-api.d.ts
  */
-export function mutateDict<T extends SharedState>(target: T) {
-  return <D = MutateFnDict<T>>(fnDict: D) => configureMutateDict({ target, fnDict, label: 'mutateDict' });
+export function mutateDict<T extends SharedState>(target: T, extraTarget?: SharedState) {
+  return <D = MutateFnDict<T>>(fnDict: D) => configureMutateDict({ target, extraTarget, fnDict, label: 'mutateDict' });
+}
+
+/**
+ * 辅助给直接透传给 defineMutateDerive 的某个 fnItem 标记类型
+ */
+export function defineMutateFnItem<F extends IMutateFnItem>(fnItem: F): F {
+  return fnItem;
 }

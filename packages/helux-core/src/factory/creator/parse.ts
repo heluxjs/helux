@@ -93,6 +93,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
       watchKey: '',
       isFake: false,
       enabled: true,
+      extraBound: { state: {}, stateRoot: {}, isAtom: false },
     };
   } else if (isObj(fnItem)) {
     const { fn, desc, deps, task, immediate, checkDeadCycle, onlyDeps = false } = fnItem;
@@ -116,6 +117,7 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
         writeKeys: [],
         isFake: false,
         enabled: true,
+        extraBound: { state: {}, stateRoot: {}, isAtom: false },
       };
     }
   }

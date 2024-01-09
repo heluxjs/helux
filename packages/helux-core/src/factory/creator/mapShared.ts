@@ -19,7 +19,7 @@ import { ParsedOptions, parseRules, pureSetOptions } from './parse';
 import { flush } from './reactive';
 import { createSyncerBuilder, createSyncFnBuilder } from './sync';
 
-export function mapSharedToInternal(sharedState: SharedState, options: ParsedOptions) {
+export function mapSharedToInternal(sharedRoot: SharedState, sharedState: SharedState, options: ParsedOptions) {
   const { deep, forAtom, sharedKey } = options;
   const ruleConf = parseRules(options);
   const isDeep = canUseDeep(deep);
@@ -57,8 +57,8 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
     // ATTENTION LABEL( flush )
     // 调用 setState 主动把响应式对象可能存在的变更先提交
     // reactive.a = 66;
-    // setState(draft=>draft.a+100); // flush后回调里可拿到draft.a最新值为66
-    flush(sharedState, REACTIVE_DESC.current(sharedKey));
+    // setState(draft=>draft.a+100); // flush 后回调里可拿到 draft.a 最新值为 66
+    flush(sharedRoot, REACTIVE_DESC.current(sharedKey));
     const ret = setStateImpl({ handleCbReturn, enableDep });
     return ret.finish(partialState, pureSetOptions(setOptions));
   };
@@ -72,6 +72,7 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   const insSetDraft: SetDraft = (partialState, options) => callSetState(partialState, [false, false, options]);
 
   const internal = buildInternal(options, {
+    sharedRoot,
     sharedState,
     setState,
     setDraft,
@@ -85,6 +86,6 @@ export function mapSharedToInternal(sharedState: SharedState, options: ParsedOpt
   internal.sync = createSyncFnBuilder(internal);
   internal.syncer = createSyncerBuilder(internal);
 
-  setInternal(sharedState, internal);
+  setInternal(sharedRoot, internal);
   return internal;
 }

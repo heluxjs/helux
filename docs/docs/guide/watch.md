@@ -106,7 +106,7 @@ watchEffect(() => {
 
 ### useWatch
 
-提供`useWatch`让客户在组件内部观察变化
+提供`useWatch`让开发者在组件内部观察变化
 
 :::success{title=自动销毁观察监听}
 组件销毁时，helux 会自动取消 useWatch 对应的观察监听函数

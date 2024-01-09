@@ -8,6 +8,8 @@ export type NumStrSymbol = number | string | symbol;
 
 export type Dict<T = any> = Record<NumStrSymbol, T>;
 
+export type DictOrCb<T = any> = Record<NumStrSymbol, T> | (() => Record<NumStrSymbol, T>);
+
 export type PlainObject = Record<string, {}>;
 
 export type DictN<T = any> = Record<number, T>;
@@ -159,12 +161,13 @@ export type Atom<T = any> = { val: T };
 /** returned by derive */
 export type DerivedAtom<R = any> = {
   val: R;
-  /** 这个值用于辅助类型推导，如果是 atom 返回结果，此值为 true */
+  /** 这个值用于辅助类型推导，如果是 derive 返回结果，此值为 true */
   z__is_atom_result__: true;
 };
 
 /** derive fn definition  */
-export type DeriveFn<R = any, I extends ReadOnlyArr = any> = (params: IDeriveFnParams<R, I>) => R;
+export type DeriveFn<R = any, I extends ReadOnlyArr = any, S = any> = (params: IDeriveFnParams<R, I, S>) => R;
+// export type DeriveFn<R = any, I extends ReadOnlyArr = any, S extends SharedState = SharedState> = (params: any) => R;
 
 export type NextAtomVal<T> = T;
 
@@ -289,6 +292,9 @@ export type ActionTask<T = any, P = UnconfirmedArg> = (
 
 export type ReadOnlyArr = readonly any[];
 
+// @ts-ignore just array is ok, 不写为 Array<any>, 刻意忽略ts错误：目标仅允许 x 个元素，但源中的元素可能不够
+export type Arr = Array;
+
 export interface IRunMutateOptions {
   desc?: string;
   /**
@@ -304,7 +310,7 @@ export interface IRunMutateOptions {
   throwErr?: boolean;
 }
 
-export interface IMutateTaskParam<T = SharedState, P = any[]> {
+export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> {
   /** 是否第一次调用 */
   isFirstCall;
   /** 异步任务提供的 draft 是全局响应式对象 */
@@ -319,6 +325,7 @@ export interface IMutateTaskParam<T = SharedState, P = any[]> {
   setState: SetState<T>;
   /** deps 返回的结果 */
   input: P;
+  extraBound: IBoundStateInfo<E>;
 }
 
 /**
@@ -352,9 +359,11 @@ export interface IMutateWitness<T = any> {
 }
 
 // for mutate task
-export type MutateTask<T = SharedState, P = ReadOnlyArr> = (param: IMutateTaskParam<T, P>) => Promise<void>;
+export type MutateTask<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> = (
+  param: IMutateTaskParam<T, P, E>,
+) => Promise<void>;
 
-export interface IMutateFnParams<T = SharedState, P = ReadOnlyArr> {
+export interface IMutateFnParams<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> {
   /** 是否第一次调用 */
   isFirstCall: boolean;
   /** mutate deps 函数的返回值 */
@@ -363,26 +372,27 @@ export interface IMutateFnParams<T = SharedState, P = ReadOnlyArr> {
   state: StateType<T>;
   /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
   draftRoot: DraftRootType<T>;
+  extraBound: IBoundStateInfo<E>;
 }
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
-export type MutateFn<T = SharedState, P = ReadOnlyArr> = (
+export type MutateFn<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> = (
   /** 草稿状态，对于 atom 对象 draft 是已拆箱的值，如需操作未拆箱值可读取下面的 params.draftRoot */
   draft: DraftType<T>,
-  params: IMutateFnParams<T, P>,
+  params: IMutateFnParams<T, P, E>,
 ) => void;
 
-export interface IMutateFnItem<T = SharedState, P = ReadOnlyArr> {
+export interface IMutateFnItem<T = any, P extends Arr = Arr, E extends SharedState = SharedState> {
   /** 依赖项列表，有 task 无 fn 时，可作为 task 的依赖收集函数 */
-  deps?: (state: StateType<T>) => P;
+  deps?: (state: StateType<T>, boundState: IBoundStateInfo<E>) => P;
   /**
    * defalt: false
    * 为 true 时表示依赖全部由 deps 函数提供，fn 执行过程中不收集任何依赖
    */
   onlyDeps?: boolean;
   /** fn 和 deps 均可以收集依赖，对应存在 task 的场景，deps 或 fn 两者保证至少有一个 */
-  fn?: MutateFn<T, P>;
-  task?: MutateTask<T, P>;
+  fn?: MutateFn<T, P, E>;
+  task?: MutateTask<T, P, E>;
   /** default: false, task 是否立即执行 */
   immediate?: boolean;
   /**
@@ -393,7 +403,7 @@ export interface IMutateFnItem<T = SharedState, P = ReadOnlyArr> {
 }
 
 /** std item 确保了 desc 一定存在 */
-export interface IMutateFnStdItem<T = any, P = ReadOnlyArr> extends IMutateFnItem<T, P> {
+export interface IMutateFnStdItem<T = any, P extends Arr = Arr, E extends SharedState = SharedState> extends IMutateFnItem<T, P, E> {
   /** 用户透传的原始 desc */
   oriDesc: string;
   /** 可能是内部生成的 desc */
@@ -408,14 +418,17 @@ export interface IMutateFnStdItem<T = any, P = ReadOnlyArr> extends IMutateFnIte
   isFake: boolean;
   /** default: true，是否启用中 */
   enabled: boolean;
+  /** 额外绑定的共享状态 */
+  extraBound: IBoundStateInfo<E>;
 }
 
-export interface IMutateFnLooseItem<T = SharedState, P = ReadOnlyArr> extends IMutateFnItem<T, P> {
+export interface IMutateFnLooseItem<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState>
+  extends IMutateFnItem<T, P, E> {
   /** 建议用户指定，无指定时内部会自动生成唯一 desc */
   desc?: FnDesc;
 }
 
-export type MutateFnDict<T = SharedState> = Dict<MutateFn<T> | IMutateFnItem<T>>;
+export type MutateFnDict<T = SharedState, E extends SharedState = SharedState> = Dict<MutateFn<T, any, E> | IMutateFnItem<T, any, E>>;
 
 export type MutateFnItemDict<T = SharedState> = Dict<IMutateFnItem<T>>;
 
@@ -431,14 +444,14 @@ export type ChangeDraftCb<T = Dict> = (mutableDraft: T) => Partial<T> | void;
 /**
  * 供 defineDeriveTask 使用的类型
  */
-export interface IDeriveTaskOptions<T = any, I extends ReadOnlyArr = any> {
-  fn: (params: IDeriveFnParams<T, I>) => T;
-  task?: (params: IDeriveFnTaskParams<T, I>) => Promise<T>;
+export interface IDeriveTaskOptions<R = any, I extends ReadOnlyArr = any, S = any> {
+  fn: (params: IDeriveFnParams<R, I, S>) => R;
+  task?: (params: IDeriveFnTaskParams<R, I, S>) => Promise<R>;
   immediate?: boolean;
 }
 
-export interface IDeriveFnItem<T = any, I extends ReadOnlyArr = any> extends IDeriveTaskOptions<T, I> {
-  deps?: () => I;
+export interface IDeriveFnItem<R = any, I extends ReadOnlyArr = any, S = any> extends IDeriveTaskOptions<R, I, S> {
+  deps?: (params: IBoundStateInfo<S>) => I;
 }
 
 export type DepsResult = { deps?: any[]; result: any };
@@ -610,9 +623,22 @@ export type DraftRootType<T = SharedState> = T extends Atom | ReadOnlyAtom ? Ato
  */
 export type DraftType<T = SharedState> = T extends Atom | ReadOnlyAtom ? AtomDraftVal<T> : T;
 
-export type StateRootType<T = SharedState> = T extends Atom | ReadOnlyAtom ? ReadOnlyAtom<T> : ReadOnlyDict<T>;
+export type StateRootType<T = SharedState> = T extends Atom | ReadOnlyAtom ? ReadOnlyAtom<T['val']> : ReadOnlyDict<T>;
 
 export type StateType<T = SharedState> = T extends Atom | ReadOnlyAtom ? ReadOnlyAtomVal<T> : ReadOnlyDict<T>;
+
+export interface IBoundStateInfo<S = any> {
+  state: StateType<S>;
+  stateRoot: StateRootType<S>;
+  isAtom: boolean;
+}
+
+export interface IStateInfo<T = SharedState, E extends SharedState = any> {
+  state: StateType<T>;
+  stateRoot: StateRootType<T>;
+  isAtom: boolean;
+  extraBound: IBoundStateInfo<E>;
+}
 
 export type SyncerFn = (mayEvent: any, ...args: any[]) => void;
 
@@ -692,6 +718,104 @@ type ActionCtx<T = any, P extends Dict | undefined = undefined, D extends Dict<F
   useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
 };
 
+type DefineMutateDerive<T extends SharedState = SharedState> = <I = SharedDict>(
+  inital: I | (() => I),
+) => <D = Dict<MutateFn<I, any, T> | IMutateFnItem<I, any, T>>>(
+  mutateDef: D | ((stateInfo: IStateInfo<I, T>) => D),
+) => {
+  derivedState: I;
+  useDerivedState: (options?: IUseSharedStateOptions) => [I, SetState<I>, IInsRenderInfo];
+  witnessDict: { [K in keyof D]: IMutateWitness<T> };
+  getLoading: () => Ext<LoadingState<D>>;
+  useLoading: () => Ext<LoadingState<D>>;
+  useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
+};
+
+/**
+ * 定义全量派生结果
+ * ```ts
+ * //【可选】约束各个结果的 deps 函数返回类型（可选），result 返回结果类型（必须）
+ * type DR = {
+ *  a: { result: number };
+ *  b: { result: number };
+ *  c: { deps: [number, string], result: number };
+ *  // 其他可以需要时在补充，不强制要求为每一个结果 key 都定义类型约束，但为了可维护性建议都补上
+ * };
+ *
+ * // 不约束 payloads 类型时写为 ctxp.defineFullDerive()({ ... });
+ * const df = ctxp.defineFullDerive<DR>()({
+ *   a() {
+ *     return priceState.a.b.c + 10000;
+ *   },
+ *   b() {
+ *    return priceState.a.b.c + 20000;
+ *   },
+ *   c: {
+ *     deps: () => [priceState.a.b1.c1, priceState.info.name],
+ *     fn: () => 1,
+ *     async task(params) {
+ *       const [c1, name] = params.input;
+ *       await delay(2000);
+ *       return 1 + c1;
+ *     },
+ *   }
+ * });
+ *
+ * df.result.a; // 派生结果a
+ * df.result.b; // 派生结果c
+ * ```
+ */
+type DefineFullDerive<T extends SharedState = SharedState> = <DR extends DepsResultDict | undefined = undefined>(
+  throwErr?: boolean,
+) => <
+  D extends /**
+   * 如果透传了 DR 约束返回结果类型和 deps 返回类型，则使用 DR 来约束
+   * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
+   */ DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
+>(
+  deriveFnDict: D | ((boundStateInfo: IBoundStateInfo<T>) => D),
+) => {
+  /**
+   * 全量派生的返回结果集合
+   */
+  result: { [K in keyof D]: FnResultValType<D[K]> };
+  /**
+   * 全量派生的返回结果助手对象
+   */
+  helper: {
+    [K in keyof D]: {
+      /**
+       * 手动运行派生函数
+       */
+      runDeriveFn: (throwErr?: boolean) => [FnResultValType<D[K]>, null | Error];
+      /**
+       * 手动运行派生函数异步任务
+       */
+      runDeriveTask: (throwErr?: boolean) => Promise<[FnResultValType<D[K]>, null | Error]>;
+      /**
+       * 组件中使用 useDerived 拿到结果（注：结果已拆箱）
+       */
+      useDerived: () => FnResultValType<D[K]>;
+      /**
+       * 异步结果可使用 useDerivedInfo 获得结果、执行状态
+       */
+      useDerivedInfo: () => [FnResultValType<D[K]>, LoadingStatus, IRenderInfo];
+    };
+  };
+};
+
+/**
+ * 对自身状态节点定义派生函数，为统一 define api 调用风格，此处采用柯里化方式
+ */
+type DefineMutateSelf<T extends SharedState = SharedState> = () => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
+  mutateDef: D | ((stateInfo: IBoundStateInfo<T>) => D),
+) => {
+  witnessDict: { [K in keyof D]: IMutateWitness<T> };
+  getLoading: () => Ext<LoadingState<D>>;
+  useLoading: () => Ext<LoadingState<D>>;
+  useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
+};
+
 export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICreateOptions<T>> {
   /**
    * 标识当前对象是否是 atom 对象
@@ -714,7 +838,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   syncer: Syncer<T>;
   setState: SetState<T>;
   setDraft: SetDraft<T>;
-  mutate: <P extends ReadOnlyArr = ReadOnlyArr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
+  mutate: <P extends Arr = Arr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
   /**
@@ -982,110 +1106,17 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     useLoading: () => Ext<LoadingState<D>>;
     useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
   };
-  /**
-   * 对自身状态节点定义派生函数，为统一 define api 调用风格，此处采用柯里化方式
-   */
-  defineMutateSelf: () => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
-    mutateDef: D,
-  ) => {
-    witnessDict: { [K in keyof D]: IMutateWitness<T> };
-    getLoading: () => Ext<LoadingState<D>>;
-    useLoading: () => Ext<LoadingState<D>>;
-    useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
-  };
+}
+
+export interface ISharedCtx<T extends SharedDict = SharedDict> extends ISharedStateCtxBase<T> {
+  state: ReadOnlyDict<T>;
+  stateRoot: ReadOnlyDict<T>;
   /**
    * 全新定义一个状态对象并对其定义派生函数，这些函数可依赖其他 atom 或 share 对象来计算当前对象的各个节点值
    */
-  defineMutateDerive: <T = SharedDict>(
-    inital: T | (() => T),
-  ) => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
-    mutateDef: D,
-  ) => {
-    derivedState: T;
-    useDerivedState: (options?: IUseSharedStateOptions) => [T, IInsRenderInfo];
-    witnessDict: { [K in keyof D]: IMutateWitness<T> };
-    getLoading: () => Ext<LoadingState<D>>;
-    useLoading: () => Ext<LoadingState<D>>;
-    useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
-  };
-  /**
-   * 定义全量派生结果
-   * ```ts
-   * //【可选】约束各个结果的 deps 函数返回类型（可选），result 返回结果类型（必须）
-   * type DR = {
-   *  a: { result: number };
-   *  b: { result: number };
-   *  c: { deps: [number, string], result: number };
-   *  // 其他可以需要时在补充，不强制要求为每一个结果 key 都定义类型约束，但为了可维护性建议都补上
-   * };
-   *
-   * // 不约束 payloads 类型时写为 ctxp.defineFullDerive()({ ... });
-   * const df = ctxp.defineFullDerive<DR>()({
-   *   a() {
-   *     return priceState.a.b.c + 10000;
-   *   },
-   *   b() {
-   *    return priceState.a.b.c + 20000;
-   *   },
-   *   c: {
-   *     deps: () => [priceState.a.b1.c1, priceState.info.name],
-   *     fn: () => 1,
-   *     async task(params) {
-   *       const [c1, name] = params.input;
-   *       await delay(2000);
-   *       return 1 + c1;
-   *     },
-   *   }
-   * });
-   *
-   * df.result.a; // 派生结果a
-   * df.result.b; // 派生结果c
-   * ```
-   */
-  defineFullDerive: <DR extends DepsResultDict | undefined = undefined>(
-    throwErr?: boolean,
-  ) => <
-    D extends /**
-     * 如果透传了 DR 约束返回结果类型和 deps 返回类型，则使用 DR 来约束
-     * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
-     */ DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
-  >(
-    deriveFnDict: D,
-  ) => {
-    /**
-     * 全量派生的返回结果集合
-     */
-    result: { [K in keyof D]: FnResultValType<D[K]> };
-    /**
-     * 全量派生的返回结果助手对象
-     */
-    helper: {
-      [K in keyof D]: {
-        /**
-         * 手动运行派生函数
-         */
-        runDeriveFn: (throwErr?: boolean) => [FnResultValType<D[K]>, null | Error];
-        /**
-         * 手动运行派生函数异步任务
-         */
-        runDeriveTask: (throwErr?: boolean) => Promise<[FnResultValType<D[K]>, null | Error]>;
-        /**
-         * 组件中使用 useDerived 拿到结果（注：结果已拆箱）
-         */
-        useDerived: () => FnResultValType<D[K]>;
-        /**
-         * 异步结果可使用 useDerivedInfo 获得结果、执行状态
-         */
-        useDerivedInfo: () => [FnResultValType<D[K]>, LoadingStatus, IRenderInfo];
-      };
-    };
-  };
-}
-
-export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
-  state: ReadOnlyDict<T>;
-  stateRoot: ReadOnlyDict<T>;
-  stateVal: ReadOnlyDict<T>;
+  defineMutateDerive: DefineMutateDerive<T>;
+  defineMutateSelf: DefineMutateSelf<T>;
+  defineFullDerive: DefineFullDerive<T>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
@@ -1093,19 +1124,31 @@ export interface ISharedCtx<T = SharedDict> extends ISharedStateCtxBase<T> {
 
 export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
   /**
-   * state 指向 stateRoot ，保留 state 命名是为了用户从 atom 切换 atomx 时，
-   * 保留 state 语义不变，即以下两种写法均 ok
+   * state 指向共享状态拆箱后的值引用，
+   * 因元组结果第一位固定指向 stateRoot，所以需要注意元组解构转为对象解构的命名方式
    * ```
+   * ❌ 从元组解构转为对象解构后，依然取 state
    * const [ state ] = atom(1) -> const { state } = atomx(1)
-   * const [ stateRoot ] = atom(1) -> const { stateRoot } = atomx(1)
+   * ✅ 从元组解构转为对象解构后，取 stateRoot 才是元组第一位指向的引用
+   * const [ state ] = atom(1) -> const { stateRoot: state } = atomx(1)
+   * const [ stateRoot ] = atom(1) -> const { stateRoot: } = atomx(1)
    * ```
    */
-  state: ReadOnlyAtom<T>;
+  state: ReadOnlyAtomVal<Atom<T>>;
+  /**
+   * stateRoot 指向共享状态未拆箱的值引用，即根值引用
+   * ```txt
+   * 1 对于 share 接口来说，ctx.stateRoot === ctx.state
+   * 2 对于 atom 接口来说，ctx.stateRoot.val === ctx.state（近似等，stateRoot.val 是临时代理对象，state 是稳定代理对象）
+   * ```
+   */
   stateRoot: ReadOnlyAtom<T>;
   /**
-   * 指向拆箱后的值引用
+   * 全新定义一个状态对象并对其定义派生函数，这些函数可依赖其他 atom 或 share 对象来计算当前对象的各个节点值
    */
-  stateVal: ReadOnlyAtomVal<Atom<T>>;
+  defineMutateDerive: DefineMutateDerive<Atom<T>>;
+  defineMutateSelf: DefineMutateSelf<Atom<T>>;
+  defineFullDerive: DefineFullDerive<Atom<T>>;
   useState: (options?: IUseSharedStateOptions<T>) => [T, SetState<T>, IInsRenderInfo];
   /** 区别于 useState 返回元组，useStateX 返回对象 */
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
@@ -1385,7 +1428,7 @@ export type WatchOptionsType = WatchFnDeps | IWatchOptions;
 
 export type WatchEffectOptionsType = WatchFnDeps | IWatchEffectOptions;
 
-export interface IDeriveFnParamsBase<I = readonly any[]> {
+export interface IDeriveFnParamsBase<I = readonly any[], S = any> extends IBoundStateInfo<S> {
   /** 函数的运行编号，每次自增1 */
   sn: number;
   isFirstCall: boolean;
@@ -1393,13 +1436,13 @@ export interface IDeriveFnParamsBase<I = readonly any[]> {
   input: I;
 }
 
-export interface IDeriveFnParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<I> {
-  prevResult: T | null;
+export interface IDeriveFnParams<R = any, I extends ReadOnlyArr = any, S = any> extends IDeriveFnParamsBase<I, S> {
+  prevResult: R | null;
 }
 
-export interface IDeriveFnTaskParams<T = any, I extends ReadOnlyArr = any> extends IDeriveFnParamsBase<I> {
+export interface IDeriveFnTaskParams<R = any, I extends ReadOnlyArr = any, S = any> extends IDeriveFnParamsBase<I, S> {
   /** 区别于 IDeriveFnParams，执行 task 时，prevResult 一定有值 */
-  prevResult: T;
+  prevResult: R;
 }
 
 export interface IUnmountInfo {
@@ -1446,6 +1489,14 @@ export interface IFnCtx {
    * 当前函数的计算状态
    */
   status: LoadingStatus;
+  /**
+   * 当前函数绑定的共享 state，没绑定的话则是 {}
+   */
+  stateRoot: SharedState;
+  /**
+   * 共享状态是否是 atom 返回
+   */
+  isStateAtom: boolean;
   /** 当前函数对应的下游函数中还剩几个需要执行 */
   remainRunCount: number;
   /**
@@ -1532,12 +1583,14 @@ export interface IFnRenderInfo {
   /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
   sn: number;
   /**
-   * 获取组件实例当前渲染阶段收集的依赖，如渲染过程中调用，是一个动态变化的数组
+   * 获取组件的当前渲染周期里收集到依赖列表，通常需要在 useEffect 里调用能获取当前渲染周期收集的所有依赖，
+   * 如在渲染过程中直接调用获取的是正在收集中的依赖（注：依赖包含了 deps 函数固定住的依赖）
    */
   getDeps: () => string[];
 }
 
 export interface IRenderInfo<T = any> extends IFnRenderInfo {
+  isAtom: boolean;
   setDraft: SetDraft<T>;
   /**
    * 获取组件实例上一轮渲染阶段收集的依赖
@@ -1555,19 +1608,9 @@ export interface ICompAtomCtx<T = any> extends IRenderInfo<T> {
   setState: SetState<T>;
 }
 
-export interface IInsRenderInfo<T = any> {
-  /** 渲染序号，多个实例拥有相同的此值表示属于同一批次被触发渲染 */
-  sn: number;
-  /** 实例 key */
-  insKey: number;
-  /**
-   * 获取组件的当前渲染周期里收集到依赖列表，通常需要在 useEffect 里调用能获取当前渲染周期收集的所有依赖，
-   * 如在渲染过程中直接调用获取的是正在收集中的依赖（注：依赖包含了 deps 函数固定住的依赖）
-   */
-  getDeps: () => string[];
+export interface IInsRenderInfo<T = any> extends IFnRenderInfo {
+  isAtom: boolean;
   snap: any;
-  /** 渲染时间 */
-  time: number;
   /**
    * 获取组件的前一次渲染周期里收集到依赖列表（注：依赖包含了 deps 函数固定住的依赖）
    */
@@ -1638,7 +1681,7 @@ export interface IInsCtx<T = Dict> {
 
 export type InsCtxMap = Map<number, IInsCtx>;
 
-export interface ICreateDeriveLogicOptions {
+export interface ICreateDeriveLogicOptions<S extends SharedState = SharedState> {
   isAsync?: boolean;
   showLoading?: boolean;
   scopeType?: ScopeType;
@@ -1649,6 +1692,7 @@ export interface ICreateDeriveLogicOptions {
   returnUpstreamResult?: boolean;
   forAtom?: boolean;
   immediate?: boolean;
+  stateRoot?: S;
 }
 
 export interface IRuleConf {

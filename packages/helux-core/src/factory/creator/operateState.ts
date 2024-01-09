@@ -58,13 +58,6 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     // 2 降低死循环可能性，例如在 watch 回调里调用顶层的 setState
     if (mutateCtx.enableDep) {
       // 支持对 draft 操作时可以收集到依赖： draft.a = draft.b + 1
-      // 来自实例的定制读行为，目前主要是响应式对象会有此操作，
-      // 因为多个实例共享了一个响应式对象，但需要有自己的读行为操作来为实例本身收集依赖
-      // 注：全局响应式对象的读行为已将 currentOnRead 置空
-      if (mutateCtx.onRead) {
-        // 来自实例 reactive 透传的 onRead
-        mutateCtx.onRead(opParams);
-      }
       if (currReactive.onRead) {
         // 来自顶层 reactive 透传的 onRead
         currReactive.onRead(opParams);

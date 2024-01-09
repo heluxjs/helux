@@ -331,14 +331,14 @@ const [finalPriceState] = share({ retA: 0, time: 0 }, {
 - 通过顶层 api 定义**可变派生**
 
 ```ts
-import { atomMutate, atom, share, mutate } from 'helux';
+import { atom, share, mutate } from 'helux';
 
 const [baseAtom] = atom(1);
 const [numAtom] = atom(3000);
 const [obj] = share({ a: 1 });
 
 // 为 atom 对象创建 mutate 函数
-atomMutate(numAtom)({
+mutate(numAtom)({
   fn: (draft) => (draft.val = baseAtom.val + 100),
   desc: 'mutateNumAtomVal',
 });

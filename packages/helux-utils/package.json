@@ -1,6 +1,6 @@
 {
   "name": "@helux/utils",
-  "version": "4.0.3",
+  "version": "4.1.0",
   "description": "helux utils lib",
   "keywords": [
     "helux",
@@ -20,7 +20,7 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "src/index.d.ts",
   "files": [
@@ -39,7 +39,6 @@
   "bundleDependencies": false,
   "publishConfig": {
     "access": "public",
-    "main": "dist/index.js",
     "registry": "https://registry.npmjs.org/"
   },
   "deprecated": false

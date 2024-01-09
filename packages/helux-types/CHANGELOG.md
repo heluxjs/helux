@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.1.0
+
+### Minor Changes
+
+- c5d1871: build(4.1.0): allow derive,mutate bind one extra shared state,now modular can be clone easily, fix reactive markUsing logic
+
 ## 4.0.3
 
 ## 4.0.2

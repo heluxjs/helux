@@ -27,6 +27,7 @@ export function buildInternal(
     insSetDraft: SetDraft;
     setStateFactory: SetStateFactory;
     innerSetState: InnerSetState;
+    sharedRoot: Ext<SharedState>;
     sharedState: Ext<SharedState>;
     ruleConf: IRuleConf;
     isDeep: boolean;

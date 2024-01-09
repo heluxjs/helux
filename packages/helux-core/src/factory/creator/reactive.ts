@@ -127,13 +127,14 @@ function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAt
     meta = buildMeta(internal, { isTop: true, from });
     metas.set(sharedKey, meta);
     REACTIVE_META.set(meta.key, meta);
-    // mark using
-    REACTIVE_META.markUsing(meta.key);
     meta.fnKey = TRIGGERED_WATCH.current();
   }
 
+  // mark using
+  REACTIVE_META.markUsing(meta.key);
   // 当前 reactive 操作来自于实例则替换为实例的 onRead，反之则置空 onRead
   meta.onRead = insKey ? options.onRead : undefined;
+  meta.insKey = insKey;
   const { draft } = meta;
   return { val: forAtom ? draft.val : draft, meta };
 }

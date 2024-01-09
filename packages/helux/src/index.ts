@@ -57,6 +57,7 @@ export const {
   mutateDict,
   runMutate,
   runMutateTask,
+  defineMutateFnItem,
   // sync api
   sync,
   syncer,
@@ -72,7 +73,9 @@ export const {
   reactiveDesc,
   flush,
   isAtom,
+  isSharedState,
   isDerivedAtom,
+  isDerivedResult,
   storeSrv,
   shallowCompare,
   markRaw,

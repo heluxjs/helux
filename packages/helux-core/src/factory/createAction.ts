@@ -3,6 +3,7 @@ import { getStatusKey, setLoadStatus } from '../factory/creator/loading';
 import type { Ext, Fn, SharedState } from '../types/base';
 import { checkSharedStrict } from './common/check';
 import { newMutateFnItem } from './common/ctor';
+import { ensureBool } from './common/util';
 import { handlePartial } from './creator/mutateDeep';
 import { callAsyncMutateFnLogic } from './creator/mutateFn';
 
@@ -16,6 +17,7 @@ function innerCreate<T = SharedState>(
   options: { task: Ext<Fn>; desc: string; label: string; throwErr?: boolean; mergeReturn?: boolean },
 ) {
   const { label, throwErr, desc = '', task, mergeReturn = true } = options;
+  const outThrowErr = ensureBool(throwErr, false);
   const internal = checkSharedStrict(state, { label });
   const { forAtom } = internal;
 
@@ -23,7 +25,8 @@ function innerCreate<T = SharedState>(
   // now fn can have a name 'action' at dev mode
   const action = (payload: any, throwFnErr?: boolean) => {
     // 用户调用 action 独立定义的 throwErr 优先级高于 创建 action 函数时预设的 throwErr
-    const throwErrVar = throwFnErr ?? throwErr;
+    // throwErr 谨慎处理，只严格接受布尔值
+    const throwErrVar = ensureBool(throwFnErr, outThrowErr);
     const fnItem = newMutateFnItem({ desc, task, depKeys: [] });
     const dispatch = (task: any, payload: any) => {
       // 可能 task 自身就是 action，例如

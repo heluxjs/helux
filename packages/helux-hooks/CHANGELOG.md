@@ -1,5 +1,18 @@
 # @helux/hooks
 
+## 4.1.0
+
+### Minor Changes
+
+- c5d1871: build(4.1.0): allow derive,mutate bind one extra shared state,now modular can be clone easily, fix reactive markUsing logic
+
+### Patch Changes
+
+- Updated dependencies [c5d1871]
+  - @helux/hooks-impl@4.1.0
+  - @helux/types@4.1.0
+  - @helux/utils@4.1.0
+
 ## 4.0.3
 
 ### Patch Changes
