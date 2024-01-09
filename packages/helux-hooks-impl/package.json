@@ -1,6 +1,6 @@
 {
   "name": "@helux/hooks-impl",
-  "version": "4.0.3",
+  "version": "4.1.0",
   "description": "helux hooks implement lib",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -16,7 +16,7 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
-  "main": "main/index.ts",
+  "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "src/index.d.ts",
   "files": [
@@ -38,7 +38,6 @@
   "bundleDependencies": false,
   "publishConfig": {
     "access": "public",
-    "main": "dist/index.js",
     "registry": "https://registry.npmjs.org/"
   },
   "deprecated": false
