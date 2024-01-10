@@ -1,0 +1,46 @@
+{
+  "name": "@helux/openinula",
+  "version": "4.0.1",
+  "description": "State library for preact that integrates atom, signal, collection dep, derive and watch.",
+  "bugs": {
+    "url": "https://github.com/heluxjs/helux/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heluxjs/helux",
+    "directory": "packages/helux"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "fantasticsoul",
+    "email": "624313307@qq.com",
+    "url": "https://github.com/fantasticsoul"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "src/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@helux/core": "workspace:^",
+    "openinula": "0.1.2-SNAPSHOT"
+  },
+  "peerDependencies": {
+    "openinula": "0.1.2-SNAPSHOT"
+  },
+  "bundleDependencies": [],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "deprecated": false
+}
