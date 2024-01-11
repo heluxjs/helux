@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.1.2
+
+### Patch Changes
+
+- b4a9cee: build(4.1.2): bump limu to get length and size dep
+
 ## 4.1.1
 
 ### Patch Changes
