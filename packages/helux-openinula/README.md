@@ -4,7 +4,7 @@
 
 ## desc
 
-[helux](https://heluxjs.github.io/helux),集原子，信号、依赖追踪为一体，支持细粒度响应式更新的状态引擎（兼容所有类react库，包括react18）
+[helux](https://heluxjs.github.io/helux),集原子，信号、依赖追踪为一体，支持细粒度响应式更新的状态引擎（兼容所有类 react 库，包括 react18）
 
 ### install
 
@@ -15,5 +15,3 @@ npm i @helux/openinula
 ### online demo
 
 https://codesandbox.io/p/devbox/helux-openinula-66gfj2
-
-

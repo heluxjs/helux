@@ -1,10 +1,10 @@
-import { initHeluxContext } from "@helux/core";
-import * as React from "openinula";
+import { initHeluxContext } from '@helux/core';
+import * as React from 'openinula';
 
 console.log(React);
 
 const api = initHeluxContext({
-  heluxCtxKey: "__HELUX_openinula__",
+  heluxCtxKey: '__HELUX_openinula__',
   reactLib: React,
 });
 

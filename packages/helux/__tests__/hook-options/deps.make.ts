@@ -18,6 +18,13 @@ const getRootValDep = (rootValKey) => [rootValKey];
 
 const getArrAndIndexDep = (rootValKey) => [
   getDepKey(rootValKey, 'extra.list'),
+  getDepKey(rootValKey, 'extra.list.length'),
+  getDepKey(rootValKey, 'extra.list.0'),
+  getDepKey(rootValKey, 'extra.list.1'),
+];
+
+const getArrAndIndexDepNoLen = (rootValKey) => [
+  getDepKey(rootValKey, 'extra.list'),
   getDepKey(rootValKey, 'extra.list.0'),
   getDepKey(rootValKey, 'extra.list.1'),
 ];
@@ -28,8 +35,8 @@ const getAgeNameDep = (rootValKey) => [getDepKey(rootValKey, 'info.age'), getDep
 
 const getDescDep = (rootValKey) => [getDepKey(rootValKey, 'desc')];
 
-export function makeTest(options: { label: string; atom: typeof atom; useAtom: typeof useAtom }) {
-  const { label, atom, useAtom } = options;
+export function makeTest(options: { label: string; atom: typeof atom }) {
+  const { label, atom } = options;
 
   async function testNotRead(options: IOptions) {
     const { getMatchObj, deps } = options;
@@ -115,7 +122,7 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
 
     test('read list item by index', async () => {
       await testReadListItem({
-        getMatchObj: getArrAndIndexDep,
+        getMatchObj: getArrAndIndexDepNoLen,
         readArr: (state) => {
           const { list } = state.extra;
           noop(list[0], list[1]);
@@ -177,7 +184,7 @@ export function makeTest(options: { label: string; atom: typeof atom; useAtom: t
 
     test('read list item by index', async () => {
       await testReadListItem({
-        getMatchObj: (rootValKey) => getArrAndIndexDep(rootValKey).concat(getDescDep(rootValKey)),
+        getMatchObj: (rootValKey) => getArrAndIndexDepNoLen(rootValKey).concat(getDescDep(rootValKey)),
         deps: (state) => [state.desc],
         readArr: (state) => {
           const { list } = state.extra;
