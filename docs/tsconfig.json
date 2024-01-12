@@ -12,5 +12,5 @@
       "helux-docs/*": ["src/*", "*"]
     }
   },
-  "include": [".dumirc.ts", "src/**/*"]
+  "include": [".dumirc.ts", "src/**/*", "docs/**/*"]
 }
