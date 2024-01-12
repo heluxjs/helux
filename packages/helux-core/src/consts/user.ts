@@ -1,6 +1,6 @@
 import { VER as limuVer } from 'limu';
 
-export const VER = '4.1.2';
+export const VER = '4.1.3';
 
 export const LIMU_VER = limuVer;
 
