@@ -10,7 +10,7 @@ export type Dict<T = any> = Record<NumStrSymbol, T>;
 
 export type DictOrCb<T = any> = Record<NumStrSymbol, T> | (() => Record<NumStrSymbol, T>);
 
-export type PlainObject = Record<string, {}>;
+export type PlainObject = Record<string, {} | undefined | null>;
 
 export type DictN<T = any> = Record<number, T>;
 
