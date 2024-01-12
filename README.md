@@ -98,7 +98,11 @@ function Demo2() {
 
 ```tsx
 // 只会引起h1标签内部重渲染
-<h1>${numAtom}</h1>
+<h1>{$(numAtom)}</h1>
+
+// 格式化
+<h1>{$(numAtom, num=>`hi helux ${num.val}`)}</h1>
+<h1>{$(numAtom.val, num=>`hi helux ${num}`)}</h1>
 ```
 
 块响应

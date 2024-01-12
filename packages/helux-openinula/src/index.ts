@@ -1,16 +1,20 @@
-import { act } from '@testing-library/react';
-import * as React from 'react';
-import { initHeluxContext } from '../../helux-core/src/index';
+import { initHeluxContext } from '@helux/core';
+import * as React from 'openinula';
 
-window.alert = () => {};
+console.log(React);
 
-// pass act to avoid Warning:
-// An update to TestComponent inside a test was not wrapped in act(...).
-// This ensures that you're testing the behavior the user would see in the browser.
-// Learn more at https://reactjs.org/link/wrap-tests-with-act
-const api = initHeluxContext({ heluxCtxKey: '__HELUX__', reactLib: React, act });
+const api = initHeluxContext({
+  heluxCtxKey: '__HELUX_openinula__',
+  reactLib: React,
+});
 
-// 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json的 types 配置）
+/**
+ * for compatible wit v2 helux
+ * 这个接口仅为了兼容 helux v2 升级到 v3 后不报错
+ */
+export const createShared = api.share;
+
+// 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json 的 types 配置）
 export const {
   atom,
   atomx,
@@ -92,8 +96,3 @@ export const {
   addPlugin,
   cst,
 } = api;
-
-export const useShared = useAtom;
-export const actionAsync = action;
-export const atomAction = action;
-export const atomActionAsync = action;

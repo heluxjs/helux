@@ -4,7 +4,7 @@ order: 4
 
 # useWatchEffect
 
-`useWatchEffect` 功能同 `watchEffect``一样，区别在于 `useWatchEffect` 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听。
+`useWatchEffect` 功能同 `watchEffect`一样，区别在于 `useWatchEffect` 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听。
 
 :::info
 其他使用方式可参考[watchEffect](/api/hooks/use-effect)
