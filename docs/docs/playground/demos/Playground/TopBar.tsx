@@ -6,7 +6,14 @@ import * as codes from './codes';
 const labelAlias: any = {
   atom: {
     dict_atomx: 'dict(atomx)',
-  }
+    dict_sharex: 'dict(sharex)',
+  },
+  reactive: {
+    dict_atomx: 'dict(atomx)',
+  },
+  useReactive: {
+    primitive_atomx: 'primitive(atomx)',
+  },
 };
 
 function getLabel(name: string, subName: string) {

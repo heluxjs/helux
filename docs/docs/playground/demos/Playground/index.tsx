@@ -7,14 +7,13 @@ import Console from './Console';
 import * as codes from './codes';
 import './index.less';
 
-const subNames = {
+const scope = { helux, React, ...helux };
+const subNames: Record<string, string> = {
   atom: 'primitive',
   derive: 'primitive',
+  modular: 'defineActions',
 };
-const cachedSubNames: Record<string, string> = {
-  atom: subNames.atom,
-  derive: subNames.derive,
-};
+const cachedSubNames: Record<string, string> = { };
 
 function getCode(name: string, subName: string) {
   const codeDict: any = codes;
@@ -24,7 +23,7 @@ function getCode(name: string, subName: string) {
 export default () => {
   const [info, setInfo] = React.useState({ name: 'atom', subName: 'primitive', code: getCode('atom', 'primitive'), });
   const changeCode = (name: string) => {
-    const subName = cachedSubNames[name] || 'primitive';
+    const subName = cachedSubNames[name] || subNames[name] || 'primitive';
     setInfo({ name, subName, code: getCode(name, subName) });
   };
   const changeSubName = (subName: string) => {
@@ -34,7 +33,7 @@ export default () => {
   }
 
   return (
-    <LiveProvider noInline={true} code={info.code} scope={helux}>
+    <LiveProvider noInline={true} code={info.code} scope={scope}>
       <div className="playground-wrap">
         <div style={{ display: "flex", height: '100%', padding: '12px 100px' }}>
           <ApiMenus onClick={changeCode} name={info.name} />
