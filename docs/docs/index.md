@@ -5,6 +5,8 @@ hero:
   actions:
     - text: 快速开始
       link: /guide/quick-start
+    - text: Playground
+      link: /playground
     - text: Github
       link: https://github.com/heluxjs/helux
 features:
