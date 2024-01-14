@@ -2,7 +2,7 @@
 
 # Introducing helux
 
-[helux](https://github.com/heluxjs/helux) is a react state library that integrates `atom`, `signal`, and `dependency collection`. It has the following features:
+[helux](https://github.com/heluxjs/helux) is a state engine integrates `atom`, `signal`,`derive`, `watch` and `dep tracking`, supports fine-grained responsive updates, it is compatible with all react like libs (including React 18)
 
 <p align="center">
   <a href="https://heluxjs.github.io/helux" target="__blink">
@@ -16,6 +16,7 @@
 - [Helux-preact-starter](https://codesandbox.io/p/sandbox/helux-preact-starter-dnyzpy)
 - [Helux-nextjs-starter](https://github.com/heluxjs/helux-nextjs-starter)
 
+It has the following features:
 - Developed based on the fastest immutable js library [limu](https://github.com/tnfe/limu), with super performance
 - Atom supports dependency collection, which means that atom does not need to be split into details. Atom can be equivalent to model, which is naturally friendly to `DDD` domain-driven design.
 - Built-in signal response mechanism, which can achieve 0 hook encoding + DOM granular update
