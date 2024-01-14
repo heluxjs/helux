@@ -459,7 +459,7 @@ export type DepsResult = { deps?: any[]; result: any };
 export type DepsResultDict = Dict<DepsResult>;
 
 export type MultiDeriveFn<DR extends DepsResultDict = DepsResultDict> = {
-  [K in keyof DR]: DeriveFn<DR[K]['result']> | IDeriveFnItem<DR[K]['result'], DR[K]['deps']>;
+  [K in keyof DR]: DeriveFn<DR[K]['result']> | IDeriveFnItem<DR[K]['result'], Exclude<DR[K]['deps'], undefined>>;
 };
 
 /** partial state or cb */
@@ -1737,8 +1737,17 @@ export interface IDataChangingInfo extends IChangeInfoBase {
   forAtom: boolean;
 }
 
-export interface IDataChangedInfo extends IChangeInfoBase {
+export interface IDataChangedInfo {
+  forAtom: boolean;
+  /** 内部为共享状态生成的唯一key */
+  sharedKey: number;
+  /** 内部计算出的可用名字，若模块名重复则是 sharedKey 字符串，不重复则是 moduleName */
+  usefulName: string;
+  /** 用户创建共享状态时传递的模块名称 */
+  moduleName: string;
+  /** 内部生成的用于表示动作的字符串 */
   type: string;
+  /** 快照 */
   snap: SharedState;
 }
 
@@ -1756,11 +1765,21 @@ export type Middleware = (midCtx: IMiddlewareCtx) => void;
 
 export type PluginStateChangedOnCb = (info: IDataChangedInfo) => void;
 
+export type PluginStateCreatedOnCb = (info: IDataChangedInfo) => void;
+
 export type PluginStateChangedOn = (cb: PluginStateChangedOnCb) => void;
 
 export type PluginCommonOnCb = (data: any) => void;
 
-export type PluginCommonOn = (heluxEventName: string, cb: PluginCommonOnCb) => void;
+// export type PluginCommonOn = (heluxEventName: string, cb: PluginCommonOnCb) => void;
+export interface PluginCommonOn {
+  /** 共享状态创建时的事件 */
+  (heluxEventName: 'ON_DATA_CHANGED', cb: PluginStateChangedOnCb): void;
+  /** 共享状态变化时的事件 */
+  (heluxEventName: 'ON_SHARE_CREATED', cb: PluginStateCreatedOnCb): void;
+  /** 若需要其他事件可以提 issue，然后内部去实现 */
+  (heluxEventName: string, cb: PluginCommonOnCb): void;
+}
 
 export type PluginCtx = { on: PluginCommonOn; onStateChanged: PluginStateChangedOn };
 
