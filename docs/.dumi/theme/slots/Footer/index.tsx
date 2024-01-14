@@ -5,17 +5,16 @@ const Footer: FC = () => {
   return (
     <>
       <div className="dumi-default-footer">
-        Copyright © {new Date().getFullYear()} Tencent PCG TNTWeb.
+        Copyright © {new Date().getFullYear()} Tencent PCG
+        <a
+          style={{ paddingLeft: '6px' }}
+          href="https://github.com/fantasticsoul"
+          target="__blink"
+        >
+          fantasticsoul
+        </a>.
         <div>
-          Author:
-          <a
-            style={{ paddingLeft: '6px' }}
-            href="https://github.com/fantasticsoul"
-            target="__blink"
-          >
-            fantasticsoul
-          </a>
-          , Welcome to follow my open source project:
+          Welcome to follow my open source project:
           <a
             style={{ paddingLeft: '6px' }}
             href="https://github.com/heluxjs/helux"
