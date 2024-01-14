@@ -1,5 +1,12 @@
 # helux
 
+## 4.1.5
+
+### Patch Changes
+
+- Updated dependencies [dd2b873]
+  - @helux/core@4.1.5
+
 ## 4.1.4
 
 ### Patch Changes

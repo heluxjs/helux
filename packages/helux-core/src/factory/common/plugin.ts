@@ -24,7 +24,7 @@ export function emitDataChanged(internal: TInternal, mutateCtx: IMutateCtx) {
   const { bus } = getRootCtx();
   if (bus.canEmit(ON_DATA_CHANGED)) {
     const { from, desc } = mutateCtx;
-    const { sharedKey, moduleName, snap, usefulName, stateType } = internal;
+    const { forAtom, sharedKey, moduleName, snap, usefulName, stateType } = internal;
     let type;
     if (loadingTypes.includes(stateType)) {
       // 来自伴生的 loading 状态调用
@@ -32,7 +32,7 @@ export function emitDataChanged(internal: TInternal, mutateCtx: IMutateCtx) {
     } else {
       type = `${usefulName}@${from || 'Api'}/${desc}`;
     }
-    bus.emit(ON_DATA_CHANGED, { snap, sharedKey, moduleName, type });
+    bus.emit(ON_DATA_CHANGED, { forAtom, snap, sharedKey, moduleName, usefulName, type });
   }
 }
 
@@ -42,9 +42,9 @@ export function emitDataChanged(internal: TInternal, mutateCtx: IMutateCtx) {
 export function emitShareCreated(internal: TInternal) {
   const { bus } = getRootCtx();
   if (bus.canEmit(ON_SHARE_CREATED)) {
-    const { snap, sharedKey, moduleName, usefulName } = internal;
+    const { forAtom, snap, sharedKey, moduleName, usefulName } = internal;
     const type = `${usefulName}@FactoryApi/createShared`;
-    bus.emit(ON_SHARE_CREATED, { snap, sharedKey, moduleName, type });
+    bus.emit(ON_SHARE_CREATED, { forAtom, snap, sharedKey, moduleName, usefulName, type });
   }
 }
 

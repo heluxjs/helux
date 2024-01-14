@@ -1,5 +1,14 @@
 # @helux/core
 
+## 4.1.5
+
+### Patch Changes
+
+- dd2b873: build(4.1.5): optimize PluginCommonOn type
+  - @helux/hooks-impl@4.1.5
+  - @helux/types@4.1.5
+  - @helux/utils@4.1.5
+
 ## 4.1.4
 
 ### Patch Changes

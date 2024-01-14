@@ -1,6 +1,6 @@
 {
   "name": "@helux/core",
-  "version": "4.1.4",
+  "version": "4.1.5",
   "description": "A state library core integrates atom, signal, collection dep, derive and watch, it supports all react like frameworks.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
