@@ -1,7 +1,7 @@
 {
   "name": "helux",
   "version": "4.1.5",
-  "description": "Official React bindings for helux-core",
+  "description": "A reactive atomic state engine for React( including React 18).",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
