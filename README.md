@@ -208,3 +208,4 @@ watch(
 
 欢迎入群了解更多，由于微信讨论群号 200 人已满，需加作者微信号或 qq 群号，再邀请你如`helux & hel`讨论群（加号时记得备注 helux 或 hel）
 
+<img width="1006" alt="hel_and_helux" src="https://github.com/heluxjs/helux/assets/7334950/85180583-8101-4360-ae38-ab229aae580d">
