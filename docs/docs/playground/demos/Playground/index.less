@@ -1,3 +1,14 @@
+
+.playground-wrap {
+  width: 100vw;
+  height: calc(100vh - 76px);
+  position: fixed;
+  left: 0px;
+  top: 76px;
+  z-index: 1;
+  background-color: rgb(255, 255, 255);
+}
+
 /** 美化滚动条 [Start] */
 .playground-wrap .prism-code:-webkit-scrollbar {
   width: 5px !important;
@@ -24,16 +35,6 @@
 
 .playground-wrap .prism-code::-webkit-scrollbar-thumb:hover {
   background-color: #443082 !important;
-}
-
-.playground-wrap {
-  width: 100vw;
-  height: calc(100vh - 76px);
-  position: fixed;
-  left: 0px;
-  top: 76px;
-  z-index: 888;
-  background-color: rgb(255, 255, 255);
 }
 
 .playground-wrap .prism-code {
