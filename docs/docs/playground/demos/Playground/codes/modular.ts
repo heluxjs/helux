@@ -6,9 +6,11 @@ const { defineActions, useState } = sharex({ a: 1, b: { b1: { b2: 1 } } });
 const delay = (ms = 1000) => new Promise(r => setTimeout(r, ms));
 
 const { actions, useLoading } = defineActions()({
+  // sync action
   changeA({ draft }) {
     draft.a += 1;
   },
+  // async action
   async changeB2Async({ draft }) {
     await delay();
     const { b1 } = draft.b;

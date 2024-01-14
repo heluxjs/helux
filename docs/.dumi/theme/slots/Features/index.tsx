@@ -10,7 +10,14 @@ const imgs = [
   'https://tnfe.gtimg.com/image/ngex07gcez_1651755956158.png',
   'https://tnfe.gtimg.com/image/harzqyxcgz_1651755973579.png',
 ];
-const defaultImg = imgs[0];
+const stWrap: React.CSSProperties = {
+  boxShadow: '1px 2px 2px 1px rgba(0, 0, 255, .2)',
+  backgroundColor: '#fff',
+  borderRadius: '6px',
+  padding: '24px 24px',
+  boxSizing: 'border-box',
+  height: '270px',
+};
 
 function getImg(idx: number) {
   return imgs[idx] || imgs[0];
@@ -39,14 +46,6 @@ const Features: FC = () => {
           );
         }
 
-        const stWrap: React.CSSProperties = {
-          boxShadow: '1px 2px 2px 1px rgba(0, 0, 255, .2)',
-          backgroundColor: '#fff',
-          borderRadius: '6px',
-          padding: '24px 24px',
-          boxSizing: 'border-box',
-          height: '270px',
-        };
         return (
           <div
             key={title}

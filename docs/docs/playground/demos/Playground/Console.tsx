@@ -11,7 +11,7 @@ class HeluxConsole extends React.Component<any, { logs: any[] }> {
     Hook(window.console, (log) => {
       this.setState(({ logs }) => ({ logs: [...logs, Decode(log)] }))
     });
-    console.log('welcome to helux playground ^_^');
+    console.log('Welcome to helux playground ^_^');
   }
 
   render() {
