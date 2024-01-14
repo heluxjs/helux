@@ -1,7 +1,7 @@
 {
   "name": "helux",
-  "version": "4.1.2",
-  "description": "A state engine integrates atom, signal, derive, watch and dep tracking, supports fine-grained responsive updates, it is compatible with all react like libs (including React 18).",
+  "version": "4.1.5",
+  "description": "A reactive atomic state engine for React like.",
   "keywords": [],
   "author": {
     "name": "fantasticsoul",

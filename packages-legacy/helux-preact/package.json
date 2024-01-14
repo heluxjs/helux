@@ -1,7 +1,7 @@
 {
   "name": "@helux/preact",
   "version": "3.5.24",
-  "description": "State library for preact that integrates atom, signal, collection dep, derive and watch.",
+  "description": "A reactive atomic state engine for Preact.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
