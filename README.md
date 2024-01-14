@@ -72,9 +72,9 @@ function Demo() {
 }
 ```
 
-### dep collection
+### dep tracking
 
-**依赖收集**，组件渲染期间将实时收集到数据依赖
+**依赖追踪**，组件渲染期间将实时收集到数据依赖
 
 ```tsx
 import { useAtom } from 'helux';
