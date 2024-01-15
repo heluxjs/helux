@@ -1,5 +1,6 @@
 import React from 'react'
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live";
+import qs from "qs";
 import * as prism from 'prism-react-renderer';
 import * as helux from 'helux';
 import ApiMenus from './ApiMenus';
@@ -15,6 +16,9 @@ const subNames: Record<string, string> = {
   modular: 'defineActions',
 };
 const cachedSubNames: Record<string, string> = {};
+const obj = qs.parse(window.location.search, { ignoreQueryPrefix: true });
+const name = obj.n || 'atom';
+const subName = obj.s || 'primitive';
 
 function getCode(name: string, subName: string) {
   const codeDict: any = codes;
@@ -22,7 +26,7 @@ function getCode(name: string, subName: string) {
 }
 
 export default () => {
-  const [info, setInfo] = React.useState({ name: 'atom', subName: 'primitive', code: getCode('atom', 'primitive'), });
+  const [info, setInfo] = React.useState({ name, subName, code: getCode('atom', 'primitive'), });
   const changeCode = (name: string) => {
     const subName = cachedSubNames[name] || subNames[name] || 'primitive';
     setInfo({ name, subName, code: getCode(name, subName) });
