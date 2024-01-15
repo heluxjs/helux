@@ -1,5 +1,14 @@
 # @helux/core
 
+## 4.1.6
+
+### Patch Changes
+
+- a73b4e3: build(4.1.6): add isDraft
+  - @helux/hooks-impl@4.1.6
+  - @helux/types@4.1.6
+  - @helux/utils@4.1.6
+
 ## 4.1.5
 
 ### Patch Changes
