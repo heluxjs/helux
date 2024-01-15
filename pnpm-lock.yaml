@@ -95,7 +95,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: 4.1.5
+      helux: 4.1.6
       husky: ^8.0.1
       lint-staged: ^13.0.3
       lodash: ^4.17.21
@@ -105,6 +105,7 @@ importers:
       prettier-plugin-packagejson: ^2.2.18
       prism-react-renderer: ^2.3.1
       prism-themes: ^1.9.0
+      qs: ^6.11.2
       rc-motion: ^2.9.0
       rc-tree: ^5.8.2
       react: ^18.0.0
@@ -124,6 +125,7 @@ importers:
       lodash.throttle: 4.1.1
       prism-react-renderer: 2.3.1_react@18.2.0
       prism-themes: 1.9.0
+      qs: 6.11.2
       rc-motion: 2.9.0_biqbaboplfbrettd7655fr4n2y
       rc-tree: 5.8.2_biqbaboplfbrettd7655fr4n2y
       react-copy-to-clipboard: 5.1.0_react@18.2.0
@@ -15354,7 +15356,6 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.0.4
-    dev: true
 
   /query-string/6.14.1:
     resolution: {integrity: sha512-XDxAeVmpfu1/6IjyT/gXHOl+S0vQ9owggJ30hhWKdHAsNPOcasn5o9BW0eejZqL2e4vMjhAxoW3jVHcD6mbcYw==}
