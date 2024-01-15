@@ -37,7 +37,7 @@ import {
 } from './hooks';
 import { block, dynamicBlock, signal } from './signal';
 
-const { shallowCompare, isDiff } = limuUtils;
+const { shallowCompare, isDiff, isDraft } = limuUtils;
 const createShared = share; // for compatible wit v2 helux
 const $ = signal; // signal api alias
 
@@ -111,6 +111,7 @@ export {
   isDerivedResult,
   isDiff,
   isSharedState,
+  isDraft,
   shallowCompare,
   markRaw,
   storeSrv,

@@ -52,7 +52,7 @@
     "animated-scroll-to": "^2.3.0",
     "classnames": "^2.5.0",
     "console-feed": "^3.5.0",
-    "helux": "4.1.5",
+    "helux": "4.1.6",
     "lodash": "^4.17.21",
     "lodash.throttle": "^4.1.1",
     "prism-react-renderer": "^2.3.1",
