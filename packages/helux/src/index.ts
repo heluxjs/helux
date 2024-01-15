@@ -76,6 +76,7 @@ export const {
   isSharedState,
   isDerivedAtom,
   isDerivedResult,
+  isDraft,
   storeSrv,
   shallowCompare,
   markRaw,

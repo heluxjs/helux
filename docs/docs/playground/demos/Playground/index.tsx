@@ -31,7 +31,7 @@ export default () => {
     const { name } = info;
     cachedSubNames[name] = subName;
     setInfo({ name, subName, code: getCode(name, subName) });
-  }
+  };
 
   return (
     <LiveProvider noInline={true} code={info.code} scope={scope} theme={prism.themes.vsDark}>

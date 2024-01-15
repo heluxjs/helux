@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@4.1.5
+| helux-core@4.1.6
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '4.1.5';
+  VER: '4.1.6';
   LIMU_VER: string;
   EVENT_NAME: {
     /** 共享状态创建时的事件 */
@@ -746,6 +746,11 @@ interface IProduce {
  * 来自  LimuUtils.isDiff
  */
 export declare function isDiff(val1: any, val2: any): boolean;
+
+/**
+ * 来自  LimuUtils.isDraft，判断是否是草稿节点
+ */
+export declare function isDraft(mayDraft: any): boolean;
 
 export declare const produce: IProduce;
 
