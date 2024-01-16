@@ -2,6 +2,16 @@
 
 click helux-core [change log](./packages/helux-core/CHANGELOG.md) to see more details
 
+[released] - 2024-01-16
+
+- fix issue [136](https://github.com/heluxjs/helux/issues/136)
+
+- fix issue [125](https://github.com/heluxjs/helux/issues/125)
+
+- fix issue [137](https://github.com/heluxjs/helux/issues/125) 新增`fnScope.delPathAoa`来记录需要移除的依赖项，让 mutate 回调的 draft 读依赖记录更精确，避免误判为死循环
+
+- 优化`defineFullDerive`类型，自动推导出`params.state`累心
+
 [released] - 2023-11-24
 
 - 接入 `vitest`

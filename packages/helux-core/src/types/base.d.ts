@@ -768,10 +768,13 @@ type DefineMutateDerive<T extends SharedState = SharedState> = <I = SharedDict>(
 type DefineFullDerive<T extends SharedState = SharedState> = <DR extends DepsResultDict | undefined = undefined>(
   throwErr?: boolean,
 ) => <
-  D extends /**
+  /**
    * 如果透传了 DR 约束返回结果类型和 deps 返回类型，则使用 DR 来约束
    * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
-   */ DR extends DepsResultDict ? MultiDeriveFn<DR> & Dict<DeriveFn | IDeriveFnItem> : Dict<DeriveFn | IDeriveFnItem>,
+   */
+  D extends DR extends DepsResultDict
+    ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
+    : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
 >(
   deriveFnDict: D | ((boundStateInfo: IBoundStateInfo<T>) => D),
 ) => {

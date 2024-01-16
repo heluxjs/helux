@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   // latest total test case count: 228
+  // latest total test case count: 215 at >=2024-01-16
   test: {
     globals: true,
     environment: 'jsdom',

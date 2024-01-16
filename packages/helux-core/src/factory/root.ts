@@ -35,11 +35,22 @@ function buildFnScope() {
     isIgnore: false,
     /** 函数运行结束收集到的读依赖 depKeys */
     depKeys: [] as string[],
+    /**
+     * del path array of array
+     * 需要移除的 depKeys，解决 mutate 回调里 draft 里深层次读取修改的依赖收集不正确问题
+     * ```
+     * // 这里 get 收集到了 a，这个 a 需要移除，否则会造成死循环依赖误判
+     * draft.a.val = state.someKey + 1;
+     * ```
+     */
+    delPathAoa: [] as string[][],
     /** globalId to Array<insKey> */
     GID_INSKEYS_MAP: new Map<NumStrSymbol, number[]>(),
     FNKEY_STATIC_CTX_MAP: new Map<string, IFnCtx>(),
     FNKEY_HOOK_CTX_MAP: new Map<string, IFnCtx>(),
     DEPKEY_FNKEYS_MAP: new Map<string, string[]>(),
+    /** sharedKeyStr to fnKeys */
+    SKEY_FNKEYS_MAP: new Map<string, string[]>(),
     UNMOUNT_INFO_MAP: new Map<string, IUnmountInfo>(),
     /** 记录第一次运行的各个函数，辅助推导出计算状态 */
     DEPKEY_COMPUTING_FNKEYS_MAP: new Map<string, string[]>(),

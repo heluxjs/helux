@@ -42,6 +42,13 @@ export function execDepFns(opts: ICommitOpts) {
     FN_DEP_KEYS.set(depKeys);
   }
 
+  const findDirtyFnKeys = (key: string, forSharedKey = false) => {
+    // 通过根值去查询 fnCtx，内部再根据自己的依赖比较后得出需要执行的函数
+    const { firstLevelFnKeys, asyncFnKeys } = getDepFnStats(internal, key, runCountStats, forSharedKey);
+    dirtyFnKeys = dirtyFnKeys.concat(firstLevelFnKeys);
+    dirtyAsyncFnKeys = dirtyAsyncFnKeys.concat(asyncFnKeys);
+  };
+
   const analyzeDepKey = (key: string) => {
     // 值相等就忽略
     if (!diffVal(internal, key)) {
@@ -72,11 +79,8 @@ export function execDepFns(opts: ICommitOpts) {
         validInsKeys.push(insKey);
       }
     }
-
     dirtyInsKeys = dirtyInsKeys.concat(validInsKeys);
-    const { firstLevelFnKeys, asyncFnKeys } = getDepFnStats(internal, key, runCountStats);
-    dirtyFnKeys = dirtyFnKeys.concat(firstLevelFnKeys);
-    dirtyAsyncFnKeys = dirtyAsyncFnKeys.concat(asyncFnKeys);
+    findDirtyFnKeys(key);
   };
   depKeys.forEach((k) => analyzeDepKey(k));
   // 分析 rootValKey 结果刻意放 depKeys.forEach 之后执行，是需要复用 sharedScope.isStateChanged 结果，有以下2个作用
@@ -88,6 +92,9 @@ export function execDepFns(opts: ICommitOpts) {
   if (!depKeys.includes(rootValKey)) {
     analyzeDepKey(rootValKey);
   }
+  // fix issue 136
+  findDirtyFnKeys(rootValKey, true);
+
   // clear cached diff result
   clearDiff();
   // find id's ins keys
@@ -106,7 +113,11 @@ export function execDepFns(opts: ICommitOpts) {
   // start mark async derive fn computing
   dirtyAsyncFnKeys.forEach((fnKey) => markComputing(fnKey, runCountStats[fnKey]));
   // start execute derive/watch fns
-  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, { depKeys, sn, from, triggerReasons, internal, desc, isFirstCall, fromFnKey }));
+  const watchFnKeys: string[] = [];
+  const runOptions = { depKeys, sn, from, triggerReasons, watchFnKeys, skipWatch: true, internal, desc, isFirstCall, fromFnKey };
+  dirtyFnKeys.forEach((fnKey) => runFn(fnKey, runOptions));
+  const runOptionsOfWatch = { depKeys, sn, from, triggerReasons, internal, desc, isFirstCall, fromFnKey };
+  watchFnKeys.forEach((fnKey) => runFn(fnKey, runOptionsOfWatch));
 
   // start trigger rerender
   dirtyInsKeys.forEach((insKey) => updateIns(insCtxMap, insKey, sn));
