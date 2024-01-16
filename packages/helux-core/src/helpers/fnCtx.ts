@@ -1,7 +1,8 @@
-import { includeOne, matchDictKey, nodupPush } from '@helux/utils';
+import { delListItem, includeOne, matchDictKey, nodupPush } from '@helux/utils';
 import { newFnCtx } from '../factory/common/ctor';
 import { getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
+import { getDepKeyByPath } from '../factory/common/util';
 import type { Dict, Fn, IFnCtx, ScopeType } from '../types/base';
 import { delFnDep, delHistoryUnmoutFnCtx } from './fnDep';
 
@@ -29,7 +30,7 @@ export function markFnEnd() {
   const fnCtx = getFnCtx(runningFnKey);
   let targetKeys: string[] = [];
   if (fnCtx) {
-    const { depKeys: afterRunDepKeys } = fnScope;
+    const { depKeys: afterRunDepKeys, delPathAoa, runningSharedKey } = fnScope;
     const { depKeys } = fnCtx;
 
     const dict: Dict<number> = {};
@@ -44,11 +45,21 @@ export function markFnEnd() {
     });
     const validDepKeys = Object.keys(dict);
     validDepKeys.forEach((depKey) => nodupPush(depKeys, depKey));
+
+    // 移除认为是冗余的依赖
+    delPathAoa.forEach((pathArr) => {
+      const len = pathArr.length;
+      for (let i = 1; i <= len; i++) {
+        const toDel = getDepKeyByPath(pathArr.slice(0, i), runningSharedKey);
+        delListItem(depKeys, toDel);
+      }
+    });
     targetKeys = depKeys.slice(); // 返回收集到依赖，辅助判断死循环之用
   }
 
   fnScope.runningFnKey = '';
   fnScope.depKeys = [];
+  fnScope.delPathAoa = [];
   fnScope.runningSharedKey = 0;
   return targetKeys;
 }

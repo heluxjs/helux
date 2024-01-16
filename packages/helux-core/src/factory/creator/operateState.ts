@@ -39,7 +39,7 @@ function putId(keyIds: KeyIdsDict, options: { writeKey: string; ids: NumStrSymbo
 export function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
   const { isChanged, fullKeyPath, keyPath, parentType, value } = opParams;
   const { internal, mutateCtx } = opts;
-  const { arrKeyDict, isReactive, readKeys } = mutateCtx;
+  const { arrKeyDict, isReactive, readKeys, from } = mutateCtx;
   const { sharedKey } = internal;
   const arrLike = isArrLike(parentType);
   const currReactive = REACTIVE_META.current();
@@ -73,6 +73,12 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
       }
     }
     return;
+  }
+
+  // 来自于 mutate 回调里的 draft 读写
+  if (MUTATE === from) {
+    const { delPathAoa, fnCtx } = getRunningFn();
+    fnCtx && delPathAoa.push(keyPath);
   }
 
   // 无任何变化的写操作

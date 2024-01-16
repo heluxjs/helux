@@ -9,6 +9,11 @@ import Console from './Console';
 import * as codes from './codes';
 import './index.less';
 
+function getCode(name: string, subName: string) {
+  const codeDict: any = codes;
+  return codeDict[name]?.[subName] || '';
+}
+
 const scope = { helux, React, ...helux };
 const subNames: Record<string, string> = {
   atom: 'primitive',
@@ -19,14 +24,10 @@ const cachedSubNames: Record<string, string> = {};
 const obj = qs.parse(window.location.search, { ignoreQueryPrefix: true });
 const name = obj.n || 'atom';
 const subName = obj.s || 'primitive';
-
-function getCode(name: string, subName: string) {
-  const codeDict: any = codes;
-  return codeDict[name]?.[subName] || '';
-}
+const code = getCode(name, subName);
 
 export default () => {
-  const [info, setInfo] = React.useState({ name, subName, code: getCode('atom', 'primitive'), });
+  const [info, setInfo] = React.useState({ name, subName, code });
   const changeCode = (name: string) => {
     const subName = cachedSubNames[name] || subNames[name] || 'primitive';
     setInfo({ name, subName, code: getCode(name, subName) });

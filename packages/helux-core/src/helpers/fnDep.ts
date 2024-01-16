@@ -1,5 +1,5 @@
 import { nodupPush, safeMapGet } from '@helux/utils';
-import { EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
+import { DERIVE, EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
 import { delFnDepData, getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
 import { hasChangedNode } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
@@ -24,7 +24,7 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
     DEPS_CB.current()(inputDepKeys);
     return;
   }
-  const { DEPKEY_FNKEYS_MAP } = getFnScope();
+  const { DEPKEY_FNKEYS_MAP, SKEY_FNKEYS_MAP } = getFnScope();
   const { belongCtx, sharedKey } = options;
 
   if (sharedKey) {
@@ -55,6 +55,9 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
 
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);
     nodupPush(fnKeys, fnKey);
+    const [sKey] = depKey.split('/');
+    const fnKeysOfSkey = safeMapGet(SKEY_FNKEYS_MAP, sKey, []);
+    nodupPush(fnKeysOfSkey, fnKey);
   });
 }
 
@@ -99,9 +102,10 @@ export function getDepSharedStateFeature(fn: IFnCtx) {
 /**
  * 获得依赖的第一层函数、异步函数
  */
-export function getDepFnStats(internal: TInternal, depKey: string, runCountStats: Dict<number>) {
-  const { DEPKEY_FNKEYS_MAP } = getFnScope();
-  const fnKeys = DEPKEY_FNKEYS_MAP.get(depKey) || [];
+export function getDepFnStats(internal: TInternal, depKey: string, runCountStats: Dict<number>, isSharedKey = false) {
+  const { DEPKEY_FNKEYS_MAP, SKEY_FNKEYS_MAP } = getFnScope();
+  const map = isSharedKey ? SKEY_FNKEYS_MAP : DEPKEY_FNKEYS_MAP;
+  const fnKeys = map.get(depKey) || [];
   const firstLevelFnKeys: string[] = [];
   const asyncFnKeys: string[] = [];
 
@@ -113,11 +117,16 @@ export function getDepFnStats(internal: TInternal, depKey: string, runCountStats
       if (fnCtx.isFirstLevel) {
         firstLevelFnKeys.push(fnKey);
       }
-      if (fnCtx.isAsync) {
+      if (fnCtx.isAsync && fnCtx.fnType === DERIVE) {
         asyncFnKeys.push(fnKey);
       }
+
       const count = runCountStats[fnKey]; // 每个函数将要运行的次数统计
-      runCountStats[fnKey] = count === undefined ? 1 : count + 1;
+      if (count === undefined) {
+        runCountStats[fnKey] = 1;
+      } else if (!isSharedKey) {
+        runCountStats[fnKey] = count + 1;
+      }
     }
   });
 

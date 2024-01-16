@@ -1,4 +1,4 @@
-import { enureReturnArr, isPromise, noopVoid, tryAlert } from '@helux/utils';
+import { enureReturnArr, isPromise, nodupPush, noopVoid, tryAlert } from '@helux/utils';
 import { ASYNC_TYPE, FROM, WATCH } from '../consts';
 import { fakeFnCtx, fakeInternal } from '../factory/common/fake';
 import { delComputingFnKey, getFnCtx, getFnCtxByObj, putComputingFnKey } from '../factory/common/fnScope';
@@ -20,6 +20,8 @@ interface IRunFnOpt {
   force?: boolean;
   isFirstCall?: boolean;
   triggerReasons?: TriggerReason[];
+  watchFnKeys?: string[];
+  skipWatch?: boolean;
   err?: any;
   internal?: TInternal;
   desc?: any;
@@ -131,6 +133,8 @@ export function runFn(fnKey: string, options: IRunFnOpt = {}) {
     forceTask = false,
     throwErr = false,
     triggerReasons = [],
+    watchFnKeys = [],
+    skipWatch = false,
     sn = 0,
     err,
     unbox = false,
@@ -146,6 +150,10 @@ export function runFn(fnKey: string, options: IRunFnOpt = {}) {
     return resultTuple(new Error(`not a valid watch or derive cb for key ${fnKey}`));
   }
   if (fnCtx.fnType === WATCH) {
+    // watch 需要合并后再外部独立执行
+    if (skipWatch) {
+      return nodupPush(watchFnKeys, fnCtx.fnKey);
+    }
     return runWatch(fnCtx, options);
   }
 
@@ -184,8 +192,9 @@ export function runFn(fnKey: string, options: IRunFnOpt = {}) {
       fnCtx.setLoading(false, err);
     }
     triggerUpdate();
+    const runOptions = { isFirstCall, sn, triggerReasons, err, watchFnKeys, skipWatch };
     fnCtx.nextLevelFnKeys.forEach((key) => {
-      runFn(key, { isFirstCall, sn, triggerReasons, err });
+      runFn(key, runOptions);
     });
   };
 
