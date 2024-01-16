@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.2.0
+
+### Minor Changes
+
+- e63fbea: build(4.2.0): see change log 2024-01-16
+
 ## 4.1.6
 
 ## 4.1.5

@@ -1,5 +1,18 @@
 # @helux/core
 
+## 4.2.0
+
+### Minor Changes
+
+- e63fbea: build(4.2.0): see change log 2024-01-16
+
+### Patch Changes
+
+- Updated dependencies [e63fbea]
+  - @helux/hooks-impl@4.2.0
+  - @helux/types@4.2.0
+  - @helux/utils@4.2.0
+
 ## 4.1.6
 
 ### Patch Changes
