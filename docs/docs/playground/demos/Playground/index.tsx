@@ -44,8 +44,8 @@ export default () => {
         <div style={{ display: "flex", height: '100%', padding: '12px 100px' }}>
           <ApiMenus onClick={changeCode} name={info.name} />
           <div style={{ flex: "1 1 0px", height: '100%' }}>
-            <TopBar onClick={changeSubName} name={info.name} subName={info.subName} />
-            <LiveEditor style={{ height: '100%' }} />
+            <TopBar onClick={changeSubName} name={info.name} subName={info.subName} defaultCode={info}/>
+            <LiveEditor style={{ height: '100%' }} onChange={(value)=>{console.log("newCode=",value)}} />
           </div>
           <div style={{ flex: "1 1 0px", height: 'calc(100vh - 138px)' }}>
             {/* 空占位一个条 */}
