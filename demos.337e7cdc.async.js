@@ -135,7 +135,7 @@ const change = () => {
   },0);
 };
 
-render(<button onClick={ change } > change { $(reactive.b.b1.b2)}</button>);
+render(<button onClick={ change }> change { $(reactive.b.b1.b2)}</button>);
 `,_=`
 // state was already unboxed from { val: T } to T
 const { reactive } = atomx({ a: 1, b: { b1: { b2: 1 } } });
