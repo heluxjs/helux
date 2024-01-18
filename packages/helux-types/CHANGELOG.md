@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.2.1
+
+### Patch Changes
+
+- 35c2cf9: build(4.2.1): optimize util writing
+
 ## 4.2.0
 
 ### Minor Changes
