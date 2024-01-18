@@ -36,7 +36,7 @@ const change = () => {
   },0);
 };
 
-render(<button onClick={ change } > change { $(reactive.b.b1.b2)}</button>);
+render(<button onClick={ change }> change { $(reactive.b.b1.b2)}</button>);
 `;
 
 const dict_atomx = `

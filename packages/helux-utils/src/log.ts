@@ -23,9 +23,10 @@ export function tryAlert(err: any, options?: IAlertOpts) {
     errMsg = err.message;
   }
 
-  const canAlert = alertErr ?? isDebug();
-  if (canAlert) {
-    err && GLOBAL_REF.alert?.(`${prefixLabel}${errMsg}${suffixLabel}`);
+  // 还原为老写法（ 无 ?? 和 ?. ），防止某些版本 babel 编译报错
+  const canAlert = typeof alertErr === 'boolean' ? alertErr : isDebug();
+  if (canAlert && GLOBAL_REF.alert) {
+    err && GLOBAL_REF.alert(`${prefixLabel}${errMsg}${suffixLabel}`);
   }
   logErr && console.error(err);
   if (throwErr) {
