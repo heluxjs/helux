@@ -6,25 +6,43 @@
  *
  */
 import React, { useCallback  } from "react";
-import { codeContext } from "./codeContext";
+import { codeContext,setCodeContext} from "./codeContext";
+import { IconButton } from "./icons/IconButton";
+import localforage from 'localforage';
 
-// export interface ToolsProps{
 
-// }
 export const Tools:React.FC  = ()=>{
 
   const saveCode =  useCallback(()=>{
-    console.log(codeContext.key," = ",codeContext.code)
+    localforage.setItem(`helux_code_${codeContext.key}`,codeContext.code,(err,value)=>{
+      if(err){
+        console.error(err)
+      }else{
+        console.info('code is saved')
+      }
+    })
+  },[])
+
+  const resetCode =  useCallback(()=>{
+    localforage.removeItem(`helux_code_${codeContext.key}`,(err)=>{
+      if(!err){
+        setCodeContext(draft=>{draft.code = ''})
+      }
+    })
   },[])
 
   return <div style={{
-    position:"relative",
+    position:"absolute",
     display:"flex",
+    flexDirection:"column",
     padding:"8px",
     boxSizing:"border-box",
-    backgroundColor:"#fff"
+    backgroundColor:"transparent",
+    left:"50%",
+    top:"88%",
+    right:0,
   }}>
-      <button style={{padding:"4px"}} type="button" onClick={()=>saveCode()}>保存</button>
-      <button style={{padding:"4px"}} type="button" onClick={()=>{}}>恢复</button>
+      <IconButton name="save" title="保存代码" onClick={()=>saveCode()}/>
+      <IconButton name="reset" title="恢复代码" onClick={()=>resetCode()}/>
     </div>
 }

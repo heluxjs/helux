@@ -2,8 +2,6 @@
 import React from 'react';
 import './index.less';
 import * as codes from './codes';
-import localforage from 'localforage';
-import {syncer ,atom,watch } from "helux"
 
 const labelAlias: any = {
   atom: {
@@ -34,26 +32,9 @@ function renderItems(name: string, subName: string) {
   ));
 }
 
-const [options,setOptions,optionsCtx] = atom({
-  autoSave:false,
-})
-const optionsSaveKey = "helux_playground_options"
-watch(()=>{
-  localforage.setItem(optionsSaveKey,JSON.stringify(options.val),(err,value)=>{
-    console.log(err,value)
-  })
-},()=>[options])
 
-localforage.getItem(optionsSaveKey,(err,value)=>{
-  setOptions(opts=>{
-    Object.assign(opts,JSON.parse(value))
-  })
-})
 
 export default React.memo(({ onClick, name, subName }: any) => {
-
-  const [options] = optionsCtx.useState();
-
 
   const handleClick = e => {
     const subName = e.target.dataset.name;
@@ -66,11 +47,6 @@ export default React.memo(({ onClick, name, subName }: any) => {
   return (
     <div className="topBar" onClick={handleClick}>
       <span className='samples'>{renderItems(name, subName)}</span>
-      <span className='tools'>
-      <input type="checkbox" name="autoSave" value={options.autoSave} onChange={syncer(options).autoSave}/>自动保存
-
-      </span>
-
     </div>
   );
 });

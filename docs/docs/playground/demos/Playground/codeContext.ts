@@ -1,14 +1,16 @@
 import { share } from "helux";
 
-const [codeContext,setCodeContext] = share<{
+
+
+const [codeContext,setCodeContext,codeCtx] = share<{
   key:string,
-  code:string,
-  defaultString?:string
+  code:string
 
 }>({key:"",code:"",})
 
 
 export {
   codeContext,
-  setCodeContext
+  setCodeContext,
+  codeCtx
 }
