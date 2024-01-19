@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live";
 import qs from "qs";
 import * as prism from 'prism-react-renderer';
@@ -8,6 +8,8 @@ import TopBar from './TopBar';
 import Console from './Console';
 import * as codes from './codes';
 import './index.less';
+import { Tools } from './Tools';
+import { setCodeContext } from './codeContext';
 
 function getCode(name: string, subName: string) {
   const codeDict: any = codes;
@@ -26,8 +28,10 @@ const name = obj.n || 'atom';
 const subName = obj.s || 'primitive';
 const code = getCode(name, subName);
 
+
 export default () => {
   const [info, setInfo] = React.useState({ name, subName, code });
+
   const changeCode = (name: string) => {
     const subName = cachedSubNames[name] || subNames[name] || 'primitive';
     setInfo({ name, subName, code: getCode(name, subName) });
@@ -38,6 +42,15 @@ export default () => {
     setInfo({ name, subName, code: getCode(name, subName) });
   };
 
+  useEffect(() => {
+    setCodeContext(draft=>{
+      draft.key = `${name}_${subName}`
+      draft.defaultString = code
+    })
+  },[info])
+
+
+
   return (
     <LiveProvider noInline={true} code={info.code} scope={scope} theme={prism.themes.vsDark}>
       <div className="playground-wrap">
@@ -45,7 +58,8 @@ export default () => {
           <ApiMenus onClick={changeCode} name={info.name} />
           <div style={{ flex: "1 1 0px", height: '100%' }}>
             <TopBar onClick={changeSubName} name={info.name} subName={info.subName} defaultCode={info}/>
-            <LiveEditor style={{ height: '100%' }} onChange={(value)=>{console.log("newCode=",value)}} />
+            <LiveEditor style={{ height: '100%' }} onChange={value=>{setCodeContext(draft=>{draft.code=value})}} />
+            <Tools/>
           </div>
           <div style={{ flex: "1 1 0px", height: 'calc(100vh - 138px)' }}>
             {/* 空占位一个条 */}

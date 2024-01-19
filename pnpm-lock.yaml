@@ -122,8 +122,11 @@ importers:
         specifier: ^4.3.1
         version: 4.3.1
       '@helux/demo-utils':
-        specifier: 0.0.3
+        specifier: latest
         version: link:../packages/helux-demo-utils
+      '@helux/utils':
+        specifier: latest
+        version: 4.2.1
       '@makotot/ghostui':
         specifier: ^2.0.0
         version: 2.0.0(react@18.2.0)
@@ -137,8 +140,11 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0(jquery@3.7.1)(react-dom@18.2.0)(react@18.2.0)
       helux:
-        specifier: 4.2.0
+        specifier: latest
         version: link:../packages/helux
+      helux-docs:
+        specifier: 'link:'
+        version: 'link:'
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -176,6 +182,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^17.1.0
         version: 17.8.1
+      '@types/qs':
+        specifier: ^6.9.11
+        version: 6.9.11
       '@types/react':
         specifier: <18.0.0
         version: 17.0.74
@@ -3099,6 +3108,16 @@ packages:
       '@hapi/hoek': 9.3.0
     dev: false
 
+  /@helux/types@4.2.1:
+    resolution: {integrity: sha512-9DcvLYy+QLsn/TYvEsbEX38EjmT1areHJIvEOzERpP1DFDg919vSGJg/WAKFSlZji8p/GK5sc3HNMqx8Kv211g==}
+    dev: false
+
+  /@helux/utils@4.2.1:
+    resolution: {integrity: sha512-bk3Z085j/2vhfsAtQ10Dw2rI2a0JzsoZDoNPVt9u0rbo5WsVioVoFpkp79IeozO7+LSoyXAEgt7BNjMZoCqLGw==}
+    dependencies:
+      '@helux/types': 4.2.1
+    dev: false
+
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
     engines: {node: '>=10.10.0'}
@@ -4541,6 +4560,10 @@ packages:
 
   /@types/q@1.5.8:
     resolution: {integrity: sha512-hroOstUScF6zhIi+5+x0dzqrHA1EJi+Irri6b1fxolMTqqHIV/Cg77EtnQcZqZCu8hR3mX2BzIxN4/GzI68Kfw==}
+    dev: true
+
+  /@types/qs@6.9.11:
+    resolution: {integrity: sha512-oGk0gmhnEJK4Yyk+oI7EfXsLayXatCWPHary1MtcmbAifkobT9cM9yutG/hZKIseOU0MqbIwQ/u2nn/Gb+ltuQ==}
     dev: true
 
   /@types/ramda@0.29.3:

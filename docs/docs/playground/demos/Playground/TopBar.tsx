@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useCallback } from 'react';
+import React from 'react';
 import './index.less';
 import * as codes from './codes';
 import localforage from 'localforage';
@@ -50,7 +50,7 @@ localforage.getItem(optionsSaveKey,(err,value)=>{
   })
 })
 
-export default React.memo(({ onClick, name, subName ,defaultCode}: any) => {
+export default React.memo(({ onClick, name, subName }: any) => {
 
   const [options] = optionsCtx.useState();
 
@@ -63,21 +63,12 @@ export default React.memo(({ onClick, name, subName ,defaultCode}: any) => {
   };
 
 
-  const saveCode = useCallback(()=>{
-    console.log(defaultCode)
-  },[])
-
-  const restoreCode = useCallback(()=>{
-    console.log(defaultCode)
-  },[])
-
   return (
     <div className="topBar" onClick={handleClick}>
       <span className='samples'>{renderItems(name, subName)}</span>
       <span className='tools'>
       <input type="checkbox" name="autoSave" value={options.autoSave} onChange={syncer(options).autoSave}/>自动保存
 
-        <button title="清除存储的代码，恢复原始的示例代码" onClick={()=>restoreCode()}>重置</button>
       </span>
 
     </div>
