@@ -84,8 +84,10 @@ importers:
       '@ant-design/icons-svg': ^4.3.1
       '@commitlint/cli': ^17.1.2
       '@commitlint/config-conventional': ^17.1.0
-      '@helux/demo-utils': 0.0.3
+      '@helux/demo-utils': latest
+      '@helux/utils': latest
       '@makotot/ghostui': ^2.0.0
+      '@types/qs': ^6.9.11
       '@types/react': <18.0.0
       '@types/react-dom': <18.0.0
       '@umijs/lint': ^4.0.0
@@ -95,9 +97,11 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: 4.1.6
+      helux: latest
+      helux-docs: 'link:'
       husky: ^8.0.1
       lint-staged: ^13.0.3
+      localforage: ^1.10.0
       lodash: ^4.17.21
       lodash.throttle: ^4.1.1
       prettier: ^2.7.1
@@ -116,11 +120,14 @@ importers:
     dependencies:
       '@ant-design/icons-svg': 4.3.1
       '@helux/demo-utils': link:../packages/helux-demo-utils
+      '@helux/utils': link:../packages/helux-utils
       '@makotot/ghostui': 2.0.0_react@18.2.0
       animated-scroll-to: 2.3.0
       classnames: 2.5.1
       console-feed: 3.5.0_b2n7dceyjx62tehd6yl3udyazy
       helux: link:../packages/helux
+      helux-docs: 'link:'
+      localforage: 1.10.0
       lodash: 4.17.21
       lodash.throttle: 4.1.1
       prism-react-renderer: 2.3.1_react@18.2.0
@@ -133,6 +140,7 @@ importers:
     devDependencies:
       '@commitlint/cli': 17.8.1
       '@commitlint/config-conventional': 17.8.1
+      '@types/qs': 6.9.11
       '@types/react': 17.0.74
       '@types/react-dom': 17.0.25
       '@umijs/lint': 4.1.0_7algbd62o5575ukcqgxqkvmkhm
@@ -215,7 +223,7 @@ importers:
       hel-micro: ^4.8.11
       hel-micro-core: ^4.8.7
       hel-types: ^4.3.3
-      helux: ^4.1.5
+      helux: ^4.2.1
       react: '>=16.10.2'
       react-dom: '>=16.10.2'
       rollup: ^2.23.0
@@ -4484,6 +4492,10 @@ packages:
 
   /@types/q/1.5.8:
     resolution: {integrity: sha512-hroOstUScF6zhIi+5+x0dzqrHA1EJi+Irri6b1fxolMTqqHIV/Cg77EtnQcZqZCu8hR3mX2BzIxN4/GzI68Kfw==}
+    dev: true
+
+  /@types/qs/6.9.11:
+    resolution: {integrity: sha512-oGk0gmhnEJK4Yyk+oI7EfXsLayXatCWPHary1MtcmbAifkobT9cM9yutG/hZKIseOU0MqbIwQ/u2nn/Gb+ltuQ==}
     dev: true
 
   /@types/ramda/0.29.3:
@@ -10625,6 +10637,10 @@ packages:
       queue: 6.0.1
     dev: true
 
+  /immediate/3.0.6:
+    resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
+    dev: false
+
   /immutable/4.3.4:
     resolution: {integrity: sha512-fsXeu4J4i6WNWSikpI88v/PcVflZz+6kMhUfIwc5SY+poQRPnaf5V7qds6SUyUN3cVxEzuCab7QIoLOQ+DQ1wA==}
     dev: true
@@ -12254,6 +12270,12 @@ packages:
       type-check: 0.4.0
     dev: true
 
+  /lie/3.1.1:
+    resolution: {integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==}
+    dependencies:
+      immediate: 3.0.6
+    dev: false
+
   /lightningcss-darwin-arm64/1.22.1:
     resolution: {integrity: sha512-ldvElu+R0QimNTjsKpaZkUv3zf+uefzLy/R1R19jtgOfSRM+zjUCUgDhfEDRmVqJtMwYsdhMI2aJtJChPC6Osg==}
     engines: {node: '>= 12.0.0'}
@@ -12503,6 +12525,12 @@ packages:
     resolution: {integrity: sha512-SFppqq5p42fe2qcZQqqEOiVRXl+WCP1MdT6k7BDEW1j++sp5fIY+/fdRQitvKgB5BrBcmrs5m/L0v2FrU5MY1g==}
     engines: {node: '>=14'}
     dev: true
+
+  /localforage/1.10.0:
+    resolution: {integrity: sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==}
+    dependencies:
+      lie: 3.1.1
+    dev: false
 
   /locate-path/3.0.0:
     resolution: {integrity: sha512-7AO748wWnIhNqAuaty2ZWHkQHRSNfPVIsPIfwEOWO22AmaoVrWavlOcMR5nzTLNYvp36X220/maaRsrec1G65A==}

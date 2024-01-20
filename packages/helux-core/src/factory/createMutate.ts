@@ -28,8 +28,8 @@ const toMutateRet = (ret: ActionReturn) => [ret.snap, ret.err] as [any, Error | 
 /**
  * 查找到配置到 mutate 函数并执行
  */
-function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; forTask?: boolean; throwErr?: boolean }) {
-  const { target, desc: inputDesc = '', forTask = false, throwErr } = options;
+function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; forTask?: boolean; throwErr?: boolean; extraArgs?: any }) {
+  const { target, desc: inputDesc = '', forTask = false, throwErr, extraArgs } = options;
   const { mutateFnDict, snap } = getInternal(target);
   const desc = inputDesc || SINGLE_MUTATE; // 未传递任何描述，尝试调用可能存在的单函数
 
@@ -40,7 +40,7 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
 
   // throwErr 谨慎处理，只严格接受布尔值
   const throwErrVar = ensureBool(throwErr, false);
-  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE, throwErr: throwErrVar };
+  const baseOpts = { sn: 0, fnItem: item, from: FROM.MUTATE, throwErr: throwErrVar, extraArgs };
   // 调用 desc 对应的函数
   if (forTask) {
     return callAsyncMutateFnLogic(target, baseOpts);
@@ -130,29 +130,29 @@ function configureMutateDict(options: IConfigureMutateDictOpt): any {
  */
 function prepareParms<T extends SharedState>(target: T, options: ILogicOptions) {
   const { label, descOrOptions, forTask = false } = options;
-  const { desc, strict, throwErr } = parseCreateMutateOpt(descOrOptions);
+  const { desc, strict, throwErr, extraArgs } = parseCreateMutateOpt(descOrOptions);
   if (!desc) {
     return { ok: false, desc, forTask, throwErr, err: new Error('miss desc') };
   }
   const internal = checkShared(target, { label, strict });
   if (!internal) {
-    return { ok: false, desc, forTask, throwErr, err: new Error('not a valid atom or shared result') };
+    return { ok: false, desc, forTask, throwErr, extraArgs, err: new Error('not a valid atom or shared result') };
   }
-  return { ok: true, desc, forTask, throwErr, err: null };
+  return { ok: true, desc, forTask, throwErr, extraArgs, err: null };
 }
 
 /**
  * 执行匹配 desc 的 mutate 函数
  */
 export function runMutateLogic<T extends SharedState>(target: T, options: ILogicOptions): [T, Error | null] | Promise<[T, Error | null]> {
-  const { ok, desc, forTask, err, throwErr } = prepareParms(target, options);
+  const { ok, desc, forTask, err, throwErr, extraArgs } = prepareParms(target, options);
   if (!ok) {
     if (throwErr) {
       throw err;
     }
     return forTask ? Promise.resolve([target, err]) : [target, err];
   }
-  const result = runMutateFnItem({ target, desc, forTask, throwErr });
+  const result = runMutateFnItem({ target, desc, forTask, throwErr, extraArgs });
   return forTask ? Promise.resolve(result).then(toMutateRet) : toMutateRet(result as ActionReturn);
 }
 

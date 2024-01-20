@@ -308,6 +308,10 @@ export interface IRunMutateOptions {
    * 是否抛出错误
    */
   throwErr?: boolean;
+  /**
+   * 额外参数，用来传递给 mutate 的fn和task函数
+   */
+  extraArgs?: any;
 }
 
 export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> {

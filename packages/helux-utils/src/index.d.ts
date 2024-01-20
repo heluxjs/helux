@@ -7,7 +7,7 @@ export declare function delListItem(list: NumStrSymbol[], toDel: NumStrSymbol): 
 export declare function dedupList(list: Array<any>): any[];
 export declare function includeOne(loopList: any[], judgeList: any[]): boolean;
 export declare function matchListItem(list: string[], fullStr: string): string;
-export declare function enureReturnArr(fn?: Fn, arg?: any): any[];
+export declare function enureReturnArr(fn?: Fn, arg1?: any, arg2?: any): any[];
 export declare const GLOBAL_REF: Dict & Window & typeof globalThis;
 export declare const DEV_FLAG: boolean;
 export declare function noop(...args: any[]): undefined;

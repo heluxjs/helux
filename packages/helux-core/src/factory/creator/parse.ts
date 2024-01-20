@@ -312,11 +312,11 @@ export function parseRules(options: ParsedOptions): IRuleConf {
 
 export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions) {
   // 不设定 desc 的话，默认指向可能存在的单函数
-  const { desc = SINGLE_MUTATE, strict = false, throwErr = false } = {} as IRunMutateOptions;
+  const { desc = SINGLE_MUTATE, strict = false, throwErr = false, extraArgs } = {} as IRunMutateOptions;
   if (typeof descOrOptions === 'string') {
-    return { desc: descOrOptions, strict, throwErr };
+    return { desc: descOrOptions, strict, throwErr, extraArgs };
   }
-  return { desc, strict, ...descOrOptions, throwErr };
+  return { desc, strict, ...descOrOptions, throwErr, extraArgs };
 }
 
 export function parseWatchOptions(forEffect: boolean, options?: WatchOptionsType) {
