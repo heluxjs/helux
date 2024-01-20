@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.2.2
+
+### Patch Changes
+
+- 9007ad6: build(4.2.2): add extraArgs for runMutateTask
+
 ## 4.2.1
 
 ### Patch Changes

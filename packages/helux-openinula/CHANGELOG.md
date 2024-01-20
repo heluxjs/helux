@@ -1,5 +1,13 @@
 # @helux/openinula
 
+## 4.2.2
+
+### Patch Changes
+
+- 9007ad6: build(4.2.2): add extraArgs for runMutateTask
+- Updated dependencies [9007ad6]
+  - @helux/core@4.2.2
+
 ## 4.2.1
 
 ### Patch Changes
