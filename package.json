@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "4.1.5",
+  "version": "4.2.2",
   "description": "A reactive atomic state engine for React like.",
   "keywords": [],
   "author": {
