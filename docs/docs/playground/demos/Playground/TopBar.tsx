@@ -32,7 +32,10 @@ function renderItems(name: string, subName: string) {
   ));
 }
 
+
+
 export default React.memo(({ onClick, name, subName }: any) => {
+
   const handleClick = e => {
     const subName = e.target.dataset.name;
     if (subName) {
@@ -40,9 +43,10 @@ export default React.memo(({ onClick, name, subName }: any) => {
     }
   };
 
+
   return (
     <div className="topBar" onClick={handleClick}>
-      {renderItems(name, subName)}
+      <span className='samples'>{renderItems(name, subName)}</span>
     </div>
   );
 });
