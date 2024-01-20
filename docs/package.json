@@ -54,7 +54,6 @@
     "classnames": "^2.5.0",
     "console-feed": "^3.5.0",
     "helux": "latest",
-    "helux-docs": "link:",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "lodash.throttle": "^4.1.1",

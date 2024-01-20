@@ -3,7 +3,7 @@ import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live";
 import qs from "qs";
 import * as prism from 'prism-react-renderer';
 import * as helux from 'helux';
-import {useWatch  } from 'helux';
+import { useWatch } from 'helux';
 
 import ApiMenus from './ApiMenus';
 import TopBar from './TopBar';
@@ -11,10 +11,10 @@ import Console from './Console';
 import * as codes from './codes';
 import './index.less';
 import { Tools } from './Tools';
-import { setCodeContext,codeContext } from './codeContext';
+import { setCodeContext, codeContext } from './codeContext';
 import localforage from 'localforage';
 
-function getCode(name: string, subName: string) {
+function getCode(name: any, subName: any) {
   const codeDict: any = codes;
   return codeDict[name]?.[subName] || '';
 }
@@ -25,19 +25,19 @@ const subNames: Record<string, string> = {
   derive: 'primitive',
   modular: 'defineActions',
 };
-const cachedSubNames: Record<string, string> = {};
+const cachedSubNames: any = {};
 const obj = qs.parse(window.location.search, { ignoreQueryPrefix: true });
-const name = obj.n || 'atom';
-const subName = obj.s || 'primitive';
+const name: string = (obj.n || 'atom') as unknown as string;
+const subName: string = (obj.s || 'primitive') as unknown as string;
 const initCode = getCode(name, subName);
-setCodeContext(draft=>{
+setCodeContext(draft => {
   draft.key = `${name}_${subName}`
 })
-function loadCode(name:string,subName:string,setCode:any){
-  localforage.getItem(`helux_code_${name}_${subName}`,(err,value)=>{
-    if(!err && typeof(value)=='string' && value.trim().length>0){
+function loadCode(name: any, subName: any, setCode: any) {
+  localforage.getItem(`helux_code_${name}_${subName}`, (err: any, value: any) => {
+    if (!err && typeof (value) === 'string' && value.trim().length > 0) {
       setCode(value);
-    }else{
+    } else {
       setCode(getCode(name, subName));
     }
   })
@@ -46,37 +46,36 @@ export default () => {
   const [info, setInfo] = React.useState({ name, subName });
   const [code, setCode] = React.useState(initCode);
 
-  useEffect(()=>{
-    loadCode(name,subName,setCode)
-  },[])
+  useEffect(() => {
+    loadCode(name, subName, setCode)
+  }, [])
 
-  useWatch(()=>{
+  useWatch(() => {
     const curCode = codeContext.code
-    if(curCode.trim().length==0){
-      loadCode(name,subName,setCode)
+    if (curCode.trim().length === 0) {
+      loadCode(name, subName, setCode)
     }
-  },()=>[codeContext.code])
+  }, () => [codeContext.code])
 
 
 
   const changeCode = useCallback((name: string) => {
     const subName = cachedSubNames[name] || subNames[name] || 'primitive';
-    setCodeContext(draft=>{ draft.key = `${name}_${subName}` })
+    setCodeContext(draft => { draft.key = `${name}_${subName}` })
     setInfo({ name, subName })
-    loadCode(name,subName,setCode)
-  },[info.name,info.subName])
+    loadCode(name, subName, setCode)
+  }, [info.name, info.subName])
 
   const changeSubName = useCallback((subName: string) => {
     const { name } = info;
     cachedSubNames[name] = subName;
-    setCodeContext(draft=>{
+    setCodeContext(draft => {
       draft.key = `${name}_${subName}`
     })
-    const dd = codeContext
 
     setInfo({ name, subName })
-    loadCode(name,subName,setCode)
-  },[info.name,info.subName])
+    loadCode(name, subName, setCode)
+  }, [info.name, info.subName])
 
 
 
@@ -87,9 +86,9 @@ export default () => {
         <div style={{ display: "flex", height: '100%', padding: '12px 100px' }}>
           <ApiMenus onClick={changeCode} name={info.name} />
           <div style={{ flex: "1 1 0px", height: '100%' }}>
-            <TopBar onClick={changeSubName} name={info.name} subName={info.subName}/>
-            <LiveEditor style={{ flexGrow: 1 }} onChange={value=>{setCodeContext(draft=>{draft.code=value})}}/>
-            <Tools/>
+            <TopBar onClick={changeSubName} name={info.name} subName={info.subName} />
+            <LiveEditor style={{ flexGrow: 1 }} onChange={value => { setCodeContext(draft => { draft.code = value }) }} />
+            <Tools />
           </div>
           <div style={{ flex: "1 1 0px", height: 'calc(100vh - 138px)' }}>
             {/* 空占位一个条 */}

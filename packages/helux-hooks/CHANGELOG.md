@@ -1,5 +1,25 @@
 # @helux/hooks
 
+## 4.2.2
+
+### Patch Changes
+
+- 9007ad6: build(4.2.2): add extraArgs for runMutateTask
+- Updated dependencies [9007ad6]
+  - @helux/hooks-impl@4.2.2
+  - @helux/types@4.2.2
+  - @helux/utils@4.2.2
+
+## 4.2.1
+
+### Patch Changes
+
+- 35c2cf9: build(4.2.1): optimize util writing
+- Updated dependencies [35c2cf9]
+  - @helux/hooks-impl@4.2.1
+  - @helux/types@4.2.1
+  - @helux/utils@4.2.1
+
 ## 4.2.0
 
 ### Minor Changes
