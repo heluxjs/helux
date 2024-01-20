@@ -33,11 +33,12 @@ interface ICallMutateBase {
   sn?: number;
   from: From;
   fnItem: IMutateFnStdItem;
+  extraArgs?:any
 }
 
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[] }) => any[];
+  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[],extraArgs:any}) => any[];
 }
 
 interface ICallAsyncMutateFnOpt extends ICallMutateBase {
@@ -70,7 +71,7 @@ export function isTaskProm(task: any) {
 
 /** 呼叫异步函数的逻辑封装，mutate task 执行或 action 定义的函数（同步或异步）执行都会走到此逻辑 */
 export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options: ICallAsyncMutateFnOpt): ActionReturn | ActionAsyncReturn {
-  const { sn, getArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn } = options;
+  const { sn, getArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn,extraArgs } = options;
   const { desc = '', depKeys, task = noopAny, extraBound } = fnItem;
   const internal = getInternal(targetState);
   const { sharedKey } = internal;
@@ -92,7 +93,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   };
 
   const input = FROM.MUTATE === from ? getInput(internal, fnItem) : [];
-  const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound };
+  const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound,extraArgs  };
   const args = getArgs(defaultParams) || [defaultParams];
   const isProm = taskProm.get(task);
   const isUnconfirmedFn = isProm === undefined;
@@ -150,7 +151,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
 
 /** 呼叫同步函数的逻辑封装 */
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnOpt<T>): ActionReturn {
-  const { sn, getArgs = noop, from, throwErr, isFirstCall = false, fnItem } = options;
+  const { sn, getArgs = noop, from, throwErr, isFirstCall = false, fnItem,extraArgs } = options;
   const { desc = '', watchKey, fn = noopAny, extraBound } = fnItem;
   const isMutate = FROM.MUTATE === from;
   isMutate && TRIGGERED_WATCH.set(watchKey);
@@ -171,7 +172,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
   const input = isMutate ? getInput(internal, fnItem) : [];
   const { draftNode: draft, draftRoot, finish } = setStateFactory(setFactoryOpts);
   // getArgs 由 createAtion 提供
-  const args = getArgs({ draft, draftRoot, setState, desc, input }) || [draft, { input, state, draftRoot, isFirstCall, extraBound }];
+  const args = getArgs({ draft, draftRoot, setState, desc, input,extraArgs }) || [draft, { input, state, draftRoot, isFirstCall, extraBound,extraArgs }];
 
   try {
     const fnCtx = getSafeFnCtx(fnItem.watchKey);
