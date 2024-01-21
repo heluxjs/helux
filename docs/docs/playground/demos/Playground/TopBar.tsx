@@ -43,7 +43,6 @@ export default React.memo(({ onClick, name, subName }: any) => {
     }
   };
 
-
   return (
     <div className="topBar" onClick={handleClick}>
       <span className='samples'>{renderItems(name, subName)}</span>

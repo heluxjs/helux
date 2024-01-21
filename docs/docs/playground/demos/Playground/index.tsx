@@ -10,7 +10,7 @@ import TopBar from './TopBar';
 import Console from './Console';
 import * as codes from './codes';
 import './index.less';
-import { Tools } from './Tools';
+// import { Tools } from './Tools';
 import { setCodeContext, codeContext } from './codeContext';
 import localforage from 'localforage';
 
@@ -70,15 +70,12 @@ export default () => {
     const { name } = info;
     cachedSubNames[name] = subName;
     setCodeContext(draft => {
-      draft.key = `${name}_${subName}`
-    })
+      draft.key = `${name}_${subName}`;
+    });
 
-    setInfo({ name, subName })
-    loadCode(name, subName, setCode)
-  }, [info.name, info.subName])
-
-
-
+    setInfo({ name, subName });
+    loadCode(name, subName, setCode);
+  }, [info.name, info.subName]);
 
   return (
     <LiveProvider noInline={true} code={code} scope={scope} theme={prism.themes.vsDark}>
@@ -87,8 +84,9 @@ export default () => {
           <ApiMenus onClick={changeCode} name={info.name} />
           <div style={{ flex: "1 1 0px", height: '100%' }}>
             <TopBar onClick={changeSubName} name={info.name} subName={info.subName} />
-            <LiveEditor style={{ flexGrow: 1 }} onChange={value => { setCodeContext(draft => { draft.code = value }) }} />
-            <Tools />
+            {/* <LiveEditor style={{ flexGrow: 1 }} onChange={value => { setCodeContext(draft => { draft.code = value }) }} /> */}
+            <LiveEditor style={{ flexGrow: 1 }} />
+            {/* <Tools /> */}
           </div>
           <div style={{ flex: "1 1 0px", height: 'calc(100vh - 138px)' }}>
             {/* 空占位一个条 */}
