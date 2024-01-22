@@ -316,7 +316,7 @@ export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions)
   if (typeof descOrOptions === 'string') {
     return { desc: descOrOptions, strict, throwErr, extraArgs };
   }
-  return { desc, strict, ...descOrOptions, throwErr, extraArgs };
+  return { desc, strict, throwErr, extraArgs , ...descOrOptions};
 }
 
 export function parseWatchOptions(forEffect: boolean, options?: WatchOptionsType) {
