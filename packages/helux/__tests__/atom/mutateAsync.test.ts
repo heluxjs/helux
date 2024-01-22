@@ -98,4 +98,26 @@ describe('create atom mutate', () => {
     await delay(120);
     expect(bAtom.val).toBe(1); // change by runMutateTask
   });
+
+  test('runMutateTask with extraArgs', async () => {
+    const [numAtom, setAtom] = atom(1);
+    // 有fn，未指定 immediate 时，task 首次不执行
+    return new Promise<void>((resolve) => {
+    const [bAtom, , ctx] = atom(0, {
+      mutate: [
+        {
+          deps: () => [numAtom.val],
+          task: async ({ extraArgs }) => {
+            expect(extraArgs).toBe(1);
+            resolve()
+          },
+          desc: 'm1',
+        },
+      ],
+    });
+    ctx.runMutateTask({desc:'m1',extraArgs: 1 });
+    });
+  });
+
+
 });
