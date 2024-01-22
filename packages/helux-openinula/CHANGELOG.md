@@ -1,5 +1,12 @@
 # @helux/openinula
 
+## 4.2.3
+
+### Patch Changes
+
+- Updated dependencies [7945ddb]
+  - @helux/core@4.2.3
+
 ## 4.2.2
 
 ### Patch Changes
