@@ -103,21 +103,19 @@ describe('create atom mutate', () => {
     const [numAtom, setAtom] = atom(1);
     // 有fn，未指定 immediate 时，task 首次不执行
     return new Promise<void>((resolve) => {
-    const [bAtom, , ctx] = atom(0, {
-      mutate: [
-        {
-          deps: () => [numAtom.val],
-          task: async ({ extraArgs }) => {
-            expect(extraArgs).toBe(1);
-            resolve()
+      const [bAtom, , ctx] = atom(0, {
+        mutate: [
+          {
+            deps: () => [numAtom.val],
+            task: async ({ extraArgs }) => {
+              expect(extraArgs).toBe(1);
+              resolve();
+            },
+            desc: 'm1',
           },
-          desc: 'm1',
-        },
-      ],
-    });
-    ctx.runMutateTask({desc:'m1',extraArgs: 1 });
+        ],
+      });
+      ctx.runMutateTask({ desc: 'm1', extraArgs: 1 });
     });
   });
-
-
 });

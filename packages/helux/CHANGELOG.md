@@ -1,5 +1,13 @@
 # helux
 
+## 4.2.3
+
+### Patch Changes
+
+- 7945ddb: build(4.2.3): merge fisher pr
+- Updated dependencies [7945ddb]
+  - @helux/core@4.2.3
+
 ## 4.2.2
 
 ### Patch Changes
