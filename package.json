@@ -26,7 +26,7 @@
     "prepare": "husky install",
     "release:all": "changeset publish",
     "release:auto": "pnpm build && pnpm version:all && pnpm release:all && pnpm sync",
-    "sync": "cnpm sync helux && cnpm sync @helux/core && cnpm sync @helux/hooks && cnpm sync @helux/hooks-impl && cnpm sync @helux/types && cnpm sync @helux/utils",
+    "sync": "cnpm sync helux @helux/core @helux/hooks @helux/hooks-impl @helux/types @helux/utils",
     "test": "cd ./packages/helux && pnpm run test",
     "version:all": "changelog version"
   },

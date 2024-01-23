@@ -377,6 +377,10 @@ export interface IMutateFnParams<T = SharedState, P extends Arr = Arr, E extends
   /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
   draftRoot: DraftRootType<T>;
   extraBound: IBoundStateInfo<E>;
+  /**
+   * 额外参数，用来传递给 mutate 的fn和task函数
+   */
+  extraArgs?: any;
 }
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
