@@ -374,7 +374,7 @@ export interface IMutateFnParams<T = SharedState, P extends Arr = Arr, E extends
   input: P;
   /** 只读状态 */
   state: StateType<T>;
-  /** 草稿根状态，对与 atom 对象，根状态是未拆箱的值 */
+  /** 草稿根状态，对于 atom 对象，根状态是未拆箱的值 */
   draftRoot: DraftRootType<T>;
   extraBound: IBoundStateInfo<E>;
   /**
