@@ -408,6 +408,10 @@ export interface IMutateFnItem<T = any, P extends Arr = Arr, E extends SharedSta
    * 未设定时，使用 atom、share 接口设定的 checkDeadCycle 值
    */
   checkDeadCycle?: boolean;
+    /**
+   * 额外参数，用来传递给 mutate 的fn和task函数
+   */
+  extraArgs?: any;
 }
 
 /** std item 确保了 desc 一定存在 */
