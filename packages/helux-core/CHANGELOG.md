@@ -1,5 +1,14 @@
 # @helux/core
 
+## 4.2.5
+
+### Patch Changes
+
+- d2dd4b9: build(4.2.5): optimize types
+  - @helux/hooks-impl@4.2.5
+  - @helux/types@4.2.5
+  - @helux/utils@4.2.5
+
 ## 4.2.4
 
 ### Patch Changes
