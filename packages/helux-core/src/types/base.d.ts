@@ -330,6 +330,10 @@ export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extend
   /** deps 返回的结果 */
   input: P;
   extraBound: IBoundStateInfo<E>;
+    /**
+   * 额外参数，用来传递给 mutate 的fn和task函数
+   */
+  extraArgs?: any;
 }
 
 /**
