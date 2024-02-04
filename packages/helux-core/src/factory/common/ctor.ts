@@ -57,7 +57,6 @@ export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
     sn = genRenderSN(),
     isFirstCall = false,
     desc = '',
-    onRead,
   } = options;
   return {
     fnKey: '',
@@ -78,7 +77,6 @@ export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
     sn,
     isFirstCall,
     desc,
-    onRead,
   };
 }
 

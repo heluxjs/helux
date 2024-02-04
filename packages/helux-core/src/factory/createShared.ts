@@ -197,7 +197,6 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     setDraft,
     setEnableMutate: (enabled: boolean) => setEnableMutate(enabled, internal),
     getOptions: () => getOptions(internal),
-    setOnReadHook: (onRead: Fn) => (internal.onRead = onRead),
     defineActions: (throwErr?: boolean) => (actionDict: Dict<ActionTask>) => defineActions({ ...acCommon, actionDict }, throwErr),
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>
       defineActions({ ...acCommon, actionDict, forTp: true }, throwErr),

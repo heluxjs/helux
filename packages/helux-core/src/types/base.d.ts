@@ -330,7 +330,7 @@ export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extend
   /** deps 返回的结果 */
   input: P;
   extraBound: IBoundStateInfo<E>;
-    /**
+  /**
    * 额外参数，用来传递给 mutate 的fn和task函数
    */
   extraArgs?: any;
@@ -528,10 +528,6 @@ export interface IMutateCtx {
    * 修改描述
    */
   desc: string;
-  /**
-   * useReactive 透传的 onRead，方便为每个实例单独收集依赖
-   */
-  onRead?: OnOperate;
 }
 
 export interface IInnerSetStateOptions extends ISetStateOptions {
@@ -560,7 +556,6 @@ export interface ISetFactoryOpts extends IInnerSetStateOptions {
    * 同时也减少不必要的运行时分析性能损耗
    */
   enableDep?: boolean;
-  onRead?: OnOperate;
 }
 
 /**
@@ -856,10 +851,6 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   mutate: <P extends Arr = Arr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
-  /**
-   * 配置 onRead 钩子函数
-   */
-  setOnReadHook: (onRead: OnRead) => void;
   /**
    * 是否禁止 mutate 再次执行（ 首次一定执行，此函数只能禁止是否再次执行 ）
    * ```ts
@@ -1255,12 +1246,16 @@ export interface ICreateOptionsFull<T = SharedState> {
    * default: true，是否允许 mutate 执行，可以创建 atom 时设置，也可以中途通过 setEnableMutate 反复设置
    */
   enableMutate: boolean;
+  /**
+   * 任何读行为都会触发此函数
+   */
+  onRead: OnRead;
 }
 
 /**
  * 目前api层面只暴露部分配置参数供用户查看
  */
-export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'before'>;
+export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'before' | 'onRead'>;
 
 export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull<SharedState> {
   forAtom: boolean;

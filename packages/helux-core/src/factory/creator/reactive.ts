@@ -92,8 +92,8 @@ export function nextTickFlush(sharedKey: number, desc?: string) {
 }
 
 function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
-  const { from = REACTIVE, onRead } = options;
-  const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true, onRead });
+  const { from = REACTIVE } = options;
+  const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true });
   const latestMeta = newReactiveMeta(draftRoot, options, finish);
   latestMeta.key = getReactiveKey();
   latestMeta.sharedKey = internal.sharedKey;
