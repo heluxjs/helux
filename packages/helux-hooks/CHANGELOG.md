@@ -1,5 +1,15 @@
 # @helux/hooks
 
+## 4.2.6
+
+### Patch Changes
+
+- efeee46: build(4.2.6): refactor onRead
+- Updated dependencies [efeee46]
+  - @helux/hooks-impl@4.2.6
+  - @helux/types@4.2.6
+  - @helux/utils@4.2.6
+
 ## 4.2.5
 
 ### Patch Changes
