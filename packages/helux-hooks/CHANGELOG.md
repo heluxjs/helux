@@ -1,5 +1,15 @@
 # @helux/hooks
 
+## 4.2.7
+
+### Patch Changes
+
+- db6c763: build(4.2.7): issue 156
+- Updated dependencies [db6c763]
+  - @helux/hooks-impl@4.2.7
+  - @helux/types@4.2.7
+  - @helux/utils@4.2.7
+
 ## 4.2.6
 
 ### Patch Changes
