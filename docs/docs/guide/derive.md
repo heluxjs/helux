@@ -389,3 +389,28 @@ witness.run();
 // 呼叫 fnItem 配置的异步函数
 witness.runTask();
 ```
+
+### 注意事项
+
+`derive`回调里的依赖必须提前声明，不能放到条件语句里，否则可能照成依赖丢失。
+
+- 错误示例
+
+```ts
+const result = derive(() => {
+  if( state.x ) return 2;
+  return state.y + 1;
+});
+```
+
+- 正确示例
+
+```ts
+const result = derive(() => {
+  const { x, y } = state;
+  if (x) return 2;
+  y + 1;
+});
+```
+
+
