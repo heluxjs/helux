@@ -1,6 +1,6 @@
 {
   "name": "@helux/core",
-  "version": "4.2.4",
+  "version": "4.2.7",
   "description": "A reactive atomic state engine for React like.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -35,7 +35,7 @@
     "@helux/hooks-impl": "workspace:^",
     "@helux/types": "workspace:^",
     "@helux/utils": "workspace:^",
-    "limu": "^3.12.3"
+    "limu": "^3.12.4"
   },
   "devDependencies": {
     "esbuild-copy-static-files": "^0.1.0"

@@ -1,5 +1,19 @@
 # @helux/types
 
+## 4.2.7
+
+### Patch Changes
+
+- db6c763: build(4.2.7): issue 156
+
+## 4.2.6
+
+### Patch Changes
+
+- efeee46: build(4.2.6): refactor onRead
+
+## 4.2.5
+
 ## 4.2.4
 
 ## 4.2.3

@@ -1,5 +1,28 @@
 # helux
 
+## 4.2.7
+
+### Patch Changes
+
+- db6c763: build(4.2.7): issue 156
+- Updated dependencies [db6c763]
+  - @helux/core@4.2.7
+
+## 4.2.6
+
+### Patch Changes
+
+- efeee46: build(4.2.6): refactor onRead
+- Updated dependencies [efeee46]
+  - @helux/core@4.2.6
+
+## 4.2.5
+
+### Patch Changes
+
+- Updated dependencies [d2dd4b9]
+  - @helux/core@4.2.5
+
 ## 4.2.4
 
 ### Patch Changes
