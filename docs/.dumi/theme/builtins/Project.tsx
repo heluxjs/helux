@@ -26,12 +26,11 @@ export type ProjectProps = React.PropsWithChildren<{
 
 export default styled<ProjectProps>((props,{className})=>{
   return (<div className={className}>
-    <span className="logo" ><img src={props.logo}/></span>
+    <a className="logo"  target="_blank" title="访问官网" href={props.website}><img src={props.logo}/></a>
     <span className="content">
       <div className='title'>{props.name}</div>
       <div className='description'>{props.description}</div>
     </span>
-    <a className="website" target="_blank" title="访问官网" href={props.website}><HomeIcon/></a>
     <a className="repo" target="_blank" title="开源仓库"  href={props.repo}><GithubIcon/></a>
   </div>)
 
@@ -44,7 +43,7 @@ export default styled<ProjectProps>((props,{className})=>{
     border:"1px solid #18baff",
   },
   "& > .logo":{
-    backgroundColor: '#eee',
+    backgroundColor: '#eaeaea',
     width: "64px",
     textAlign: "center",
     display: "flex",
