@@ -63,7 +63,8 @@
     "rc-motion": "^2.9.0",
     "rc-tree": "^5.8.2",
     "react-copy-to-clipboard": "^5.1.0",
-    "react-live": "^4.1.5"
+    "react-live": "^4.1.5",
+    "styledfc": "^1.0.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.1.2",
