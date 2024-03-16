@@ -8,6 +8,11 @@ const moduleInfoMap: Record<string, { name: string; state: any }> = {
   [pluginName]: { name: pluginName, state: 'init helux devtool' }, // 避免调试时再刷新浏览器出现 no store 错误导致 devtool 无法启动
 };
 
+function getWindow() {
+  // @ts-ignore
+  return window || global;
+}
+
 function createReducer(module: string, initState = {}) {
   return function (state: any, action: any) {
     if (state === undefined) state = initState;
@@ -34,10 +39,10 @@ function tryInjectReduxDevTool() {
   const redecers = createReducers();
   if (!Object.keys(redecers).length) return;
 
+  const g = getWindow(); // global this
   reduxStore = createStore(
     combineReducers(redecers),
-    // @ts-ignore
-    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
+    g.__REDUX_DEVTOOLS_EXTENSION__ && g.__REDUX_DEVTOOLS_EXTENSION__(),
   );
   injected = true;
 
