@@ -30,11 +30,22 @@ export function delComputingFnKey(depKey: string, fnKey: string) {
  * 删除已记录的相关依赖数据
  */
 export function delFnDepData(fnCtx: IFnCtx) {
-  const { DEPKEY_FNKEYS_MAP } = getFnScope();
-  const { depKeys, fnKey } = fnCtx;
+  const { DEPKEY_FNKEYS_MAP, SKEY_FNKEYS_MAP } = getFnScope();
+  const { depKeys, fnKey, depSharedKeys } = fnCtx;
+  const toDel: string[] = [];
+
   depKeys.forEach((key) => {
     const fnKeys = DEPKEY_FNKEYS_MAP.get(key) || [];
     delListItem(fnKeys, fnKey);
+    nodupPush(toDel, fnKey);
+  });
+
+  // 将 sharedKey 映射的 fnKey 也一并移除
+  depSharedKeys.forEach((key) => {
+    const fnKeysOfSkey = SKEY_FNKEYS_MAP.get(String(key)) || [];
+    toDel.forEach((key) => {
+      delListItem(fnKeysOfSkey, key);
+    });
   });
 }
 

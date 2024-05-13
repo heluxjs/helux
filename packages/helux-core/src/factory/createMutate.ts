@@ -1,4 +1,5 @@
 import { FROM, SINGLE_MUTATE } from '../consts';
+import { delFnDep } from '../helpers/fnDep';
 import { getBoundStateInfo, getInternal } from '../helpers/state';
 import type {
   ActionReturn,
@@ -48,7 +49,8 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
   return callMutateFnLogic(target, baseOpts);
 }
 
-function makeWitness(target: SharedState, desc: string, oriDesc: string, internal: TInternal) {
+function makeWitness(target: SharedState, options: { desc: string; oriDesc: string; internal: TInternal; watchFnCtx: any }) {
+  const { desc, oriDesc, internal, watchFnCtx } = options;
   return {
     run: (throwErr?: boolean) => {
       // 呼叫同步函数的句柄
@@ -57,6 +59,12 @@ function makeWitness(target: SharedState, desc: string, oriDesc: string, interna
     },
     // 呼叫异步函数的句柄
     runTask: (throwErr?: boolean) => Promise.resolve(runMutateFnItem({ target, desc, forTask: true, throwErr })).then(toMutateRet),
+    cancel: () => {
+      // unwatch
+      delFnDep(watchFnCtx);
+      // TODO optimize: shuold I use Relect.deleteProperty
+      delete internal.mutateFnDict[desc];
+    },
     desc,
     oriDesc,
     getSnap: () => internal.snap,
@@ -94,14 +102,17 @@ function configureMutateFn(options: IConfigureMutateFnOpt) {
   if (extraTarget) {
     stdFnItem.extraBound = getBoundStateInfo(extraTarget);
   }
+  const { desc, oriDesc } = stdFnItem;
 
-  internal.mutateFnDict[stdFnItem.desc] = stdFnItem;
+  internal.mutateFnDict[desc] = stdFnItem;
   stdFnItem.enabled = internal.enableMutate;
-  const dict = { [stdFnItem.desc]: stdFnItem };
+  const dict = { [desc]: stdFnItem };
+  let watchFnCtx;
   if (internal.enableMutate) {
-    watchAndCallMutateDict({ target, dict });
+    const retMap = watchAndCallMutateDict({ target, dict });
+    watchFnCtx = retMap[desc];
   }
-  return makeWitness(target, stdFnItem.desc, stdFnItem.oriDesc, internal);
+  return makeWitness(target, { desc, oriDesc, internal, watchFnCtx });
 }
 
 /**IMutateWitness
@@ -115,12 +126,14 @@ function configureMutateDict(options: IConfigureMutateDictOpt): any {
     const extraBound = getBoundStateInfo(options.extraTarget);
     Object.keys(dict).forEach((key) => (dict[key].extraBound = extraBound));
   }
+
+  let watchFnCtxMap: Dict = {};
   if (internal.enableMutate) {
-    watchAndCallMutateDict({ target, dict });
+    watchFnCtxMap = watchAndCallMutateDict({ target, dict });
   }
   const witnessDict: Dict<IMutateWitness> = {}; // 具体类型定义见 types-api multiDict
   Object.keys(dict).forEach((desc) => {
-    witnessDict[desc] = makeWitness(target, desc, desc, internal);
+    witnessDict[desc] = makeWitness(target, { desc, oriDesc: desc, internal, watchFnCtx: watchFnCtxMap[desc] });
   });
   return witnessDict;
 }

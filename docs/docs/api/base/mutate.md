@@ -117,7 +117,7 @@ task 和 fn 同时存在，设定`immediate`为`true`，首次执行 mutate 先�
 const witness = mutate(state)({
   deps: () => [state.a, state.b],
   fn: (draft, { input }) => (draft.c = input[0] + input[1] + 1),
-  task: async ({ input }) => {
+  task: async ({ draft, input }) => {
     draft.c = input[0] + input[1] + 1;
   },
   immediate: true,
@@ -129,7 +129,7 @@ const witness = mutate(state)({
 ```ts
 const witness = mutate(state)({
   deps: () => [state.a, state.b],
-  task: async ({ input }) => {
+  task: async ({ draft, input }) => {
     draft.c = input[0] + input[1] + 1;
   },
 });
@@ -140,7 +140,7 @@ const witness = mutate(state)({
 ```ts
 const witness = mutate(state)({
   deps: () => [state.a, state.b],
-  task: async ({ input }) => {
+  task: async ({ draft, input }) => {
     draft.c = input[0] + input[1] + 1;
   },
   immediate: false,
@@ -179,7 +179,7 @@ const [state] = share({ a: 1, b: 1, c: 0 });
 
 const witness = mutate(state)({
   deps: () => [state.a, state.b], // deps 返回结果会透传给 taskFnParams.input 数组
-  task: async ({ input }) => {
+  task: async ({ draft, input }) => {
     draft.c = input[0] + input[1] + 1;
   },
 });
@@ -200,7 +200,7 @@ const [state] = share({ a: 1, b: 1, c: 0 });
 const witness = mutate(state)({
   deps: () => [state.a],
   onlyDeps: true,
-  task: async ({ input }) => {
+  task: async ({ draft, input }) => {
     // 此时 b 的变化不会引起 task 执行
     draft.c = input[0] + state.b + 1;
   },

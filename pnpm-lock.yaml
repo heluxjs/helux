@@ -97,8 +97,7 @@ importers:
       dumi: ^2.2.16
       eslint: ^8.23.0
       father: ^4.1.0
-      helux: latest
-      helux-docs: 'link:'
+      helux: workspace:^4.3.0
       husky: ^8.0.1
       lint-staged: ^13.0.3
       localforage: ^1.10.0
@@ -116,6 +115,7 @@ importers:
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.0.0
       react-live: ^4.1.5
+      styledfc: ^1.0.7
       stylelint: ^14.9.1
     dependencies:
       '@ant-design/icons-svg': 4.3.1
@@ -126,7 +126,6 @@ importers:
       classnames: 2.5.1
       console-feed: 3.5.0_b2n7dceyjx62tehd6yl3udyazy
       helux: link:../packages/helux
-      helux-docs: 'link:'
       localforage: 1.10.0
       lodash: 4.17.21
       lodash.throttle: 4.1.1
@@ -137,6 +136,7 @@ importers:
       rc-tree: 5.8.2_biqbaboplfbrettd7655fr4n2y
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       react-live: 4.1.5_biqbaboplfbrettd7655fr4n2y
+      styledfc: 1.1.1_ew44pi3lpycpetk4ebiajdjvuy
     devDependencies:
       '@commitlint/cli': 17.8.1
       '@commitlint/config-conventional': 17.8.1
@@ -223,7 +223,7 @@ importers:
       hel-micro: ^4.8.11
       hel-micro-core: ^4.8.7
       hel-types: ^4.3.3
-      helux: ^4.2.1
+      helux: ^4.2.7
       react: '>=16.10.2'
       react-dom: '>=16.10.2'
       rollup: ^2.23.0
@@ -286,12 +286,9 @@ importers:
     specifiers:
       helux: workspace:^
       redux: ^4.2.1
-      terser: ^5.29.1
     dependencies:
       helux: link:../helux
       redux: 4.2.1
-    devDependencies:
-      terser: 5.29.1
 
   packages/helux-types:
     specifiers: {}
@@ -17373,6 +17370,19 @@ packages:
       inline-style-parser: 0.1.1
     dev: true
 
+  /styledfc/1.1.1_ew44pi3lpycpetk4ebiajdjvuy:
+    resolution: {integrity: sha512-QbdGGZm46x+JiD7pZxyOLGlefLhr1wEGH3t+rOEMt9KHMwHPmIm0dPGIZ+3MlX5naQ7PBBXKgcIMuyPRgvgSMw==}
+    peerDependencies:
+      '@types/react': ^18.2.40
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    dependencies:
+      '@changesets/cli': 2.27.1
+      '@types/react': 17.0.74
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
+
   /stylelint-config-recommended/7.0.0_stylelint@14.16.1:
     resolution: {integrity: sha512-yGn84Bf/q41J4luis1AZ95gj0EQwRX8lWmGmBwkwBNSkpGSpl66XcPTulxGa/Z91aPoNGuIGBmFkcM1MejMo9Q==}
     peerDependencies:
@@ -17729,17 +17739,6 @@ packages:
       acorn: 8.11.3
       commander: 2.20.3
       source-map-support: 0.5.21
-
-  /terser/5.29.1:
-    resolution: {integrity: sha512-lZQ/fyaIGxsbGxApKmoPTODIzELy3++mXhS5hOqaAWZjQtpq/hFHAc+rm29NND1rYRxRWKcjuARNwULNXa5RtQ==}
-    engines: {node: '>=10'}
-    hasBin: true
-    dependencies:
-      '@jridgewell/source-map': 0.3.5
-      acorn: 8.11.3
-      commander: 2.20.3
-      source-map-support: 0.5.21
-    dev: true
 
   /test-exclude/6.0.0:
     resolution: {integrity: sha512-cAGWPIyOHU6zlmg88jwm7VRyXnMN7iV68OGAbYDk/Mh/xC/pzVPlQtY6ngoIH/5/tciuhGfvESU8GrHrcxD56w==}

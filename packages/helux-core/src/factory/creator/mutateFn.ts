@@ -1,3 +1,4 @@
+import type { Dict } from '@helux/types';
 import { enureReturnArr, isPromise, noop } from '@helux/utils';
 import { FROM, SCOPE_TYPE } from '../../consts';
 import { getRunningFn, getSafeFnCtx } from '../../factory/common/fnScope';
@@ -252,7 +253,8 @@ function initFnItem(internal: TInternal, fnItem: IMutateFnStdItem) {
 export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) {
   const { target, dict } = options;
   const keys = Object.keys(dict);
-  if (!keys.length) return;
+  const watchFnCtxMap: Dict = {};
+  if (!keys.length) return watchFnCtxMap;
   const internal = getInternal(target);
   const { mutateFnDict, usefulName, forAtom, sharedRoot } = internal;
   const emitErrToPlugin = (err: Error) => emitErr(internal, err);
@@ -260,7 +262,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   keys.forEach((descKey) => {
     const item = mutateFnDict[descKey];
     // 开始映射 mutate 函数相关数据依赖关系
-    createWatchLogic(
+    watchFnCtxMap[descKey] = createWatchLogic(
       ({ sn, isFirstCall }) => {
         if (isFirstCall) {
           initFnItem(internal, item);
@@ -315,4 +317,6 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
       },
     );
   });
+
+  return watchFnCtxMap;
 }
