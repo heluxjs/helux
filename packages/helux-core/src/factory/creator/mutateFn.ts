@@ -1,5 +1,5 @@
-import { enureReturnArr, isPromise, noop } from '@helux/utils';
 import type { Dict } from '@helux/types';
+import { enureReturnArr, isPromise, noop } from '@helux/utils';
 import { FROM, SCOPE_TYPE } from '../../consts';
 import { getRunningFn, getSafeFnCtx } from '../../factory/common/fnScope';
 import { emitErr } from '../../factory/common/plugin';

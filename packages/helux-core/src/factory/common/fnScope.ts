@@ -45,7 +45,7 @@ export function delFnDepData(fnCtx: IFnCtx) {
     const fnKeysOfSkey = SKEY_FNKEYS_MAP.get(String(key)) || [];
     toDel.forEach((key) => {
       delListItem(fnKeysOfSkey, key);
-    })
+    });
   });
 }
 

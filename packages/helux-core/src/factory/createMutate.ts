@@ -1,10 +1,9 @@
 import { FROM, SINGLE_MUTATE } from '../consts';
-import { getBoundStateInfo, getInternal } from '../helpers/state';
 import { delFnDep } from '../helpers/fnDep';
+import { getBoundStateInfo, getInternal } from '../helpers/state';
 import type {
   ActionReturn,
   Dict,
-  Fn,
   IMutateFnItem,
   IMutateFnLooseItem,
   IMutateWitness,
@@ -50,7 +49,7 @@ function runMutateFnItem<T = SharedState>(options: { target: T; desc?: string; f
   return callMutateFnLogic(target, baseOpts);
 }
 
-function makeWitness(target: SharedState, options: { desc: string, oriDesc: string, internal: TInternal, watchFnCtx: any }) {
+function makeWitness(target: SharedState, options: { desc: string; oriDesc: string; internal: TInternal; watchFnCtx: any }) {
   const { desc, oriDesc, internal, watchFnCtx } = options;
   return {
     run: (throwErr?: boolean) => {
