@@ -1,6 +1,6 @@
 {
   "name": "@helux/openinula",
-  "version": "4.2.7",
+  "version": "5.0.0",
   "description": "State library for preact that integrates atom, signal, collection dep, derive and watch.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"

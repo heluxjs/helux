@@ -1,5 +1,17 @@
 # @helux/core
 
+## 5.0.0
+
+### Major Changes
+
+- 5c77fdf: build(4.2.7): fix unwatch problem
+
+### Patch Changes
+
+- @helux/hooks-impl@5.0.0
+- @helux/types@5.0.0
+- @helux/utils@5.0.0
+
 ## 4.2.7
 
 ### Patch Changes
