@@ -1,5 +1,12 @@
 # @helux/openinula
 
+## 4.3.1
+
+### Patch Changes
+
+- Updated dependencies [41b9f1d]
+  - @helux/core@4.3.1
+
 ## 4.3.0
 
 ### Minor Changes
