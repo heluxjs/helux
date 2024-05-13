@@ -1,5 +1,14 @@
 # @helux/core
 
+## 4.3.2
+
+### Patch Changes
+
+- 94cd307: build(4.3.2): optimize delFnDepData
+  - @helux/hooks-impl@4.3.2
+  - @helux/types@4.3.2
+  - @helux/utils@4.3.2
+
 ## 4.3.1
 
 ### Patch Changes
