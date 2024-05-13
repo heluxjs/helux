@@ -25,6 +25,10 @@ watch 可观察共享状态跟对象的变化，第二位参数可写为`()=>[]`
 
 <code src="./demos/watch-sub-node.tsx"></code>
 
+### 人工执行/取消watch
+
+<code src="./demos/run-watch.tsx"></code>
+
 ## 死循环
 
 设置`immediate`为 true 时，watch 回调首次执行会自动收集依赖，此时如果存在读取自己修改自己的行为，会造成死循环。

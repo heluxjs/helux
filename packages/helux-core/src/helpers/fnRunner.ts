@@ -53,7 +53,7 @@ function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
     return;
   }
 
-  // simpleWatch 的依赖时转移进去的，不需要判死循环，否则会照成误判
+  // simpleWatch 的依赖是转移进去的，不需要判死循环，否则会照成误判
   // 设定了 checkDeadCycle 为 false，不检查死循环
   if (fnCtx.isSimpleWatch || !fnCtx.checkDeadCycle) {
     return fnCtx.fn({ isFirstCall, triggerReasons, sn });

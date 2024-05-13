@@ -353,6 +353,10 @@ export interface IMutateWitness<T = any> {
   run: MutateCall<T>;
   /** 人工调用 mutate 配置里的异步函数 */
   runTask: MutateTaskCall<T>;
+  /**
+   * 撤销 mutate 自动运行机制，这是一个不可逆的操作，执行后 mutate 将不再执行
+   */
+  cancel: () => void;
   /** 用户透传的原始描述值 */
   oriDesc: string;
   /**
