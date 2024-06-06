@@ -40,10 +40,7 @@ function tryInjectReduxDevTool() {
   if (!Object.keys(redecers).length) return;
 
   const g = getWindow(); // global this
-  reduxStore = createStore(
-    combineReducers(redecers),
-    g.__REDUX_DEVTOOLS_EXTENSION__ && g.__REDUX_DEVTOOLS_EXTENSION__(),
-  );
+  reduxStore = createStore(combineReducers(redecers), g.__REDUX_DEVTOOLS_EXTENSION__ && g.__REDUX_DEVTOOLS_EXTENSION__());
   injected = true;
 
   reduxStore.subscribe(function () {

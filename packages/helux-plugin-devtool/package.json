@@ -34,14 +34,14 @@
     "helux": "^4.3.5",
     "redux": "^4.2.1"
   },
+  "devDependencies": {
+    "terser": "^5.29.1"
+  },
   "bundleDependencies": false,
   "publishConfig": {
     "access": "public",
     "main": "dist/index.js",
     "registry": "https://registry.npmjs.org/"
   },
-  "deprecated": false,
-  "devDependencies": {
-    "terser": "^5.29.1"
-  }
+  "deprecated": false
 }

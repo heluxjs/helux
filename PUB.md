@@ -6,6 +6,8 @@
 
 ### changeset 发布
 
+跟目录处先执行构建 `pnpm run build`
+
 使用 changeset 分以下几步：
 
 1. 当代码变更后，执行 `pnpm changeset` ，会让你输入选择变更的包和输入变更日志.

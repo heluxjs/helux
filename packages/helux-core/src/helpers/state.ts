@@ -81,12 +81,16 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
   const existedShared = rootState[usefulName];
   const existedInternal = getInternal(existedShared);
   if (moduleName && existedInternal && existedInternal.loc !== options.loc) {
-    const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
-    return warn(
-      `only-dev-mode tip: moduleName ${moduleName} duplicate! `
-        + 'this does not effect helux but the duplicated module will be ignored by devtool'
-        + locInfo,
-    );
+    // 非 loading 模块才提示
+    if (!moduleName.endsWith('@Loading')) {
+      const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
+      warn(
+        `only-dev-mode tip: moduleName ${moduleName} duplicate! `
+          + 'this does not effect helux but the duplicated module will be ignored by devtool'
+          + locInfo,
+      );
+    }
+    return;
   }
   // may hot replace for dev mode or add new mod
   rootState[usefulName] = sharedState;
