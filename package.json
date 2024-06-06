@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "4.3.1",
+  "version": "4.3.5",
   "description": "A reactive atomic state engine for React like.",
   "keywords": [],
   "author": {
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "turbo run build",
     "build:watch": "turbo run build:watch",
-    "build_devtool": "pnpm --filter=helux-devtool run build",
+    "build_devtool": "pnpm --filter=@helux/plugin-devtool run build",
     "build_helux": "pnpm --filter=helux run build",
     "changeset": "changeset",
     "commitlint": "commitlint -e $HUSKY_GIT_PARAMS",
