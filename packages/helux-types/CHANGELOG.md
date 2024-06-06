@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.3.5
+
+### Patch Changes
+
+- a17d460: mark ver as 4.3.5
+
 ## 4.3.4
 
 ### Patch Changes
