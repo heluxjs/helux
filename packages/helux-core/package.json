@@ -1,6 +1,6 @@
 {
   "name": "@helux/core",
-  "version": "4.3.3",
+  "version": "4.3.4",
   "description": "A reactive atomic state engine for React like.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
