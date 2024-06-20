@@ -1,4 +1,5 @@
 import { delListItem, includeOne, matchDictKey, nodupPush } from '@helux/utils';
+import { RUN_AT_SERVER } from '../consts';
 import { newFnCtx } from '../factory/common/ctor';
 import { getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
 import { getFnScope } from '../factory/common/speedup';
@@ -78,7 +79,14 @@ export function registerFn(fn: Fn, options: { specificProps: Partial<IFnCtx> & {
   const props = { fn, fnKey, ...specificProps };
   // 如 fnCtxBase 存在则 fnCtx 指向用户透传的 fnCtxBase
   const fnCtx = fnCtxBase ? Object.assign(fnCtxBase, props) : buildFnCtx(props);
-  getCtxMap(scopeType).set(fnKey, fnCtx);
+
+  // static 调用派生时始终记录 fnCtx
+  // hook 调用派生时仅在非服务器端执行才记录 fnCtx ，避免内存泄露
+  if (scopeType === 'static' || !RUN_AT_SERVER) {
+    // debugger;
+    getCtxMap(scopeType).set(fnKey, fnCtx);
+  }
+
   return fnCtx;
 }
 

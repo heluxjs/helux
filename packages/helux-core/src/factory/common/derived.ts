@@ -174,7 +174,7 @@ export function initDeriveFn(options: IInitDeriveFnOptions) {
   // 第一次调用时，如未显示定义 immediate 值，则触发规律是没有 fn 则执行，有 fn 则不执行
   const canRunTask = runAsync && asyncType === TASK && (immediate ?? !options.fn);
   if (task && canRunTask) {
-    runFn(curFnKey, { isFirstCall: true, sn: fnCtx.renderInfo.sn + 1 })
+    runFn(curFnKey, { isFirstCall: true, sn: fnCtx.renderInfo.sn + 1, throwErr: true })
       .then((data: [any, Error | null]) => {
         checkResult(fnCtx, data[0], forAtom);
       })

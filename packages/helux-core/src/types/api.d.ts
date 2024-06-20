@@ -68,7 +68,7 @@ import type {
 } from './base';
 
 export declare const cst: {
-  VER: '4.3.5';
+  VER: '4.3.6';
   LIMU_VER: string;
   EVENT_NAME: {
     /** 共享状态创建时的事件 */

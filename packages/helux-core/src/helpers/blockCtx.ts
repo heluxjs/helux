@@ -1,3 +1,4 @@
+import { RUN_AT_SERVER } from '../consts';
 import { getBlockCtxMap } from '../factory/common/blockScope';
 import { genBlockKey } from '../factory/common/key';
 import { getBlockScope } from '../factory/common/speedup';
@@ -30,7 +31,12 @@ export function initBlockCtx(isDynamic: boolean, enableStatus = false) {
   }
   const blockKey = genBlockKey();
   const blockCtx = newBlockCtx(blockKey, enableStatus);
-  getBlockCtxMap(isDynamic).set(blockKey, blockCtx);
+
+  // 非服务器端执行才记录 blockCtx ，避免内存泄露
+  if (!RUN_AT_SERVER) {
+    getBlockCtxMap(isDynamic).set(blockKey, blockCtx);
+  }
+
   return blockCtx;
 }
 

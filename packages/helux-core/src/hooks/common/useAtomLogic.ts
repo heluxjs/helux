@@ -1,4 +1,4 @@
-import { Fn } from 'helux';
+import type { Fn } from 'helux';
 import { RENDER_END, RENDER_START } from '../../consts';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { INS_CTX } from '../../factory/creator/current';

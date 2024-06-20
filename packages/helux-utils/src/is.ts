@@ -6,7 +6,7 @@ const toString = Object.prototype.toString;
 const MAP_DESC = '[object Map]';
 
 export function isServer() {
-  return !(typeof window != 'undefined' && window.document);
+  return GLOBAL_REF.window === undefined && GLOBAL_REF.global !== undefined;
 }
 
 export function isMap(mayMap: any) {

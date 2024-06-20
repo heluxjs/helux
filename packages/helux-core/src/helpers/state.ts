@@ -1,5 +1,5 @@
 import { getSafeNext, warn } from '@helux/utils';
-import { SHARED_KEY } from '../consts';
+import { RUN_AT_SERVER, SHARED_KEY } from '../consts';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
 import type { TInternal } from '../factory/creator/buildInternal';
@@ -76,6 +76,11 @@ export function getSharedState(sharedKey: number) {
 }
 
 export function recordMod(sharedState: Dict, options: ParsedOptions) {
+  // 服务端运行，没必要记录模块信息到 global 上，避免服务端内存浪费、冗余的模块重复信息提示（nextjs里同一个地方的share代码会被多次调用）
+  if (RUN_AT_SERVER) {
+    return;
+  }
+
   const { rootState, ctx } = getRoot();
   const { moduleName, usefulName } = options;
   const existedShared = rootState[usefulName];

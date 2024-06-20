@@ -1,5 +1,5 @@
 import { delListItem, nodupPush, safeMapGet } from '@helux/utils';
-import { STATE_TYPE } from '../../consts';
+import { RUN_AT_SERVER, STATE_TYPE } from '../../consts';
 import { getInternal } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { Fn, NumStrSymbol } from '../../types/base';
@@ -37,7 +37,8 @@ export function getGlobalEmptyInternal() {
 }
 
 export function mapGlobalId(id: NumStrSymbol, insKey: number) {
-  if (!id) return;
+  // 服务端运行时，不做 globalId 映射，避免内存浪费
+  if (!id || RUN_AT_SERVER) return;
   const keys = getGlobalIdInsKeys(id);
   nodupPush(keys, insKey);
 }

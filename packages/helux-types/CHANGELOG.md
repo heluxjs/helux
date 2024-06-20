@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.3.6
+
+### Patch Changes
+
+- f014aae: build(4.3.6): add RUN_AT_SERVER judgement
+
 ## 4.3.5
 
 ### Patch Changes
