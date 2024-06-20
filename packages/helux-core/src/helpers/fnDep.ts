@@ -1,5 +1,5 @@
 import { nodupPush, safeMapGet } from '@helux/utils';
-import { DERIVE, EXPIRE_MS, NOT_MOUNT, PROTO_KEY, SIZE_LIMIT, UNMOUNT } from '../consts';
+import { DERIVE, EXPIRE_MS, NOT_MOUNT, PROTO_KEY, RUN_AT_SERVER, SIZE_LIMIT, UNMOUNT } from '../consts';
 import { delFnDepData, getFnCtx, getRunningFn, opUpstreamFnKey } from '../factory/common/fnScope';
 import { hasChangedNode } from '../factory/common/sharedScope';
 import { getFnScope } from '../factory/common/speedup';
@@ -24,6 +24,12 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
     DEPS_CB.current()(inputDepKeys);
     return;
   }
+  const { fnKey, scopeType } = fnCtx;
+  // 服务端运行的话，不记录任何 hook 实例对应的相关映射关系，避免不必要的服务端内存开销
+  if (RUN_AT_SERVER && scopeType === 'hook') {
+    return;
+  }
+
   const { DEPKEY_FNKEYS_MAP, SKEY_FNKEYS_MAP } = getFnScope();
   const { belongCtx, sharedKey } = options;
 
@@ -42,7 +48,6 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
     nodupPush(belongCtx.nextLevelFnKeys, runningFnCtx.fnKey);
   }
 
-  const { fnKey } = fnCtx;
   inputDepKeys.forEach((depKey: string) => {
     if (PROTO_KEY === depKey || isIgnore) {
       return;
@@ -70,6 +75,8 @@ export function ensureFnDepData(fnCtx?: IFnCtx) {
 /** TODO 后续接入内置 useEffect 后，这里可考虑移除 */
 export function recoverDep(fnCtx: IFnCtx) {
   const { FNKEY_HOOK_CTX_MAP, UNMOUNT_INFO_MAP } = getFnScope();
+  if (RUN_AT_SERVER) return;
+
   const { fnKey } = fnCtx;
   FNKEY_HOOK_CTX_MAP.set(fnKey, fnCtx);
   opUpstreamFnKey(fnCtx, true);

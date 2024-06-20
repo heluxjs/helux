@@ -138,7 +138,7 @@ export function newMutateFnItem(partial?: Partial<IMutateFnStdItem>): IMutateFnS
 
 export function newFnCtx() {
   const base: IFnCtx = {
-    fnKey: '', // 在 feDep.mapFn 阶段会生成
+    fnKey: '', // 在 fnDep.mapFn 阶段会生成
     fn: noop,
     subFnInfo: fnItem,
     checkDeadCycle: true,

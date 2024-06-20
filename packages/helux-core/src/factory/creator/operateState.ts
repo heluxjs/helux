@@ -61,8 +61,9 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
       if (currReactive.onRead) {
         currReactive.onRead(opParams);
       } else {
+        const runingFnCtx = getRunningFn().fnCtx;
         // 支持对 draft 操作时可以收集到依赖： draft.a = draft.b + 1
-        if (getRunningFn().fnCtx) {
+        if (runingFnCtx) {
           recordFnDepKeys([depKey], { sharedKey });
         }
         // 仅 top reactive 触发以下逻辑，为 block 收集依赖

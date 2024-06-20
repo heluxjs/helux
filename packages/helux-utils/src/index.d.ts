@@ -15,6 +15,8 @@ export declare function noopVoid(...args: any[]): void;
 export declare function noopArgs<T extends any[] = any[]>(...args: T): T;
 export declare function noopArr(...args: any[]): any[];
 export declare function noopAny(...args: any[]): any;
+/** 是否是在 server 端运行 */
+export declare function isServer(): boolean;
 export declare function isMap(mayMap: any): boolean;
 export declare function isMax(input: number): boolean;
 export declare function isDebug(): boolean;

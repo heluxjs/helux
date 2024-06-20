@@ -61,10 +61,9 @@ export function genDerivedResult(deriveCtx: IDeriveCtx, options: IUseDerivedLogi
     const isChanged = isInputChanged(fnCtx, input, result);
     if (!isChanged) {
       return;
-    } else {
-      isCtxChanged = true;
-      ensureHotReload(fnCtx);
     }
+    isCtxChanged = true;
+    ensureHotReload(fnCtx);
   }
 
   deriveCtx.input = result;

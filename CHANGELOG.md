@@ -2,6 +2,10 @@
 
 click helux-core [change log](./packages/helux-core/CHANGELOG.md) to see more details
 
+[released] - 2024-06-20
+
+relese `4.3.6` to fix server mem leak( add `RUN_AT_SERVER` judgement)
+
 [released] - 2024-01-16
 
 - fix issue [136](https://github.com/heluxjs/helux/issues/136)

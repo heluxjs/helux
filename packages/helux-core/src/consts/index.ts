@@ -7,6 +7,10 @@ export const PROTO_KEY = '__proto__';
 
 export const HAS_PROXY = isProxyAvailable();
 
+// export const RUN_AT_SERVER = isServer();
+export const RUN_AT_SERVER = false;
+// export const RUN_AT_SERVER = true;
+
 /** 提供给 sync 返回 undefined 时之用 */
 export const UNDEFINED = createSymbol('HeluxUndefined');
 

@@ -1,6 +1,6 @@
 import { delListItem, enureReturnArr, isFn, isSymbol, nodupPush, prefixValKey, warn } from '@helux/utils';
 import { immut } from 'limu';
-import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, NOT_MOUNT, OTHER, RENDER_END, RENDER_START } from '../consts';
+import { DICT, EXPIRE_MS, IS_DERIVED_ATOM, NOT_MOUNT, OTHER, RENDER_END, RENDER_START, RUN_AT_SERVER } from '../consts';
 import { newOpParams } from '../factory/common/ctor';
 import { hasRunningFn } from '../factory/common/fnScope';
 import { genInsKey } from '../factory/common/key';
@@ -65,6 +65,8 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
   const { rawState, isDeep, sharedKey, onRead, forAtom } = internal;
   if (isDeep) {
     const onOperate: OnOperate = (opParams) => {
+      // 服务端执行，无需记录依赖关系
+      if (RUN_AT_SERVER) return;
       const { isBuiltInFnKey, key } = opParams;
       if (isBuiltInFnKey) return;
       if (isSymbol(key)) {
@@ -99,6 +101,8 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
         return true;
       },
       get: (target: Dict, key: string) => {
+        // 服务端执行，无需记录依赖关系
+        if (RUN_AT_SERVER) return;
         const value = target[key];
         if (isSymbol(key)) {
           return handleHeluxKey(true, forAtom, sharedKey, key, value);
@@ -252,8 +256,15 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
       }
     },
   };
+
   globalId && mapGlobalId(globalId, insKey);
   attachInsProxyState(insCtx);
+
+  // 是服务器端执行的话，不需要真正的去映射实例和共享状态关系，避免内存泄露
+  if (RUN_AT_SERVER) {
+    return insCtx;
+  }
+
   internal.mapInsCtx(insCtx, insKey);
   internal.recordId(id, insKey);
 
@@ -281,7 +292,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
 export function attachInsDerivedResult(fnCtx: IFnCtx) {
   const { result, forAtom } = fnCtx;
 
-  // MARK: 此计算结果不具备依赖收集特性，如需要此特性可使用 share接口的 mutate 配置可变派生结果
+  // MARK: 此计算结果不具备依赖收集特性，如需要此特性可使用 share 接口的 mutate 配置可变派生结果
   // LABEL: proxyResult
   fnCtx.proxyResult = createOb(result, {
     set: () => {
@@ -292,7 +303,8 @@ export function attachInsDerivedResult(fnCtx: IFnCtx) {
       if (IS_DERIVED_ATOM === resultKey) {
         return forAtom;
       }
-      if (RENDER_START === fnCtx.renderStatus) {
+      // 服务端运行时，就不需要记录hook使用导出结果时的相关映射关系了，避免内存浪费
+      if (RENDER_START === fnCtx.renderStatus && !RUN_AT_SERVER) {
         fnDep.ensureFnDepData(fnCtx);
       }
       return result[resultKey];
