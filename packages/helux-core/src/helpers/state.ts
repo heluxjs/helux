@@ -1,4 +1,4 @@
-import { getSafeNext, warn, noop } from '@helux/utils';
+import { getSafeNext, noop, warn } from '@helux/utils';
 import { RUN_AT_SERVER, SHARED_KEY } from '../consts';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
@@ -96,8 +96,8 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
       const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
       warn(
         `only-dev-mode tip: moduleName ${moduleName} duplicate! `
-        + 'this does not effect helux but the duplicated module will be ignored by devtool'
-        + locInfo,
+          + 'this does not effect helux but the duplicated module will be ignored by devtool'
+          + locInfo,
       );
     }
     return;
