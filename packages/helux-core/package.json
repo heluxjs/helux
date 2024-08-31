@@ -35,7 +35,7 @@
     "@helux/hooks-impl": "workspace:^",
     "@helux/types": "workspace:^",
     "@helux/utils": "workspace:^",
-    "limu": "^3.12.4"
+    "limu": "^3.13.0"
   },
   "devDependencies": {
     "esbuild-copy-static-files": "^0.1.0"

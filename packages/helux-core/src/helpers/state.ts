@@ -1,4 +1,4 @@
-import { getSafeNext, warn } from '@helux/utils';
+import { getSafeNext, warn, noop } from '@helux/utils';
 import { RUN_AT_SERVER, SHARED_KEY } from '../consts';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
@@ -26,6 +26,11 @@ export function setInternal(state: SharedState, internal: TInternal) {
 export function getRawState<T = Dict>(state: T): T {
   const internal = getInternal(state);
   return internal.rawState;
+}
+
+/** TODO: get sub node of state */
+export function getRawNode() {
+  noop();
 }
 
 export function getSnap<T = Dict>(state: T, isPrev = true): T {
@@ -91,8 +96,8 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
       const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
       warn(
         `only-dev-mode tip: moduleName ${moduleName} duplicate! `
-          + 'this does not effect helux but the duplicated module will be ignored by devtool'
-          + locInfo,
+        + 'this does not effect helux but the duplicated module will be ignored by devtool'
+        + locInfo,
       );
     }
     return;
