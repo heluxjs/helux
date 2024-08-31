@@ -28,6 +28,9 @@ export function getRawState<T = Dict>(state: T): T {
   return internal.rawState;
 }
 
+/** TODO: get sub node of state */
+export function getRawNode() {}
+
 export function getSnap<T = Dict>(state: T, isPrev = true): T {
   const internal = getInternal(state);
   return isPrev ? internal.prevSnap : internal.snap;

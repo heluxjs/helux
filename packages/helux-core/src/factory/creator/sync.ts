@@ -92,10 +92,14 @@ export function createSyncerBuilder(internal: TInternal) {
 }
 
 const syncFnCahce = new Map<string, Fn>();
+
 /**
+ * @example
+ * ```
  * <div onClick={sync(t=>t.a.b)}></div>
- * 这里 val 将获得类型提示
+ * // 这里 val 将获得类型提示
  * <div onClick={to(t=>t.a.b, val=>val+1)}></div>
+ * ```
  * @return syncFnBuilder
  */
 export function createSyncFnBuilder(internal: TInternal) {
