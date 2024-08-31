@@ -1,5 +1,16 @@
 # helux
 
+## 4.4.0
+
+### Minor Changes
+
+- a228a34: build(4.4.0): bump limu to support autoRevoke, avoid limu deepDrill maximum call
+
+### Patch Changes
+
+- Updated dependencies [a228a34]
+  - @helux/core@4.4.0
+
 ## 4.3.6
 
 ### Patch Changes

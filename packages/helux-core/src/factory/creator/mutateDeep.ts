@@ -143,6 +143,7 @@ export function prepareDeepMutate(opts: IPrepareMutateOpts) {
   const { forAtom, rawState } = internal;
   const mutateCtx = newMutateCtx(setFactoryOpts);
   const draftRoot = createDraft(rawState, {
+    autoRevoke: false,
     customKeys: OP_KEYS,
     onOperate: (opParams: IOperateParams) => {
       if (opParams.isCustom) {
