@@ -7,7 +7,7 @@ export function useMutable<T extends object = PlainObject>(apiCtx: CoreApiCtx, i
   const handleState = (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => {
     let final = null;
     if (isFn(partialStateOrCb)) {
-      // 不自动撤销结束后的草稿 proxy，使用户的闭包了子节点使用的场景不报错，但是此节点在结束草稿后只能读取不能修改（修改时无效的）
+      // 不自动撤销结束后的草稿 proxy，使用户闭包了子节点的使用场景不报错，但是此节点在结束草稿后只能读取不能修改（修改是无效的）
       const draft = createDraft(prevState, { autoRevoke: false });
       const mayPartial = partialStateOrCb(draft);
       final = finishDraft(draft);
