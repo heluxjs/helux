@@ -21,6 +21,7 @@ function getCode(name: any, subName: any) {
 
 const scope = { helux, React, ...helux };
 const subNames: Record<string, string> = {
+  quickStart: 'HelloHelux',
   atom: 'primitive',
   derive: 'primitive',
   modular: 'defineActions',
@@ -48,22 +49,22 @@ function useLogic(name = 'atom', subName = 'primitive') {
   const [code, setCode] = React.useState(initCode);
 
   useEffect(() => {
-    loadCode(name, subName, setCode)
-  }, [])
+    loadCode(name, subName, setCode);
+  }, []);
 
   useWatch(() => {
-    const curCode = codeContext.code
+    const curCode = codeContext.code;
     if (curCode.trim().length === 0) {
-      loadCode(name, subName, setCode)
+      loadCode(name, subName, setCode);
     }
-  }, () => [codeContext.code])
+  }, () => [codeContext.code]);
 
   const changeCode = useCallback((name: string) => {
     const subName = cachedSubNames[name] || subNames[name] || 'primitive';
-    setCodeContext(draft => { draft.key = `${name}_${subName}` })
-    setInfo({ name, subName })
-    loadCode(name, subName, setCode)
-  }, [info.name, info.subName])
+    setCodeContext(draft => { draft.key = `${name}_${subName}` });
+    setInfo({ name, subName });
+    loadCode(name, subName, setCode);
+  }, [info.name, info.subName]);
 
   const changeSubName = useCallback((subName: string) => {
     const { name } = info;
@@ -113,22 +114,24 @@ export default () => {
   return (
     <LiveProvider noInline={true} code={code} scope={scope} theme={prism.themes.vsDark}>
       <div className="playground-wrap">
-        <div style={{ display: "flex", height: '100%', padding: '12px 100px' }}>
+        <div className="leftMenuWrap">
           <ApiMenus onClick={changeCode} name={info.name} />
-          <div style={{ flex: "1 1 0px", height: '100%' }}>
-            <TopBar onClick={changeSubName} name={info.name} subName={info.subName} />
-            {/* <LiveEditor style={{ flexGrow: 1 }} onChange={value => { setCodeContext(draft => { draft.code = value }) }} /> */}
-            <LiveEditor style={{ flexGrow: 1 }} />
-            {/* <Tools /> */}
-          </div>
-          <div style={{ flex: "1 1 0px", height: 'calc(100vh - 138px)' }}>
-            {/* 空占位一个条 */}
-            <div style={{ width: '200%', height: '28px' }}></div>
-            <div style={{ height: '50%', padding: '12px', boxSizing: 'border-box', border: '1px solid #e8ae56' }}>
-              <LiveError className="liveErr" />
-              <LivePreview />
+        </div>
+        <div style={{ width: 'calc(100% - 120px)', display: 'inline-block' }}>
+          <TopBar onClick={changeSubName} name={info.name} subName={info.subName} />
+          <div style={{ display: "flex", height: '100%', padding: '0 2px' }}>
+            <div style={{ flex: "1 1 0px", height: '100%' }}>
+              {/* <LiveEditor style={{ flexGrow: 1 }} onChange={value => { setCodeContext(draft => { draft.code = value }) }} /> */}
+              <LiveEditor style={{ flexGrow: 1 }} />
+              {/* <Tools /> */}
             </div>
-            <Console />
+            <div style={{ flex: "1 1 0px", height: 'calc(100vh - 118px)' }}>
+              <div style={{ height: '50%', padding: '12px', boxSizing: 'border-box', border: '1px solid #e8ae56' }}>
+                <LiveError className="liveErr" />
+                <LivePreview />
+              </div>
+              <Console />
+            </div>
           </div>
         </div>
       </div>
