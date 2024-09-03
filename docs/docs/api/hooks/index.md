@@ -7,7 +7,7 @@ order: 0
 包含以下常用钩子
 
 - [useAtom](/api/hooks/use-atom) 使用`atom`对象，返回元组
-- [useAtomX](/api/hooks/use-atom-x) 使用`atom`对象，返回字典
+- [useAtomX](/api/hooks/use-atomx) 使用`atom`对象，返回字典
 - [useReactive](/api/hooks/use-reactive) 使用`reactive`对象，返回元组
 - [useReactiveX](/api/hooks/use-reactive-x) 使用`reactive`对象，返回字典
 - [useDerived](/api/hooks/use-derived) 使用全量派生结果

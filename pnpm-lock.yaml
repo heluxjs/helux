@@ -223,7 +223,7 @@ importers:
       hel-micro: ^4.8.11
       hel-micro-core: ^4.8.7
       hel-types: ^4.3.3
-      helux: ^4.3.6
+      helux: ^4.4.0
       react: '>=16.10.2'
       react-dom: '>=16.10.2'
       rollup: ^2.23.0
@@ -284,7 +284,7 @@ importers:
 
   packages/helux-plugin-devtool:
     specifiers:
-      helux: ^4.3.6
+      helux: ^4.4.0
       redux: ^4.2.1
       terser: ^5.29.1
     dependencies:

@@ -8,9 +8,9 @@ nav:
 包含以下基础函数
 
 - [atom](/api/base/atom) 创建`atom`对象，返回元组
-- [atomx](/api/base/atom-x) 创建`atom`对象，返回字典
+- [atomx](/api/base/atomx) 创建`atom`对象，返回字典
 - [share](/api/base/share) 创建字典型`atom`对象，返回元组
-- [sharex](/api/base/share-x) 创建字典型`atom`对象，返回字典
+- [sharex](/api/base/sharex) 创建字典型`atom`对象，返回字典
 - [signal](/api/base/signal) 创建`signal`响应区域，实现dom粒度更新
 - [block](/api/base/block) 创建`block`块响应区域，实现块粒度更新
 - [dynamicBlock](/api/base/dynamic-block) 组件渲染过程中创建动态`block`块响应区域，实现块粒度更新

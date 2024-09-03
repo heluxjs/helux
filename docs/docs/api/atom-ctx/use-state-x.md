@@ -12,5 +12,5 @@ order: 1
 ---
 
 :::info
-更多用法查阅[Hooks/useAtomX](/api/hooks/use-atom-x)
+更多用法查阅[Hooks/useAtomX](/api/hooks/use-atomx)
 :::

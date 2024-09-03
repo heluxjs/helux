@@ -32,10 +32,7 @@ function renderItems(name: string, subName: string) {
   ));
 }
 
-
-
 export default React.memo(({ onClick, name, subName }: any) => {
-
   const handleClick = e => {
     const subName = e.target.dataset.name;
     if (subName) {

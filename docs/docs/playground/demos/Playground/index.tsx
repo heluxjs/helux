@@ -42,7 +42,8 @@ function loadCode(name: any, subName: any, setCode: any) {
     }
   })
 }
-export default () => {
+
+function useLogic(name = 'atom', subName = 'primitive') {
   const [info, setInfo] = React.useState({ name, subName });
   const [code, setCode] = React.useState(initCode);
 
@@ -56,8 +57,6 @@ export default () => {
       loadCode(name, subName, setCode)
     }
   }, () => [codeContext.code])
-
-
 
   const changeCode = useCallback((name: string) => {
     const subName = cachedSubNames[name] || subNames[name] || 'primitive';
@@ -77,6 +76,40 @@ export default () => {
     loadCode(name, subName, setCode);
   }, [info.name, info.subName]);
 
+  return { info, code, changeCode, changeSubName };
+}
+
+export function SimplePlayground() {
+  const { info, code, changeCode, changeSubName } = useLogic('quickStart', 'HelloHelux');
+
+  return (
+    <LiveProvider noInline={true} code={code} scope={scope} theme={prism.themes.vsDark}>
+      <div className="simple-playground-wrap">
+        <div className="leftMenuWrap">
+          <ApiMenus onClick={changeCode} name={info.name} />
+        </div>
+        <div style={{ width: 'calc(100% - 120px)', display: 'inline-block' }}>
+          <TopBar onClick={changeSubName} name={info.name} subName={info.subName} />
+          <div style={{ display: "flex", height: '100%', paddingTop: '12px' }}>
+            <div style={{ flex: "1 1 0px", height: '100%' }}>
+              <LiveEditor style={{ flexGrow: 1 }} />
+            </div>
+            <div style={{ flex: "1 1 0px", height: '543px' }}>
+              <div style={{ height: '90%', padding: '12px', boxSizing: 'border-box', border: '1px solid #e8ae56' }}>
+                <LiveError className="liveErr" />
+                <LivePreview />
+              </div>
+              <Console />
+            </div>
+          </div>
+        </div>
+      </div>
+    </LiveProvider>
+  );
+}
+
+export default () => {
+  const { info, code, changeCode, changeSubName } = useLogic(name, subName);
   return (
     <LiveProvider noInline={true} code={code} scope={scope} theme={prism.themes.vsDark}>
       <div className="playground-wrap">
