@@ -38,7 +38,7 @@ interface IRunFnOpt {
 
 /**
  * 执行 watch 函数，内部会尝试检测死循环，防止无限调用情况产生
- * TODO  后续优化拦截逻辑，提高可读性
+ * TODO 后续优化拦截逻辑，提高可读性
  */
 function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
   const { isFirstCall = false, triggerReasons = [], sn = 0, from, internal = fakeInternal, desc, fromFnKey } = options;

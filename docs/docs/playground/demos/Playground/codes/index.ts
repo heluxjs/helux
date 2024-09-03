@@ -1,3 +1,4 @@
+export { default as quickStart } from './quickStart';
 export { default as atom } from './atom';
 export { default as derive } from './derive';
 export { default as watch } from './watch';

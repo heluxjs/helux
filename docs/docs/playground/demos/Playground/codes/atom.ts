@@ -1,5 +1,4 @@
 
-
 const primitive = `
 const [ num, setNum ] = atom(1);
 

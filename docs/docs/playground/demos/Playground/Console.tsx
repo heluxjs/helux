@@ -1,4 +1,5 @@
 import React from 'react'
+import * as helux from 'helux'
 import { Hook, Console, Decode } from 'console-feed';
 import './index.less';
 
@@ -11,7 +12,7 @@ class HeluxConsole extends React.Component<any, { logs: any[] }> {
     Hook(window.console, (log) => {
       this.setState(({ logs }) => ({ logs: [...logs, Decode(log)] }))
     });
-    console.log('Welcome to helux playground ^_^');
+    console.log(`Welcome to helux playground (helux ver: ${helux.cst.VER})^_^`);
   }
 
   render() {

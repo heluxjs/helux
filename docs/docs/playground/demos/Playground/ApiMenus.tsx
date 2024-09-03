@@ -6,6 +6,7 @@ import * as codes from './codes';
 const c = '#e8ae56';
 
 const orderedKeys = [
+  'quickStart',
   'atom',
   'derive',
   'watch',
