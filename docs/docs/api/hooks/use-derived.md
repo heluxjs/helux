@@ -16,8 +16,8 @@ order: 3
  */
 import { atomx, derive, useDerived } from 'helux';
 
-const { state, reactiveRoot } = atomx(1);
-const result = derive(() => state.val + 100);
+const { stateRoot, reactiveRoot } = atomx(1);
+const result = derive(() => stateRoot.val + 100);
 
 const change = () => {
   reactiveRoot.val += 1;
@@ -48,9 +48,9 @@ export default () => (
 import { atomx, derive, useDerived } from 'helux';
 
 const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
-const { state, reactiveRoot } = atomx(1);
+const { stateRoot, reactiveRoot } = atomx(1);
 const result = derive({
-  deps: () => [state.val],
+  deps: () => [stateRoot.val],
   fn: () => 0,
   task: async ({ input }) => {
     await delay(100);
