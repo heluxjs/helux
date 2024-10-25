@@ -68,7 +68,9 @@ function syncerFn(keyPath: string[], internal: TInternal) {
 const dataSyncerCahce = new Map<string, Fn>();
 /**
  * 注意 syncer 只能同步一层key的数据，如需要同步多层的，使用 sync 函数
+ * ```jsx
  * <div onClick={syncer.a}></div>
+ * ```
  * @return syncerBuilder
  */
 export function createSyncerBuilder(internal: TInternal) {
@@ -95,7 +97,7 @@ const syncFnCahce = new Map<string, Fn>();
 
 /**
  * @example
- * ```
+ * ```jsx
  * <div onClick={sync(t=>t.a.b)}></div>
  * // 这里 val 将获得类型提示
  * <div onClick={to(t=>t.a.b, val=>val+1)}></div>
