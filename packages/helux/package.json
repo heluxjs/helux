@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "A reactive atomic state engine for React( including React 18).",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"

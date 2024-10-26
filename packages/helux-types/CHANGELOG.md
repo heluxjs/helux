@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.4.2
+
+### Patch Changes
+
+- ce189b6: build(4.4.2): clear fixedDepKeys
+
 ## 4.4.1
 
 ## 4.4.0

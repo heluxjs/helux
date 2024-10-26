@@ -1,5 +1,13 @@
 # @helux/openinula
 
+## 4.4.2
+
+### Patch Changes
+
+- ce189b6: build(4.4.2): clear fixedDepKeys
+- Updated dependencies [ce189b6]
+  - @helux/core@4.4.2
+
 ## 4.4.1
 
 ### Patch Changes

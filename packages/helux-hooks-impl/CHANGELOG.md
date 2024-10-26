@@ -1,5 +1,14 @@
 # @helux/hooks-impl
 
+## 4.4.2
+
+### Patch Changes
+
+- ce189b6: build(4.4.2): clear fixedDepKeys
+- Updated dependencies [ce189b6]
+  - @helux/types@4.4.2
+  - @helux/utils@4.4.2
+
 ## 4.4.1
 
 ### Patch Changes
