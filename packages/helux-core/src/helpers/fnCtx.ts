@@ -61,6 +61,7 @@ export function markFnEnd() {
 
   fnScope.runningFnKey = '';
   fnScope.depKeys = [];
+  fnScope.fixedDepKeys = [];
   fnScope.delPathAoa = [];
   fnScope.runningSharedKey = 0;
   return targetKeys;
