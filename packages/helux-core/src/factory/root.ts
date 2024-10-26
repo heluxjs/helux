@@ -35,6 +35,8 @@ function buildFnScope() {
     isIgnore: false,
     /** 函数运行结束收集到的读依赖 depKeys */
     depKeys: [] as string[],
+    /** 函数运行结束后，会做一次依赖精简逻辑，只保留最长路径依赖，若依赖在 fixedDepKeys 里则不会被精简掉 */
+    fixedDepKeys: [] as string[],
     /**
      * del path array of array
      * 需要移除的 depKeys，解决 mutate 回调里 draft 里深层次读取修改的依赖收集不正确问题

@@ -94,7 +94,7 @@ export function useWatchSimpleLogic(apiCtx: CoreApiCtx, watchFn: Fn, options: IS
         const state = getSharedState(sharedKey);
         return getVal(state, keyPath);
       });
-    createWatchLogic(watchFn, { scopeType: HOOK, fnCtxBase: fnCtx, deps, isSimpleWatch: true });
+    createWatchLogic(watchFn, { scopeType: HOOK, fnCtxBase: fnCtx, deps, forBlock: true });
   }
   useFnCtxEffect(useEffect, fnCtx);
 }

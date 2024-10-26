@@ -1541,6 +1541,11 @@ export interface IFnCtx {
   proxyResult: PlainObject;
   fnType: FnType;
   scopeType: ScopeType;
+  /**
+   * default: false
+   * 是否为 block 工作，true 表示由 block 重发读取记录时创建的，主要服务于 block 组件的依赖锁定流程
+   */
+  forBlock: boolean;
   /** work for hook derived fnCtx */
   updater: Fn;
   /** 为了更友好的支持热更新而加入的标记，标记当前 fnCtx 是否已过期 */
@@ -1565,11 +1570,6 @@ export interface IFnCtx {
   isAsync: boolean;
   /** 是否是一个中转结果的异步函数，内部用的标记 */
   isAsyncTransfer: boolean;
-  /**
-   * default: false
-   * 是否由 simple watch 创建
-   */
-  isSimpleWatch: boolean;
   /**
    * 是否正在运行中，辅助判断死循环
    */

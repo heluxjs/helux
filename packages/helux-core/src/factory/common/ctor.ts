@@ -168,7 +168,7 @@ export function newFnCtx() {
     shouldReplaceResult: false,
     isAsync: false,
     isAsyncTransfer: false,
-    isSimpleWatch: false,
+    forBlock: false,
     isRunning: false,
     dcErrorInfo: { err: null, tipFn: noop },
     asyncType: MAY_TRANSFER,

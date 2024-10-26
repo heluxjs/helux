@@ -16,8 +16,11 @@ export function markIgnore(isIgnore = true) {
 /**
  * 自动记录当前正在运行的函数对 depKey 的依赖，以及 depKey 对应的函数记录
  */
-export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx }) {
-  const { fnCtx: runningFnCtx, depKeys, isIgnore } = getRunningFn();
+export function recordFnDepKeys(
+  inputDepKeys: string[],
+  options: { sharedKey?: number; specificCtx?: IFnCtx | null; belongCtx?: IFnCtx; kv?: Dict },
+) {
+  const { fnCtx: runningFnCtx, depKeys, fixedDepKeys, isIgnore } = getRunningFn();
   const fnCtx: IFnCtx | null | undefined = options.specificCtx || runningFnCtx;
   if (!fnCtx) {
     // 来自 useGlobalForceUpdate 的 deps 收集
@@ -31,7 +34,7 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
   }
 
   const { DEPKEY_FNKEYS_MAP, SKEY_FNKEYS_MAP } = getFnScope();
-  const { belongCtx, sharedKey } = options;
+  const { belongCtx, sharedKey, kv = {} } = options;
 
   if (sharedKey) {
     nodupPush(fnCtx.depSharedKeys, sharedKey);
@@ -56,6 +59,13 @@ export function recordFnDepKeys(inputDepKeys: string[], options: { sharedKey?: n
     // 等到 markFnEnd 时再按最长路径提取出所有 depKeys 转移到 fnCtx.depKeys 里
     if (runningFnCtx) {
       nodupPush(depKeys, depKey); // here depKeys is come from fnScope
+      // fix https://github.com/heluxjs/helux/issues/172, block 组件读取的数组 key 要固定住
+      if (runningFnCtx.forBlock) {
+        const val = kv[depKey];
+        if (Array.isArray(val)) {
+          nodupPush(fixedDepKeys, depKey); // here fixedDepKeys is come from fnScope
+        }
+      }
     }
 
     const fnKeys = safeMapGet(DEPKEY_FNKEYS_MAP, depKey, []);

@@ -30,7 +30,7 @@ function getDepKeyDict<T = any>(internal: TInternal, deps?: (sharedState: T) => 
 }
 
 /**
- * 慎用此功能，会造成使用了某个共享状态的所以实例被强制更新
+ * 慎用此功能，会造成使用了某个共享状态的所有实例被强制更新
  */
 export function useGlobalForceUpdate<T = any>(apiCtx: CoreApiCtx, sharedState: T, presetDeps?: (sharedState: T) => any[]) {
   const internal = checkSharedStrict(sharedState);

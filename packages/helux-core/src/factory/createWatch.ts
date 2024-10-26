@@ -15,7 +15,7 @@ interface ICreateWatchLogicOpts<T = SharedState> {
   immediate?: boolean;
   deps?: Fn;
   label?: string;
-  isSimpleWatch?: boolean;
+  forBlock?: boolean;
 }
 
 function putSharedToDep(list: any[]) {
@@ -48,12 +48,12 @@ function innerWatch(forEffect: boolean, watchFn: (fnParams: IWatchFnParams) => v
 }
 
 export function createWatchLogic<T = SharedState>(watchFn: (fnParams: IWatchFnParams) => any, options: ICreateWatchLogicOpts<T>) {
-  const { scopeType, fnCtxBase, immediate, deps = noop, label = 'watch', sharedState, isSimpleWatch } = options;
+  const { scopeType, fnCtxBase, immediate, deps = noop, label = 'watch', sharedState, forBlock } = options;
   if (!isFn(watchFn)) {
     throw new Error(`ERR_NON_FN: pass an non-function to ${label}!`);
   }
 
-  const fnCtx = registerFn(watchFn, { specificProps: { scopeType, fnType: WATCH, isSimpleWatch }, fnCtxBase });
+  const fnCtx = registerFn(watchFn, { specificProps: { scopeType, fnType: WATCH, forBlock }, fnCtxBase });
   markFnStart(fnCtx.fnKey, getSharedKey(sharedState));
   const list = deps() || [];
   putSharedToDep(list);

@@ -31,7 +31,7 @@ export function markFnEnd() {
   const fnCtx = getFnCtx(runningFnKey);
   let targetKeys: string[] = [];
   if (fnCtx) {
-    const { depKeys: afterRunDepKeys, delPathAoa, runningSharedKey } = fnScope;
+    const { depKeys: afterRunDepKeys, fixedDepKeys, delPathAoa, runningSharedKey } = fnScope;
     const { depKeys } = fnCtx;
 
     const dict: Dict<number> = {};
@@ -44,6 +44,7 @@ export function markFnEnd() {
         delete dict[matched];
       }
     });
+    fixedDepKeys.forEach((k) => (dict[k] = 1));
     const validDepKeys = Object.keys(dict);
     validDepKeys.forEach((depKey) => nodupPush(depKeys, depKey));
 
