@@ -1,5 +1,13 @@
 # @helux/hooks
 
+## 4.4.1
+
+### Patch Changes
+
+- @helux/hooks-impl@4.4.1
+- @helux/types@4.4.1
+- @helux/utils@4.4.1
+
 ## 4.4.0
 
 ### Patch Changes

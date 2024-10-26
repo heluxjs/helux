@@ -1,5 +1,13 @@
 # @helux/openinula
 
+## 4.4.1
+
+### Patch Changes
+
+- 02c2272: (build: 4.4.1): fix issue 172
+- Updated dependencies [02c2272]
+  - @helux/core@4.4.1
+
 ## 4.4.0
 
 ### Minor Changes
