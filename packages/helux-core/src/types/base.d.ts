@@ -12,6 +12,15 @@ export type DictOrCb<T = any> = Record<NumStrSymbol, T> | (() => Record<NumStrSy
 
 export type PlainObject = Record<string, {} | undefined | null>;
 
+// export type JSONDict = PlainObject;
+/** 这种写法可以监测出 Map Array Set 不合法，但是对象里如果含有 length size 属性的话会被误判 */
+// export type JSONDict = object & { length?: number; size?: number; };
+/**
+ * 先用 object 替代 PlainObject，支持 share<ISomeObj>() 这样的泛型校验通过，同时让 share(1) share(true) share('str') 的类型校验失败，
+ * 但还是无法检测 share([]) share(new Map) share(new Set) 不符合普通json对象
+ */
+export type JSONDict = object;
+
 export type DictN<T = any> = Record<number, T>;
 
 export type DictS<T = any> = Record<string, T>;
@@ -314,7 +323,7 @@ export interface IRunMutateOptions {
   extraArgs?: any;
 }
 
-export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> {
+export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extends JSONDict = JSONDict> {
   /** 是否第一次调用 */
   isFirstCall;
   /** 异步任务提供的 draft 是全局响应式对象 */
@@ -371,11 +380,11 @@ export interface IMutateWitness<T = any> {
 }
 
 // for mutate task
-export type MutateTask<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> = (
+export type MutateTask<T = SharedState, P extends Arr = Arr, E extends JSONDict = JSONDict> = (
   param: IMutateTaskParam<T, P, E>,
 ) => Promise<void>;
 
-export interface IMutateFnParams<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> {
+export interface IMutateFnParams<T = SharedState, P extends Arr = Arr, E extends JSONDict = JSONDict> {
   /** 是否第一次调用 */
   isFirstCall: boolean;
   /** mutate deps 函数的返回值 */
@@ -392,13 +401,13 @@ export interface IMutateFnParams<T = SharedState, P extends Arr = Arr, E extends
 }
 
 /** 如定义了 task 函数，则 fn 在异步函数执行之前回执行一次，且只在首次执行一次，后续不会执行 */
-export type MutateFn<T = SharedState, P extends Arr = Arr, E extends SharedState = SharedState> = (
+export type MutateFn<T = SharedState, P extends Arr = Arr, E extends JSONDict = JSONDict> = (
   /** 草稿状态，对于 atom 对象 draft 是已拆箱的值，如需操作未拆箱值可读取下面的 params.draftRoot */
   draft: DraftType<T>,
   params: IMutateFnParams<T, P, E>,
 ) => void;
 
-export interface IMutateFnItem<T = any, P extends Arr = Arr, E extends SharedState = SharedState> {
+export interface IMutateFnItem<T = any, P extends Arr = Arr, E extends JSONDict = JSONDict> {
   /** 依赖项列表，有 task 无 fn 时，可作为 task 的依赖收集函数 */
   deps?: (state: StateType<T>, boundState: IBoundStateInfo<E>) => P;
   /**
@@ -644,7 +653,7 @@ export interface IBoundStateInfo<S = any> {
   isAtom: boolean;
 }
 
-export interface IStateInfo<T = SharedState, E extends SharedState = any> {
+export interface IStateInfo<T = SharedState, E extends JSONDict = any> {
   state: StateType<T>;
   stateRoot: StateRootType<T>;
   isAtom: boolean;
@@ -729,7 +738,7 @@ type ActionCtx<T = any, P extends Dict | undefined = undefined, D extends Dict<F
   useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
 };
 
-type DefineMutateDerive<T extends SharedState = SharedState> = <I = SharedDict>(
+type DefineMutateDerive<T extends JSONDict = JSONDict> = <I = SharedDict>(
   inital: I | (() => I),
 ) => <D = Dict<MutateFn<I, any, T> | IMutateFnItem<I, any, T>>>(
   mutateDef: D | ((stateInfo: IStateInfo<I, T>) => D),
@@ -776,7 +785,7 @@ type DefineMutateDerive<T extends SharedState = SharedState> = <I = SharedDict>(
  * df.result.b; // 派生结果c
  * ```
  */
-type DefineFullDerive<T extends SharedState = SharedState> = <DR extends DepsResultDict | undefined = undefined>(
+type DefineFullDerive<T extends JSONDict = JSONDict> = <DR extends DepsResultDict | undefined = undefined>(
   throwErr?: boolean,
 ) => <
   /**
@@ -821,7 +830,7 @@ type DefineFullDerive<T extends SharedState = SharedState> = <DR extends DepsRes
 /**
  * 对自身状态节点定义派生函数，为统一 define api 调用风格，此处采用柯里化方式
  */
-type DefineMutateSelf<T extends SharedState = SharedState> = () => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
+type DefineMutateSelf<T extends JSONDict = JSONDict> = () => <D = Dict<MutateFn<T, any> | IMutateFnItem<T, any>>>(
   mutateDef: D | ((stateInfo: IBoundStateInfo<T>) => D),
 ) => {
   witnessDict: { [K in keyof D]: IMutateWitness<T> };
@@ -1118,7 +1127,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   };
 }
 
-export interface ISharedCtx<T extends SharedDict = SharedDict> extends ISharedStateCtxBase<T> {
+export interface ISharedCtx<T extends JSONDict = JSONDict> extends ISharedStateCtxBase<T> {
   state: ReadOnlyDict<T>;
   stateRoot: ReadOnlyDict<T>;
   /**

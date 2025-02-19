@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@4.2.7
+| helux-core@4.5.0
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ import type {
   IUseDerivedOptions,
   IUseSharedStateOptions,
   IWatchFnParams,
+  JSONDict,
   LoadingState,
   LoadingStatus,
   Middleware,
@@ -108,7 +109,7 @@ export declare const cst: {
  * ```
  * 如需感知组件上下文，则需要`useService`接口去定义服务函数，可查看 useService 相关说明
  */
-export function share<T extends PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function share<T extends JSONDict, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T>];
@@ -126,7 +127,7 @@ export function atom<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions
 /**
  * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] sharex 返回 ctx 自身
  */
-export function sharex<T extends PlainObject = PlainObject, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function sharex<T extends JSONDict, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
 ): ISharedCtx<T>;

@@ -6,7 +6,7 @@
 
 ### changeset 发布
 
-跟目录处先执行构建 `pnpm run build`
+根目录处先执行构建 `pnpm run build`
 
 使用 changeset 分以下几步：
 
