@@ -1,5 +1,17 @@
 # @helux/core
 
+## 4.5.0
+
+### Minor Changes
+
+- 55db803: add type JSONDict
+
+### Patch Changes
+
+- @helux/hooks-impl@4.5.0
+- @helux/types@4.5.0
+- @helux/utils@4.5.0
+
 ## 4.4.2
 
 ### Patch Changes

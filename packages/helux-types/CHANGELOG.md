@@ -1,5 +1,7 @@
 # @helux/types
 
+## 4.5.0
+
 ## 4.4.2
 
 ### Patch Changes
