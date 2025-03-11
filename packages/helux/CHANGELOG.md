@@ -1,5 +1,15 @@
 # helux
 
+## 4.5.1
+
+### Patch Changes
+
+- 2835a9a: optimize useEffect for strict mode
+- 634244e: optimize useEffect
+- Updated dependencies [2835a9a]
+- Updated dependencies [634244e]
+  - @helux/core@4.5.1
+
 ## 4.5.0
 
 ### Patch Changes
