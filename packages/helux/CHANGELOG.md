@@ -1,5 +1,12 @@
 # helux
 
+## 4.6.2
+
+### Patch Changes
+
+- Updated dependencies [592c4d6]
+  - @helux/core@4.6.2
+
 ## 4.6.1
 
 ### Patch Changes
