@@ -1,5 +1,14 @@
 # @helux/hooks
 
+## 4.6.1
+
+### Patch Changes
+
+- Updated dependencies [99b3ea9]
+  - @helux/hooks-impl@4.6.1
+  - @helux/types@4.6.1
+  - @helux/utils@4.6.1
+
 ## 4.6.0
 
 ### Patch Changes

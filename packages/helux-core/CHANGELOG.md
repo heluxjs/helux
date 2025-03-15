@@ -1,5 +1,15 @@
 # @helux/core
 
+## 4.6.1
+
+### Patch Changes
+
+- 99b3ea9: change log condition
+- Updated dependencies [99b3ea9]
+  - @helux/hooks-impl@4.6.1
+  - @helux/types@4.6.1
+  - @helux/utils@4.6.1
+
 ## 4.6.0
 
 ### Minor Changes
