@@ -4,7 +4,7 @@ import { atom, useAtom } from '../helux';
 import { dictFictory, DictState, getDepKey, noop } from '../util';
 
 interface IOptions {
-  deps?: (state: DictState) => any[];
+  deps?: (state: DictState) => any[] | void;
   getMatchObj: (rootValKey: string) => any;
   /**
    * 是否采用解构数组的方式读取数组子元素
@@ -40,7 +40,7 @@ export function makeTest(options: { label: string; atom: typeof atom }) {
 
   async function testNotRead(options: IOptions) {
     const { getMatchObj, deps } = options;
-    const [dictAtom, setDictAtom, { rootValKey }] = atom(dictFictory);
+    const [dictAtom, , { rootValKey }] = atom(dictFictory);
     const { result } = renderHook(() => {
       const [state, , info] = useAtom(dictAtom, { deps });
       return info.getDeps();
@@ -51,32 +51,32 @@ export function makeTest(options: { label: string; atom: typeof atom }) {
 
   async function testReadList(options: IOptions) {
     const { getMatchObj, deps } = options;
-    const [dictAtom, setDictAtom, { rootValKey }] = atom(dictFictory);
+    const [dictAtom, , { rootValKey }] = atom(dictFictory);
     const { result } = renderHook(() => {
       const [state, , info] = useAtom(dictAtom, { deps });
       noop(state.extra.list);
       return info.getDeps();
     });
 
-    expect(result.current).toMatchObject(options.getMatchObj(rootValKey));
+    expect(result.current).toMatchObject(getMatchObj(rootValKey));
   }
 
   async function testReadListItem(options: IOptions) {
     const { getMatchObj, deps, readArr = noop } = options;
-    const [dictAtom, setDictAtom, { rootValKey }] = atom(dictFictory);
+    const [dictAtom, , { rootValKey }] = atom(dictFictory);
     const { result } = renderHook(() => {
       const [state, , info] = useAtom(dictAtom, { deps });
       readArr(state);
       return info.getDeps();
     });
 
-    expect(result.current).toMatchObject(options.getMatchObj(rootValKey));
+    expect(result.current).toMatchObject(getMatchObj(rootValKey));
   }
 
   async function testReadDict(options: IOptions) {
-    const { getMatchObj, deps } = options;
-    const [dictAtom, setDictAtom, { rootValKey }] = atom(dictFictory);
-    const { result } = renderHook(() => {
+    const { deps } = options;
+    const [dictAtom] = atom(dictFictory);
+    renderHook(() => {
       const [state, , info] = useAtom(dictAtom, { deps });
       const { age, name } = state.info;
       noop([age, name]);
@@ -86,7 +86,7 @@ export function makeTest(options: { label: string; atom: typeof atom }) {
 
   async function testReadDesc(options: IOptions) {
     const { getMatchObj, deps } = options;
-    const [dictAtom, setDictAtom, { rootValKey }] = atom(dictFictory);
+    const [dictAtom, , { rootValKey }] = atom(dictFictory);
     const { result } = renderHook(() => {
       const [state, , info] = useAtom(dictAtom, { deps });
       noop(state.desc);
@@ -109,10 +109,10 @@ export function makeTest(options: { label: string; atom: typeof atom }) {
       });
     });
 
-    // ATTENTION: 解构方式不会触发下标依赖收集，故此处的比较使用的是 getArrDep
+    // 解构触发依赖收集
     test('read list item by deconstruct', async () => {
       await testReadListItem({
-        getMatchObj: getArrDep,
+        getMatchObj: getArrAndIndexDepNoLen,
         readArr: (state) => {
           const [item0, item1] = state.extra.list;
           noop(item0, item1);
@@ -120,6 +120,7 @@ export function makeTest(options: { label: string; atom: typeof atom }) {
       });
     });
 
+    // 下标读取触发依赖收集
     test('read list item by index', async () => {
       await testReadListItem({
         getMatchObj: getArrAndIndexDepNoLen,
@@ -170,10 +171,9 @@ export function makeTest(options: { label: string; atom: typeof atom }) {
       });
     });
 
-    // ATTENTION: 解构方式不会触发下标依赖收集，故此处的比较使用的是 getArrDep
     test('read list item by deconstruct', async () => {
       await testReadListItem({
-        getMatchObj: (rootValKey) => getArrDep(rootValKey).concat(getDescDep(rootValKey)),
+        getMatchObj: (rootValKey) => getArrAndIndexDepNoLen(rootValKey).concat(getDescDep(rootValKey)),
         deps: (state) => [state.desc],
         readArr: (state) => {
           const [item0, item1] = state.extra.list;

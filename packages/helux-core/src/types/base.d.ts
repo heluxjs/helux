@@ -1240,8 +1240,17 @@ export interface ICreateOptionsFull<T = SharedState> {
    * 定义当前状态对自身状态或其他状态某些数据节点有依赖的 `mutate` 函数集合或函数，它们将在依赖项变化时被自动执行，
    * 首次执行时会收集到每个函数各自对应的外部数据依赖并记录下来
    * 推荐走 defineMutateSelf 或 mutateDict 在外部定义 mutate 函数，以便获得更好的类型推导
+   * ```text
+   * 为正确推导出 mutate 为数组时的类型，v4.5.2 之后 mutate 类型由
+   * MutateFn<T> | MutateFnDict<T> | MutateFnList<T> 收窄为 MutateFn<T> | MutateFnDict<T>，
+   * 新增 mutateList 来承接数组的类型推导工作，强制将数组透传给 mutate 运行时还是有效的，只不过类型推导有异常
+   * ```
    */
-  mutate: MutateFn<T> | MutateFnDict<T> | MutateFnList<T>;
+  mutate: MutateFn<T> | MutateFnDict<T>;
+  /**
+   * 含义见 mutate
+   */
+  mutateList: MutateFnList<T>;
   /**
    * action、mutate、setState、sync 提交状态之前会触发执行的函数，可在此函数里再次修改 draft，该函数执行时机是在中间件之前
    */
@@ -1268,7 +1277,7 @@ export interface ICreateOptionsFull<T = SharedState> {
 /**
  * 目前api层面只暴露部分配置参数供用户查看
  */
-export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'before' | 'onRead'>;
+export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'mutateList' | 'before' | 'onRead'>;
 
 export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull<SharedState> {
   forAtom: boolean;
@@ -1308,7 +1317,7 @@ export interface IUseSharedStateOptions<T = any> {
    * function Demo(){
    *  const [state] = useAtom(dictAtom, { pure: true });
    *  const { extra, name, desc } = state;
-   *  // 这里继续下钻读取了 state.extra 的子节点，故state.extra 算作一个中间态的依赖
+   *  // 这里继续下钻读取了 state.extra 的子节点，故 state.extra 算作一个中间态的依赖
    *  const { list, mark } = extra;
    * }
    *
@@ -1325,7 +1334,7 @@ export interface IUseSharedStateOptions<T = any> {
    * // helux 内部经过比较 extra.list, extra.mask 值发现无变化后不会重渲染 Demo
    * setState(draft=> draft.extra = { ...draft.extra });
    *
-   * // 👻 但要注意，此时如果 extra 传给了 useEffect，并不会因为 extra的变化而引起 Effect 重新执行
+   * // 👻 但要注意，此时如果 extra 传给了 useEffect，并不会因为 extra 的变化而引起 Effect 重新执行
    * useEffect(()=>{//...logic}, [state.extra]);
    * // 如执行了则是因为其他依赖引起组件重渲染刚好顺带触发了 Effect 执行
    *
@@ -1339,10 +1348,11 @@ export interface IUseSharedStateOptions<T = any> {
    */
   pure?: boolean;
   /**
-   * 组件件可在渲染过实时收集到依赖，如需补充一些组件渲染过程中不体现的额外依赖时，设置此函数
-   * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集
+   * 组件件可在渲染过实时收集到依赖，如需补充一些组件渲染过程中不体现的额外依赖时，设置此函数，
+   * 此时组件的依赖是 deps 返回依赖和渲染完毕收集到的依赖合集，
+   * deps 回调里的参数针对 atom 对象会自动拆箱
    */
-  deps?: (readOnlyState: T) => any[] | void;
+  deps?: (readOnlyState: T extends Atom ? T['val'] : T) => any[] | void;
   /**
    * default: true，是否记录数组自身依赖，当确认是孩子组件自己读数组下标渲染的场景，可设置为 false，
    * 这样数组被重置时不会触发重渲染
@@ -1383,7 +1393,7 @@ export interface IUseSharedStateOptions<T = any> {
   arrIndexDep?: boolean;
 }
 
-export interface IInnerUseSharedOptions<T = Dict> extends IUseSharedStateOptions<T> {
+export interface IInnerUseSharedOptions<T = any> extends IUseSharedStateOptions<T> {
   /**
    * 全局id，在 ICreateOptionsFull.rules 子项里配置 globalIds，
    * 此 id 需通过 useGlobalId 设定

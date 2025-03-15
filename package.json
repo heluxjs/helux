@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "4.5.0",
+  "version": "4.6.0",
   "description": "A reactive atomic state engine for React like.",
   "keywords": [],
   "author": {
@@ -74,15 +74,17 @@
     "tslib": "^1.14.1",
     "tsup": "^8.0.0",
     "turbo": "^1.10.16",
-    "typescript": "4.9.5"
-  },
-  "gitHooks": {
-    "pre-commit": "lint-staged"
+    "typescript": "4.9.5",
+    "vite": "^5.0.2",
+    "vitest": "^0.34.6"
   },
   "pnpm": {
     "overrides": {
       "@types/react": "<18.0.0",
       "@types/react-dom": "<18.0.0"
     }
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
   }
 }

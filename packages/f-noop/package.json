@@ -1,7 +1,7 @@
 {
-  "name": "@helux/openinula",
-  "version": "4.6.0",
-  "description": "State library for preact that integrates atom, signal, collection dep, derive and watch.",
+  "name": "@helux/f-noop",
+  "version": "0.0.1",
+  "description": "Function does nothing, this lib supply noop fn or noop fn maker.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
@@ -16,29 +16,28 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "src/index.d.ts",
+  "types": "index.d.ts",
   "files": [
     "dist",
     "src",
+    "index.d.ts",
     "README.md",
     "tsconfig.json"
   ],
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
-  "dependencies": {
-    "@helux/core": "workspace:^"
-  },
-  "peerDependencies": {
-    "openinula": "0.1.2-SNAPSHOT"
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "bundleDependencies": false,
   "publishConfig": {
     "access": "public",
+    "main": "dist/index.js",
     "registry": "https://registry.npmjs.org/"
   },
   "deprecated": false

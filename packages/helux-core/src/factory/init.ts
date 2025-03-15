@@ -37,7 +37,7 @@ export function initHeluxContext(options: {
   // no matter the helux in app1 and app2 is the same module or not,
   // it is ok that app1 can use a shared state exported from app2 by useAtom directly,
 
-  //try transfer legacy root by user custom transfer fn
+  // try transfer legacy root by user custom transfer fn
   if (transfer) {
     const ROOT = createRoot(); // may a lower version root
     setRootData({ ROOT, inited: true });

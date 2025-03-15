@@ -5,8 +5,7 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "target": "esnext",
-    "outDir": "src-js"
+    "target": "esnext"
   },
   "include": ["src/**/*"]
 }

@@ -264,7 +264,8 @@ export function watchEffect(
  * });
  * ```
  */
-export function useAtom<T extends SharedState = any>(
+// export function useAtom<T extends SharedState = any>(
+export function useAtom<T extends any = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [

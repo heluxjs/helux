@@ -136,7 +136,11 @@ export function parseMutateFn(fnItem: Dict, inputDesc?: string, checkDupDict?: D
 /**
  * 解析伴随创建share对象时配置的 mutate 对象，如果传入已存在字典则写入
  */
-export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cachedDict?: MutateFnStdDict, enabled = true) {
+export function parseMutate(
+  mutate?: IInnerCreateOptions['mutate'] | IInnerCreateOptions['mutateList'] | null,
+  cachedDict?: MutateFnStdDict,
+  enabled = true,
+) {
   const mutateFnDict: MutateFnStdDict = {};
   const checkDupDict: MutateFnStdDict = cachedDict || {};
   if (!mutate) return mutateFnDict;
@@ -162,6 +166,7 @@ export function parseMutate(mutate?: IInnerCreateOptions['mutate'] | null, cache
     handleItem(mutate, SINGLE_MUTATE); // 标记为单函数
   } else if (isObj(mutate)) {
     Object.keys(mutate).forEach((key) => {
+      // @ts-ignore
       handleItem(mutate[key], key);
     });
   }
@@ -190,7 +195,9 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const rootValKey = forAtom ? `${sharedKey}/val` : sharedKeyStr;
   const usefulName = moduleName || sharedKeyStr;
   const loc = tryGetLoc(moduleName);
-  const mutateFnDict = parseMutate(mutate, {}, enableMutate);
+  const dict1 = parseMutate(mutate, {}, enableMutate);
+  const dict2 = parseMutate(options.mutateList || [], dict1, enableMutate);
+  const mutateFnDict = Object.assign(dict1, dict2);
 
   return {
     /** TODO 未来可能支持 atom 对象销毁 */
@@ -314,10 +321,16 @@ export function parseRules(options: ParsedOptions): IRuleConf {
 export function parseCreateMutateOpt(descOrOptions?: string | IRunMutateOptions) {
   // 不设定 desc 的话，默认指向可能存在的单函数
   const { desc = SINGLE_MUTATE, strict = false, throwErr = false, extraArgs } = {} as IRunMutateOptions;
-  if (typeof descOrOptions === 'string') {
-    return { desc: descOrOptions, strict, throwErr, extraArgs };
+  const optType = typeof descOrOptions;
+  if (optType === 'string') {
+    return { desc: descOrOptions as string, strict, throwErr, extraArgs };
   }
-  return { desc, strict, throwErr, extraArgs, ...descOrOptions };
+
+  const finalOpt = { desc, strict, throwErr, extraArgs };
+  if (descOrOptions && optType === 'object' && !Array.isArray(descOrOptions)) {
+    return { ...finalOpt, ...(descOrOptions as IRunMutateOptions) };
+  }
+  return finalOpt;
 }
 
 export function parseWatchOptions(forEffect: boolean, options?: WatchOptionsType) {
