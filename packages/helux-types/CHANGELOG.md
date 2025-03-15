@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.6.0
+
+### Minor Changes
+
+- 52693ba: optimize useEffect, type def
+
 ## 4.5.1
 
 ### Patch Changes

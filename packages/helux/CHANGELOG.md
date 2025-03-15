@@ -1,5 +1,16 @@
 # helux
 
+## 4.6.0
+
+### Minor Changes
+
+- 52693ba: optimize useEffect, type def
+
+### Patch Changes
+
+- Updated dependencies [52693ba]
+  - @helux/core@4.6.0
+
 ## 4.5.1
 
 ### Patch Changes

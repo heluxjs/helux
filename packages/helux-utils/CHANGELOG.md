@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 4.6.0
+
+### Patch Changes
+
+- Updated dependencies [52693ba]
+  - @helux/types@4.6.0
+
 ## 4.5.1
 
 ### Patch Changes

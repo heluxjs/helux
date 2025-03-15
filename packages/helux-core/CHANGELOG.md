@@ -1,5 +1,18 @@
 # @helux/core
 
+## 4.6.0
+
+### Minor Changes
+
+- 52693ba: optimize useEffect, type def
+
+### Patch Changes
+
+- Updated dependencies [52693ba]
+  - @helux/hooks-impl@4.6.0
+  - @helux/types@4.6.0
+  - @helux/utils@4.6.0
+
 ## 4.5.1
 
 ### Patch Changes
