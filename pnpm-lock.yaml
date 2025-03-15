@@ -132,7 +132,7 @@ importers:
         version: 0.0.3(@types/react-dom@17.0.26(@types/react@17.0.83))(@types/react@17.0.83)(hel-micro-core@4.9.6(hel-types@4.3.3))(hel-micro@4.10.7(hel-html-parser@1.1.2)(hel-micro-core@4.9.6(hel-types@4.3.3))(hel-types@4.3.3))(hel-types@4.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@helux/utils':
         specifier: latest
-        version: 4.5.1
+        version: 4.6.1
       '@makotot/ghostui':
         specifier: ^2.0.0
         version: 2.0.0(react@18.3.1)
@@ -147,7 +147,7 @@ importers:
         version: 3.8.0(jquery@3.7.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       helux:
         specifier: latest
-        version: 4.5.1(react@18.3.1)
+        version: 4.6.1(react@18.3.1)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -325,8 +325,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       helux:
-        specifier: ^4.5.1
-        version: 4.5.1(react@18.3.1)
+        specifier: ^4.6.0
+        version: 4.6.1(react@18.3.1)
       react:
         specifier: '>=16.10.2'
         version: 18.3.1
@@ -402,8 +402,8 @@ importers:
   packages/helux-plugin-devtool:
     dependencies:
       helux:
-        specifier: ^4.5.1
-        version: 4.5.1(react@18.3.1)
+        specifier: ^4.6.0
+        version: 4.6.1(react@18.3.1)
       redux:
         specifier: ^4.2.1
         version: 4.2.1
@@ -2127,8 +2127,8 @@ packages:
   '@helux/core@3.6.14':
     resolution: {integrity: sha512-99+IXuOFwix0yfEqO7vjM/gW4YviEYI6YGEaxG8yMxgpzMHsfmMqDqyPJtjT/GcFqYfV7JnOnlWERBUS+RQ2cA==}
 
-  '@helux/core@4.5.1':
-    resolution: {integrity: sha512-QphDM/X2gdWq8zn4TkXp4iD5lxe0C6Kmd9khQlYkAbAQ1Q4/p6NfPdCIZ5eM2CuXAfhY0G97fNoNszJ4gEgJWw==}
+  '@helux/core@4.6.1':
+    resolution: {integrity: sha512-zZ8Piz5kJrH+RD5Te5X291qYlSk4lwfxaqwmgVxaIMAyvGiKSGFlSP2ZYOQ2e7zT3v1KdNjjqAHCfX4Vnwv/kQ==}
 
   '@helux/demo-utils@0.0.3':
     resolution: {integrity: sha512-PUTJkDsqpR7AnOJeDjzgvRwPDkedCUxpYcjVUX0uM/UiNSi0QOIM0y/GTh456FLtaiKnFxZBkFec1xXfpMp4YQ==}
@@ -2144,20 +2144,20 @@ packages:
   '@helux/hooks-impl@3.6.14':
     resolution: {integrity: sha512-IGfD1nafVkfY0NvU6/UAl3t8av83o08mjAMXroesK1pcYEdYxhO+lPsPjqyUV1yMqnl5IkMWvtpEMdEAuvjwrA==}
 
-  '@helux/hooks-impl@4.5.1':
-    resolution: {integrity: sha512-BGYWENpvtVvplgdJ0P+iHXh3Vt+EPqqnPQtD6iu7rGhKFHPU8tAnSg86GzeyTmdwwZJkH8ENtLODYOAvnd2nsw==}
+  '@helux/hooks-impl@4.6.1':
+    resolution: {integrity: sha512-cUSL9UhqOJy9kFyl/muTfPxCAKQ0qNPBeKkW032l6TgIU+dnro12THG+5TGsuP/7JmYhUwI6hxdAoklgCsNImw==}
 
   '@helux/types@3.6.14':
     resolution: {integrity: sha512-CiZ/s2MuYlRqZwOXqF5WIiilT8D8YbIDTml8jLTazdQr85ZW7l98DBZfNOj/dC9V0iX9FMDxPsQwDqBxGAVyqQ==}
 
-  '@helux/types@4.5.1':
-    resolution: {integrity: sha512-vu18NA6F7EBLk/dFsKhHGVnzgQHIqw36jVmkGD2XRS8hed0PNTEsY1OIVDoLmEwx42GDVeSDwaf5IG7n4hNKvA==}
+  '@helux/types@4.6.1':
+    resolution: {integrity: sha512-43GZVfwNZfIls0cJhRXiX44ddRReLrd/NLWUfkxLqvDUhbFG/3O0RfcaHaFTf0rnCcHMwcjIA/RLgLDfrav0xA==}
 
   '@helux/utils@3.6.14':
     resolution: {integrity: sha512-foaVmUUG7PAYsPgjGXe+lX4sU4BeiUk783Ib5sq3KA7AA3wxAtO5lfMvaEmIg7Ah7HTowuWj1IPlnt0SqKyQnQ==}
 
-  '@helux/utils@4.5.1':
-    resolution: {integrity: sha512-WkE4XO7iR0/ztpS+iqubJQfE5bAziN+tml54xVAkQeeaCV05/6xy6HE4GmixBgPoNqTDbYb0gWFha9DNrYfuFg==}
+  '@helux/utils@4.6.1':
+    resolution: {integrity: sha512-rJkOUVMxhi1LfWEGtYTR3qKHvmArsqR95Ru9obs8FSiEmk3lk/52yy1COq+gvt8x0nMKFyjvacdIptfn+ewIaw==}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -5924,7 +5924,6 @@ packages:
       hel-html-parser: ^1.1.2
       hel-micro-core: ^4.9.6
       hel-types: ^4.3.3
-    bundledDependencies: []
 
   hel-types@4.3.3:
     resolution: {integrity: sha512-Oluh82FIi0XvM1kfXYpYqZ9j70hHVrLEDEeWc3Hf9yl1eYDKBlomTXppXN7cQN9yn82+3Mk7BYrJx8D/Y63CjA==}
@@ -5934,8 +5933,8 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
 
-  helux@4.5.1:
-    resolution: {integrity: sha512-tfLkmW1KeRslJu8uO7NExRcNKDjzadCTdYkyF/0vlqTWyKBTr2gmbrnshGaU8swuhoR+5iRPCThQK8qEmmH94g==}
+  helux@4.6.1:
+    resolution: {integrity: sha512-tSpVSdb+3NUdJiO8KbfVUKamXpTHLNzaLQxUpGaWC24HellzkEkOHRTeCwBEO10WV0/y8pXRpK2SnAEEMOlpAw==}
     peerDependencies:
       react: '>=16.8.0'
 
@@ -6969,7 +6968,6 @@ packages:
 
   limu@3.13.1:
     resolution: {integrity: sha512-4qCZEQZ4yr0KUyjR83I7tZJ3IqAcFucPjkiUN1lk99bmVYYaWqDINaN202w434/sGVM3rpUBHDvXfWpJljQ+/g==}
-    bundledDependencies: []
 
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
@@ -11547,7 +11545,7 @@ snapshots:
       '@types/node': 20.5.1
       chalk: 4.1.2
       cosmiconfig: 8.3.6(typescript@4.9.5)
-      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@4.9.5))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5)
+      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.3.3))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -12217,11 +12215,11 @@ snapshots:
       '@helux/utils': 3.6.14
       limu: 3.13.1
 
-  '@helux/core@4.5.1':
+  '@helux/core@4.6.1':
     dependencies:
-      '@helux/hooks-impl': 4.5.1
-      '@helux/types': 4.5.1
-      '@helux/utils': 4.5.1
+      '@helux/hooks-impl': 4.6.1
+      '@helux/types': 4.6.1
+      '@helux/utils': 4.6.1
       limu: 3.13.1
 
   '@helux/demo-utils@0.0.3(@types/react-dom@17.0.26(@types/react@17.0.83))(@types/react@17.0.83)(hel-micro-core@4.9.6(hel-types@4.3.3))(hel-micro@4.10.7(hel-html-parser@1.1.2)(hel-micro-core@4.9.6(hel-types@4.3.3))(hel-types@4.3.3))(hel-types@4.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
@@ -12240,22 +12238,22 @@ snapshots:
       '@helux/types': 3.6.14
       '@helux/utils': 3.6.14
 
-  '@helux/hooks-impl@4.5.1':
+  '@helux/hooks-impl@4.6.1':
     dependencies:
-      '@helux/types': 4.5.1
-      '@helux/utils': 4.5.1
+      '@helux/types': 4.6.1
+      '@helux/utils': 4.6.1
 
   '@helux/types@3.6.14': {}
 
-  '@helux/types@4.5.1': {}
+  '@helux/types@4.6.1': {}
 
   '@helux/utils@3.6.14':
     dependencies:
       '@helux/types': 3.6.14
 
-  '@helux/utils@4.5.1':
+  '@helux/utils@4.6.1':
     dependencies:
-      '@helux/types': 4.5.1
+      '@helux/types': 4.6.1
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
@@ -15309,7 +15307,7 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@4.9.5))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5):
+  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.3.3))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5):
     dependencies:
       '@types/node': 20.5.1
       cosmiconfig: 8.3.6(typescript@4.9.5)
@@ -17329,9 +17327,9 @@ snapshots:
       '@helux/core': 3.6.14
       react: 18.3.1
 
-  helux@4.5.1(react@18.3.1):
+  helux@4.6.1(react@18.3.1):
     dependencies:
-      '@helux/core': 4.5.1
+      '@helux/core': 4.6.1
       react: 18.3.1
 
   heti-findandreplacedomtext@0.5.0: {}
