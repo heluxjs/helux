@@ -7,5 +7,5 @@
   "access": "restricted",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": ["@helux/f-noop", "@helux/fre", "@helux/preact", "@helux/demo-utils", "@helux/plugin-devtool", "helux-docs"]
+  "ignore": ["@helux/f-noop", "@helux/f-guard", "@helux/fre", "@helux/preact", "@helux/demo-utils", "@helux/plugin-devtool", "helux-docs"]
 }

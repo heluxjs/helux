@@ -44,6 +44,8 @@ export type ReactLike = {
   useLayoutEffect: FnVoid;
   useMemo: UseMemo;
   createElement: Fn;
+  PureComponent: any;
+  Fragment: Fn;
   memo: Fn;
   useCallback: UseCallback;
   forwardRef: Fn;

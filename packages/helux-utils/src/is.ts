@@ -6,8 +6,13 @@ const toString = Object.prototype.toString;
 const MAP_DESC = '[object Map]';
 
 export function isServer() {
-  return GLOBAL_REF.window === undefined && GLOBAL_REF.global !== undefined;
+  if (GLOBAL_REF.process && GLOBAL_REF.global && !GLOBAL_REF.document) {
+    // running at server
+    return true;
+  }
+  return false;
 }
+
 
 export function isMap(mayMap: any) {
   return toString.call(mayMap) === MAP_DESC;

@@ -26,7 +26,7 @@ function getKey(err: any) {
   const list = err.stack.split('\n');
   let key = '';
   for (const item of list) {
-    // 双调用第二次堆栈里 renderWithHooks 之后的信息都不一样，需从这里开始断掉，
+    // 双调用的第二次错误信息堆栈里 renderWithHooks 之后的信息都不一样，需从这里开始断掉，
     if (item.includes('renderWithHooks')) {
       break;
     }

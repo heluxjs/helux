@@ -1,4 +1,4 @@
-import { isProxyAvailable } from '@helux/utils';
+import { isProxyAvailable, isServer } from '@helux/utils';
 import { createSymbol, HAS_SYMBOL } from '../helpers/sym';
 export { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './user';
 export { HAS_SYMBOL };
@@ -7,9 +7,7 @@ export const PROTO_KEY = '__proto__';
 
 export const HAS_PROXY = isProxyAvailable();
 
-// export const RUN_AT_SERVER = isServer();
-export const RUN_AT_SERVER = false;
-// export const RUN_AT_SERVER = true;
+export const RUN_AT_SERVER = isServer();
 
 /** 提供给 sync 返回 undefined 时之用 */
 export const UNDEFINED = createSymbol('HeluxUndefined');
