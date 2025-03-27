@@ -1,5 +1,16 @@
 # helux
 
+## 4.7.0
+
+### Minor Changes
+
+- 07a1b0b: mod RUN_AT_SERVER
+
+### Patch Changes
+
+- Updated dependencies [07a1b0b]
+  - @helux/core@4.7.0
+
 ## 4.6.2
 
 ### Patch Changes

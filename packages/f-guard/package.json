@@ -1,7 +1,7 @@
 {
-  "name": "@helux/core",
-  "version": "4.7.0",
-  "description": "A reactive atomic state engine for React like.",
+  "name": "@helux/f-guard",
+  "version": "0.1.0",
+  "description": "Function does nothing, this lib supply noop fn or noop fn maker.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
@@ -16,9 +16,10 @@
     "email": "624313307@qq.com",
     "url": "https://github.com/fantasticsoul"
   },
-  "main": "src/index.ts",
+  "type": "module",
+  "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "src/index.d.ts",
+  "types": "index.d.ts",
   "files": [
     "dist",
     "src",
@@ -29,23 +30,15 @@
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
-  "dependencies": {
-    "@helux/hooks-impl": "workspace:^",
-    "@helux/types": "workspace:^",
-    "@helux/utils": "workspace:^",
-    "limu": "^3.13.0"
-  },
-  "devDependencies": {
-    "esbuild-copy-static-files": "^0.1.0"
-  },
+  "dependencies": {},
+  "devDependencies": {},
   "bundleDependencies": false,
   "publishConfig": {
     "access": "public",
     "main": "dist/index.js",
     "registry": "https://registry.npmjs.org/"
   },
-  "deprecated": false,
-  "src": "dist/index.d.ts"
+  "deprecated": false
 }

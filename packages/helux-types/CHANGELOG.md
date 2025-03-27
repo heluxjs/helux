@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.7.0
+
+### Minor Changes
+
+- 07a1b0b: mod RUN_AT_SERVER
+
 ## 4.6.2
 
 ## 4.6.1

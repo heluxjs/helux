@@ -1,5 +1,18 @@
 # @helux/hooks
 
+## 4.7.0
+
+### Minor Changes
+
+- 07a1b0b: mod RUN_AT_SERVER
+
+### Patch Changes
+
+- Updated dependencies [07a1b0b]
+  - @helux/hooks-impl@4.7.0
+  - @helux/types@4.7.0
+  - @helux/utils@4.7.0
+
 ## 4.6.2
 
 ### Patch Changes
