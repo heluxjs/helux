@@ -1,5 +1,11 @@
 # @helux/types
 
+## 4.7.1
+
+### Patch Changes
+
+- 4efa342: mod ver
+
 ## 4.7.0
 
 ### Minor Changes
