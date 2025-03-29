@@ -1,4 +1,5 @@
 import { limuUtils, markRaw, produce } from 'limu';
+import { assignThisHX, bindAtom, getHX, makeWithAtomOptions, withAtom } from './class';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
 import { getAtom, isAtom, isDerivedAtom, isDerivedResult, isSharedState } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
@@ -81,6 +82,12 @@ export {
   useActionLoading,
   useLocalForceUpdate,
   useGlobalForceUpdate,
+  // for react class component
+  bindAtom,
+  withAtom,
+  assignThisHX,
+  getHX,
+  makeWithAtomOptions,
   // action api
   action,
   // signal api

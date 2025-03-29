@@ -48,6 +48,7 @@ export function buildInternal(
   return {
     ver: 0,
     sn: 0,
+    insCount: 0,
     // reactive and reactiveRoot will be replaced in buildReactive process later
     reactive: rawState,
     reactiveRoot: rawState,
@@ -69,6 +70,13 @@ export function buildInternal(
     insCtxMap,
     key2InsKeys,
     id2InsKeys,
+    lifecycle: {
+      willMount: noop,
+      mounted: noop,
+      willUnmount: noop,
+      /** 严格模式下，在 effect 里判断 insCount=1 是失败的，需提前标记此变量，确保 mounted 触发 */
+      shouldCallMounted: false,
+    },
     recordId(id: NumStrSymbol, insKey: number) {
       if (!id) return;
       const insKeys: any[] = safeObjGet(id2InsKeys, id, []);

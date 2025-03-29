@@ -13,7 +13,6 @@ export function isServer() {
   return false;
 }
 
-
 export function isMap(mayMap: any) {
   return toString.call(mayMap) === MAP_DESC;
 }

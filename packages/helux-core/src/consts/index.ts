@@ -31,6 +31,12 @@ export const IS_ATOM = createSymbol('HeluxIsAtom');
 /** see if the target is returned by deriveAtom api */
 export const IS_DERIVED_ATOM = createSymbol('HeluxIsDerivedAtom');
 
+export const CLASS_ATOM = createSymbol('HeluxClassDefaultAtom');
+
+export const CLASS_ERROR = createSymbol('HeluxClassError');
+
+export const CLASS_ERROR_INFO = createSymbol('HeluxClassErrorInfo');
+
 export const OP_KEYS = [SHARED_KEY, IS_ATOM, IS_DERIVED_ATOM, IS_BLOCK];
 
 /**

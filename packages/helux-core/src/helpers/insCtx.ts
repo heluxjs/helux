@@ -21,10 +21,6 @@ import { getInternal } from './state';
  * 开始收集依赖
  */
 function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { parentType: string; rawVal: any }) {
-  if (!insCtx.canCollect) {
-    // 无需收集依赖
-    return;
-  }
   const { parentType, rawVal } = options;
   const isValArrLike = isArrLikeVal(rawVal);
   if (isValArrLike) {
@@ -75,6 +71,9 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
 
       const { fullKeyPath, keyPath, parentType } = opParams;
       const rawVal = callOnRead(opParams, onRead);
+      // 标记了 canCollect=false，无需收集依赖
+      if (!insCtx.canCollect) return;
+
       const depKey = getDepKeyByPath(fullKeyPath, sharedKey);
       const depKeyInfo = { depKey, keyPath: fullKeyPath, parentKeyPath: keyPath, sharedKey };
       collectDep(insCtx, depKeyInfo, { parentType, rawVal });
@@ -108,6 +107,10 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
           return handleHeluxKey(true, forAtom, sharedKey, key, value);
         }
         const rawVal = callOnRead(newOpParams(key, value, { isChanged: false, parentKeyPath: [] }), onRead);
+
+        // 标记了 canCollect=false，无需收集依赖
+        if (!insCtx.canCollect) return;
+
         const depKey = prefixValKey(key, sharedKey);
         const parentType = isDict(target) ? DICT : OTHER;
         collectDep(insCtx, { depKey, keyPath: [key], sharedKey }, { parentType, rawVal });
@@ -267,6 +270,12 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
 
   internal.mapInsCtx(insCtx, insKey);
   internal.recordId(id, insKey);
+  internal.insCount += 1;
+  if (internal.insCount === 1) {
+    const { lifecycle } = internal;
+    lifecycle.willMount();
+    lifecycle.shouldCallMounted = true;
+  }
 
   // 首次渲染执行一次依赖项补充函数，并记录为固定依赖项
   if (isFn(deps)) {

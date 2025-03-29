@@ -1,4 +1,4 @@
-import { Dict, EffectCb, PartialStateCb } from '@helux/types';
+import { Dict, EffectCb, EffectStrictCb, PartialStateCb } from '@helux/types';
 
 /**
  * 使用稳定的数据
@@ -36,9 +36,14 @@ export function useEffect(cb: EffectCb, deps?: any[]): void;
 export function useLayoutEffect(cb: EffectCb, deps?: any[]): void;
 
 /**
- * 可指定是否是 isLayout
+ * 回调参数里回告诉用户当前组件是否运行在严格模式下，该回调只会在组件初见挂载时执行一次
+ * @example
+ * ```
+ * useIsStrict(isStrict=>console.log(isStrict));
+ * ```
+ * @param cb
  */
-export function useEffectLogic(cb: EffectCb, options: { isLayout?: boolean; deps?: any[] }): void;
+export function useIsStrict(cb: EffectStrictCb): void;
 
 /**
  * 强制更新

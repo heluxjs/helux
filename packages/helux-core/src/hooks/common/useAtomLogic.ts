@@ -35,6 +35,12 @@ function useInsCtx<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, options: IInner
  */
 function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
   apiCtx.react.useEffect(() => {
+    const { lifecycle } = insCtx.internal;
+    if (lifecycle.shouldCallMounted) {
+      lifecycle.mounted();
+      lifecycle.shouldCallMounted = false;
+    }
+
     insCtx.isFirstRender = false;
     INS_CTX.del(insCtx.rootVal);
     // 设定了 options.collect='first' 则首轮渲染结束后标记不能再收集依赖，阻值后续新的渲染流程里继续收集依赖的行为
@@ -56,7 +62,7 @@ function useClearEffect(apiCtx: CoreApiCtx, insCtx: InsCtxDef) {
 /**
  * 收集组件渲染需要的依赖，做一些其他设置逻辑
  */
-function useCollectDep<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef, options: IInnerUseSharedOptions<T>) {
+function useCollectDep<T = Dict>(apiCtx: CoreApiCtx, sharedState: T, insCtx: InsCtxDef) {
   insCtx.renderStatus = RENDER_START;
   resetDepHelpData(insCtx);
   // adapt to react 18
@@ -94,7 +100,7 @@ export function useAtomLogic<T = Dict>(
   const { forAtom } = options;
   checkAtom(sharedState, forAtom);
   const insCtx = useInsCtx(apiCtx, sharedState, options);
-  useCollectDep(apiCtx, sharedState, insCtx, options);
+  useCollectDep(apiCtx, sharedState, insCtx);
   useClearEffect(apiCtx, insCtx);
   checkStateVer(insCtx);
   const tuple = prepareTuple(insCtx);

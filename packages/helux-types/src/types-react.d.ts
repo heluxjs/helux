@@ -8,6 +8,8 @@ export type CleanUpCb = () => void;
 
 export type EffectCb = () => void | CleanUpCb;
 
+export type EffectStrictCb = (isStrict: boolean) => any;
+
 export type ReactNode = any;
 
 export type PropsWithChildren<P> = P & { children?: ReactNode | undefined };
@@ -45,6 +47,7 @@ export type ReactLike = {
   useMemo: UseMemo;
   createElement: Fn;
   PureComponent: any;
+  Component: any;
   Fragment: Fn;
   memo: Fn;
   useCallback: UseCallback;

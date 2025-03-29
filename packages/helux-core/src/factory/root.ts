@@ -130,16 +130,17 @@ export function createRoot() {
     LIMU_VER,
     rootState: {} as Dict,
     setState: (moduleName: string, partialState: Dict) => {
-      const modData = root.ctx.mod[moduleName];
-      if (!modData) {
+      const modInternal = root.ctx.modMap.get(moduleName);
+      if (!modInternal) {
         throw new Error(`moduleName ${moduleName} not found`);
       }
-      modData.setState(partialState);
+      modInternal.setState(partialState);
     },
     ctx: {
       bus: buildEventBus(),
       userBus: buildEventBus(),
-      mod: {} as Dict, // 与模块相关的辅助信息
+      mod: {} as Dict, // 与模块相关的辅助信息（4.7.0 之后使用 modMap 替代，后期会删除此属性）
+      modMap: new Map<any, TInternal>(), // 替代 mod
       middlewares: [] as Middleware[],
       plugins: [] as IPlugin[],
       sharedScope: buildSharedScope(),

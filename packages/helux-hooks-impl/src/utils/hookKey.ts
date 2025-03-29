@@ -5,8 +5,8 @@ let isDev: boolean = false;
 try {
   isDev = process.env.NODE_ENV === 'development';
 } catch (err) {
-  console.log();
-  // slicent here
+  // silent here
+  console.log('ignored err:', err);
 }
 
 // @ts-ignore log helux associate params

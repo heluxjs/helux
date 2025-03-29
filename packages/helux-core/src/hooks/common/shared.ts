@@ -18,6 +18,7 @@ export function prepareTuple(insCtx: InsCtxDef): [any, Fn, IInsRenderInfo] {
   renderInfo.time = Date.now();
   // atom 自动拆箱，注意这里  proxyState.val 已触发记录根值依赖
   const rootVal = forAtom ? proxyState.val : proxyState;
+
   // 首次渲染时，记录一下 rootVal
   if (insCtx.isFirstRender) {
     // ATTENTION：这里会提前触发一次 .val 根值依赖记录
@@ -67,8 +68,12 @@ export function recoverInsCtx(insCtx: InsCtxDef) {
 
 export function delInsCtx(insCtx: InsCtxDef) {
   insCtx.mountStatus = UNMOUNT;
-  const { id, globalId, insKey } = insCtx;
-  insCtx.internal.delId(id, insKey);
+  const { id, globalId, insKey, internal } = insCtx;
+  internal.delId(id, insKey);
+  internal.insCount -= 1;
+  if (internal.insCount === 0) {
+    internal.lifecycle.willUnmount();
+  }
   delGlobalId(globalId, insKey);
   clearDep(insCtx);
 }

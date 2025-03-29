@@ -9,6 +9,7 @@ import type {
   ActionTask,
   CtxCreateOptions,
   Dict,
+  DictFn,
   DictOrCb,
   Fn,
   IAtomCtx,
@@ -24,6 +25,7 @@ import { mutate, mutateDict, runMutate, runMutateTask } from './createMutate';
 import { buildSharedObject } from './creator';
 import type { TInternal } from './creator/buildInternal';
 import { getGlobalEmpty, initGlobalEmpty } from './creator/globalId';
+import { defineLifecycle } from './creator/lifecycle';
 import { getLoadingInfo, initGlobalLoading, initLoadingCtx } from './creator/loading';
 import { isTaskProm } from './creator/mutateFn';
 import type { IInnerOptions } from './creator/parse';
@@ -203,6 +205,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     defineMutateDerive: (inital: Dict) => (mutateFnDict: DictOrCb) => defineMutateDerive({ common, ldMutate, inital, mutateFnDict }),
     defineMutateSelf: () => (mutateFnDict: DictOrCb) => defineMutate({ common, ldMutate, mutateFnDict }),
     defineFullDerive: (throwErr?: boolean) => (deriveFnDict: DictOrCb) => defineFullDerive({ common, deriveFnDict, throwErr }),
+    defineLifecycle: (lifecycle: DictFn) => defineLifecycle(lifecycle, internal),
     mutate: mutate(stateRoot),
     runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(stateRoot, descOrOptions),
     runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(stateRoot, descOrOptions),

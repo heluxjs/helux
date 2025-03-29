@@ -49,6 +49,7 @@ export function updateDep(insCtx: InsCtxDef) {
     }
     return;
   }
+
   insCtx.depKeys = currentDepKeys.slice();
 }
 

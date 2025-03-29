@@ -104,5 +104,5 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
   }
   // may hot replace for dev mode or add new mod
   rootState[usefulName] = sharedState;
-  ctx.mod[usefulName] = getInternal(sharedState);
+  ctx.modMap.set(usefulName, getInternal(sharedState));
 }

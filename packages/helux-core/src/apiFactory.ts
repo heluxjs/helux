@@ -13,6 +13,8 @@ const needApiCtxFns = [
   'atomx',
   'share',
   'sharex',
+  'bindAtom',
+  'withAtom',
   'getMutateLoading',
   'getActionLoading',
   '$',

@@ -17,6 +17,10 @@ export function initHeluxContext(options: {
   const existedRoot: HeluxRoot = GLOBAL_REF[heluxCtxKey];
   const done = (key: string | symbol, root?: any) => {
     const ROOT = root || createRoot();
+    // 兼容一下多版本共存
+    if (!ROOT.modMap) {
+      ROOT.modMap = new Map<any, any>();
+    }
     const api = buildHeluxApi(reactLib, act);
     setRootData({ ROOT, inited: true, api });
     GLOBAL_REF[key] = ROOT;
