@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 1.0.5
+
+### Patch Changes
+
+- 86f15b7: optimize README
+
 ## 1.0.4
 
 ### Patch Changes
