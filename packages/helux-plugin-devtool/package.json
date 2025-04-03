@@ -31,7 +31,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux": "^4.7.1",
+    "helux": "^5.0.0",
     "redux": "^4.2.1"
   },
   "devDependencies": {

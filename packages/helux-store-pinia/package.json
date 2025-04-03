@@ -1,14 +1,14 @@
 {
-  "name": "helux",
-  "version": "5.0.0",
-  "description": "A reactive atomic state engine for React(including React 18) and all React like, carrying dependency collection feature, supporting fine-grained updates",
+  "name": "@helux/store-pinia",
+  "version": "1.0.0",
+  "description": "Intuitive, type safe, light and flexible Store (based on helux) for React with DevTools support",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/heluxjs/helux",
-    "directory": "packages/helux"
+    "directory": "packages/helux-store-pinia"
   },
   "license": "MIT",
   "author": {
@@ -18,7 +18,7 @@
   },
   "main": "src/index.ts",
   "module": "dist/index.mjs",
-  "types": "src/index.d.ts",
+  "types": "src/types.d.ts",
   "files": [
     "dist",
     "src",
@@ -31,7 +31,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@helux/core": "workspace:^"
+    "helux": "workspace:^"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.4",
@@ -44,6 +44,7 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
+    "helux": "workspace:^",
     "react": ">=16.8.0"
   },
   "bundleDependencies": false,

@@ -1,0 +1,12 @@
+# helux-store-pinia
+
+## 1.0.0
+
+### Minor Changes
+
+- b6e5c8b: release helux 5.0, support lifecycle withAtom
+
+### Patch Changes
+
+- Updated dependencies [b6e5c8b]
+  - helux@5.0.0
