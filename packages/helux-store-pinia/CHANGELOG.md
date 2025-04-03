@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 1.0.8
+
+### Patch Changes
+
+- 0d259a0: expose with fns for store-pinia
+
 ## 1.0.7
 
 ### Patch Changes
