@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 1.0.4
+
+### Patch Changes
+
+- d981485: bump store-pinia
+
 ## 1.0.0
 
 ### Minor Changes

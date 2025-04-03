@@ -1,6 +1,6 @@
 {
   "name": "@helux/store-pinia",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Intuitive, type safe, light and flexible Store (based on helux) for React with DevTools support",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -18,7 +18,7 @@
   },
   "main": "src/index.ts",
   "module": "dist/index.mjs",
-  "types": "src/types.d.ts",
+  "types": "index.d.ts",
   "files": [
     "dist",
     "src",
@@ -44,8 +44,7 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "helux": "workspace:^",
-    "react": ">=16.8.0"
+    "helux": "workspace:^"
   },
   "bundleDependencies": false,
   "publishConfig": {
