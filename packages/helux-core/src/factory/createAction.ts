@@ -14,18 +14,25 @@ const { ACTION } = FROM;
  */
 function innerCreate<T = SharedState>(
   state: T,
-  options: { task: Ext<Fn>; desc: string; label: string; throwErr?: boolean; mergeReturn?: boolean },
+  options: { task: Ext<Fn>; desc: string; label: string; throwErr?: boolean; mergeReturn?: boolean; isMultiPayload?: boolean },
 ) {
-  const { label, throwErr, desc = '', task, mergeReturn = true } = options;
+  const { label, throwErr, desc = '', task, mergeReturn = true, isMultiPayload = false } = options;
   const outThrowErr = ensureBool(throwErr, false);
   const internal = checkSharedStrict(state, { label });
   const { forAtom } = internal;
 
   // 把 action 定义函数统一当异步函数去处理，callAsyncMutateFnLogic 内部会自动判断是否需要走异步调用逻辑
   // now fn can have a name 'action' at dev mode
-  const action = (payload: any, throwFnErr?: boolean) => {
+  const action = (...args: any[]) => {
+    let payloadArg = args[0];
     // 用户调用 action 独立定义的 throwErr 优先级高于 创建 action 函数时预设的 throwErr
     // throwErr 谨慎处理，只严格接受布尔值
+    let throwFnErr = args[1];
+    if (isMultiPayload) {
+      payloadArg = args;
+      throwFnErr = undefined;
+    }
+
     const throwErrVar = ensureBool(throwFnErr, outThrowErr);
     const fnItem = newMutateFnItem({ desc, task, depKeys: [] });
     const dispatch = (task: any, payload: any) => {
@@ -53,6 +60,7 @@ function innerCreate<T = SharedState>(
         const merge = (partial: any) => {
           handlePartial({ partial, forAtom, draftRoot, draftNode: draft });
         };
+        const payload = payloadArg;
         return [{ draft, draftRoot, setState, desc, payload, flush, merge, dispatch }];
       },
     });
@@ -74,6 +82,6 @@ function innerCreate<T = SharedState>(
  */
 export function action<T = SharedState>(sharedState: T) {
   return (mergeReturn?: boolean) =>
-    (task: Fn, desc = '', throwErr?: boolean) =>
-      innerCreate(sharedState, { task, desc, label: 'action', mergeReturn, throwErr });
+    (task: Fn, desc = '', throwErr?: boolean, isMultiPayload?: boolean) =>
+      innerCreate(sharedState, { task, desc, label: 'action', mergeReturn, throwErr, isMultiPayload });
 }

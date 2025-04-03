@@ -5,7 +5,7 @@ import { getFnCtxByObj } from '../../factory/common/fnScope';
 import { createDeriveLogic } from '../../factory/createDerived';
 import { delFnCtx } from '../../helpers/fnCtx';
 import { attachInsDerivedResult } from '../../helpers/insCtx';
-import type { AsyncType, Fn, IFnCtx } from '../../types/base';
+import type { AsyncType, IFnCtx } from '../../types/base';
 
 const InvalidInput = 'ERR_NOT_DERIVED_RESULT: useDerived only accept derived result';
 const NotDerivedAtom = 'ERR_NOT_ATOM_RESULT: useDerivedAtom only accept derived atom';

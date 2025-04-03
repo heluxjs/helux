@@ -1,6 +1,7 @@
 import { limuUtils, markRaw, produce } from 'limu';
 import { assignThisHX, bindAtom, getHX, makeWithAtomOptions, withAtom } from './class';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
+import { defineStore } from './factory/advance/defineStore';
 import { getAtom, isAtom, isDerivedAtom, isDerivedResult, isSharedState } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
@@ -56,6 +57,7 @@ export {
   share,
   sharex,
   createShared,
+  defineStore,
   // derive api
   derive,
   deriveDict,

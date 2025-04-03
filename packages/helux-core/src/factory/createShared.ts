@@ -60,10 +60,11 @@ function defineActions(
     actionCreator: any;
     actionDict: Dict;
     forTp?: boolean;
+    isMultiPayload?: boolean;
   },
   throwErr?: boolean,
 ) {
-  const { createFn, ldAction, actionDict, actionCreator, internal, apiCtx, forTp = false } = options;
+  const { createFn, ldAction, actionDict, actionCreator, internal, apiCtx, forTp = false, isMultiPayload = false } = options;
   // 提前触发伴生loading状态创建
   getLoadingInfo(createFn, { internal, from: ACTION, apiCtx });
   const actions: Dict = {};
@@ -75,7 +76,7 @@ function defineActions(
     // defineActions 传入的是 actionFnDef 定义函数即 actionTask
     const actionTask = forTp ? actionOrFnDef.__task : actionOrFnDef;
     // actions 和 eActions 都不把 return 结果当做部分状态合并到 draft 上，仅作为普通结果返回
-    const eActionFn = actionCreator(false)(actionTask, key, throwErr);
+    const eActionFn = actionCreator(false)(actionTask, key, throwErr, isMultiPayload);
 
     // eActions 对应函数返回原始的 { result, snap, err } 结构，故此处指向 actionFn 即可
     eActionFn.__fnName = key;
@@ -121,9 +122,9 @@ function defineMutate(options: { common: ICommon; ldMutate: Dict; mutateFnDict: 
   };
 }
 
-function defineMutateDerive(options: { common: ICommon; ldMutate: Dict; inital: Dict; mutateFnDict: DictOrCb }) {
-  const { common, ldMutate, inital, mutateFnDict } = options;
-  const { stateRoot, useState, state, isAtom } = sharex(common.apiCtx, inital);
+function defineMutateDerive(options: { common: ICommon; ldMutate: Dict; inital: Dict; mutateFnDict: DictOrCb; shareOptions: any }) {
+  const { common, ldMutate, inital, mutateFnDict, shareOptions } = options;
+  const { stateRoot, useState, state, isAtom } = sharex(common.apiCtx, inital, shareOptions);
   const initialCommon = { ...common, stateRoot, state, isAtom, internal: getInternal(stateRoot) };
   // 注意此处是将原 common.stateRoot 作为 extra 转移给 defineMutate
   const result = defineMutate({ common: initialCommon, ldMutate, mutateFnDict, extra: common.stateRoot });
@@ -199,10 +200,12 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     setDraft,
     setEnableMutate: (enabled: boolean) => setEnableMutate(enabled, internal),
     getOptions: () => getOptions(internal),
-    defineActions: (throwErr?: boolean) => (actionDict: Dict<ActionTask>) => defineActions({ ...acCommon, actionDict }, throwErr),
+    defineActions: (throwErr?: boolean, isMultiPayload?: boolean) => (actionDict: Dict<ActionTask>) =>
+      defineActions({ ...acCommon, actionDict, isMultiPayload }, throwErr),
     defineTpActions: (throwErr?: boolean) => (actionDict: Dict<Action>) =>
       defineActions({ ...acCommon, actionDict, forTp: true }, throwErr),
-    defineMutateDerive: (inital: Dict) => (mutateFnDict: DictOrCb) => defineMutateDerive({ common, ldMutate, inital, mutateFnDict }),
+    defineMutateDerive: (inital: Dict, shareOptions: any) => (mutateFnDict: DictOrCb) =>
+      defineMutateDerive({ common, ldMutate, inital, mutateFnDict, shareOptions }),
     defineMutateSelf: () => (mutateFnDict: DictOrCb) => defineMutate({ common, ldMutate, mutateFnDict }),
     defineFullDerive: (throwErr?: boolean) => (deriveFnDict: DictOrCb) => defineFullDerive({ common, deriveFnDict, throwErr }),
     defineLifecycle: (lifecycle: DictFn) => defineLifecycle(lifecycle, internal),

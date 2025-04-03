@@ -15,6 +15,7 @@ export const {
   atomx,
   share,
   sharex,
+  defineStore,
   // derive api
   derive,
   deriveDict,

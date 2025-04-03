@@ -15,6 +15,7 @@ export function isSharedState(mayShared: any) {
   return mayShared[IS_ATOM] !== undefined;
 }
 
+/** 判断是否是 derive 函数返回的结果，true：是全量派生的 atom 结果  */
 export function isDerivedAtom(mayAtomDerived: any): mayAtomDerived is DerivedAtom {
   if (!mayAtomDerived) {
     return false;
@@ -22,6 +23,7 @@ export function isDerivedAtom(mayAtomDerived: any): mayAtomDerived is DerivedAto
   return mayAtomDerived[IS_DERIVED_ATOM] || false;
 }
 
+/** 判断是否是 derive 或 deriveDict 函数返回的结果，true：是全量派生结果，false：不是全量派生结果 */
 export function isDerivedResult(mayDerived: any): mayDerived is DerivedAtom | DerivedDict {
   if (!mayDerived) {
     return false;

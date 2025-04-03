@@ -33,22 +33,22 @@ export type Off = Fn;
 
 export type DictFn = Dict<Fn>;
 
-export interface IAtomLifecycle {
+export interface ILifecycle {
   /**
    * 第一个使用当前共享对象的组件实例将要挂载时触发 willMount
    * willMount will be triggered before first ins of current atom will mount
    */
-  willMount: () => void;
+  willMount?: () => void;
   /**
    * 第一个使用当前共享对象的组件实例挂载完毕触发 mounted
    * mounted will be triggered before first ins of current atom mounted
    */
-  mounted: () => void;
+  mounted?: () => void;
   /**
    * 最后一个使用当前共享对象的组件实例卸载前触发 willUnmount
    * willUnmount will be triggered before last ins of current will unmount
    */
-  willUnmount: () => void;
+  willUnmount?: () => void;
 }
 export interface ILocalStateApi<T> {
   setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
@@ -734,7 +734,7 @@ type FnResultValType<T extends IDeriveFnItem | DeriveFn> = T extends IDeriveFnIt
  * defineActions 调用返回 actionCtx 上下文对象，包括 actions、eActions、getLoading、useLoading
  */
 type ActionCtx<T = any, P extends Dict | undefined = undefined, D extends Dict<Fn> = Dict<ActionTask<T, UnconfirmedArg>>> = {
-  /** 调用 actions.xxMethod，返回结果为函数内部执行完毕返回的结果，会抛出函数执行过程出现的错误 */
+  /** 调用 actions.xxMethod，返回结果为函数内部执行完毕返回的结果，会抛出函数执行过程中出现的错误 */
   actions: {
     [K in keyof D]: (
       /** 支持用户单独使用 ActionTaskParam 标记类型并推导给 action 函数 */
@@ -761,6 +761,7 @@ type ActionCtx<T = any, P extends Dict | undefined = undefined, D extends Dict<F
 
 type DefineMutateDerive<T extends JSONDict = JSONDict> = <I = SharedDict>(
   inital: I | (() => I),
+  options?: ICreateOptions<I>,
 ) => <D = Dict<MutateFn<I, any, T> | IMutateFnItem<I, any, T>>>(
   mutateDef: D | ((stateInfo: IStateInfo<I, T>) => D),
 ) => {
@@ -1104,6 +1105,11 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
      * true 则表示抛出，此时用户外部的逻辑要自己 try catch 捕获错误
      */
     throwErr?: boolean,
+    /**
+     * default: false，
+     * 是否是多个 payload 参数
+     */
+    isMultiPayload?: boolean,
   ) => <
     D extends Dict<Fn> = P extends Dict
       ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
@@ -1146,11 +1152,17 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     useLoading: () => Ext<LoadingState<D>>;
     useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
   };
-  defineLifecycle: (lifecycle: IAtomLifecycle) => void;
+  defineLifecycle: (lifecycle: ILifecycle) => void;
 }
 
 export interface ISharedCtx<T extends JSONDict = JSONDict> extends ISharedStateCtxBase<T> {
+  /**
+   * state 和 stateRoot 均指向同一个代理对象
+   */
   state: ReadOnlyDict<T>;
+  /**
+   * 即 state
+   */
   stateRoot: ReadOnlyDict<T>;
   /**
    * 全新定义一个状态对象并对其定义派生函数，这些函数可依赖其他 atom 或 share 对象来计算当前对象的各个节点值
@@ -1168,11 +1180,12 @@ export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
    * state 指向共享状态拆箱后的值引用，
    * 因元组结果第一位固定指向 stateRoot，所以需要注意元组解构转为对象解构的命名方式
    * ```
-   * ❌ 从元组解构转为对象解构后，依然取 state
-   * const [ state ] = atom(1) -> const { state } = atomx(1)
+   * ❌ 从元组解构转为对象解构后，依然取 state 是错误的，对于原始类型来说此时的 state 是原始值而非 atom 对象
+   * const [ state ] = atom(1) -> const { state } = atomx(1); // state is 1
    * ✅ 从元组解构转为对象解构后，取 stateRoot 才是元组第一位指向的引用
-   * const [ state ] = atom(1) -> const { stateRoot: state } = atomx(1)
-   * const [ stateRoot ] = atom(1) -> const { stateRoot: } = atomx(1)
+   * const [ stateRoot ] = atom(1) -> const { stateRoot } = atomx(1)
+   * // 或使用别名
+   * const [ state ] = atom(1) -> const { stateRoot: state } = atomx(1); state is { val: 1}
    * ```
    */
   state: ReadOnlyAtomVal<Atom<T>>;
@@ -1861,31 +1874,15 @@ export interface IInitOptions {
   isRootRender?: boolean;
 }
 
-export interface IBindAtomOptions {
-  /**
-   * 单个 atom 对象
-   */
-  atom?: ValidAtom;
+export interface IBindAtomBaseOptions {
   /**
    * 单个 atom 对象对应的 options 配置
    */
   atomOptions?: IUseSharedStateOptions;
   /**
-   * atom 字典配置
+   * 基于 mutateDerive 导出的 atom 对象对应的 options 配置
    */
-  atoms?: Record<string, any>;
-  /**
-   * atom 字典对应的 options 配置
-   */
-  atomsOptions?: Record<string, IUseSharedStateOptions>;
-  /**
-   * derived 字典配置
-   */
-  deriveds?: Record<string, any>;
-  /**
-   * derived 字典对应的 options 配置
-   */
-  derivedsOptions?: Record<string, IUseDerivedOptions>;
+  derivedAtomOptions?: IUseSharedStateOptions;
   /**
    * default: true，是否对导出的组件包裹一层 React.memo
    */
@@ -1905,6 +1902,42 @@ export interface IBindAtomOptions {
    * 目标组件渲染崩溃时，是否在重渲染期间重建视图
    */
   rebuild?: boolean;
+}
+
+export interface IWithStoreOptions extends IBindAtomBaseOptions {
+  /**
+   * default: false，
+   * 为 false 时，走反向继承模式生成新的类组件
+   * 为 true 时，走属性模式生成新的类组件
+   */
+  isPropsProxy?: boolean;
+}
+
+export interface IBindAtomOptions extends IBindAtomBaseOptions {
+  /**
+   * 单个 atom 对象
+   */
+  atom?: ValidAtom;
+  /**
+   * 单个 atom 对象对应的导出 atom 对象，此 atom 是可变派生结果（基于 defineMutateDerive 生成）
+   */
+  derivedAtom?: ValidAtom;
+  /**
+   * atom 字典配置
+   */
+  atoms?: Record<string, any>;
+  /**
+   * atom 字典对应的 options 配置
+   */
+  atomsOptions?: Record<string, IUseSharedStateOptions>;
+  /**
+   * derived 字典配置，derived 是全量派生结果（基于derive函数返回的结果）
+   */
+  deriveds?: Record<string, any>;
+  /**
+   * derived 字典对应的 options 配置
+   */
+  derivedsOptions?: Record<string, IUseDerivedOptions>;
 }
 
 export interface IWithAtomOptions extends IBindAtomOptions {
@@ -1927,9 +1960,10 @@ export interface IWithAtomOptions extends IBindAtomOptions {
  * }
  * ```
  */
-export type HXType<O extends IWithAtomOptions = IWithAtomOptions> = 'atom' extends keyof O
+export type HXType<O extends IWithAtomOptions = IWithAtomOptions> = ('atom' extends keyof O
   ? HXTypeByAD<O['atom'], O['atoms'], O['deriveds']>
-  : HXTypeByAD<DefaultClassAtom, O['atoms'], O['deriveds']>;
+  : HXTypeByAD<DefaultClassAtom, O['atoms'], O['deriveds']>) &
+  ('derivedAtom' extends keyof O ? HXDerivedAtomType<O['derivedAtom']> : HXTypeByAD<DefaultClassAtom>);
 
 type DefaultClassAtom = {
   /**
@@ -1970,4 +2004,21 @@ export type HXTypeByAD<A = any, AS extends Dict<any> = Dict<any>, DS extends Dic
       }
     : {};
   deriveds: DS extends Dict ? { [K in keyof DS]: DerivedResultType<DS[K]> } : {};
+};
+
+/**
+ * 求 hx.derivedAtom 类型
+ */
+export type HXDerivedAtomType<A = any> = {
+  derivedAtom: {
+    state: A extends ReadOnlyAtom ? AtomValType<A> : A;
+    setState: SetState<A>;
+    time: number;
+    isAtom: boolean;
+    setDraft: SetDraft<A>;
+    insKey: 0;
+    sn: 0;
+    getDeps: () => string[];
+    getPrevDeps: () => string[];
+  };
 };

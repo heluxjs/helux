@@ -1,6 +1,8 @@
 import * as api from './api';
 
-export type HeluxApi = typeof api;
+import * as apiStore from './api-store';
+
+export type HeluxApi = typeof api & typeof apiStore;
 
 export type Model<T = any> = T;
 

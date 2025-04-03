@@ -27,3 +27,8 @@ export default defineConfig([
     ],
   },
 ]);
+
+/**
+ * 不能将类型“import("/Users/fancyzhong/Desktop/code/my-opensource/helux/node_modules/.pnpm/esbuild@0.17.19/node_modules/esbuild/lib/main").Plugin”
+ * 分配给类型“import("/Users/fancyzhong/Desktop/code/my-opensource/helux/node_modules/.pnpm/esbuild@0.25.1/node_modules/esbuild/lib/main").Plugin”。
+ */
