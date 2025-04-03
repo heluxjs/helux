@@ -1,7 +1,11 @@
-import type { Fn, ILifecycle, ISharedCtx } from 'helux';
+import type { Fn, ILifecycle, ISharedCtx, Dict } from 'helux';
 
 function keys(obj: object) {
   return Object.keys(obj);
+}
+
+export function returnConf(conf: Dict) {
+  return conf;
 }
 
 export function extractOptions(isLayered: boolean, options: any) {
@@ -102,7 +106,7 @@ export function makeWrapDerived(ctx: ISharedCtx, options: any, isLayered?: boole
     });
     ctx.defineMutateSelf()(deriveFns);
     // 未分层结构是用 state 当 derived，因为是基于自身可变计算的派生属性
-    return { derivedState: state, useDerivedState: () => {} };
+    return { derivedState: state, useDerivedState: () => { } };
   }
 
   Object.keys(userGetters).forEach((key) => {
