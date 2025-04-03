@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 1.0.6
+
+### Patch Changes
+
+- 4dd6fd2: bump helux-core
+- Updated dependencies [4dd6fd2]
+  - helux@5.0.1
+
 ## 1.0.5
 
 ### Patch Changes

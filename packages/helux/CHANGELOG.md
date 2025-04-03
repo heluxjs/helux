@@ -1,5 +1,13 @@
 # helux
 
+## 5.0.1
+
+### Patch Changes
+
+- 4dd6fd2: bump helux-core
+- Updated dependencies [4dd6fd2]
+  - @helux/core@5.0.1
+
 ## 5.0.0
 
 ### Major Changes

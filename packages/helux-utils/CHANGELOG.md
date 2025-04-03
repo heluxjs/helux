@@ -1,5 +1,11 @@
 # @helux/utils
 
+## 5.0.1
+
+### Patch Changes
+
+- @helux/types@5.0.1
+
 ## 5.0.0
 
 ### Major Changes

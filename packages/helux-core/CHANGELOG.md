@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.0.1
+
+### Patch Changes
+
+- 4dd6fd2: bump helux-core
+  - @helux/hooks-impl@5.0.1
+  - @helux/types@5.0.1
+  - @helux/utils@5.0.1
+
 ## 5.0.0
 
 ### Major Changes
