@@ -570,6 +570,10 @@ export interface IMutateCtx {
    * 修改描述
    */
   desc: string;
+  /**
+   * 透传来自 action 的 payloadArgs
+   */
+  payloadArgs: any;
 }
 
 export interface IInnerSetStateOptions extends ISetStateOptions {
@@ -583,6 +587,10 @@ export interface IInnerSetStateOptions extends ISetStateOptions {
    * 是否忽略cb返回值，setDraft 接口会设置为 false
    */
   handleCbReturn?: boolean;
+  /**
+   * action 函数调用会透传此参数
+   */
+  payloadArgs?: string;
 }
 
 export interface ISetFactoryOpts extends IInnerSetStateOptions {
@@ -1845,6 +1853,8 @@ export interface IDataChangedInfo {
   type: string;
   /** 快照 */
   snap: SharedState;
+  /** action 透传的 payload 参数列表 */
+  payloadArgs: any;
 }
 
 export interface IMiddlewareCtx extends IDataChangingInfo {

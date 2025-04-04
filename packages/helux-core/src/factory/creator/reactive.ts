@@ -26,7 +26,7 @@ function flushModified(meta: IReactiveMeta, desc?: string) {
   // 标记过期，不能再被复用
   meta.expired = true;
   REACTIVE_META.del(key);
-  return meta.finish(null, { from, desc: desc || meta.desc });
+  return meta.finish(null, { from, desc: desc || meta.desc, payloadArgs: meta.payloadArgs });
 }
 
 /**
@@ -113,13 +113,13 @@ function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
  */
 function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAtom: boolean) {
   const { sharedKey } = internal;
-  const { insKey = 0, from, desc } = options;
+  const { insKey = 0, from, desc, payloadArgs } = options;
   let meta = metas.get(sharedKey) || fakeReativeMeta;
 
   // 无顶层响应对象、或顶层响应对象已过期，则重建顶层 top reactive
   if (meta.expired) {
     // 复用 from 和 desc 重建 meta，以便插件获取正常的执行源描述
-    meta = buildMeta(internal, { isTop: true, from, desc });
+    meta = buildMeta(internal, { isTop: true, from, desc, payloadArgs });
     metas.set(sharedKey, meta);
     REACTIVE_META.set(meta.key, meta);
     meta.fnKey = TRIGGERED_WATCH.current();
@@ -129,6 +129,8 @@ function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAt
     // 未过期就指回 meta 最初创建时携带的信息（ buildReactive 形成的闭包指向的数据 ）才是正确的，
     meta.from = from;
     meta.desc = desc;
+    // for https://github.com/heluxjs/helux/issues/179
+    meta.payloadArgs = payloadArgs;
   }
 
   // mark using

@@ -125,7 +125,7 @@ export function execFinish(commitOpts: ICommitOpts, draftRoot: any, draftNode: a
 }
 
 export function fillMutateCtx(mutateCtx: IMutateCtx, innerSetOptions: IInnerSetStateOptions) {
-  const { ids, globalIds, from, desc, fnKey } = innerSetOptions;
+  const { ids, globalIds, from, desc, fnKey, payloadArgs } = innerSetOptions;
   // 用户 setState 可能设定了 ids globalIds
   if (ids) {
     ids.forEach((id) => nodupPush(mutateCtx.ids, id));
@@ -139,6 +139,9 @@ export function fillMutateCtx(mutateCtx: IMutateCtx, innerSetOptions: IInnerSetS
   desc && (mutateCtx.desc = desc);
   // 可能来自于 mutate 函数调用
   fnKey && (mutateCtx.fnKey = fnKey);
+  if (payloadArgs !== undefined) {
+    mutateCtx.payloadArgs = payloadArgs;
+  }
 }
 
 /**

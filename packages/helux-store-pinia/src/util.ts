@@ -83,6 +83,7 @@ export function makeWrapActions(ctx: ISharedCtx, options: any, isLayered?: boole
       // 绑定 ctx.state 给 actions 函数操作
       const wrapStore = makeWrapStore(draft, { userGetters, derived, userActions, wrapActions }, isLayered);
       const fn = userActions[key].bind(wrapStore);
+      // 这里的 payload 是一个数组，故使用 apply 接受并转为可变长度参数调用
       return fn.apply(null, payload);
     };
   });

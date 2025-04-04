@@ -59,4 +59,8 @@ export interface IReactiveMeta {
    * 当前 reactive 对像可能来自于实例
    */
   insKey: number;
+  /**
+   * 记录对应的 action 执行的 payload 参数列表
+   */
+  payloadArgs: any;
 }

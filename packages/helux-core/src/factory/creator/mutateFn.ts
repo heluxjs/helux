@@ -40,12 +40,14 @@ interface ICallMutateBase {
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
   /** fn 函数调用入参拼装 */
   getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[]; extraArgs: any }) => any[];
+  getPayloadArgs?: () => any;
 }
 
 interface ICallAsyncMutateFnOpt extends ICallMutateBase {
   mergeReturn?: boolean;
   /** task 函数调用入参拼装，暂不像同步函数逻辑那样提供 draft 给用户直接操作，用户必须使用 setState 修改状态 */
   getArgs?: (param: { flush: any; draft: any; draftRoot: any; desc: string; setState: Fn; input: any[] }) => any[];
+  getPayloadArgs?: () => any;
 }
 
 const taskProm = new Map<any, boolean>();
@@ -72,13 +74,16 @@ export function isTaskProm(task: any) {
 
 /** 呼叫异步函数的逻辑封装，mutate task 执行或 action 定义的函数（同步或异步）执行都会走到此逻辑 */
 export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options: ICallAsyncMutateFnOpt): ActionReturn | ActionAsyncReturn {
-  const { sn, getArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn, extraArgs } = options;
+  const { sn, getArgs = noop, getPayloadArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn, extraArgs } = options;
   const { desc = '', depKeys, task = noopAny, extraBound } = fnItem;
   const internal = getInternal(targetState);
   const { sharedKey } = internal;
   const customOptions: ISetFactoryOpts = { desc, sn, from };
   const statusKey = getStatusKey(from, desc);
-  const { draft, draftRoot } = buildReactive(internal, { depKeys, desc, from });
+
+  const payloadArgs = getPayloadArgs();
+  // 这里透传给 buildReactive 的 payload，后续会继续透传给 devtool
+  const { draft, draftRoot } = buildReactive(internal, { depKeys, desc, from, payloadArgs });
   const flush = (desc: string) => {
     innerFlush(sharedKey, desc);
   };
@@ -96,6 +101,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   const input = FROM.MUTATE === from ? getInput(internal, fnItem) : [];
   const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound, extraArgs };
   const args = getArgs(defaultParams) || [defaultParams];
+
   const isProm = taskProm.get(task);
   const isUnconfirmedFn = isProm === undefined;
   const setStatus = (loading: boolean, err: any, ok: boolean) => {
@@ -158,7 +164,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
 
 /** 呼叫同步函数的逻辑封装 */
 export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICallMutateFnOpt<T>): ActionReturn {
-  const { sn, getArgs = noop, from, throwErr, isFirstCall = false, fnItem, extraArgs } = options;
+  const { sn, getArgs = noop, getPayloadArgs = noop, from, throwErr, isFirstCall = false, fnItem, extraArgs } = options;
   const { desc = '', watchKey, fn = noopAny, extraBound } = fnItem;
   const isMutate = FROM.MUTATE === from;
   isMutate && TRIGGERED_WATCH.set(watchKey);
@@ -172,7 +178,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
   // 调用函数形如：(draft)=>draft.xxx+=1; 或 (draft, input)=>draft.xxx+=input[0]
   const setState: any = (cb: any) => {
     const { finish } = setStateFactory(setFactoryOpts); // 继续透传 sn from 等信息
-    return finish(cb);
+    return finish(cb, { from, desc, payloadArgs: getPayloadArgs() });
   };
 
   const state = getStateNode(sharedRoot, forAtom);

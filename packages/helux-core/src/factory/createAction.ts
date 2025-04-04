@@ -25,11 +25,13 @@ function innerCreate<T = SharedState>(
   // now fn can have a name 'action' at dev mode
   const action = (...args: any[]) => {
     let payloadArg = args[0];
+    let payloadArgs = [payloadArg]; // 透传给 devtool，所有需要保证始终为数组格式
     // 用户调用 action 独立定义的 throwErr 优先级高于 创建 action 函数时预设的 throwErr
     // throwErr 谨慎处理，只严格接受布尔值
     let throwFnErr = args[1];
     if (isMultiPayload) {
       payloadArg = args;
+      payloadArgs = args;
       throwFnErr = undefined;
     }
 
@@ -61,8 +63,9 @@ function innerCreate<T = SharedState>(
           handlePartial({ partial, forAtom, draftRoot, draftNode: draft });
         };
         const payload = payloadArg;
-        return [{ draft, draftRoot, setState, desc, payload, flush, merge, dispatch }];
+        return [{ draft, draftRoot, setState, desc, payload, payloadArgs, flush, merge, dispatch }];
       },
+      getPayloadArgs: () => payloadArgs,
     });
   };
   // 提前记录一个值，方便用户使用 getLoading 时可收集到依赖

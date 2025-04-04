@@ -23,7 +23,7 @@ export function addPlugin(plugin: IPlugin) {
 export function emitDataChanged(internal: TInternal, mutateCtx: IMutateCtx) {
   const { bus } = getRootCtx();
   if (bus.canEmit(ON_DATA_CHANGED)) {
-    const { from, desc } = mutateCtx;
+    const { from, desc, payloadArgs } = mutateCtx;
     const { forAtom, sharedKey, moduleName, snap, usefulName, stateType } = internal;
     let type;
     if (loadingTypes.includes(stateType)) {
@@ -32,7 +32,7 @@ export function emitDataChanged(internal: TInternal, mutateCtx: IMutateCtx) {
     } else {
       type = `${usefulName}@${from || 'Api'}/${desc}`;
     }
-    bus.emit(ON_DATA_CHANGED, { forAtom, snap, sharedKey, moduleName, usefulName, type });
+    bus.emit(ON_DATA_CHANGED, { forAtom, snap, sharedKey, moduleName, usefulName, type, payloadArgs });
   }
 }
 
