@@ -38,5 +38,6 @@ export function defineStore(moduleName: string, options: IDefineStoreOptions<{},
     reactive: ctx.reactive,
     getters: state,
     actions: wrapActions,
+    reactiveDesc: ctx.reactiveDesc,
   };
 }

@@ -1,4 +1,4 @@
-import type { Dict } from 'helux';
+import type { Dict, IPlugin, Middleware } from 'helux';
 import {
   GettersProp,
   HeluxOptions,
@@ -10,6 +10,7 @@ import {
   MergeGetters,
   StateWrap,
 } from './src/types';
+export * from '@helux/core/src/types/base';
 export * from './src/types';
 
 /**
@@ -158,3 +159,35 @@ export declare function defineStore<S extends Dict, G extends Dict, A extends Di
   storeOptions: IDefineStoreOptions<S, G, A>,
   heluxOptions?: HeluxOptions,
 ): IStoreCtx<S, G, A>;
+
+/**
+ * 添加中间件，可在数据提交前做二次修改，可写入数据传递给下一个中间件
+ * ```ts
+ * function myMiddleware({ draft, setData, moduleName, sharedKey, idx }){
+ *  setData('key', 1); // 写数据给下一个中间件
+ *  draft.time = 2; // 修改数据
+ * }
+ * ```
+ */
+export function addMiddleware(mid: Middleware): void;
+
+/**
+ * 使用中间件，可监听 helux 内部的各种事件做异步处理
+ * ```ts
+ *  const myPlugin = {
+ *    install(ctx){
+ *      // 监听其他将来会扩展的事件
+ *      ctx.on('someEvent', ()=>{ ... });
+ *      // 监听内置的 onStateChanged 事件
+ *      ctx.onStateChanged(({snap})=>{
+ *          // 可记录 snap 到 redux-dev-tool
+ *      });
+ *    },
+ *    name: 'myPlugin', // 名称可选
+ *    desc: 'this is helux plugin demo', // 描述可选
+ *  };
+ *  usePlugin(myPlugin);
+ * ```
+ * @param plugin
+ */
+export function addPlugin(plugin: IPlugin): void;

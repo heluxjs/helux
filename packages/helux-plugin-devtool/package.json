@@ -1,6 +1,6 @@
 {
   "name": "@helux/plugin-devtool",
-  "version": "4.0.3",
+  "version": "5.0.0",
   "description": "devtool for helux",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -36,6 +36,10 @@
   },
   "devDependencies": {
     "terser": "^5.29.1"
+  },
+  "peerDependencies": {
+    "helux": "^5.0.3",
+    "redux": "^4.2.1"
   },
   "bundleDependencies": false,
   "publishConfig": {

@@ -40,5 +40,6 @@ export function defineLayeredStore(moduleName: string, options: IDefineStoreOpti
     reactive: ctx.reactive,
     getters: derivedState,
     actions: wrapActions,
+    reactiveDesc: ctx.reactiveDesc,
   };
 }

@@ -1,8 +1,9 @@
+import { addMiddleware, addPlugin } from 'helux';
 import { defineLayeredStore } from './layered';
 import { defineStore } from './store';
 import { returnConf } from './util';
 
-export { defineStore, defineLayeredStore };
+export { defineStore, defineLayeredStore, addPlugin, addMiddleware };
 
 // defineLayeredStore options 独立存放时的类型辅助函数
 export const withLayeredOptionsThis = returnConf;

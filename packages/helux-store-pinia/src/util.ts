@@ -132,11 +132,11 @@ export function makeLifecycle(ctx: ISharedCtx, lifecycle: ILifecycle, options: a
   const lifecycleFns: any = {};
 
   Object.keys(lifecycle).forEach((key) => {
-    lifecycleFns[key] = () => {
+    lifecycleFns[key] = (params: any) => {
       // 绑定 reactive 给 lifecycle 函数使用, 因为用户可能在 lifecycle 里直接修改状态
       const wrapStore = makeWrapStore(reactive, { userGetters, derived, userActions, wrapActions }, isLayered);
       const fn = userLifecycle[key].bind(wrapStore);
-      fn();
+      fn(params);
     };
   });
 

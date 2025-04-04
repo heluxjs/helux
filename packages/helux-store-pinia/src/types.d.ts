@@ -1,5 +1,8 @@
 import type { Dict, ICreateOptions, ILifecycle, IUseSharedStateOptions, LoadingStatus } from 'helux';
 
+/** 使用reactive修改状态时，标记表述，方便在devtool里可追溯 */
+type MarkRreactiveDesc = (desc: string) => void;
+
 type HeluxOptions = Omit<ICreateOptions, 'moduleName'>;
 
 type D = Dict;
@@ -63,6 +66,7 @@ export interface ILayeredStoreCtx<S extends Dict, G extends Dict, A extends Dict
   getters: GettersProp<G>;
   reactive: S;
   actions: A;
+  reactiveDesc: MarkRreactiveDesc;
 }
 
 /**
@@ -90,4 +94,5 @@ export interface IStoreCtx<S extends Dict, G extends Dict, A extends Dict> {
   getters: GettersProp<G>;
   reactive: S;
   actions: A;
+  reactiveDesc: MarkRreactiveDesc;
 }
