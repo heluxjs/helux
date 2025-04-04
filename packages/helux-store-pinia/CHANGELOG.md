@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 1.0.10
+
+### Patch Changes
+
+- f9a81f4: for issue 180, support addPlugin addMiddleware
+
 ## 1.0.9
 
 ### Patch Changes

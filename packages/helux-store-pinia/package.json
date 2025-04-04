@@ -1,6 +1,6 @@
 {
   "name": "@helux/store-pinia",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Intuitive, type safe, light and flexible Store (based on helux) for React with DevTools support",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
