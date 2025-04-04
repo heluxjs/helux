@@ -81,7 +81,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
 
     if (isReactive) {
       // 组件实例使用 useReactive(state) 返回的 reactive 对象时，会在 creator/operateState 里操作实例自己的 onOperate 句柄
-      const { draft, draftRoot } = buildReactive(internal, { onRead: onOperate, insKey });
+      const { draft, draftRoot } = buildReactive(internal, { onRead: onOperate, insKey, from: 'Reactive', desc: 'mutate' });
       insCtx.proxyState = draftRoot;
       insCtx.proxyStateVal = draft;
     } else {

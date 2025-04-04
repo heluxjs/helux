@@ -136,13 +136,19 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   };
 
   try {
+    // TODO  add boforeAction lifecycle
     const result = task(...args);
     // is result a promise
     const isProm = isPromise(result);
     // 注：只能从结果判断函数是否是 Promise，因为编译后的函数很可能再套一层函数
     taskProm.set(task, isProm);
     if (isProm) {
-      return Promise.resolve(result).then(handlePartial).catch(handleErr);
+      return Promise.resolve(result)
+        .then((result) => {
+          // TODO  add afterAction lifecycle
+          return handlePartial(result);
+        })
+        .catch(handleErr);
     }
     return handlePartial(result);
   } catch (err) {

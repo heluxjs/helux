@@ -15,9 +15,9 @@ const fnItem = newMutateFnItem({ isFake: true });
 export interface IBuildReactiveOpts {
   isTop?: boolean;
   depKeys?: string[];
-  desc?: string;
+  desc: string;
   onRead?: OnOperate;
-  from?: From;
+  from: From;
   expired?: boolean;
   insKey?: number;
 }

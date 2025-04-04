@@ -574,6 +574,7 @@ export interface IMutateCtx {
 
 export interface IInnerSetStateOptions extends ISetStateOptions {
   from?: From;
+  desc?: string;
   isFirstCall?: boolean;
   /** 触发 finish 的函数 key，用于辅助发现死循环 */
   fnKey?: string;

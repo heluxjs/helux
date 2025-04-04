@@ -21,15 +21,12 @@ function canFlush(meta?: IReactiveMeta): meta is IReactiveMeta {
 /**
  * flush modified data by finish handler
  */
-function flushModified(meta: IReactiveMeta) {
-  const { sharedKey } = meta;
+function flushModified(meta: IReactiveMeta, desc?: string) {
+  const { key, from } = meta;
   // 标记过期，不能再被复用
   meta.expired = true;
-  REACTIVE_META.del(meta.key);
-  // 来自于 flush 记录的 desc 值，使用过一次就清除
-  const desc = REACTIVE_DESC.current(sharedKey);
-  REACTIVE_DESC.del(sharedKey);
-  return meta.finish(null, { desc });
+  REACTIVE_META.del(key);
+  return meta.finish(null, { from, desc: desc || meta.desc });
 }
 
 /**
@@ -65,11 +62,8 @@ export function flushActive() {
 export function innerFlush(sharedKey: any, desc?: string) {
   const meta = metas.get(sharedKey);
   if (canFlush(meta)) {
-    if (desc) {
-      REACTIVE_DESC.set(sharedKey, desc);
-    }
     // 提交变化数据
-    flushModified(meta);
+    flushModified(meta, desc);
   }
 }
 
@@ -85,29 +79,29 @@ export function markExpired(sharedKey: number) {
  * 在下一次事件循环里提交之前修改的状态，供内部发生状态变化时调用
  * 故调用此方法就会标记 reactive.modified = true
  */
-export function nextTickFlush(sharedKey: number, desc?: string) {
+export function nextTickFlush(sharedKey: number) {
   const meta = metas.get(sharedKey) || fakeReativeMeta;
   meta.modified = true;
-  meta.nextTickFlush(desc);
+  meta.nextTickFlush();
 }
 
 function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
   const { from = REACTIVE } = options;
   const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true });
   const latestMeta = newReactiveMeta(draftRoot, options, finish);
+  const { sharedKey } = internal;
+
   latestMeta.key = getReactiveKey();
-  latestMeta.sharedKey = internal.sharedKey;
-  latestMeta.nextTickFlush = (desc?: string) => {
-    const { expired, hasFlushTask } = latestMeta;
-    if (!expired) {
-      latestMeta.data = [desc];
-    }
+  latestMeta.sharedKey = sharedKey;
+  latestMeta.nextTickFlush = () => {
+    const { hasFlushTask } = latestMeta;
     if (!hasFlushTask) {
       latestMeta.hasFlushTask = true;
       // push flush cb to micro task
       Promise.resolve().then(() => {
-        const [desc] = latestMeta.data;
-        innerFlush(internal.sharedKey, desc);
+        // 取一下用户可能调用了 reactiveDesc 接口临时设置的 desc 值
+        const desc = REACTIVE_DESC.currentOnce(sharedKey);
+        innerFlush(sharedKey, desc);
       });
     }
   };
@@ -119,15 +113,22 @@ function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
  */
 function getReactiveInfo(internal: TInternal, options: IBuildReactiveOpts, forAtom: boolean) {
   const { sharedKey } = internal;
-  const { insKey = 0, from } = options;
+  const { insKey = 0, from, desc } = options;
   let meta = metas.get(sharedKey) || fakeReativeMeta;
 
   // 无顶层响应对象、或顶层响应对象已过期，则重建顶层 top reactive
   if (meta.expired) {
-    meta = buildMeta(internal, { isTop: true, from });
+    // 复用 from 和 desc 重建 meta，以便插件获取正常的执行源描述
+    meta = buildMeta(internal, { isTop: true, from, desc });
     metas.set(sharedKey, meta);
     REACTIVE_META.set(meta.key, meta);
     meta.fnKey = TRIGGERED_WATCH.current();
+  } else {
+    // for https://github.com/heluxjs/helux/issues/177
+    // 因为全局 reactive 和实例 reactive 是在不停切换的，
+    // 未过期就指回 meta 最初创建时携带的信息（ buildReactive 形成的闭包指向的数据 ）才是正确的，
+    meta.from = from;
+    meta.desc = desc;
   }
 
   // mark using

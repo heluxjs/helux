@@ -142,7 +142,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   // 是响应式对象在操作对象变更
   if (isReactive) {
     // 来自响应对象的变更操作，主动触发 nextTickFlush
-    nextTickFlush(sharedKey, currReactive.desc);
+    nextTickFlush(sharedKey);
   } else {
     // 发现 sharedKey 对应的对象已变化，主动标记 sharedKey 对应的响应对象已过期
     // 用户在其他地方再次使用 reactive 对象时，内部会自动创建一个新的返回给用户
