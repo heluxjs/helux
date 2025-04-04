@@ -4,6 +4,7 @@ import { injectHeluxProto } from '../../helpers/obj';
 import type { Dict, IFnCtx, ScopeType } from '../../types/base';
 import { fakeFnCtx } from '../common/fake';
 import { genFnKey } from '../common/key';
+import { REACTIVE_META } from '../creator/current';
 import { getFnScope } from './speedup';
 
 export function getCtxMap(scopeKeyOrFnKey: string) {
@@ -64,13 +65,18 @@ export function opUpstreamFnKey(fnCtx: IFnCtx, isAdd?: boolean) {
 }
 
 /**
- * for hot reload
- * see window.__HELUX__.help.fnDep.FNKEY_HOOK_CTX_MAP
+ * let hot mudule reload work well
+ * see window.__HELUX__.ctx.fnScope.FNKEY_HOOK_CTX_MAP
  */
-export function markFnExpired() {
-  const { FNKEY_HOOK_CTX_MAP } = getFnScope();
+export function ensureHMRRunWell() {
   if (isDebug()) {
-    // for hot reload working well
+    // see issue https://github.com/heluxjs/helux/issues/176
+    // 清理残留的活跃 reactive 对象，避免新建的共享对象的派生函数不能正确收集到依赖
+    // 对应的代码是 factory/creator/operateState 里的 if (currReactive.onRead) 逻辑会再次进入，
+    // 导致派生函数不能正确收集到依赖
+    REACTIVE_META.delActive();
+
+    const { FNKEY_HOOK_CTX_MAP } = getFnScope();
     FNKEY_HOOK_CTX_MAP.forEach((item) => {
       item.isExpired = true;
     });

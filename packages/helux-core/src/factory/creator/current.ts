@@ -63,6 +63,7 @@ export const FN_DEP_KEYS = {
 
 /** 记录、获取执行写操作的 draft 对象元数据 */
 export const REACTIVE_META = {
+  delActive: () => (CURRENT_CB_REACTIVE_KEY = ''),
   current: () => CURRENT_REACTIVE_META.get(CURRENT_CB_REACTIVE_KEY) || fakeReativeMeta,
   markUsing: (key: string) => (CURRENT_CB_REACTIVE_KEY = key),
   set: (key: string, obj: IReactiveMeta) => CURRENT_REACTIVE_META.set(key, obj),
