@@ -63,8 +63,9 @@ function dispatchAction(actionForRedux: any) {
 }
 
 function getPayload(dataInfo: IDataChangedInfo) {
-  const { snap, type, moduleName } = dataInfo;
-  return { type, payload: snap, module: moduleName };
+  const { snap, type, moduleName, payloadArgs: args = [] } = dataInfo;
+  // redux 要求 payload 必须是对象，这里包装为 { args } 格式，同时放一份到外层方便直接查看
+  return { type, payload: { args }, snap, args, module: moduleName };
 }
 
 function replaceReducer(moduleName: string, snap: any) {
