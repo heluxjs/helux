@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 1.0.9
+
+### Patch Changes
+
+- 9aac767: fix issue 176 177 179
+- Updated dependencies [9aac767]
+  - helux@5.0.3
+
 ## 1.0.8
 
 ### Patch Changes
