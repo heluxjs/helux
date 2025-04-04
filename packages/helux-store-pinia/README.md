@@ -265,14 +265,16 @@ const MyPlugin: IPlugin = {
 addPlugin(MyPlugin);
 ```
 
-添加中间件（中间件在变更提交之前按添加顺序依次执行）
+添加自定义中间件（中间件在变更提交之前按添加顺序依次执行）
 
 ```ts
 import { addMiddleware, Middleware } from '@helux/store-pinia';
 
-addMiddleware((mid) => {
+const myMiddleware: Middleware = (mid) => {
   if (mid.moduleName) { // 来自某个模块
     mid.draft.timestamp = new Date(); // 修改一下事件戳
   }
-});
+}
+
+addMiddleware(myMiddleware);
 ```

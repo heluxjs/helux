@@ -836,7 +836,7 @@ export declare function bindAtom<T extends any = any>(ClassComp: T, atomMap: IBi
  *   // 先声明，运行时会由 withAtom 将值注入到此属性上
  *   private hx = assignThisHX(this);
  *   render() {
- *     console.log(hx.atom.state); // 获取到 atom state
+ *     console.log(this.hx.atom.state); // 获取到 atom state
  *   }
  * }
  *
@@ -854,10 +854,10 @@ export declare function bindAtom<T extends any = any>(ClassComp: T, atomMap: IBi
  * class DemoCls extends React.Component {
  *   private hx = assignThisHX(this);
  *   addNum = () => {
- *     this.hx.num.setState((draft: any) => void (draft.num += 2));
+ *     this.hx.atoms.num.setState((draft: any) => void (draft.num += 2));
  *   };
  *   render() {
- *     const { num: { state } } = this.hx;
+ *     const { num: { state } } = this.hx.atoms;
  *     return <div>hello num {state.num}<button onClick={this.addNum}> add num </button></div>;
  *   }
  * }
