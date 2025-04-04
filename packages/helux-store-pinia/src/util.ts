@@ -1,4 +1,4 @@
-import type { Fn, ILifecycle, ISharedCtx, Dict } from 'helux';
+import type { Dict, Fn, ILifecycle, ISharedCtx } from 'helux';
 
 function keys(obj: object) {
   return Object.keys(obj);
@@ -80,6 +80,7 @@ export function makeWrapActions(ctx: ISharedCtx, options: any, isLayered?: boole
   let wrapActions: any = {};
   Object.keys(userActions).forEach((key) => {
     actionFns[key] = ({ draft, payload }: any) => {
+      // 绑定 ctx.state 给 actions 函数操作
       const wrapStore = makeWrapStore(draft, { userGetters, derived, userActions, wrapActions }, isLayered);
       const fn = userActions[key].bind(wrapStore);
       return fn.apply(null, payload);
@@ -105,14 +106,14 @@ export function makeWrapDerived(ctx: ISharedCtx, options: any, isLayered?: boole
       };
     });
     ctx.defineMutateSelf()(deriveFns);
-    // 未分层结构是用 state 当 derived，因为是基于自身可变计算的派生属性
-    return { derivedState: state, useDerivedState: () => { } };
+    // 因需要基于自身可变计算的派生属性，未分层结构用 state 当作 derived
+    return { derivedState: state, useDerivedState: () => {} };
   }
 
   Object.keys(userGetters).forEach((key) => {
     initDerived[key] = undefined;
     deriveFns[key] = (draft: any) => {
-      // 绑定 ctx.state 给 actions 函数操作, 提供 draft 给用户，是 getters 里 g2 依赖 g1 的计算也能正常收集到依赖
+      // 绑定 ctx.state 给 getters 函数限制为只可读操作, 提供 draft 给用户，使 getters 里 g2 依赖 g1 的计算也能正常收集到依赖
       const wrapStore = makeWrapStore(state, { userGetters, derived: draft, userActions, wrapActions: {} }, isLayered);
       const fn = userGetters[key].bind(wrapStore);
       draft[key] = fn(state);

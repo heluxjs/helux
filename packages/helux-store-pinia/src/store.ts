@@ -17,7 +17,7 @@ export function defineStore(moduleName: string, options: IDefineStoreOptions<{},
       // 绑定顶层 reactive 给 actions 函数或 store自身操作
       return makeWrapStore(ctx.reactive, { userGetters, derived: ctx.reactive, userActions, wrapActions });
     },
-    useStore: (options: IUseSharedStateOptions) => {
+    useStore: (options?: IUseSharedStateOptions) => {
       const [reactive] = ctx.useReactive(options) as unknown as [any];
       // 绑定 reactive 给 actions 函数或 store自身操作
       const wrapStore = makeWrapStore(reactive, { userGetters, derived: reactive, userActions, wrapActions });

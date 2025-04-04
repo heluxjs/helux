@@ -16,11 +16,11 @@ export function defineLayeredStore(moduleName: string, options: IDefineStoreOpti
     getStore: () => {
       return { state: ctx.reactive, getters: derivedState, actions: wrapActions };
     },
-    useState: (options: IUseSharedStateOptions) => {
+    useState: (options?: IUseSharedStateOptions) => {
       const [reactive] = ctx.useReactive(options) as unknown as [any];
       return [reactive, wrapActions];
     },
-    useGetters: (options: IUseSharedStateOptions) => {
+    useGetters: (options?: IUseSharedStateOptions) => {
       const [derived] = useDerivedState(options);
       return derived;
     },

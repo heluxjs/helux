@@ -33,7 +33,7 @@ export type Off = Fn;
 
 export type DictFn = Dict<Fn>;
 
-export interface ILifecycle {
+export interface ILifecycle<T extends any = any> {
   /**
    * 第一个使用当前共享对象的组件实例将要挂载时触发 willMount
    * willMount will be triggered before first ins of current atom will mount
@@ -49,6 +49,14 @@ export interface ILifecycle {
    * willUnmount will be triggered before last ins of current will unmount
    */
   willUnmount?: () => void;
+  /**
+   * 变更的状态提交之前回触发此函数，执行时机是在所有中间件执行之前，在此函数里可以对草稿做2次修改或其他事情
+   */
+  beforeCommit?: (params: BeforeFnParams<T>) => void;
+  /**
+   * 变更的状态提交之后会触发此函数
+   */
+  afterCommit?: (params: AfterFnParams<T>) => void;
 }
 export interface ILocalStateApi<T> {
   setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
@@ -1209,11 +1217,29 @@ export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
 }
 
 export interface BeforeFnParams<T = SharedState> {
+  /** 模块名，未指定时内部会自动生成 */
+  moduleName: string;
+  /** 触发自哪里 */
   from: From;
-  desc?: FnDesc;
-  sn?: number;
+  /** 提交描述 */
+  desc: FnDesc;
+  /** 变更批次 */
+  sn: number;
   draftRoot: DraftRootType<T>;
   draft: DraftType<T>;
+}
+
+export interface AfterFnParams<T = SharedState> {
+  /** 模块名，未指定时内部会自动生成 */
+  moduleName: string;
+  /** 总是指向 root */
+  state: T;
+  /** 提交描述 */
+  desc: FnDesc;
+  /** 变更批次 */
+  sn: number;
+  /** 触发自哪里 */
+  from: From;
 }
 
 export interface IDataRule<T = any> {
@@ -1288,6 +1314,7 @@ export interface ICreateOptionsFull<T = SharedState> {
   mutateList: MutateFnList<T>;
   /**
    * action、mutate、setState、sync 提交状态之前会触发执行的函数，可在此函数里再次修改 draft，该函数执行时机是在中间件之前
+   * v5.0之后，lifecycle 里定义的 beforeCommit 会覆盖此函数
    */
   before: (params: BeforeFnParams<T>) => void;
   /**
@@ -1961,8 +1988,8 @@ export interface IWithAtomOptions extends IBindAtomOptions {
  * ```
  */
 export type HXType<O extends IWithAtomOptions = IWithAtomOptions> = ('atom' extends keyof O
-  ? HXTypeByAD<O['atom'], O['atoms'], O['deriveds']>
-  : HXTypeByAD<DefaultClassAtom, O['atoms'], O['deriveds']>) &
+  ? HXTypeByAD<O['atom'], O['atoms'] & {}, O['deriveds'] & {}>
+  : HXTypeByAD<DefaultClassAtom, O['atoms'] & {}, O['deriveds'] & {}>) &
   ('derivedAtom' extends keyof O ? HXDerivedAtomType<O['derivedAtom']> : HXTypeByAD<DefaultClassAtom>);
 
 type DefaultClassAtom = {

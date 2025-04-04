@@ -33,7 +33,7 @@ export function buildInternal(
     isDeep: boolean;
   },
 ) {
-  const { rawState, forAtom } = parsedOptions;
+  const { rawState, forAtom, before } = parsedOptions;
   const insCtxMap = new Map<number, InsCtxDef>();
   const key2InsKeys: KeyInsKeysDict = {};
   // id --> insKeys
@@ -44,6 +44,7 @@ export function buildInternal(
   if (forAtom) {
     rawStateVal = rawState.val;
   }
+  const hasBeforeCommit = before !== noop;
 
   return {
     ver: 0,
@@ -74,8 +75,13 @@ export function buildInternal(
       willMount: noop,
       mounted: noop,
       willUnmount: noop,
+      // 5.0 之后，将之前的 before 迁移到 lifecycle 里，同时用户透传的 lifecycle.beforeCommit 也会合并到此处
+      beforeCommit: before,
+      afterCommit: noop,
       /** 严格模式下，在 effect 里判断 insCount=1 是失败的，需提前标记此变量，确保 mounted 触发 */
       shouldCallMounted: false,
+      // 优化 beforeCommit 执行效率
+      hasBeforeCommit,
     },
     recordId(id: NumStrSymbol, insKey: number) {
       if (!id) return;
