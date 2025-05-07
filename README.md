@@ -57,6 +57,50 @@ function HelloHelux(props: any) {
 }
 ```
 
+## 类pinia使用
+基于helux向上封装了[helux-store-pinia](https://github.com/heluxjs/helux/tree/master/packages/helux-store-pinia)，你可以像 pinia 一样管理react状态了，访问[示例](https://codesandbox.io/p/sandbox/helux-store-pinia-forked-xqw3ks?file=%2Fsrc%2FLikePinia.tsx)体验.
+
+```tsx
+const counterStoreCtx = defineStore("Counter", {
+  state: () => ({ count: 1, mountCount: 1 }),
+  getters: {
+    // 由 state 派生出 double ，上游依赖不变化时此函数不再重复计算
+    double() {
+      return this.count * 2;
+    },
+    // 由其他 getters 派生出 plus10 ，上游依赖不变化时此函数不再重复计算
+    plus10() {
+      return this.double + 10;
+    },
+  },
+  actions: {
+    // 同步方法
+    changeCount(payload: number) {
+      this.count = payload;
+    },
+    // 异步方法
+    async changeCountSync(p1: number, p2: number) {
+      this.changeCount(p1);
+      await delay();
+      this.count += p2;
+    },
+    plus() {
+      this.count += 1;
+    },
+  },
+  // lifecyle 里可以访问 actions 调用方法
+  // lifecycle的方法由框架负责调用，在 actions 里是访问不到的（类型上已屏蔽），由框架负责调用
+  lifecycle: {
+    mounted() {
+      // this.changeCount(888);
+      this.mountCount += 1;
+    },
+  },
+});
+```
+
+具体使用方式可参考[文档](https://github.com/heluxjs/helux/tree/master/packages/helux-store-pinia)
+
 ## 部分特性简介
 
 以下是一些常见特性，更多特性可查阅文档里的[Atom](https://heluxjs.github.io/helux/guide/atom)、[Signal](https://heluxjs.github.io/helux/guide/signal)、[依赖追踪](https://heluxjs.github.io/helux/guide/dep-tracking)、[响应式](https://heluxjs.github.io/helux/guide/reactive)、[双向绑定](https://heluxjs.github.io/helux/guide/sync)、[派生](https://heluxjs.github.io/helux/guide/derive)、[观察](https://heluxjs.github.io/helux/guide/watch)、[Action](https://heluxjs.github.io/helux/guide/action)、[模块化](https://heluxjs.github.io/helux/guide/modular) 等章节做深入了解
