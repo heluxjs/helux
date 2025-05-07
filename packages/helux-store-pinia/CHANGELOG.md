@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 1.1.0
+
+### Minor Changes
+
+- e8a23df: bump pinia
+
 ## 1.0.10
 
 ### Patch Changes
