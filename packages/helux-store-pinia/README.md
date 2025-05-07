@@ -180,10 +180,12 @@ interface IBook {
   price: number;
 }
 
-const delay = (ms = 1000) => new Promise(r => setTimeout(r, ms));
+const delay = (ms = 1000) => new Promise((r) => setTimeout(r, ms));
 export const storeCtx = defineStore('DefineStoreDemo', {
   state: () => ({
-    list: [] as IBook[], page: 1, size: 10,
+    list: [] as IBook[],
+    page: 1,
+    size: 10,
     total: 221,
     mountCount: 0,
     time: 0,
@@ -217,7 +219,7 @@ export const storeCtx = defineStore('DefineStoreDemo', {
       // ✅<--- 结束 action，在此之前有数据变更，触发提交
     },
     // 异步方法
-    async fetchList(payload: { page: number, size: number }, p2: number) {
+    async fetchList(payload: { page: number; size: number }, p2: number) {
       console.log('START fetchList', payload.page, payload.size);
       await delay(); // ❌ <--- 此处之前无变更，故不会提交
       this.a = Date.now();
@@ -242,7 +244,6 @@ export const storeCtx = defineStore('DefineStoreDemo', {
   },
 });
 ```
-
 
 添加自定义插件（ 接收来自 helux 内部的各种事件并做对应处理 ）
 
@@ -271,10 +272,11 @@ addPlugin(MyPlugin);
 import { addMiddleware, Middleware } from '@helux/store-pinia';
 
 const myMiddleware: Middleware = (mid) => {
-  if (mid.moduleName) { // 来自某个模块
+  if (mid.moduleName) {
+    // 来自某个模块
     mid.draft.timestamp = new Date(); // 修改一下事件戳
   }
-}
+};
 
 addMiddleware(myMiddleware);
 ```

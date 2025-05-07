@@ -1111,14 +1111,14 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
    * // eActions 方法调用返回格式如 {result, snap, err}，
    * // 它的异常默认被拦截掉不再继续抛出，只是并发送给插件和伴生loading状态
    * const {result, snap, err} = eActions.changeA([1,1]);
-   * // eAction 支持调用方法并抛出错误，此时错误既发给插件和伴生loading状态，也也向上抛出，用户需自己 catch
+   * // eAction 支持调用方法并抛出错误，此时错误既发给插件和伴生loading状态，也向上抛出，用户需自己 catch
    * const {result, snap, err} = eActions.changeA([1,1], true);
    * ```
    */
   defineActions: <P extends Dict | undefined = undefined>(
     /**
      * default: false，
-     * false 表示 ActionCtx.eActions 调用时，错误不抛出，传递给返回元组的第二位参数 [ result, err ]，
+     * false 表示 ActionCtx.eActions 调用时，错误不抛出，传递给返回数据里 { result, err, snap } 里的 err，
      * true 则表示抛出，此时用户外部的逻辑要自己 try catch 捕获错误
      */
     throwErr?: boolean,

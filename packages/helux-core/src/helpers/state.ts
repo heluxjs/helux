@@ -81,7 +81,8 @@ export function getSharedState(sharedKey: number) {
 }
 
 export function recordMod(sharedState: Dict, options: ParsedOptions) {
-  // 服务端运行，没必要记录模块信息到 global 上，避免服务端内存浪费、冗余的模块重复信息提示（nextjs里同一个地方的share代码会被多次调用）
+  // 服务端运行，没必要记录模块信息到 global 上，避免服务端内存浪费、
+  // 和冗余模块重复信息提示（nextjs里同一个地方的share代码会被多次调用）
   if (RUN_AT_SERVER) {
     return;
   }

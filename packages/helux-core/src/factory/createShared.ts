@@ -75,23 +75,26 @@ function defineActions(
     // 此时 actionOrFnDef 是 action 函数，这里提取 task 重新创建
     // defineActions 传入的是 actionFnDef 定义函数即 actionTask
     const actionTask = forTp ? actionOrFnDef.__task : actionOrFnDef;
+    // actionCreator(false) 的 false 表示设置 mergeReturn=false，调用的是 createAction里的 action 函数
     // actions 和 eActions 都不把 return 结果当做部分状态合并到 draft 上，仅作为普通结果返回
     const eActionFn = actionCreator(false)(actionTask, key, throwErr, isMultiPayload);
 
-    // eActions 对应函数返回原始的 { result, snap, err } 结构，故此处指向 actionFn 即可
+    // eActions 对应函数返回原始的 { result, snap, err } 结构，故此处指向 eActionFn 即可
     eActionFn.__fnName = key;
     eActions[key] = eActionFn;
 
-    // actions 对应函数需直接返回结果，故内部做拆解处理
-    const actionFn = (...args: any[]) => {
-      const ret = eActionFn(...args);
+    // actions 和 eActions 返回结果不一样，故包装为 actionFnWrap，并在内部需提取出 result 再返回
+    // actions 函数一定是要抛出错误的，故第三位参数传递 true
+    const actionFn = actionCreator(false)(actionTask, key, true, isMultiPayload);
+    const actionFnWrap = (...args: any[]) => {
+      const ret = actionFn(...args);
       if (isTaskProm(actionTask)) {
         return Promise.resolve(ret).then((data) => data.result);
       }
-      return ret.result;
+      return ret.result; // actions 返回 result
     };
-    actionFn.__fnName = key;
-    actions[key] = actionFn;
+    actionFnWrap.__fnName = key;
+    actions[key] = actionFnWrap;
   });
 
   return {

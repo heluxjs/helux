@@ -21,21 +21,30 @@ function newBlockCtx(key: string, enableStatus: boolean): IBlockCtx {
   };
 }
 
+let fakeBlockCtx: any = null;
+
+function getFakeBlockCtx() {
+  if (!fakeBlockCtx) {
+    fakeBlockCtx = newBlockCtx(genBlockKey(), false);
+  }
+  return fakeBlockCtx;
+}
+
 /**
  * 为 block 函数初始一个执行上下文
  */
 export function initBlockCtx(isDynamic: boolean, enableStatus = false) {
+  // 服务器端不记录 blockCtx ，返回一个假的即可，避免内存泄露
+  if (RUN_AT_SERVER) {
+    return getFakeBlockCtx();
+  }
   const blockScope = getBlockScope();
   if (isDynamic) {
     blockScope.initCount += 1;
   }
   const blockKey = genBlockKey();
   const blockCtx = newBlockCtx(blockKey, enableStatus);
-
-  // 非服务器端执行才记录 blockCtx ，避免内存泄露
-  if (!RUN_AT_SERVER) {
-    getBlockCtxMap(isDynamic).set(blockKey, blockCtx);
-  }
+  getBlockCtxMap(isDynamic).set(blockKey, blockCtx);
 
   return blockCtx;
 }

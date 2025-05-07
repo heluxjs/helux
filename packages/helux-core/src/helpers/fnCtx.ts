@@ -82,10 +82,12 @@ export function registerFn(fn: Fn, options: { specificProps: Partial<IFnCtx> & {
   // 如 fnCtxBase 存在则 fnCtx 指向用户透传的 fnCtxBase
   const fnCtx = fnCtxBase ? Object.assign(fnCtxBase, props) : buildFnCtx(props);
 
-  // static 调用派生时始终记录 fnCtx
-  // hook 调用派生时仅在非服务器端执行才记录 fnCtx ，避免内存泄露
-  if (scopeType === 'static' || !RUN_AT_SERVER) {
-    // debugger;
+  if (
+    // static 调用派生时始终记录 fnCtx
+    scopeType === 'static'
+    // hook 调用派生时仅在浏览器端执行才记录 fnCtx ，避免服务器端内存泄露
+    || !RUN_AT_SERVER
+  ) {
     getCtxMap(scopeType).set(fnKey, fnCtx);
   }
 
