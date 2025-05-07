@@ -273,8 +273,8 @@ import { addMiddleware, Middleware } from '@helux/store-pinia';
 
 const myMiddleware: Middleware = (mid) => {
   if (mid.moduleName) {
-    // 来自某个模块
-    mid.draft.timestamp = new Date(); // 修改一下事件戳
+    // 来自某个模块，修改一下时间戳
+    mid.draft.timestamp = new Date();
   }
 };
 
