@@ -1,5 +1,16 @@
 # helux-store-pinia
 
+## 2.0.0
+
+### Minor Changes
+
+- b923812: bump limu
+
+### Patch Changes
+
+- Updated dependencies [b923812]
+  - helux@5.2.0
+
 ## 1.1.0
 
 ### Minor Changes

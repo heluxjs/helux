@@ -1,5 +1,16 @@
 # @helux/openinula
 
+## 5.2.0
+
+### Minor Changes
+
+- b923812: bump limu
+
+### Patch Changes
+
+- Updated dependencies [b923812]
+  - @helux/core@5.2.0
+
 ## 5.1.0
 
 ### Patch Changes

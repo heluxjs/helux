@@ -1,5 +1,11 @@
 # @helux/types
 
+## 5.2.0
+
+### Minor Changes
+
+- b923812: bump limu
+
 ## 5.1.0
 
 ## 5.0.3
