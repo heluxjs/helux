@@ -1,5 +1,5 @@
 import type { ApiCtx, EffectCb, EffectStrictCb, Fn } from '@helux/types';
-import { getHookKey, isHookUnderStrictMode } from '../utils/hookKey';
+import { clearKeyCount, getHookKey, isHookUnderStrictMode } from '../utils/hookKey';
 
 const fakeMount = { count: 0 };
 const MOUNT_MAP = new Map<string, { count: number }>();
@@ -19,16 +19,12 @@ function getKeyMount(hookKey: string) {
 
 function mayExecuteCb(hookKey: string, isDoubleCheck: boolean, cb: Fn, passIsStrict?: boolean) {
   const effectLogic = () => {
-    if (passIsStrict) {
-      cb(isDoubleCheck);
-      return () => {
-        MOUNT_MAP.delete(hookKey);
-      };
-    }
-
-    const cleanUp = cb();
+    const cleanUp = passIsStrict ? cb(isDoubleCheck) : cb();
     return () => {
-      MOUNT_MAP.delete(hookKey);
+      if (hookKey) {
+        clearKeyCount(hookKey);
+        MOUNT_MAP.delete(hookKey);
+      }
       cleanUp && cleanUp();
     };
   };

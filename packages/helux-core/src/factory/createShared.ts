@@ -51,6 +51,29 @@ export function ensureGlobal(apiCtx: CoreApiCtx, inputStateType?: string) {
   }
 }
 
+function wrapAndMapAction(actions: Dict, options: Dict) {
+  const { actionCreator, actionTask, desc, throwErr, isMultiPayload, isEAction } = options;
+  /** actionCreator 是来自 @type {import('./createAction').action} 调用的返回结果 */
+  // actionCreator(false) 的 false 表示设置 mergeReturn=false，调用的是 createAction 里的 action 函数
+  // actions 和 eActions 都不把 return 结果当做部分状态合并到 draft 上，仅作为普通结果返回，故设置 mergeReturn=false
+  // 同时 skipResolve=true，跳过 actionFn 内部处理，而是在 actionFnWrap 里处理 promise 结果
+  const actionFn = actionCreator(false)(actionTask, { desc, throwErr, isMultiPayload, skipResolve: true });
+  const actionFnWrap = (...args: any[]) => {
+    /** actionFn 进入到 @type {import('./createAction')} 文件第27行 */
+    const ret = actionFn(...args);
+    // actionFn 调用完毕后，内部会确认 task 是否是 promise 函数，故此处可拿到准确的结果
+    if (isTaskProm(actionTask)) {
+      return Promise.resolve(ret).then((data) => {
+        // action 和 eAction 返回结果不一样，针对 action 需提取出 result 再返回
+        return isEAction ? data : data.result;
+      });
+    }
+    return isEAction ? ret : ret.result;
+  };
+  actionFnWrap.__fnName = desc;
+  actions[desc] = actionFnWrap;
+}
+
 function defineActions(
   options: {
     internal: TInternal;
@@ -69,32 +92,16 @@ function defineActions(
   getLoadingInfo(createFn, { internal, from: ACTION, apiCtx });
   const actions: Dict = {};
   const eActions: Dict = {};
-  Object.keys(actionDict).forEach((key) => {
-    const actionOrFnDef = actionDict[key];
+  Object.keys(actionDict).forEach((desc) => {
+    const actionOrFnDef = actionDict[desc];
     // defineTpActions 传入的是已经创建好的 action 函数
     // 此时 actionOrFnDef 是 action 函数，这里提取 task 重新创建
     // defineActions 传入的是 actionFnDef 定义函数即 actionTask
     const actionTask = forTp ? actionOrFnDef.__task : actionOrFnDef;
-    // actionCreator(false) 的 false 表示设置 mergeReturn=false，调用的是 createAction里的 action 函数
-    // actions 和 eActions 都不把 return 结果当做部分状态合并到 draft 上，仅作为普通结果返回
-    const eActionFn = actionCreator(false)(actionTask, key, throwErr, isMultiPayload);
 
-    // eActions 对应函数返回原始的 { result, snap, err } 结构，故此处指向 eActionFn 即可
-    eActionFn.__fnName = key;
-    eActions[key] = eActionFn;
-
-    // actions 和 eActions 返回结果不一样，故包装为 actionFnWrap，并在内部需提取出 result 再返回
-    // actions 函数一定是要抛出错误的，故第三位参数传递 true
-    const actionFn = actionCreator(false)(actionTask, key, true, isMultiPayload);
-    const actionFnWrap = (...args: any[]) => {
-      const ret = actionFn(...args);
-      if (isTaskProm(actionTask)) {
-        return Promise.resolve(ret).then((data) => data.result);
-      }
-      return ret.result; // actions 返回 result
-    };
-    actionFnWrap.__fnName = key;
-    actions[key] = actionFnWrap;
+    wrapAndMapAction(eActions, { actionCreator, actionTask, desc, throwErr, isMultiPayload, isEAction: true });
+    // actions 函数一定是要抛出错误的，故 throwErr 参数传递 true
+    wrapAndMapAction(actions, { actionCreator, actionTask, desc, throwErr: true, isMultiPayload });
   });
 
   return {
@@ -216,7 +223,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     runMutate: (descOrOptions: string | IRunMutateOptions) => runMutate(stateRoot, descOrOptions),
     runMutateTask: (descOrOptions: string | IRunMutateOptions) => runMutateTask(stateRoot, descOrOptions),
     action: actionCreator,
-    call: (fn: Fn, payload: any, desc: string, throwErr: boolean) => actionTaskCreator(fn, desc, throwErr)(payload),
+    call: (fn: Fn, payload: any, desc: string, throwErr: boolean) => actionTaskCreator(fn, { desc, throwErr })(payload),
     useState: (options?: any) => useAtom(apiCtx, stateRoot, options),
     useStateX: (options?: any) => useAtomX(apiCtx, stateRoot, options),
     useForceUpdate: (presetDeps?: (sharedState: any) => any[]) => useGlobalForceUpdate(apiCtx, stateRoot, presetDeps),

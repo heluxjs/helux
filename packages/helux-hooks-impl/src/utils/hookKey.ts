@@ -58,3 +58,7 @@ export function isHookUnderStrictMode(key: string) {
 
   return KEY_COUNT.get(key) === 2;
 }
+
+export function clearKeyCount(key: string) {
+  KEY_COUNT.set(key, 0);
+}

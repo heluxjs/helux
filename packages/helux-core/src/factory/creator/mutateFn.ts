@@ -48,6 +48,7 @@ interface ICallAsyncMutateFnOpt extends ICallMutateBase {
   /** task 函数调用入参拼装，暂不像同步函数逻辑那样提供 draft 给用户直接操作，用户必须使用 setState 修改状态 */
   getArgs?: (param: { flush: any; draft: any; draftRoot: any; desc: string; setState: Fn; input: any[] }) => any[];
   getPayloadArgs?: () => any;
+  skipResolve?: boolean;
 }
 
 const taskProm = new Map<any, boolean>();
@@ -69,12 +70,12 @@ function getInput(internal: TInternal, fnItem: IMutateFnStdItem) {
  * task 是否是一个异步函数，首次执行完毕即可分析得到结果并缓存到 taskProm 中
  */
 export function isTaskProm(task: any) {
-  return taskProm.get(task) ?? false;
+  return taskProm.get(task);
 }
 
 /** 呼叫异步函数的逻辑封装，mutate task 执行或 action 定义的函数（同步或异步）执行都会走到此逻辑 */
 export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options: ICallAsyncMutateFnOpt): ActionReturn | ActionAsyncReturn {
-  const { sn, getArgs = noop, getPayloadArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn, extraArgs } = options;
+  const { sn, getArgs = noop, getPayloadArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn, extraArgs, skipResolve } = options;
   const { desc = '', depKeys, task = noopAny, extraBound } = fnItem;
   const internal = getInternal(targetState);
   const { sharedKey } = internal;
@@ -102,10 +103,10 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound, extraArgs };
   const args = getArgs(defaultParams) || [defaultParams];
 
-  const isProm = taskProm.get(task);
-  const isUnconfirmedFn = isProm === undefined;
+  const isTaskFnProm = taskProm.get(task);
+  const isUnconfirmedFn = isTaskFnProm === undefined;
   const setStatus = (loading: boolean, err: any, ok: boolean) => {
-    if (isUnconfirmedFn || isProm) {
+    if (isUnconfirmedFn || isTaskFnProm) {
       /**
        * 异步函数调用发起前已调用 markFnEnd 来结束依赖收集行为，
        * 之前未结束这里会造成死循环（ 注：禁止异步函数依赖收集本就是合理行为 ）
@@ -137,27 +138,37 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
     // const nextState = actions.xxxMethod(); //  nextState 为最新值
     // 同时多个 action 组合使用时，下一个 action 可自动获取到最新的 draft
     flush(desc);
-
+    // TODO  add afterAction lifecycle
     return { snap: internal.snap, err: null, result: partial };
   };
 
   try {
+    const handlePromResult = (result: any) => {
+      return Promise.resolve(result).then(handlePartial).catch(handleErr);
+    };
+
     // TODO  add boforeAction lifecycle
     const result = task(...args);
-    // is result a promise
-    const isProm = isPromise(result);
-    // 注：只能从结果判断函数是否是 Promise，因为编译后的函数很可能再套一层函数
-    taskProm.set(task, isProm);
-    if (isProm) {
-      return Promise.resolve(result)
-        .then((result) => {
-          // TODO  add afterAction lifecycle
-          return handlePartial(result);
-        })
-        .catch(handleErr);
+    const isResultProm = isPromise(result);
+    // 还未确定 task 是不是 promise 函数时，只能从结果判断函数是否是 Promise，因为编译后的函数很可能再套一层函数
+    if (isUnconfirmedFn) {
+      taskProm.set(task, isPromise(result));
     }
-    return handlePartial(result);
+
+    if (
+      // skipResolve=true，表示外部主动 resolve（ wrapAndMapAction ）且设置了 mergeReturn=false ，这里可直接调用 handlePartial
+      // 避免一次多余的错误日志漏到 react-dev-tool 的 hook 脚本里打印
+      skipResolve
+      // 已确定了结果为非 promise 对象时，调用 handlePartial 即可
+      || !isResultProm
+    ) {
+      return handlePartial(result);
+    }
+
+    return handlePromResult(result);
   } catch (err) {
+    // 能在此处捕捉到错误，说明 task 是一个同步函数
+    taskProm.set(task, false);
     return handleErr(err);
   }
 }

@@ -1,6 +1,6 @@
 import { FROM } from '../consts';
 import { getStatusKey, setLoadStatus } from '../factory/creator/loading';
-import type { Ext, Fn, SharedState } from '../types/base';
+import type { Ext, Fn, ICreateActionOptions, SharedState } from '../types/base';
 import { checkSharedStrict } from './common/check';
 import { newMutateFnItem } from './common/ctor';
 import { ensureBool } from './common/util';
@@ -8,15 +8,21 @@ import { handlePartial } from './creator/mutateDeep';
 import { callAsyncMutateFnLogic } from './creator/mutateFn';
 
 const { ACTION } = FROM;
+interface IInnerCreateActionOptions {
+  task: Ext<Fn>;
+  desc: string;
+  label: string;
+  throwErr?: boolean;
+  mergeReturn?: boolean;
+  isMultiPayload?: boolean;
+  skipResolve?: boolean;
+}
 
 /**
  * 内部统一封装，shared 和 atom 走统一的入口，上层接口自己标记对应类型
  */
-function innerCreate<T = SharedState>(
-  state: T,
-  options: { task: Ext<Fn>; desc: string; label: string; throwErr?: boolean; mergeReturn?: boolean; isMultiPayload?: boolean },
-) {
-  const { label, throwErr, desc = '', task, mergeReturn = true, isMultiPayload = false } = options;
+function innerCreate<T = SharedState>(state: T, options: IInnerCreateActionOptions) {
+  const { label, throwErr, desc = '', task, mergeReturn = true, isMultiPayload = false, skipResolve = false } = options;
   const outThrowErr = ensureBool(throwErr, false);
   const internal = checkSharedStrict(state, { label });
   const { forAtom } = internal;
@@ -66,6 +72,7 @@ function innerCreate<T = SharedState>(
         return [{ draft, draftRoot, setState, desc, payload, payloadArgs, flush, merge, dispatch }];
       },
       getPayloadArgs: () => payloadArgs,
+      skipResolve,
     });
   };
   // 提前记录一个值，方便用户使用 getLoading 时可收集到依赖
@@ -84,7 +91,17 @@ function innerCreate<T = SharedState>(
  * 创建一个 action 函数，建议设置 desc，这样可以结合 redux-devtool 准确定位到调用源
  */
 export function action<T = SharedState>(sharedState: T) {
-  return (mergeReturn?: boolean) =>
-    (task: Fn, desc = '', throwErr?: boolean, isMultiPayload?: boolean) =>
-      innerCreate(sharedState, { task, desc, label: 'action', mergeReturn, throwErr, isMultiPayload });
+  return (mergeReturn?: boolean) => (task: Fn, descOrOptions?: string | ICreateActionOptions) => {
+    const opts: IInnerCreateActionOptions = { task, desc: '', label: 'action', mergeReturn };
+    if (typeof descOrOptions === 'string') {
+      opts.desc = descOrOptions;
+    } else if (descOrOptions && typeof descOrOptions === 'object') {
+      const { desc = '', isMultiPayload = false, throwErr, skipResolve = false } = descOrOptions;
+      opts.desc = desc;
+      opts.throwErr = throwErr; // 保持可能的 undefined
+      opts.isMultiPayload = isMultiPayload;
+      opts.skipResolve = skipResolve;
+    }
+    return innerCreate(sharedState, opts);
+  };
 }

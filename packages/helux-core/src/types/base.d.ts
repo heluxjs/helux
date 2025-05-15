@@ -2060,3 +2060,10 @@ export type HXDerivedAtomType<A = any> = {
     getPrevDeps: () => string[];
   };
 };
+
+export interface ICreateActionOptions {
+  desc?: string;
+  throwErr?: boolean;
+  isMultiPayload?: boolean;
+  skipResolve?: boolean;
+}
