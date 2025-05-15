@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 2.0.1
+
+### Patch Changes
+
+- 57eeb2f: add wrapAndMapAction, optimize useEffect
+- Updated dependencies [57eeb2f]
+  - helux@5.2.1
+
 ## 2.0.0
 
 ### Minor Changes

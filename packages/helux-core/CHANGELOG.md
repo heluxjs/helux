@@ -1,5 +1,15 @@
 # @helux/core
 
+## 5.2.1
+
+### Patch Changes
+
+- 57eeb2f: add wrapAndMapAction, optimize useEffect
+- Updated dependencies [57eeb2f]
+  - @helux/hooks-impl@5.2.1
+  - @helux/types@5.2.1
+  - @helux/utils@5.2.1
+
 ## 5.2.0
 
 ### Minor Changes
