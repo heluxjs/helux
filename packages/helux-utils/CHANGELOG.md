@@ -1,5 +1,15 @@
 # @helux/utils
 
+## 5.3.0
+
+### Minor Changes
+
+- d4d1dc2: bump limu, support more effective signal call, optimize module name dup check, expose useStore from definLayeredStore
+
+### Patch Changes
+
+- @helux/types@5.3.0
+
 ## 5.2.1
 
 ### Patch Changes
