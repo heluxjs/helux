@@ -1,4 +1,17 @@
-import { canUseDeep, enureReturnArr, isDebug, isFn, isJsObj, isObj, nodupPush, noop, noopArr, safeObjGet, setNoop } from '@helux/utils';
+import {
+  canUseDeep,
+  enureReturnArr,
+  isDebug,
+  isFn,
+  isJsObj,
+  isObj,
+  isPlainObj,
+  nodupPush,
+  noop,
+  noopArr,
+  safeObjGet,
+  setNoop,
+} from '@helux/utils';
 import { immut } from 'limu';
 import { FROM, MUTATE_FN_ITEM, RECORD_LOADING, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
@@ -188,6 +201,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const before = options.before || noop;
   const mutate = options.mutate || noop;
   const onRead = options.onRead || noop;
+  const extra = isPlainObj(options.extra) ? options.extra : {};
   // 后续 parseRules 步骤会转 stopArrDep stopDepth 到 stopDepInfo 上
   const stopArrDep = options.stopArrDep ?? true;
   const stopDepth = options.stopDepth || STOP_DEPTH;
@@ -204,6 +218,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     isDestroyed: false,
     alertDeadCycleErr,
     checkDeadCycle,
+    extra,
     rawState,
     sharedKey,
     sharedKeyStr,

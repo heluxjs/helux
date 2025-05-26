@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { getSnap, sharex, type ISharedCtx, type IUseSharedStateOptions } from 'helux';
+import { useState } from 'react';
 import type { IDefineStoreOptions, ILayeredStoreCtx } from './types';
 import { extractOptions, makeLifecycle, makeWrapActions, makeWrapDerived } from './util';
 
@@ -31,7 +31,7 @@ export function defineLayeredStore(moduleName: string, options: IDefineStoreOpti
       // 提供一个稳定的 store 对象给用户
       const [store] = useState(() => {
         return { state: reactive, actions: wrapActions, getters: derived };
-      })
+      });
       return store;
     },
     getLoading,

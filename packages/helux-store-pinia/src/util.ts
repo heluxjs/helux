@@ -108,7 +108,7 @@ export function makeWrapDerived(ctx: ISharedCtx, options: any, isLayered?: boole
     });
     ctx.defineMutateSelf()(deriveFns);
     // 因需要基于自身可变计算的派生属性，未分层结构用 state 当作 derived
-    return { derivedState: state, useDerivedState: () => { } };
+    return { derivedState: state, useDerivedState: () => {} };
   }
 
   Object.keys(userGetters).forEach((key) => {

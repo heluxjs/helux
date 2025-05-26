@@ -4,6 +4,7 @@ import { noop } from './fn';
 
 const toString = Object.prototype.toString;
 const MAP_DESC = '[object Map]';
+const OBJ_DESC = '[object Object]';
 
 export function isServer() {
   if (GLOBAL_REF.process && GLOBAL_REF.global && !GLOBAL_REF.document) {
@@ -30,6 +31,13 @@ export function isDebug() {
     return true;
   }
   return false;
+}
+
+/**
+ * 是否是普通json对象，仅传入字典 {} 时才返回 true
+ */
+export function isPlainObj(mayPlainObj: any) {
+  return toString.call(mayPlainObj) === OBJ_DESC;
 }
 
 export function isObj(mayObj: any): mayObj is Dict {

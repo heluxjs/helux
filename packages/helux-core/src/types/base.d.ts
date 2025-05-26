@@ -85,8 +85,8 @@ export type UnconfirmedArg = ValidArg | void;
 /** 调用时如未指定具体 payload 类型，收窄为 UnconfirmedArg，让用户不传递也能类型校验通过 */
 export type PayloadType<P extends Dict | undefined = undefined, K = any> = P extends Dict
   ? K extends keyof P
-    ? P[K]
-    : UnconfirmedArg
+  ? P[K]
+  : UnconfirmedArg
   : UnconfirmedArg;
 
 // use Awaited instead
@@ -744,8 +744,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-    ? SyncerFn
-    : { [key in keyof T['val']]: SyncerFn }
+  ? SyncerFn
+  : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -754,8 +754,8 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? DerivedAtom<ReturnType<T['fn']>>
-    : DerivedAtom<any>
+  ? DerivedAtom<ReturnType<T['fn']>>
+  : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
@@ -851,8 +851,8 @@ type DefineFullDerive<T extends JSONDict = JSONDict> = <DR extends DepsResultDic
    * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
    */
   D extends DR extends DepsResultDict
-    ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
-    : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
+  ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
+  : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
 >(
   deriveFnDict: D | ((boundStateInfo: IBoundStateInfo<T>) => D),
 ) => {
@@ -897,7 +897,7 @@ type DefineMutateSelf<T extends JSONDict = JSONDict> = () => <D = Dict<MutateFn<
   useLoadingInfo: () => [Ext<LoadingState<D>>, SetState<LoadingState>, IInsRenderInfo];
 };
 
-export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICreateOptions<T>> {
+export interface ISharedStateCtxBase<T = any, E = any, O extends ICreateOptions<T> = ICreateOptions<T>> {
   /**
    * 标识当前对象是否是 atom 对象
    * ```
@@ -919,6 +919,8 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   syncer: Syncer<T>;
   setState: SetState<T>;
   setDraft: SetDraft<T>;
+  extra: E,
+  setExtra: (partial: Partial<E>) => void;
   mutate: <P extends Arr = Arr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
   runMutateTask: (descOrOptions: string | IRunMutateOptions) => T;
@@ -1148,8 +1150,8 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
     isMultiPayload?: boolean,
   ) => <
     D extends Dict<Fn> = P extends Dict
-      ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
-      : { [K in string]: ActionTask<T, UnconfirmedArg> },
+    ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
+    : { [K in string]: ActionTask<T, UnconfirmedArg> },
   >(
     /** action 函数定义字典集合 */
     actionFnDefs: D,
@@ -1191,7 +1193,7 @@ export interface ISharedStateCtxBase<T = any, O extends ICreateOptions<T> = ICre
   defineLifecycle: (lifecycle: ILifecycle) => void;
 }
 
-export interface ISharedCtx<T extends JSONDict = JSONDict> extends ISharedStateCtxBase<T> {
+export interface ISharedCtx<T extends JSONDict = JSONDict, E extends JSONDict = JSONDict> extends ISharedStateCtxBase<T, E> {
   /**
    * state 和 stateRoot 均指向同一个代理对象
    */
@@ -1211,7 +1213,7 @@ export interface ISharedCtx<T extends JSONDict = JSONDict> extends ISharedStateC
   useStateX: (options?: IUseSharedStateOptions<T>) => ICompAtomCtx<T>;
 }
 
-export interface IAtomCtx<T = any> extends ISharedStateCtxBase<Atom<T>> {
+export interface IAtomCtx<T = any, E = any> extends ISharedStateCtxBase<Atom<T>, E> {
   /**
    * state 指向共享状态拆箱后的值引用，
    * 因元组结果第一位固定指向 stateRoot，所以需要注意元组解构转为对象解构的命名方式
@@ -1368,6 +1370,11 @@ export interface ICreateOptionsFull<T = SharedState> {
    * @deprecated 建议配置到 lifecycle 中，此处的配置会自动转移到 lifecyle 里
    */
   onRead: OnRead;
+  /**
+   * 其他方便actions、derived里可读取使用的中间数据，例如 dom ref，配置等，
+   * 这些数据放 state 里会被代理，更适合放extra
+   */
+  extra: Dict;
 }
 
 /**
@@ -2052,20 +2059,20 @@ export type HXTypeByAD<A = any, AS extends Dict<any> = Dict<any>, DS extends Dic
     getPrevDeps: () => string[];
   };
   atoms: AS extends Dict
-    ? {
-        [K in keyof AS]: {
-          state: AS[K] extends ReadOnlyAtom ? AtomValType<AS[K]> : AS[K];
-          setState: SetState<AS[K]>;
-          time: number;
-          isAtom: boolean;
-          setDraft: SetDraft<AS[K]>;
-          insKey: 0;
-          sn: 0;
-          getDeps: () => string[];
-          getPrevDeps: () => string[];
-        };
-      }
-    : {};
+  ? {
+    [K in keyof AS]: {
+      state: AS[K] extends ReadOnlyAtom ? AtomValType<AS[K]> : AS[K];
+      setState: SetState<AS[K]>;
+      time: number;
+      isAtom: boolean;
+      setDraft: SetDraft<AS[K]>;
+      insKey: 0;
+      sn: 0;
+      getDeps: () => string[];
+      getPrevDeps: () => string[];
+    };
+  }
+  : {};
   deriveds: DS extends Dict ? { [K in keyof DS]: DerivedResultType<DS[K]> } : {};
 };
 

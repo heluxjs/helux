@@ -37,7 +37,7 @@ interface ICallMutateBase {
 
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[]; extraArgs: any }) => any[];
+  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[]; extraArgs: any, extra: any }) => any[];
   getPayloadArgs?: () => any;
 }
 
@@ -76,7 +76,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   const { sn, getArgs = noop, getPayloadArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn, extraArgs, skipResolve } = options;
   const { desc = '', depKeys, task = noopAny, extraBound } = fnItem;
   const internal = getInternal(targetState);
-  const { sharedKey } = internal;
+  const { sharedKey, userExtra: extra } = internal;
   const customOptions: ISetFactoryOpts = { desc, sn, from };
   const statusKey = getStatusKey(from, desc);
 
@@ -98,7 +98,7 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   };
 
   const input = FROM.MUTATE === from ? getInput(internal, fnItem) : [];
-  const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound, extraArgs };
+  const defaultParams = { isFirstCall, desc, setState, input, draft, draftRoot, flush, extraBound, extraArgs, extra };
   const args = getArgs(defaultParams) || [defaultParams];
 
   const isTaskFnProm = taskProm.get(task);
@@ -176,7 +176,7 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
   isMutate && TRIGGERED_WATCH.set(watchKey);
 
   const internal = getInternal(targetState);
-  const { setStateFactory, forAtom, sharedRoot } = internal;
+  const { setStateFactory, forAtom, sharedRoot, userExtra: extra } = internal;
   // 第一次执行时开启依赖收集
   const enableDep = isMutate && isFirstCall;
   const setFactoryOpts: ISetFactoryOpts = { desc, sn, from, isFirstCall, enableDep };
@@ -191,9 +191,9 @@ export function callMutateFnLogic<T = SharedState>(targetState: T, options: ICal
   const input = isMutate ? getInput(internal, fnItem) : [];
   const { draftNode: draft, draftRoot, finish } = setStateFactory(setFactoryOpts);
   // getArgs 由 createAtion 提供
-  const args = getArgs({ draft, draftRoot, setState, desc, input, extraArgs }) || [
+  const args = getArgs({ draft, draftRoot, setState, desc, input, extraArgs, extra }) || [
     draft,
-    { input, state, draftRoot, isFirstCall, extraBound, extraArgs },
+    { input, state, draftRoot, isFirstCall, extraBound, extraArgs, extra },
   ];
 
   try {

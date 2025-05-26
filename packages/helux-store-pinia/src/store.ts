@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { getSnap, sharex, type ISharedCtx, type IUseSharedStateOptions } from 'helux';
+import { useState } from 'react';
 import type { IDefineStoreOptions, IStoreCtx } from './types';
 import { extractOptions, makeLifecycle, makeWrapActions, makeWrapDerived, makeWrapStore } from './util';
 
@@ -25,7 +25,7 @@ export function defineStore(moduleName: string, options: IDefineStoreOptions<{},
         // 绑定 reactive 给 actions 函数或 store自身操作
         const wrapStore = makeWrapStore(reactive, { userGetters, derived: reactive, userActions, wrapActions });
         return wrapStore;
-      })
+      });
       return wrapStore;
     },
     getLoading,

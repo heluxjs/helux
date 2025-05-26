@@ -25,6 +25,10 @@ export declare function isDebug(): boolean;
  */
 export declare function isObj(mayObj: any): mayObj is Dict;
 /**
+ * 是否是普通json对象，仅传入字典 {} 时才返回 true
+ */
+export declare function isPlainObj(mayObj: any): mayObj is Dict;
+/**
  * 区别于 isObj，此方法把 {} Map Set Array 都认为是 obj
  */
 export declare function isJsObj(mayObj: any): mayObj is Dict | Array<any>;

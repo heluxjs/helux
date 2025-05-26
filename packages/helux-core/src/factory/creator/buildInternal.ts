@@ -45,6 +45,8 @@ export function buildInternal(
     rawStateVal = rawState.val;
   }
   const hasBeforeCommit = before !== noop;
+  // 确保 extra 为内部持有的引用
+  const userExtra: Dict = Object.assign({}, parsedOptions.extra);
 
   return {
     ver: 0,
@@ -108,7 +110,8 @@ export function buildInternal(
     delInsCtx(insKey: number) {
       insCtxMap.delete(insKey);
     },
-    extra: {} as Dict, // 记录一些需复用的中间生成的数据
+    userExtra, // 用户使用的 extra 数据
+    extra: {} as Dict, // 内部使用的 extra 数据
     loadingInternal: fakeInternal,
     level1ArrKeys,
   };

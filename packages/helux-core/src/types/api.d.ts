@@ -112,36 +112,36 @@ export declare const cst: {
  * ```
  * 如需感知组件上下文，则需要`useService`接口去定义服务函数，可查看 useService 相关说明
  */
-export function share<T extends JSONDict, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function share<T extends JSONDict = JSONDict, E extends JSONDict = JSONDict, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T>];
+): readonly [ReadOnlyDict<T>, SetState<T>, ISharedCtx<T, E>];
 // ): readonly [ReadOnlyDict<T>, SetDraft<T>, ISharedCtx<T>];
 
 /**
  * 支持共享所有类型值的接口，会自动装箱为 {val:T} 结构的数据
  */
-export function atom<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions<Atom<T>>>(
+export function atom<T = any, E extends JSONDict = JSONDict, O extends ICreateOptions<Atom<T>> = ICreateOptions<Atom<T>>>(
   rawState: T | (() => T),
   createOptions?: O,
-): readonly [ReadOnlyAtom<T>, SetState<T>, IAtomCtx<T>];
+): readonly [ReadOnlyAtom<T>, SetState<T>, IAtomCtx<T, E>];
 // ): readonly [ReadOnlyAtom<T>, AtomTupleSetState<Atom<T>>, IAtomCtx<T>];
 
 /**
  * 效果完全等同 share，唯一的区别是 share 返回元组 [state,setState,ctx] sharex 返回 ctx 自身
  */
-export function sharex<T extends JSONDict, O extends ICreateOptions<T> = ICreateOptions<T>>(
+export function sharex<T extends JSONDict = JSONDict, E extends JSONDict = JSONDict, O extends ICreateOptions<T> = ICreateOptions<T>>(
   rawState: T | (() => T),
   createOptions?: O,
-): ISharedCtx<T>;
+): ISharedCtx<T, E>;
 
 /**
  * 效果完全等同 atom，唯一的区别是 share 返回元组 [state,setState,call] atom 返回 ctx 自身
  */
-export function atomx<T = any, O extends ICreateOptions<Atom<T>> = ICreateOptions<Atom<T>>>(
+export function atomx<T = any, E extends JSONDict = JSONDict, O extends ICreateOptions<Atom<T>> = ICreateOptions<Atom<T>>>(
   rawState: T | (() => T),
   createOptions?: O,
-): IAtomCtx<T>;
+): IAtomCtx<T, E>;
 
 /**
  * 定义全量派生结果，支持同步和异步，支持返回 pritimive 类型，如果确定返回 dict 数据，可优先考虑使用 deriveDict 接口，
@@ -272,11 +272,11 @@ export function useAtom<T extends any = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  T extends ReadOnlyAtom ? AtomValType<T> : T,
-  // AtomTupleSetState<T>,
-  SetState<T>,
-  IInsRenderInfo<T>,
-];
+    T extends ReadOnlyAtom ? AtomValType<T> : T,
+    // AtomTupleSetState<T>,
+    SetState<T>,
+    IInsRenderInfo<T>,
+  ];
 
 /**
  * 区别于 useAtom，useAtomX 返回对象
@@ -290,12 +290,12 @@ export function useReactive<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  // 针对 atom，第一位 reactive 参数自动拆箱
-  T extends Atom ? T['val'] : T,
-  // 代表 reactiveRoot
-  T,
-  IInsRenderInfo,
-];
+    // 针对 atom，第一位 reactive 参数自动拆箱
+    T extends Atom ? T['val'] : T,
+    // 代表 reactiveRoot
+    T,
+    IInsRenderInfo,
+  ];
 
 export function useReactiveX<T = any>(sharedState: T, options?: IUseSharedStateOptions<T>): ICompReactiveCtx<T>;
 

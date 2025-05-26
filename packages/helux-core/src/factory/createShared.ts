@@ -184,8 +184,8 @@ function setEnableMutate(enabled: boolean, internal: TInternal) {
 }
 
 function getOptions(internal: TInternal): CtxCreateOptions {
-  const { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate } = internal;
-  return { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate };
+  const { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate, extra } = internal;
+  return { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate, extra };
 }
 
 export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: any): any {
@@ -201,6 +201,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
   const ldMutate = initLoadingCtx(createFn, opt);
   const common: ICommon = { createFn, internal, apiCtx, state, stateRoot, isAtom: forAtom };
   const acCommon = { ...common, ldAction, actionCreator };
+  const { userExtra } = internal;
 
   return {
     state, // atom 的 state 指向拆箱后的值，share 的 state 指向根值
@@ -208,6 +209,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     stateRoot, // 指向 root
     setState,
     setDraft,
+    setExtra: (data: any) => Object.assign(userExtra, data),
     setEnableMutate: (enabled: boolean) => setEnableMutate(enabled, internal),
     getOptions: () => getOptions(internal),
     defineActions: (throwErr?: boolean, isMultiPayload?: boolean) => (actionDict: Dict<ActionTask>) =>
@@ -246,6 +248,7 @@ export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: a
     useReactiveX: (options?: any) => useReactiveX(apiCtx, stateRoot, options),
     flush: (desc?: string) => flush(stateRoot, desc),
     isAtom: forAtom,
+    extra: userExtra,
   };
 }
 
