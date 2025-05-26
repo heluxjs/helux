@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 3.0.1
+
+### Patch Changes
+
+- 1372363: bump limu to 4.0.0,add setExtra,extra
+- Updated dependencies [1372363]
+  - helux@5.3.1
+
 ## 3.0.0
 
 ### Minor Changes

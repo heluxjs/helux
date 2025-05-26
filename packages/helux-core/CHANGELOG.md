@@ -1,5 +1,15 @@
 # @helux/core
 
+## 5.3.1
+
+### Patch Changes
+
+- 1372363: bump limu to 4.0.0,add setExtra,extra
+- Updated dependencies [1372363]
+  - @helux/utils@5.3.1
+  - @helux/hooks-impl@5.3.1
+  - @helux/types@5.3.1
+
 ## 5.3.0
 
 ### Minor Changes
