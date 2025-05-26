@@ -1,4 +1,5 @@
-import { delListItem, includeOne, matchDictKey, nodupPush } from '@helux/utils';
+import { delListItem, includeOne, nodupPush } from '@helux/utils';
+import { getParentKey } from '../common';
 import { RUN_AT_SERVER } from '../consts';
 import { newFnCtx } from '../factory/common/ctor';
 import { getCtxMap, getFnCtx, getFnKey, markFnKey } from '../factory/common/fnScope';
@@ -37,7 +38,7 @@ export function markFnEnd() {
     const dict: Dict<number> = {};
     afterRunDepKeys.forEach((k) => (dict[k] = 1));
     afterRunDepKeys.forEach((depKey) => {
-      const matched = matchDictKey(dict, depKey);
+      const matched = getParentKey(dict, depKey);
       // 匹配到的子串不是 depKey 自身，就丢弃该子串
       // 随着子串不停地被丢弃，最长路径的多个 depKey 就保留下来了
       if (matched && matched !== depKey) {

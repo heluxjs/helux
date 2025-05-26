@@ -2,7 +2,7 @@ import { isFn } from '@helux/utils';
 import type { DictFn } from '../../types/base';
 import type { TInternal } from '../creator/buildInternal';
 
-const lifecycleFnNames = ['willMount', 'mounted', 'willUnmount', 'beforeCommit', 'afterCommit'];
+const lifecycleFnNames = ['willMount', 'mounted', 'willUnmount', 'beforeCommit', 'afterCommit', 'onRead', 'onWrite'];
 
 export function defineLifecycle(lifecycleFns: DictFn, internal: TInternal) {
   if (!lifecycleFns) return;

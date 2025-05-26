@@ -71,6 +71,7 @@ function buildBlockScope() {
       sharedKey: 0,
       depKey: '',
       keyPath: [] as string[],
+      keyPaths: [] as string[][],
       isDerivedResult: false,
       isDerivedAtom: false,
     },

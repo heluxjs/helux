@@ -1,4 +1,5 @@
-import { matchListItem, nodupPush } from '@helux/utils';
+import { nodupPush } from '@helux/utils';
+import { getParentKeyFromArr } from '../../common';
 import { KEY_SPLITER } from '../../consts';
 import type { IRuleConf } from '../../types/base';
 import type { DepKeyInfo, Level1ArrKeys } from '../../types/inner';
@@ -22,8 +23,12 @@ function getArrIndexKey(confKey: string, fullKey: string) {
  * 辅助 stopDep 主逻辑之用
  */
 export function recordArrKey(arrKeys: string[], depKey: string) {
-  const parentDepKey = matchListItem(arrKeys, depKey);
-  if (parentDepKey) return;
+  const parentDepKey = getParentKeyFromArr(arrKeys, depKey);
+  // arrKeys 某一项是 depKey 的子串时不记录，仅记录一层数组即可
+  // 例如 list[0].subList 是一个 list，但他的父路径 list 已被记录
+  if (parentDepKey) {
+    return;
+  }
   nodupPush(arrKeys, depKey);
 }
 
@@ -48,7 +53,7 @@ export function cutDepKeyByStop(
   }
 
   const { keys: stopDepKeys, isArrDict, depth, arrKeyStopDcit, stopArrDep } = stopDepInfo;
-  const mayArrKeyPrefix = matchListItem(level1ArrKeys, depKey);
+  const mayArrKeyPrefix = getParentKeyFromArr(level1ArrKeys, depKey);
   const isGtDepth = keyPath.length > depth;
   // 大于了规定的依赖收集深度或命中了 list 前缀
   if (isGtDepth || mayArrKeyPrefix) {

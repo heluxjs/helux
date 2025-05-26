@@ -31,11 +31,21 @@ export function safeMapGet<T = any>(map: Map<any, any>, key: any, defaultValue: 
   return item;
 }
 
-export function matchDictKey(dict: Dict, fullStr: string) {
+/**
+ * 获得object所有key里第一个是 fullStr 子串的key
+ * @example
+ * matchListItem({'12':1, '33':1}, '333'); // out: '33'
+ * // 可加 itemSuffix 来做特殊判定，内部遍历时会统一给 key 加后缀
+ * matchListItem({'a|b|1':1,'a|b|2':1}, 'a|b|22'); // out: 'a|b|2'
+ * matchListItem({'a|b|1':1,'a|b|2':1}, 'a|b|22', '|'); // out: ''
+ */
+export function matchDictKey(dict: Dict, fullStr: string, itemSuffix?: string) {
   let matchKey = '';
+  const suffix = itemSuffix || '';
   for (const key in dict) {
     // test if calling matchListItem(fullStr, Object.keys(dict)) is faster
-    if (fullStr.startsWith(key)) {
+    const toMatch = `${key}${suffix}`;
+    if (fullStr.startsWith(toMatch)) {
       matchKey = key;
       break;
     }

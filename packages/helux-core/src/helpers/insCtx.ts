@@ -21,6 +21,7 @@ import { getInternal } from './state';
  * 开始收集依赖
  */
 function collectDep(insCtx: InsCtxDef, info: DepKeyInfo, options: { parentType: string; rawVal: any }) {
+  // rawVal 即 info.depKey 对应的值
   const { parentType, rawVal } = options;
   const isValArrLike = isArrLikeVal(rawVal);
   if (isValArrLike) {

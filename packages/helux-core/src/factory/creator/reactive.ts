@@ -87,11 +87,12 @@ export function nextTickFlush(sharedKey: number) {
 
 function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
   const { from = REACTIVE } = options;
-  const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true });
+  const rkey = getReactiveKey();
+  const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true, rkey });
   const latestMeta = newReactiveMeta(draftRoot, options, finish);
   const { sharedKey } = internal;
 
-  latestMeta.key = getReactiveKey();
+  latestMeta.key = rkey;
   latestMeta.sharedKey = sharedKey;
   latestMeta.nextTickFlush = () => {
     const { hasFlushTask } = latestMeta;

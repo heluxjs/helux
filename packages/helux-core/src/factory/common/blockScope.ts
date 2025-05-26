@@ -1,5 +1,7 @@
 import { getBlockScope } from './speedup';
 
+let reuseLatest = false;
+
 /**
  * 记录共享状态或共享派生结果最近一次读取的数据，为 block 模块服务
  * for perf, no options param here
@@ -14,7 +16,30 @@ export function recordLastest(
   isDerivedAtom = false,
 ) {
   const scope = getBlockScope();
-  scope.latest = { sharedKey, val, stateOrResult: sharedState, depKey, keyPath, isDerivedResult, isDerivedAtom };
+  const latest = scope.latest;
+  if (reuseLatest) {
+    latest.keyPaths.push(keyPath);
+    return;
+  }
+
+  scope.latest = {
+    sharedKey,
+    val,
+    stateOrResult: sharedState,
+    depKey,
+    keyPath,
+    keyPaths: [keyPath],
+    isDerivedResult,
+    isDerivedAtom,
+  };
+}
+
+export function enableReuseLatest() {
+  reuseLatest = true;
+}
+
+export function disableReuseLatest() {
+  reuseLatest = false;
 }
 
 /**

@@ -58,8 +58,8 @@ export function buildSharedState(options: ParsedOptions) {
         }
         if (!isBuiltInFnKey) {
           const { fullKeyPath } = params;
-          const rawVal = callOnRead(params, onRead);
-          collectDep(fullKeyPath, rawVal);
+          const val = callOnRead(params, onRead);
+          collectDep(fullKeyPath, val);
         }
       },
       compareVer: true,

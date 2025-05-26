@@ -25,7 +25,14 @@ export function tryGetLoc(moduleName: string, endCutIdx = 8) {
         loc = arr.slice(0, 16).join(' -> ');
       } else {
         const pureArr = arr.map((codeLoc) => {
-          return codeLoc.substring(0, codeLoc.indexOf('(')).trim();
+          // 热更新模式下，需处理同一个文件里在多个位置透传相同模块名的情况
+          // at ./src/demos/Api_mutate2.tsx (http://localhost:3100/static/js/src_loadApp18_tsx.chunk.js:300:61)
+          // at ./src/demos/Api_mutate2.tsx (http://localhost:3100/static/js/src_loadApp18_tsx.chunk.js:286:76)
+          // 故此处同时提取 atLabel 和 lineLabel 来定位调用位置
+          const atLabel = codeLoc.substring(0, codeLoc.indexOf('(')).trim();
+          const list = codeLoc.split('/');
+          const lineLabel = list[list.length - 1];
+          return `${atLabel}|${lineLabel}`;
         });
         loc = pureArr.slice(4, endCutIdx).join(' -> ');
       }
@@ -129,6 +136,9 @@ export function isArrLike(parentType?: string) {
   return [ARR, MAP].includes(parentType);
 }
 
+/**
+ * 是 Array 或 Map
+ */
 export function isArrLikeVal(val: any) {
   return Array.isArray(val) || isMap(val);
 }

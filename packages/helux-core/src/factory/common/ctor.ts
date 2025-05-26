@@ -1,4 +1,4 @@
-import { noop, noopArr } from '@helux/utils';
+import { noop, noopAny, noopArr } from '@helux/utils';
 import { IOperateParams } from 'limu';
 import { ASYNC_TYPE, FROM, NOT_MOUNT, RENDER_START } from '../../consts';
 import type { From, IFnCtx, IMutateCtx, IMutateFnStdItem, ISetFactoryOpts, OnOperate } from '../../types/base';
@@ -8,7 +8,6 @@ import { genRenderSN } from './key';
 const { MAY_TRANSFER } = ASYNC_TYPE;
 const { SET_STATE, REACTIVE } = FROM;
 const fakeGetReplaced = () => ({ isReplaced: false, replacedValue: null as any });
-const noopAny: (...args: any[]) => any = () => {};
 
 const fnItem = newMutateFnItem({ isFake: true });
 
@@ -51,6 +50,7 @@ export function newReactiveMeta(draft: any, buildOptions: IBuildReactiveOpts, fi
 export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
   const {
     ids = [],
+    rkey = '',
     globalIds = [],
     isReactive = false,
     from = SET_STATE,
@@ -62,6 +62,7 @@ export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
   } = options;
   return {
     fnKey: '',
+    rkey,
     depKeys: [],
     forcedDepKeys: [],
     triggerReasons: [],

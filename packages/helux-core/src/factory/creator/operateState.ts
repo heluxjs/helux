@@ -1,5 +1,6 @@
-import { getVal, matchDictKey, nodupPush } from '@helux/utils';
+import { getVal, nodupPush } from '@helux/utils';
 import { IOperateParams } from 'limu';
+import { getParentKey } from '../../common';
 import { FROM } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
@@ -71,7 +72,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
           recordBlockDepKey([depKey]);
           recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
         }
-        internal.onRead?.(opParams);
+        internal.onRead(opParams);
       }
     }
     return;
@@ -111,7 +112,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   const { hasIds, hasGlobalIds, stopDepInfo } = ruleConf;
   writeKeyPathInfo[writeKey] = { sharedKey, moduleName, keyPath: fullKeyPath };
   // 筛出当前写入 key 对应的可能存在的数组 key
-  const arrKey = matchDictKey(arrKeyDict, writeKey);
+  const arrKey = getParentKey(arrKeyDict, writeKey);
   if (arrKey) {
     // 主动把数组 key 也记录下，因为数组对应视图通常都用 forEach 生成的
     // 然后遍历出来的孩子节点都会包一个 memo ，所以需主动通知一下使用数组根节点的组件重渲染
@@ -139,6 +140,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
     putId(ruleConf.globalIdsDict, { ids: globalIds, writeKey, internal, opParams });
   }
 
+  internal.lifecycle.onWrite(opParams);
   // 是响应式对象在操作对象变更
   if (isReactive) {
     // 来自响应对象的变更操作，主动触发 nextTickFlush

@@ -671,14 +671,20 @@ export function dynamicBlock<P = object, Ref = any>(
  * // 不成功或有缺陷的响应示例
  * // ❌ bad 传入对象，react 本身也不允许，考虑使用 ()=> ReactNode 写法替代
  * <div>...long content {$(sharedUser.infoObj)}</div>
+ * // ✅ 可使用 ()=> ReactNode 写法替代
+ * <div>...long content {$((v)=>`${sharedUser.infoObj.name}-${sharedUser.infoObj.age}`)}</div>
+ * // ✅ 👉 更推荐定制 format 函数来展开此对象渲染，避免重复从根对象开始的取值过程
+ * <div>...long content {$(sharedUser.infoObj, (v)=>`${v.name}-${v.age}`)}</div>
  * // ❌ bad 传入多个值
  * <div>...long content {$([1,2,3]])}</div>
  * // ❌ 内部存在有判断，可能会造成响应依赖缺失
  * <div>...long content {$(()=><div>{sharedUser.age >10?sharedUser.name:sharedUser.nickname}</div>)}</div>
+ * // ✅ 👉推荐定制format函数，会函数里将所有依赖提前声明，随后再做判断
+ * <div>...long content {$(sharedUser, (v)=>{const{age,name,nickname}=v;return age>10?name:nickname})}</div>
  * ```
- * @param inputVar
  */
-export function signal(inputVar: SingalVal | (() => SingalVal), format?: (val: any) => any): ReactNode;
+export function signal<T extends SingalVal>(inputVar: T, format?: (val: T) => any): ReactNode;
+export function signal(inputVar: () => SingalVal): ReactNode;
 
 /**
  * signal 函数的简写导出

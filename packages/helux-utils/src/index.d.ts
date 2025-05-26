@@ -6,7 +6,7 @@ export declare function nodupPush(list: NumStrSymbol[], toPush: NumStrSymbol): v
 export declare function delListItem(list: NumStrSymbol[], toDel: NumStrSymbol): void;
 export declare function dedupList(list: Array<any>): any[];
 export declare function includeOne(loopList: any[], judgeList: any[]): boolean;
-export declare function matchListItem(list: string[], fullStr: string): string;
+export declare function matchListItem(list: string[], fullStr: string, itemSuffix?: string): string;
 export declare function enureReturnArr(fn?: Fn, arg1?: any, arg2?: any): any[];
 export declare const GLOBAL_REF: Dict & Window & typeof globalThis;
 export declare const DEV_FLAG: boolean;
@@ -62,7 +62,7 @@ export declare function safeMapGet<T = any>(map: Map<any, any>, key: any, defaul
 /**
  * 尝试匹配 dict 的 key 列表里是 fullStr 子串的 key
  */
-export declare function matchDictKey(dict: Dict, fullStr: string): string;
+export declare function matchDictKey(dict: Dict, fullStr: string, itemSuffix: string): string;
 export declare function getVal(obj: any, keyPath: string[]): any;
 export declare function setVal(obj: any, keyPath: string[], val: any): void;
 export declare function setNoop(): boolean;

@@ -57,6 +57,14 @@ export interface ILifecycle<T extends any = any> {
    * 变更的状态提交之后会触发此函数
    */
   afterCommit?: (params: AfterFnParams<T>) => void;
+  /**
+   * 任何读行为都会触发此函数
+   */
+  onRead?: OnRead;
+  /**
+   * 任何写行为都会触发此函数
+   */
+  onWrite?: OnWrite;
 }
 export interface ILocalStateApi<T> {
   setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
@@ -114,10 +122,15 @@ export type RecordLoading = NoRecord | RecordToPrivate | RecordToGlobal;
 export type From = 'Reactive' | 'CbReactive' | 'Mutate' | 'Action' | 'SetState' | 'Sync' | 'Loading';
 
 /**
- * onRead用于给开发者配置读操作钩子函数，所有值读取操作均触发此钩子函数，
- * 如果 onReadFn 返回了具体指，则会透传给用户，这是一个危险的操作，用户需自己为此负责
+ * onRead 用于给开发者配置读操作钩子函数，所有值读取操作均触发此钩子函数，
+ * 调用 replaceValue 可替换读取值，这是一个危险的操作，用户需自己为此负责
  */
 export type OnRead = (opParams: IOperateParams) => any;
+
+/**
+ * 调用 replaceValue 可替换写入值，这是一个危险的操作，用户需自己为此负责
+ */
+export type OnWrite = (opParams: IOperateParams) => void;
 
 export interface IBlockCtx {
   key: string;
@@ -555,6 +568,10 @@ export interface IMutateCtx {
   draftVal: any;
   from: From;
   isReactive: boolean;
+  /**
+   * 对于的 reactive meta key
+   */
+  rkey: string;
   enableDep: ISetFactoryOpts['enableDep'];
   /**
    * 调用序列号，sn 序号相同表示同一批次触发重渲染
@@ -596,6 +613,8 @@ export interface IInnerSetStateOptions extends ISetStateOptions {
 export interface ISetFactoryOpts extends IInnerSetStateOptions {
   sn?: number;
   isReactive?: boolean;
+  /** reactive meta key */
+  rkey?: string;
   /**
    * 目前通用 operateState 里支持依赖收集的场景：
    * 1 mutate( draft=> draft.xx );
@@ -1234,15 +1253,20 @@ export interface BeforeFnParams<T = SharedState> {
   desc: FnDesc;
   /** 变更批次 */
   sn: number;
+  /**
+   * 草稿根对象，对于 shared 来说，draftRoot 和 draft是同一个值，
+   * 对于 atom 来说，draftRoot 是未拆箱值
+   */
   draftRoot: DraftRootType<T>;
+  /** 草稿对象, 对于 shared 来说，draft 就是根对象，对于 atom 来说，draft 是已拆箱值 */
   draft: DraftType<T>;
 }
 
 export interface AfterFnParams<T = SharedState> {
   /** 模块名，未指定时内部会自动生成 */
   moduleName: string;
-  /** 总是指向 root */
-  state: T;
+  /** 状态快照，总是指向 root */
+  snap: T;
   /** 提交描述 */
   desc: FnDesc;
   /** 变更批次 */
@@ -1341,6 +1365,7 @@ export interface ICreateOptionsFull<T = SharedState> {
   enableMutate: boolean;
   /**
    * 任何读行为都会触发此函数
+   * @deprecated 建议配置到 lifecycle 中，此处的配置会自动转移到 lifecyle 里
    */
   onRead: OnRead;
 }
@@ -1348,7 +1373,7 @@ export interface ICreateOptionsFull<T = SharedState> {
 /**
  * 目前api层面只暴露部分配置参数供用户查看
  */
-export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'mutateList' | 'before' | 'onRead'>;
+export type CtxCreateOptions = Omit<ICreateOptionsFull, 'rules' | 'mutate' | 'mutateList' | 'before' | 'onRead' | 'onWrite'>;
 
 export interface IInnerCreateOptions<T = SharedState> extends ICreateOptionsFull<SharedState> {
   forAtom: boolean;

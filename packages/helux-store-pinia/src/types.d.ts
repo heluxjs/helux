@@ -57,6 +57,7 @@ export interface ILayeredStoreCtx<S extends Dict, G extends Dict, A extends Dict
   };
   useState: (options?: IUseSharedStateOptions) => [S, A];
   useGetters: (options?: IUseSharedStateOptions) => GettersProp<G>;
+  useStore: (options?: IUseSharedStateOptions) => { state: S; getters: GettersProp<G>; actions: A };
   useLoading: () => LoadingType<A>;
   getLoading: () => LoadingType<A>;
   getSnap: () => S;

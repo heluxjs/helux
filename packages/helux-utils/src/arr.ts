@@ -27,12 +27,22 @@ export function includeOne(loopList: any[], judgeList: any[]) {
   return ret;
 }
 
-export function matchListItem(list: string[], fullStr: string) {
+/**
+ * 获得list所有元素里第一个是 fullStr 子串的项
+ * @example
+ * matchListItem(['12','33'], '333'); // out: '33'
+ * // 可加 itemSuffix 来做特殊判定，内部遍历时会统一个 item 加后缀
+ * matchListItem(['a|b|1','a|b|2'], 'a|b|22'); // out: 'a|b|2'
+ * matchListItem(['a|b|1','a|b|2'], 'a|b|22', '|'); // out: ''
+ */
+export function matchListItem(list: string[], fullStr: string, itemSuffix?: string) {
   let matchKey = '';
+  const suffix = itemSuffix || '';
   const len = list.length;
   for (let i = 0; i < len; i++) {
     const item = list[i];
-    if (fullStr.startsWith(item)) {
+    const toMatch = `${item}${suffix}`;
+    if (fullStr.startsWith(toMatch)) {
       matchKey = item;
       break;
     }
