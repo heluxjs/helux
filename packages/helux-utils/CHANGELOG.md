@@ -1,5 +1,15 @@
 # @helux/utils
 
+## 5.4.0
+
+### Minor Changes
+
+- ffc79fb: optimize signal,mutate loading
+
+### Patch Changes
+
+- @helux/types@5.4.0
+
 ## 5.3.1
 
 ### Patch Changes

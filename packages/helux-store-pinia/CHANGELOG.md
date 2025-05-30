@@ -1,5 +1,16 @@
 # helux-store-pinia
 
+## 4.0.0
+
+### Minor Changes
+
+- ffc79fb: optimize signal,mutate loading
+
+### Patch Changes
+
+- Updated dependencies [ffc79fb]
+  - helux@5.4.0
+
 ## 3.0.1
 
 ### Patch Changes

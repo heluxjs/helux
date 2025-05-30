@@ -1,5 +1,16 @@
 # helux
 
+## 5.4.0
+
+### Minor Changes
+
+- ffc79fb: optimize signal,mutate loading
+
+### Patch Changes
+
+- Updated dependencies [ffc79fb]
+  - @helux/core@5.4.0
+
 ## 5.3.1
 
 ### Patch Changes
