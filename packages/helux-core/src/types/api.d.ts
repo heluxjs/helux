@@ -5,7 +5,7 @@
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
 */
-import type { MutableRefObject, ReactNode } from '@helux/types';
+import type { ForwardedRef, MutableRefObject, ReactNode } from '@helux/types';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,
@@ -14,7 +14,6 @@ import type {
   Atom,
   AtomValType,
   BlockComponent,
-  BlockParams,
   ChangeDraftCb,
   DerivedAtom,
   DerivedDict,
@@ -27,6 +26,7 @@ import type {
   IAtomCtx,
   IBindAtomOptions,
   IBlockOptions,
+  IBlockParams,
   IBoundStateInfo,
   ICompAtomCtx,
   ICompReactiveCtx,
@@ -272,11 +272,11 @@ export function useAtom<T extends any = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-    T extends ReadOnlyAtom ? AtomValType<T> : T,
-    // AtomTupleSetState<T>,
-    SetState<T>,
-    IInsRenderInfo<T>,
-  ];
+  T extends ReadOnlyAtom ? AtomValType<T> : T,
+  // AtomTupleSetState<T>,
+  SetState<T>,
+  IInsRenderInfo<T>,
+];
 
 /**
  * 区别于 useAtom，useAtomX 返回对象
@@ -290,12 +290,12 @@ export function useReactive<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-    // 针对 atom，第一位 reactive 参数自动拆箱
-    T extends Atom ? T['val'] : T,
-    // 代表 reactiveRoot
-    T,
-    IInsRenderInfo,
-  ];
+  // 针对 atom，第一位 reactive 参数自动拆箱
+  T extends Atom ? T['val'] : T,
+  // 代表 reactiveRoot
+  T,
+  IInsRenderInfo,
+];
 
 export function useReactiveX<T = any>(sharedState: T, options?: IUseSharedStateOptions<T>): ICompReactiveCtx<T>;
 
@@ -632,7 +632,7 @@ export function runDeriveTask<T = SharedState>(result: T, throwErr?: boolean): P
  * ```
  */
 export function block<P = object, T = any>(
-  cb: (props: P, params: BlockParams<P, T>) => ReactNode,
+  cb: (props: P, ref: ForwardedRef<T>) => ReactNode,
   options?: EnableStatus | IBlockOptions<P>,
 ): BlockComponent<P>;
 
@@ -640,10 +640,17 @@ export function block<P = object, T = any>(
  * 功能同 block，适用于在组件里调用动态生成组件的场景，会在组件销毁后自动释放掉占用的内存
  * 如果在组件里使用 block 生成组件，也能正常工作，但会额外占用一些不会释放的内存
  */
-export function dynamicBlock<P = object, Ref = any>(
-  cb: (props: P, params: BlockParams<P, Ref>) => ReactNode,
+export function dynamicBlock<P = object, T = any>(
+  cb: (props: P, ref: ForwardedRef<T>) => ReactNode,
   options?: EnableStatus | IBlockOptions<P>,
 ): BlockComponent<P>;
+
+/**
+ * 获取 props 上的 blockParams 参数，如不存在也会返回，并标识 isFake=true，
+ * 在 signal(getProps, Comp) 场景，这样设计课让 Comp 在 signal 外或 signal 中均可正常渲染不报错
+ * @param props
+ */
+export function getBlockParams<P = object>(props: P): IBlockParams<P>;
 
 /**
  * 创建一个具有 signal 响应粒度的视图，仅当传入的值发生变化才渲染且只渲染 signal 区域，helux 同时也导出了 $ 符号表示 signal 函数
@@ -657,6 +664,10 @@ export function dynamicBlock<P = object, Ref = any>(
  * <div>...long content {$(User)}</div>
  * // ✅ ok，复杂渲染逻辑可传入渲染函数，（注：可将这个回调通过 block 抽象为一个组件）
  * <div>...long content {$(()=><div><span>{sharedUser.infoObj.grade}</span><span>{sharedUser.infoObj.addr}</span></div>)}</div>
+ * // ✅ ok，支持 props 和 渲染函数分离定义
+ * const Info = (props)=><div>name:{props.name}-age{props.age}</div>;
+ * const getProps = ()=>({ name: state.info.name, age: state.info.age });
+ * <div>...long content {$(getProps,Info)}</div>
  *
  * //  atom 响应示例
  * // ✅ ok，传入原始值 atom，推荐这种写法
@@ -672,24 +683,144 @@ export function dynamicBlock<P = object, Ref = any>(
  * // ❌ bad 传入对象，react 本身也不允许，考虑使用 ()=> ReactNode 写法替代
  * <div>...long content {$(sharedUser.infoObj)}</div>
  * // ✅ 可使用 ()=> ReactNode 写法替代
- * <div>...long content {$((v)=>`${sharedUser.infoObj.name}-${sharedUser.infoObj.age}`)}</div>
+ * <div>...long content {$(()=>`${sharedUser.infoObj.name}-${sharedUser.infoObj.age}`)}</div>
  * // ✅ 👉 更推荐定制 format 函数来展开此对象渲染，避免重复从根对象开始的取值过程
  * <div>...long content {$(sharedUser.infoObj, (v)=>`${v.name}-${v.age}`)}</div>
  * // ❌ bad 传入多个值
  * <div>...long content {$([1,2,3]])}</div>
  * // ❌ 内部存在有判断，可能会造成响应依赖缺失
- * <div>...long content {$(()=><div>{sharedUser.age >10?sharedUser.name:sharedUser.nickname}</div>)}</div>
- * // ✅ 👉推荐定制format函数，会函数里将所有依赖提前声明，随后再做判断
+ * <div>...long content {$(()=><div>{sharedUser.age>10?sharedUser.name:sharedUser.nickname}</div>)}</div>
+ * // ✅ 👉推荐定制format函数，函数里可将所有依赖提前声明，随后再做判断
  * <div>...long content {$(sharedUser, (v)=>{const{age,name,nickname}=v;return age>10?name:nickname})}</div>
  * ```
  */
-export function signal<T extends SingalVal>(inputVar: T, format?: (val: T) => any): ReactNode;
+export function signal<T extends SingalVal>(inputVar: T, format?: (val: T) => any, enableStatus?: EnableStatus): ReactNode;
+export function signal(inputVar: (props: any) => SingalVal, format?: (val: any) => any, enableStatus?: EnableStatus): ReactNode;
 export function signal(inputVar: () => SingalVal): ReactNode;
 
 /**
  * signal 函数的简写导出
  */
 export const $: typeof signal;
+
+type ISignalViewInnerProps<T extends SingalVal = any> = {
+  /**
+   * 信号响应输入值，必须透传函数 ()=>T，
+   * ```jsx
+   *  // 不支持 input 为 T 的原因如下，考虑下面两个连续声明在一起的组件
+   * <SignalView input={state.a.b} format={...} />
+   * <SignalView input={state.a} format={...} />
+   * // 编译后是
+   * react.createElement(SignalView, {input:state.a.b, forat:...})
+   * react.createElement(SignalView, {input:state.a, forat:...})
+   * // SignalView 对应函数的执行是延后的，真正执行 SignalView 时，
+   * // 第一个声明处拿到的依赖为 state.a 了，而不是想要的 state.a.b
+   * // 但 $ 写法是支持直接绑定值的，因为它的执行时间并没有延后
+   * {$(state.a.b, format)}
+   * {$(state.a, format)}
+   * ```
+   */
+  input: () => T;
+  format?: (val: T) => any;
+  /**
+   * 响应异步计算任务的状态变化
+   */
+  enableStatus?: EnableStatus;
+  ref?: any;
+  /**
+   * 当前组件关心的 action 函数 status 变化列表
+   */
+  useStatusList?: () => LoadingStatus[];
+};
+
+type SignalViewProps<T extends SingalVal = any, ViewProps extends object = any> = ISignalViewInnerProps<T> &
+  Omit<ViewProps, 'input' | 'format' | 'enableStatus' | 'ref' | 'useStatusList'>;
+
+/**
+ * signal 的组件化写法
+ */
+export function SignalView(props: SignalViewProps): ReactNode;
+export function SignalView<T extends SingalVal = any, O extends object = any>(props: SignalViewProps<T, O>): ReactNode;
+
+interface ISignalV2Props<T extends SingalVal = any, V extends object = any> extends ISignalViewInnerProps<T> {
+  viewProps: V;
+}
+
+interface ISignalV2SimpleProps<T extends SingalVal = any> extends ISignalViewInnerProps<T> {
+  viewProps?: any;
+}
+
+/**
+ * viewProps 属性会透传到组件上（如 format传的组件）
+ * @param props
+ */
+export function SignalV2(props: ISignalV2SimpleProps): ReactNode;
+export function SignalV2<T extends SingalVal = any>(props: ISignalV2SimpleProps<T>): ReactNode;
+export function SignalV2<T extends SingalVal = any, V extends object = object>(props: ISignalV2Props<T, V>): ReactNode;
+
+type IBlockViewInnerProps<Data extends object = any, ViewProps extends object = any> = {
+  data: () => Data;
+  comp: (compProps: Data & ViewProps, ref: any) => any; // react component def
+  /**
+   * 响应异步计算任务的状态变化
+   */
+  enableStatus?: EnableStatus;
+  ref?: any;
+  /**
+   * 当前组件关心的 action 函数 status 变化列表
+   */
+  useStatusList?: () => LoadingStatus[];
+};
+
+type IBlockViewProps<Data extends object = any, ViewProps extends object = any> = IBlockViewInnerProps<Data, ViewProps> &
+  Omit<ViewProps, 'input' | 'format' | 'enableStatus' | 'ref' | 'useStatusList'>;
+
+/**
+ * 收窄 SignalView，变换属性为 data, comp,
+ * 除去 'input' | 'format' | 'enableStatus' | 'ref' | 'useStatusList' 之外的属性
+ * 会和 data 函数返回值会合并后透传到 comp 组件 props 上
+ * @example
+ * ```tsx
+ * // 不约束类型
+ * <BlockView data={() => ({ a: 1 })} comp={Label} b={1} />; // props {a:1, b: 1}
+ * // 只约束 data 函数返回类型
+ * <BlockView<{ a: 1 }> data={() => ({ a: 1 })} comp={Label} b={1} />
+ * // 约束 data 函数返回类型和 其他 props类型
+ * <BlockView<{ a: 1 }, { b: number }> data={() => ({ a: 1 })} comp={Label} b={1} />
+ * ```
+ */
+export function BlockView(props: IBlockViewProps): ReactNode;
+// 只约束Data
+export function BlockView<D extends object = any>(props: IBlockViewProps<D, any>): ReactNode;
+// Data，ViewProps 都约束
+export function BlockView<D extends object = any, V extends object = object>(props: IBlockViewProps<D, V>): ReactNode;
+
+interface IBlockV2Props<Data extends object = any, V extends object = any> extends IBlockViewInnerProps<Data, V> {
+  viewProps: V;
+}
+
+interface IBlockV2SimpleProps<Data extends object = any> extends IBlockViewInnerProps<Data, any> {
+  viewProps?: any;
+}
+
+/**
+ * 收窄 SignalView，变换属性为 data, comp,
+ * viewProps 和 data 函数返回值会合并后透传到 comp 组件 props 上
+ * @example
+ * ```tsx
+ * // 不约束类型
+ * <BlockV2 data={() => ({ a: 1 })} comp={Label} viewProps={{ b: 's' }} />
+ * // 只约束 data 函数返回类型
+ * <BlockV2<{ a: 1 }> data={() => ({ a: 1 })} comp={Label} viewProps={{ b: 's' }} />
+ * // 约束 data 函数返回类型和 viewProps 类型
+ * <BlockV2<{ a: 1 }, { b: number }> data={() => ({ a: 1 })} comp={Label} viewProps={{ b: 's' }} />
+ * ```
+ */
+export function BlockV2(props: IBlockV2SimpleProps): ReactNode;
+// 只约束Data
+export function BlockV2<Data extends object = any>(props: IBlockV2SimpleProps<Data>): ReactNode;
+// Data，ViewProps 都约束
+export function BlockV2<Data extends object = any, V extends object = object>(props: IBlockV2Props<Data, V>): ReactNode;
 
 /**
  * 添加中间件，可在数据提交前做二次修改，可写入数据传递给下一个中间件

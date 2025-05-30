@@ -14,6 +14,7 @@ import { getInternal } from '../../helpers/state';
 import type {
   ActionAsyncReturn,
   ActionReturn,
+  ActionReturnInner,
   Fn,
   From,
   IMutateFnStdItem,
@@ -37,7 +38,7 @@ interface ICallMutateBase {
 
 interface ICallMutateFnOpt<T = SharedState> extends ICallMutateBase {
   /** fn 函数调用入参拼装 */
-  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[]; extraArgs: any, extra: any }) => any[];
+  getArgs?: (param: { draft: T; draftRoot: T; setState: Fn; desc: string; input: any[]; extraArgs: any; extra: any }) => any[];
   getPayloadArgs?: () => any;
 }
 
@@ -72,7 +73,10 @@ export function isTaskProm(task: any) {
 }
 
 /** 呼叫异步函数的逻辑封装，mutate task 执行或 action 定义的函数（同步或异步）执行都会走到此逻辑 */
-export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options: ICallAsyncMutateFnOpt): ActionReturn | ActionAsyncReturn {
+export function callAsyncMutateFnLogic<T = SharedState>(
+  targetState: T,
+  options: ICallAsyncMutateFnOpt,
+): Promise<ActionReturnInner> | ActionReturnInner {
   const { sn, getArgs = noop, getPayloadArgs = noop, from, throwErr, isFirstCall, fnItem, mergeReturn, extraArgs, skipResolve } = options;
   const { desc = '', depKeys, task = noopAny, extraBound } = fnItem;
   const internal = getInternal(targetState);
@@ -118,26 +122,30 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
   };
 
   setStatus(true, null, false);
-  const handleErr = (err: any): ActionReturn => {
+  const handleErr = (err: any): ActionReturnInner => {
     FN_DEP_KEYS.del();
     setStatus(false, err, false);
     if (throwErr) {
       throw err;
     }
-    return { snap: internal.snap, err, result: null };
+    return { snap: internal.snap, err, result: null, setStatus };
   };
-  const handlePartial = (partial: any): ActionReturn => {
+  const handlePartial = (partial: any): ActionReturnInner => {
     // 来自 mutate 调用时，task 返回结果自动合并
     if (mergeReturn) {
       partial && setState(partial);
     }
-    setStatus(false, null, true);
+    // 没有透传 skipResolve 时，才能在这里主动标记 loading 为 false
+    // 否则需要在外部自己去标记，如 wrapAndMapAction 里
+    if (!skipResolve) {
+      setStatus(false, null, true);
+    }
     // 这里需要主动 flush 一次，让返回的 snap 是最新值（ flush 内部会主动判断 reactive 是否已过期，不会有冗余的刷新动作产生 ）
     // const nextState = actions.xxxMethod(); //  nextState 为最新值
     // 同时多个 action 组合使用时，下一个 action 可自动获取到最新的 draft
     flush(desc);
     // TODO  add afterAction lifecycle
-    return { snap: internal.snap, err: null, result: partial };
+    return { snap: internal.snap, err: null, result: partial, setStatus };
   };
   const handlePromResult = (result: any) => Promise.resolve(result).then(handlePartial).catch(handleErr);
 
@@ -157,6 +165,8 @@ export function callAsyncMutateFnLogic<T = SharedState>(targetState: T, options:
       // 已确定了结果为非 promise 对象时，调用 handlePartial 即可
       || !isResultProm
     ) {
+      // 这里 result 可能是一个 rejected 的 Promise
+      // wrapAndMapAction 里会进一步处理
       return handlePartial(result);
     }
 

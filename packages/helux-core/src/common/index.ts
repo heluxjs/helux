@@ -7,6 +7,9 @@ export function getParentKey(keyDict: Dict, depKey: string) {
   return parentKey;
 }
 
+/**
+ * 判断数组里那个元素是 depKey 的父串并返回
+ */
 export function getParentKeyFromArr(keyArr: string[], depKey: string) {
   /**
    * 加第三个参数 KEY_SPLITER 是为了避免如下情况的误判

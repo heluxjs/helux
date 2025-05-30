@@ -28,6 +28,8 @@ export const IS_BLOCK = createSymbol('HeluxIsBlock');
 /** see if the target is returned by atom api */
 export const IS_ATOM = createSymbol('HeluxIsAtom');
 
+export const HELUX_BLOCK_PARAMS = createSymbol('HeluxBlockParams');
+
 /** see if the target is returned by deriveAtom api */
 export const IS_DERIVED_ATOM = createSymbol('HeluxIsDerivedAtom');
 

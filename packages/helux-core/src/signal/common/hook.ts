@@ -1,3 +1,4 @@
+import { noop } from '@helux/utils';
 import { isDerivedAtom } from '../../factory/common/atom';
 import { delBlockCtx, markBlockMounted } from '../../helpers/blockCtx';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
@@ -9,9 +10,11 @@ export function useStateDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate
   useWatchSimpleLogic(apiCtx, forceUpdate, { manualDepKeys: blockCtx.depKeys });
 }
 
-export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn) {
+export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn, useStatusList: Fn) {
   let status: LoadingStatus = { loading: false, err: null, ok: true };
   useStateDep(apiCtx, blockCtx, forceUpdate);
+  const statusList: LoadingStatus[] = useStatusList() || [];
+  statusList.forEach((v) => noop(v.loading)); // 触发一下读取动作，表示关心 status 变化
 
   // use result dep, find one non-ok status
   blockCtx.results.forEach((result) => {
@@ -23,6 +26,16 @@ export function useDep(apiCtx: CoreApiCtx, blockCtx: IBlockCtx, forceUpdate: Fn)
       status = fnCtx.status;
     }
   });
+
+  if (!status.loading && !status.err) {
+    for (const item of statusList) {
+      if (item.loading || item.err) {
+        status = item;
+        break;
+      }
+    }
+  }
+
   return status;
 }
 

@@ -63,10 +63,23 @@ function wrapAndMapAction(actions: Dict, options: Dict) {
     const ret = actionFn(...args);
     // actionFn 调用完毕后，内部会确认 task 是否是 promise 函数，故此处可拿到准确的结果
     if (isTaskProm(actionTask)) {
-      return Promise.resolve(ret).then((data) => {
-        // action 和 eAction 返回结果不一样，针对 action 需提取出 result 再返回
-        return isEAction ? data : data.result;
-      });
+      return Promise.resolve(ret.result)
+        .then((result) => {
+          // action 和 eAction 返回结果不一样，针对 action 需提取出 result 再返回
+          const { setStatus, snap } = ret;
+          setStatus(false, null, true); // loading err ok
+          return isEAction ? { snap, result, err: null } : result;
+        })
+        .catch((err) => {
+          const { setStatus, snap } = ret;
+          // 让 useLoading 同步到相关 action 运行的错误状态
+          setStatus(false, err, false);
+          // 对于 eAtions 调用，静默错误并携带到返回体里提供给用户使用
+          if (isEAction) {
+            return { snap, result: null, err };
+          }
+          throw err;
+        });
     }
     return isEAction ? ret : ret.result;
   };

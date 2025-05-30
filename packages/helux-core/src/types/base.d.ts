@@ -1,4 +1,4 @@
-import type { ForwardedRef, FunctionComponent, PropsWithChildren, ReactNode } from '@helux/types';
+import type { FunctionComponent, PropsWithChildren, ReactNode } from '@helux/types';
 import type { IOperateParams as OpParams } from 'limu';
 import type { DepKeyInfo } from './inner';
 
@@ -85,8 +85,8 @@ export type UnconfirmedArg = ValidArg | void;
 /** 调用时如未指定具体 payload 类型，收窄为 UnconfirmedArg，让用户不传递也能类型校验通过 */
 export type PayloadType<P extends Dict | undefined = undefined, K = any> = P extends Dict
   ? K extends keyof P
-  ? P[K]
-  : UnconfirmedArg
+    ? P[K]
+    : UnconfirmedArg
   : UnconfirmedArg;
 
 // use Awaited instead
@@ -170,9 +170,31 @@ export interface IBlockOptions<P = object> {
    * memo 的比较函数，默认走 react 内置的浅比较规则，如确定 block 不传递任何 props，建议设置为 ()=>true
    */
   compare?: (prevProps: Readonly<PropsWithChildren<P>>, nextProps: Readonly<PropsWithChildren<P>>) => boolean;
+  /**
+   * 用户关注的 action 函数 status
+   */
+  useStatusList?: () => LoadingStatus[];
+}
+
+export type RenderCbType = 'forwardRef' | 'memo' | 'normal';
+
+export interface IBlockOptionsWithRead<P = object> extends IBlockOptions<P> {
+  /**
+   * 读取函数，创建 block 时会自动执行此函数并锁定相关依赖
+   */
+  read?: Fn;
+  ref?: any;
+  /** 来自 BlockView 透传的其他属性 */
+  viewProps?: any;
+  cbType?: RenderCbType;
+  useStatusList?: () => LoadingStatus[];
+  isFormatAsComp?: boolean;
+  blockCtx?: any;
 }
 
 export type BlockOptionsType = EnableStatus | IBlockOptions;
+
+export type BlockOptionsWithReadType = EnableStatus | IBlockOptionsWithRead;
 
 /**
  * block 渲染函数内部存在判断逻辑时，可使用 read 提前锁定住相关依赖
@@ -183,9 +205,21 @@ export type BlockOptionsType = EnableStatus | IBlockOptions;
  */
 export type Read = <P extends readonly any[] = readonly any[]>(...args: P) => P;
 
-export type BlockParams<P = object, T = any> = { props: P; status: LoadingStatus; read: Read; ref?: ForwardedRef<T> };
+export interface IBlockParams<P = object> {
+  props: P;
+  status: LoadingStatus;
+  /**
+   * 读函数，用于锁定依赖，同时会返回数据
+   */
+  read: Read;
+  /**
+   * 是否是假的 blockParams 参数，避免用户频繁使用可选链，可安全切换组件渲染模式为block或非block，
+   * 注：在 block 函数里渲染的组件可获取到真的 blockParams 参数
+   */
+  isFake: boolean;
+}
 
-export type BlockCb<P = object, T = any> = (props: P, params?: BlockParams<T>) => ReactNode;
+export type BlockCb<P = object, T = any> = (props: P, params?: IBlockParams<T>) => ReactNode;
 
 // maybe add a new interface that pass 3 args in the future ?
 // export type BlockCbV2<P = object> = (props: P, ref?: ForwardedRef<any>, blockCtx: BlockCbCtx) => ReactNode;
@@ -323,6 +357,8 @@ export interface IActionTaskParams<T = any, P = UnconfirmedArg> {
 export type ActionReturn<R = any, T = any> = { result: R; err: Error | null; snap: NextSharedDict<T> };
 
 export type ActionAsyncReturn<R = any, T = any> = Promise<{ result: R; err: Error | null; snap: NextSharedDict<T> }>;
+
+export type ActionReturnInner = ActionReturn & { setStatus: Fn };
 
 export type Action<F extends Fn = Fn, P = any, T = SharedDict> = (payload: P, throwErr?: boolean) => ActionReturn<ReturnType<F>, T>;
 
@@ -744,8 +780,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-  ? SyncerFn
-  : { [key in keyof T['val']]: SyncerFn }
+    ? SyncerFn
+    : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -754,8 +790,8 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-  ? DerivedAtom<ReturnType<T['fn']>>
-  : DerivedAtom<any>
+    ? DerivedAtom<ReturnType<T['fn']>>
+    : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
@@ -851,8 +887,8 @@ type DefineFullDerive<T extends JSONDict = JSONDict> = <DR extends DepsResultDic
    * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
    */
   D extends DR extends DepsResultDict
-  ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
-  : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
+    ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
+    : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
 >(
   deriveFnDict: D | ((boundStateInfo: IBoundStateInfo<T>) => D),
 ) => {
@@ -919,7 +955,7 @@ export interface ISharedStateCtxBase<T = any, E = any, O extends ICreateOptions<
   syncer: Syncer<T>;
   setState: SetState<T>;
   setDraft: SetDraft<T>;
-  extra: E,
+  extra: E;
   setExtra: (partial: Partial<E>) => void;
   mutate: <P extends Arr = Arr>(fnItem: IMutateFnLooseItem<T, P> | MutateFn<T, P>) => IMutateWitness<T>;
   runMutate: (descOrOptions: string | IRunMutateOptions) => T;
@@ -1150,8 +1186,8 @@ export interface ISharedStateCtxBase<T = any, E = any, O extends ICreateOptions<
     isMultiPayload?: boolean,
   ) => <
     D extends Dict<Fn> = P extends Dict
-    ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
-    : { [K in string]: ActionTask<T, UnconfirmedArg> },
+      ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
+      : { [K in string]: ActionTask<T, UnconfirmedArg> },
   >(
     /** action 函数定义字典集合 */
     actionFnDefs: D,
@@ -2059,20 +2095,20 @@ export type HXTypeByAD<A = any, AS extends Dict<any> = Dict<any>, DS extends Dic
     getPrevDeps: () => string[];
   };
   atoms: AS extends Dict
-  ? {
-    [K in keyof AS]: {
-      state: AS[K] extends ReadOnlyAtom ? AtomValType<AS[K]> : AS[K];
-      setState: SetState<AS[K]>;
-      time: number;
-      isAtom: boolean;
-      setDraft: SetDraft<AS[K]>;
-      insKey: 0;
-      sn: 0;
-      getDeps: () => string[];
-      getPrevDeps: () => string[];
-    };
-  }
-  : {};
+    ? {
+        [K in keyof AS]: {
+          state: AS[K] extends ReadOnlyAtom ? AtomValType<AS[K]> : AS[K];
+          setState: SetState<AS[K]>;
+          time: number;
+          isAtom: boolean;
+          setDraft: SetDraft<AS[K]>;
+          insKey: 0;
+          sn: 0;
+          getDeps: () => string[];
+          getPrevDeps: () => string[];
+        };
+      }
+    : {};
   deriveds: DS extends Dict ? { [K in keyof DS]: DerivedResultType<DS[K]> } : {};
 };
 

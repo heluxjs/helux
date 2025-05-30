@@ -193,8 +193,9 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
       const {
         insCtx: { proxyState, internal, extra, renderInfo },
       } = useAtomLogic(apiCtx, loadingProxy);
+      const statusDict = createSafeLoading(extra, proxyState, from);
       // 注意此处用实例的 extra 记录 safeLoading，实例存在期间 safeLoading 创建一次后会被后续一直复用
-      return [createSafeLoading(extra, proxyState, from), internal.setState, renderInfo];
+      return [statusDict, internal.setState, renderInfo];
     };
   }
 

@@ -18,9 +18,9 @@ import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type {
-  BlockOptionsType,
+  BlockOptionsWithReadType,
   Dict,
-  IBlockOptions,
+  IBlockOptionsWithRead,
   ICreateOptions,
   IInnerCreateOptions,
   IMutateFnLooseItem,
@@ -364,13 +364,19 @@ export function parseWatchOptions(forEffect: boolean, options?: WatchOptionsType
   return { immediate, deps };
 }
 
-export function parseBlockOptions(options?: BlockOptionsType): IBlockOptions {
+export function parseBlockOptions(options?: BlockOptionsWithReadType, shouldUseRead?: boolean): IBlockOptionsWithRead {
   if (!options) return {};
   if (typeof options === 'boolean') {
     return { enableStatus: options };
   }
-  if (isObj(options)) {
-    return options;
+  if (!isPlainObj(options)) {
+    return {};
   }
-  return {};
+
+  if (!shouldUseRead) {
+    // 剔除可能包含的 read 函数，因此函数值允许由内部的 signal 调用来传递
+    const { read, ...rest } = options;
+    return rest;
+  }
+  return options;
 }

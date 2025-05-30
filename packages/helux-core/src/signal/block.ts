@@ -1,6 +1,8 @@
+import { noopAny } from '@helux/utils';
+import { HELUX_BLOCK_PARAMS } from '../consts';
 import type { CoreApiCtx } from '../types/api-ctx';
-import type { BlockCb, BlockOptionsType } from '../types/base';
-import { blockLogic } from './common/blockLogic';
+import type { BlockCb, BlockOptionsType, IBlockOptionsWithRead, IBlockParams } from '../types/base';
+import { blockLogic, blockLogicWithRead } from './common/blockLogic';
 
 /**
  * 生成 Block 组件，会自动绑定视图中的状态依赖
@@ -17,4 +19,27 @@ export function block<P = object>(apiCtx: CoreApiCtx, cb: BlockCb<P>, options?: 
 export function dynamicBlock<P = object>(apiCtx: CoreApiCtx, cb: BlockCb<P>, options?: BlockOptionsType) {
   const Block = blockLogic({ apiCtx, isDynamic: true, cb }, options);
   return Block;
+}
+
+/**
+ * 功能同 dynamicBlock，内部专用函数
+ */
+export function dynamicBlockWithRead<P = object>(apiCtx: CoreApiCtx, cb: BlockCb<P>, options?: IBlockOptionsWithRead) {
+  const Block = blockLogicWithRead({ apiCtx, isDynamic: true, cb }, options);
+  return Block;
+}
+
+/**
+ * 获取 props 上的 blockParams 参数，如果获取不到则返回一个假的参数，表标识 isFake=true
+ * @param props
+ * @returns
+ */
+export function getBlockParams(props: any) {
+  const noop: any = noopAny;
+  const fake: IBlockParams = { props, status: { loading: false, err: null, ok: true }, read: noop, isFake: true };
+  if (!props) {
+    return fake;
+  }
+
+  return props[HELUX_BLOCK_PARAMS] || fake;
 }

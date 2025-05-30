@@ -6,10 +6,10 @@ import { useAtomSimpleLogic } from '../../hooks/common/useAtomLogic';
 import { useDerivedSimpleLogic } from '../../hooks/common/useDerivedLogic';
 import type { CoreApiCtx } from '../../types/api-ctx';
 import type { DerivedAtom, Dict, Fn } from '../../types/base';
+import { noopVal } from './util';
 
 export const alwaysEqual = () => true;
-const noopVal = (val: any) => val;
-interface IWrapSignalCompOpt {
+export interface IWrapSignalCompOpt {
   sharedKey: number;
   sharedState: Dict; // may derived result
   depKey: string;
@@ -19,6 +19,10 @@ interface IWrapSignalCompOpt {
   keyPaths: string[][];
   compare?: Fn;
   format?: Fn;
+  result?: any;
+  /** 第一次渲染时，是否使用透传的 result */
+  shouldUseResult?: any;
+  input?: any;
 }
 
 interface IWrapDerivedAtomSignalCompOpt {
@@ -50,7 +54,7 @@ export function wrapComp(apiCtx: CoreApiCtx, Comp: any, displayName: string, nee
 }
 
 export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalCompOpt): FunctionComponent {
-  const { sharedState, depKey, keyPath, keyPaths, compare, sharedKey, format = noopVal } = options;
+  const { sharedState, depKey, keyPath, keyPaths, compare, sharedKey, format = noopVal, shouldUseResult, result, input } = options;
   const Comp = function () {
     const insCtx = useAtomSimpleLogic(apiCtx, sharedState, { arrDep: true });
     if (insCtx.isFirstRender) {
@@ -74,9 +78,13 @@ export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalCompOpt):
         }
       };
       keyPaths.forEach(walkPath);
+      if (shouldUseResult) {
+        return result;
+      }
     }
+
     // 此处用 rawState 替代 sharedState 依然获取最新的状态，同时也减少了代理对象获取的额外运行损耗
-    const val = getVal(insCtx.internal.rawState, keyPath);
+    const val = input ? input() : getVal(insCtx.internal.rawState, keyPath);
     return format(val);
   };
   return wrapComp(apiCtx, Comp, 'HeluxSignal', true, compare);

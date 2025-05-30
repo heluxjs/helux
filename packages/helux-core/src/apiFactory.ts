@@ -2,10 +2,12 @@ import { buildApi } from '@helux/hooks-impl';
 import { Fn, React18Like, ReactLike } from '@helux/types';
 import { noop } from '@helux/utils';
 import * as api from './api';
+import { setApiCtx } from './common/transfer';
 import { CoreApiCtx } from './types/api-ctx';
 import { HeluxApi, model, modelFactory } from './types/model';
 // 依赖 api，故这里二次合并
 import * as modelApi from './factory/createModel';
+import { compareBlockViewProps, compareSignalViewProps, compareV2Props } from './signal/view-compare';
 
 export type AllApi = HeluxApi & { model: typeof model; modelFactory: typeof modelFactory };
 const needApiCtxFns = [
@@ -26,6 +28,11 @@ const needApiCtxFns = [
   'dynamicBlockStatus',
 ];
 
+/**
+ *  这些api需要直接获取转发api，内部调用 getApiCtx 来获取 apiCtx 透传给其他函数
+ */
+const needForwardRefFns = ['SignalView', 'BlockView'];
+
 function shouldInjectApiCtx(key: string) {
   return key.startsWith('use') || needApiCtxFns.includes(key);
 }
@@ -44,6 +51,7 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
   const baseApi: any = { ...hookImpl };
   // 注意用户层面调用api时不需要感知这个参数，由 adapter 层自动绑定
   const apiCtx: CoreApiCtx = { react: to18(react), hookImpl, act };
+  setApiCtx(apiCtx);
   if (act) {
     // to avoid Warning from @testing-library/react:
     // Warning: An update to TestComponent inside a test was not wrapped in act(...)
@@ -56,20 +64,39 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
   }
   const apiVar: any = api; // fot skip ts check instead of ts-ignore
   Object.keys(apiVar).forEach((key) => {
-    const val = apiVar[key];
+    const apiDef = apiVar[key];
+
+    if ('COMPS' === key) {
+      const { SignalView, BlockView, SignalV2, BlockV2 } = apiDef;
+      apiDef.SignalView = react.memo(react.forwardRef(SignalView), compareSignalViewProps);
+      apiDef.BlockView = react.memo(react.forwardRef(BlockView), compareBlockViewProps);
+      apiDef.SignalV2 = react.memo(react.forwardRef(SignalV2), compareV2Props);
+      apiDef.BlockV2 = react.memo(react.forwardRef(BlockV2), compareV2Props);
+      baseApi[key] = apiDef;
+      return;
+    }
+
     if (shouldInjectApiCtx(key)) {
       // code 1:
-      // baseApiVar[key] = (...args: any[]) => val(apiCtx, ...args) };
+      // baseApiVar[key] = (...args: any[]) => apiDef(apiCtx, ...args) };
 
       // code 2: give arrow function a name;
-      // const wrap = { [key]: (...args: any[]) => val(apiCtx, ...args) };
+      // const wrap = { [key]: (...args: any[]) => apiDef(apiCtx, ...args) };
       // baseApiVar[key] = wrap[key];
 
       // code 3: use bind
-      baseApi[key] = val.bind(null, apiCtx);
-    } else {
-      baseApi[key] = val;
+      baseApi[key] = apiDef.bind(null, apiCtx);
+      return;
     }
+
+    if (needForwardRefFns.includes(key)) {
+      const Comp = apiCtx.react.forwardRef(apiDef);
+      Comp.displayName = key;
+      baseApi[key] = Comp;
+      return;
+    }
+
+    baseApi[key] = apiDef;
   });
 
   const allApi = {
