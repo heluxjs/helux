@@ -9,11 +9,6 @@ const api = initHeluxContext({ heluxCtxKey: '__HELUX__', reactLib: React });
  */
 export const createShared = api.share;
 
-// SignalView，BlockView 类型上是从 api 导出的，但实际是从 COMPS 导出的，因他们要在 apiFactory 被 memo 包裹一下
-// @ts-ignore
-const { COMPS } = api;
-export const { SignalView, SignalV2, BlockView, BlockV2 } = COMPS;
-
 // 导出 core 所有方法，类型由 index.d.ts 提供（见 package.json 的 types 配置）
 export const {
   atom,
@@ -63,6 +58,10 @@ export const {
   block,
   dynamicBlock,
   getBlockParams,
+  SignalView,
+  SignalV2,
+  BlockView,
+  BlockV2,
   $,
   // mutate api
   mutate,
