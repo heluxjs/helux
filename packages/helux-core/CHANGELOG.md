@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.4.2
+
+### Patch Changes
+
+- 2f1563e: optimize apiFactory
+  - @helux/hooks-impl@5.4.2
+  - @helux/types@5.4.2
+  - @helux/utils@5.4.2
+
 ## 5.4.1
 
 ### Patch Changes

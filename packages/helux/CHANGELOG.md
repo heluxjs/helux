@@ -1,5 +1,13 @@
 # helux
 
+## 5.4.2
+
+### Patch Changes
+
+- 2f1563e: optimize apiFactory
+- Updated dependencies [2f1563e]
+  - @helux/core@5.4.2
+
 ## 5.4.1
 
 ### Patch Changes

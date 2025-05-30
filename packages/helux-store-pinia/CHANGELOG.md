@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 4.0.2
+
+### Patch Changes
+
+- 2f1563e: optimize apiFactory
+- Updated dependencies [2f1563e]
+  - helux@5.4.2
+
 ## 4.0.1
 
 ### Patch Changes
