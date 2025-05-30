@@ -63,9 +63,9 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
       const { memo, forwardRef } = react;
       const { SignalView, BlockView, SignalV2, BlockV2 } = apiDef;
       baseApi.SignalView = memo(forwardRef(SignalView), compareSignalViewProps);
-      // apiDef.Signal = apiDef.SignalView; // should I expose this, it is similar with signal
+      // baseApi.Signal = baseApi.SignalView; // should I expose this, it is similar with signal
       baseApi.BlockView = memo(forwardRef(BlockView), compareBlockViewProps);
-      // apiDef.Block = apiDef.BlockView; // should I expose this, it is similar with block
+      // baseApi.Block = baseApi.BlockView; // should I expose this, it is similar with block
       baseApi.SignalV2 = memo(forwardRef(SignalV2), compareV2Props);
       baseApi.BlockV2 = memo(forwardRef(BlockV2), compareV2Props);
       return;
