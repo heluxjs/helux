@@ -37,7 +37,6 @@ import {
   useWatch,
   useWatchEffect,
 } from './hooks';
-// import { block, dynamicBlock, getBlockParams, signal, SignalView, BlockView } from './signal';
 import { block, COMPS, dynamicBlock, getBlockParams, signal } from './signal';
 
 const { shallowCompare, isDiff, isDraft } = limuUtils;

@@ -23,9 +23,7 @@ const needApiCtxFns = [
   '$',
   'signal',
   'block',
-  'blockStatus',
   'dynamicBlock',
-  'dynamicBlockStatus',
 ];
 
 /**
@@ -67,11 +65,14 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
     const apiDef = apiVar[key];
 
     if ('COMPS' === key) {
+      const { memo, forwardRef } = react;
       const { SignalView, BlockView, SignalV2, BlockV2 } = apiDef;
-      apiDef.SignalView = react.memo(react.forwardRef(SignalView), compareSignalViewProps);
-      apiDef.BlockView = react.memo(react.forwardRef(BlockView), compareBlockViewProps);
-      apiDef.SignalV2 = react.memo(react.forwardRef(SignalV2), compareV2Props);
-      apiDef.BlockV2 = react.memo(react.forwardRef(BlockV2), compareV2Props);
+      apiDef.SignalView = memo(forwardRef(SignalView), compareSignalViewProps);
+      // apiDef.Signal = apiDef.SignalView; // should I expose this, it is similar with signal
+      apiDef.BlockView = memo(forwardRef(BlockView), compareBlockViewProps);
+      // apiDef.Block = apiDef.BlockView; // should I expose this, it is similar with block
+      apiDef.SignalV2 = memo(forwardRef(SignalV2), compareV2Props);
+      apiDef.BlockV2 = memo(forwardRef(BlockV2), compareV2Props);
       baseApi[key] = apiDef;
       return;
     }
