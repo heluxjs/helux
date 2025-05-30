@@ -31,14 +31,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "helux": "^5.4.0",
+    "helux": "^5.4.1",
     "redux": "^4.2.1"
   },
   "devDependencies": {
     "terser": "^5.29.1"
   },
   "peerDependencies": {
-    "helux": "^5.4.0",
+    "helux": "^5.4.1",
     "redux": "^4.2.1"
   },
   "bundleDependencies": false,

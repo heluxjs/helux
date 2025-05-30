@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.4.1
+
+### Patch Changes
+
+- e8a3956: change consts/ver
+  - @helux/hooks-impl@5.4.1
+  - @helux/types@5.4.1
+  - @helux/utils@5.4.1
+
 ## 5.4.0
 
 ### Minor Changes

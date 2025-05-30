@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 4.0.1
+
+### Patch Changes
+
+- helux@5.4.1
+
 ## 4.0.0
 
 ### Minor Changes
