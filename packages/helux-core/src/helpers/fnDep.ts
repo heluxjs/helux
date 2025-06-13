@@ -125,12 +125,13 @@ export function getDepFnStats(internal: TInternal, depKey: string, runCountStats
   const fnKeys = map.get(depKey) || [];
   const firstLevelFnKeys: string[] = [];
   const asyncFnKeys: string[] = [];
+  const { disableProxy } = internal;
 
   fnKeys.forEach((fnKey) => {
     const fnCtx = getFnCtx(fnKey);
     if (!fnCtx) return;
-    // 子串对应值变化才加入到 firstLevelFnKeys
-    if (hasChangedNode(internal, fnCtx.depKeys, depKey)) {
+    // 子串对应值变化时、或禁用代理时，将其加入到 firstLevelFnKeys
+    if (hasChangedNode(internal, fnCtx.depKeys, depKey) || disableProxy) {
       if (fnCtx.isFirstLevel) {
         firstLevelFnKeys.push(fnKey);
       }

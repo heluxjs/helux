@@ -43,12 +43,13 @@ interface ICommon {
   isAtom: boolean;
 }
 
-export function ensureGlobal(apiCtx: CoreApiCtx, inputStateType?: string) {
-  const stateType = inputStateType || USER_STATE;
-  if (USER_STATE === stateType && !getGlobalEmpty()) {
-    initGlobalEmpty(apiCtx, createSharedLogic);
+export function ensureGlobal(apiCtx: CoreApiCtx) {
+  let globalEmpty = getGlobalEmpty();
+  if (!globalEmpty) {
+    globalEmpty = initGlobalEmpty(apiCtx, createSharedLogic);
     initGlobalLoading(apiCtx, createSharedLogic);
   }
+  return globalEmpty;
 }
 
 function wrapAndMapAction(actions: Dict, options: Dict) {
@@ -197,13 +198,21 @@ function setEnableMutate(enabled: boolean, internal: TInternal) {
 }
 
 function getOptions(internal: TInternal): CtxCreateOptions {
-  const { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate, extra } = internal;
-  return { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate, extra };
+  const {
+    moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle,
+    enableMutate, extra, disableProxy,
+  } = internal;
+  return {
+    moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle,
+    enableMutate, extra, disableProxy
+  };
 }
 
 export function createSharedLogic(innerOptions: IInnerOptions, createOptions?: any): any {
   const { stateType, apiCtx } = innerOptions;
-  ensureGlobal(apiCtx, stateType);
+  if (USER_STATE === stateType) {
+    ensureGlobal(apiCtx);
+  }
   const { sharedRoot: stateRoot, sharedState: state, internal } = buildSharedObject(innerOptions, createOptions);
   const { syncer, sync, forAtom, setState, setDraft, sharedKey, sharedKeyStr, rootValKey, reactive, reactiveRoot } = internal;
   const actionCreator = action(stateRoot);

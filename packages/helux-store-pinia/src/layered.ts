@@ -1,15 +1,24 @@
 import { getSnap, sharex, type ISharedCtx, type IUseSharedStateOptions } from 'helux';
 import { useState } from 'react';
-import type { IDefineStoreOptions, ILayeredStoreCtx } from './types';
+import type { HeluxOptions, IDefineStoreOptions, ILayeredStoreCtx } from './types';
 import { extractOptions, makeLifecycle, makeWrapActions, makeWrapDerived } from './util';
 
-export function defineLayeredStore(moduleName: string, options: IDefineStoreOptions<{}, {}, {}>): ILayeredStoreCtx<{}, {}, {}> {
+export function defineLayeredStore(
+  moduleName: string,
+  options: IDefineStoreOptions<{}, {}, {}>,
+  heluxOptions?: HeluxOptions,
+): ILayeredStoreCtx<{}, {}, {}> {
   const { firstVerState, lifecycle, userGetters, userActions, stateFn } = extractOptions(true, options);
-  const ctx = sharex(firstVerState, { moduleName }) as ISharedCtx;
+  const ctx = sharex(firstVerState, { ...(heluxOptions || {}), moduleName }) as ISharedCtx;
   const { state } = ctx;
+  const reset = () => ctx.setState(stateFn());
 
   const { derivedState, useDerivedState } = makeWrapDerived(ctx, { userGetters, userActions }, true);
-  const { wrapActions, getLoading, useLoading } = makeWrapActions(ctx, { userGetters, derived: derivedState, userActions }, true);
+  const { wrapActions, getLoading, useLoading } = makeWrapActions(
+    ctx,
+    { userGetters, derived: derivedState, userActions, reset },
+    true,
+  );
   // 创建生命周期
   makeLifecycle(ctx, lifecycle, { userGetters, userActions, wrapActions, derivedState, isLayered: true });
 
@@ -36,9 +45,7 @@ export function defineLayeredStore(moduleName: string, options: IDefineStoreOpti
     },
     getLoading,
     useLoading,
-    reset: () => {
-      ctx.setState(stateFn());
-    },
+    reset,
     getSnap: (latest = true) => {
       const isPrevSnap = !latest;
       return getSnap(state, isPrevSnap);

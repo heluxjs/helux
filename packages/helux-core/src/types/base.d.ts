@@ -58,11 +58,11 @@ export interface ILifecycle<T extends any = any> {
    */
   afterCommit?: (params: AfterFnParams<T>) => void;
   /**
-   * 任何读行为都会触发此函数
+   * 任何读行为都会触发此函数（注： disableProxy=true 时此函数不会触发）
    */
   onRead?: OnRead;
   /**
-   * 任何写行为都会触发此函数
+   * 任何写行为都会触发此函数（注： disableProxy=true 时此函数不会触发）
    */
   onWrite?: OnWrite;
 }
@@ -85,8 +85,8 @@ export type UnconfirmedArg = ValidArg | void;
 /** 调用时如未指定具体 payload 类型，收窄为 UnconfirmedArg，让用户不传递也能类型校验通过 */
 export type PayloadType<P extends Dict | undefined = undefined, K = any> = P extends Dict
   ? K extends keyof P
-    ? P[K]
-    : UnconfirmedArg
+  ? P[K]
+  : UnconfirmedArg
   : UnconfirmedArg;
 
 // use Awaited instead
@@ -586,6 +586,8 @@ export interface IMutateCtx {
   ids: NumStrSymbol[];
   globalIds: NumStrSymbol[];
   writeKeys: Dict;
+  /** 所有的发生变化的数组索引 */
+  writeArrKeys: Dict;
   /**
    * 记录读过的 key，用于提前发现 mutate 里 draft.a+=1 时回导致死循环情况出现，并提示用户
    */
@@ -780,8 +782,8 @@ export type SyncFnBuilder<T = SharedState, V = any> = (
 
 export type Syncer<T = SharedState> = T extends Atom | ReadOnlyAtom
   ? T['val'] extends Primitive
-    ? SyncerFn
-    : { [key in keyof T['val']]: SyncerFn }
+  ? SyncerFn
+  : { [key in keyof T['val']]: SyncerFn }
   : { [key in keyof T]: SyncerFn };
 
 export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOptions<T>> = O['mutate'] extends MutateFnDict<T>
@@ -790,8 +792,8 @@ export type SafeLoading<T = SharedState, O extends ICreateOptions<T> = ICreateOp
 
 type FnResultType<T extends PlainObject | DeriveFn> = T extends PlainObject
   ? T['fn'] extends Fn
-    ? DerivedAtom<ReturnType<T['fn']>>
-    : DerivedAtom<any>
+  ? DerivedAtom<ReturnType<T['fn']>>
+  : DerivedAtom<any>
   : T extends DeriveFn
   ? DerivedAtom<ReturnType<T>>
   : DerivedAtom<any>;
@@ -887,8 +889,8 @@ type DefineFullDerive<T extends JSONDict = JSONDict> = <DR extends DepsResultDic
    * 加上 & Dict 是为了支持用户配置 DR 之外的其他结果，不严格要求所有结果 key 都需要在 DR 里定义类型
    */
   D extends DR extends DepsResultDict
-    ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
-    : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
+  ? MultiDeriveFn<DR> & Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>
+  : Dict<DeriveFn<any, any, T> | IDeriveFnItem<any, any, T>>,
 >(
   deriveFnDict: D | ((boundStateInfo: IBoundStateInfo<T>) => D),
 ) => {
@@ -1186,8 +1188,8 @@ export interface ISharedStateCtxBase<T = any, E = any, O extends ICreateOptions<
     isMultiPayload?: boolean,
   ) => <
     D extends Dict<Fn> = P extends Dict
-      ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
-      : { [K in string]: ActionTask<T, UnconfirmedArg> },
+    ? { [K in keyof P]: ActionTask<T, P[K]> } & { [K in string]: ActionTask<T, UnconfirmedArg> }
+    : { [K in string]: ActionTask<T, UnconfirmedArg> },
   >(
     /** action 函数定义字典集合 */
     actionFnDefs: D,
@@ -1298,6 +1300,8 @@ export interface BeforeFnParams<T = SharedState> {
   draftRoot: DraftRootType<T>;
   /** 草稿对象, 对于 shared 来说，draft 就是根对象，对于 atom 来说，draft 是已拆箱值 */
   draft: DraftType<T>;
+  /** 是否处于禁用代理状态 */
+  disableProxy: boolean;
 }
 
 export interface AfterFnParams<T = SharedState> {
@@ -1311,6 +1315,8 @@ export interface AfterFnParams<T = SharedState> {
   sn: number;
   /** 触发自哪里 */
   from: From;
+  /** 是否处于禁用代理状态 */
+  disableProxy: boolean;
 }
 
 export interface IDataRule<T = any> {
@@ -1411,6 +1417,11 @@ export interface ICreateOptionsFull<T = SharedState> {
    * 这些数据放 state 里会被代理，更适合放extra
    */
   extra: Dict;
+  /**
+   * default: false，（v5.5 新增）
+   * 关闭代理行为，关闭后底层将不再使用 limu 生成结构共享数据，任何改变数据的行为都将导致所有引用共享状态的组件刷新、所有计算函数重计算
+   */
+  disableProxy: boolean;
 }
 
 /**
@@ -1519,10 +1530,10 @@ export interface IUseSharedStateOptions<T = any> {
    * 此参数在 arrDep=true 时设置有效，arrDep=false 时，arrIndexDep 被自动强制设为 true
    *
    * ```ts
-   * arrDep=true arrIndexDep = true
+   * arrDep=true arrIndexDep=true
    * // deps: list list[0] list[...]
    *
-   * arrDep=true arrIndexDep = false
+   * arrDep=true arrIndexDep=false
    * // deps: list
    *
    * arrDep=false
@@ -1534,12 +1545,19 @@ export interface IUseSharedStateOptions<T = any> {
 
 export interface IInnerUseSharedOptions<T = any> extends IUseSharedStateOptions<T> {
   /**
-   * 全局id，在 ICreateOptionsFull.rules 子项里配置 globalIds，
+   * 全局id 列表，在 ICreateOptionsFull.rules 子项里配置 globalIds，
    * 此 id 需通过 useGlobalId 设定
    */
-  globalId?: NumStrSymbol;
+  globalIds?: NumStrSymbol[];
   forAtom?: boolean;
+  /** default:false, 是否是 useReactive 创建的 insCtx */
   isReactive?: boolean;
+  /** default:false, 是否是 useLoading 创建的 insCtx */
+  isLoading?: boolean;
+  /** default:false, 是否是 useGlobalId 创建的 insCtx */
+  isGlobalId?: boolean;
+  /** default: false, 调用 immut 时是否禁用代理生成 */
+  disableProxy?: boolean;
 }
 
 export interface ISetStateOptions {
@@ -1807,6 +1825,12 @@ export interface IInsCtx<T = Dict> {
   isFirstRender: boolean;
   /** 是否响应式，使用 useReactive 生成 inCtx 时会标记为 true */
   isReactive: boolean;
+  /** 是否是 useLoading 创建的 insCtx */
+  isLoading: boolean;
+  /** 是否是 useGlobalId 创建的 insCtx */
+  isGlobalId: boolean;
+  /** 创建 insCtx 时记录的 disableProxy 值，为 true 表示不用为返回的对象生成代理 */
+  disableProxy: boolean;
   insKey: number;
   /** 记录一些需复用的中间生成的数据 */
   extra: Dict;
@@ -1817,6 +1841,7 @@ export interface IInsCtx<T = Dict> {
   proxyStateVal: Dict;
   sharedKey: number;
   rootVal: any;
+  arrIndexDep: boolean;
   updater: Fn;
   /** 未挂载 已挂载 已卸载 */
   mountStatus: MountStatus;
@@ -1828,8 +1853,8 @@ export interface IInsCtx<T = Dict> {
   /** 实例读取数据对应的版本号 */
   ver: number;
   id: NumStrSymbol;
-  /** 全局id，此属性只服务于 useGlobaId 设定的 globalId */
-  globalId: NumStrSymbol;
+  /** 全局id 列表，此属性只服务于 useGlobaId 设定的 globalId */
+  globalIds: NumStrSymbol[];
   /**
    * default: every
    * 使用钩子函数时透传的能否收集依赖的标记
@@ -2095,20 +2120,20 @@ export type HXTypeByAD<A = any, AS extends Dict<any> = Dict<any>, DS extends Dic
     getPrevDeps: () => string[];
   };
   atoms: AS extends Dict
-    ? {
-        [K in keyof AS]: {
-          state: AS[K] extends ReadOnlyAtom ? AtomValType<AS[K]> : AS[K];
-          setState: SetState<AS[K]>;
-          time: number;
-          isAtom: boolean;
-          setDraft: SetDraft<AS[K]>;
-          insKey: 0;
-          sn: 0;
-          getDeps: () => string[];
-          getPrevDeps: () => string[];
-        };
-      }
-    : {};
+  ? {
+    [K in keyof AS]: {
+      state: AS[K] extends ReadOnlyAtom ? AtomValType<AS[K]> : AS[K];
+      setState: SetState<AS[K]>;
+      time: number;
+      isAtom: boolean;
+      setDraft: SetDraft<AS[K]>;
+      insKey: 0;
+      sn: 0;
+      getDeps: () => string[];
+      getPrevDeps: () => string[];
+    };
+  }
+  : {};
   deriveds: DS extends Dict ? { [K in keyof DS]: DerivedResultType<DS[K]> } : {};
 };
 

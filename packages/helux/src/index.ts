@@ -45,6 +45,7 @@ export const {
   useObject,
   useLocalForceUpdate,
   useGlobalForceUpdate,
+  useLockDep,
   // for react class component
   bindAtom,
   withAtom,
@@ -99,6 +100,7 @@ export const {
   getRawState,
   getSnap,
   getAtom,
+  getCurrentProxy,
   addMiddleware,
   addPlugin,
   cst,

@@ -1,8 +1,10 @@
+import { noop } from '@helux/utils';
+import { finishImmut } from 'limu';
 import { DICT, MOUNTED, UNMOUNT } from '../../consts';
 import { isAtom } from '../../factory/common/atom';
 import type { InsCtxDef } from '../../factory/creator/buildInternal';
 import { INS_CTX } from '../../factory/creator/current';
-import { delGlobalId, mapGlobalId } from '../../factory/creator/globalId';
+import { delGlobalIds, mapGlobalIds } from '../../factory/creator/globalId';
 import { attachInsProxyState } from '../../helpers/insCtx';
 import { clearDep, recoverDep } from '../../helpers/insDep';
 import { getInternal } from '../../helpers/state';
@@ -60,22 +62,37 @@ export function checkStateVer(insCtx: InsCtxDef) {
 // recover ins ctx (dep,updater etc...) for double mount behavior under react 18 strict mode
 export function recoverInsCtx(insCtx: InsCtxDef) {
   insCtx.mountStatus = MOUNTED;
-  const { id, globalId, insKey } = insCtx;
+  const { id, globalIds, insKey } = insCtx;
   insCtx.internal.recordId(id, insKey);
-  mapGlobalId(globalId, insKey);
+  mapGlobalIds(globalIds, insKey);
   recoverDep(insCtx);
 }
 
 export function delInsCtx(insCtx: InsCtxDef) {
   insCtx.mountStatus = UNMOUNT;
-  const { id, globalId, insKey, internal } = insCtx;
+  const { id, globalIds, insKey, internal, isLoading, isGlobalId } = insCtx;
   internal.delId(id, insKey);
   internal.insCount -= 1;
   if (internal.insCount === 0) {
     internal.lifecycle.willUnmount();
   }
-  delGlobalId(globalId, insKey);
+  delGlobalIds(globalIds, insKey);
   clearDep(insCtx);
+
+  if (isLoading || isGlobalId) {
+    // 1 把组件使用的共享状态对应的伴生状态清理掉
+    // 2 把 useGlobalId 对应状态清理掉
+    try {
+      const proxyState = insCtx.proxyState;
+      finishImmut(proxyState);
+    } catch (err: any) {
+      noop(err);
+      // 对 limu 尝试做数据清理，避免 ROOT_CTX 持有过多的无用 metaMap
+      // err: Not a Limu root draft or draft has been finished!
+      // 这里可静默如上错误，因会有一次 react-dom 的 safelyCallDestroy 调用，
+      // 导致对同一个代理对象做两次结束草稿而报错
+    }
+  }
 }
 
 /**

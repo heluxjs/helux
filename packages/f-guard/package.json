@@ -1,7 +1,7 @@
 {
   "name": "@helux/f-guard",
-  "version": "0.1.0",
-  "description": "Function does nothing, this lib supply noop fn or noop fn maker.",
+  "version": "0.1.2",
+  "description": "Make concurrent function running highly efficient.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
   },
@@ -19,7 +19,7 @@
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "src",

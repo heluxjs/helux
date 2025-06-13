@@ -85,9 +85,9 @@ export function isValChanged(internal: TInternal, depKey: string) {
   }
 }
 
-export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void) {
+export function createImmut(obj: Dict, onOperate: (op: IOperateParams) => void, disableProxy: boolean, sourceId: string) {
   if (isProxyAvailable()) {
-    return immut(obj, { onOperate, compareVer: true });
+    return immut(obj, { sourceId, disableProxy, onOperate, compareVer: true });
   }
 
   // TODO  整合 toShallowProxy 为一个公共方法，并复用到此处

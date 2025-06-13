@@ -1,4 +1,4 @@
-import { canUseDeep } from '@helux/utils';
+import { canUseDeep, noop } from '@helux/utils';
 import { setInternal } from '../../helpers/state';
 import type {
   IInnerSetStateOptions,
@@ -11,6 +11,7 @@ import type {
   SharedState,
 } from '../../types/base';
 import { runPartialCb } from '../common/util';
+import { STATE_TYPE } from '../../consts';
 import { buildInternal } from './buildInternal';
 import { REACTIVE_DESC } from './current';
 import { prepareDeepMutate } from './mutateDeep';
@@ -18,6 +19,10 @@ import { prepareDowngradeMutate } from './mutateDowngrade';
 import { ParsedOptions, parseRules, pureSetOptions } from './parse';
 import { flush } from './reactive';
 import { createSyncerBuilder, createSyncFnBuilder } from './sync';
+
+/** 因外部用不到，这些类型可不用创建 syncer，节省触发的 immut 调用，以便节省内存空间 */
+const noSyncerTypes: string[] = [STATE_TYPE.GLOGAL_EMPTY, STATE_TYPE.GLOGAL_LOADING, STATE_TYPE.PRIVATE_LOADING];
+const fakeBuilder = () => noop;
 
 export function mapSharedToInternal(sharedRoot: SharedState, sharedState: SharedState, options: ParsedOptions) {
   const { deep, forAtom, sharedKey } = options;
@@ -83,7 +88,7 @@ export function mapSharedToInternal(sharedRoot: SharedState, sharedState: Shared
     ruleConf,
     isDeep,
   });
-  internal.sync = createSyncFnBuilder(internal);
+  internal.sync = noSyncerTypes.includes(internal.stateType) ? fakeBuilder : createSyncFnBuilder(internal);
   internal.syncer = createSyncerBuilder(internal);
 
   setInternal(sharedRoot, internal);

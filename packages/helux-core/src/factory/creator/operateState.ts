@@ -38,7 +38,7 @@ function putId(keyIds: KeyIdsDict, options: { writeKey: string; ids: NumStrSymbo
  * 具体是否需要通知相关函数重执行见 notify 逻辑，里面还包含有孩子节点值比较过程
  */
 export function handleOperate(opParams: IOperateParams, opts: { internal: TInternal; mutateCtx: IMutateCtx }) {
-  const { isChanged, fullKeyPath, keyPath, parentType, value } = opParams;
+  const { isChanged, fullKeyPath, keyPath, parentType, value, arrKeyPaths, keyPaths, key } = opParams;
   const { internal, mutateCtx } = opts;
   const { arrKeyDict, isReactive, readKeys, from } = mutateCtx;
   const { sharedKey } = internal;
@@ -90,8 +90,21 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
   }
 
   const { moduleName, ruleConf, level1ArrKeys } = internal;
-  const { writeKeyPathInfo, ids, globalIds, writeKeys } = mutateCtx;
+  const { writeKeyPathInfo, ids, globalIds, writeKeys, writeArrKeys } = mutateCtx;
   const writeKey = getDepKeyByPath(fullKeyPath, sharedKey);
+  if (arrKeyPaths.length) {
+    arrKeyPaths.forEach((arrKeyPath) => {
+      const writeArrKey = getDepKeyByPath(arrKeyPath, sharedKey);
+      writeArrKeys[writeArrKey] = 1;
+    });
+  }
+
+  if (keyPaths.length) {
+    keyPaths.forEach((keyPath) => {
+      const depKey = getDepKeyByPath(keyPath.concat(key), sharedKey);
+      writeKeys[depKey] = 1;
+    });
+  }
 
   // 是一个有效的 reactive
   if (currReactive.key) {

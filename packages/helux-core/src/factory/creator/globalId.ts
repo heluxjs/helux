@@ -22,8 +22,9 @@ export function initGlobalEmpty(apiCtx: CoreApiCtx, createFn: Fn) {
     const internal = getInternal(stateRoot);
     ctx.globalEmpty = stateRoot;
     ctx.globalEmptyInternal = internal;
+    GLOBAL_EMPTY = stateRoot;
+    shared = stateRoot;
   }
-  GLOBAL_EMPTY = shared;
   return shared;
 }
 
@@ -36,15 +37,18 @@ export function getGlobalEmptyInternal() {
   return getRootCtx().globalEmptyInternal;
 }
 
-export function mapGlobalId(id: NumStrSymbol, insKey: number) {
+export function mapGlobalIds(ids: NumStrSymbol[], insKey: number) {
   // 服务端运行时，不做 globalId 映射，避免内存浪费
-  if (!id || RUN_AT_SERVER) return;
-  const keys = getGlobalIdInsKeys(id);
-  nodupPush(keys, insKey);
+  if (RUN_AT_SERVER) return;
+  ids.forEach((id) => {
+    const keys = getGlobalIdInsKeys(id);
+    nodupPush(keys, insKey);
+  });
 }
 
-export function delGlobalId(id: NumStrSymbol, insKey: number) {
-  if (!id) return;
-  const keys = getGlobalIdInsKeys(id);
-  delListItem(keys, insKey);
+export function delGlobalIds(ids: NumStrSymbol[], insKey: number) {
+  ids.forEach((id) => {
+    const keys = getGlobalIdInsKeys(id);
+    delListItem(keys, insKey);
+  });
 }

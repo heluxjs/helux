@@ -1,4 +1,5 @@
-import { getSafeNext, noop, warn } from '@helux/utils';
+import { getSafeNext, getVal, noop, warn } from '@helux/utils';
+import { limuUtils } from 'limu';
 import { RUN_AT_SERVER, SHARED_KEY } from '../consts';
 import { getInternalMap } from '../factory/common/internal';
 import { getSharedScope } from '../factory/common/speedup';
@@ -98,9 +99,9 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
       const locInfo = `\nloc1:${existedInternal.loc} \nloc2:${options.loc}`;
       warn(
         `only-dev-mode tip: moduleName ${moduleName} duplicate! `
-          + 'this does not effect helux but the duplicated module will be ignored by devtool '
-          + 'and the store tree keyed by moduleName'
-          + locInfo,
+        + 'this does not effect helux but the duplicated module will be ignored by devtool '
+        + 'and the store tree keyed by moduleName'
+        + locInfo,
       );
     }
     return;
@@ -108,4 +109,34 @@ export function recordMod(sharedState: Dict, options: ParsedOptions) {
   // may hot replace for dev mode or add new mod
   rootState[usefulName] = sharedState;
   ctx.modMap.set(usefulName, getInternal(sharedState));
+}
+
+export function getCurrentProxyPath(mayProxyDraft: any) {
+  if (!mayProxyDraft) {
+    return [];
+  }
+  const meta = limuUtils.getDraftMeta(mayProxyDraft);
+  if (!meta) {
+    return [];
+  }
+  return meta.keyPath;
+}
+
+/**
+ * 获取代理对象（可能已过期）的最新版本代理对象
+ */
+export function getCurrentProxy(proxyRoot: any, mayProxyDraft: any) {
+  const path = getCurrentProxyPath(mayProxyDraft);
+  let result = mayProxyDraft;
+  if (!path.length) {
+    return [result, false, path];
+  }
+
+  let isGetSucess = true;
+  try {
+    result = getVal(proxyRoot, path);
+  } catch (err: any) {
+    isGetSucess = false;
+  }
+  return [result, isGetSucess, path];
 }

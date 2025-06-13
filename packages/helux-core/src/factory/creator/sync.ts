@@ -27,12 +27,12 @@ export function getEventVal(e: any) {
   return val;
 }
 
-function createTargetWrap(rawState: Dict) {
+function createTargetWrap(rawState: Dict, disableProxy: boolean, sourceId: string) {
   let latestPath: string[] = [];
   // 非 Proxy 环境只支持一层 syncer 值
   const target = createImmut(rawState, ({ fullKeyPath }) => {
     latestPath = fullKeyPath;
-  });
+  }, disableProxy, sourceId);
   return { target, getPath: () => latestPath };
 }
 
@@ -105,8 +105,8 @@ const syncFnCahce = new Map<string, Fn>();
  * @return syncFnBuilder
  */
 export function createSyncFnBuilder(internal: TInternal) {
-  const { forAtom, sharedKey, innerSetState, rawState } = internal;
-  const targetWrap = createTargetWrap(rawState);
+  const { forAtom, sharedKey, innerSetState, rawState, disableProxy } = internal;
+  const targetWrap = createTargetWrap(rawState, disableProxy, String(sharedKey));
   return (pathOrRecorder: any, before?: (val: any) => any) => {
     let path: string[] = [];
     if (Array.isArray(pathOrRecorder)) {

@@ -10,7 +10,7 @@ const { ACTION, MUTATE } = FROM;
 
 function getLoadingCtx<T = SharedState>(apiCtx: CoreApiCtx, options?: { target?: T; from: From }) {
   ensureGlobal(apiCtx);
-  const { target, from = 'Mutate' } = options || {};
+  const { target, from = MUTATE } = options || {};
   let internal = getGlobalLoadingInternal();
   if (target) {
     // 传递了 target 才检查

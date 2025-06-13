@@ -3,7 +3,7 @@ import { FROM, IS_ATOM, REACTIVE_META_KEY, SHARED_KEY } from '../../consts';
 import { getSharedKey } from '../../helpers/state';
 import type { Dict } from '../../types/base';
 import type { IReactiveMeta } from '../../types/inner';
-import { IBuildReactiveOpts, newReactiveMeta } from '../common/ctor';
+import { IBuildReactiveOpts, INewReactiveMetaOpts, newReactiveMeta } from '../common/ctor';
 import { fakeReativeMeta } from '../common/fake';
 import { getReactiveKey } from '../common/key';
 import type { TInternal } from './buildInternal';
@@ -15,7 +15,15 @@ const { REACTIVE } = FROM;
 const metas: Map<number, IReactiveMeta> = new Map();
 
 function canFlush(meta?: IReactiveMeta): meta is IReactiveMeta {
-  return !!(meta && !meta.expired && meta.modified);
+  if (!meta) {
+    return false;
+  }
+  // 设置了禁用代理是，比较逻辑已丢失，这里需返回一定可刷新
+  if (meta.disableProxy) {
+    return true;
+  }
+
+  return !meta.expired && meta.modified;
 }
 
 /**
@@ -87,10 +95,11 @@ export function nextTickFlush(sharedKey: number) {
 
 function buildMeta(internal: TInternal, options: IBuildReactiveOpts) {
   const { from = REACTIVE } = options;
+  const { sharedKey, disableProxy } = internal;
   const rkey = getReactiveKey();
   const { finish, draftRoot } = internal.setStateFactory({ isReactive: true, from, handleCbReturn: false, enableDep: true, rkey });
-  const latestMeta = newReactiveMeta(draftRoot, options, finish);
-  const { sharedKey } = internal;
+  const newMetaOpts: INewReactiveMetaOpts = { ...options, disableProxy };
+  const latestMeta = newReactiveMeta(draftRoot, newMetaOpts, finish);
 
   latestMeta.key = rkey;
   latestMeta.sharedKey = sharedKey;
@@ -188,9 +197,9 @@ export function buildReactive(internal: TInternal, options: IBuildReactiveOpts) 
       draft = isPrimitive
         ? rawState.val
         : new Proxy(rawState.val, {
-            set: (t: any, key: any, value: any) => set(true, key, value),
-            get: (t: any, key: any) => get(true, key, subInnerData),
-          });
+          set: (t: any, key: any, value: any) => set(true, key, value),
+          get: (t: any, key: any) => get(true, key, subInnerData),
+        });
     }
   } else {
     // TODO 非 Proxy 环境暂不支持 reactive

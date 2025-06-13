@@ -12,9 +12,9 @@ const fakeGetReplaced = () => ({ isReplaced: false, replacedValue: null as any }
 const fnItem = newMutateFnItem({ isFake: true });
 
 export interface IBuildReactiveOpts {
+  desc: string;
   isTop?: boolean;
   depKeys?: string[];
-  desc: string;
   onRead?: OnOperate;
   from: From;
   expired?: boolean;
@@ -22,8 +22,15 @@ export interface IBuildReactiveOpts {
   payloadArgs?: any;
 }
 
-export function newReactiveMeta(draft: any, buildOptions: IBuildReactiveOpts, finish: any = noop): IReactiveMeta {
-  const { desc = '', onRead, from = REACTIVE, depKeys = [], isTop = false, expired = false, insKey = 0, payloadArgs } = buildOptions;
+export interface INewReactiveMetaOpts extends IBuildReactiveOpts {
+  disableProxy: boolean;
+}
+
+export function newReactiveMeta(draft: any, buildOptions: INewReactiveMetaOpts, finish: any = noop): IReactiveMeta {
+  const {
+    desc = '', onRead, from = REACTIVE, depKeys = [], isTop = false, expired = false, insKey = 0,
+    payloadArgs, disableProxy,
+  } = buildOptions;
   return {
     draft,
     finish,
@@ -44,6 +51,7 @@ export function newReactiveMeta(draft: any, buildOptions: IBuildReactiveOpts, fi
     from,
     insKey,
     payloadArgs,
+    disableProxy,
   };
 }
 
@@ -70,6 +78,7 @@ export function newMutateCtx(options: ISetFactoryOpts): IMutateCtx {
     globalIds,
     readKeys: {},
     writeKeys: {},
+    writeArrKeys: {},
     arrKeyDict: {}, // 记录读取过程中遇到的数组 key
     writeKeyPathInfo: {},
     handleCbReturn,
@@ -106,6 +115,10 @@ export function newOpParams(
     isBuiltInFnKey: false,
     replaceValue: noop,
     getReplaced: fakeGetReplaced,
+    arrKeyPath: [],
+    arrKeyPaths: [],
+    keyPaths: [],
+    keyStrPaths: [],
   };
 }
 

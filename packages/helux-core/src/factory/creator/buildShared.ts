@@ -38,7 +38,7 @@ export function handleCustomKey(opParams: IOperateParams, forAtom: boolean, shar
  */
 export function buildSharedState(options: ParsedOptions) {
   let sharedRoot: any = {};
-  const { rawState, sharedKey, forAtom, onRead, isPrimitive, stopDepth } = options;
+  const { rawState, sharedKey, forAtom, onRead, isPrimitive, stopDepth, disableProxy } = options;
   const collectDep = (keyPath: string[], val: any) => {
     const depKey = getDepKeyByPath(keyPath, sharedKey);
     // using shared state in derived/watch callback
@@ -50,6 +50,8 @@ export function buildSharedState(options: ParsedOptions) {
   if (HAS_PROXY) {
     // Proxy 环境使用 limu.immut 接口创建具有能自动同步最新数据特性的只可读对象
     sharedRoot = immut(rawState, {
+      sourceId: String(sharedKey),
+      disableProxy,
       customKeys: OP_KEYS,
       onOperate: (params: IOperateParams) => {
         const { isBuiltInFnKey, isCustom } = params;

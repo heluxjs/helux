@@ -25,9 +25,12 @@ export function updateIns(insCtxMap: InsCtxMap, insKey: number, sn: number) {
  */
 export function execDepFns(opts: ICommitOpts) {
   const { mutateCtx, internal } = opts;
-  const { ids, globalIds, depKeys, triggerReasons, isFirstCall, from, sn, desc, fnKey: fromFnKey } = mutateCtx;
-  const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey } = internal;
+  const { ids, depKeys, triggerReasons, isFirstCall, from, sn, desc, fnKey: fromFnKey, writeArrKeys } = mutateCtx;
+  const { key2InsKeys, id2InsKeys, insCtxMap, rootValKey, disableProxy } = internal;
+  const globalIds = mutateCtx.globalIds.slice();
+  const depArrKeys = Object.keys(writeArrKeys);
 
+  const isArrItemChanged = depArrKeys.length > 0;
   // these associate ins keys will be update
   let dirtyInsKeys: number[] = [];
   let dirtyGlobalInsKeys: number[] = [];
@@ -49,16 +52,21 @@ export function execDepFns(opts: ICommitOpts) {
     dirtyAsyncFnKeys = dirtyAsyncFnKeys.concat(asyncFnKeys);
   };
 
+  // 这些 key 将发送给 useLockDep 去更新
+  depArrKeys.forEach((v) => {
+    nodupPush(globalIds, v);
+  });
+
   const analyzeDepKey = (key: string) => {
     // 值相等就忽略
-    if (!diffVal(internal, key)) {
+    if (!diffVal(internal, key) && !disableProxy) {
       return;
     }
 
     const insKeys = key2InsKeys[key] || [];
     const validInsKeys: number[] = [];
     for (const insKey of insKeys) {
-      // 已包含或已排除，都跳过当次循环
+      // 已包含则跳过当次循环
       if (dirtyInsKeys.includes(insKey)) {
         continue;
       }
@@ -69,6 +77,17 @@ export function execDepFns(opts: ICommitOpts) {
         continue;
       }
       const depKeys = insCtx.getDeps();
+
+      // 禁用代理时，不需要做任何比较了，只要实例有引用就添加
+      if (disableProxy) {
+        nodupPush(validInsKeys, insKey);
+        continue;
+      }
+
+      if (!insCtx.arrIndexDep && isArrItemChanged) {
+        continue;
+      }
+
       // 未对 useAtom 返回值有任何读操作时
       if (depKeys[0] === rootValKey) {
         if (diffVal(internal, rootValKey)) {
@@ -81,6 +100,7 @@ export function execDepFns(opts: ICommitOpts) {
         validInsKeys.push(insKey);
       }
     }
+
     dirtyInsKeys = dirtyInsKeys.concat(validInsKeys);
     findDirtyFnKeys(key);
   };

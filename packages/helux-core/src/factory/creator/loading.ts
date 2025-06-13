@@ -79,6 +79,7 @@ export function getStatusKey(from: string, desc: string) {
 export function setLoadStatus(internal: TInternal, statusKey: string, status: LoadingStatus) {
   if (!statusKey) return;
   const { loadingInternal } = internal;
+  /** impl at import('./mapShared').mapSharedToInternal line 52 */
   loadingInternal.innerSetState(
     (draft: any) => {
       draft[statusKey] = status;
@@ -190,9 +191,8 @@ export function initLoadingCtx(createFn: Fn, options: IInitLoadingCtxOpt) {
     useLoading = (actionsOrMutate?: Dict) => {
       const targetOptions = getLoadingOpts(options, actionsOrMutate);
       const loadingProxy = getLoadingInfo(createFn, targetOptions).loadingProxy;
-      const {
-        insCtx: { proxyState, internal, extra, renderInfo },
-      } = useAtomLogic(apiCtx, loadingProxy);
+      const { insCtx } = useAtomLogic(apiCtx, loadingProxy, { isLoading: true });
+      const { proxyState, internal, extra, renderInfo } = insCtx;
       const statusDict = createSafeLoading(extra, proxyState, from);
       // 注意此处用实例的 extra 记录 safeLoading，实例存在期间 safeLoading 创建一次后会被后续一直复用
       return [statusDict, internal.setState, renderInfo];

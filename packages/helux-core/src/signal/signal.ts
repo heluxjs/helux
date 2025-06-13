@@ -1,12 +1,12 @@
 import { ReactNode } from '@helux/types';
-import { isFn, prefixValKey } from '@helux/utils';
+import { isFn, noop, prefixValKey } from '@helux/utils';
 import { original } from 'limu';
 import { IS_BLOCK } from '../consts';
 import { isAtom, isDerivedAtom } from '../factory/common/atom';
 import { disableReuseLatest, enableReuseLatest, getLastest } from '../factory/common/blockScope';
 import { getSharedKey } from '../helpers/state';
 import type { CoreApiCtx } from '../types/api-ctx';
-import type { IBlockOptionsWithRead, LoadingStatus, RenderCbType, SingalVal } from '../types/base';
+import type { IBlockOptionsWithRead, LoadingStatus, RenderCbType, SingalVal, Fn } from '../types/base';
 import { dynamicBlockWithRead } from './block';
 import { noopVal } from './common/util';
 import { alwaysEqual, wrapDerivedAtomSignalComp, wrapDerivedSignalComp, wrapSignalComp, type IWrapSignalCompOpt } from './common/wrap';
@@ -20,6 +20,7 @@ interface ISignalLogicOptions {
   useStatusList?: () => LoadingStatus[];
   forView?: boolean;
   blockCtx?: any;
+  onUpdate?: Fn;
 }
 
 const str2CompType: Record<string, string> = {
@@ -52,7 +53,7 @@ function getCbType(result: any) {
 }
 
 export function signalLogic(apiCtx: CoreApiCtx, options: ISignalLogicOptions): ReactNode {
-  const { input, mayFormat, enableStatus, ref, viewProps, useStatusList, forView } = options;
+  const { input, mayFormat, enableStatus, ref, viewProps, useStatusList, forView, onUpdate } = options;
   const { react } = apiCtx;
 
   // for $(BlcokComp)
@@ -162,6 +163,7 @@ export function signalLogic(apiCtx: CoreApiCtx, options: ISignalLogicOptions): R
         format,
         result,
         shouldUseResult: true,
+        onUpdate,
       };
       if (isInputFn) {
         options.input = input;

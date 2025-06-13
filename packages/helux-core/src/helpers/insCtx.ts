@@ -8,7 +8,7 @@ import { cutDepKeyByStop, recordArrKey } from '../factory/common/stopDep';
 import { callOnRead, getDepKeyByPath, isArrLike, isArrLikeVal, isDict } from '../factory/common/util';
 import type { InsCtxDef } from '../factory/creator/buildInternal';
 import { handleCustomKey, handleHeluxKey } from '../factory/creator/buildShared';
-import { mapGlobalId } from '../factory/creator/globalId';
+import { mapGlobalIds } from '../factory/creator/globalId';
 import { buildReactive } from '../factory/creator/reactive';
 import type { Dict, Ext, IFnCtx, IInnerUseSharedOptions, OnOperate } from '../types/base';
 import type { DepKeyInfo } from '../types/inner';
@@ -58,7 +58,7 @@ export function runInsUpdater(insCtx: InsCtxDef | undefined) {
  * 为实例创建代理对象并追加到 insCtx 上
  */
 export function attachInsProxyState(insCtx: InsCtxDef) {
-  const { internal, isReactive, insKey } = insCtx;
+  const { internal, isReactive, insKey, disableProxy } = insCtx;
   const { rawState, isDeep, sharedKey, onRead, forAtom } = internal;
   if (isDeep) {
     const onOperate: OnOperate = (opParams) => {
@@ -88,7 +88,7 @@ export function attachInsProxyState(insCtx: InsCtxDef) {
     } else {
       // 非 reactive 对象，外部 prepareTuple 里会自动拆箱，这里只需创建根代理对象即可
       // 对于 immut 对象来说，只会触发读操作
-      insCtx.proxyState = immut(rawState, { onOperate, compareVer: true });
+      insCtx.proxyState = immut(rawState, { disableProxy, onOperate, compareVer: true, sourceId: String(sharedKey) });
     }
   } else {
     // TODO
@@ -129,18 +129,22 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     updater,
     sharedState,
     id = '',
-    globalId = '',
+    globalIds = [],
     collectType = 'every',
     deps,
     pure = true,
     arrDep = true,
     isReactive = false,
+    isLoading = false,
+    isGlobalId = false,
   } = options;
   const arrIndexDep = !arrDep ? true : options.arrIndexDep ?? true;
   const internal = getInternal(sharedState);
   if (!internal) {
     throw new Error('ERR_OBJ_NOT_SHARED: input object is not a result returned by share api');
   }
+  // 优先走实例透传的，再走全局透传
+  const disableProxy = options.disableProxy ?? internal.disableProxy;
 
   const insKey = genInsKey();
   const { rawState, isDeep, ver, ruleConf, level1ArrKeys, forAtom, sharedKey, sharedKeyStr, snap } = internal;
@@ -154,6 +158,9 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     currentDepKeys: [],
     isDeep,
     isReactive,
+    isLoading,
+    isGlobalId,
+    disableProxy,
     insKey,
     internal,
     rawState,
@@ -167,9 +174,10 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     needEFUpdate: false,
     createTime: Date.now(),
     rootVal: null,
+    arrIndexDep,
     ver,
     id,
-    globalId,
+    globalIds,
     collectType,
     // 设定了 no，才关闭依赖收集功能，此时依赖靠 deps 函数提供
     canCollect: collectType !== 'no',
@@ -197,6 +205,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
       // depKey 可能因为配置了 rules[]stopDep 的关系被 recordCb 改写
       cutDepKeyByStop(depKeyInfo, {
         stopDepInfo,
+        arrIndexDep,
         level1ArrKeys,
         recordCb: (key) => {
           depKey = key;
@@ -261,7 +270,7 @@ export function buildInsCtx(options: Ext<IInnerUseSharedOptions>): InsCtxDef {
     },
   };
 
-  globalId && mapGlobalId(globalId, insKey);
+  mapGlobalIds(globalIds, insKey);
   attachInsProxyState(insCtx);
 
   // 是服务器端执行的话，不需要真正的去映射实例和共享状态关系，避免内存泄露

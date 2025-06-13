@@ -40,11 +40,18 @@ const cutCache = new Map<string, string>();
  */
 export function cutDepKeyByStop(
   depKeyInfo: DepKeyInfo,
-  options: { stopDepInfo: IRuleConf['stopDepInfo']; level1ArrKeys: Level1ArrKeys; recordCb: (key: string) => void },
+  options: { stopDepInfo: IRuleConf['stopDepInfo']; arrIndexDep?: boolean, level1ArrKeys: Level1ArrKeys; recordCb: (key: string) => void },
 ) {
   let isKeyRerord = false;
   const { depKey, keyPath, sharedKey } = depKeyInfo;
-  const { stopDepInfo, level1ArrKeys, recordCb } = options;
+  const { stopDepInfo, level1ArrKeys, recordCb, arrIndexDep = true } = options;
+  const mayArrKeyPrefix = getParentKeyFromArr(level1ArrKeys, depKey);
+
+  // 来自 insCtx 调用
+  if (mayArrKeyPrefix && !arrIndexDep) {
+    recordCb(mayArrKeyPrefix);
+    return true;
+  }
 
   const cutKey = cutCache.get(depKey);
   if (cutKey) {
@@ -53,7 +60,6 @@ export function cutDepKeyByStop(
   }
 
   const { keys: stopDepKeys, isArrDict, depth, arrKeyStopDcit, stopArrDep } = stopDepInfo;
-  const mayArrKeyPrefix = getParentKeyFromArr(level1ArrKeys, depKey);
   const isGtDepth = keyPath.length > depth;
   // 大于了规定的依赖收集深度或命中了 list 前缀
   if (isGtDepth || mayArrKeyPrefix) {

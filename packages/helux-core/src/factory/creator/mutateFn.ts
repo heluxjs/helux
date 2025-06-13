@@ -284,7 +284,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
   const watchFnCtxMap: Dict = {};
   if (!keys.length) return watchFnCtxMap;
   const internal = getInternal(target);
-  const { mutateFnDict, usefulName, forAtom, sharedRoot } = internal;
+  const { mutateFnDict, usefulName, forAtom, sharedRoot, disableProxy } = internal;
   const emitErrToPlugin = (err: Error) => emitErr(internal, err);
 
   keys.forEach((descKey) => {
@@ -336,8 +336,11 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
       },
       {
         deps: () => {
-          if (!item.deps) return [];
-          return item.deps(getStateNode(sharedRoot, forAtom), item.extraBound) || [];
+          let depNodes: any[] = !item.deps ? [] : (item.deps(getStateNode(sharedRoot, forAtom), item.extraBound) || []);
+          if (disableProxy) {
+            depNodes = depNodes.concat(sharedRoot);
+          }
+          return depNodes;
         },
         sharedState: target,
         scopeType: SCOPE_TYPE.STATIC,

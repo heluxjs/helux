@@ -9,3 +9,4 @@ export { useOnEvent } from './useOnEvent';
 export { useReactive, useReactiveX } from './useReactive';
 export { storeSrv, useService } from './useService';
 export { useWatch, useWatchEffect } from './useWatch';
+export { useLockDep } from './useLockDep';

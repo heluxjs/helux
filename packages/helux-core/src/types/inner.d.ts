@@ -2,8 +2,10 @@ import { Fn, From, IInnerSetStateOptions } from './base';
 
 /**
  * 第一层路径的数组 key 集合，会在不停地读取过程中动态新增
- * 多层结构中存在多个数组时，例如：a.b.list[].c.d.list[]，
- * 只记录第一个 a.b.list
+ * 多层结构中存在多个数组时，
+ * 例如：a.b.list[].c.d.list[]，a.b.list2[].info.address[]
+ * 第一层记录为：a|b|list，a.b.list2
+ * 第二层记录为：a|b|list|{num}|c|d|list，a|b|list2|{num}|info|address
  */
 export type Level1ArrKeys = string[];
 
@@ -63,4 +65,6 @@ export interface IReactiveMeta {
    * 记录对应的 action 执行的 payload 参数列表
    */
   payloadArgs: any;
+  /** 由 createShared 透传过来 */
+  disableProxy: boolean;
 }

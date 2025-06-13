@@ -12,7 +12,7 @@ import {
   safeObjGet,
   setNoop,
 } from '@helux/utils';
-import { immut } from 'limu';
+import { immut, finishImmut } from 'limu';
 import { FROM, MUTATE_FN_ITEM, RECORD_LOADING, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';
@@ -212,6 +212,8 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
   const dict1 = parseMutate(mutate, {}, enableMutate);
   const dict2 = parseMutate(options.mutateList || [], dict1, enableMutate);
   const mutateFnDict = Object.assign(dict1, dict2);
+  // 5.5 新增 disableProxy
+  const disableProxy = options.disableProxy ?? false;
 
   return {
     /** TODO 未来可能支持 atom 对象销毁 */
@@ -240,6 +242,7 @@ export function parseOptions(innerOptions: IInnerOptions, options: ICreateOption
     stopArrDep,
     stopDepth,
     isPrimitive,
+    disableProxy,
   };
 }
 
@@ -249,7 +252,7 @@ export type ParsedOptions = ReturnType<typeof parseOptions>;
  * 解析出 createShared 里配置的 rules
  */
 export function parseRules(options: ParsedOptions): IRuleConf {
-  const { rawState, sharedKey, rootValKey, deep, rules, stopDepth, stopArrDep, forAtom } = options;
+  const { rawState, sharedKey, rootValKey, deep, rules, stopDepth, stopArrDep, forAtom, disableProxy } = options;
   const idsDict: KeyIdsDict = {};
   const globalIdsDict: KeyIdsDict = {};
   const stopDepInfo: IRuleConf['stopDepInfo'] = { keys: [], isArrDict: {}, arrKeyStopDcit: {}, depth: stopDepth, stopArrDep };
@@ -266,6 +269,8 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     if (isDeep) {
       let pervKey = '';
       state = immut(rawState, {
+        sourceId: String(sharedKey),
+        disableProxy,
         onOperate: ({ fullKeyPath, value, isBuiltInFnKey }) => {
           if (isBuiltInFnKey) return;
           // 只记录单一路径下读取的最长的那个key，
@@ -325,6 +330,10 @@ export function parseRules(options: ParsedOptions): IRuleConf {
     // 返回的数组包含有根状态自身时，需补上 rootValKey
     if (result.includes(stateNode)) {
       setRuleConf(rootValKey);
+    }
+
+    if (isDeep) {
+      finishImmut(state);
     }
   });
 

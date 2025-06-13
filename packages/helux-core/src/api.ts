@@ -16,7 +16,7 @@ import { currentDraftRoot } from './factory/creator/current';
 import { flush, reactiveDesc } from './factory/creator/reactive';
 import { init } from './factory/root';
 import { getDeriveLoading, runDerive, runDeriveTask } from './helpers/fnRunner';
-import { getRawState, getSnap } from './helpers/state';
+import { getRawState, getSnap, getCurrentProxy } from './helpers/state';
 import {
   getActionLoading,
   getMutateLoading,
@@ -36,6 +36,7 @@ import {
   useService,
   useWatch,
   useWatchEffect,
+  useLockDep,
 } from './hooks';
 import { block, COMPS, dynamicBlock, getBlockParams, signal } from './signal';
 
@@ -84,6 +85,7 @@ export {
   useActionLoading,
   useLocalForceUpdate,
   useGlobalForceUpdate,
+  useLockDep,
   // for react class component
   bindAtom,
   withAtom,
@@ -133,6 +135,7 @@ export {
   getRawState,
   getSnap,
   getAtom,
+  getCurrentProxy,
   addMiddleware,
   addPlugin,
   cst,

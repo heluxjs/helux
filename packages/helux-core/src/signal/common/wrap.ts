@@ -23,6 +23,7 @@ export interface IWrapSignalCompOpt {
   /** 第一次渲染时，是否使用透传的 result */
   shouldUseResult?: any;
   input?: any;
+  onUpdate?: Fn;
 }
 
 interface IWrapDerivedAtomSignalCompOpt {
@@ -54,7 +55,10 @@ export function wrapComp(apiCtx: CoreApiCtx, Comp: any, displayName: string, nee
 }
 
 export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalCompOpt): FunctionComponent {
-  const { sharedState, depKey, keyPath, keyPaths, compare, sharedKey, format = noopVal, shouldUseResult, result, input } = options;
+  const {
+    sharedState, depKey, keyPath, keyPaths, compare, sharedKey, format = noopVal, shouldUseResult, result, input,
+    onUpdate = noopVal,
+  } = options;
   const Comp = function () {
     const insCtx = useAtomSimpleLogic(apiCtx, sharedState, { arrDep: true });
     if (insCtx.isFirstRender) {
@@ -81,6 +85,8 @@ export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalCompOpt):
       if (shouldUseResult) {
         return result;
       }
+    } else {
+      onUpdate();
     }
 
     // 此处用 rawState 替代 sharedState 依然获取最新的状态，同时也减少了代理对象获取的额外运行损耗

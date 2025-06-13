@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "5.4.2",
+  "version": "5.4.3",
   "description": "A reactive atomic state engine for React(including React 18) and all React like, carrying dependency collection feature, supporting fine-grained updates",
   "keywords": [],
   "author": {
@@ -49,7 +49,7 @@
     "@types/node": ">=12.0.0",
     "esbuild-plugin-external-global": "^1.0.1",
     "helux": "workspace:^",
-    "limu": "^4.0.0"
+    "limu": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.19.3",

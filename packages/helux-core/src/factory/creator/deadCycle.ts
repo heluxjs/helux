@@ -97,6 +97,13 @@ export function alertDepKeyDeadCycleErr(internal: TInternal, dcErrorInfo: { err:
  * 等场景的死循环
  */
 export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changedDepKeys: string[]): boolean {
+  let foundDc = false;
+
+  // 禁用代理时，无需探测
+  if (internal.disableProxy) {
+    return foundDc;
+  }
+
   const { depKeys, subFnInfo } = fnCtx;
   let shortArr = fnCtx.depKeys;
   let longArr = changedDepKeys;
@@ -105,7 +112,6 @@ export function probeDepKeyDeadCycle(internal: TInternal, fnCtx: IFnCtx, changed
     longArr = depKeys;
   }
 
-  let foundDc = false;
   // found dc error
   if (includeOne(shortArr, longArr)) {
     const cbType: CbType = subFnInfo.desc ? cbTypes.MUTATE : cbTypes.WATCH;

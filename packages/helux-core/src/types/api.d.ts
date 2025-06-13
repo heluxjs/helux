@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@5.2.1
+| helux-core@5.4.3
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -272,11 +272,11 @@ export function useAtom<T extends any = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  T extends ReadOnlyAtom ? AtomValType<T> : T,
-  // AtomTupleSetState<T>,
-  SetState<T>,
-  IInsRenderInfo<T>,
-];
+    T extends ReadOnlyAtom ? AtomValType<T> : T,
+    // AtomTupleSetState<T>,
+    SetState<T>,
+    IInsRenderInfo<T>,
+  ];
 
 /**
  * 区别于 useAtom，useAtomX 返回对象
@@ -290,12 +290,12 @@ export function useReactive<T = any>(
   sharedState: T,
   options?: IUseSharedStateOptions<T>,
 ): [
-  // 针对 atom，第一位 reactive 参数自动拆箱
-  T extends Atom ? T['val'] : T,
-  // 代表 reactiveRoot
-  T,
-  IInsRenderInfo,
-];
+    // 针对 atom，第一位 reactive 参数自动拆箱
+    T extends Atom ? T['val'] : T,
+    // 代表 reactiveRoot
+    T,
+    IInsRenderInfo,
+  ];
 
 export function useReactiveX<T = any>(sharedState: T, options?: IUseSharedStateOptions<T>): ICompReactiveCtx<T>;
 
@@ -530,6 +530,11 @@ export function useMutable<T extends PlainObject>(
 export function useStable<T = any>(data: T): T;
 
 /**
+ * 锁定依赖，配合父组件设置 arrIndexDep=false 时用
+ */
+export function useLockDep<T = any>(data: T): T;
+
+/**
  * default: GlobalLoading，
  * 不传递任何共享状态的话，顶层 useMutateLoading 默认使用全局的 loading 状态
  * ```ts
@@ -566,6 +571,14 @@ export function getRawState<T = Dict>(state: T): T;
  * isPrevSnap 默认值为 true，表示返回前一刻的快照，设为 false 表示返回最新快照
  */
 export function getSnap<T = Dict>(state: T, isPrevSnap?: boolean): T;
+
+/**
+ * 获取代理对象（可能已过期）的最新版本代理对象
+ */
+export function getCurrentProxy<T = any>(
+  proxyRoot: any,
+  mayProxyDraft: T,
+): [currentProxy: T, isGetSucess: boolean, path: string[]];
 
 export function emit<A extends any[] = any[]>(name: string, ...args: A): void;
 
@@ -958,7 +971,7 @@ export declare const produce: IProduce;
 export declare function markRaw<T extends any = any>(rawVal: T): T;
 
 /**
- * 兼容 react 类组件使用 helux，区别于 withAtom，bindAtom 返回函数组件
+ * 兼容 react 类组件使用 helux ，区别于 withAtom ，bindAtom 返回函数组件
  */
 export declare function bindAtom<T extends any = any>(ClassComp: T, atomMap: IBindAtomOptions): T;
 

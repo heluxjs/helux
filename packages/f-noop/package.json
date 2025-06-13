@@ -1,6 +1,6 @@
 {
   "name": "@helux/f-noop",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Function does nothing, this lib supply noop fn or noop fn maker.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -19,6 +19,7 @@
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
+  "unpkg": "dist/index.global.js",
   "types": "index.d.ts",
   "files": [
     "dist",
