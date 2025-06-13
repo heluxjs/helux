@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 4.2.0
+
+### Minor Changes
+
+- 06eb94d: add draft state $draft $state to defineStore api
+
 ## 4.1.0
 
 ### Minor Changes
