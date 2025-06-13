@@ -59,10 +59,10 @@ function HelloHelux(props: any) {
 
 ## 类 pinia 使用
 
-基于 helux 向上封装了[helux-store-pinia](https://github.com/heluxjs/helux/tree/master/packages/helux-store-pinia)，你可以像 pinia 一样管理 react 状态了，访问[示例](https://codesandbox.io/p/sandbox/helux-store-pinia-forked-xqw3ks?file=%2Fsrc%2FLikePinia.tsx)体验.
+基于 helux 向上封装了[@helux/store-pinia](https://github.com/heluxjs/helux/tree/master/packages/helux-store-pinia)，你可以像 pinia 一样管理 react 状态了，访问[示例](https://codesandbox.io/p/sandbox/helux-store-pinia-forked-xqw3ks?file=%2Fsrc%2FLikePinia.tsx)体验.
 
 ```tsx
-import { defineStore } from '@helux/helux-store-pinia';
+import { defineStore } from '@helux/store-pinia';
 
 const counterStoreCtx = defineStore('Counter', {
   state: () => ({ count: 1, mountCount: 1 }),
