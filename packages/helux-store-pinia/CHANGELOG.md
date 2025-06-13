@@ -1,5 +1,15 @@
 # helux-store-pinia
 
+## 4.0.3
+
+### Patch Changes
+
+- b2bfa74: bump limu, add $reset, unable disableProxy
+- a5eacd8: add $reset, enable disableProxy, bump limu
+- Updated dependencies [b2bfa74]
+- Updated dependencies [a5eacd8]
+  - helux@5.4.3
+
 ## 4.0.2
 
 ### Patch Changes

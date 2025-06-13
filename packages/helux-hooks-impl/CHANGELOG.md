@@ -1,5 +1,13 @@
 # @helux/hooks-impl
 
+## 5.4.3
+
+### Patch Changes
+
+- Updated dependencies [b2bfa74]
+  - @helux/utils@5.4.3
+  - @helux/types@5.4.3
+
 ## 5.4.2
 
 ### Patch Changes

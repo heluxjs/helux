@@ -1,5 +1,12 @@
 # @helux/utils
 
+## 5.4.3
+
+### Patch Changes
+
+- b2bfa74: bump limu, add $reset, unable disableProxy
+  - @helux/types@5.4.3
+
 ## 5.4.2
 
 ### Patch Changes
