@@ -1,5 +1,13 @@
 # @helux/hooks-impl
 
+## 5.4.6
+
+### Patch Changes
+
+- f92ad32: mark type HooksApiImpl
+  - @helux/types@5.4.6
+  - @helux/utils@5.4.6
+
 ## 5.4.4
 
 ### Patch Changes

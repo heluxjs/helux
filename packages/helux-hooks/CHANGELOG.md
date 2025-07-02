@@ -1,5 +1,14 @@
 # @helux/hooks
 
+## 5.4.6
+
+### Patch Changes
+
+- Updated dependencies [f92ad32]
+  - @helux/hooks-impl@5.4.6
+  - @helux/types@5.4.6
+  - @helux/utils@5.4.6
+
 ## 5.4.4
 
 ### Patch Changes

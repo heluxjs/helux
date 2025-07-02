@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 4.2.2
+
+### Patch Changes
+
+- f92ad32: mark type HooksApiImpl
+- Updated dependencies [f92ad32]
+  - helux@5.4.6
+
 ## 4.2.1
 
 ### Patch Changes

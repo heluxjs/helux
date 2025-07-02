@@ -1,5 +1,13 @@
 # helux
 
+## 5.4.6
+
+### Patch Changes
+
+- f92ad32: mark type HooksApiImpl
+- Updated dependencies [f92ad32]
+  - @helux/core@5.4.6
+
 ## 5.4.4
 
 ### Patch Changes

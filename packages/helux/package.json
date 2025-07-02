@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "5.4.4",
+  "version": "5.4.6",
   "description": "A reactive atomic state engine for React(including React 18) and all React like, carrying dependency collection feature, supporting fine-grained updates",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
