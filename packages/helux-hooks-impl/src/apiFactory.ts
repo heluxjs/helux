@@ -7,7 +7,7 @@ import * as api from './api';
 export function buildApi(react: ReactLike): any {
   const userApi: any = {};
   const apiCtx = { react };
-  const apiVar: any = api; // fot skip ts check instead of ts-ignore
+  const apiVar: any = api; // for skip ts check instead of ts-ignore
   Object.keys(api).forEach((fnKey: string) => {
     userApi[fnKey] = apiVar[fnKey].bind(null, apiCtx);
   });

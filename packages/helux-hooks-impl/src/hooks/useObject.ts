@@ -2,11 +2,7 @@ import type { ApiCtx, Dict, PartialStateCb } from '@helux/types';
 import { isFn } from '@helux/utils';
 import { useForceUpdate } from './useForceUpdate';
 import { useStable } from './useStable';
-
-interface IObjApi<T> {
-  setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
-  getLatestState: () => T;
-}
+import type { IUseObjectLogicV2Options, IObjApi } from '../types-api';
 
 interface ILogicRef {
   state: any;
@@ -14,14 +10,14 @@ interface ILogicRef {
   shouldCopy: boolean;
 }
 
-export function useObjectLogic<T extends object = Dict>(
+function useObjectLogicImpl<T extends object = Dict>(
   apiCtx: ApiCtx,
   initialState: T | (() => T),
-  handleState?: (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => T,
-  returnFull?: boolean,
+  options?: IUseObjectLogicV2Options,
 ): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>] {
+  const { handleState, returnFull, isStable = true } = options || {};
   const { useState, useRef, useEffect } = apiCtx.react;
-  const [stableState] = useState<T>(initialState);
+  const [mayStableState, setState] = useState<T>(initialState);
   const forceUpdate = useForceUpdate(apiCtx);
   const logicRef = useRef<ILogicRef>({ state: null, unmount: false, shouldCopy: true });
 
@@ -37,8 +33,8 @@ export function useObjectLogic<T extends object = Dict>(
       // user want to handle partial state self
       if (handleState) {
         // prevState 优先给已浅克隆的那个
-        partial = handleState(partialStateOrCb, cur.state || stableState);
-        // 处理者需自己保证返回的完整状态，目前此函数对接了 useMutable
+        partial = handleState(partialStateOrCb, cur.state || mayStableState);
+        // 处理者需自己保证返回的状态完整，目前此函数对接了 useMutable
         if (returnFull && partial) {
           cur.state = partial;
           cur.shouldCopy = false;
@@ -50,13 +46,18 @@ export function useObjectLogic<T extends object = Dict>(
         cur.shouldCopy = true; // 标记需要潜克隆，触发 getLatestState 时才做克隆操作
       }
 
-      Object.assign(stableState, partial || {}); // 合并到稳定引用里
-      forceUpdate();
+      if (isStable) {
+        Object.assign(mayStableState, partial || {}); // 合并到稳定引用里
+        forceUpdate();
+        return;
+      }
+
+      setState({ ...mayStableState, ...(partial || {}) });
     },
     getLatestState() {
       const cur = logicRef.current;
       if (cur.shouldCopy) {
-        cur.state = { ...stableState }; // 浅克隆为最新的
+        cur.state = { ...mayStableState }; // 浅克隆为最新的
         cur.shouldCopy = false;
       }
       return cur.state as T;
@@ -72,7 +73,27 @@ export function useObjectLogic<T extends object = Dict>(
     };
   }, [logicRef]);
 
-  return [stableState, api.setState, api];
+  return [mayStableState, api.setState, api];
+}
+
+/**
+ * 为了上层稳定性，这里新增 v2 版本接口，不再对 useObjectLogic 扩展新参数
+ */
+export function useObjectLogicV2<T extends object = Dict>(
+  apiCtx: ApiCtx,
+  initialState: T | (() => T),
+  options?: IUseObjectLogicV2Options,
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>] {
+  return useObjectLogicImpl(apiCtx, initialState, options);
+}
+
+export function useObjectLogic<T extends object = Dict>(
+  apiCtx: ApiCtx,
+  initialState: T | (() => T),
+  handleState?: (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => T,
+  returnFull?: boolean,
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>] {
+  return useObjectLogicImpl(apiCtx, initialState, { handleState, returnFull });
 }
 
 /**

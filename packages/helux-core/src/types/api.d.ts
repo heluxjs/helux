@@ -1,11 +1,12 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@5.4.3
+| helux-core@5.4.5
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
 */
 import type { ForwardedRef, MutableRefObject, ReactNode } from '@helux/types';
+import type { HooksApiImpl } from '@helux/hooks-impl';
 import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
 import type {
   Action,
@@ -69,6 +70,7 @@ import type {
   SyncFnBuilder,
   WatchEffectOptionsType,
   WatchOptionsType,
+  ILocalStateApi,
 } from './base';
 
 export declare const cst: {
@@ -353,7 +355,7 @@ export function useGlobalForceUpdate<T = any>(
  */
 export function useObject<T = Dict>(
   initialState: T | (() => T),
-): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, ILocalStateApi<T>];
 
 /**
  * 功能同 watch，默认首次不执行回调，故需要提前写清楚依赖，
@@ -478,12 +480,6 @@ export function useDerived<R = DerivedDict | DerivedAtom>(
  */
 export function useOnEvent(name: string, cb: Fn, onBeforeMount?: boolean): void;
 
-export interface IObjApi<T> {
-  setState: (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void;
-  /** 返回最新的状态，可能会变化，适用于透传给子组件 */
-  getLatestState: () => T;
-}
-
 /**
  * 以 mutable 方式修改 react 状态
  * ```ts
@@ -496,10 +492,10 @@ export interface IObjApi<T> {
  */
 export function useMutable<T extends PlainObject>(
   initialState: T | (() => T),
-): [state: T, setDraft: (partialStateOrCb: Partial<T> | ChangeDraftCb<T>) => void, objApi: IObjApi<T>];
+): [state: T, setDraft: (partialStateOrCb: Partial<T> | ChangeDraftCb<T>) => void, objApi: ILocalStateApi<T>];
 
 /**
- * 生成稳定的对象，对象的所有方法将转为稳定引用，且回调里始终可以读到外部的最新值，无闭包陷阱
+ * 生成稳定的字典对象，对象的所有方法将转为稳定引用，且回调里始终可以读到外部的最新值，无闭包陷阱
  * @example
  * ```ts
  * function Comp(props: any) {
@@ -1097,3 +1093,5 @@ export declare function getHX<T extends any = any>(props: any, context: any): T;
  * ```
  */
 export declare function makeWithAtomOptions<T extends IWithAtomOptions>(options: T): T;
+
+export declare const hookImpl: HooksApiImpl;

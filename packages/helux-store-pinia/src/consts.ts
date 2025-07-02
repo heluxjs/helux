@@ -4,14 +4,26 @@
 export const INNER_GET_CURRENT_PROXY = '$getCurrentProxy';
 
 /**
- * store 内部属性，获取状态
+ * 在 defineStore defineLayeredStore 里获取只读状态
  */
 export const INNER_STATE = '$state';
 
 /**
- * store 内部属性，重置状态
+ * 在 defineStore defineLayeredStore 里操作草稿
  */
-export const RESET_STATE = '$reset';
+export const INNER_DRAFT = '$draft';
 
+/**
+ * 在 defineStore defineLayeredStore 里重置状态
+ */
+export const INNER_RESET = '$reset';
 
+/**
+ * 在 defineLayeredStore 里获取只读状态
+ */
 export const STATE = 'state';
+
+/**
+ * 在 defineLayeredStore 里操作草稿
+ */
+export const DRAFT = 'draft';

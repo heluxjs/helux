@@ -40,8 +40,6 @@ function to18(react: ReactLike): React18Like {
  */
 export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
   const hookImpl = buildApi(react);
-  // All apis will be filled later
-  const baseApi: any = { ...hookImpl };
   // 注意用户层面调用api时不需要感知这个参数，由 adapter 层自动绑定
   const apiCtx: CoreApiCtx = { react: to18(react), hookImpl, act };
   setApiCtx(apiCtx);
@@ -55,6 +53,9 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
       return () => act(() => set({}));
     };
   }
+
+  // helux api will be assigned in below loop
+  const heluxApi: any = { hookImpl };
   const apiVar: any = api; // fot skip ts check instead of ts-ignore
   Object.keys(apiVar).forEach((key) => {
     const apiDef = apiVar[key];
@@ -62,12 +63,12 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
     if ('COMPS' === key) {
       const { memo, forwardRef } = react;
       const { SignalView, BlockView, SignalV2, BlockV2 } = apiDef;
-      baseApi.SignalView = memo(forwardRef(SignalView), compareSignalViewProps);
+      heluxApi.SignalView = memo(forwardRef(SignalView), compareSignalViewProps);
       // baseApi.Signal = baseApi.SignalView; // should I expose this, it is similar with signal
-      baseApi.BlockView = memo(forwardRef(BlockView), compareBlockViewProps);
+      heluxApi.BlockView = memo(forwardRef(BlockView), compareBlockViewProps);
       // baseApi.Block = baseApi.BlockView; // should I expose this, it is similar with block
-      baseApi.SignalV2 = memo(forwardRef(SignalV2), compareV2Props);
-      baseApi.BlockV2 = memo(forwardRef(BlockV2), compareV2Props);
+      heluxApi.SignalV2 = memo(forwardRef(SignalV2), compareV2Props);
+      heluxApi.BlockV2 = memo(forwardRef(BlockV2), compareV2Props);
       return;
     }
 
@@ -80,17 +81,18 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
       // baseApiVar[key] = wrap[key];
 
       // code 3: use bind
-      baseApi[key] = apiDef.bind(null, apiCtx);
+      heluxApi[key] = apiDef.bind(null, apiCtx);
       return;
     }
 
-    baseApi[key] = apiDef;
+    heluxApi[key] = apiDef;
   });
 
   const allApi = {
-    model: (cb: Fn) => modelApi.model(baseApi, cb),
-    modelFactory: (cb: Fn) => modelApi.modelFactory(baseApi, cb),
+    model: (cb: Fn) => modelApi.model(heluxApi, cb),
+    modelFactory: (cb: Fn) => modelApi.modelFactory(heluxApi, cb),
+    hookImpl,
   };
 
-  return Object.assign(allApi, baseApi);
+  return Object.assign(allApi, heluxApi);
 }

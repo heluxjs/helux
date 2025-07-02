@@ -1,3 +1,6 @@
+/**
+ * @helux/store-pinia 4.1.0 types definition
+ */
 import type { Dict, ICreateOptions, ILifecycle, IUseSharedStateOptions, LoadingStatus } from 'helux';
 
 /** 使用reactive修改状态时，标记表述，方便在devtool里可追溯 */
@@ -37,10 +40,22 @@ export type GettersProp<G extends Dict> = {
 };
 
 export type InnerProp<S extends Dict> = {
+  /**
+   * 获取当前对象对应的最新 proxy 对象
+   */
   $getCurrentProxy: <T = any>(mayProxyDraft: T) => [currentProxy: T, isGetSucess: boolean, path: string[]];
+  /** read only state */
   $state: S;
+  /** mutable state */
+  $draft: S;
   /** 重置状态 */
   $reset: () => void;
+};
+
+export type LayeredStoreExtraProp<S extends Dict> = InnerProp<S> & {
+  state: S;
+  /** mutable state */
+  draft: S;
 };
 
 // 约束返回给用户使用的 loading 类型
@@ -51,7 +66,7 @@ export interface IDefineLayeredStoreOptions<S extends Dict, G extends Dict, A ex
   /** 确保 getters 里能访问到 state */
   getters?: G & ThisType<StateWrap<S> & GettersProp<G>>;
   /** 确保 actions 里能访问到 state getters */
-  actions?: A & ThisType<StateWrap<S> & A & GettersProp<G> & InnerProp<S>>;
+  actions?: A & ThisType<StateWrap<S> & A & GettersProp<G> & LayeredStoreExtraProp<S>>;
   /** 确保 lifecycle 里能访问到 state getters actions */
   lifecycle?: ILifecycle & ThisType<StateWrap<S> & A & GettersProp<G>>;
 }
