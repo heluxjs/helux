@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 4.2.1
+
+### Patch Changes
+
+- 0e4bf25: expose hookImpl, add useObject to helux-core
+- Updated dependencies [0e4bf25]
+  - helux@5.4.4
+
 ## 4.2.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @helux/core
 
+## 5.4.4
+
+### Patch Changes
+
+- 0e4bf25: expose hookImpl, add useObject to helux-core
+- Updated dependencies [0e4bf25]
+  - @helux/hooks-impl@5.4.4
+  - @helux/types@5.4.4
+  - @helux/utils@5.4.4
+
 ## 5.4.3
 
 ### Patch Changes

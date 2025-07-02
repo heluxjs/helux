@@ -1,5 +1,12 @@
 # @helux/openinula
 
+## 5.4.4
+
+### Patch Changes
+
+- Updated dependencies [0e4bf25]
+  - @helux/core@5.4.4
+
 ## 5.4.3
 
 ### Patch Changes
