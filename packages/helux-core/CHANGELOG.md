@@ -1,5 +1,25 @@
 # @helux/core
 
+## 5.4.6
+
+### Patch Changes
+
+- f92ad32: mark type HooksApiImpl
+- Updated dependencies [f92ad32]
+  - @helux/hooks-impl@5.4.6
+  - @helux/types@5.4.6
+  - @helux/utils@5.4.6
+
+## 5.4.4
+
+### Patch Changes
+
+- 0e4bf25: expose hookImpl, add useObject to helux-core
+- Updated dependencies [0e4bf25]
+  - @helux/hooks-impl@5.4.4
+  - @helux/types@5.4.4
+  - @helux/utils@5.4.4
+
 ## 5.4.3
 
 ### Patch Changes

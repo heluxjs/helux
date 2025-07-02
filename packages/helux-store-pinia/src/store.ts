@@ -20,15 +20,16 @@ export function defineStore(
 
   return {
     getStore: () => {
+      const { reactive } = ctx;
       // 绑定顶层 reactive 给 actions 函数或 store自身操作
-      return makeWrapStore(ctx.reactive, { userGetters, derived: ctx.reactive, userActions, wrapActions, reset });
+      return makeWrapStore(reactive, { userGetters, derived: reactive, state, userActions, wrapActions, reset });
     },
     useStore: (options?: IUseSharedStateOptions) => {
       const [reactive] = ctx.useReactive(options) as unknown as [any];
       // 提供一个稳定的 store 对象给用户
       const [wrapStore] = useState(() => {
         // 绑定 reactive 给 actions 函数或 store自身操作
-        const wrapStore = makeWrapStore(reactive, { userGetters, derived: reactive, userActions, wrapActions, reset });
+        const wrapStore = makeWrapStore(reactive, { userGetters, derived: reactive, state, userActions, wrapActions, reset });
         return wrapStore;
       });
       return wrapStore;

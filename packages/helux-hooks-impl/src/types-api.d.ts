@@ -86,3 +86,19 @@ export function useObjectLogic<T = Dict>(
   handleState?: (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => T | null,
   returnFull?: boolean,
 ): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];
+
+export interface IUseObjectLogicV2Options<T = Dict> {
+  handleState?: (partialStateOrCb: Partial<T> | PartialStateCb<T>, prevState: T) => T,
+  /** default: false */
+  returnFull?: boolean,
+  /** default: true */
+  isStable?: boolean,
+}
+
+/**
+ * 复用 useOjbect 内部逻辑，支持自己处理 state
+ */
+export function useObjectLogicV2<T = Dict>(
+  initialState: T | (() => T),
+  options?: IUseObjectLogicV2Options<T>,
+): [T, (partialStateOrCb: Partial<T> | PartialStateCb<T>) => void, IObjApi<T>];

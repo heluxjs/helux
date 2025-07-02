@@ -1,5 +1,33 @@
 # helux-store-pinia
 
+## 4.2.2
+
+### Patch Changes
+
+- f92ad32: mark type HooksApiImpl
+- Updated dependencies [f92ad32]
+  - helux@5.4.6
+
+## 4.2.1
+
+### Patch Changes
+
+- 0e4bf25: expose hookImpl, add useObject to helux-core
+- Updated dependencies [0e4bf25]
+  - helux@5.4.4
+
+## 4.2.0
+
+### Minor Changes
+
+- 06eb94d: add draft state $draft $state to defineStore api
+
+## 4.1.0
+
+### Minor Changes
+
+- 43c7918: add $draft $state draft state to defineStore api
+
 ## 4.0.3
 
 ### Patch Changes

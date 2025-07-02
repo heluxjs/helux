@@ -1,6 +1,6 @@
 import type { Dict, Fn, ILifecycle, ISharedCtx } from 'helux';
 import { getCurrentProxy } from 'helux';
-import { INNER_GET_CURRENT_PROXY, INNER_STATE, RESET_STATE, STATE } from './consts';
+import { INNER_GET_CURRENT_PROXY, INNER_STATE, INNER_RESET, INNER_DRAFT, STATE, DRAFT } from './consts';
 
 function keys(obj: object) {
   return Object.keys(obj);
@@ -40,30 +40,31 @@ export function extractOptions(isLayered: boolean, options: any) {
   return { stateFn, firstVerState, userGetters, userActions, lifecycle };
 }
 
-export function makeWrapStore(state: any, options: any, isLayered?: boolean) {
-  const { userGetters, derived, userActions, wrapActions, reset } = options;
+export function makeWrapStore(reactiveState: any, options: any, isLayered?: boolean) {
+  // state is read only
+  const { userGetters, derived, userActions, wrapActions, reset, state: readOnlyState } = options;
   const wrapStore = new Proxy(
     {},
     {
       get(t: any, p: any) {
         if (INNER_GET_CURRENT_PROXY === p) {
-          return (mayProxyDraft: any) => getCurrentProxy(state, mayProxyDraft);
-        }
-        if (
-          // 访问内置属性
-          INNER_STATE === p
-          // state 独立存放
-          || (isLayered && STATE === p)
-        ) {
-          return state;
+          return (mayProxyDraft: any) => getCurrentProxy(reactiveState, mayProxyDraft);
         }
 
-        if (RESET_STATE === p) {
+        if (INNER_STATE === p || (isLayered && STATE === p)) {
+          return readOnlyState;
+        }
+
+        if (INNER_DRAFT === p || (isLayered && DRAFT === p)) {
+          return reactiveState;
+        }
+
+        if (INNER_RESET === p) {
           return reset;
         }
 
-        if (p in state) {
-          return state[p];
+        if (p in reactiveState) {
+          return reactiveState[p];
         }
         if (p in userGetters) {
           return derived[p];
@@ -75,8 +76,8 @@ export function makeWrapStore(state: any, options: any, isLayered?: boolean) {
         return t[p];
       },
       set(t: any, p: any, v: any) {
-        if (p in state) {
-          state[p] = v;
+        if (p in reactiveState) {
+          reactiveState[p] = v;
           return true;
         }
         console.warn('can not set');
@@ -89,12 +90,13 @@ export function makeWrapStore(state: any, options: any, isLayered?: boolean) {
 
 export function makeWrapActions(ctx: ISharedCtx, options: any, isLayered?: boolean) {
   const { userActions, userGetters, derived, reset } = options;
+  const { state } = ctx;
   const actionFns: any = {};
   let wrapActions: any = {};
   Object.keys(userActions).forEach((key) => {
     actionFns[key] = ({ draft, payload }: any) => {
       // 绑定 ctx.state 给 actions 函数操作
-      const wrapStore = makeWrapStore(draft, { userGetters, derived, userActions, wrapActions, reset }, isLayered);
+      const wrapStore = makeWrapStore(draft, { userGetters, derived, state, userActions, wrapActions, reset }, isLayered);
       const fn = userActions[key].bind(wrapStore);
       // 这里的 payload 是一个数组，故使用 apply 接受并转为可变长度参数调用
       return fn.apply(null, payload);
