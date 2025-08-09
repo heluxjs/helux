@@ -1,6 +1,6 @@
 {
   "name": "@helux/f-guard",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Make concurrent function running highly efficient.",
   "bugs": {
     "url": "https://github.com/heluxjs/helux/issues"
@@ -17,7 +17,7 @@
     "url": "https://github.com/fantasticsoul"
   },
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [

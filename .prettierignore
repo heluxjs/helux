@@ -9,3 +9,4 @@ fixtures
 *.less
 .turbo
 doc/src/components
+./.changeset/config.json

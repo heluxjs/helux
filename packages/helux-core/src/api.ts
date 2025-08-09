@@ -1,4 +1,4 @@
-import { limuUtils, markRaw, produce } from 'limu';
+import * as limu from 'limu';
 import { assignThisHX, bindAtom, getHX, makeWithAtomOptions, withAtom } from './class';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
 import { defineStore } from './factory/advance/defineStore';
@@ -41,6 +41,7 @@ import {
 } from './hooks';
 import { block, COMPS, dynamicBlock, getBlockParams, signal } from './signal';
 
+const { limuUtils, markRaw, produce } = limu;
 const { shallowCompare, isDiff, isDraft } = limuUtils;
 const createShared = share; // for compatible wit v2 helux
 const $ = signal; // signal api alias
@@ -118,6 +119,7 @@ export {
   // init api
   init,
   // util api
+  limu, // 自 v5.5.0 开始导出 limu
   reactiveDesc,
   flush,
   currentDraftRoot,

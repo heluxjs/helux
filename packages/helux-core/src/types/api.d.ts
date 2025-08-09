@@ -1,13 +1,17 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@5.4.5
+| helux-core@5.5.0
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
 */
 import type { ForwardedRef, MutableRefObject, ReactNode } from '@helux/types';
 import type { HooksApiImpl } from '@helux/hooks-impl';
-import type { Draft, GenNewStateCb, ICreateDraftOptions } from 'limu';
+import type {
+  Draft,
+  GenNewStateCb,
+  ICreateDraftOptions,
+} from 'limu';
 import type {
   Action,
   ActionAsync,
@@ -72,9 +76,13 @@ import type {
   WatchOptionsType,
   ILocalStateApi,
 } from './base';
+import * as limuApi from 'limu';
+
+// since v5.5.0+, export limu
+export const limu: typeof limuApi;
 
 export declare const cst: {
-  VER: '5.0.2';
+  VER: '5.5.0';
   LIMU_VER: string;
   EVENT_NAME: {
     /** 共享状态创建时的事件 */
@@ -561,6 +569,15 @@ export function getDeriveLoading<T = Dict>(target: T): LoadingStatus;
 
 export function getAtom<T = any>(mayAtom: T): AtomValType<T>;
 
+/**
+ * 返回代理对象的原始数据，如果想获取具体节点的原始数据，使用 limu.original 替代
+ * @example
+ * ```ts
+ * getRawState(state.x.y); // always return state node;
+ * limu.original(state.x.y); // return y node
+ * ```
+ * @param state
+ */
 export function getRawState<T = Dict>(state: T): T;
 
 /**

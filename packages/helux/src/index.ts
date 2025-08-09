@@ -88,6 +88,7 @@ export const {
   // init api
   init,
   // util api
+  limu,
   reactiveDesc,
   flush,
   isAtom,
