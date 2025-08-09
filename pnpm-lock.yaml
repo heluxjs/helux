@@ -181,9 +181,6 @@ importers:
       react-live:
         specifier: ^4.1.5
         version: 4.1.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-toastify:
-        specifier: ^11.0.5
-        version: 11.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       styledfc:
         specifier: ^1.0.7
         version: 1.2.1(@types/react@17.0.83)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -5966,7 +5963,6 @@ packages:
       hel-html-parser: ^1.1.2
       hel-micro-core: ^4.9.6
       hel-types: ^4.3.3
-    bundledDependencies: []
 
   hel-types@4.3.3:
     resolution: {integrity: sha512-Oluh82FIi0XvM1kfXYpYqZ9j70hHVrLEDEeWc3Hf9yl1eYDKBlomTXppXN7cQN9yn82+3Mk7BYrJx8D/Y63CjA==}
@@ -7011,6 +7007,7 @@ packages:
 
   limu@3.13.2:
     resolution: {integrity: sha512-wTN7gklCjfVUDyFh8Rj3n03D7RzXb3CXfgljR0kX2D+YADcbruv6+rxCzXz0mK1D3XHTIyQpin5xM1xIg0xsUg==}
+    bundledDependencies: []
 
   limu@4.1.0:
     resolution: {integrity: sha512-0t1VVXdH/Xijm7NUhIPYZ70JdSKXt1MtuqapZQVe74PvdngrOisLUhpz01ikb+y0VpYMXk1Wh8ZKFRavB0H5+Q==}
@@ -8668,12 +8665,6 @@ packages:
     peerDependencies:
       react: '*'
       react-dom: '*'
-
-  react-toastify@11.0.5:
-    resolution: {integrity: sha512-EpqHBGvnSTtHYhCPLxML05NLY2ZX0JURbAdNYa6BUkk+amz4wbKBQvoKQAB0ardvSarUBuY4Q4s1sluAzZwkmA==}
-    peerDependencies:
-      react: ^18 || ^19
-      react-dom: ^18 || ^19
 
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
@@ -11598,8 +11589,8 @@ snapshots:
       '@commitlint/types': 17.8.1
       '@types/node': 20.5.1
       chalk: 4.1.2
-      cosmiconfig: 8.3.6(typescript@5.3.3)
-      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@4.9.5))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5)
+      cosmiconfig: 8.3.6(typescript@4.9.5)
+      cosmiconfig-typescript-loader: 4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.3.3))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -15361,10 +15352,10 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@4.9.5))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5):
+  cosmiconfig-typescript-loader@4.4.0(@types/node@20.5.1)(cosmiconfig@8.3.6(typescript@5.3.3))(ts-node@10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@4.9.5))(typescript@4.9.5):
     dependencies:
       '@types/node': 20.5.1
-      cosmiconfig: 8.3.6(typescript@5.3.3)
+      cosmiconfig: 8.3.6(typescript@4.9.5)
       ts-node: 10.9.2(@swc/core@1.11.9(@swc/helpers@0.5.1))(@types/node@20.5.1)(typescript@5.3.3)
       typescript: 4.9.5
 
@@ -15384,14 +15375,14 @@ snapshots:
       path-type: 4.0.0
       yaml: 1.10.2
 
-  cosmiconfig@8.3.6(typescript@5.3.3):
+  cosmiconfig@8.3.6(typescript@4.9.5):
     dependencies:
       import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.3.3
+      typescript: 4.9.5
 
   create-ecdh@4.0.4:
     dependencies:
@@ -20829,12 +20820,6 @@ snapshots:
 
   react-simple-code-editor@0.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  react-toastify@11.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      clsx: 2.1.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 

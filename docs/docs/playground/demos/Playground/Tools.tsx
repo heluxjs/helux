@@ -8,8 +8,8 @@
 import React from "react";
 import { IconButton } from "./icons/IconButton";
 
-const stControlWrap= { width: '156px', transform: 'translateX(-105px)' };
-const stWrap = {
+const stControlWrap: React.CSSProperties = { width: '156px', transform: 'translateX(-105px)' };
+const stWrap: React.CSSProperties = {
   position: "absolute",
   display: "flex",
   flexDirection: "column",
@@ -22,31 +22,31 @@ const stWrap = {
   transform: 'translateX(-15px)',
 };
 
-export const Tools: React.FC = (props: any) => {
+export const Tools: React.FC<any> = (props) => {
   const { mode, onControlClick, onRunClick, copyUrl, saveCode, resetCode, recoverCode } = props;
-  const liveBtnStyle = mode === 'live'? { backgroundColor: 'lightskyblue' } : {};
-  const lagBtnStyle = mode === 'lag'? { backgroundColor: 'lightskyblue' } : {};
-  const manualBtnStyle = mode === 'manual'? { backgroundColor: 'lightskyblue' } : {};
+  const liveBtnStyle = mode === 'live' ? { backgroundColor: 'lightskyblue' } : {};
+  const lagBtnStyle = mode === 'lag' ? { backgroundColor: 'lightskyblue' } : {};
+  const manualBtnStyle = mode === 'manual' ? { backgroundColor: 'lightskyblue' } : {};
 
   return <div style={stWrap}>
     <div style={stControlWrap}>
-      <IconButton 
-        name="实时" 
-        title="预览区实时响应编辑器代码" 
-        style={liveBtnStyle} 
-        onClick={()=>onControlClick('live')} 
+      <IconButton
+        name="实时"
+        title="预览区实时响应编辑器代码"
+        style={liveBtnStyle}
+        onClick={() => onControlClick('live')}
       />
-      <IconButton 
-        name="延时" 
-        title="预览区延时响应编辑器代码" 
-        style={lagBtnStyle} 
-        onClick={()=>onControlClick('lag')} 
+      <IconButton
+        name="延时"
+        title="预览区延时响应编辑器代码"
+        style={lagBtnStyle}
+        onClick={() => onControlClick('lag')}
       />
-      <IconButton 
-        name="手动" 
-        title="手动点击运行后，预览区才响应编辑器代码" 
-        style={manualBtnStyle} 
-        onClick={()=>onControlClick('manual')} 
+      <IconButton
+        name="手动"
+        title="手动点击运行后，预览区才响应编辑器代码"
+        style={manualBtnStyle}
+        onClick={() => onControlClick('manual')}
       />
     </div>
     <IconButton name="重置" title="重置代码" onClick={resetCode} />
