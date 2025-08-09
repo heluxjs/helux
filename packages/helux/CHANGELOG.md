@@ -1,5 +1,16 @@
 # helux
 
+## 5.5.0
+
+### Minor Changes
+
+- f9d36bf: export limu
+
+### Patch Changes
+
+- Updated dependencies [f9d36bf]
+  - @helux/core@5.5.0
+
 ## 5.4.6
 
 ### Patch Changes

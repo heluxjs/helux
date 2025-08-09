@@ -1,5 +1,17 @@
 # @helux/core
 
+## 5.5.0
+
+### Minor Changes
+
+- f9d36bf: export limu
+
+### Patch Changes
+
+- @helux/hooks-impl@5.5.0
+- @helux/types@5.5.0
+- @helux/utils@5.5.0
+
 ## 5.4.6
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # helux-store-pinia
 
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies [f9d36bf]
+  - helux@5.5.0
+
 ## 4.2.2
 
 ### Patch Changes
