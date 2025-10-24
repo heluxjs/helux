@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.5.2
+
+### Patch Changes
+
+- 45f3912: support syncer string
+  - @helux/hooks-impl@5.5.2
+  - @helux/types@5.5.2
+  - @helux/utils@5.5.2
+
 ## 5.5.1
 
 ### Patch Changes

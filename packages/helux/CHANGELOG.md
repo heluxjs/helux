@@ -1,5 +1,13 @@
 # helux
 
+## 5.5.2
+
+### Patch Changes
+
+- 45f3912: support syncer string
+- Updated dependencies [45f3912]
+  - @helux/core@5.5.2
+
 ## 5.5.1
 
 ### Patch Changes
