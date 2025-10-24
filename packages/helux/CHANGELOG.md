@@ -1,5 +1,13 @@
 # helux
 
+## 5.5.3
+
+### Patch Changes
+
+- 7be2611: optimize syncer
+- Updated dependencies [7be2611]
+  - @helux/core@5.5.3
+
 ## 5.5.2
 
 ### Patch Changes
