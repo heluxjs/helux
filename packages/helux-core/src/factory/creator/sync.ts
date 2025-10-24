@@ -117,8 +117,7 @@ export function createSyncFnBuilder(internal: TInternal) {
     if (Array.isArray(pathOrRecorder)) {
       // atom 自动补齐 val
       path = forAtom ? ['val', ...pathOrRecorder] : pathOrRecorder;
-    }
-    if (typeof pathOrRecorder === 'string') {
+    } else if (typeof pathOrRecorder === 'string') {
       // atom 自动补齐 val
       const pathStr = forAtom ? `val.${pathOrRecorder}` : pathOrRecorder;
       path = pathStr.split('.');
