@@ -1,6 +1,6 @@
 import type { Dict, Fn, ILifecycle, ISharedCtx } from 'helux';
 import { getCurrentProxy } from 'helux';
-import { INNER_GET_CURRENT_PROXY, INNER_STATE, INNER_RESET, INNER_DRAFT, STATE, DRAFT } from './consts';
+import { DRAFT, INNER_DRAFT, INNER_GET_CURRENT_PROXY, INNER_RESET, INNER_STATE, STATE } from './consts';
 
 function keys(obj: object) {
   return Object.keys(obj);
@@ -127,7 +127,7 @@ export function makeWrapDerived(ctx: ISharedCtx, options: any, isLayered?: boole
     });
     ctx.defineMutateSelf()(deriveFns);
     // 因需要基于自身可变计算的派生属性，未分层结构用 state 当作 derived
-    return { derivedState: state, useDerivedState: () => { } };
+    return { derivedState: state, useDerivedState: () => {} };
   }
 
   Object.keys(userGetters).forEach((key) => {

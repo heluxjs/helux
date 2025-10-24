@@ -336,7 +336,7 @@ export function watchAndCallMutateDict(options: IWatchAndCallMutateDictOptions) 
       },
       {
         deps: () => {
-          let depNodes: any[] = !item.deps ? [] : (item.deps(getStateNode(sharedRoot, forAtom), item.extraBound) || []);
+          let depNodes: any[] = !item.deps ? [] : item.deps(getStateNode(sharedRoot, forAtom), item.extraBound) || [];
           if (disableProxy) {
             depNodes = depNodes.concat(sharedRoot);
           }

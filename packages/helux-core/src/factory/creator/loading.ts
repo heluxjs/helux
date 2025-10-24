@@ -13,7 +13,7 @@ import type { TInternal } from './buildInternal';
 import { getGlobalEmpty } from './globalId';
 
 const { MUTATE, LOADING } = FROM;
-const { GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
+const { GLOBAL_LOADING: GLOGAL_LOADING, PRIVATE_LOADING } = STATE_TYPE;
 const { PRIVATE, GLOBAL } = RECORD_LOADING;
 const fakeExtra: Dict = {};
 const fakeLoading: Dict = {};

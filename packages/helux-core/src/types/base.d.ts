@@ -771,11 +771,11 @@ export type SyncBeforeFnParams<T = SharedState> = {
 
 // 此处用 V 约束 before 函数的返回类型
 export type SyncFnBuilder<T = SharedState, V = any> = (
-  pathOrRecorder: string[] | PathRecorder<T>,
+  pathOrRecorder: string | string[] | PathRecorder<T>,
   /**
    * 在提交数据之前，还可以修改其他数据或自身数据的函数
    * 此函数也支持返回 path 对应的修改新值，如需修改为 undefined
-   * 需返回 params.UNDEFEIND 才有效，如果此函数不返回任何值或返回 undefined 均不会干预赋值操作
+   * 需返回 params.UNDEFINED 才有效，如果此函数不返回任何值或返回 undefined 均不会干预赋值操作
    */
   before?: (eventNewVal: V, params: SyncBeforeFnParams<T>) => any,
 ) => SyncerFn;

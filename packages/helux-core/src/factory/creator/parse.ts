@@ -12,7 +12,7 @@ import {
   safeObjGet,
   setNoop,
 } from '@helux/utils';
-import { immut, finishImmut } from 'limu';
+import { finishImmut, immut } from 'limu';
 import { FROM, MUTATE_FN_ITEM, RECORD_LOADING, SINGLE_MUTATE, STATE_TYPE, STOP_ARR_DEP, STOP_DEPTH } from '../../consts';
 import { createOb, injectHeluxProto } from '../../helpers/obj';
 import { getSharedKey, markSharedKey } from '../../helpers/state';

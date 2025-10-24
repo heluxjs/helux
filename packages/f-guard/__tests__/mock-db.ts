@@ -37,7 +37,7 @@ export class DBWrap {
   private async initIns() {
     const prom = createFlatPromise();
     const db = new DB();
-    db.on('connect', ins => prom.resolve(ins));
+    db.on('connect', (ins) => prom.resolve(ins));
     const ins = await prom;
     return ins;
   }

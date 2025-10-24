@@ -44,8 +44,8 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "@helux/core": "workspace:^"
+    "@helux/core": "workspace:^",
+    "react": ">=16.8.0"
   },
   "bundleDependencies": false,
   "publishConfig": {

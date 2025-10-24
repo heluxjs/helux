@@ -1,8 +1,8 @@
 import type { ApiCtx, Dict, PartialStateCb } from '@helux/types';
 import { isFn } from '@helux/utils';
+import type { IObjApi, IUseObjectLogicV2Options } from '../types-api';
 import { useForceUpdate } from './useForceUpdate';
 import { useStable } from './useStable';
-import type { IUseObjectLogicV2Options, IObjApi } from '../types-api';
 
 interface ILogicRef {
   state: any;

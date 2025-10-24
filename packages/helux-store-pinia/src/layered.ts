@@ -14,11 +14,7 @@ export function defineLayeredStore(
   const reset = () => ctx.setState(stateFn());
 
   const { derivedState, useDerivedState } = makeWrapDerived(ctx, { userGetters, userActions }, true);
-  const { wrapActions, getLoading, useLoading } = makeWrapActions(
-    ctx,
-    { userGetters, derived: derivedState, userActions, reset },
-    true,
-  );
+  const { wrapActions, getLoading, useLoading } = makeWrapActions(ctx, { userGetters, derived: derivedState, userActions, reset }, true);
   // 创建生命周期
   makeLifecycle(ctx, lifecycle, { userGetters, userActions, wrapActions, derivedState, isLayered: true });
 

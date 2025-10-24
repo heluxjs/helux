@@ -1,6 +1,6 @@
 {
   "name": "helux",
-  "version": "5.4.6",
+  "version": "5.5.2",
   "description": "A reactive atomic state engine for React(including React 18) and all React like, carrying dependency collection feature, supporting fine-grained updates",
   "keywords": [],
   "author": {
@@ -21,7 +21,8 @@
     "doc": "pnpm --filter=hel-doc run build && npm run cpdoc",
     "doc2": "pnpm --filter=helux-docs run docs:build",
     "docs:build": "pnpm --filter=helux-docs run docs:build",
-    "format": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' '!./docs' --ignore-path .prettierignore .gitignore --ignore-unknown",
+    "format": "prettier --cache --write .",
+    "format2": "prettier --cache --write . '!./pnpm-lock.yaml' '!./doc/src/components' '!./docs' --ignore-path .prettierignore .gitignore --ignore-unknown",
     "limu": "pnpm i limu@latest --filter @helux/core",
     "prepare": "husky install",
     "release:all": "changeset publish",

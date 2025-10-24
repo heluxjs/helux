@@ -197,9 +197,9 @@ export function buildReactive(internal: TInternal, options: IBuildReactiveOpts) 
       draft = isPrimitive
         ? rawState.val
         : new Proxy(rawState.val, {
-          set: (t: any, key: any, value: any) => set(true, key, value),
-          get: (t: any, key: any) => get(true, key, subInnerData),
-        });
+            set: (t: any, key: any, value: any) => set(true, key, value),
+            get: (t: any, key: any) => get(true, key, subInnerData),
+          });
     }
   } else {
     // TODO 非 Proxy 环境暂不支持 reactive

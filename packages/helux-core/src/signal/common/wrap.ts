@@ -56,7 +56,16 @@ export function wrapComp(apiCtx: CoreApiCtx, Comp: any, displayName: string, nee
 
 export function wrapSignalComp(apiCtx: CoreApiCtx, options: IWrapSignalCompOpt): FunctionComponent {
   const {
-    sharedState, depKey, keyPath, keyPaths, compare, sharedKey, format = noopVal, shouldUseResult, result, input,
+    sharedState,
+    depKey,
+    keyPath,
+    keyPaths,
+    compare,
+    sharedKey,
+    format = noopVal,
+    shouldUseResult,
+    result,
+    input,
     onUpdate = noopVal,
   } = options;
   const Comp = function () {

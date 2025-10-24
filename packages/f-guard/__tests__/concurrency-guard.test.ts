@@ -11,7 +11,7 @@ function throwErrCb() {
 type Func = (...args: any) => any;
 
 function delay(ms = 1000) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 // 模拟一个执行时间长达3s的函数，可配置前置运行逻辑，后置运行逻辑
@@ -64,7 +64,7 @@ describe('ConcurrencyGuard', () => {
   test('apply with valid arg', async () => {
     const guard = new ConcurrencyGuard();
     // @ts-ignore 触发内部参数纠正逻辑
-    const result = await guard.apply('key', p1 => Promise.resolve(p1), 1);
+    const result = await guard.apply('key', (p1) => Promise.resolve(p1), 1);
     expect(result).toBe(1);
   });
 

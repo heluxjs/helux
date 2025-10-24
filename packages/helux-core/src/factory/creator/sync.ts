@@ -30,9 +30,14 @@ export function getEventVal(e: any) {
 function createTargetWrap(rawState: Dict, disableProxy: boolean, sourceId: string) {
   let latestPath: string[] = [];
   // 非 Proxy 环境只支持一层 syncer 值
-  const target = createImmut(rawState, ({ fullKeyPath }) => {
-    latestPath = fullKeyPath;
-  }, disableProxy, sourceId);
+  const target = createImmut(
+    rawState,
+    ({ fullKeyPath }) => {
+      latestPath = fullKeyPath;
+    },
+    disableProxy,
+    sourceId,
+  );
   return { target, getPath: () => latestPath };
 }
 
@@ -93,7 +98,7 @@ export function createSyncerBuilder(internal: TInternal) {
   });
 }
 
-const syncFnCahce = new Map<string, Fn>();
+const syncFnCache = new Map<string, Fn>();
 
 /**
  * @example
@@ -112,6 +117,11 @@ export function createSyncFnBuilder(internal: TInternal) {
     if (Array.isArray(pathOrRecorder)) {
       // atom 自动补齐 val
       path = forAtom ? ['val', ...pathOrRecorder] : pathOrRecorder;
+    }
+    if (typeof pathOrRecorder === 'string') {
+      // atom 自动补齐 val
+      const pathStr = forAtom ? `val.${pathOrRecorder}` : pathOrRecorder;
+      path = pathStr.split('.');
     } else {
       const { target, getPath } = targetWrap;
       // atom sync 读路径回调自动拆箱
@@ -124,10 +134,10 @@ export function createSyncFnBuilder(internal: TInternal) {
       cacheKey += `${before.toString()}`;
     }
 
-    let syncFn = syncFnCahce.get(cacheKey);
+    let syncFn = syncFnCache.get(cacheKey);
     if (!syncFn) {
       syncFn = createSyncFn(innerSetState, path, before);
-      syncFnCahce.set(cacheKey, syncFn);
+      syncFnCache.set(cacheKey, syncFn);
     }
 
     return syncFn;

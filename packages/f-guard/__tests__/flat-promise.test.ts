@@ -20,7 +20,7 @@ describe('createFlatPromise', () => {
     waitProm();
     prom.resolve('1'); // 让两个等待结果的 waitProm 函数继续执行
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
     // 开始检查结果
     expect(callCount).toBe(2);
     expect(resultStr).toBe('11');
@@ -46,7 +46,7 @@ describe('createFlatPromise', () => {
     waitProm();
     prom.reject(new Error('err_')); // 让两个等待结果的 waitProm 函数都捕捉错误
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
     // 开始检查结果
     expect(callCount).toBe(2);
     expect(errCount).toBe(2);

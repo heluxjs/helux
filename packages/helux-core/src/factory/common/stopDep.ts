@@ -40,7 +40,7 @@ const cutCache = new Map<string, string>();
  */
 export function cutDepKeyByStop(
   depKeyInfo: DepKeyInfo,
-  options: { stopDepInfo: IRuleConf['stopDepInfo']; arrIndexDep?: boolean, level1ArrKeys: Level1ArrKeys; recordCb: (key: string) => void },
+  options: { stopDepInfo: IRuleConf['stopDepInfo']; arrIndexDep?: boolean; level1ArrKeys: Level1ArrKeys; recordCb: (key: string) => void },
 ) {
   let isKeyRerord = false;
   const { depKey, keyPath, sharedKey } = depKeyInfo;

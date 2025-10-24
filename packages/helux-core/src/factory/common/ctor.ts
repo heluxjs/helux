@@ -28,8 +28,15 @@ export interface INewReactiveMetaOpts extends IBuildReactiveOpts {
 
 export function newReactiveMeta(draft: any, buildOptions: INewReactiveMetaOpts, finish: any = noop): IReactiveMeta {
   const {
-    desc = '', onRead, from = REACTIVE, depKeys = [], isTop = false, expired = false, insKey = 0,
-    payloadArgs, disableProxy,
+    desc = '',
+    onRead,
+    from = REACTIVE,
+    depKeys = [],
+    isTop = false,
+    expired = false,
+    insKey = 0,
+    payloadArgs,
+    disableProxy,
   } = buildOptions;
   return {
     draft,

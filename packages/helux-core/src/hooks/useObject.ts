@@ -1,6 +1,6 @@
 import type { PartialStateCb } from '@helux/types';
-import type { CoreApiCtx } from '../types/api-ctx';
 import { getSharedKey } from '../helpers/state';
+import type { CoreApiCtx } from '../types/api-ctx';
 import type { Dict, ILocalStateApi } from '../types/base';
 
 /**
@@ -22,5 +22,5 @@ export function useObject<T extends Dict = Dict>(
     throw new Error('ERR_OBJ_NOT_NORMAL: can not pass a shared object to useObject!');
   }
 
-  return apiCtx.hookImpl.useObjectLogicV2(initialState, { isStable })
+  return apiCtx.hookImpl.useObjectLogicV2(initialState, { isStable });
 }

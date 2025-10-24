@@ -198,13 +198,19 @@ function setEnableMutate(enabled: boolean, internal: TInternal) {
 }
 
 function getOptions(internal: TInternal): CtxCreateOptions {
-  const {
-    moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle,
-    enableMutate, extra, disableProxy,
-  } = internal;
+  const { moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle, enableMutate, extra, disableProxy } =
+    internal;
   return {
-    moduleName, deep, recordLoading, stopDepth, stopArrDep, alertDeadCycleErr, checkDeadCycle,
-    enableMutate, extra, disableProxy
+    moduleName,
+    deep,
+    recordLoading,
+    stopDepth,
+    stopArrDep,
+    alertDeadCycleErr,
+    checkDeadCycle,
+    enableMutate,
+    extra,
+    disableProxy,
   };
 }
 

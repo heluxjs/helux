@@ -16,7 +16,7 @@ import { currentDraftRoot } from './factory/creator/current';
 import { flush, reactiveDesc } from './factory/creator/reactive';
 import { init } from './factory/root';
 import { getDeriveLoading, runDerive, runDeriveTask } from './helpers/fnRunner';
-import { getRawState, getSnap, getCurrentProxy } from './helpers/state';
+import { getCurrentProxy, getRawState, getSnap } from './helpers/state';
 import {
   getActionLoading,
   getMutateLoading,
@@ -28,16 +28,16 @@ import {
   useGlobalForceUpdate,
   useGlobalId,
   useLocalForceUpdate,
+  useLockDep,
   useMutable,
   useMutateLoading,
+  useObject,
   useOnEvent,
   useReactive,
   useReactiveX,
   useService,
   useWatch,
   useWatchEffect,
-  useLockDep,
-  useObject,
 } from './hooks';
 import { block, COMPS, dynamicBlock, getBlockParams, signal } from './signal';
 
@@ -119,7 +119,7 @@ export {
   // init api
   init,
   // util api
-  limu, // 自 v5.5.0 开始导出 limu
+  limu,
   reactiveDesc,
   flush,
   currentDraftRoot,

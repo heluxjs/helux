@@ -100,10 +100,7 @@ export class ConcurrencyGuard {
   /**
    * 配合 flatPromise 和 reqKey，控制高并发时只有一个真正发起请求，其他函数等待结果
    */
-  private async run<T = any>(
-    runCtx: { key: string, asyncFn: () => Promise<T>, isCall: boolean },
-    ...args: any[]
-  ): Promise<T> {
+  private async run<T = any>(runCtx: { key: string; asyncFn: () => Promise<T>; isCall: boolean }, ...args: any[]): Promise<T> {
     const { key, asyncFn, isCall } = runCtx;
     const { runningPromise, isExist } = this.getRunningPromise<T>(key);
     if (isExist) {
