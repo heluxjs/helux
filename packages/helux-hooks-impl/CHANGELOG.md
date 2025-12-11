@@ -1,5 +1,12 @@
 # @helux/hooks-impl
 
+## 5.5.4
+
+### Patch Changes
+
+- @helux/types@5.5.4
+- @helux/utils@5.5.4
+
 ## 5.5.3
 
 ### Patch Changes
