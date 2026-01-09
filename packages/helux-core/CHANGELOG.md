@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.5.6
+
+### Patch Changes
+
+- 79235a0: add enhanceStore
+  - @helux/hooks-impl@5.5.6
+  - @helux/types@5.5.6
+  - @helux/utils@5.5.6
+
 ## 5.5.5
 
 ### Patch Changes
