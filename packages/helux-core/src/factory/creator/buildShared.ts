@@ -7,7 +7,7 @@ import { recordFnDepKeys } from '../../helpers/fnDep';
 import { createDpOb, createOb } from '../../helpers/obj';
 import { mapSharedState } from '../../helpers/state';
 import type { Dict } from '../../types/base';
-import { recordLastest } from '../common/blockScope';
+import { recordLatest } from '../common/blockScope';
 import { newOpParams } from '../common/ctor';
 import { callOnRead, getDepKeyByPath, isDict } from '../common/util';
 import type { ParsedOptions } from './parse';
@@ -44,7 +44,7 @@ export function buildSharedState(options: ParsedOptions) {
     // using shared state in derived/watch callback
     recordFnDepKeys([depKey], { sharedKey, kv: { [depKey]: val } });
     recordBlockDepKey([depKey]);
-    recordLastest(sharedKey, val, sharedRoot, depKey, keyPath);
+    recordLatest(sharedKey, val, sharedRoot, depKey, keyPath);
   };
 
   if (HAS_PROXY) {

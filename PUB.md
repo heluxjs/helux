@@ -18,4 +18,9 @@
 
 3. 发布时执行 `pnpm changeset publish`
 
+```bash
+# 需要补充 otp 值
+pnpm changeset publish --otp=xxxxxx
+```
+
 发布配置见 `.changeset/config.json` 文件

@@ -31,7 +31,7 @@ function innerCreate<T = SharedState>(state: T, options: IInnerCreateActionOptio
   // now fn can have a name 'action' at dev mode
   const action = (...args: any[]) => {
     let payloadArg = args[0];
-    let payloadArgs = [payloadArg]; // 透传给 devtool，所有需要保证始终为数组格式
+    let payloadArgs = [payloadArg]; // 透传给 devtool，保证始终为数组格式
     // 用户调用 action 独立定义的 throwErr 优先级高于 创建 action 函数时预设的 throwErr
     // throwErr 谨慎处理，只严格接受布尔值
     let throwFnErr = args[1];
@@ -69,7 +69,11 @@ function innerCreate<T = SharedState>(state: T, options: IInnerCreateActionOptio
           handlePartial({ partial, forAtom, draftRoot, draftNode: draft });
         };
         const payload = payloadArg;
-        return [{ draft, draftRoot, setState, desc, payload, payloadArgs, flush, merge, dispatch }];
+        // 新增 getDraft，getDraftRoot 句柄，让用户可通过此函数获得 draft 修改，从而避免标记以下 lint 屏蔽语句
+        // eslint-disable-next-line no-param-reassign
+        const getDraft = () => draft;
+        const getDraftRoot = () => draftRoot;
+        return [{ draft, draftRoot, getDraft, getDraftRoot, setState, desc, payload, payloadArgs, flush, merge, dispatch }];
       },
       getPayloadArgs: () => payloadArgs,
       skipResolve,

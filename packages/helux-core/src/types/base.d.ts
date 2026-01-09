@@ -306,10 +306,27 @@ export interface IActionTaskParams<T = any, P = UnconfirmedArg> {
    */
   draft: T extends Atom | ReadOnlyAtom ? T['val'] : T;
   /**
+   * 直接使用 params 解构出的 draft 修改出现 lint 警告 no-param-reassign 时，可通过此函数获得 draft 来修改
+   */
+  getDraft: () => T extends Atom | ReadOnlyAtom ? T['val'] : T;
+  /**
    * 可直接操作修改的局部响应式根对象
    */
   draftRoot: T extends Atom | ReadOnlyAtom ? Atom<AtomValType<T>> : T;
-  /** 第一层 key 多个值浅合并时，可使用 merge({x,y}) 替代多次 draft.x=, draft.y= 写法 */
+  /**
+   * 直接使用 params 解构出的 draftRoot 修改出现 lint 警告 no-param-reassign 时，可通过此函数获得 draftRoot 来修改
+   */
+  getDraftRoot: () => T extends Atom | ReadOnlyAtom ? Atom<AtomValType<T>> : T;
+  /**
+   * 出现第一层 key 多个值浅合并情况时，可使用此函数优化
+   * @example
+   * ```
+   *  merge({ x: 1, y: 1 });
+   *  // 替代
+   *  draft.x = 1;
+   *  draft.y = 1;
+   * ```
+   */
   merge: (partial: T extends Atom ? (T['val'] extends Primitive ? T : Partial<T['val']>) : Partial<T>) => void;
   /**
    * 支持直接调用 task 函数和 action 函数（注：此时action本身也是可直接调用的）

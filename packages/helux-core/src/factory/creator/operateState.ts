@@ -5,7 +5,7 @@ import { FROM } from '../../consts';
 import { recordBlockDepKey } from '../../helpers/blockDep';
 import { recordFnDepKeys } from '../../helpers/fnDep';
 import type { IMutateCtx, KeyIdsDict, NumStrSymbol } from '../../types/base';
-import { recordLastest } from '../common/blockScope';
+import { recordLatest } from '../common/blockScope';
 import { getRunningFn, getSafeFnCtx } from '../common/fnScope';
 import { cutDepKeyByStop } from '../common/stopDep';
 import { getDepKeyByPath, isArrLike } from '../common/util';
@@ -70,7 +70,7 @@ export function handleOperate(opParams: IOperateParams, opts: { internal: TInter
         // 仅 top reactive 触发以下逻辑，为 block 收集依赖
         if (isReactive) {
           recordBlockDepKey([depKey]);
-          recordLastest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
+          recordLatest(sharedKey, value, internal.sharedState, depKey, fullKeyPath);
         }
         internal.onRead(opParams);
       }

@@ -8,7 +8,7 @@ import { createOb } from '../../helpers/obj';
 import { getSharedKey } from '../../helpers/state';
 import type { Dict, Fn, ICreateDeriveLogicOptions, IDeriveFnParams, IFnCtx } from '../../types/base';
 import { isAtom } from './atom';
-import { recordLastest } from './blockScope';
+import { recordLatest } from './blockScope';
 import { getFnCtxByObj, getFnKey, markFnKey } from './fnScope';
 
 const { TASK } = ASYNC_TYPE;
@@ -50,7 +50,7 @@ export function attachStaticProxyResult(fnCtx: IFnCtx, forAtom: boolean) {
       recordFnDepKeys(fnCtx.depKeys, { belongCtx: fnCtx });
       // transfer depKeys for block or signal
       recordBlockDepKey(fnCtx.depKeys, proxyResult);
-      recordLastest(0, val, proxyResult, '', [key], true, forAtom);
+      recordLatest(0, val, proxyResult, '', [key], true, forAtom);
       return val;
     },
   });

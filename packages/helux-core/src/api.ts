@@ -2,6 +2,7 @@ import * as limu from 'limu';
 import { assignThisHX, bindAtom, getHX, makeWithAtomOptions, withAtom } from './class';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
 import { defineStore } from './factory/advance/defineStore';
+import { enhanceStore } from './factory/advance/enhanceStore';
 import { getAtom, isAtom, isDerivedAtom, isDerivedResult, isSharedState } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
@@ -61,6 +62,7 @@ export {
   sharex,
   createShared,
   defineStore,
+  enhanceStore,
   // derive api
   derive,
   deriveDict,

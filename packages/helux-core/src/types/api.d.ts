@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@5.5.2
+| helux-core@5.5.5
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -900,6 +900,25 @@ export function action<T = any>(
   fn: F,
   descOrOptions?: string | ICreateActionOptions,
 ) => ReturnType<F> extends Promise<any> ? ActionAsync<F, P, T> : Action<F, P, T>;
+
+/**
+ * 向 store 上挂载 actions 和 useLoading 属性，以便增强 store 功能
+ * ```ts
+ * const store = sharex({ a:1 });
+ * const { actions, useLoading } = store.defineActions({
+ *   add({ draft }){
+ *     draft.a +=1;
+ *   },
+ * });
+ *
+ * // 暴露出去的 store 拥有了 actions、useLoading 属性，且 IDE 能够感知到对应的类型
+ * export default enhanceStore(store, { actions, useLoading });
+ * ```
+ */
+export function enhanceStore<T extends any, A extends any, U extends any>(
+  store: T,
+  options: { actions: A, useLoading: U },
+): T & { actions: A, useLoading: U }
 
 /**
  * test if the input arg is a result returned by atom()

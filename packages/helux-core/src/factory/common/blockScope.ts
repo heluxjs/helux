@@ -9,7 +9,7 @@ let reuseLatest = false;
  * 记录共享状态或共享派生结果最近一次读取的数据，为 block 模块服务
  * for perf, no options param here
  */
-export function recordLastest(
+export function recordLatest(
   sharedKey: number,
   val: any,
   sharedState: any,
