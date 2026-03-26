@@ -1,5 +1,12 @@
 # helux
 
+## 5.5.8
+
+### Patch Changes
+
+- Updated dependencies [43eb7b2]
+  - @helux/core@5.5.8
+
 ## 5.5.7
 
 ### Patch Changes
