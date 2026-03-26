@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.5.7
+
+### Patch Changes
+
+- 110a214: optimize enhanceStore type
+  - @helux/hooks-impl@5.5.7
+  - @helux/types@5.5.7
+  - @helux/utils@5.5.7
+
 ## 5.5.6
 
 ### Patch Changes

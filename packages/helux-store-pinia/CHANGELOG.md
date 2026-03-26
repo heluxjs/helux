@@ -1,5 +1,11 @@
 # helux-store-pinia
 
+## 5.0.7
+
+### Patch Changes
+
+- helux@5.5.7
+
 ## 5.0.6
 
 ### Patch Changes
