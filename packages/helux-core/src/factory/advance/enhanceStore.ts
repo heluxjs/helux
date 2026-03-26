@@ -1,10 +1,11 @@
+import { noop } from '@helux/utils';
+import type { IEnhanceOptions } from '../../types/api'
+import type { Dict } from '../../types/base'
 
-export function enhanceStore<T extends any, A extends any, U extends any>(
-  store: T,
-  options: { actions: A, useLoading: U },
-): T & { actions: A, useLoading: U } {
+export function enhanceStore(store: Dict, options?: IEnhanceOptions): Dict & IEnhanceOptions {
+  const { useLoading = noop, actions = {}, da = {}, mut = {} } = options || {};
   // @ts-ignore
-  const enhancedStore = Object.assign(store, options);
+  const enhancedStore = Object.assign(store, { useLoading, actions, da, mut });
   // @ts-ignore
   return enhancedStore;
 }

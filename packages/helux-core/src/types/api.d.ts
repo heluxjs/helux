@@ -901,6 +901,17 @@ export function action<T = any>(
   descOrOptions?: string | ICreateActionOptions,
 ) => ReturnType<F> extends Promise<any> ? ActionAsync<F, P, T> : Action<F, P, T>;
 
+export interface IEnhanceOptions {
+  /** 约定此属性放置 defineActions 返回结果 da 的 actions */
+  actions?: any,
+  /** 约定此属性放置 defineActions 返回结果 da 的 useLoading */
+  useLoading?: any,
+  /** 约定此属性放置 defineActions 返回结果 da */
+  da?: any,
+  /** 约定此属性放置 defineMutateDerive 返回结果 */
+  mut?: any,
+}
+
 /**
  * 向 store 上挂载 actions 和 useLoading 属性，以便增强 store 功能
  * ```ts
@@ -915,10 +926,14 @@ export function action<T = any>(
  * export default enhanceStore(store, { actions, useLoading });
  * ```
  */
-export function enhanceStore<T extends any, A extends any, U extends any>(
-  store: T,
-  options: { actions: A, useLoading: U },
-): T & { actions: A, useLoading: U }
+export function enhanceStore<
+  T extends any,
+  O extends IEnhanceOptions>(
+    store: T,
+    options?: O,
+  ): O extends undefined
+  ? T
+  : T & { actions: O['actions'], useLoading: O['useLoading'], mut: O['mut'], da: O['da'] };
 
 /**
  * test if the input arg is a result returned by atom()

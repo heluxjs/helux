@@ -1733,6 +1733,10 @@ export interface IFnCtx {
    */
   proxyResult: PlainObject;
   fnType: FnType;
+  /**
+   * default: false，针对 fnTye='watch' 时有效，为 true 表示绕过死循环检测等消耗性能步骤，直接触发 watch 函数
+   */
+  isFastWatch: boolean;
   scopeType: ScopeType;
   /**
    * default: false
