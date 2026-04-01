@@ -1,5 +1,13 @@
 # helux-store-pinia
 
+## 5.0.10
+
+### Patch Changes
+
+- 0916e9b: bump limu
+- Updated dependencies [0916e9b]
+  - helux@5.5.10
+
 ## 5.0.9
 
 ### Patch Changes

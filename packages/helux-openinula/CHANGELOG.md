@@ -1,5 +1,13 @@
 # @helux/openinula
 
+## 5.5.10
+
+### Patch Changes
+
+- 0916e9b: bump limu
+- Updated dependencies [0916e9b]
+  - @helux/core@5.5.10
+
 ## 5.5.9
 
 ### Patch Changes
