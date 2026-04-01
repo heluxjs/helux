@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.5.9
+
+### Patch Changes
+
+- 701bc35: bump limu
+  - @helux/hooks-impl@5.5.9
+  - @helux/types@5.5.9
+  - @helux/utils@5.5.9
+
 ## 5.5.8
 
 ### Patch Changes
