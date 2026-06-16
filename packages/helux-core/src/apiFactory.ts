@@ -94,6 +94,8 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
     hookImpl,
     // 兼容历史版本的声明方式
     useStable: hookImpl.useStable,
+    useEffect: hookImpl.useEffect,
+    useLayoutEffect: hookImpl.useLayoutEffect,
   };
 
   return Object.assign(allApi, heluxApi);

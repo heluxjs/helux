@@ -390,7 +390,7 @@ export function useObject<T = Dict>(
  *  }, { immediate: true });
  * ```
  */
-export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType);
+export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType): void;
 
 /**
  * 功能同 watchEffect 一样，区别在于 useWatchEffect 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听
@@ -409,7 +409,7 @@ export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: W
  *
  * ```
  */
-export function useWatchEffect(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchEffectOptionsType);
+export function useWatchEffect(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchEffectOptionsType): void;
 
 /**
  * 使用全局id，配合 rules[].globalIds 做定向通知更新
@@ -903,13 +903,18 @@ export function action<T = any>(
 
 export interface IEnhanceOptions {
   /** 约定此属性放置 defineActions 返回结果 da 的 actions */
-  actions?: any,
+  actions?: any;
   /** 约定此属性放置 defineActions 返回结果 da 的 useLoading */
-  useLoading?: any,
+  useLoading?: any;
   /** 约定此属性放置 defineActions 返回结果 da */
-  da?: any,
+  da?: any;
   /** 约定此属性放置 defineMutateDerive 返回结果 */
-  mut?: any,
+  mut?: any;
+  /**
+   * 为了方便调用，用户多次调用 defineActions defineMutateDerive 生成的结果需要按 key 归类放置时，
+   * 可放置到此属性下（ ns is short of namespace ）
+   */
+  ns?: any;
 }
 
 /**
@@ -933,7 +938,7 @@ export function enhanceStore<
     options?: O,
   ): O extends undefined
   ? T
-  : T & { actions: O['actions'], useLoading: O['useLoading'], mut: O['mut'], da: O['da'] };
+  : T & { actions: O['actions'], useLoading: O['useLoading'], mut: O['mut'], da: O['da'], ns: O['ns'] };
 
 /**
  * test if the input arg is a result returned by atom()
