@@ -1,5 +1,12 @@
 # @helux/openinula
 
+## 5.5.11
+
+### Patch Changes
+
+- Updated dependencies [e273cae]
+  - @helux/core@5.5.11
+
 ## 5.5.10
 
 ### Patch Changes

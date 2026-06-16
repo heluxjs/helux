@@ -1,5 +1,13 @@
 # helux
 
+## 5.5.11
+
+### Patch Changes
+
+- e273cae: expose useEffect
+- Updated dependencies [e273cae]
+  - @helux/core@5.5.11
+
 ## 5.5.10
 
 ### Patch Changes

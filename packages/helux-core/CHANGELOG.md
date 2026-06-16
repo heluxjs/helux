@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.5.11
+
+### Patch Changes
+
+- e273cae: expose useEffect
+  - @helux/hooks-impl@5.5.11
+  - @helux/types@5.5.11
+  - @helux/utils@5.5.11
+
 ## 5.5.10
 
 ### Patch Changes
