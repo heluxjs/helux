@@ -1,4 +1,4 @@
-export type FlatPromise<T = any> = Promise<T> & { resolve: any, reject: any };
+export type FlatPromise<T = any> = Promise<T> & { resolve: any; reject: any };
 
 /**
  * 创建一个可脱离回调修改状态的扁平化 Promise，简化接收异步结果的写法，在处理复杂的控制流语句场景时更方便、更灵活。

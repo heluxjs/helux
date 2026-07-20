@@ -18,7 +18,8 @@ const change = () => {
     // draft was already unboxed from { val: T } to T
     draft.b.b1.b2 += 100;
   })
-  console.log('dict.val.b.b1.b2 is ', dict.val.b.b1.b2);
+  console.log('proxy dict.val.b ', dict.val.b);
+  console.log('original dict.val.b ', limu.original(dict.val.b));
 };
 
 render(<button onClick={ change } > change { $(dict.val.b.b1.b2)}</button>);

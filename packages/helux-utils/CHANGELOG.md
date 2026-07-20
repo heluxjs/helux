@@ -1,5 +1,77 @@
 # @helux/utils
 
+## 5.5.12
+
+### Patch Changes
+
+- @helux/types@5.5.12
+
+## 5.5.11
+
+### Patch Changes
+
+- @helux/types@5.5.11
+
+## 5.5.10
+
+### Patch Changes
+
+- @helux/types@5.5.10
+
+## 5.5.9
+
+### Patch Changes
+
+- @helux/types@5.5.9
+
+## 5.5.8
+
+### Patch Changes
+
+- @helux/types@5.5.8
+
+## 5.5.7
+
+### Patch Changes
+
+- @helux/types@5.5.7
+
+## 5.5.6
+
+### Patch Changes
+
+- @helux/types@5.5.6
+
+## 5.5.5
+
+### Patch Changes
+
+- @helux/types@5.5.5
+
+## 5.5.4
+
+### Patch Changes
+
+- @helux/types@5.5.4
+
+## 5.5.3
+
+### Patch Changes
+
+- @helux/types@5.5.3
+
+## 5.5.2
+
+### Patch Changes
+
+- @helux/types@5.5.2
+
+## 5.5.1
+
+### Patch Changes
+
+- @helux/types@5.5.1
+
 ## 5.5.0
 
 ### Patch Changes

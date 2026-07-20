@@ -7,6 +7,7 @@ import { newMutateCtx } from '../common/ctor';
 import { runMiddlewares } from '../common/middleware';
 import { emitDataChanged } from '../common/plugin';
 import { isDict } from '../common/util';
+import { getRootCtx } from '../root';
 import type { TInternal } from './buildInternal';
 import { handleCustomKey } from './buildShared';
 import { commitState } from './commitState';
@@ -84,10 +85,18 @@ export function handlePartial(opts: IHandlePartialOpts) {
  * mutateNormal 和 mutateDepp 的 finishMutate 里提交之前可复用的公共逻辑
  */
 function beforeCommit(opts: ICommitOpts, draftRoot: any, moduleName: string) {
+  const { middlewares } = getRootCtx();
   const { internal, mutateCtx } = opts;
+  const { lifecycle } = internal;
+  if (!middlewares.length && !lifecycle.hasBeforeCommit) {
+    return;
+  }
+
   const draft = getStateNode(draftRoot, internal.forAtom);
   const { from, sn, desc } = mutateCtx;
-  internal.lifecycle.beforeCommit({ from, draftRoot, draft, desc, sn, moduleName, disableProxy: internal.disableProxy });
+  if (lifecycle.hasBeforeCommit) {
+    lifecycle.beforeCommit({ from, draftRoot, draft, desc, sn, moduleName, disableProxy: internal.disableProxy });
+  }
   runMiddlewares(internal, draftRoot, draft, sn);
 }
 
@@ -165,18 +174,16 @@ export function prepareDeepMutate(opts: IPrepareMutateOpts) {
 export function execFinish(commitOpts: ICommitOpts, draftRoot: any, draftNode: any, partial?: Dict) {
   const { mutateCtx, internal } = commitOpts;
   const { writeKeys, writeKeyPathInfo, handleCbReturn, sn, desc, from } = mutateCtx;
-  const { forAtom, moduleName, lifecycle, disableProxy, sharedKeyStr } = internal;
+  const { forAtom, moduleName, disableProxy, sharedKeyStr } = internal;
 
   // setState 不忽略cb 返回值， setDraft 忽略
   if (handleCbReturn) {
     handlePartial({ partial, forAtom, draftRoot, draftNode });
   }
-  if (lifecycle.hasBeforeCommit) {
-    beforeCommit(commitOpts, draftRoot, moduleName);
-  }
+  beforeCommit(commitOpts, draftRoot, moduleName);
 
   // 禁用代理时，是记录不到任何写值的，此时用根对象key作为依赖去查询和通知需要执行的渲染、计算函数
-  mutateCtx.depKeys = disableProxy ? [sharedKeyStr] : Object.keys(writeKeys)
+  mutateCtx.depKeys = disableProxy ? [sharedKeyStr] : Object.keys(writeKeys);
 
   DRAFT_ROOT.del();
   MUTATE_CTX.del();

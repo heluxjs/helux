@@ -18,7 +18,7 @@ export function initGlobalEmpty(apiCtx: CoreApiCtx, createFn: Fn) {
   let shared = ctx.globalEmpty;
   if (!shared) {
     // global shared state
-    const { stateRoot } = createFn({ apiCtx, rawState: {}, forGlobal: true, stateType: STATE_TYPE.GLOGAL_EMPTY });
+    const { stateRoot } = createFn({ apiCtx, rawState: {}, forGlobal: true, stateType: STATE_TYPE.GLOBAL_EMPTY });
     const internal = getInternal(stateRoot);
     ctx.globalEmpty = stateRoot;
     ctx.globalEmptyInternal = internal;

@@ -93,8 +93,8 @@ export const SCOPE_TYPE = {
 
 export const STATE_TYPE = {
   USER_STATE: 'user_state',
-  GLOGAL_EMPTY: 'global_empty',
-  GLOGAL_LOADING: 'global_loading',
+  GLOBAL_EMPTY: 'global_empty',
+  GLOBAL_LOADING: 'global_loading',
   PRIVATE_LOADING: 'private_loading',
 } as const;
 

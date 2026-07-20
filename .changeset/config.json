@@ -3,7 +3,15 @@
   "changelog": "@changesets/cli/changelog",
   "commit": true,
   "fixed": [
-    ["helux", "@helux/core", "@helux/openinula", "@helux/hooks", "@helux/hooks-impl", "@helux/types", "@helux/utils"]
+    [
+      "helux",
+      "@helux/core",
+      "@helux/openinula",
+      "@helux/hooks",
+      "@helux/hooks-impl",
+      "@helux/types",
+      "@helux/utils"
+    ]
   ],
   "linked": [],
   "access": "restricted",

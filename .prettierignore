@@ -8,5 +8,8 @@ fixtures
 *.yaml
 *.less
 .turbo
+.changeset
+docs
 doc/src/components
-./.changeset/config.json
+packages/f-guard/__tests__
+packages/helux-core/src/helpers/state.ts

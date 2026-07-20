@@ -91,7 +91,7 @@ function runWatch(fnCtx: IFnCtx, options: IRunFnOpt) {
   TRIGGERED_WATCH.set(fnCtx.fnKey);
   const ret = fnCtx.fn({ isFirstCall, triggerReasons, sn });
   TRIGGERED_WATCH.del();
-  //  重新获取函数中可能存在的 reactive 修改
+  // 重新获取函数中可能存在的 reactive 修改
   const afterRunRmeta = REACTIVE_META.current();
 
   // 来自以下类似示例的死循环

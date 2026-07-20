@@ -306,10 +306,27 @@ export interface IActionTaskParams<T = any, P = UnconfirmedArg> {
    */
   draft: T extends Atom | ReadOnlyAtom ? T['val'] : T;
   /**
+   * 直接使用 params 解构出的 draft 修改出现 lint 警告 no-param-reassign 时，可通过此函数获得 draft 来修改
+   */
+  getDraft: () => T extends Atom | ReadOnlyAtom ? T['val'] : T;
+  /**
    * 可直接操作修改的局部响应式根对象
    */
   draftRoot: T extends Atom | ReadOnlyAtom ? Atom<AtomValType<T>> : T;
-  /** 第一层 key 多个值浅合并时，可使用 merge({x,y}) 替代多次 draft.x=, draft.y= 写法 */
+  /**
+   * 直接使用 params 解构出的 draftRoot 修改出现 lint 警告 no-param-reassign 时，可通过此函数获得 draftRoot 来修改
+   */
+  getDraftRoot: () => T extends Atom | ReadOnlyAtom ? Atom<AtomValType<T>> : T;
+  /**
+   * 出现第一层 key 多个值浅合并情况时，可使用此函数优化
+   * @example
+   * ```
+   *  merge({ x: 1, y: 1 });
+   *  // 替代
+   *  draft.x = 1;
+   *  draft.y = 1;
+   * ```
+   */
   merge: (partial: T extends Atom ? (T['val'] extends Primitive ? T : Partial<T['val']>) : Partial<T>) => void;
   /**
    * 支持直接调用 task 函数和 action 函数（注：此时action本身也是可直接调用的）
@@ -403,7 +420,7 @@ export interface IRunMutateOptions {
 
 export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extends JSONDict = JSONDict> {
   /** 是否第一次调用 */
-  isFirstCall;
+  isFirstCall: boolean;
   /** 异步任务提供的 draft 是全局响应式对象 */
   draftRoot: DraftRootType<T>;
   draft: DraftType<T>;
@@ -771,11 +788,11 @@ export type SyncBeforeFnParams<T = SharedState> = {
 
 // 此处用 V 约束 before 函数的返回类型
 export type SyncFnBuilder<T = SharedState, V = any> = (
-  pathOrRecorder: string[] | PathRecorder<T>,
+  pathOrRecorder: string | string[] | PathRecorder<T>,
   /**
    * 在提交数据之前，还可以修改其他数据或自身数据的函数
    * 此函数也支持返回 path 对应的修改新值，如需修改为 undefined
-   * 需返回 params.UNDEFEIND 才有效，如果此函数不返回任何值或返回 undefined 均不会干预赋值操作
+   * 需返回 params.UNDEFINED 才有效，如果此函数不返回任何值或返回 undefined 均不会干预赋值操作
    */
   before?: (eventNewVal: V, params: SyncBeforeFnParams<T>) => any,
 ) => SyncerFn;
@@ -1716,6 +1733,10 @@ export interface IFnCtx {
    */
   proxyResult: PlainObject;
   fnType: FnType;
+  /**
+   * default: false，针对 fnTye='watch' 时有效，为 true 表示绕过死循环检测等消耗性能步骤，直接触发 watch 函数
+   */
+  isFastWatch: boolean;
   scopeType: ScopeType;
   /**
    * default: false
@@ -1758,7 +1779,7 @@ export interface IFnCtx {
   subscribe: Fn;
   renderInfo: IFnRenderInfo;
   /** 记录一些需复用的中间生成的数据 */
-  extra;
+  extra: Dict;
   /** 对应的可能存在的子函数描述 */
   subFnInfo: IMutateFnStdItem;
   /** 由 createSharedOptions.checkDeadCycle 和 mutateFnItem.checkDeadCycle 共同生成 */
@@ -1953,7 +1974,7 @@ export interface IDataChangedInfo {
 export interface IMiddlewareCtx extends IDataChangingInfo {
   /** setData 存储的数据，下一个中间件可获取 */
   data: Dict;
-  setData(key: any, value: any);
+  setData: (key: any, value: any) => void;
   /** 中间件下标 */
   idx: number;
   /** 执行状态修改的批次编号 */

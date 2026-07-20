@@ -5,7 +5,7 @@ import type { TInternal } from '../creator/buildInternal';
 import { getRootCtx } from '../root';
 
 const { ON_DATA_CHANGED, ON_SHARE_CREATED, ON_ERROR_OCCURED } = EVENT_NAME;
-const loadingTypes: string[] = [STATE_TYPE.GLOGAL_LOADING, STATE_TYPE.PRIVATE_LOADING];
+const loadingTypes: string[] = [STATE_TYPE.GLOBAL_LOADING, STATE_TYPE.PRIVATE_LOADING];
 
 export function addPlugin(plugin: IPlugin) {
   const { plugins, bus } = getRootCtx();

@@ -44,7 +44,7 @@ export function defineStore(apiCtx: CoreApiCtx) {
       },
       useDerived: () => {
         const [derived] = dm.useDerivedState();
-        // dirived 拒绝修改，故此处仅返回 derived
+        // derived 拒绝修改，故此处仅返回 derived
         return derived;
       },
       useLoading,

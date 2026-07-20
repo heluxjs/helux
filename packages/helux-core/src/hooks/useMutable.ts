@@ -23,7 +23,6 @@ function useMutableLogic<T extends object = PlainObject>(apiCtx: CoreApiCtx, ini
   return apiCtx.hookImpl.useObjectLogic(initialState, handleState, true);
 }
 
-
 export function useMutable<T extends object = PlainObject>(apiCtx: CoreApiCtx, initialState: T | (() => T)) {
   return useMutableLogic(apiCtx, initialState);
 }

@@ -1,5 +1,113 @@
 # @helux/core
 
+## 5.5.12
+
+### Patch Changes
+
+- ca5b930: fix type file
+  - @helux/hooks-impl@5.5.12
+  - @helux/types@5.5.12
+  - @helux/utils@5.5.12
+
+## 5.5.11
+
+### Patch Changes
+
+- e273cae: expose useEffect
+  - @helux/hooks-impl@5.5.11
+  - @helux/types@5.5.11
+  - @helux/utils@5.5.11
+
+## 5.5.10
+
+### Patch Changes
+
+- 0916e9b: bump limu
+  - @helux/hooks-impl@5.5.10
+  - @helux/types@5.5.10
+  - @helux/utils@5.5.10
+
+## 5.5.9
+
+### Patch Changes
+
+- 701bc35: bump limu
+  - @helux/hooks-impl@5.5.9
+  - @helux/types@5.5.9
+  - @helux/utils@5.5.9
+
+## 5.5.8
+
+### Patch Changes
+
+- 43eb7b2: add ns
+  - @helux/hooks-impl@5.5.8
+  - @helux/types@5.5.8
+  - @helux/utils@5.5.8
+
+## 5.5.7
+
+### Patch Changes
+
+- 110a214: optimize enhanceStore type
+  - @helux/hooks-impl@5.5.7
+  - @helux/types@5.5.7
+  - @helux/utils@5.5.7
+
+## 5.5.6
+
+### Patch Changes
+
+- 79235a0: add enhanceStore
+  - @helux/hooks-impl@5.5.6
+  - @helux/types@5.5.6
+  - @helux/utils@5.5.6
+
+## 5.5.5
+
+### Patch Changes
+
+- 4347ce9: bump
+  - @helux/hooks-impl@5.5.5
+  - @helux/types@5.5.5
+  - @helux/utils@5.5.5
+
+## 5.5.4
+
+### Patch Changes
+
+- 8aa2422: export useStable from top api
+  - @helux/hooks-impl@5.5.4
+  - @helux/types@5.5.4
+  - @helux/utils@5.5.4
+
+## 5.5.3
+
+### Patch Changes
+
+- 7be2611: optimize syncer
+  - @helux/hooks-impl@5.5.3
+  - @helux/types@5.5.3
+  - @helux/utils@5.5.3
+
+## 5.5.2
+
+### Patch Changes
+
+- 45f3912: support syncer string
+  - @helux/hooks-impl@5.5.2
+  - @helux/types@5.5.2
+  - @helux/utils@5.5.2
+
+## 5.5.1
+
+### Patch Changes
+
+- 0decefa: optimize mid
+  - @helux/hooks-impl@5.5.1
+  - @helux/types@5.5.1
+  - @helux/utils@5.5.1
+
 ## 5.5.0
 
 ### Minor Changes

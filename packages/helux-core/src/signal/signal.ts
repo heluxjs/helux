@@ -1,12 +1,12 @@
 import { ReactNode } from '@helux/types';
-import { isFn, noop, prefixValKey } from '@helux/utils';
+import { isFn, prefixValKey } from '@helux/utils';
 import { original } from 'limu';
 import { IS_BLOCK } from '../consts';
 import { isAtom, isDerivedAtom } from '../factory/common/atom';
 import { disableReuseLatest, enableReuseLatest, getLastest } from '../factory/common/blockScope';
 import { getSharedKey } from '../helpers/state';
 import type { CoreApiCtx } from '../types/api-ctx';
-import type { IBlockOptionsWithRead, LoadingStatus, RenderCbType, SingalVal, Fn } from '../types/base';
+import type { Fn, IBlockOptionsWithRead, LoadingStatus, RenderCbType, SingalVal } from '../types/base';
 import { dynamicBlockWithRead } from './block';
 import { noopVal } from './common/util';
 import { alwaysEqual, wrapDerivedAtomSignalComp, wrapDerivedSignalComp, wrapSignalComp, type IWrapSignalCompOpt } from './common/wrap';

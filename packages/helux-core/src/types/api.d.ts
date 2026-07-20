@@ -1,6 +1,6 @@
 /*
 |------------------------------------------------------------------------------------------------
-| helux-core@5.5.0
+| helux-core@5.5.5
 | A state library core that integrates atom, signal, collection dep, derive and watch,
 | it supports all react like frameworks ( including react 18 ).
 |------------------------------------------------------------------------------------------------
@@ -390,7 +390,7 @@ export function useObject<T = Dict>(
  *  }, { immediate: true });
  * ```
  */
-export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType);
+export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: WatchOptionsType): void;
 
 /**
  * 功能同 watchEffect 一样，区别在于 useWatchEffect 会立即执行回调，自动对首次运行时函数内读取到的值完成变化监听
@@ -409,7 +409,7 @@ export function useWatch(watchFn: (fnParams: IWatchFnParams) => void, options: W
  *
  * ```
  */
-export function useWatchEffect(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchEffectOptionsType);
+export function useWatchEffect(watchFn: (fnParams: IWatchFnParams) => void, options?: WatchEffectOptionsType): void;
 
 /**
  * 使用全局id，配合 rules[].globalIds 做定向通知更新
@@ -900,6 +900,45 @@ export function action<T = any>(
   fn: F,
   descOrOptions?: string | ICreateActionOptions,
 ) => ReturnType<F> extends Promise<any> ? ActionAsync<F, P, T> : Action<F, P, T>;
+
+export interface IEnhanceOptions {
+  /** 约定此属性放置 defineActions 返回结果 da 的 actions */
+  actions?: any;
+  /** 约定此属性放置 defineActions 返回结果 da 的 useLoading */
+  useLoading?: any;
+  /** 约定此属性放置 defineActions 返回结果 da */
+  da?: any;
+  /** 约定此属性放置 defineMutateDerive 返回结果 */
+  mut?: any;
+  /**
+   * 为了方便调用，用户多次调用 defineActions defineMutateDerive 生成的结果需要按 key 归类放置时，
+   * 可放置到此属性下（ ns is short of namespace ）
+   */
+  ns?: any;
+}
+
+/**
+ * 向 store 上挂载 actions 和 useLoading 属性，以便增强 store 功能
+ * ```ts
+ * const store = sharex({ a:1 });
+ * const { actions, useLoading } = store.defineActions({
+ *   add({ draft }){
+ *     draft.a +=1;
+ *   },
+ * });
+ *
+ * // 暴露出去的 store 拥有了 actions、useLoading 属性，且 IDE 能够感知到对应的类型
+ * export default enhanceStore(store, { actions, useLoading });
+ * ```
+ */
+export function enhanceStore<
+  T extends any,
+  O extends IEnhanceOptions>(
+    store: T,
+    options?: O,
+  ): O extends undefined
+  ? T
+  : T & { actions: O['actions'], useLoading: O['useLoading'], mut: O['mut'], da: O['da'], ns: O['ns'] };
 
 /**
  * test if the input arg is a result returned by atom()

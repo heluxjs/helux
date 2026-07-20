@@ -2,6 +2,7 @@ import * as limu from 'limu';
 import { assignThisHX, bindAtom, getHX, makeWithAtomOptions, withAtom } from './class';
 import { EVENT_NAME, LIMU_VER, RECORD_LOADING, VER } from './consts/user';
 import { defineStore } from './factory/advance/defineStore';
+import { enhanceStore } from './factory/advance/enhanceStore';
 import { getAtom, isAtom, isDerivedAtom, isDerivedResult, isSharedState } from './factory/common/atom';
 import { addMiddleware } from './factory/common/middleware';
 import { addPlugin } from './factory/common/plugin';
@@ -16,7 +17,7 @@ import { currentDraftRoot } from './factory/creator/current';
 import { flush, reactiveDesc } from './factory/creator/reactive';
 import { init } from './factory/root';
 import { getDeriveLoading, runDerive, runDeriveTask } from './helpers/fnRunner';
-import { getRawState, getSnap, getCurrentProxy } from './helpers/state';
+import { getCurrentProxy, getRawState, getSnap } from './helpers/state';
 import {
   getActionLoading,
   getMutateLoading,
@@ -28,16 +29,16 @@ import {
   useGlobalForceUpdate,
   useGlobalId,
   useLocalForceUpdate,
+  useLockDep,
   useMutable,
   useMutateLoading,
+  useObject,
   useOnEvent,
   useReactive,
   useReactiveX,
   useService,
   useWatch,
   useWatchEffect,
-  useLockDep,
-  useObject,
 } from './hooks';
 import { block, COMPS, dynamicBlock, getBlockParams, signal } from './signal';
 
@@ -61,6 +62,7 @@ export {
   sharex,
   createShared,
   defineStore,
+  enhanceStore,
   // derive api
   derive,
   deriveDict,
@@ -119,7 +121,7 @@ export {
   // init api
   init,
   // util api
-  limu, // 自 v5.5.0 开始导出 limu
+  limu,
   reactiveDesc,
   flush,
   currentDraftRoot,

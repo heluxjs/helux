@@ -8,7 +8,7 @@ export function addMiddleware(mid: Middleware) {
 }
 
 /**
- * middle only support sync call, so no next fn handler in middleware fn args
+ * middleware only support sync call, so no next fn handler in middleware fn args
  */
 export function runMiddlewares(internal: TInternal, draftRoot: DraftRootType, draft: DraftType, sn: number) {
   const { middlewares } = getRootCtx();

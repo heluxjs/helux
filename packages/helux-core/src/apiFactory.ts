@@ -56,7 +56,7 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
 
   // helux api will be assigned in below loop
   const heluxApi: any = { hookImpl };
-  const apiVar: any = api; // fot skip ts check instead of ts-ignore
+  const apiVar: any = api; // skip ts check instead of ts-ignore
   Object.keys(apiVar).forEach((key) => {
     const apiDef = apiVar[key];
 
@@ -92,6 +92,10 @@ export function buildHeluxApi(react: ReactLike, act?: Fn): AllApi {
     model: (cb: Fn) => modelApi.model(heluxApi, cb),
     modelFactory: (cb: Fn) => modelApi.modelFactory(heluxApi, cb),
     hookImpl,
+    // 兼容历史版本的声明方式
+    useStable: hookImpl.useStable,
+    useEffect: hookImpl.useEffect,
+    useLayoutEffect: hookImpl.useLayoutEffect,
   };
 
   return Object.assign(allApi, heluxApi);

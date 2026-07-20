@@ -1,5 +1,91 @@
 # @helux/openinula
 
+## 5.5.12
+
+### Patch Changes
+
+- Updated dependencies [ca5b930]
+  - @helux/core@5.5.12
+
+## 5.5.11
+
+### Patch Changes
+
+- Updated dependencies [e273cae]
+  - @helux/core@5.5.11
+
+## 5.5.10
+
+### Patch Changes
+
+- 0916e9b: bump limu
+- Updated dependencies [0916e9b]
+  - @helux/core@5.5.10
+
+## 5.5.9
+
+### Patch Changes
+
+- 701bc35: bump limu
+- Updated dependencies [701bc35]
+  - @helux/core@5.5.9
+
+## 5.5.8
+
+### Patch Changes
+
+- Updated dependencies [43eb7b2]
+  - @helux/core@5.5.8
+
+## 5.5.7
+
+### Patch Changes
+
+- Updated dependencies [110a214]
+  - @helux/core@5.5.7
+
+## 5.5.6
+
+### Patch Changes
+
+- Updated dependencies [79235a0]
+  - @helux/core@5.5.6
+
+## 5.5.5
+
+### Patch Changes
+
+- Updated dependencies [4347ce9]
+  - @helux/core@5.5.5
+
+## 5.5.4
+
+### Patch Changes
+
+- Updated dependencies [8aa2422]
+  - @helux/core@5.5.4
+
+## 5.5.3
+
+### Patch Changes
+
+- Updated dependencies [7be2611]
+  - @helux/core@5.5.3
+
+## 5.5.2
+
+### Patch Changes
+
+- Updated dependencies [45f3912]
+  - @helux/core@5.5.2
+
+## 5.5.1
+
+### Patch Changes
+
+- Updated dependencies [0decefa]
+  - @helux/core@5.5.1
+
 ## 5.5.0
 
 ### Patch Changes

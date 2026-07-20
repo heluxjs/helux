@@ -21,7 +21,7 @@ import { markRaw, atom } from 'helux';
 const [ state, setState, ctx ] = atom({ a: { } });
 
 setState(draft=>{
-  draft.a.k1 = markRaw(AComplexThridObject);
+  draft.a.k1 = markRaw(aComplexThirdObject);
 });
 
 function Demo(){

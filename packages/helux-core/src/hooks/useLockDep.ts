@@ -1,9 +1,9 @@
-import { getVal } from "@helux/utils";
+import { getVal } from '@helux/utils';
 import { limuUtils } from 'limu';
-import type { CoreApiCtx } from '../types/api-ctx';
-import { getInternal } from '../helpers/state';
-import { useGlobalId } from './useGlobalId';
 import { getDepKeyByPath } from '../factory/common/util';
+import { getInternal } from '../helpers/state';
+import type { CoreApiCtx } from '../types/api-ctx';
+import { useGlobalId } from './useGlobalId';
 
 const hiddenGlobalId = Symbol('HiddenGlobalId');
 
@@ -17,7 +17,7 @@ export function useLockDep<T extends any>(apiCtx: CoreApiCtx, mayProxyNode: T): 
       const { keyPath, arrKeyPath, keyPaths } = meta;
       const { sharedKey } = internal;
       if (keyPaths.length > 1) {
-        globalIds = keyPaths.map(path => getDepKeyByPath(path, sharedKey));
+        globalIds = keyPaths.map((path) => getDepKeyByPath(path, sharedKey));
       } else {
         const targetPath = arrKeyPath.length ? arrKeyPath : keyPath;
         globalIds = getDepKeyByPath(targetPath, internal.sharedKey);

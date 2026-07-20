@@ -1,5 +1,85 @@
 # helux-store-pinia
 
+## 5.0.12
+
+### Patch Changes
+
+- helux@5.5.12
+
+## 5.0.11
+
+### Patch Changes
+
+- Updated dependencies [e273cae]
+  - helux@5.5.11
+
+## 5.0.10
+
+### Patch Changes
+
+- 0916e9b: bump limu
+- Updated dependencies [0916e9b]
+  - helux@5.5.10
+
+## 5.0.9
+
+### Patch Changes
+
+- 701bc35: bump limu
+- Updated dependencies [701bc35]
+  - helux@5.5.9
+
+## 5.0.8
+
+### Patch Changes
+
+- helux@5.5.8
+
+## 5.0.7
+
+### Patch Changes
+
+- helux@5.5.7
+
+## 5.0.6
+
+### Patch Changes
+
+- Updated dependencies [79235a0]
+  - helux@5.5.6
+
+## 5.0.5
+
+### Patch Changes
+
+- helux@5.5.5
+
+## 5.0.4
+
+### Patch Changes
+
+- helux@5.5.4
+
+## 5.0.3
+
+### Patch Changes
+
+- Updated dependencies [7be2611]
+  - helux@5.5.3
+
+## 5.0.2
+
+### Patch Changes
+
+- Updated dependencies [45f3912]
+  - helux@5.5.2
+
+## 5.0.1
+
+### Patch Changes
+
+- helux@5.5.1
+
 ## 5.0.0
 
 ### Patch Changes
