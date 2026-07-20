@@ -420,7 +420,7 @@ export interface IRunMutateOptions {
 
 export interface IMutateTaskParam<T = SharedState, P extends Arr = Arr, E extends JSONDict = JSONDict> {
   /** 是否第一次调用 */
-  isFirstCall;
+  isFirstCall: boolean;
   /** 异步任务提供的 draft 是全局响应式对象 */
   draftRoot: DraftRootType<T>;
   draft: DraftType<T>;
@@ -1779,7 +1779,7 @@ export interface IFnCtx {
   subscribe: Fn;
   renderInfo: IFnRenderInfo;
   /** 记录一些需复用的中间生成的数据 */
-  extra;
+  extra: Dict;
   /** 对应的可能存在的子函数描述 */
   subFnInfo: IMutateFnStdItem;
   /** 由 createSharedOptions.checkDeadCycle 和 mutateFnItem.checkDeadCycle 共同生成 */
@@ -1974,7 +1974,7 @@ export interface IDataChangedInfo {
 export interface IMiddlewareCtx extends IDataChangingInfo {
   /** setData 存储的数据，下一个中间件可获取 */
   data: Dict;
-  setData(key: any, value: any);
+  setData: (key: any, value: any) => void;
   /** 中间件下标 */
   idx: number;
   /** 执行状态修改的批次编号 */
