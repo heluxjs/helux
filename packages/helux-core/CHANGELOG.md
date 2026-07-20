@@ -1,5 +1,14 @@
 # @helux/core
 
+## 5.5.12
+
+### Patch Changes
+
+- ca5b930: fix type file
+  - @helux/hooks-impl@5.5.12
+  - @helux/types@5.5.12
+  - @helux/utils@5.5.12
+
 ## 5.5.11
 
 ### Patch Changes
